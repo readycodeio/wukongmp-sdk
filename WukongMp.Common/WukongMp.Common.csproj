@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+        <ImplicitUsings>false</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PhotonRealtimeApi\PhotonRealtimeApi.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="PhotonClient">
+            <HintPath>..\PhotonLibs\Debug\netstandard2.0\PhotonClient.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+</Project>
