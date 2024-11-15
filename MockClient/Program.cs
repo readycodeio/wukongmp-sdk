@@ -23,16 +23,16 @@ public class Program
                 switch (keyInfo.Key)
                 {
                     case ConsoleKey.W:
-                        x += 10;
+                        x += 200;
                         break;
                     case ConsoleKey.S:
-                        x -= 10;
+                        x -= 200;
                         break;
                     case ConsoleKey.A:
-                        y -= 10;
+                        y -= 200;
                         break;
                     case ConsoleKey.D:
-                        y += 10;
+                        y += 200;
                         break;
                     default:
                         continue;

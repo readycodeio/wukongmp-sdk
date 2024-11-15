@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Numerics;
+using b1;
 using CSharpModBase;
 using CSharpModBase.Input;
+using UnrealEngine.AIModule;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Common;
@@ -14,16 +15,16 @@ namespace WukongCSharpMod
         public string Name => "ModExample";
         public string Version => "0.0.1";
 
-        private WukongClient photon;
+        private WukongClient _photon;
 
         public void Init()
         {
             Console.WriteLine("Init");
 
-            photon = new WukongClient();
-            photon.StartClient();
+            _photon = new WukongClient();
+            _photon.StartClient();
 
-            photon.OnPlayerMoved += MoveMonstersInRange;
+            _photon.OnPlayerMoved += MoveMonstersInRange;
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
@@ -50,36 +51,65 @@ namespace WukongCSharpMod
 
                 foreach (var monster in GameUtils.GetMonsters())
                 {
-                    var controller = monster.GetController();
+                    try
+                    {
+                        Console.WriteLine($"Monster: {monster.GetName()}");
 
-                    if (controller is null)
-                        continue;
+                        var controller = monster.GetController();
 
-                    Console.WriteLine("Has controller");
+                        if (controller is null)
+                            continue;
 
-                    controller.UnPossess();
+                        Console.WriteLine("Has controller");
+
+                        var ai = controller.Cast<AIController>();
+
+                        if (ai is null)
+                            continue;
+
+                        Console.WriteLine("Has AI");
+
+                        var brain = ai.BrainComponent;
+
+                        if (brain is null)
+                            continue;
+
+                        Console.WriteLine("Has brain");
+
+                        brain.StopLogic("Stop");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
             });
         }
 
         private void MoveMonstersInRange(int id, float x, float y, float z)
         {
+            var playerCharacter = GameUtils.GetBguPlayerCharacterCs();
+
+            var pawn = playerCharacter.GetController().GetControlledPawn();
+            var playerLoc = pawn.GetActorTransform().GetLocation();
+
             foreach (var monster in GameUtils.GetMonsters())
             {
-                var t = monster.GetActorTransform();
+                var controller = monster.GetController();
 
-                var loc = t.GetLocation();
+                if (controller is null)
+                    continue;
 
                 // x is forward / backward, y is left / right
-                var forward = t.GetRotation().GetNormalized().Vector(); // FQuat from Unreal Engine
-                var right = forward.Cross_VectorVector(FVector.UpVector); // FVector from Unreal Engine
+                var forward = monster.GetActorForwardVector();
+                var left = forward.Cross_VectorVector(FVector.UpVector); // FVector from Unreal Engine
 
-                t.SetLocation(loc + forward * x + right * y);
+                var goal = playerLoc + forward * x + left * y;
+                Console.WriteLine("Requested move to: " + goal);
 
-                if (!monster.SetActorTransform(t, false, out _, false))
-                {
-                    Console.WriteLine("Failed to move monster.");
-                }
+                // UAIHelperLibrary.SimpleMoveToLocation(controller, goal);
+                BGUFuncLibAICS.BGUCancelAICurrentMove(monster);
+                BGUFuncLibAICS.BGURequestAIMoveToLocationWithMM(monster, goal, EAIMoveSpeedType.JOG, 10, EBGUMoveAIType.None, false, false, EState_MM.FreeWalk);
             }
         }
 

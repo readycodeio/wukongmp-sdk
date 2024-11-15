@@ -16,6 +16,9 @@
       <Reference Include="b1.NativePlugins">
         <HintPath>Game\b1.NativePlugins.dll</HintPath>
       </Reference>
+      <Reference Include="Harmony">
+        <HintPath>Core\0Harmony.dll</HintPath>
+      </Reference>
       <Reference Include="B1UI_GSE.Script">
         <HintPath>Game\B1UI_GSE.Script.dll</HintPath>
       </Reference>
