@@ -12,27 +12,27 @@ public class Program
 
         while (true)
         {
-            // Check if a key is pressed without blocking
             if (Console.KeyAvailable)
             {
                 float x = 0;
                 float y = 0;
+                const float force = 200;
 
                 var keyInfo = Console.ReadKey(intercept: true); // intercept true to prevent key from being shown
 
                 switch (keyInfo.Key)
                 {
                     case ConsoleKey.W:
-                        x += 200;
+                        x += force;
                         break;
                     case ConsoleKey.S:
-                        x -= 200;
+                        x -= force;
                         break;
                     case ConsoleKey.A:
-                        y -= 200;
+                        y -= force;
                         break;
                     case ConsoleKey.D:
-                        y += 200;
+                        y += force;
                         break;
                     default:
                         continue;

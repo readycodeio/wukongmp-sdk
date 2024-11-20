@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using b1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -44,9 +45,12 @@ namespace WukongCSharpMod
             var actors = world.GetAllActorsOfClass<BUTamerActor>();
             foreach (var actor in actors)
             {
+                Console.WriteLine($"Found actor: {actor.GetName()}");
+
                 var monster = actor.GetMonster();
                 if (monster != null)
                 {
+                    Console.WriteLine("Actor is a monster");
                     yield return monster;
                 }
             }
