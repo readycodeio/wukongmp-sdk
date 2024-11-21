@@ -1,9 +1,11 @@
 ﻿using System;
 using b1;
+using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
 using UnrealEngine.Engine;
+using UnrealEngine.InputCore;
 using UnrealEngine.Runtime;
 using WukongMp.Common;
 
@@ -29,6 +31,7 @@ namespace WukongCSharpMod
             _photon.StartClient();
 
             _photon.OnPlayerMoved += MoveClone;
+            _photon.OnKeyReceived += ApplyKeyPress;
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             {
@@ -47,126 +50,92 @@ namespace WukongCSharpMod
 
                 // BGU_UnrealWorldUtil.DestroyActor(oldPawn);
                 _clone = oldPawn;
+
+                var cloneCharacter = _clone as BGUPlayerCharacterCS;
+
+                FActorSpawnParameters spawnInfo = new FActorSpawnParameters
+                {
+                    Instigator = cloneCharacter.GetInstigator(),
+                    SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod.AlwaysSpawn,
+                    OverrideLevel = cloneCharacter.GetLevel(),
+                    ObjectFlags = EObjectFlags.Transient // We never want to save AI controllers into a map
+                };
+
+                var loc = cloneCharacter.GetActorLocation();
+                var rot = cloneCharacter.GetActorRotation();
+
+                var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
+
+                if (@class is null)
+                {
+                    Console.WriteLine("Class is null");
+                    return;
+                }
+
+                var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
+
+                Console.WriteLine("Spawned new controller");
+
+                if (newController != null && newController is ABGPPlayerController ctrl)
+                {
+                    ctrl.Possess(_clone);
+                    Console.WriteLine("Possessed new controller");
+
+                    ctrl.InitInputSystemCS();
+                    ctrl.EnableClickEvents = true;
+                }
             });
 
-            // Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Z, () =>
-            // {
-            //     Console.WriteLine("Alt + Z");
-            //
-            //     foreach (var monster in GameUtils.GetMonsters())
-            //     {
-            //         try
-            //         {
-            //             Console.WriteLine($"Monster: {monster.GetName()}");
-            //
-            //             var controller = monster.GetController();
-            //
-            //             if (controller is null)
-            //                 continue;
-            //
-            //             Console.WriteLine("Has controller");
-            //
-            //             var ai = controller.Cast<AIController>();
-            //
-            //             if (ai is null)
-            //                 continue;
-            //
-            //             Console.WriteLine("Has AI");
-            //
-            //             var brain = ai.BrainComponent;
-            //
-            //             if (brain is null)
-            //                 continue;
-            //
-            //             Console.WriteLine("Has brain");
-            //
-            //             brain.StopLogic("Stop");
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             Console.WriteLine(e);
-            //         }
-            //     }
-            // });
-            //
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            {
+                Console.WriteLine("Alt + X");
 
+                _clone.GetMovementComponent().StopActiveMovement();
+            });
+        }
 
-            // Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
-            // {
-            //     Console.WriteLine("Alt + C");
-            //
-            //     var playerCharacter = GameUtils.GetBguPlayerCharacterCs();
-            //     if (playerCharacter != null)
-            //     {
-            //         try
-            //         {
-            //             var cbi = new FContinueBehaviorInfo
-            //             {
-            //                 CBT = EContinueBehaviorType.AnimationSyncing,
-            //                 BeatbackMontage = playerCharacter.GetCurrentMontage()
-            //             };
-            //             BUS_EventCollectionCS.Get(playerCharacter).Evt_SummonSkillCastByPhantomRush.Invoke(1001101, cbi);
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             Console.WriteLine(e);
-            //         }
-            //     }
-            // });
-            //
-            // Utils.RegisterKeyBind(ModifierKeys.Alt, Key.W, () =>
-            // {
-            //     Console.WriteLine("Alt + W");
-            //
-            //     var playerCharacter = GameUtils.GetBguPlayerCharacterCs();
-            //     if (playerCharacter != null)
-            //     {
-            //         try
-            //         {
-            //             BUS_EventCollectionCS.Get(playerCharacter).Evt_TriggerPhantomRush.Invoke(ESkillDirection.Forward);
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             Console.WriteLine(e);
-            //         }
-            //     }
-            // });
+        private void ApplyKeyPress(int id, ConsoleKey key)
+        {
+            if (!(_clone.GetController() is ABGPPlayerController controller))
+            {
+                Console.WriteLine("Controller is null");
+                return;
+            }
+
+            switch (key)
+            {
+                case ConsoleKey.Spacebar:
+                    BUS_EventCollectionCS.Get(_clone).Evt_TriggerJumpSkill.Invoke(ESkillDirection.None, FVector2D.ZeroVector);
+                    break;
+            }
         }
 
         private void MoveClone(int id, float x, float y, float z)
         {
-            // AddMovementInput is a method of ACharacter
-            var movement = _clone?.GetMovementComponent() as UBGUCharacterMovementComponent;
+            var vec = new FVector(x, y, z);
+            var events = BUS_EventCollectionCS.Get(_clone);
 
-            if (movement is null)
-            {
-                Console.WriteLine("Movement is null");
-                return;
-            }
+            var goal = _clone.GetActorTransform();
+            goal.SetLocation(goal.GetLocation() + vec);
 
-            var controller = _clone.GetController() as BGP_PlayerControllerCS;
+            vec.ToDirectionAndLength(out var dir, out var mag);
+            // events.Evt_StopCurrentMove.Invoke();
+            
+            // events.Evt_InputMoveForward.Invoke(mag);
 
-            if (controller == null)
-            {
-                (_clone as BGUPlayerCharacterCS).SpawnDefaultController();
-                controller = _clone.GetController() as BGP_PlayerControllerCS;
-
-                if (controller is null)
-                {
-                    Console.WriteLine("Controller is null and cannot be spawned");
-                    return;
-                }
-
-                controller.InitAllComp();
-            }
-
-
-            var translation = new FVector(x, y, z);
-            var goal = _clone.GetActorLocation() + translation;
-            var dir = translation.Rotation().GetNormalized();
-
-            // TODO: Move the controller instead of teleporting the Pawn
-            BUS_EventCollectionCS.Get(_clone).Evt_InterpolationMove.Invoke(goal, dir, 0.5f, true, false, false, true);
+            // events.Evt_MatchingPositionMove.Invoke(new FMatchingPositionMoveParam
+            // {
+            //     TargetTrans = goal,
+            //     bFacingTargetRotation = false,
+            //     AcceptableRadius = 10f,
+            //     MatchingPosType = EMatchingPosType.InterpolationLiner,
+            //     MoveSpeedType = EAIMoveSpeedType.RUN,
+            //     InterpMoveCallbackFunc = done =>
+            //     {
+            //         Console.WriteLine("Move done: " + done);
+            //         events.Evt_ClearMoveToTarget.Invoke();
+            //     }
+            // });
         }
 
         // private void MoveMonstersInRange(int id, float x, float y, float z)

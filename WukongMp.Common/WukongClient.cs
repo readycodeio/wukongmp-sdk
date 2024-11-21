@@ -18,9 +18,10 @@ namespace WukongMp.Common
             _client.RemoveCallbackTarget(this);
         }
 
-        public int Id => _client.LocalPlayer.ActorNumber;
+        private int Id => _client.LocalPlayer.ActorNumber;
 
         public event Action<int, float, float, float> OnPlayerMoved;
+        public event Action<int, ConsoleKey> OnKeyReceived;
 
         public void OnEvent(EventData photonEvent)
         {
@@ -34,6 +35,10 @@ namespace WukongMp.Common
                 case 1:
                     var pos = (float[])photonEvent.CustomData;
                     OnPlayerMoved?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
+                    break;
+                case 2:
+                    var key = (ConsoleKey)photonEvent.CustomData;
+                    OnKeyReceived?.Invoke(photonEvent.Sender, key);
                     break;
             }
         }
@@ -80,7 +85,7 @@ namespace WukongMp.Common
         // user choice, e.g. types 1 - 9
         private byte selectedMapType = 2;
 
-        void MyJoinRandomOrCreateRoom()
+        private void MyJoinRandomOrCreateRoom()
         {
             // custom room properties to use when this client creates a room.
             var mapSelectionAsProperties = new PhotonHashtable { { MapProperty, selectedMapType } };
@@ -108,6 +113,14 @@ namespace WukongMp.Common
         private void OnStateChange(ClientState arg1, ClientState arg2)
         {
             Console.WriteLine(arg1 + " -> " + arg2);
+        }
+
+        public void SendKeyClick(ConsoleKey keyCode)
+        {
+            const byte eventCode = 2; // make up event codes at will, < 200
+            var evData = keyCode;
+
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SendPositionUpdate(float x, float y, float z)
