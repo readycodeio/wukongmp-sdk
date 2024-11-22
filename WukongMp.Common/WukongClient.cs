@@ -11,6 +11,7 @@ namespace WukongMp.Common
     {
         private readonly RealtimeClient _client = new RealtimeClient();
         private bool _quit;
+        private Thread _bgThread;
 
         ~WukongClient()
         {
@@ -19,9 +20,10 @@ namespace WukongMp.Common
         }
 
         private int Id => _client.LocalPlayer.ActorNumber;
+        public bool Ready => _client.IsConnectedAndReady;
 
         public event Action<int, float, float, float> OnPlayerMoved;
-        public event Action<int, ConsoleKey> OnKeyReceived;
+        public event Action<int, KeyPress> OnKeyReceived;
 
         public void OnEvent(EventData photonEvent)
         {
@@ -37,7 +39,7 @@ namespace WukongMp.Common
                     OnPlayerMoved?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
                     break;
                 case 2:
-                    var key = (ConsoleKey)photonEvent.CustomData;
+                    var key = (KeyPress)photonEvent.CustomData;
                     OnKeyReceived?.Invoke(photonEvent.Sender, key);
                     break;
             }
@@ -46,6 +48,7 @@ namespace WukongMp.Common
         public void StartClient()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            PhotonPeer.RegisterType(typeof(KeyPress), 255, KeyPress.Serialize, KeyPress.Deserialize);
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
@@ -59,12 +62,15 @@ namespace WukongMp.Common
                 AuthMode = AuthModeOption.AuthOnce
             });
 
-            var t = new Thread(Loop);
-            t.Start();
+            _bgThread = new Thread(Loop);
+            _bgThread.Start();
 
             Console.WriteLine("Running forever.");
-            // Console.ReadKey();
-            // quit = true;
+        }
+
+        public void Reconnect()
+        {
+            _client.ReconnectAndRejoin();
         }
 
         private void Loop(object state)
@@ -72,7 +78,7 @@ namespace WukongMp.Common
             while (!_quit)
             {
                 _client.Service();
-                Thread.Sleep(33);
+                Thread.Sleep(30);
             }
         }
 
@@ -115,12 +121,11 @@ namespace WukongMp.Common
             Console.WriteLine(arg1 + " -> " + arg2);
         }
 
-        public void SendKeyClick(ConsoleKey keyCode)
+        public void SendKeyPressed(ConsoleKey key, KeyState state)
         {
+            var press = new KeyPress(key, state);
             const byte eventCode = 2; // make up event codes at will, < 200
-            var evData = keyCode;
-
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, press, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SendPositionUpdate(float x, float y, float z)

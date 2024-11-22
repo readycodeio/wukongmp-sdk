@@ -4,8 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongCSharpMod", "WukongCS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonRealtimeApi", "PhotonRealtimeApi\PhotonRealtimeApi.csproj", "{A5054542-5C47-40EC-8C6E-AD8B41AB9B54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockClient", "MockClient\MockClient.csproj", "{B0F6E91D-217F-459C-A887-5AC4CD1A413A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Common", "WukongMp.Common\WukongMp.Common.csproj", "{8E001812-4216-4012-BC6B-139C3D3A61B2}"
 EndProject
 Global
@@ -22,10 +20,6 @@ Global
 		{A5054542-5C47-40EC-8C6E-AD8B41AB9B54}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5054542-5C47-40EC-8C6E-AD8B41AB9B54}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5054542-5C47-40EC-8C6E-AD8B41AB9B54}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B0F6E91D-217F-459C-A887-5AC4CD1A413A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B0F6E91D-217F-459C-A887-5AC4CD1A413A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B0F6E91D-217F-459C-A887-5AC4CD1A413A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B0F6E91D-217F-459C-A887-5AC4CD1A413A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8E001812-4216-4012-BC6B-139C3D3A61B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8E001812-4216-4012-BC6B-139C3D3A61B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E001812-4216-4012-BC6B-139C3D3A61B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
