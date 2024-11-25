@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using b1;
 using BtlShare;
 using CSharpModBase;
@@ -21,12 +22,13 @@ namespace WukongCSharpMod
         private readonly Harmony _harmony = new Harmony("WukongMP");
 
         public static APawn Clone { get; private set; }
+        public static BUS_MovementSystem CloneMovementSystem { get; private set; }
 
         public void Init()
         {
             Console.WriteLine("Init");
-
-            _harmony.PatchAll();
+            _harmony.PatchAll(Assembly.GetExecutingAssembly());
+            Console.WriteLine("Patched with Harmony");
 
             _photon = new WukongClient();
             _photon.StartClient();
@@ -89,7 +91,28 @@ namespace WukongCSharpMod
                 if (newController != null && newController is ABGUAIPlayerController ctrl)
                 {
                     ctrl.Possess(Clone);
+                    ctrl.CanBeDamaged = false;
                     Console.WriteLine("Possessed new controller");
+                }
+
+                var iterator = new TObjectIterator<BUS_MovementSystem>();
+                while (iterator.MoveNext())
+                {
+                    Console.WriteLine("Found movement component");
+
+                    var item = iterator.Current;
+
+                    if (item is null)
+                        continue;
+
+                    if (item.GetOwner() == Clone)
+                    {
+                        Console.WriteLine("Found movement component for clone");
+
+                        CloneMovementSystem = item;
+
+                        break;
+                    }
                 }
             });
 
@@ -116,20 +139,47 @@ namespace WukongCSharpMod
 
             var events = BUS_EventCollectionCS.Get(Clone);
 
+            var movData = Traverse.Create(CloneMovementSystem).Field<BUC_MovementData>("MovementData").Value;
+            movData.bInputMoving = true;
+
+            // var mover = Traverse.Create(CloneMovementSystem).Field<BUC_MovementModes>("MoveModes").Value.ActiveMover;
+            // if (mover is null)
+            // {
+            //     Console.WriteLine("Mover is null");
+            // }
+
+            // var state = Traverse.Create(CloneMovementSystem).Field<BUC_SimpleStateData>("SimpleStateData").Value;
+
+            var len = 100f;
+            var goal = FVector.ZeroVector;
+
             switch (keyPress.Key)
             {
-                case ConsoleKey.W when keyPress.State == KeyState.Held:
-                    events.Evt_InputMoveForward.Invoke(10000f);
+                case ConsoleKey.W when keyPress.State != KeyState.Released:
+                    // events.Evt_InputMoveForward.Invoke(1000f);
+                    goal = Clone.GetActorTransform().GetLocation() + new FVector(len, 0, 0);
                     break;
-                case ConsoleKey.A when keyPress.State == KeyState.Held:
-                    events.Evt_RepPlayerLoc.Invoke(Clone.GetActorLocation() + new FVector(0, 0, 100), "self");
+                case ConsoleKey.A when keyPress.State != KeyState.Released:
+                    // events.Evt_InputMoveRight.Invoke(-1000f);
+                    goal = Clone.GetActorTransform().GetLocation() - new FVector(0, len, 0);
                     break;
-                case ConsoleKey.S when keyPress.State == KeyState.Held:
-                    events.Evt_InputMoveForward.Invoke(-10000f);
+                case ConsoleKey.S when keyPress.State != KeyState.Released:
+                    // events.Evt_InputMoveForward.Invoke(-1000f);
+                    goal = Clone.GetActorTransform().GetLocation() - new FVector(len, 0, 0);
                     break;
-                case ConsoleKey.D when keyPress.State == KeyState.Held:
-                    events.Evt_InputMoveRight.Invoke(10000f);
+                case ConsoleKey.D when keyPress.State != KeyState.Released:
+                    // events.Evt_InputMoveRight.Invoke(1000f);
+                    goal = Clone.GetActorTransform().GetLocation() + new FVector(0, len, 0);
                     break;
+            }
+
+            if (goal != FVector.ZeroVector)
+            {
+                events.Evt_AIMoveTo.Invoke(goal, null, EAIMoveSpeedType.RUN, 10f, EBGUMoveAIType.None, false, false, "", "");
+            }
+
+            switch (keyPress.Key)
+            {
                 case ConsoleKey.Spacebar when keyPress.State == KeyState.Pressed:
                     events.Evt_TriggerJumpSkill.Invoke(ESkillDirection.None, FVector2D.ZeroVector);
                     break;
@@ -179,25 +229,6 @@ namespace WukongCSharpMod
                 //     );
                 //     break;
             }
-        }
-
-        [HarmonyPatch(typeof(BUIAMove), "GetOwner")]
-        [HarmonyPostfix]
-        public static void PostTemplate(ref AActor __result)
-        {
-            if (Clone != null)
-            {
-                __result = Clone;
-            }
-
-            Console.WriteLine($"GetOwner: {__result?.GetName()}");
-        }
-
-        [HarmonyPatch(typeof(BGUFuncLibMap), "IsPartyLevel")]
-        [HarmonyPostfix]
-        public static void Post(ref bool __result)
-        {
-            __result = true;
         }
 
         // private void MoveClone(int id, float x, float y, float z)
