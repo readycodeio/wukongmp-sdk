@@ -5,10 +5,10 @@ namespace WukongMp.Common
 {
     public readonly struct KeyPress
     {
-        public readonly ConsoleKey Key;
+        public readonly PlayerInput Key;
         public readonly KeyState State;
 
-        public KeyPress(ConsoleKey key, KeyState state)
+        public KeyPress(PlayerInput key, KeyState state)
         {
             Key = key;
             State = state;
@@ -16,7 +16,7 @@ namespace WukongMp.Common
 
         public static object Deserialize(byte[] data)
         {
-            return new KeyPress((ConsoleKey)data[0], (KeyState)data[1]);
+            return new KeyPress((PlayerInput)data[0], (KeyState)data[1]);
         }
 
         public static byte[] Serialize(object keyPress)
@@ -35,7 +35,7 @@ namespace WukongMp.Common
 
         public static object Deserialize(StreamBuffer instream, short length)
         {
-            var key = (ConsoleKey)instream.ReadByte();
+            var key = (PlayerInput)instream.ReadByte();
             var state = (KeyState)instream.ReadByte();
             return new KeyPress(key, state);
         }

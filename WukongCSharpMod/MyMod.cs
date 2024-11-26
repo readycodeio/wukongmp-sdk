@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using b1;
 using BtlShare;
@@ -21,8 +22,10 @@ namespace WukongCSharpMod
         private WukongClient _photon;
         private readonly Harmony _harmony = new Harmony("WukongMP");
 
-        public static APawn Clone { get; private set; }
-        public static BUS_MovementSystem CloneMovementSystem { get; private set; }
+        public APawn Clone { get; private set; }
+        // public BUS_MovementSystem CloneMovementSystem { get; private set; }
+
+        private Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
 
         public void Init()
         {
@@ -34,8 +37,9 @@ namespace WukongCSharpMod
             _photon.StartClient();
 
             // _photon.OnPlayerMoved += MoveClone;
-            _photon.OnKeyReceived += ApplyKeyPress;
+            _photon.OnKeyReceived += ApplyPlayerInput;
 
+            // bind my movement
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Z, () =>
             {
                 Console.WriteLine("Alt + Z");
@@ -50,9 +54,9 @@ namespace WukongCSharpMod
                 var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
                 var oldPawn = GameUtils.GetControlledPawn();
                 var newTransform = oldPawn.GetActorTransform();
-                newTransform.Translation += oldPawn.GetActorForwardVector() * 200;
+                newTransform.Translation -= oldPawn.GetActorForwardVector() * 400;
 
-                BUS_EventCollectionCS.Get(oldPawn).Evt_TriggerInputActionImpl += LogInputEvents;
+                BUS_EventCollectionCS.Get(oldPawn).Evt_TriggerInputActionImpl += SendInputEvents;
 
                 BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, newTransform, pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
                 {
@@ -95,41 +99,69 @@ namespace WukongCSharpMod
                     Console.WriteLine("Possessed new controller");
                 }
 
-                var iterator = new TObjectIterator<BUS_MovementSystem>();
-                while (iterator.MoveNext())
-                {
-                    Console.WriteLine("Found movement component");
-
-                    var item = iterator.Current;
-
-                    if (item is null)
-                        continue;
-
-                    if (item.GetOwner() == Clone)
-                    {
-                        Console.WriteLine("Found movement component for clone");
-
-                        CloneMovementSystem = item;
-
-                        break;
-                    }
-                }
-            });
-
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
-            {
-                Console.WriteLine("Alt + X");
-
-                Clone.GetMovementComponent().StopActiveMovement();
+                // var iterator = new TObjectIterator<BUS_MovementSystem>();
+                // while (iterator.MoveNext())
+                // {
+                //     Console.WriteLine("Found movement component");
+                //
+                //     var item = iterator.Current;
+                //
+                //     if (item is null)
+                //         continue;
+                //
+                //     if (item.GetOwner() == Clone)
+                //     {
+                //         Console.WriteLine("Found movement component for clone");
+                //
+                //         CloneMovementSystem = item;
+                //
+                //         break;
+                //     }
+                // }
             });
         }
 
-        private void LogInputEvents(string actionname, ETriggerEvent triggerevent, FInputActionValue value)
+        private void SendInputEvents(string actionname, ETriggerEvent triggerevent, FInputActionValue value)
         {
-            Console.WriteLine($"Action: {actionname}, TriggerEvent: {triggerevent}, Value: {value}");
+            Console.WriteLine($"SendInputEvents: {actionname} {triggerevent} {value.GetValueType()} {value.GetValue()}");
+
+            KeyState keyState;
+            PlayerInput key;
+
+            switch (actionname)
+            {
+                case "IA_B1MoveForward":
+                    key = value == FInputActionValue.Forward ? PlayerInput.MoveForward : PlayerInput.MoveBackward;
+                    keyState = triggerevent != ETriggerEvent.Completed ? KeyState.Held : KeyState.Released;
+                    break;
+                case "IA_B1MoveSideways":
+                    key = value == FInputActionValue.Right ? PlayerInput.MoveRight : PlayerInput.MoveLeft;
+                    keyState = triggerevent != ETriggerEvent.Completed ? KeyState.Held : KeyState.Released;
+                    break;
+                case "IA_B1Jump":
+                    key = PlayerInput.Jump;
+                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                case "IA_B1Roll":
+                    key = PlayerInput.Roll;
+                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                case "IA_B1LightAttack":
+                    key = PlayerInput.LightAttack;
+                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                case "IA_B1HeavyAttack":
+                    key = PlayerInput.HeavyAttack;
+                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                default:
+                    return;
+            }
+
+            _photon.SendKeyPressed(key, keyState);
         }
 
-        private void ApplyKeyPress(int id, KeyPress keyPress)
+        private void ApplyPlayerInput(int id, KeyPress keyPress)
         {
             if (!(Clone.GetController() is ABGUAIPlayerController controller))
             {
@@ -139,36 +171,21 @@ namespace WukongCSharpMod
 
             var events = BUS_EventCollectionCS.Get(Clone);
 
-            var movData = Traverse.Create(CloneMovementSystem).Field<BUC_MovementData>("MovementData").Value;
-            movData.bInputMoving = true;
-
-            // var mover = Traverse.Create(CloneMovementSystem).Field<BUC_MovementModes>("MoveModes").Value.ActiveMover;
-            // if (mover is null)
-            // {
-            //     Console.WriteLine("Mover is null");
-            // }
-
-            // var state = Traverse.Create(CloneMovementSystem).Field<BUC_SimpleStateData>("SimpleStateData").Value;
-
             var len = 100f;
             var goal = FVector.ZeroVector;
 
             switch (keyPress.Key)
             {
-                case ConsoleKey.W when keyPress.State != KeyState.Released:
-                    // events.Evt_InputMoveForward.Invoke(1000f);
+                case PlayerInput.MoveForward when keyPress.State != KeyState.Released:
                     goal = Clone.GetActorTransform().GetLocation() + new FVector(len, 0, 0);
                     break;
-                case ConsoleKey.A when keyPress.State != KeyState.Released:
-                    // events.Evt_InputMoveRight.Invoke(-1000f);
+                case PlayerInput.MoveLeft when keyPress.State != KeyState.Released:
                     goal = Clone.GetActorTransform().GetLocation() - new FVector(0, len, 0);
                     break;
-                case ConsoleKey.S when keyPress.State != KeyState.Released:
-                    // events.Evt_InputMoveForward.Invoke(-1000f);
+                case PlayerInput.MoveBackward when keyPress.State != KeyState.Released:
                     goal = Clone.GetActorTransform().GetLocation() - new FVector(len, 0, 0);
                     break;
-                case ConsoleKey.D when keyPress.State != KeyState.Released:
-                    // events.Evt_InputMoveRight.Invoke(1000f);
+                case PlayerInput.MoveRight when keyPress.State != KeyState.Released:
                     goal = Clone.GetActorTransform().GetLocation() + new FVector(0, len, 0);
                     break;
             }
@@ -180,126 +197,20 @@ namespace WukongCSharpMod
 
             switch (keyPress.Key)
             {
-                case ConsoleKey.Spacebar when keyPress.State == KeyState.Pressed:
-                    events.Evt_TriggerJumpSkill.Invoke(ESkillDirection.None, FVector2D.ZeroVector);
+                case PlayerInput.Jump when keyPress.State == KeyState.Pressed:
+                    events.Evt_TriggerJumpSkill.Invoke(ESkillDirection.None, FVector2D.ZeroVector); // TODO: Direction
                     break;
-                case ConsoleKey.J:
+                case PlayerInput.LightAttack:
                     events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
                     break;
-                // case ConsoleKey.W:
-                //     events.Evt_TriggerInputActionImpl.Invoke(
-                //         "IA_B1MoveForward",
-                //         keyPress.State == KeyState.Released ? ETriggerEvent.Completed : ETriggerEvent.Triggered,
-                //         keyPress.State == KeyState.Released ? FInputActionValue.False : FInputActionValue.Forward
-                //     );
-                //     break;
-                // case ConsoleKey.S:
-                //     events.Evt_TriggerInputActionImpl.Invoke(
-                //         "IA_B1MoveForward",
-                //         keyPress.State == KeyState.Released ? ETriggerEvent.Completed : ETriggerEvent.Triggered,
-                //         keyPress.State == KeyState.Released ? FInputActionValue.False : FInputActionValue.Backward
-                //     );
-                //     break;
-                // case ConsoleKey.A:
-                //     events.Evt_TriggerInputAction.Invoke(
-                //         "IA_B1MoveSideways",
-                //         keyPress.State == KeyState.Released ? ETriggerEvent.Completed : ETriggerEvent.Triggered,
-                //         keyPress.State == KeyState.Released ? FInputActionValue.False : FInputActionValue.Left
-                //     );
-                //     break;
-                // case ConsoleKey.D:
-                //     events.Evt_TriggerInputAction.Invoke(
-                //         "IA_B1MoveSideways",
-                //         keyPress.State == KeyState.Released ? ETriggerEvent.Completed : ETriggerEvent.Triggered,
-                //         keyPress.State == KeyState.Released ? FInputActionValue.False : FInputActionValue.Right
-                //     );
-                //     break;
-                // case ConsoleKey.Spacebar:
-                //     events.Evt_TriggerInputActionImpl.Invoke(
-                //         "IA_B1Jump",
-                //         keyPress.State == KeyState.Released ? ETriggerEvent.Completed : ETriggerEvent.Started,
-                //         keyPress.State == KeyState.Released ? FInputActionValue.False : FInputActionValue.True
-                //     );
-                //     break;
-                // case ConsoleKey.J:
-                //     events.Evt_TriggerInputActionImpl.Invoke(
-                //         "IA_B1LightAttack",
-                //         keyPress.State == KeyState.Released ? ETriggerEvent.Completed : ETriggerEvent.Started,
-                //         keyPress.State == KeyState.Released ? FInputActionValue.False : FInputActionValue.True
-                //     );
-                //     break;
+                case PlayerInput.HeavyAttack:
+                    events.Evt_InputCastSkill.Invoke(EInputActionType.HeavyAttack, keyPress.State == KeyState.Released);
+                    break;
+                case PlayerInput.Roll:
+                    events.Evt_TriggerRollSkill.Invoke(ESkillDirection.None);
+                    break;
             }
         }
-
-        // private void MoveClone(int id, float x, float y, float z)
-        // {
-        //     var vec = new FVector(x, y, z);
-        //     var events = BUS_EventCollectionCS.Get(_clone);
-        //
-        //     var goal = _clone.GetActorTransform();
-        //     goal.SetLocation(goal.GetLocation() + vec);
-        //
-        //     vec.ToDirectionAndLength(out var dir, out var mag);
-        //     // events.Evt_StopCurrentMove.Invoke();
-        //     
-        //     events.Evt_TriggerInputActionImpl.Invoke("", ETriggerEvent.Started);
-        //
-        //     // events.Evt_InputMoveForward.Invoke(x);
-        //     // events.Evt_InputMoveRight.Invoke(y);
-        //
-        //     // if (x > 0)
-        //     // {
-        //     //     events.Evt_AnyKeyInput.Invoke(false, new FKey(EKeys.W)); // nie działa
-        //     // }
-        //     // else if (x < 0)
-        //     // {
-        //     //     events.Evt_SetMovementInput.Invoke(dir, mag, false); // działa
-        //     // }
-        //     // else
-        //     // {
-        //     //     events.Evt_AISideWalk.Invoke(x, y); // działa
-        //     // }
-        //
-        //     // events.Evt_MatchingPositionMove.Invoke(new FMatchingPositionMoveParam
-        //     // {
-        //     //     TargetTrans = goal,
-        //     //     bFacingTargetRotation = false,
-        //     //     AcceptableRadius = 10f,
-        //     //     MatchingPosType = EMatchingPosType.InterpolationLiner,
-        //     //     MoveSpeedType = EAIMoveSpeedType.JOG,
-        //     //     InterpMoveCallbackFunc = done => { Console.WriteLine("Move done: " + done); },
-        //     //     AIPathMoveCallbackFunc = done => { Console.WriteLine("Path move done: " + done); },
-        //     //     bIncludeSelfRadius = false,
-        //     //     InterpMoveTime = 0f
-        //     // });
-        // }
-
-        // private void MoveMonstersInRange(int id, float x, float y, float z)
-        // {
-        //     var playerCharacter = GameUtils.GetBguPlayerCharacterCs();
-        //
-        //     var pawn = playerCharacter.GetController().GetControlledPawn();
-        //     var playerLoc = pawn.GetActorTransform().GetLocation();
-        //
-        //     foreach (var monster in GameUtils.GetMonsters())
-        //     {
-        //         var controller = monster.GetController();
-        //
-        //         if (controller is null)
-        //             continue;
-        //
-        //         // x is forward / backward, y is left / right
-        //         var forward = monster.GetActorForwardVector();
-        //         var left = forward.Cross_VectorVector(FVector.UpVector);
-        //
-        //         var goal = playerLoc + forward * x - left * y;
-        //         Console.WriteLine("Requested move to: " + goal + " for monster " + monster.GetName());
-        //
-        //         // UAIHelperLibrary.SimpleMoveToLocation(controller, goal);
-        //         BGUFuncLibAICS.BGUCancelAICurrentMove(monster);
-        //         BGUFuncLibAICS.BGURequestAIMoveToLocation(monster, goal, EAIMoveSpeedType.JOG, 10, EBGUMoveAIType.KeepFacingTarget, false, false);
-        //     }
-        // }
 
         public void DeInit()
         {

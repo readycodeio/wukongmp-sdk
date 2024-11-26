@@ -7,17 +7,11 @@ using Photon.Realtime;
 
 namespace WukongMp.Common
 {
-    public class WukongClient : IConnectionCallbacks, IOnEventCallback
+    public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks
     {
         private readonly RealtimeClient _client = new RealtimeClient();
         private bool _quit;
         private Thread _bgThread;
-
-        ~WukongClient()
-        {
-            _client.Disconnect();
-            _client.RemoveCallbackTarget(this);
-        }
 
         private int Id => _client.LocalPlayer.ActorNumber;
         public bool Ready => _client.IsConnectedAndReady;
@@ -25,12 +19,29 @@ namespace WukongMp.Common
         public event Action<int, float, float, float> OnPlayerMoved;
         public event Action<int, KeyPress> OnKeyReceived;
 
+        ~WukongClient()
+        {
+            _client.Disconnect();
+            _client.RemoveCallbackTarget(this);
+        }
+
+#if UNITY_EDITOR
+        private void Log(string message) {
+            UnityEngine.Debug.Log(message);
+        }
+#else
+        private void Log(string message)
+        {
+            Console.WriteLine(message);
+        }
+#endif
+
         public void OnEvent(EventData photonEvent)
         {
             if (photonEvent.Sender == Id)
                 return;
 
-            Console.WriteLine($"Received message from {photonEvent.Sender}");
+            Log($"Received message from {photonEvent.Sender}");
 
             switch (photonEvent.Code)
             {
@@ -65,7 +76,7 @@ namespace WukongMp.Common
             _bgThread = new Thread(Loop);
             _bgThread.Start();
 
-            Console.WriteLine("Running forever.");
+            Log("Running forever.");
         }
 
         public void Reconnect()
@@ -78,50 +89,32 @@ namespace WukongMp.Common
             while (!_quit)
             {
                 _client.Service();
-                Thread.Sleep(30);
+                Thread.Sleep(33);
             }
         }
 
-        // key of our "map type" room property
-        private static string MapProperty = "m";
-
-        // room properties available in matchmaking
-        private static string[] RoomPropsInLobby = { "m" };
-
-        // user choice, e.g. types 1 - 9
-        private byte selectedMapType = 2;
-
         private void MyJoinRandomOrCreateRoom()
         {
-            // custom room properties to use when this client creates a room.
-            var mapSelectionAsProperties = new PhotonHashtable { { MapProperty, selectedMapType } };
-
-            // if a new room gets created, this sets the map property and makes it available in matchmaking
             var propertiesForRoomCreation = new RoomOptions
             {
-                CustomRoomProperties = mapSelectionAsProperties,
-                CustomRoomPropertiesForLobby = RoomPropsInLobby
+                PublishUserId = true,
             };
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation
             };
 
-            // this defines the join random filter. rooms must match the key-values in this hashtable
-            var joinRoomParams = new JoinRandomRoomArgs
-            {
-                ExpectedCustomRoomProperties = mapSelectionAsProperties
-            };
+            var joinRoomParams = new JoinRandomRoomArgs();
 
             _client.OpJoinRandomOrCreateRoom(joinRoomParams, enterRoomParams);
         }
 
         private void OnStateChange(ClientState arg1, ClientState arg2)
         {
-            Console.WriteLine(arg1 + " -> " + arg2);
+            Log(arg1 + " -> " + arg2);
         }
 
-        public void SendKeyPressed(ConsoleKey key, KeyState state)
+        public void SendKeyPressed(PlayerInput key, KeyState state)
         {
             var press = new KeyPress(key, state);
             const byte eventCode = 2; // make up event codes at will, < 200
@@ -136,42 +129,83 @@ namespace WukongMp.Common
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        // from IConnectionCallbacks:
+        #region IConnectionCallbacks
 
         public void OnConnected()
         {
-            Console.WriteLine("OnConnected");
+            Log("OnConnected");
         }
 
         public void OnConnectedToMaster()
         {
-            Console.WriteLine("OnConnectedToMaster Server: " + _client.RealtimePeer.ServerIpAddress);
+            Log("OnConnectedToMaster Server: " + _client.RealtimePeer.ServerIpAddress);
             MyJoinRandomOrCreateRoom();
         }
 
         public void OnDisconnected(DisconnectCause cause)
         {
-            Console.WriteLine($"OnDisconnected: {cause}");
+            Log($"OnDisconnected: {cause}");
         }
 
         public void OnRegionListReceived(RegionHandler regionHandler)
         {
-            Console.WriteLine("OnRegionListReceived");
+            Log("OnRegionListReceived");
         }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
         {
-            Console.WriteLine("OnCustomAuthenticationResponse");
+            Log("OnCustomAuthenticationResponse");
 
             foreach (var kvp in data)
             {
-                Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+                Log($"{kvp.Key}: {kvp.Value}");
             }
         }
 
         public void OnCustomAuthenticationFailed(string debugMessage)
         {
-            Console.WriteLine("OnCustomAuthenticationFailed: " + debugMessage);
+            Log("OnCustomAuthenticationFailed: " + debugMessage);
         }
+
+        #endregion
+
+        #region IMatchmakingCallbacks
+
+        public void OnFriendListUpdate(List<FriendInfo> friendList)
+        {
+            Log("OnFriendListUpdate");
+        }
+
+        public void OnCreatedRoom()
+        {
+            Log("OnCreatedRoom");
+        }
+
+        public void OnCreateRoomFailed(short returnCode, string message)
+        {
+            Log("OnCreateRoomFailed: " + message);
+        }
+
+        public void OnJoinedRoom()
+        {
+            Log("OnJoinedRoom");
+        }
+
+        public void OnJoinRoomFailed(short returnCode, string message)
+        {
+            Log("OnJoinRoomFailed: " + message);
+        }
+
+        public void OnJoinRandomFailed(short returnCode, string message)
+        {
+            Log("OnJoinRandomFailed: " + message);
+        }
+
+        public void OnLeftRoom()
+        {
+            Log("OnLeftRoom");
+        }
+
+        #endregion
     }
 }
