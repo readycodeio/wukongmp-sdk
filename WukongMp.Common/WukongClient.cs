@@ -16,6 +16,7 @@ namespace WukongMp.Common
         private int Id => _client.LocalPlayer.ActorNumber;
         public bool Ready => _client.IsConnectedAndReady;
 
+        public event Action<int> OnPlayerJoined;
         public event Action<int, float, float, float> OnPlayerMoved;
         public event Action<int, KeyPress> OnKeyReceived;
 
@@ -41,15 +42,21 @@ namespace WukongMp.Common
             if (photonEvent.Sender == Id)
                 return;
 
-            Log($"Received message from {photonEvent.Sender}");
+            Log($"Received message from {photonEvent.Sender}: {photonEvent.Code}");
 
             switch (photonEvent.Code)
             {
+                case 0:
+                    // room joined
+                    OnPlayerJoined?.Invoke(photonEvent.Sender);
+                    break;
                 case 1:
+                    // position update
                     var pos = (float[])photonEvent.CustomData;
                     OnPlayerMoved?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
                     break;
                 case 2:
+                    // key press
                     var key = (KeyPress)photonEvent.CustomData;
                     OnKeyReceived?.Invoke(photonEvent.Sender, key);
                     break;
@@ -112,6 +119,12 @@ namespace WukongMp.Common
         private void OnStateChange(ClientState arg1, ClientState arg2)
         {
             Log(arg1 + " -> " + arg2);
+        }
+
+        private void SendRoomJoined()
+        {
+            const byte eventCode = 0; // make up event codes at will, < 200
+            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SendKeyPressed(PlayerInput key, KeyState state)
@@ -189,6 +202,7 @@ namespace WukongMp.Common
         public void OnJoinedRoom()
         {
             Log("OnJoinedRoom");
+            SendRoomJoined();
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)

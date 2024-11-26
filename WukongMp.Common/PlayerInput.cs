@@ -9,7 +9,6 @@
         Jump,
         Roll,
         Walk,
-        Run,
         Sprint,
         LightAttack,
         HeavyAttack,

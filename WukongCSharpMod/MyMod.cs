@@ -22,10 +22,9 @@ namespace WukongCSharpMod
         private WukongClient _photon;
         private readonly Harmony _harmony = new Harmony("WukongMP");
 
-        public APawn Clone { get; private set; }
         // public BUS_MovementSystem CloneMovementSystem { get; private set; }
 
-        private Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
+        private readonly Dictionary<int, PlayerState> _connectedPlayers = new Dictionary<int, PlayerState>();
 
         public void Init()
         {
@@ -37,6 +36,7 @@ namespace WukongCSharpMod
             _photon.StartClient();
 
             // _photon.OnPlayerMoved += MoveClone;
+            _photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             _photon.OnKeyReceived += ApplyPlayerInput;
 
             // bind my movement
@@ -45,85 +45,72 @@ namespace WukongCSharpMod
                 Console.WriteLine("Alt + Z");
                 _photon.Reconnect();
             });
+        }
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
+        private void SpawnCloneForJoiningPlayer(int id)
+        {
+            if (_connectedPlayers.ContainsKey(id))
             {
-                Console.WriteLine("Alt + V");
+                Console.WriteLine($"Player already exists: {id}");
+                return;
+            }
 
-                var controller = GameUtils.GetPlayerController();
-                var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
-                var oldPawn = GameUtils.GetControlledPawn();
-                var newTransform = oldPawn.GetActorTransform();
-                newTransform.Translation -= oldPawn.GetActorForwardVector() * 400;
+            var controller = GameUtils.GetPlayerController();
+            var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
+            var oldPawn = GameUtils.GetControlledPawn();
+            var newTransform = oldPawn.GetActorTransform();
+            newTransform.Translation -= oldPawn.GetActorForwardVector() * 400;
 
-                BUS_EventCollectionCS.Get(oldPawn).Evt_TriggerInputActionImpl += SendInputEvents;
+            BUS_EventCollectionCS.Get(oldPawn).Evt_TriggerInputActionImpl += SendInputEvents;
 
-                BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, newTransform, pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
-                {
-                    NeedBlend = false
-                });
-
-                // BGU_UnrealWorldUtil.DestroyActor(oldPawn);
-                Clone = oldPawn;
-
-                var cloneCharacter = Clone as BGUPlayerCharacterCS;
-
-                FActorSpawnParameters spawnInfo = new FActorSpawnParameters
-                {
-                    Instigator = cloneCharacter.GetInstigator(),
-                    SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod.AlwaysSpawn,
-                    OverrideLevel = cloneCharacter.GetLevel(),
-                    ObjectFlags = EObjectFlags.Transient // We never want to save AI controllers into a map
-                };
-
-                var loc = cloneCharacter.GetActorLocation();
-                var rot = cloneCharacter.GetActorRotation();
-
-                // var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
-                var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
-
-                if (@class is null)
-                {
-                    Console.WriteLine("Class is null");
-                    return;
-                }
-
-                var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
-
-                Console.WriteLine("Spawned new controller");
-
-                if (newController != null && newController is ABGUAIPlayerController ctrl)
-                {
-                    ctrl.Possess(Clone);
-                    ctrl.CanBeDamaged = false;
-                    Console.WriteLine("Possessed new controller");
-                }
-
-                // var iterator = new TObjectIterator<BUS_MovementSystem>();
-                // while (iterator.MoveNext())
-                // {
-                //     Console.WriteLine("Found movement component");
-                //
-                //     var item = iterator.Current;
-                //
-                //     if (item is null)
-                //         continue;
-                //
-                //     if (item.GetOwner() == Clone)
-                //     {
-                //         Console.WriteLine("Found movement component for clone");
-                //
-                //         CloneMovementSystem = item;
-                //
-                //         break;
-                //     }
-                // }
+            BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, newTransform, pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
+            {
+                NeedBlend = false
             });
+
+            // BGU_UnrealWorldUtil.DestroyActor(oldPawn);
+            var clone = oldPawn;
+
+            var cloneCharacter = clone as BGUPlayerCharacterCS;
+
+            FActorSpawnParameters spawnInfo = new FActorSpawnParameters
+            {
+                Instigator = cloneCharacter.GetInstigator(),
+                SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod.AlwaysSpawn,
+                OverrideLevel = cloneCharacter.GetLevel(),
+                ObjectFlags = EObjectFlags.Transient // We never want to save AI controllers into a map
+            };
+
+            var loc = cloneCharacter.GetActorLocation();
+            var rot = cloneCharacter.GetActorRotation();
+
+            // var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
+            var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
+
+            if (@class is null)
+            {
+                Console.WriteLine("Class is null");
+                return;
+            }
+
+            var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
+
+            Console.WriteLine("Spawned new controller");
+
+            if (newController != null && newController is ABGUAIPlayerController ctrl)
+            {
+                ctrl.Possess(clone);
+                // ctrl.CanBeDamaged = false;
+                Console.WriteLine("Possessed new controller");
+            }
+
+            // assign in dictionary
+            _connectedPlayers[id] = new PlayerState(id, clone);
         }
 
         private void SendInputEvents(string actionname, ETriggerEvent triggerevent, FInputActionValue value)
         {
-            Console.WriteLine($"SendInputEvents: {actionname} {triggerevent} {value.GetValueType()} {value.GetValue()}");
+            Console.WriteLine($"SendInputEvents: {actionname} {triggerevent} {value}");
 
             KeyState keyState;
             PlayerInput key;
@@ -142,7 +129,7 @@ namespace WukongCSharpMod
                     key = PlayerInput.Jump;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
-                case "IA_B1Roll":
+                case "IA_B1Roll_KB":
                     key = PlayerInput.Roll;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
@@ -154,6 +141,14 @@ namespace WukongCSharpMod
                     key = PlayerInput.HeavyAttack;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
+                case "IA_Walk":
+                    key = PlayerInput.Walk;
+                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                case "IA_Sprint_KB":
+                    key = PlayerInput.Sprint;
+                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
                 default:
                     return;
             }
@@ -163,13 +158,15 @@ namespace WukongCSharpMod
 
         private void ApplyPlayerInput(int id, KeyPress keyPress)
         {
-            if (!(Clone.GetController() is ABGUAIPlayerController controller))
+            if (!_connectedPlayers.TryGetValue(id, out var player))
             {
-                Console.WriteLine("Controller is null");
+                Console.WriteLine($"Player not found: {id}");
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(Clone);
+            var clone = player.Pawn;
+
+            var events = BUS_EventCollectionCS.Get(clone);
 
             var len = 100f;
             var goal = FVector.ZeroVector;
@@ -177,28 +174,32 @@ namespace WukongCSharpMod
             switch (keyPress.Key)
             {
                 case PlayerInput.MoveForward when keyPress.State != KeyState.Released:
-                    goal = Clone.GetActorTransform().GetLocation() + new FVector(len, 0, 0);
+                    goal = clone.GetActorTransform().GetLocation() + new FVector(len, 0, 0);
+                    player.LastMovement = ESkillDirection.Forward;
                     break;
                 case PlayerInput.MoveLeft when keyPress.State != KeyState.Released:
-                    goal = Clone.GetActorTransform().GetLocation() - new FVector(0, len, 0);
+                    goal = clone.GetActorTransform().GetLocation() - new FVector(0, len, 0);
+                    player.LastMovement = ESkillDirection.Left;
                     break;
                 case PlayerInput.MoveBackward when keyPress.State != KeyState.Released:
-                    goal = Clone.GetActorTransform().GetLocation() - new FVector(len, 0, 0);
+                    goal = clone.GetActorTransform().GetLocation() - new FVector(len, 0, 0);
+                    player.LastMovement = ESkillDirection.Backward;
                     break;
                 case PlayerInput.MoveRight when keyPress.State != KeyState.Released:
-                    goal = Clone.GetActorTransform().GetLocation() + new FVector(0, len, 0);
+                    goal = clone.GetActorTransform().GetLocation() + new FVector(0, len, 0);
+                    player.LastMovement = ESkillDirection.Right;
                     break;
             }
 
             if (goal != FVector.ZeroVector)
             {
-                events.Evt_AIMoveTo.Invoke(goal, null, EAIMoveSpeedType.RUN, 10f, EBGUMoveAIType.None, false, false, "", "");
+                events.Evt_AIMoveTo.Invoke(goal, null, player.MovementType, 10f, EBGUMoveAIType.None, false, false, "", "");
             }
 
             switch (keyPress.Key)
             {
                 case PlayerInput.Jump when keyPress.State == KeyState.Pressed:
-                    events.Evt_TriggerJumpSkill.Invoke(ESkillDirection.None, FVector2D.ZeroVector); // TODO: Direction
+                    events.Evt_TriggerJumpSkill.Invoke(player.LastMovement, FVector2D.ZeroVector); // TODO: Direction
                     break;
                 case PlayerInput.LightAttack:
                     events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
@@ -207,7 +208,13 @@ namespace WukongCSharpMod
                     events.Evt_InputCastSkill.Invoke(EInputActionType.HeavyAttack, keyPress.State == KeyState.Released);
                     break;
                 case PlayerInput.Roll:
-                    events.Evt_TriggerRollSkill.Invoke(ESkillDirection.None);
+                    events.Evt_TriggerRollSkill.Invoke(player.LastMovement);
+                    break;
+                case PlayerInput.Walk:
+                    player.MovementType = keyPress.State == KeyState.Pressed ? EAIMoveSpeedType.JOG : EAIMoveSpeedType.RUN;
+                    break;
+                case PlayerInput.Sprint:
+                    player.MovementType = keyPress.State == KeyState.Pressed ? EAIMoveSpeedType.SPRINT : EAIMoveSpeedType.RUN;
                     break;
             }
         }
