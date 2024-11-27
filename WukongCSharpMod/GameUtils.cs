@@ -79,25 +79,23 @@ namespace WukongCSharpMod
             if (world == null)
                 return null;
 
-
             var list = new List<UUserWidget>();
-            //var widgetAsset = UEditorAssetLibrary.LoadAsset("'/Game/Mods/CustomLuaMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C");
-            //if (widgetAsset != null)
-            //{
+            var userWidgets = new List<UUserWidget>();
+
             var wiClass = new TSubclassOf<UUserWidget>();
             wiClass.SetClass<UUserWidget>();
-            UWidgetLibrary.GetAllWidgetsOfClass(world, out list, wiClass, false);
+            UWidgetLibrary.GetAllWidgetsOfClass(world, out list, wiClass, true);
             foreach (var widget in list)
             {
                 Console.WriteLine(widget.GetType());
+                Console.WriteLine(widget.GetFullName());
+                if (widget.GetFullName().Contains("WBP_MultiplayerChat_C"))
+                {
+                    userWidgets.Add(widget);
+                }
             }
-            //}
-            //else
-            //{
-            //    Console.WriteLine("Could not load asset");
-            //}
 
-            return list;
+            return userWidgets;
         }
     }
 }
