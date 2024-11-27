@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonRealtimeApi", "Photon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Common", "WukongMp.Common\WukongMp.Common.csproj", "{8E001812-4216-4012-BC6B-139C3D3A61B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonChatApi", "PhotonChatApi\PhotonChatApi.csproj", "{D0CA2B6A-B99D-4837-B973-9DE94C41D9E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

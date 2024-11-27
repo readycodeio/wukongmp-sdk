@@ -6,7 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PhotonRealtimeApi\PhotonRealtimeApi.csproj"/>
+        <ProjectReference Include="..\PhotonChatApi\PhotonChatApi.csproj" />
+        <ProjectReference Include="..\PhotonRealtimeApi\PhotonRealtimeApi.csproj" />
     </ItemGroup>
 
     <ItemGroup>
