@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using b1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using UnrealEngine.UMG;
 
 namespace WukongCSharpMod
 {
@@ -70,6 +71,33 @@ namespace WukongCSharpMod
         {
             var controlledPawn = GetControlledPawn();
             return (BGUPlayerCharacterCS)(controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null);
+        }
+
+        public static List<UUserWidget> GetWidgets()
+        {
+            var world = GetWorld();
+            if (world == null)
+                return null;
+
+
+            var list = new List<UUserWidget>();
+            //var widgetAsset = UEditorAssetLibrary.LoadAsset("'/Game/Mods/CustomLuaMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C");
+            //if (widgetAsset != null)
+            //{
+            var wiClass = new TSubclassOf<UUserWidget>();
+            wiClass.SetClass<UUserWidget>();
+            UWidgetLibrary.GetAllWidgetsOfClass(world, out list, wiClass, false);
+            foreach (var widget in list)
+            {
+                Console.WriteLine(widget.GetType());
+            }
+            //}
+            //else
+            //{
+            //    Console.WriteLine("Could not load asset");
+            //}
+
+            return list;
         }
     }
 }

@@ -20,6 +20,8 @@ namespace WukongMp.Common
         public event Action<int, float, float, float> OnPlayerJoined;
         public event Action<int, float, float, float> OnPlayerPosition;
         public event Action<int, KeyPress> OnKeyReceived;
+        public event Func<string> OnGetMessage;
+        public event Action<int, string> OnSendMessage;
 
         private readonly float _initialX;
         private readonly float _initialY;
@@ -76,6 +78,10 @@ namespace WukongMp.Common
                     var key = (KeyPress)photonEvent.CustomData;
                     OnKeyReceived?.Invoke(photonEvent.Sender, key);
                     break;
+                case 3:
+                    var message = (string)photonEvent.CustomData;
+                    OnSendMessage?.Invoke(photonEvent.Sender, message);
+                    break;
             }
         }
 
@@ -114,6 +120,11 @@ namespace WukongMp.Common
             {
                 _client.Service();
                 Thread.Sleep(33);
+                var message = OnGetMessage?.Invoke();
+                if (message != null && message.Length > 0)
+                {
+                    SendChatMessage(message);
+                }
             }
         }
 
@@ -173,6 +184,13 @@ namespace WukongMp.Common
             const byte eventCode = 1; // make up event codes at will, < 200
             var evData = new float[] { x, y, z };
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SendChatMessage(string message)
+        {
+            const byte eventCode = 3; // make up event codes at will, < 200
+
+            _client.OpRaiseEvent(eventCode, message, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         #region IConnectionCallbacks

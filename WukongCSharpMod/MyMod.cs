@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using b1;
+using b1.UI;
 using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -10,6 +11,7 @@ using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Plugins.EnhancedInput;
 using UnrealEngine.Runtime;
+using UnrealEngine.UMG;
 using WukongMp.Common;
 using FInputActionValue = b1.FInputActionValue;
 
@@ -19,6 +21,8 @@ namespace WukongCSharpMod
     {
         public string Name => "ModExample";
         public string Version => "0.0.1";
+
+        private UUserWidget chatWidget;
 
         private WukongClient _photon;
         private readonly Harmony _harmony = new Harmony("WukongMP");
@@ -206,6 +210,40 @@ namespace WukongCSharpMod
             catch
             {
                 // ignore
+            }
+        }
+        
+        private void AddMessage(int id, string message)
+        {
+            if (chatWidget != null)
+            {
+                Console.WriteLine("Calling AddMessage funcition");
+                chatWidget.CallFunctionByNameWithArguments("AddMessage Unknown ExampleMessage", true);
+            }
+        }
+
+        private string GetMessage()
+        {
+            if (chatWidget != null)
+            {
+                Console.WriteLine("Calling GetSentMessage funcition");
+                chatWidget.CallFunctionByNameWithArguments("GetSentMessage", true);
+
+                return chatWidget.ToolTipText.ToString();
+            }
+            return "";
+        }
+
+        private void InitializeChatWidget()
+        {
+            var widgets = GameUtils.GetWidgets();
+            if (widgets.Count == 1)
+            {
+                chatWidget = widgets[0];
+            }
+            else
+            {
+                Console.WriteLine($"Error!, Found {widgets.Count} widgets. Expected 1.");
             }
         }
 
