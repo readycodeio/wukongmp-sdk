@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Numerics;
 using System.Threading;
 using Photon.Client;
 using Photon.Realtime;
@@ -16,12 +17,15 @@ namespace WukongMp.Common
         public bool Ready => _client.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
-        public event Action<int> OnPlayerJoined;
+        public event Action<int, float, float, float> OnPlayerJoined;
         public event Action<int, float, float, float> OnPlayerPosition;
         public event Action<int, KeyPress> OnKeyReceived;
 
-        public WukongClient(Action onJoinedRoom)
+        private readonly Vector3 _initialPosition;
+
+        public WukongClient(Action onJoinedRoom, Vector3 initialPosition)
         {
+            _initialPosition = initialPosition;
             _joinedRoomCallback = onJoinedRoom;
         }
 
@@ -47,19 +51,22 @@ namespace WukongMp.Common
             if (photonEvent.Sender == Id)
                 return;
 
-            Log($"Received message from {photonEvent.Sender}: {photonEvent.Code}");
-
             switch (photonEvent.Code)
             {
                 case 0:
+                {
                     // room joined
-                    OnPlayerJoined?.Invoke(photonEvent.Sender);
+                    var pos = (float[])photonEvent.CustomData;
+                    OnPlayerJoined?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
                     break;
+                }
                 case 1:
+                {
                     // position update
                     var pos = (float[])photonEvent.CustomData;
                     OnPlayerPosition?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
                     break;
+                }
                 case 2:
                     // key press
                     var key = (KeyPress)photonEvent.CustomData;
@@ -146,7 +153,8 @@ namespace WukongMp.Common
         private void SendRoomJoined()
         {
             const byte eventCode = 0; // make up event codes at will, < 200
-            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            var evData = new float[] { _initialPosition.X, _initialPosition.Y, _initialPosition.Z };
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SendKeyPressed(PlayerInput key, KeyState state)
@@ -160,8 +168,6 @@ namespace WukongMp.Common
         {
             const byte eventCode = 1; // make up event codes at will, < 200
             var evData = new float[] { x, y, z };
-
-            Log($"Sending position update: {x}, {y}, {z}");
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 

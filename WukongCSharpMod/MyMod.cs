@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Reflection;
 using b1;
 using BtlShare;
@@ -42,26 +43,30 @@ namespace WukongCSharpMod
             {
                 Console.WriteLine("Alt + X");
 
-                _photon = new WukongClient(SpawnPlayersAlreadyInRoom);
+                var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
+
+                _photon = new WukongClient(SpawnPlayersAlreadyInRoom, new Vector3(myLocation.X, myLocation.Y, myLocation.Z));
                 _photon.StartClient();
 
                 // _photon.OnPlayerMoved += MoveClone;
-                _photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-                _photon.OnKeyReceived += ApplyPlayerInput;
-                _photon.OnPlayerPosition += ApplyPlayerPosition;
+                _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
+                _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
+                _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
             });
         }
 
         private void SpawnPlayersAlreadyInRoom()
         {
+            var localTransform = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
+
             // when joining game, spawn all players already in room
             foreach (var id in _photon.GetOtherPlayersInRoom())
             {
-                SpawnCloneForJoiningPlayer(id);
+                Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, localTransform.X, localTransform.Y, localTransform.Z));
             }
         }
 
-        private void SpawnCloneForJoiningPlayer(int id)
+        private void SpawnCloneForJoiningPlayer(int id, float x, float y, float z)
         {
             if (_connectedPlayers.ContainsKey(id))
             {
@@ -72,12 +77,13 @@ namespace WukongCSharpMod
             var controller = GameUtils.GetPlayerController();
             var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
             var oldPawn = GameUtils.GetControlledPawn();
-            var newTransform = oldPawn.GetActorTransform();
-            newTransform.Translation -= oldPawn.GetActorForwardVector() * 400;
+
+            var cloneTransform = oldPawn.GetActorTransform();
+            cloneTransform.Translation = new FVector(x, y, z);
 
             BUS_EventCollectionCS.Get(oldPawn).Evt_TriggerInputActionImpl += SendInputEvents;
 
-            BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, newTransform, pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
+            BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, oldPawn.GetActorTransform(), pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
             {
                 NeedBlend = false
             });
@@ -120,6 +126,9 @@ namespace WukongCSharpMod
 
             // assign in dictionary
             _connectedPlayers[id] = new PlayerState(id, clone);
+
+            // teleport clone to cloneTransform
+            clone.SetActorTransform(cloneTransform, false, out _, true);
         }
 
         private void SendInputEvents(string actionname, ETriggerEvent triggerevent, FInputActionValue value)
@@ -190,8 +199,14 @@ namespace WukongCSharpMod
 
             // TODO: Set player.LastMovement
             var goal = new FVector(x, y, z);
-            Console.WriteLine($"Moving to {goal}");
-            events.Evt_AIMoveTo.Invoke(goal, null, player.MovementType, 10f, EBGUMoveAIType.None, false, false, "", "");
+            try
+            {
+                events.Evt_AIMoveTo.Invoke(goal, null, player.MovementType, 10f, EBGUMoveAIType.None, false, false, "", "");
+            }
+            catch
+            {
+                // ignore
+            }
         }
 
         private void ApplyPlayerInput(int id, KeyPress keyPress)
