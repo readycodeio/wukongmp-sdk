@@ -17,7 +17,7 @@ namespace WukongMp.Common
         public bool Ready => _client.IsConnectedAndReady;
 
         public event Action<int> OnPlayerJoined;
-        public event Action<int, float, float, float> OnPlayerMoved;
+        public event Action<int, float, float, float> OnPlayerPosition;
         public event Action<int, KeyPress> OnKeyReceived;
 
         ~WukongClient()
@@ -53,7 +53,7 @@ namespace WukongMp.Common
                 case 1:
                     // position update
                     var pos = (float[])photonEvent.CustomData;
-                    OnPlayerMoved?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
+                    OnPlayerPosition?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
                     break;
                 case 2:
                     // key press
@@ -110,6 +110,7 @@ namespace WukongMp.Common
 
             foreach (var player in _client.CurrentRoom.Players)
             {
+                Log($"Other player: {player.Value.ActorNumber} {player.Value.UserId} local: {player.Value.IsLocal}");
                 if (!player.Value.IsLocal)
                     yield return player.Value.ActorNumber;
             }
@@ -154,6 +155,7 @@ namespace WukongMp.Common
             const byte eventCode = 1; // make up event codes at will, < 200
             var evData = new float[] { x, y, z };
 
+            Log($"Sending position update: {x}, {y}, {z}");
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 

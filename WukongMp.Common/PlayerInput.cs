@@ -2,10 +2,6 @@
 {
     public enum PlayerInput
     {
-        MoveForward,
-        MoveBackward,
-        MoveRight,
-        MoveLeft,
         Jump,
         Roll,
         Walk,

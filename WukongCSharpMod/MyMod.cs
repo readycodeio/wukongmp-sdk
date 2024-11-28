@@ -38,6 +38,7 @@ namespace WukongCSharpMod
             // _photon.OnPlayerMoved += MoveClone;
             _photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             _photon.OnKeyReceived += ApplyPlayerInput;
+            _photon.OnPlayerPosition += ApplyPlayerPosition;
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Z, () =>
             {
@@ -132,13 +133,19 @@ namespace WukongCSharpMod
             switch (actionname)
             {
                 case "IA_B1MoveForward":
-                    key = value == FInputActionValue.Forward ? PlayerInput.MoveForward : PlayerInput.MoveBackward;
-                    keyState = triggerevent != ETriggerEvent.Completed ? KeyState.Held : KeyState.Released;
-                    break;
                 case "IA_B1MoveSideways":
-                    key = value == FInputActionValue.Right ? PlayerInput.MoveRight : PlayerInput.MoveLeft;
-                    keyState = triggerevent != ETriggerEvent.Completed ? KeyState.Held : KeyState.Released;
-                    break;
+                    if (triggerevent == ETriggerEvent.Triggered)
+                    {
+                        var transform = GameUtils.GetControlledPawn().BGUGetActorTransform();
+                        var pos = transform.GetLocation();
+                        _photon.SendPositionUpdate(pos.X, pos.Y, pos.Z);
+                    }
+                    else if (triggerevent == ETriggerEvent.Completed)
+                    {
+                        // TODO: stopped moving, set to idle? (not really, 2 keys can be held at the same time)
+                    }
+
+                    return;
                 case "IA_B1Jump":
                     key = PlayerInput.Jump;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
@@ -170,6 +177,24 @@ namespace WukongCSharpMod
             _photon.SendKeyPressed(key, keyState);
         }
 
+        private void ApplyPlayerPosition(int id, float x, float y, float z)
+        {
+            if (!_connectedPlayers.TryGetValue(id, out var player))
+            {
+                Console.WriteLine($"Player not found: {id}");
+                return;
+            }
+
+            var clone = player.Pawn;
+            var events = BUS_EventCollectionCS.Get(clone);
+            // var currentZ = clone.GetActorLocation().Z;
+
+            // TODO: Set player.LastMovement
+            var goal = new FVector(x, y, z);
+            Console.WriteLine($"Moving to {goal}");
+            events.Evt_AIMoveTo.Invoke(goal, null, player.MovementType, 10f, EBGUMoveAIType.None, false, false, "", "");
+        }
+
         private void ApplyPlayerInput(int id, KeyPress keyPress)
         {
             if (!_connectedPlayers.TryGetValue(id, out var player))
@@ -182,38 +207,11 @@ namespace WukongCSharpMod
 
             var events = BUS_EventCollectionCS.Get(clone);
 
-            var len = 100f;
-            var goal = FVector.ZeroVector;
-
-            switch (keyPress.Key)
-            {
-                case PlayerInput.MoveForward when keyPress.State != KeyState.Released:
-                    goal = clone.GetActorTransform().GetLocation() + new FVector(len, 0, 0);
-                    player.LastMovement = ESkillDirection.Forward;
-                    break;
-                case PlayerInput.MoveLeft when keyPress.State != KeyState.Released:
-                    goal = clone.GetActorTransform().GetLocation() - new FVector(0, len, 0);
-                    player.LastMovement = ESkillDirection.Left;
-                    break;
-                case PlayerInput.MoveBackward when keyPress.State != KeyState.Released:
-                    goal = clone.GetActorTransform().GetLocation() - new FVector(len, 0, 0);
-                    player.LastMovement = ESkillDirection.Backward;
-                    break;
-                case PlayerInput.MoveRight when keyPress.State != KeyState.Released:
-                    goal = clone.GetActorTransform().GetLocation() + new FVector(0, len, 0);
-                    player.LastMovement = ESkillDirection.Right;
-                    break;
-            }
-
-            if (goal != FVector.ZeroVector)
-            {
-                events.Evt_AIMoveTo.Invoke(goal, null, player.MovementType, 10f, EBGUMoveAIType.None, false, false, "", "");
-            }
-
             switch (keyPress.Key)
             {
                 case PlayerInput.Jump when keyPress.State == KeyState.Pressed:
-                    events.Evt_TriggerJumpSkill.Invoke(player.LastMovement, FVector2D.ZeroVector); // TODO: Direction
+                    // TODO: Direction
+                    events.Evt_TriggerJumpSkill.Invoke(player.LastMovement, FVector2D.ZeroVector);
                     break;
                 case PlayerInput.LightAttack:
                     events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
