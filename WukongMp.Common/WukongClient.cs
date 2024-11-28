@@ -100,6 +100,21 @@ namespace WukongMp.Common
             }
         }
 
+        public IEnumerable<int> GetOtherPlayersInRoom()
+        {
+            if (_client.CurrentRoom is null)
+            {
+                Log("No room joined.");
+                yield break;
+            }
+
+            foreach (var player in _client.CurrentRoom.Players)
+            {
+                if (!player.Value.IsLocal)
+                    yield return player.Value.ActorNumber;
+            }
+        }
+
         private void MyJoinRandomOrCreateRoom()
         {
             var propertiesForRoomCreation = new RoomOptions

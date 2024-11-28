@@ -39,12 +39,26 @@ namespace WukongCSharpMod
             _photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             _photon.OnKeyReceived += ApplyPlayerInput;
 
-            // bind my movement
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Z, () =>
             {
                 Console.WriteLine("Alt + Z");
                 _photon.Reconnect();
             });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            {
+                Console.WriteLine("Alt + X");
+                SpawnPlayersAlreadyInRoom();
+            });
+        }
+
+        private void SpawnPlayersAlreadyInRoom()
+        {
+            // when joining game, spawn all players already in room
+            foreach (var id in _photon.GetOtherPlayersInRoom())
+            {
+                SpawnCloneForJoiningPlayer(id);
+            }
         }
 
         private void SpawnCloneForJoiningPlayer(int id)
