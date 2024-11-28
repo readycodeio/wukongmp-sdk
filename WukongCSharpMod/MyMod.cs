@@ -45,7 +45,7 @@ namespace WukongCSharpMod
 
                 var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
 
-                _photon = new WukongClient(SpawnPlayersAlreadyInRoom, new Vector3(myLocation.X, myLocation.Y, myLocation.Z));
+                _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
                 _photon.StartClient();
 
                 // _photon.OnPlayerMoved += MoveClone;

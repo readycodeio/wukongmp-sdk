@@ -21,12 +21,16 @@ namespace WukongMp.Common
         public event Action<int, float, float, float> OnPlayerPosition;
         public event Action<int, KeyPress> OnKeyReceived;
 
-        private readonly Vector3 _initialPosition;
+        private readonly float _initialX;
+        private readonly float _initialY;
+        private readonly float _initialZ;
 
-        public WukongClient(Action onJoinedRoom, Vector3 initialPosition)
+        public WukongClient(Action onJoinedRoom, float x, float y, float z)
         {
-            _initialPosition = initialPosition;
             _joinedRoomCallback = onJoinedRoom;
+            _initialX = x;
+            _initialY = y;
+            _initialZ = z;
         }
 
         ~WukongClient()
@@ -153,7 +157,7 @@ namespace WukongMp.Common
         private void SendRoomJoined()
         {
             const byte eventCode = 0; // make up event codes at will, < 200
-            var evData = new float[] { _initialPosition.X, _initialPosition.Y, _initialPosition.Z };
+            var evData = new float[] { _initialX, _initialY, _initialZ };
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
