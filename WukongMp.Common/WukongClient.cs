@@ -10,15 +10,20 @@ namespace WukongMp.Common
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks
     {
         private readonly RealtimeClient _client = new RealtimeClient();
-        private bool _quit;
         private Thread _bgThread;
 
         private int Id => _client.LocalPlayer.ActorNumber;
         public bool Ready => _client.IsConnectedAndReady;
 
+        private readonly Action _joinedRoomCallback;
         public event Action<int> OnPlayerJoined;
         public event Action<int, float, float, float> OnPlayerPosition;
         public event Action<int, KeyPress> OnKeyReceived;
+
+        public WukongClient(Action onJoinedRoom)
+        {
+            _joinedRoomCallback = onJoinedRoom;
+        }
 
         ~WukongClient()
         {
@@ -91,9 +96,10 @@ namespace WukongMp.Common
             _client.ReconnectAndRejoin();
         }
 
+        // ReSharper disable once FunctionNeverReturns
         private void Loop(object state)
         {
-            while (!_quit)
+            while (true)
             {
                 _client.Service();
                 Thread.Sleep(33);
@@ -163,28 +169,28 @@ namespace WukongMp.Common
 
         public void OnConnected()
         {
-            Log("OnConnected");
+            Log("Connected");
         }
 
         public void OnConnectedToMaster()
         {
-            Log("OnConnectedToMaster Server: " + _client.RealtimePeer.ServerIpAddress);
+            Log("Connected to master server: " + _client.RealtimePeer.ServerIpAddress);
             MyJoinRandomOrCreateRoom();
         }
 
         public void OnDisconnected(DisconnectCause cause)
         {
-            Log($"OnDisconnected: {cause}");
+            Log($"Disconnected: {cause}");
         }
 
         public void OnRegionListReceived(RegionHandler regionHandler)
         {
-            Log("OnRegionListReceived");
+            Log("Region list received");
         }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
         {
-            Log("OnCustomAuthenticationResponse");
+            Log("Custom authentication response");
 
             foreach (var kvp in data)
             {
@@ -194,7 +200,7 @@ namespace WukongMp.Common
 
         public void OnCustomAuthenticationFailed(string debugMessage)
         {
-            Log("OnCustomAuthenticationFailed: " + debugMessage);
+            Log("Custom authentication failed: " + debugMessage);
         }
 
         #endregion
@@ -203,38 +209,39 @@ namespace WukongMp.Common
 
         public void OnFriendListUpdate(List<FriendInfo> friendList)
         {
-            Log("OnFriendListUpdate");
+            Log("Friend list update");
         }
 
         public void OnCreatedRoom()
         {
-            Log("OnCreatedRoom");
+            Log("Created room");
         }
 
         public void OnCreateRoomFailed(short returnCode, string message)
         {
-            Log("OnCreateRoomFailed: " + message);
+            Log("Create room failed: " + message);
         }
 
         public void OnJoinedRoom()
         {
-            Log("OnJoinedRoom");
+            Log("Joined room");
+            _joinedRoomCallback?.Invoke();
             SendRoomJoined();
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
         {
-            Log("OnJoinRoomFailed: " + message);
+            Log("Join room failed: " + message);
         }
 
         public void OnJoinRandomFailed(short returnCode, string message)
         {
-            Log("OnJoinRandomFailed: " + message);
+            Log("Join random failed: " + message);
         }
 
         public void OnLeftRoom()
         {
-            Log("OnLeftRoom");
+            Log("Left room");
         }
 
         #endregion

@@ -32,14 +32,6 @@ namespace WukongCSharpMod
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
             Console.WriteLine("Patched with Harmony");
 
-            _photon = new WukongClient();
-            _photon.StartClient();
-
-            // _photon.OnPlayerMoved += MoveClone;
-            _photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-            _photon.OnKeyReceived += ApplyPlayerInput;
-            _photon.OnPlayerPosition += ApplyPlayerPosition;
-
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Z, () =>
             {
                 Console.WriteLine("Alt + Z");
@@ -49,7 +41,14 @@ namespace WukongCSharpMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 Console.WriteLine("Alt + X");
-                SpawnPlayersAlreadyInRoom();
+
+                _photon = new WukongClient(SpawnPlayersAlreadyInRoom);
+                _photon.StartClient();
+
+                // _photon.OnPlayerMoved += MoveClone;
+                _photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
+                _photon.OnKeyReceived += ApplyPlayerInput;
+                _photon.OnPlayerPosition += ApplyPlayerPosition;
             });
         }
 
