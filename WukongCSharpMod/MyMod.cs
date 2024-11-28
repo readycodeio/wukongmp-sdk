@@ -57,6 +57,12 @@ namespace WukongCSharpMod
                 _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
                 _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
             });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
+            {
+                Console.WriteLine("Alt + H");
+                InitializeChatWidget();
+            });
         }
 
         private void SpawnPlayersAlreadyInRoom()
@@ -213,23 +219,34 @@ namespace WukongCSharpMod
             }
         }
         
-        private void AddMessage(int id, string message)
+        private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
         {
             if (chatWidget != null)
             {
-                Console.WriteLine("Calling AddMessage funcition");
-                chatWidget.CallFunctionByNameWithArguments("AddMessage Unknown ExampleMessage", true);
+                Console.WriteLine($"Calling AddMessage funcition with message {message} from {sender}");
+                chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
+            }
+            else
+            {
+                InitializeChatWidget();
             }
         }
 
-        private string GetMessage()
+        private string GetMessageFromWidget()
         {
             if (chatWidget != null)
             {
-                Console.WriteLine("Calling GetSentMessage funcition");
                 chatWidget.CallFunctionByNameWithArguments("GetSentMessage", true);
-
-                return chatWidget.ToolTipText.ToString();
+                var message = chatWidget.ToolTipText.ToString();
+                if (message.Length > 0)
+                {
+                    Console.WriteLine($"Got message: {message} in GetSentMessage funcition");
+                }
+                return message;
+            }
+            else
+            {
+                InitializeChatWidget();
             }
             return "";
         }
@@ -237,13 +254,17 @@ namespace WukongCSharpMod
         private void InitializeChatWidget()
         {
             var widgets = GameUtils.GetWidgets();
-            if (widgets.Count == 1)
+            if (widgets != null)
             {
-                chatWidget = widgets[0];
-            }
-            else
-            {
-                Console.WriteLine($"Error!, Found {widgets.Count} widgets. Expected 1.");
+                if (widgets.Count == 1)
+                {
+                    chatWidget = widgets[0];
+                    Console.WriteLine($"Chat widget initialzied!.");
+                }
+                //else
+                //{
+                //    Console.WriteLine($"Error!, Found {widgets.Count} widgets. Expected 1.");
+                //}
             }
         }
 
