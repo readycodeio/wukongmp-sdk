@@ -56,6 +56,8 @@ namespace WukongCSharpMod
                 _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
                 _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
                 _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
+                _photon.WukongChat.OnSendMessage += AddMessageToWidget;
+                _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
