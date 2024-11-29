@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Numerics;
 using System.Threading;
 using Photon.Client;
 using Photon.Realtime;
@@ -12,7 +11,7 @@ namespace WukongMp.Common
     {
         private readonly RealtimeClient _client = new RealtimeClient();
         private readonly WukongChatter _wukongChat = new WukongChatter();
-        private Thread _bgThread;
+        private Thread _bgGameThread;
 
         private int Id => _client.LocalPlayer.ActorNumber;
         public bool Ready => _client.IsConnectedAndReady;
@@ -101,8 +100,8 @@ namespace WukongMp.Common
                 AuthMode = AuthModeOption.AuthOnce
             });
 
-            _bgThread = new Thread(Loop);
-            _bgThread.Start();
+            _bgGameThread = new Thread(LoopGame);
+            _bgGameThread.Start();
 
             Log("Running forever.");
         }
@@ -113,12 +112,11 @@ namespace WukongMp.Common
         }
 
         // ReSharper disable once FunctionNeverReturns
-        private void Loop(object state)
+        private void LoopGame(object state)
         {
             while (true)
             {
                 _client.Service();
-                _wukongChat.ServiceChat();
                 Thread.Sleep(33);
             }
         }

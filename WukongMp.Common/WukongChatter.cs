@@ -1,10 +1,8 @@
-﻿using Photon.Chat;
-using Photon.Client;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using Photon.Chat;
+using Photon.Client;
 
 namespace WukongMp.Common
 {
@@ -12,9 +10,10 @@ namespace WukongMp.Common
     {
         private ChatClient _chatClient;
 
-        private const string generalChannelName = "General";
-        private const string serverChannelName = "Server";
+        private const string GeneralChannelName = "General";
+        private const string ServerChannelName = "Server";
         private string _userName;
+        private Thread _bgChatThread;
 
         public event Func<string> OnGetMessage;
         public event Action<bool, string, string> OnSendMessage;
@@ -25,29 +24,35 @@ namespace WukongMp.Common
             _chatClient = new ChatClient(this);
             _chatClient.Connect("d4af67fe-a776-499e-8f56-f169d3db616e", "1.0", new AuthenticationValues(userName));
 
+            _bgChatThread = new Thread(LoopChat);
+            _bgChatThread.Start();
+
             Console.WriteLine("\n\nYou are: " + userName);
         }
 
-        public void ServiceChat()
+        private void ServiceChat()
         {
-            if (_chatClient != null)
+            _chatClient.Service();
+            var message = OnGetMessage?.Invoke();
+            if (!string.IsNullOrEmpty(message))
             {
-                _chatClient.Service();
-                var message = OnGetMessage?.Invoke();
-                if (message != null && message.Length > 0)
-                {
-                    SendChatMessage(generalChannelName, message);
-                }
+                SendChatMessage(GeneralChannelName, message);
+            }
+        }
+
+        private void LoopChat(object state)
+        {
+            while (true)
+            {
+                ServiceChat();
+                Thread.Sleep(33);
             }
         }
 
         private void SendChatMessage(string channel, string message)
         {
-            if (_chatClient != null)
-            {
-                Console.WriteLine($"Sending message {message}");
-                _chatClient.PublishMessage(channel, message);
-            }
+            Console.WriteLine($"Sending message {message}");
+            _chatClient.PublishMessage(channel, message);
         }
 
         public void DebugReturn(LogLevel level, string message)
@@ -61,9 +66,9 @@ namespace WukongMp.Common
         public void OnConnected()
         {
             Console.WriteLine("Chat connected");
-            _chatClient.Subscribe(generalChannelName);
-            _chatClient.Subscribe(serverChannelName);
-            SendChatMessage(serverChannelName, $"{_userName} has joined!");
+            _chatClient.Subscribe(GeneralChannelName);
+            _chatClient.Subscribe(ServerChannelName);
+            SendChatMessage(ServerChannelName, $"{_userName} has joined!");
         }
 
         public void OnCustomAuthenticationFailed(string debugMessage)
@@ -77,15 +82,15 @@ namespace WukongMp.Common
         public void OnDisconnected()
         {
             Console.WriteLine("Chat disconnected");
-            SendChatMessage(serverChannelName, $"{_userName} has left!");
+            SendChatMessage(ServerChannelName, $"{_userName} has left!");
         }
 
         public void OnGetMessages(string channelName, string[] senders, object[] messages)
         {
-            for (int i = 0; i < senders.Length; i++)
+            for (var i = 0; i < senders.Length; i++)
             {
                 Console.WriteLine($"Message {messages[i]} recieved");
-                if (channelName == serverChannelName)
+                if (channelName == ServerChannelName)
                 {
                     OnSendMessage?.Invoke(true, "Server", messages[i].ToString());
                 }
@@ -106,7 +111,7 @@ namespace WukongMp.Common
 
         public void OnSubscribed(string[] channels, bool[] results)
         {
-            for (int i = 0; i < channels.Length; i++)
+            for (var i = 0; i < channels.Length; i++)
             {
                 Console.WriteLine($"Subscribed to the channel: {channels[i]}: {results[i]}");
             }
