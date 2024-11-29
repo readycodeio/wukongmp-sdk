@@ -52,7 +52,6 @@ namespace WukongCSharpMod
                 _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
                 _photon.StartClient();
 
-                // _photon.OnPlayerMoved += MoveClone;
                 _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
                 _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
                 _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
@@ -182,11 +181,11 @@ namespace WukongCSharpMod
                     key = PlayerInput.HeavyAttack;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
-                case "IA_Walk":
+                case "IA_B1Walk":
                     key = PlayerInput.Walk;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
-                case "IA_Sprint_KB":
+                case "IA_B1Sprint_KB":
                     key = PlayerInput.Sprint;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
@@ -207,7 +206,6 @@ namespace WukongCSharpMod
 
             var clone = player.Pawn;
             var events = BUS_EventCollectionCS.Get(clone);
-            // var currentZ = clone.GetActorLocation().Z;
 
             // TODO: Set player.LastMovement
             var goal = new FVector(x, y, z);
