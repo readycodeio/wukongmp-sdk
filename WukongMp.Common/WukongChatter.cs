@@ -26,22 +26,26 @@ namespace WukongMp.Common
 
         public event Action OnSavePosition;
         public event Action OnLoadPosition;
+        public event Action OnConnectRequest;
         public event Action<string> OnSpawnEnemy;
 
         readonly char separator = ':';
         Dictionary<string, Command> commands = new Dictionary<string, Command>();
 
 
+        public WukongChatter()
+        {
+            SetupCommands();
+
+            _bgChatThread = new Thread(LoopChat);
+            _bgChatThread.Start();
+        }
+
         public void InitializeChat(string userName)
         {
             _userName = userName;
             _chatClient = new ChatClient(this);
             _chatClient.Connect("d4af67fe-a776-499e-8f56-f169d3db616e", "1.0", new AuthenticationValues(userName));
-
-            SetupCommands();
-
-            _bgChatThread = new Thread(LoopChat);
-            _bgChatThread.Start();
 
             Console.WriteLine("\n\nYou are: " + userName);
         }
@@ -83,17 +87,33 @@ namespace WukongMp.Common
                         }
                     }
                 });
+            commands.Add(
+                "\\connect",
+                new Command
+                {
+                    Name = "Connect",
+                    Handler = (string data) =>
+                    {
+                        OnConnectRequest();
+                    }
+                });
         }
 
         private void ServiceChat()
         {
-            _chatClient.Service();
+            if (_chatClient != null)
+            {
+                _chatClient.Service();
+            }
             var message = OnGetMessage?.Invoke();
             if (!string.IsNullOrEmpty(message))
             {
                 if (!TryHandleCommand(message))
-                { 
-                    SendChatMessage(GeneralChannelName, message);
+                {
+                    if (_chatClient != null)
+                    {
+                        SendChatMessage(GeneralChannelName, message);
+                    }
                 }
             }
         }

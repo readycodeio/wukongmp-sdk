@@ -50,25 +50,36 @@ namespace WukongCSharpMod
                 Console.WriteLine("Alt + X");
 
                 var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
-
                 _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
-                _photon.StartClient();
 
-                _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
-                _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
-                _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
-                _photon.WukongChat.OnSendMessage += AddMessageToWidget;
                 _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
-                _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
-                _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-                _photon.WukongChat.OnSpawnEnemy += (name) => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
+                Connect();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
             {
                 Console.WriteLine("Alt + H");
                 InitializeChatWidget();
+
+                var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
+                _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
+
+                _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+                _photon.WukongChat.OnConnectRequest += Connect;
             });
+        }
+
+        private void Connect()
+        {
+            _photon.StartClient();
+
+            _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
+            _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
+            _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
+            _photon.WukongChat.OnSendMessage += AddMessageToWidget;
+            _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
+            _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
+            _photon.WukongChat.OnSpawnEnemy += (name) => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
         }
 
         private void SpawnEnemy(string obj)
