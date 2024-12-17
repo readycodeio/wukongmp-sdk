@@ -31,6 +31,8 @@ namespace WukongCSharpMod
 
         private readonly Dictionary<int, PlayerState> _connectedPlayers = new Dictionary<int, PlayerState>();
 
+        private FVector savedPosition;
+
         public void Init()
         {
             Console.WriteLine("Init");
@@ -57,6 +59,9 @@ namespace WukongCSharpMod
                 _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
                 _photon.WukongChat.OnSendMessage += AddMessageToWidget;
                 _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+                _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
+                _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
+                _photon.WukongChat.OnSpawnEnemy += SpawnEnemy;
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
@@ -64,6 +69,61 @@ namespace WukongCSharpMod
                 Console.WriteLine("Alt + H");
                 InitializeChatWidget();
             });
+        }
+
+        private void SpawnEnemy(string obj)
+        {
+            APawn controlledPawn = GameUtils.GetControlledPawn();
+            var loc = controlledPawn.GetActorLocation() + new FVector(300, 300,0 );
+            var rot = controlledPawn.GetActorRotation();
+
+            var @class = UClass.LoadClass<AActor>(null, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_02.TAMER_gycy_lang_02_C");
+
+            if (@class is null)
+            {
+                Console.WriteLine("Enemy class is null");
+                return;
+            }
+            else
+            {
+                Console.WriteLine($"Class to spawn: {@class.PathName}");
+            }
+
+            FTransform transform = new FTransform(rot, loc);
+            BUTamerActor tamer = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(GameUtils.GetWorld(), @class, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
+            BGU_UnrealActorUtil.BGUFinishSpawningActor(tamer, transform);
+            var monster = tamer.GetMonster();
+            if (monster != null)
+            {
+                Console.WriteLine($"Moster class: {monster.PathName}");
+            }
+            else
+            {
+                Console.WriteLine("Monster not spawned");
+            }
+
+            if (tamer != null)
+            {
+                Console.WriteLine("Enemy spawned");
+            }
+        }
+
+        private void LoadSavedPosition()
+        {
+            APawn pawn = GameUtils.GetControlledPawn();
+            if (pawn != null)
+            {
+                pawn.SetActorLocation(savedPosition, false, out _, true);
+            }
+        }
+
+        private void SaveCurrentPosition()
+        {
+            APawn pawn = GameUtils.GetControlledPawn();
+            if (pawn != null)
+            {
+                savedPosition = pawn.GetActorLocation();
+            }
         }
 
         private void SpawnPlayersAlreadyInRoom()
