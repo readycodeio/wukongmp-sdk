@@ -6,6 +6,12 @@ using Photon.Client;
 
 namespace WukongMp.Common
 {
+    internal class Command
+    {
+        public string Name { get; set; }
+        public Action<string> Handler { get; set; }
+    }
+
     public class WukongChatter : IChatClientListener
     {
         private ChatClient _chatClient;
@@ -18,16 +24,65 @@ namespace WukongMp.Common
         public event Func<string> OnGetMessage;
         public event Action<bool, string, string> OnSendMessage;
 
+        public event Action OnSavePosition;
+        public event Action OnLoadPosition;
+        public event Action<string> OnSpawnEnemy;
+
+        readonly char separator = ':';
+        Dictionary<string, Command> commands = new Dictionary<string, Command>();
+
+
         public void InitializeChat(string userName)
         {
             _userName = userName;
             _chatClient = new ChatClient(this);
             _chatClient.Connect("d4af67fe-a776-499e-8f56-f169d3db616e", "1.0", new AuthenticationValues(userName));
 
+            SetupCommands();
+
             _bgChatThread = new Thread(LoopChat);
             _bgChatThread.Start();
 
             Console.WriteLine("\n\nYou are: " + userName);
+        }
+
+        private void SetupCommands()
+        {
+            commands.Add(
+                "\\savePos",
+                new Command
+                {
+                    Name = "Save check point",
+                    Handler = (string data) =>
+                    {
+                        OnSavePosition();
+                    }
+                });
+
+            commands.Add(
+                "\\loadPos",
+                new Command
+                {
+                    Name = "Load check point",
+                    Handler = (string data) =>
+                    {
+                        OnLoadPosition();
+                    }
+                });
+
+            commands.Add(
+                "\\spawn",
+                new Command
+                {
+                    Name = "Spawn enemy NPC",
+                    Handler = (string data) =>
+                    {
+                        if (data.Length > 0)
+                        {
+                            OnSpawnEnemy(data);
+                        }
+                    }
+                });
         }
 
         private void ServiceChat()
@@ -36,8 +91,26 @@ namespace WukongMp.Common
             var message = OnGetMessage?.Invoke();
             if (!string.IsNullOrEmpty(message))
             {
-                SendChatMessage(GeneralChannelName, message);
+                if (!TryHandleCommand(message))
+                { 
+                    SendChatMessage(GeneralChannelName, message);
+                }
             }
+        }
+
+        private bool TryHandleCommand(string message)
+        {
+            string[] commandParts = message.Split(separator);
+            if (commandParts.Length > 0)
+            {
+                if (commands.ContainsKey(commandParts[0]))
+                {
+                    var cmd = commands[commandParts[0]];
+                    cmd.Handler(commandParts.Length > 1 ? commandParts[1] : "");
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void LoopChat(object state)
