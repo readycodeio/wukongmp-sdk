@@ -69,8 +69,6 @@ namespace WukongCSharpMod
 
         private void Connect()
         {
-            _photon.StartClient();
-
             _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
             _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
@@ -78,7 +76,9 @@ namespace WukongCSharpMod
             _photon.WukongChat.OnSendMessage += AddMessageToWidget;
             _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            _photon.WukongChat.OnSpawnEnemy += (name) => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
+            _photon.WukongChat.OnSpawnEnemy += name => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
+            
+            _photon.StartClient();
         }
 
         private void SpawnEnemy(string unitName)
@@ -356,12 +356,12 @@ namespace WukongCSharpMod
                     // TODO: Direction
                     events.Evt_TriggerJumpSkill.Invoke(player.LastMovement, FVector2D.ZeroVector);
                     break;
-                case PlayerInput.LightAttack:
-                    events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
-                    break;
-                case PlayerInput.HeavyAttack:
-                    events.Evt_InputCastSkill.Invoke(EInputActionType.HeavyAttack, keyPress.State == KeyState.Released);
-                    break;
+                // case PlayerInput.LightAttack:
+                //     events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
+                //     break;
+                // case PlayerInput.HeavyAttack:
+                //     events.Evt_InputCastSkill.Invoke(EInputActionType.HeavyAttack, keyPress.State == KeyState.Released);
+                //     break;
                 case PlayerInput.Roll:
                     events.Evt_TriggerRollSkill.Invoke(player.LastMovement);
                     break;
