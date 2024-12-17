@@ -26,5 +26,7 @@ Global
 		{8E001812-4216-4012-BC6B-139C3D3A61B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E001812-4216-4012-BC6B-139C3D3A61B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E001812-4216-4012-BC6B-139C3D3A61B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0CA2B6A-B99D-4837-B973-9DE94C41D9E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0CA2B6A-B99D-4837-B973-9DE94C41D9E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal

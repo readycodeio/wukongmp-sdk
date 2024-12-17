@@ -11,7 +11,6 @@ namespace WukongMp.Common
     {
         private readonly RealtimeClient _client = new RealtimeClient();
         private readonly WukongChatter _wukongChat = new WukongChatter();
-        private Thread _bgGameThread;
 
         private int Id => _client.LocalPlayer.ActorNumber;
         public bool Ready => _client.IsConnectedAndReady;
@@ -21,8 +20,7 @@ namespace WukongMp.Common
         public event Action<int, float, float, float> OnPlayerPosition;
         public event Action<int, KeyPress> OnKeyReceived;
 
-        private const string UserNamePrefix = "Player";
-        protected string UserName => UserNamePrefix + Id;
+        private const string UserName = "ReadyM_JakuJ";
         public WukongChatter WukongChat => _wukongChat;
 
         private readonly float _initialX;
@@ -56,9 +54,6 @@ namespace WukongMp.Common
 
         public void OnEvent(EventData photonEvent)
         {
-            //if (photonEvent.Sender == Id)
-            //    return;
-
             switch (photonEvent.Code)
             {
                 case 0:
@@ -100,9 +95,7 @@ namespace WukongMp.Common
                 AuthMode = AuthModeOption.AuthOnce
             });
 
-            _bgGameThread = new Thread(LoopGame);
-            _bgGameThread.Start();
-
+            new Thread(LoopGame).Start();
             Log("Running forever.");
         }
 

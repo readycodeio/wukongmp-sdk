@@ -19,7 +19,6 @@ namespace WukongMp.Common
         private const string GeneralChannelName = "General";
         private const string ServerChannelName = "Server";
         private string _userName;
-        private Thread _bgChatThread;
 
         public event Func<string> OnGetMessage;
         public event Action<bool, string, string> OnSendMessage;
@@ -29,16 +28,14 @@ namespace WukongMp.Common
         public event Action OnConnectRequest;
         public event Action<string> OnSpawnEnemy;
 
-        readonly char separator = ':';
-        Dictionary<string, Command> commands = new Dictionary<string, Command>();
-
+        private const char Separator = ':';
+        private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
 
         public WukongChatter()
         {
             SetupCommands();
 
-            _bgChatThread = new Thread(LoopChat);
-            _bgChatThread.Start();
+            new Thread(LoopChat).Start();
         }
 
         public void InitializeChat(string userName)
@@ -52,49 +49,46 @@ namespace WukongMp.Common
 
         private void SetupCommands()
         {
-            commands.Add(
+            _commands.Add(
                 "\\savePos",
                 new Command
                 {
                     Name = "Save check point",
-                    Handler = (string data) =>
+                    Handler = data =>
                     {
-                        OnSavePosition();
+                        OnSavePosition?.Invoke();
                     }
                 });
 
-            commands.Add(
+            _commands.Add(
                 "\\loadPos",
                 new Command
                 {
                     Name = "Load check point",
-                    Handler = (string data) =>
+                    Handler = data =>
                     {
-                        OnLoadPosition();
+                        OnLoadPosition?.Invoke();
                     }
                 });
 
-            commands.Add(
+            _commands.Add(
                 "\\spawn",
                 new Command
                 {
                     Name = "Spawn enemy NPC",
-                    Handler = (string data) =>
+                    Handler = data =>
                     {
-                        if (data.Length > 0)
-                        {
-                            OnSpawnEnemy(data);
-                        }
+                        OnSpawnEnemy?.Invoke(data);
                     }
                 });
-            commands.Add(
+            _commands.Add(
                 "\\connect",
                 new Command
                 {
                     Name = "Connect",
-                    Handler = (string data) =>
+                    Handler = data =>
                     {
-                        OnConnectRequest();
+                        OnConnectRequest?.Invoke();
                     }
                 });
         }
@@ -120,12 +114,12 @@ namespace WukongMp.Common
 
         private bool TryHandleCommand(string message)
         {
-            string[] commandParts = message.Split(separator);
+            string[] commandParts = message.Split(Separator);
             if (commandParts.Length > 0)
             {
-                if (commands.ContainsKey(commandParts[0]))
+                if (_commands.ContainsKey(commandParts[0]))
                 {
-                    var cmd = commands[commandParts[0]];
+                    var cmd = _commands[commandParts[0]];
                     cmd.Handler(commandParts.Length > 1 ? commandParts[1] : "");
                     return true;
                 }

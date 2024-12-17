@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Reflection;
 using b1;
-using b1.UI;
 using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -161,6 +159,7 @@ namespace WukongCSharpMod
             var oldPawn = GameUtils.GetControlledPawn();
 
             var cloneTransform = oldPawn.GetActorTransform();
+            var oldPos = new FTransform(cloneTransform.Rotation, cloneTransform.Translation); // copy
             cloneTransform.Translation = new FVector(x, y, z);
 
             BUS_EventCollectionCS.Get(oldPawn).Evt_TriggerInputActionImpl += SendInputEvents;
@@ -210,13 +209,11 @@ namespace WukongCSharpMod
             _connectedPlayers[id] = new PlayerState(id, clone);
 
             // teleport clone to cloneTransform
-            clone.SetActorTransform(cloneTransform, false, out _, true);
+            clone.SetActorTransform(oldPos, false, out _, true);
         }
 
         private void SendInputEvents(string actionname, ETriggerEvent triggerevent, FInputActionValue value)
         {
-            Console.WriteLine($"SendInputEvents: {actionname} {triggerevent} {value}");
-
             KeyState keyState;
             PlayerInput key;
 
@@ -315,10 +312,8 @@ namespace WukongCSharpMod
                 }
                 return message;
             }
-            else
-            {
-                InitializeChatWidget();
-            }
+
+            InitializeChatWidget();
             return "";
         }
 
@@ -330,12 +325,8 @@ namespace WukongCSharpMod
                 if (widgets.Count == 1)
                 {
                     chatWidget = widgets[0];
-                    Console.WriteLine($"Chat widget initialzied!.");
+                    Console.WriteLine("Chat widget initialized!.");
                 }
-                //else
-                //{
-                //    Console.WriteLine($"Error!, Found {widgets.Count} widgets. Expected 1.");
-                //}
             }
         }
 
