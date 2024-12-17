@@ -74,17 +74,25 @@ namespace WukongCSharpMod
             _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
             _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
+            _photon.OnUnitSpawn += (id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnUnit(name, x, y, z));
             _photon.WukongChat.OnSendMessage += AddMessageToWidget;
             _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             _photon.WukongChat.OnSpawnEnemy += (name) => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
         }
 
-        private void SpawnEnemy(string obj)
+        private void SpawnEnemy(string unitName)
         {
             APawn controlledPawn = GameUtils.GetControlledPawn();
             var loc = controlledPawn.GetActorLocation() + new FVector(300, 300,0 );
-            var rot = controlledPawn.GetActorRotation();
+            _photon.SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
+            SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
+        }
+
+        private void SpawnUnit(string unitName, float x, float y, float z)
+        {
+            var loc = new FVector(x, y, z);
+            var rot = new FRotator();
 
             var @class = UClass.LoadClass<AActor>(null, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_02.TAMER_gycy_lang_02_C");
 

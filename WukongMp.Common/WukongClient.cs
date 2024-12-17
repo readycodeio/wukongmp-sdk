@@ -18,6 +18,7 @@ namespace WukongMp.Common
         private readonly Action _joinedRoomCallback;
         public event Action<int, float, float, float> OnPlayerJoined;
         public event Action<int, float, float, float> OnPlayerPosition;
+        public event Action<int, string, float, float, float> OnUnitSpawn;
         public event Action<int, KeyPress> OnKeyReceived;
 
         private const string UserName = "ReadyM_JakuJ";
@@ -74,6 +75,11 @@ namespace WukongMp.Common
                     // key press
                     var key = (KeyPress)photonEvent.CustomData;
                     OnKeyReceived?.Invoke(photonEvent.Sender, key);
+                    break;
+                case 3:
+                    // key press
+                    var unitPos = (float[])photonEvent.CustomData;
+                    OnUnitSpawn?.Invoke(photonEvent.Sender, "", unitPos[0], unitPos[1], unitPos[2]);
                     break;
             }
         }
@@ -169,6 +175,13 @@ namespace WukongMp.Common
         public void SendPositionUpdate(float x, float y, float z)
         {
             const byte eventCode = 1; // make up event codes at will, < 200
+            var evData = new float[] { x, y, z };
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SpawnUnit(string unitName, float x, float y, float z)
+        {
+            const byte eventCode = 3; // make up event codes at will, < 200
             var evData = new float[] { x, y, z };
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
