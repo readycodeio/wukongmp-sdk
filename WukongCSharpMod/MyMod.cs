@@ -61,7 +61,7 @@ namespace WukongCSharpMod
                 _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
                 _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
                 _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-                _photon.WukongChat.OnSpawnEnemy += SpawnEnemy;
+                _photon.WukongChat.OnSpawnEnemy += (name) => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
