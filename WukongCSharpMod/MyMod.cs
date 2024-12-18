@@ -43,32 +43,66 @@ namespace WukongCSharpMod
                 _photon.Reconnect();
             });
 
+            InitWorldCallbacks();
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 Console.WriteLine("Alt + X");
 
-                var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
-                _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
-
-                _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+                InitPhoton();
                 Connect();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
             {
                 Console.WriteLine("Alt + H");
+
                 InitializeChatWidget();
-
-                var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
-                _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
-
-                _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
-                _photon.WukongChat.OnConnectRequest += Connect;
+                InitPhoton();
             });
+        }
+
+        private void InitWorldCallbacks()
+        {
+            UWorld world = GameUtils.GetWorld();
+            if (world != null)
+            {
+                BGW_EventCollection.Get(world).Evt_PostLoadMapWithWorld += OnMapLoaded;
+                BGW_EventCollection.Get(world).Evt_PlayerDelayBeginPlayFinished += OnDelayBeginPlay;
+            }
+            else
+            {
+                Console.WriteLine($"World is null.");
+            }
+        }
+
+        private void InitPhoton()
+        {
+            var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
+            _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
+            _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+            _photon.WukongChat.OnConnectRequest += Connect;
+
+        }
+
+        private void OnMapLoaded()
+        {
+            UWorld world = GameUtils.GetWorld();
+            if (world != null)
+                Console.WriteLine($"Map loaded: {world.GetCurrentLevelName()}");
+        }
+
+        private void OnDelayBeginPlay()
+        {
+            Console.WriteLine("Delay begin play.");
+            InitializeChatWidget();
+            InitPhoton();
         }
 
         private void Connect()
         {
+            if (_photon.Ready) { return; }
+
             _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
             _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
