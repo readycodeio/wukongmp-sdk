@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using b1;
-using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
@@ -111,14 +110,14 @@ namespace WukongCSharpMod
             _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             _photon.WukongChat.OnSpawnEnemy += name => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
-            
+
             _photon.StartClient();
         }
 
         private void SpawnEnemy(string unitName)
         {
             APawn controlledPawn = GameUtils.GetControlledPawn();
-            var loc = controlledPawn.GetActorLocation() + new FVector(300, 300,0 );
+            var loc = controlledPawn.GetActorLocation() + new FVector(300, 300, 0);
             _photon.SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
             SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
         }
@@ -210,12 +209,12 @@ namespace WukongCSharpMod
             {
                 NeedBlend = false
             });
-
+            
             // BGU_UnrealWorldUtil.DestroyActor(oldPawn);
             var clone = oldPawn;
-
+            
             var cloneCharacter = clone as BGUPlayerCharacterCS;
-
+            
             FActorSpawnParameters spawnInfo = new FActorSpawnParameters
             {
                 Instigator = cloneCharacter.GetInstigator(),
@@ -226,20 +225,20 @@ namespace WukongCSharpMod
 
             var loc = cloneCharacter.GetActorLocation();
             var rot = cloneCharacter.GetActorRotation();
-
+            
             // var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
-
+            
             if (@class is null)
             {
                 Console.WriteLine("Class is null");
                 return;
             }
-
+            
             var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
-
+            
             Console.WriteLine("Spawned new controller");
-
+            
             if (newController != null && newController is ABGUAIPlayerController ctrl)
             {
                 ctrl.Possess(clone);
@@ -328,12 +327,12 @@ namespace WukongCSharpMod
                 // ignore
             }
         }
-        
+
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
         {
             if (chatWidget != null)
             {
-                Console.WriteLine($"Calling AddMessage funcition with message {message} from {sender}");
+                Console.WriteLine($"Calling AddMessage function with message {message} from {sender}");
                 chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
             }
             else
@@ -352,6 +351,7 @@ namespace WukongCSharpMod
                 {
                     Console.WriteLine($"Got message: {message} in GetSentMessage funcition");
                 }
+
                 return message;
             }
 
@@ -384,18 +384,30 @@ namespace WukongCSharpMod
 
             var events = BUS_EventCollectionCS.Get(clone);
 
+            Console.WriteLine($"Player {id} pressed key {keyPress.Key} with state {keyPress.State}");
+
             switch (keyPress.Key)
             {
                 case PlayerInput.Jump when keyPress.State == KeyState.Pressed:
                     // TODO: Direction
                     events.Evt_TriggerJumpSkill.Invoke(player.LastMovement, FVector2D.ZeroVector);
                     break;
-                // case PlayerInput.LightAttack:
-                //     events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
-                //     break;
-                // case PlayerInput.HeavyAttack:
-                //     events.Evt_InputCastSkill.Invoke(EInputActionType.HeavyAttack, keyPress.State == KeyState.Released);
-                //     break;
+                case PlayerInput.LightAttack:
+                {
+                    var prop = events.GetType().GetProperty("Evt_InputCastSkill");
+                    var gottenPropObj = prop.GetValue(events);
+                    var method = gottenPropObj.GetType().GetMethod("Invoke");
+                    method.Invoke(gottenPropObj, new object[] { BtlShare.EInputActionType.LightAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
+                    break;
+                }
+                case PlayerInput.HeavyAttack:
+                {
+                    var prop = events.GetType().GetProperty("Evt_InputCastSkill");
+                    var gottenPropObj = prop.GetValue(events);
+                    var method = gottenPropObj.GetType().GetMethod("Invoke");
+                    method.Invoke(gottenPropObj, new object[] { BtlShare.EInputActionType.HeavyAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
+                    break;
+                }
                 case PlayerInput.Roll:
                     events.Evt_TriggerRollSkill.Invoke(player.LastMovement);
                     break;

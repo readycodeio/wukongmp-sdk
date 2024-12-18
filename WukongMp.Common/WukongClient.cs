@@ -144,12 +144,11 @@ namespace WukongMp.Common
             };
             var enterRoomParams = new EnterRoomArgs
             {
-                RoomOptions = propertiesForRoomCreation
+                RoomOptions = propertiesForRoomCreation,
+                RoomName = "Kuba123"
             };
-
-            var joinRoomParams = new JoinRandomRoomArgs();
-
-            _client.OpJoinRandomOrCreateRoom(joinRoomParams, enterRoomParams);
+            
+            _client.OpJoinOrCreateRoom(enterRoomParams);
         }
 
         private void OnStateChange(ClientState arg1, ClientState arg2)
