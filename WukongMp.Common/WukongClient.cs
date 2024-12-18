@@ -78,8 +78,8 @@ namespace WukongMp.Common
                     break;
                 case 3:
                     // key press
-                    var unitPos = (float[])photonEvent.CustomData;
-                    OnUnitSpawn?.Invoke(photonEvent.Sender, "", unitPos[0], unitPos[1], unitPos[2]);
+                    var unitData = (UnitSpawnData)photonEvent.CustomData;
+                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Name, unitData.X, unitData.Y, unitData.Z);
                     break;
             }
         }
@@ -88,6 +88,7 @@ namespace WukongMp.Common
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             PhotonPeer.RegisterType(typeof(KeyPress), 255, KeyPress.Serialize, KeyPress.Deserialize);
+            PhotonPeer.RegisterType(typeof(UnitSpawnData), 254, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
@@ -181,7 +182,7 @@ namespace WukongMp.Common
         public void SpawnUnit(string unitName, float x, float y, float z)
         {
             const byte eventCode = 3; // make up event codes at will, < 200
-            var evData = new float[] { x, y, z };
+            var evData = new UnitSpawnData(unitName, x, y, z);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
