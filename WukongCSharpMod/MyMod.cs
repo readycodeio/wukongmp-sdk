@@ -124,10 +124,13 @@ namespace WukongCSharpMod
 
         private void SpawnUnit(string unitName, float x, float y, float z)
         {
+            Console.WriteLine($"Spawn unit called for {unitName}");
+
             var loc = new FVector(x, y, z);
             var rot = new FRotator();
 
-            var @class = UClass.LoadClass<AActor>(null, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_02.TAMER_gycy_lang_02_C");
+            var unitPath = UnitPathsConfig.GetUnitPath(unitName);
+            var @class = UClass.LoadClass<AActor>(null, unitPath);
 
             if (@class is null)
             {
