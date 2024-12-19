@@ -1,4 +1,3 @@
-using System;
 using Photon.Client;
 
 namespace WukongMp.Common
@@ -12,17 +11,6 @@ namespace WukongMp.Common
         {
             Key = key;
             State = state;
-        }
-
-        public static object Deserialize(byte[] data)
-        {
-            return new KeyPress((PlayerInput)data[0], (KeyState)data[1]);
-        }
-
-        public static byte[] Serialize(object keyPress)
-        {
-            var c = (KeyPress)keyPress;
-            return new[] { (byte)c.Key, (byte)c.State };
         }
 
         public static short Serialize(StreamBuffer outstream, object customobject)

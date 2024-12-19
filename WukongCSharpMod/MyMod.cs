@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using b1;
+using BtlB1;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
@@ -19,16 +20,14 @@ namespace WukongCSharpMod
         public string Name => "ModExample";
         public string Version => "0.0.1";
 
-        private UUserWidget chatWidget;
+        private UUserWidget _chatWidget;
 
         private WukongClient _photon;
         private readonly Harmony _harmony = new Harmony("WukongMP");
 
-        // public BUS_MovementSystem CloneMovementSystem { get; private set; }
-
         private readonly Dictionary<int, PlayerState> _connectedPlayers = new Dictionary<int, PlayerState>();
 
-        private FVector savedPosition;
+        private FVector _savedPosition;
 
         public void Init()
         {
@@ -71,7 +70,7 @@ namespace WukongCSharpMod
             }
             else
             {
-                Console.WriteLine($"World is null.");
+                Console.WriteLine("World is null.");
             }
         }
 
@@ -81,7 +80,6 @@ namespace WukongCSharpMod
             _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
             _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             _photon.WukongChat.OnConnectRequest += Connect;
-
         }
 
         private void OnMapLoaded()
@@ -100,7 +98,10 @@ namespace WukongCSharpMod
 
         private void Connect()
         {
-            if (_photon.Ready) { return; }
+            if (_photon.Ready)
+            {
+                return;
+            }
 
             _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
             _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
@@ -112,70 +113,58 @@ namespace WukongCSharpMod
             _photon.WukongChat.OnSpawnEnemy += name => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
 
             _photon.StartClient();
+
+            var myPawn = GameUtils.GetControlledPawn();
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            events.Evt_TriggerInputActionImpl += SendInputEvents;
         }
 
         private void SpawnEnemy(string unitName)
         {
-            APawn controlledPawn = GameUtils.GetControlledPawn();
+            var controlledPawn = GameUtils.GetControlledPawn();
             var loc = controlledPawn.GetActorLocation() + new FVector(300, 300, 0);
             _photon.SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
             SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
         }
 
-        private void SpawnUnit(string unitName, float x, float y, float z)
+        private static APawn SpawnUnit(string unitName, float x, float y, float z)
         {
             Console.WriteLine($"Spawn unit called for {unitName}");
 
             var loc = new FVector(x, y, z);
             var rot = new FRotator();
 
-            var unitPath = UnitPathsConfig.GetUnitPath(unitName);
-            var @class = UClass.LoadClass<AActor>(null, unitPath);
+            var @class = UObject.LoadClass<AActor>(null, unitName);
 
             if (@class is null)
             {
                 Console.WriteLine("Enemy class is null");
-                return;
-            }
-            else
-            {
-                Console.WriteLine($"Class to spawn: {@class.PathName}");
+                return null;
             }
 
-            FTransform transform = new FTransform(rot, loc);
-            BUTamerActor tamer = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(GameUtils.GetWorld(), @class, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
-            BGU_UnrealActorUtil.BGUFinishSpawningActor(tamer, transform);
-            var monster = tamer.GetMonster();
-            if (monster != null)
-            {
-                Console.WriteLine($"Moster class: {monster.PathName}");
-            }
-            else
-            {
-                Console.WriteLine("Monster not spawned");
-            }
+            Console.WriteLine($"Class to spawn: {@class.PathName}");
 
-            if (tamer != null)
-            {
-                Console.WriteLine("Enemy spawned");
-            }
+            var transform = new FTransform(rot, loc);
+            var actor = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(GameUtils.GetWorld(), @class, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
+            BGU_UnrealActorUtil.BGUFinishSpawningActor(actor, transform);
+            return actor;
         }
 
         private void LoadSavedPosition()
         {
-            APawn pawn = GameUtils.GetControlledPawn();
+            var pawn = GameUtils.GetControlledPawn();
             if (pawn != null)
             {
-                pawn.SetActorLocation(savedPosition, false, out _, true);
+                pawn.SetActorLocation(_savedPosition, false, out _, true);
             }
         }
 
         private void SaveCurrentPosition()
         {
-            APawn pawn = GameUtils.GetControlledPawn();
+            var pawn = GameUtils.GetControlledPawn();
             if (pawn != null)
             {
-                savedPosition = pawn.GetActorLocation();
+                _savedPosition = pawn.GetActorLocation();
             }
         }
 
@@ -201,23 +190,19 @@ namespace WukongCSharpMod
             var controller = GameUtils.GetPlayerController();
             var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
             var oldPawn = GameUtils.GetControlledPawn();
-
-            var cloneTransform = oldPawn.GetActorTransform();
-            var oldPos = new FTransform(cloneTransform.Rotation, cloneTransform.Translation); // copy
-            cloneTransform.Translation = new FVector(x, y, z);
-
-            BUS_EventCollectionCS.Get(oldPawn).Evt_TriggerInputActionImpl += SendInputEvents;
+            var oldPawnPos = oldPawn.GetActorTransform().GetLocation();
+            var oldPawnRot = oldPawn.GetActorTransform().GetRotation();
 
             BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, oldPawn.GetActorTransform(), pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
             {
                 NeedBlend = false
             });
-            
+
             // BGU_UnrealWorldUtil.DestroyActor(oldPawn);
             var clone = oldPawn;
-            
+
             var cloneCharacter = clone as BGUPlayerCharacterCS;
-            
+
             FActorSpawnParameters spawnInfo = new FActorSpawnParameters
             {
                 Instigator = cloneCharacter.GetInstigator(),
@@ -228,24 +213,24 @@ namespace WukongCSharpMod
 
             var loc = cloneCharacter.GetActorLocation();
             var rot = cloneCharacter.GetActorRotation();
-            
+
             // var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
-            
+
             if (@class is null)
             {
                 Console.WriteLine("Class is null");
                 return;
             }
-            
+
             var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
-            
+
             Console.WriteLine("Spawned new controller");
-            
+
             if (newController != null && newController is ABGUAIPlayerController ctrl)
             {
                 ctrl.Possess(clone);
-                // ctrl.CanBeDamaged = false;
+                ctrl.CanBeDamaged = false;
                 Console.WriteLine("Possessed new controller");
             }
 
@@ -253,13 +238,19 @@ namespace WukongCSharpMod
             _connectedPlayers[id] = new PlayerState(id, clone);
 
             // teleport clone to cloneTransform
-            clone.SetActorTransform(oldPos, false, out _, true);
+            var targetTransform = new FTransform(FRotator.ZeroRotator, new FVector(x, y, z));
+            clone.SetActorTransform(targetTransform, false, out _, true);
+
+            var controlledPawn = GameUtils.GetControlledPawn();
+            controlledPawn.SetActorTransform(new FTransform(oldPawnRot, oldPawnPos), false, out _, false);
         }
 
         private void SendInputEvents(string actionname, ETriggerEvent triggerevent, FInputActionValue value)
         {
             KeyState keyState;
             PlayerInput key;
+
+            Console.WriteLine($"Action: {actionname}, TriggerEvent: {triggerevent}, Value: {value}");
 
             switch (actionname)
             {
@@ -291,6 +282,10 @@ namespace WukongCSharpMod
                     break;
                 case "IA_B1HeavyAttack":
                     key = PlayerInput.HeavyAttack;
+                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                case "IA_B1Spell_QS":
+                    key = PlayerInput.CastImmobilize;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
                 case "IA_B1Walk":
@@ -333,10 +328,10 @@ namespace WukongCSharpMod
 
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
         {
-            if (chatWidget != null)
+            if (_chatWidget != null)
             {
                 Console.WriteLine($"Calling AddMessage function with message {message} from {sender}");
-                chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
+                _chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
             }
             else
             {
@@ -346,10 +341,10 @@ namespace WukongCSharpMod
 
         private string GetMessageFromWidget()
         {
-            if (chatWidget != null)
+            if (_chatWidget != null)
             {
-                chatWidget.CallFunctionByNameWithArguments("GetSentMessage", true);
-                var message = chatWidget.ToolTipText.ToString();
+                _chatWidget.CallFunctionByNameWithArguments("GetSentMessage", true);
+                var message = _chatWidget.ToolTipText.ToString();
                 if (message.Length > 0)
                 {
                     Console.WriteLine($"Got message: {message} in GetSentMessage funcition");
@@ -369,7 +364,7 @@ namespace WukongCSharpMod
             {
                 if (widgets.Count == 1)
                 {
-                    chatWidget = widgets[0];
+                    _chatWidget = widgets[0];
                     Console.WriteLine("Chat widget initialized!.");
                 }
             }
@@ -411,6 +406,14 @@ namespace WukongCSharpMod
                     method.Invoke(gottenPropObj, new object[] { BtlShare.EInputActionType.HeavyAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
                     break;
                 }
+                // TODO: This doesn't yet work
+                case PlayerInput.CastImmobilize:
+                    events.Evt_CastDingShenToTarget.Invoke(new FGSCastDingShenSetting
+                    {
+                        RangeRadius = 1000,
+                        SelectCount = 1,
+                    }, 1000f);
+                    break;
                 case PlayerInput.Roll:
                     events.Evt_TriggerRollSkill.Invoke(player.LastMovement);
                     break;

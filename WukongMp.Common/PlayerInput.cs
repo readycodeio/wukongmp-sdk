@@ -8,5 +8,6 @@
         Sprint,
         LightAttack,
         HeavyAttack,
+        CastImmobilize,
     }
 }

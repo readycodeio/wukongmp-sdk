@@ -78,6 +78,10 @@ namespace WukongMp.Common
                     Name = "Spawn enemy NPC",
                     Handler = data =>
                     {
+                        if (string.IsNullOrEmpty(data))
+                        {
+                            data = "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_02.TAMER_gycy_lang_02_C";
+                        }
                         OnSpawnEnemy?.Invoke(data);
                     }
                 });
