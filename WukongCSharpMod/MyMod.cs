@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 using b1;
-using BtlB1;
+using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
+using UnrealEngine.AIModule;
 using UnrealEngine.Engine;
 using UnrealEngine.Plugins.EnhancedInput;
 using UnrealEngine.Runtime;
@@ -26,6 +27,7 @@ namespace WukongCSharpMod
         private readonly Harmony _harmony = new Harmony("WukongMP");
 
         private readonly Dictionary<int, PlayerState> _connectedPlayers = new Dictionary<int, PlayerState>();
+        private readonly Dictionary<byte, MonsterState> _monsters = new Dictionary<byte, MonsterState>();
 
         private FVector _savedPosition;
 
@@ -106,7 +108,7 @@ namespace WukongCSharpMod
             _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
             _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             _photon.OnPlayerPosition += (id, x, y, z) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, x, y, z));
-            _photon.OnUnitSpawn += (id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnUnit(name, x, y, z));
+            _photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             _photon.WukongChat.OnSendMessage += AddMessageToWidget;
             _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -123,11 +125,26 @@ namespace WukongCSharpMod
         {
             var controlledPawn = GameUtils.GetControlledPawn();
             var loc = controlledPawn.GetActorLocation() + new FVector(300, 300, 0);
-            _photon.SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
-            SpawnUnit(unitName, loc.X, loc.Y, loc.Z);
+
+            var id = (byte)_monsters.Count; // TODO: Overflow??
+            var pawn = SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z, false);
+
+            _monsters[id] = new MonsterState
+            {
+                Id = id,
+                Local = true,
+                Pawn = pawn
+            };
+
+            _photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
 
-        private static APawn SpawnUnit(string unitName, float x, float y, float z)
+        private APawn SpawnRemoteUnit(byte id, string unitName, float x, float y, float z)
+        {
+            return SpawnUnit(id, unitName, x, y, z, true);
+        }
+
+        private APawn SpawnUnit(byte id, string unitName, float x, float y, float z, bool remote)
         {
             Console.WriteLine($"Spawn unit called for {unitName}");
 
@@ -147,6 +164,49 @@ namespace WukongCSharpMod
             var transform = new FTransform(rot, loc);
             var actor = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(GameUtils.GetWorld(), @class, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
             BGU_UnrealActorUtil.BGUFinishSpawningActor(actor, transform);
+
+            if (!remote)
+                return actor;
+
+            _monsters.Add(id, new MonsterState
+            {
+                Id = id,
+                Local = false,
+                Pawn = actor
+            });
+
+            // de-brain AI
+            var controller = actor.GetController();
+
+            if (controller is null)
+            {
+                Console.WriteLine("No controller");
+                return actor;
+            }
+
+            Console.WriteLine("Has controller");
+
+            var ai = controller.Cast<AIController>();
+
+            if (ai is null)
+            {
+                Console.WriteLine("No AI");
+                return actor;
+            }
+
+            Console.WriteLine("Has AI");
+
+            var brain = ai.BrainComponent;
+
+            if (brain is null)
+            {
+                Console.WriteLine("No brain");
+                return actor;
+            }
+
+            Console.WriteLine("Has brain");
+            brain.StopLogic("Stop");
+
             return actor;
         }
 
@@ -395,7 +455,7 @@ namespace WukongCSharpMod
                     var prop = events.GetType().GetProperty("Evt_InputCastSkill");
                     var gottenPropObj = prop.GetValue(events);
                     var method = gottenPropObj.GetType().GetMethod("Invoke");
-                    method.Invoke(gottenPropObj, new object[] { BtlShare.EInputActionType.LightAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
+                    method.Invoke(gottenPropObj, new object[] { EInputActionType.LightAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
                     break;
                 }
                 case PlayerInput.HeavyAttack:
@@ -403,7 +463,7 @@ namespace WukongCSharpMod
                     var prop = events.GetType().GetProperty("Evt_InputCastSkill");
                     var gottenPropObj = prop.GetValue(events);
                     var method = gottenPropObj.GetType().GetMethod("Invoke");
-                    method.Invoke(gottenPropObj, new object[] { BtlShare.EInputActionType.HeavyAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
+                    method.Invoke(gottenPropObj, new object[] { EInputActionType.HeavyAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
                     break;
                 }
                 // TODO: This doesn't yet work
