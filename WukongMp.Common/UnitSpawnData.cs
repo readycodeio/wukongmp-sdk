@@ -27,7 +27,7 @@ namespace WukongMp.Common
             var nameBytes = System.Text.Encoding.UTF8.GetBytes(spawnData.Name);
             var nameLength = (short)nameBytes.Length;
 
-            outstream.Write(BitConverter.GetBytes(spawnData.Id), 0, 1);
+            outstream.WriteByte(spawnData.Id);
             outstream.Write(BitConverter.GetBytes(nameLength), 0, 2);
             outstream.Write(nameBytes, 0, nameBytes.Length);
             outstream.Write(BitConverter.GetBytes(spawnData.X), 0, 4);

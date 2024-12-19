@@ -141,7 +141,7 @@ namespace WukongMp.Common
         {
             var propertiesForRoomCreation = new RoomOptions
             {
-                PublishUserId = true,
+                PublishUserId = true
             };
             var enterRoomParams = new EnterRoomArgs
             {

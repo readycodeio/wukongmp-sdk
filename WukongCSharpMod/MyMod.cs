@@ -312,7 +312,7 @@ namespace WukongCSharpMod
             KeyState keyState;
             PlayerInput key;
 
-            Console.WriteLine($"Action: {actionname}, TriggerEvent: {triggerevent}, Value: {value}");
+            // Console.WriteLine($"Action: {actionname}, TriggerEvent: {triggerevent}, Value: {value}");
 
             switch (actionname)
             {
