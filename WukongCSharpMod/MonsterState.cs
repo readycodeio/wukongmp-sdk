@@ -1,4 +1,4 @@
-﻿using UnrealEngine.Engine;
+﻿using b1;
 
 namespace WukongCSharpMod
 {
@@ -6,6 +6,6 @@ namespace WukongCSharpMod
     {
         public byte Id { get; set; }
         public bool Local { get; set; }
-        public APawn Pawn { get; set; }
+        public BUTamerActor Pawn { get; set; }
     }
 }

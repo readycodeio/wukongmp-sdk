@@ -43,7 +43,7 @@ namespace WukongCSharpMod
                 _photon.Reconnect();
             });
 
-            InitWorldCallbacks();
+            // InitWorldCallbacks();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
@@ -141,12 +141,12 @@ namespace WukongCSharpMod
             _photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
 
-        private APawn SpawnRemoteUnit(byte id, string unitName, float x, float y, float z)
+        private BUTamerActor SpawnRemoteUnit(byte id, string unitName, float x, float y, float z)
         {
             return SpawnUnit(id, unitName, x, y, z, true);
         }
 
-        private APawn SpawnUnit(byte id, string unitName, float x, float y, float z, bool remote)
+        private BUTamerActor SpawnUnit(byte id, string unitName, float x, float y, float z, bool remote)
         {
             Console.WriteLine($"Spawn unit called for {unitName}");
 
@@ -164,7 +164,14 @@ namespace WukongCSharpMod
             Console.WriteLine($"Class to spawn: {@class.PathName}");
 
             var transform = new FTransform(rot, loc);
-            var actor = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(GameUtils.GetWorld(), @class, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
+            var actor = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(GameUtils.GetWorld(), @class, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
+            
+            if (actor is null)
+            {
+                Console.WriteLine("Actor is null");
+                return null;
+            }
+            
             BGU_UnrealActorUtil.BGUFinishSpawningActor(actor, transform);
 
             if (!remote)
@@ -176,10 +183,23 @@ namespace WukongCSharpMod
                 Local = false,
                 Pawn = actor
             });
+            
+            // find controller
+            var world = GameUtils.GetWorld();
+            var characters = world.GetAllActorsOfClass<ABGUCharacter>();
+
+            AController controller = null;
+
+            foreach (var character in characters)
+            {
+                var owner = character.GetTamerOwner();
+                if (owner == actor)
+                {
+                    controller = character.GetController();
+                }
+            }
 
             // de-brain AI
-            var controller = actor.GetController();
-
             if (controller is null)
             {
                 Console.WriteLine("No controller");
