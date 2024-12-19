@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Photon.Chat;
 using Photon.Client;
+using AuthenticationValues = Photon.Chat.AuthenticationValues;
 
 namespace WukongMp.Common
 {
@@ -78,10 +79,6 @@ namespace WukongMp.Common
                     Name = "Spawn enemy NPC",
                     Handler = data =>
                     {
-                        if (string.IsNullOrEmpty(data))
-                        {
-                            data = "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_02.TAMER_gycy_lang_02_C";
-                        }
                         OnSpawnEnemy?.Invoke(data);
                     }
                 });
@@ -99,10 +96,8 @@ namespace WukongMp.Common
 
         private void ServiceChat()
         {
-            if (_chatClient != null)
-            {
-                _chatClient.Service();
-            }
+            _chatClient?.Service();
+
             var message = OnGetMessage?.Invoke();
             if (!string.IsNullOrEmpty(message))
             {

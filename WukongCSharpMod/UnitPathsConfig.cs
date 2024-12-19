@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace WukongCSharpMod
 {
     internal static class UnitPathsConfig
     {
-
         private static readonly Dictionary<string, string> Configurations = new Dictionary<string, string>
         {
             { "sentinel", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_01.TAMER_gycy_lang_01_C" },
@@ -36,6 +34,7 @@ namespace WukongCSharpMod
             {
                 return value;
             }
+
             Console.WriteLine($"Unit path for '{unitName}' not found. Spawning {Configurations.First().Key} instead");
             return Configurations.First().Value;
         }

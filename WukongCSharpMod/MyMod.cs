@@ -121,8 +121,10 @@ namespace WukongCSharpMod
             events.Evt_TriggerInputActionImpl += SendInputEvents;
         }
 
-        private void SpawnEnemy(string unitName)
+        private void SpawnEnemy(string enemyName)
         {
+            var unitName = UnitPathsConfig.GetUnitPath(enemyName);
+
             var controlledPawn = GameUtils.GetControlledPawn();
             var loc = controlledPawn.GetActorLocation() + new FVector(300, 300, 0);
 
