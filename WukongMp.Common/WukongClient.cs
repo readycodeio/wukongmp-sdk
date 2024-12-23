@@ -20,17 +20,8 @@ namespace WukongMp.Common
         public event Action<int, float[]> OnPlayerPosition;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
         public event Action<int, KeyPress> OnKeyReceived;
-        public event Action<int, float, float, float, float, bool> OnAttackRotation;
         public event Action<int, byte> OnRollSkill;
-        public event Action<int, bool> OnMarkRolling;
-        public event Action<int> OnRestartCombo;
-        public event Action<int, int, int> OnChangeDodgeSkill;
-        public event Action<int> OnResetDodgeSkill;
         public event Action<int, byte, float, float> OnJumpSkillCue;
-        public event Action<int, float> OnStrideJump;
-        public event Action<int, byte> OnSwitchFsmSolver;
-        public event Action<int, float> OnUpdateFsmSolver;
-        public event Action<int, string> OnFsmEvent;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
@@ -93,54 +84,16 @@ namespace WukongMp.Common
                     OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Id, unitData.Name, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 4:
-                    // attack rotation
-                    var attackRotation = (float[])photonEvent.CustomData;
-                    OnAttackRotation?.Invoke(photonEvent.Sender, attackRotation[0], attackRotation[1], attackRotation[2], attackRotation[3], attackRotation[4] > 0);
-                    break;
-                case 5:
                     // roll skill
                     OnRollSkill?.Invoke(photonEvent.Sender, (byte)photonEvent.CustomData);
                     break;
-                case 6:
-                    // mark rolling
-                    OnMarkRolling?.Invoke(photonEvent.Sender, (bool)photonEvent.CustomData);
-                    break;
-                case 7:
-                    // restart combo
-                    OnRestartCombo?.Invoke(photonEvent.Sender);
-                    break;
-                case 8:
-                    // change dodge skill
-                    var dodgeSkill = (int[])photonEvent.CustomData;
-                    OnChangeDodgeSkill?.Invoke(photonEvent.Sender, dodgeSkill[0], dodgeSkill[1]);
-                    break;
-                case 9:
-                    // reset dodge skill
-                    OnResetDodgeSkill?.Invoke(photonEvent.Sender);
-                    break;
-                case 10:
+                case 5:
                     // jump skill cue
                     var jumpSkillCue = (byte[])photonEvent.CustomData;
                     var startJumpDir = jumpSkillCue[0];
                     var currentInputX = BitConverter.ToSingle(jumpSkillCue, 1);
                     var currentInputY = BitConverter.ToSingle(jumpSkillCue, 5);
                     OnJumpSkillCue?.Invoke(photonEvent.Sender, startJumpDir, currentInputX, currentInputY);
-                    break;
-                case 11:
-                    // stride jump
-                    OnStrideJump?.Invoke(photonEvent.Sender, (float)photonEvent.CustomData);
-                    break;
-                case 12:
-                    // switch fsm solver
-                    OnSwitchFsmSolver?.Invoke(photonEvent.Sender, (byte)photonEvent.CustomData);
-                    break;
-                case 13:
-                    // update fsm solver
-                    OnUpdateFsmSolver?.Invoke(photonEvent.Sender, (float)photonEvent.CustomData);
-                    break;
-                case 14:
-                    // fsm event
-                    OnFsmEvent?.Invoke(photonEvent.Sender, (string)photonEvent.CustomData);
                     break;
             }
         }
@@ -227,18 +180,18 @@ namespace WukongMp.Common
             _wukongChat.InitializeChat(UserName);
         }
 
-        public void SendKeyPressed(PlayerInput key, KeyState state)
-        {
-            var press = new KeyPress(key, state);
-            const byte eventCode = 2;
-            _client.OpRaiseEvent(eventCode, press, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
         public void SendPositionUpdate(float x, float y, float z, float rx, float ry, float rz, float rw)
         {
             const byte eventCode = 1;
             var evData = new[] { x, y, z, rx, ry, rz, rw };
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SendKeyPressed(PlayerInput key, KeyState state)
+        {
+            var press = new KeyPress(key, state);
+            const byte eventCode = 2;
+            _client.OpRaiseEvent(eventCode, press, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SpawnUnit(byte id, string unitName, float x, float y, float z)
@@ -248,83 +201,21 @@ namespace WukongMp.Common
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        public void SendAttackRotation(float x, float y, float z, float turnspeed, bool force)
-        {
-            const byte eventCode = 4;
-            var evData = new[] { x, y, z, turnspeed, force ? 1 : 0 };
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
         public void SendRollSkill(byte rolldir)
         {
-            const byte eventCode = 5;
+            const byte eventCode = 4;
             var evData = rolldir;
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        public void SendMarkRolling(bool p1)
-        {
-            const byte eventCode = 6;
-            var evData = p1;
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-
-        public void SendReStartCombo()
-        {
-            const byte eventCode = 7;
-            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendChangeDodgeSkill(int p1, int p2)
-        {
-            const byte eventCode = 8;
-            var evData = new[] { p1, p2 };
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendResetDodgeSkill()
-        {
-            const byte eventCode = 9;
-            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
         public void SendJumpSkillCue(byte startjumpdir, float currentinputX, float currentinputY)
         {
-            const byte eventCode = 10;
+            const byte eventCode = 5;
             var evData = new List<byte> { startjumpdir };
             evData.AddRange(BitConverter.GetBytes(currentinputX));
             evData.AddRange(BitConverter.GetBytes(currentinputY));
 
             _client.OpRaiseEvent(eventCode, evData.ToArray(), RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendStrideJump(float height)
-        {
-            const byte eventCode = 11;
-            var evData = height;
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendSwitchFsmSolver(byte newsolvertype)
-        {
-            const byte eventCode = 12;
-            var evData = newsolvertype;
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendUpdateFsmSolver(float p1)
-        {
-            const byte eventCode = 13;
-            var evData = p1;
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendFsmEvent(string toString)
-        {
-            const byte eventCode = 14;
-            var evData = toString;
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         #region IConnectionCallbacks

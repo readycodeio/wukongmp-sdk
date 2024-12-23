@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using b1;
 using b1.BGW;
 using b1.Prediction;
-using BtlB1;
 using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -42,73 +37,6 @@ namespace WukongCSharpMod
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
             WukongClient.Log("Patched with Harmony");
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Z, () =>
-            {
-                Utils.TryRunOnGameThread(() =>
-                {
-                    WukongClient.Log("Alt + Z");
-                    var events = BUS_EventCollectionCS.Get(GameUtils.GetControlledPawn());
-
-                    var properties = events.GetType().GetProperties();
-                    foreach (var prop in properties)
-                    {
-                        if (prop.Name.StartsWith("Evt_"))
-                        {
-                            var propObj = prop.GetValue(events);
-
-                            // check if it has a + operator for subscribing
-                            // example: public static GSDel_Void_Bool operator +(GSDel_Void_Bool GSEvent, Del_Void_Bool Del)
-                            var addMethod = propObj.GetType().GetMethod("op_Addition");
-
-                            if (addMethod == null)
-                                continue;
-
-                            // cast del to the deleagte type expected by +=, e.g. Del_Void_Bool
-                            var delType = addMethod.GetParameters()[1].ParameterType;
-
-                            // list the parameter types of its invoke func
-                            var invokeMethod = propObj.GetType().GetMethod("Invoke");
-
-                            // if delType return type is not void, return
-                            if (invokeMethod.ReturnType != typeof(void))
-                            {
-                                WukongClient.Log("Return type is not void");
-                                continue;
-                            }
-
-                            var paramTypes = invokeMethod.GetParameters().Select(p => p.ParameterType).ToArray();
-
-                            // use LINQ expression to create a delegate that calls GenericPrint with event name and its params
-                            var parameters = paramTypes.Select(Expression.Parameter).ToArray();
-
-                            var genericPrintArgs = new List<Expression> { Expression.Constant(prop.Name) };
-
-                            var paramsArray = Expression.NewArrayInit(typeof(object), parameters.Select(p => Expression.Convert(p, typeof(object))));
-                            genericPrintArgs.Add(paramsArray);
-
-                            WukongClient.Log($"Subscribing to {prop.Name}");
-                            WukongClient.Log($"Params: {string.Join(", ", paramTypes.Select(p => p.Name))}");
-
-                            try
-                            {
-                                var call = Expression.Call(typeof(MyMod), nameof(GenericPrint), new Type[] { }, genericPrintArgs.ToArray());
-                                var lambda = Expression.Lambda(call, parameters);
-                                var del = lambda.Compile();
-
-                                var castDel = Delegate.CreateDelegate(delType, del.Target, del.Method);
-
-                                // subscribe to the event via addMethod, it's static
-                                addMethod.Invoke(null, new object[] { propObj, castDel });
-                            }
-                            catch (Exception e)
-                            {
-                                WukongClient.Log($"Error subscribing to {prop.Name}: {e.Message}");
-                            }
-                        }
-                    }
-                });
-            });
-
             // InitWorldCallbacks();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
@@ -128,20 +56,7 @@ namespace WukongCSharpMod
             });
         }
 
-        private static readonly object Lock = new object();
-
-        public static void GenericPrint(string name, object[] parameters)
-        {
-            var sb = new StringBuilder($"Calling {name} with args: ");
-            foreach (var parameter in parameters)
-            {
-                sb.Append(parameter);
-                sb.Append(", ");
-            }
-
-            WukongClient.Log(sb.ToString());
-        }
-
+        // ReSharper disable once UnusedMember.Local
         private void InitWorldCallbacks()
         {
             UWorld world = GameUtils.GetWorld();
@@ -189,17 +104,8 @@ namespace WukongCSharpMod
             _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             _photon.OnPlayerPosition += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, data));
             _photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
-            _photon.OnAttackRotation += (id, x, y, z, speed, force) => Utils.TryRunOnGameThread(() => ApplyAttackRotation(id, x, y, z, speed, force));
             _photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
-            _photon.OnMarkRolling += (id, rolling) => Utils.TryRunOnGameThread(() => ApplyMarkRolling(id, rolling));
-            _photon.OnChangeDodgeSkill += (id, p1, p2) => Utils.TryRunOnGameThread(() => ApplyChangeDodgeSkill(id, p1, p2));
-            _photon.OnRestartCombo += (id) => Utils.TryRunOnGameThread(() => ApplyRestartCombo(id));
-            _photon.OnResetDodgeSkill += (id) => Utils.TryRunOnGameThread(() => ApplyResetDodgeSkill(id));
             _photon.OnJumpSkillCue += (id, input, x, y) => Utils.TryRunOnGameThread(() => ApplyJumpSkillCue(id, (ESkillDirection)input, x, y));
-            _photon.OnStrideJump += (id, height) => Utils.TryRunOnGameThread(() => ApplyStrideJump(id, height));
-            // _photon.OnFsmEvent += (id, tag) => Utils.TryRunOnGameThread(() => ApplyFsmEvent(id, tag));
-            // _photon.OnUpdateFsmSolver += (id, p1) => Utils.TryRunOnGameThread(() => ApplyUpdateFsmSolver(id, p1));
-            // _photon.OnSwitchFsmSolver += (id, newsolvertype) => Utils.TryRunOnGameThread(() => ApplySwitchFsmSolver(id, newsolvertype));
             _photon.WukongChat.OnSendMessage += AddMessageToWidget;
             _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -209,85 +115,13 @@ namespace WukongCSharpMod
             SubscribeToPlayerEvents();
         }
 
-        private void ApplySwitchFsmSolver(int id, byte newsolvertype)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying FSM solver switch for player {id}");
-            events.Evt_SwitchFsmSolver.Invoke((EFsmSolverType)newsolvertype);
-        }
-
-        private void ApplyUpdateFsmSolver(int id, float p1)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying FSM solver update for player {id}");
-            events.Evt_UpdateFsmSolver.Invoke(p1);
-        }
-
-        private void ApplyFsmEvent(int id, string tag)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying FSM event for player {id}");
-            events.Evt_TriggerFsmEvent.Invoke(new FGameplayTag(new FName(tag)));
-        }
-
         private void SubscribeToPlayerEvents()
         {
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_TriggerInputActionImpl += SendInputEvents;
-            events.Evt_AttackRotateToPos += SendAttackRotation; // important
             events.Evt_TriggerRollSkill += SendRollSkill;
-            events.Evt_ReStartDodgeCombo += SendRestartCombo;
-            events.Evt_ChangeDodgeSkill += SendChangeDodgeSkill;
-            events.Evt_ResetDodgeSkill += SendResetDodgeSkill;
-            events.Evt_MarkRolling += SendMarkRolling;
             events.Evt_TriggerJumpSkill.Cue += SendTriggerJumpSkillCue;
-            events.Evt_TriggerFsmEvent += SendFsmEvent;
-            events.Evt_UpdateFsmSolver += SendUpdateFsmSolver;
-            events.Evt_SwitchFsmSolver += SendSwitchFsmSolver;
-            // events.Evt_TriggerStrideJump += SendStrideJump;
-        }
-
-        private void SendSwitchFsmSolver(EFsmSolverType newsolvertype)
-        {
-            WukongClient.Log($"Sending FSM solver switch to server: {newsolvertype}");
-            _photon.SendSwitchFsmSolver((byte)newsolvertype);
-        }
-
-        private void SendUpdateFsmSolver(float p1)
-        {
-            WukongClient.Log($"Sending FSM solver update to server: {p1}");
-            _photon.SendUpdateFsmSolver(p1);
-        }
-
-        private void SendFsmEvent(FGameplayTag tag)
-        {
-            WukongClient.Log($"Sending FSM event to server: {tag}");
-            _photon.SendFsmEvent(tag.TagName.ToString());
         }
 
         private void UnsubscribeFromPlayerEvents()
@@ -295,35 +129,8 @@ namespace WukongCSharpMod
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_TriggerInputActionImpl -= SendInputEvents;
-            events.Evt_AttackRotateToPos -= SendAttackRotation;
             events.Evt_TriggerRollSkill -= SendRollSkill;
-            events.Evt_ReStartDodgeCombo -= SendRestartCombo;
-            events.Evt_ChangeDodgeSkill -= SendChangeDodgeSkill;
-            events.Evt_ResetDodgeSkill -= SendResetDodgeSkill;
-            events.Evt_MarkRolling -= SendMarkRolling;
             events.Evt_TriggerJumpSkill.Cue -= SendTriggerJumpSkillCue;
-            // events.Evt_TriggerStrideJump -= SendStrideJump;
-        }
-
-        private void SendStrideJump(float height)
-        {
-            WukongClient.Log($"Sending stride jump to server: {height}");
-            _photon.SendStrideJump(height);
-        }
-
-        private void ApplyStrideJump(int id, float height)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying stride jump for player {id}");
-            events.Evt_TriggerStrideJump.Invoke(height);
         }
 
         private void SendTriggerJumpSkillCue(ESkillDirection startjumpdir, FVector2D currentinput, GSPredictionKey predictionkey)
@@ -347,90 +154,6 @@ namespace WukongCSharpMod
             events.Evt_TriggerJumpSkill.Cue.Invoke(input, new FVector2D(x, y));
         }
 
-        private void SendResetDodgeSkill()
-        {
-            WukongClient.Log("Sending reset dodge skill to server");
-            _photon.SendResetDodgeSkill();
-        }
-
-        private void ApplyResetDodgeSkill(int id)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying reset dodge skill for player {id}");
-            events.Evt_ResetDodgeSkill.Invoke();
-        }
-
-        private void SendChangeDodgeSkill(int p1, int p2)
-        {
-            WukongClient.Log($"Sending change dodge skill to server: {p1}, {p2}");
-            _photon.SendChangeDodgeSkill(p1, p2);
-        }
-
-        private void ApplyChangeDodgeSkill(int id, int p1, int arg3)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying change dodge skill for player {id}");
-            events.Evt_ChangeDodgeSkill.Invoke(p1, arg3);
-        }
-
-        private void SendRestartCombo()
-        {
-            WukongClient.Log("Sending restart combo to server");
-            _photon.SendReStartCombo();
-        }
-
-        private void ApplyRestartCombo(int id)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying restart combo for player {id}");
-            events.Evt_ReStartDodgeCombo.Invoke();
-        }
-
-        private void SendMarkRolling(bool p1)
-        {
-            WukongClient.Log($"Sending mark rolling to server: {p1}");
-            _photon.SendMarkRolling(p1);
-        }
-
-        private void ApplyMarkRolling(int id, bool rolling)
-        {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying mark rolling for player {id}");
-            events.Evt_MarkRolling.Invoke(rolling);
-        }
-
         private void SendRollSkill(ESkillDirection rolldir)
         {
             WukongClient.Log($"Sending roll skill to server: {rolldir}");
@@ -450,27 +173,6 @@ namespace WukongCSharpMod
 
             WukongClient.Log($"Applying roll skill for player {id}");
             events.Evt_TriggerRollSkill.Invoke(dir);
-        }
-
-        private void SendAttackRotation(FVector targetlocation, float turnspeed, bool bforceupdate)
-        {
-            WukongClient.Log($"Sending attack rotation to server: {targetlocation}, {turnspeed}, {bforceupdate}");
-            _photon.SendAttackRotation(targetlocation.X, targetlocation.Y, targetlocation.Z, turnspeed, bforceupdate);
-        }
-
-        private void ApplyAttackRotation(int id, float x, float y, float z, float speed, bool force)
-        {
-            if (!_connectedPlayers.TryGetValue((byte)id, out var player))
-            {
-                WukongClient.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            WukongClient.Log($"Applying attack rotation for player {id}");
-            events.Evt_AttackRotateToPos.Invoke(new FVector(x, y, z), speed, force);
         }
 
         private void SpawnEnemy(string enemyName)
@@ -493,9 +195,9 @@ namespace WukongCSharpMod
             _photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
 
-        private BUTamerActor SpawnRemoteUnit(byte id, string unitName, float x, float y, float z)
+        private void SpawnRemoteUnit(byte id, string unitName, float x, float y, float z)
         {
-            return SpawnUnit(id, unitName, x, y, z, true);
+            SpawnUnit(id, unitName, x, y, z, true);
         }
 
         private BUTamerActor SpawnUnit(byte id, string unitName, float x, float y, float z, bool remote)
@@ -703,13 +405,9 @@ namespace WukongCSharpMod
             var clone = player.Pawn;
             var events = BUS_EventCollectionCS.Get(clone);
 
-            // TODO: Set player.LastMovement
             var goal = new FVector(data[0], data[1], data[2]);
-            var rotation = new FRotator(new FQuat(data[3], data[4], data[5], data[6]));
             try
             {
-                // events.Evt_SetActorRotation.Invoke(rotation, false);
-                // events.Evt_InterpolationMove.Invoke(goal, rotation, 0, true, false, false, true);
                 events.Evt_AIMoveTo.Invoke(goal, null, player.MovementType, 10f, EBGUMoveAIType.None, false, false, "", "");
             }
             catch

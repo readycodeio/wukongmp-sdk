@@ -10,6 +10,8 @@ namespace WukongCSharpMod
         private static APlayerController _playerController;
         private static APlayerCameraManager _cameraManager;
 
+        // Update player camera <-> ground intersection point
+        // Used by monster spawning command to spawn enemies at the camera look position
         public static void TickWithGroup(float deltaTime)
         {
             if (_cameraManager == null)
@@ -30,7 +32,7 @@ namespace WukongCSharpMod
                 return;
             }
 
-            // intersect with the plane at Z = playerLoc.Z, do not use Unreal raytrace
+            // intersect with the plane at Z = playerLoc.Z, gets the job done
             var z = _playerController.GetActorLocation().Z;
 
             var hit = FMath.LinePlaneIntersection(traceStart, traceEnd, new FVector(0, 0, z), new FVector(0, 0, 1));
