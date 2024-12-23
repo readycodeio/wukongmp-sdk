@@ -2,12 +2,9 @@
 {
     public enum PlayerInput
     {
-        Jump,
-        Roll,
         Walk,
         Sprint,
         LightAttack,
         HeavyAttack,
-        CastImmobilize,
     }
 }
