@@ -1,14 +1,12 @@
-﻿using b1;
-using UnrealEngine.Engine;
+﻿using UnrealEngine.Engine;
 
 namespace WukongCSharpMod
 {
     public class PlayerState
     {
         public int PhotonId { get; }
-        public EAIMoveSpeedType MovementType { get; set; } = EAIMoveSpeedType.RUN;
-        public ESkillDirection LastMovement { get; set; } = ESkillDirection.None;
-        public APawn Pawn { get; }
+        public APawn Pawn { get; set; }
+        public bool LastIsFalling { get; set; }
 
         public PlayerState(int photonId, APawn pawn)
         {

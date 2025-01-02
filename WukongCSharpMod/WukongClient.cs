@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
+using b1;
 using Photon.Client;
 using Photon.Realtime;
+using UnrealEngine.Engine;
+using WukongCSharpMod;
 
 namespace WukongMp.Common
 {
@@ -30,12 +34,23 @@ namespace WukongMp.Common
         private readonly float _initialY;
         private readonly float _initialZ;
 
+        public PlayerState LocalPlayerState { get; }
+        public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
+
+        public PlayerState GetByActor(AActor actor)
+        {
+            var kvp = ConnectedPlayers.FirstOrDefault(x => x.Value.Pawn == actor);
+            return kvp.Value;
+        }
+
         public WukongClient(Action onJoinedRoom, float x, float y, float z)
         {
             _joinedRoomCallback = onJoinedRoom;
             _initialX = x;
             _initialY = y;
             _initialZ = z;
+
+            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, null);
         }
 
         ~WukongClient()
@@ -95,6 +110,30 @@ namespace WukongMp.Common
                     var currentInputY = BitConverter.ToSingle(jumpSkillCue, 5);
                     OnJumpSkillCue?.Invoke(photonEvent.Sender, startJumpDir, currentInputX, currentInputY);
                     break;
+                case 6:
+                    var isFalling = (bool)photonEvent.CustomData;
+                    var sender = photonEvent.Sender;
+
+                    if (ConnectedPlayers.TryGetValue(sender, out var playerState))
+                    {
+                        playerState.LastIsFalling = isFalling;
+                        Log($"Received message: Player {sender} is falling: {isFalling}");
+                    }
+                    else
+                    {
+                        Log($"Received message: Player {sender} is falling: {isFalling} (not found)");
+
+                        // assign to all connnected players
+                        foreach (var player in GetOtherPlayersInRoom())
+                        {
+                            if (ConnectedPlayers.TryGetValue(player, out playerState))
+                            {
+                                playerState.LastIsFalling = isFalling;
+                            }
+                        }
+                    }
+
+                    break;
             }
         }
 
@@ -119,11 +158,6 @@ namespace WukongMp.Common
 
             new Thread(LoopGame).Start();
             Log("Running forever.");
-        }
-
-        public void Reconnect()
-        {
-            _client.ReconnectAndRejoin();
         }
 
         // ReSharper disable once FunctionNeverReturns
@@ -161,7 +195,7 @@ namespace WukongMp.Common
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation,
-                RoomName = "Kuba123"
+                RoomName = "Kuba123123"
             };
 
             _client.OpJoinOrCreateRoom(enterRoomParams);
@@ -216,6 +250,12 @@ namespace WukongMp.Common
             evData.AddRange(BitConverter.GetBytes(currentinputY));
 
             _client.OpRaiseEvent(eventCode, evData.ToArray(), RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SendIsFalling(bool isFalling)
+        {
+            const byte eventCode = 6;
+            _client.OpRaiseEvent(eventCode, isFalling, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         #region IConnectionCallbacks

@@ -23,16 +23,19 @@ namespace WukongCSharpMod
 
         private UUserWidget _chatWidget;
 
-        private WukongClient _photon;
+        public WukongClient Photon { get; private set; }
         private readonly Harmony _harmony = new Harmony("WukongMP");
 
-        private readonly Dictionary<int, PlayerState> _connectedPlayers = new Dictionary<int, PlayerState>();
         private readonly Dictionary<byte, MonsterState> _monsters = new Dictionary<byte, MonsterState>();
 
         private FVector _savedPosition;
+        
+        public static MyMod Instance { get; private set; }
 
         public void Init()
         {
+            Instance = this;
+            
             WukongClient.Log("Init");
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
             WukongClient.Log("Patched with Harmony");
@@ -74,9 +77,9 @@ namespace WukongCSharpMod
         private void InitPhoton()
         {
             var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
-            _photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
-            _photon.WukongChat.OnGetMessage += GetMessageFromWidget;
-            _photon.WukongChat.OnConnectRequest += Connect;
+            Photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
+            Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+            Photon.WukongChat.OnConnectRequest += Connect;
         }
 
         private void OnMapLoaded()
@@ -95,53 +98,47 @@ namespace WukongCSharpMod
 
         private void Connect()
         {
-            if (_photon.Ready)
+            if (Photon.Ready)
             {
                 return;
             }
 
-            _photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
-            _photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
-            _photon.OnPlayerPosition += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, data));
-            _photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
-            _photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
-            _photon.OnJumpSkillCue += (id, input, x, y) => Utils.TryRunOnGameThread(() => ApplyJumpSkillCue(id, (ESkillDirection)input, x, y));
-            _photon.WukongChat.OnSendMessage += AddMessageToWidget;
-            _photon.WukongChat.OnSavePosition += SaveCurrentPosition;
-            _photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            _photon.WukongChat.OnSpawnEnemy += name => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
+            Photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
+            Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
+            Photon.OnPlayerPosition += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, data));
+            Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
+            Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
+            Photon.OnJumpSkillCue += (id, input, x, y) => Utils.TryRunOnGameThread(() => ApplyJumpSkillCue(id, (ESkillDirection)input, x, y));
+            Photon.WukongChat.OnSendMessage += AddMessageToWidget;
+            Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
+            Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
+            Photon.WukongChat.OnSpawnEnemy += name => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
 
-            _photon.StartClient();
+            Photon.StartClient();
             SubscribeToPlayerEvents();
         }
 
         private void SubscribeToPlayerEvents()
         {
             var myPawn = GameUtils.GetControlledPawn();
+            Photon.LocalPlayerState.Pawn = myPawn;
+            
             var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_TriggerInputActionImpl += SendInputEvents;
-            events.Evt_TriggerRollSkill += SendRollSkill;
-            events.Evt_TriggerJumpSkill.Cue += SendTriggerJumpSkillCue;
+            // events.Evt_TriggerInputActionImpl += SendInputEvents;
+            // events.Evt_TriggerRollSkill += SendRollSkill;
         }
 
         private void UnsubscribeFromPlayerEvents()
         {
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_TriggerInputActionImpl -= SendInputEvents;
-            events.Evt_TriggerRollSkill -= SendRollSkill;
-            events.Evt_TriggerJumpSkill.Cue -= SendTriggerJumpSkillCue;
-        }
-
-        private void SendTriggerJumpSkillCue(ESkillDirection startjumpdir, FVector2D currentinput, GSPredictionKey predictionkey)
-        {
-            WukongClient.Log($"Sending jump skill cue to server: {startjumpdir}, {currentinput}");
-            _photon.SendJumpSkillCue((byte)startjumpdir, currentinput.X, currentinput.Y);
+            // events.Evt_TriggerInputActionImpl -= SendInputEvents;
+            // events.Evt_TriggerRollSkill -= SendRollSkill;
         }
 
         private void ApplyJumpSkillCue(int id, ESkillDirection input, float x, float y)
         {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
                 WukongClient.Log($"Player not found: {id}");
                 return;
@@ -157,12 +154,12 @@ namespace WukongCSharpMod
         private void SendRollSkill(ESkillDirection rolldir)
         {
             WukongClient.Log($"Sending roll skill to server: {rolldir}");
-            _photon.SendRollSkill((byte)rolldir);
+            Photon.SendRollSkill((byte)rolldir);
         }
 
         private void ApplyRollSkill(int id, ESkillDirection dir)
         {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
                 WukongClient.Log($"Player not found: {id}");
                 return;
@@ -192,7 +189,7 @@ namespace WukongCSharpMod
             };
 
             WukongClient.Log($"Sending spawn enemy {enemyName} at {loc}");
-            _photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
+            Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
 
         private void SpawnRemoteUnit(byte id, string unitName, float x, float y, float z)
@@ -271,7 +268,7 @@ namespace WukongCSharpMod
             var localTransform = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
 
             // when joining game, spawn all players already in room
-            foreach (var id in _photon.GetOtherPlayersInRoom())
+            foreach (var id in Photon.GetOtherPlayersInRoom())
             {
                 Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, localTransform.X, localTransform.Y, localTransform.Z));
             }
@@ -279,7 +276,7 @@ namespace WukongCSharpMod
 
         private void SpawnCloneForJoiningPlayer(int id, float x, float y, float z)
         {
-            if (_connectedPlayers.ContainsKey(id))
+            if (Photon.ConnectedPlayers.ContainsKey(id))
             {
                 WukongClient.Log($"Player already exists: {id}");
                 return;
@@ -335,7 +332,7 @@ namespace WukongCSharpMod
             }
 
             // assign in dictionary
-            _connectedPlayers[id] = new PlayerState(id, clone);
+            Photon.ConnectedPlayers[id] = new PlayerState(id, clone);
 
             // teleport clone to cloneTransform
             var targetTransform = new FTransform(FRotator.ZeroRotator, new FVector(x, y, z));
@@ -363,7 +360,7 @@ namespace WukongCSharpMod
                         var transform = GameUtils.GetControlledPawn().BGUGetActorTransform();
                         var pos = transform.GetLocation();
                         var rot = transform.GetRotation();
-                        _photon.SendPositionUpdate(pos.X, pos.Y, pos.Z, rot.X, rot.Y, rot.Z, rot.W);
+                        Photon.SendPositionUpdate(pos.X, pos.Y, pos.Z, rot.X, rot.Y, rot.Z, rot.W);
                     }
                     else if (triggerevent == ETriggerEvent.Completed)
                     {
@@ -391,12 +388,12 @@ namespace WukongCSharpMod
                     return;
             }
 
-            _photon.SendKeyPressed(key, keyState);
+            Photon.SendKeyPressed(key, keyState);
         }
 
         private void ApplyPlayerPosition(int id, float[] data)
         {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
                 WukongClient.Log($"Player not found: {id}");
                 return;
@@ -408,7 +405,7 @@ namespace WukongCSharpMod
             var goal = new FVector(data[0], data[1], data[2]);
             try
             {
-                events.Evt_AIMoveTo.Invoke(goal, null, player.MovementType, 10f, EBGUMoveAIType.None, false, false, "", "");
+                events.Evt_AIMoveTo.Invoke(goal, null, EAIMoveSpeedType.JOG, 10f, EBGUMoveAIType.None, false, false, "", "");
             }
             catch
             {
@@ -462,7 +459,7 @@ namespace WukongCSharpMod
 
         private void ApplyPlayerInput(int id, KeyPress keyPress)
         {
-            if (!_connectedPlayers.TryGetValue(id, out var player))
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
                 WukongClient.Log($"Player not found: {id}");
                 return;
@@ -492,12 +489,6 @@ namespace WukongCSharpMod
                     method.Invoke(gottenPropObj, new object[] { EInputActionType.HeavyAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
                     break;
                 }
-                case PlayerInput.Walk:
-                    player.MovementType = keyPress.State == KeyState.Pressed ? EAIMoveSpeedType.JOG : EAIMoveSpeedType.RUN;
-                    break;
-                case PlayerInput.Sprint:
-                    player.MovementType = keyPress.State == KeyState.Pressed ? EAIMoveSpeedType.SPRINT : EAIMoveSpeedType.RUN;
-                    break;
             }
         }
 
