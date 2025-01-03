@@ -5,7 +5,7 @@ using Photon.Chat;
 using Photon.Client;
 using AuthenticationValues = Photon.Chat.AuthenticationValues;
 
-namespace WukongMp.Common
+namespace WukongCSharpMod
 {
     internal class Command
     {

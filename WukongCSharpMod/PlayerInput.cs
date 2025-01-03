@@ -1,4 +1,4 @@
-﻿namespace WukongMp.Common
+﻿namespace WukongCSharpMod
 {
     public enum PlayerInput
     {

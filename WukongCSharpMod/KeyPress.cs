@@ -1,6 +1,6 @@
 using Photon.Client;
 
-namespace WukongMp.Common
+namespace WukongCSharpMod
 {
     public readonly struct KeyPress
     {

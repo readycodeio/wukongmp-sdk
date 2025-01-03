@@ -2,7 +2,6 @@
 using System.Reflection;
 using b1;
 using b1.BGW;
-using b1.Prediction;
 using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -11,7 +10,6 @@ using UnrealEngine.Engine;
 using UnrealEngine.Plugins.EnhancedInput;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using WukongMp.Common;
 using FInputActionValue = b1.FInputActionValue;
 
 namespace WukongCSharpMod
@@ -24,27 +22,28 @@ namespace WukongCSharpMod
         private UUserWidget _chatWidget;
 
         public WukongClient Photon { get; private set; }
+
         private readonly Harmony _harmony = new Harmony("WukongMP");
 
         private readonly Dictionary<byte, MonsterState> _monsters = new Dictionary<byte, MonsterState>();
 
         private FVector _savedPosition;
-        
+
         public static MyMod Instance { get; private set; }
 
         public void Init()
         {
             Instance = this;
-            
-            WukongClient.Log("Init");
+
+            Helpers.Log("Init");
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
-            WukongClient.Log("Patched with Harmony");
+            Helpers.Log("Patched with Harmony");
 
             // InitWorldCallbacks();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
-                WukongClient.Log("Alt + X");
+                Helpers.Log("Alt + X");
 
                 InitPhoton();
                 Connect();
@@ -52,7 +51,7 @@ namespace WukongCSharpMod
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
             {
-                WukongClient.Log("Alt + H");
+                Helpers.Log("Alt + H");
 
                 InitializeChatWidget();
                 InitPhoton();
@@ -70,7 +69,7 @@ namespace WukongCSharpMod
             }
             else
             {
-                WukongClient.Log("World is null.");
+                Helpers.Log("World is null.");
             }
         }
 
@@ -86,12 +85,12 @@ namespace WukongCSharpMod
         {
             UWorld world = GameUtils.GetWorld();
             if (world != null)
-                WukongClient.Log($"Map loaded: {world.GetCurrentLevelName()}");
+                Helpers.Log($"Map loaded: {world.GetCurrentLevelName()}");
         }
 
         private void OnDelayBeginPlay()
         {
-            WukongClient.Log("Delay begin play.");
+            Helpers.Log("Delay begin play.");
             InitializeChatWidget();
             InitPhoton();
         }
@@ -104,11 +103,11 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
-            Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
+            // Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             Photon.OnPlayerPosition += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, data));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
-            Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
-            Photon.OnJumpSkillCue += (id, input, x, y) => Utils.TryRunOnGameThread(() => ApplyJumpSkillCue(id, (ESkillDirection)input, x, y));
+            // Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
+            // Photon.OnJumpSkillCue += (id, input, x, y) => Utils.TryRunOnGameThread(() => ApplyJumpSkillCue(id, (ESkillDirection)input, x, y));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -122,16 +121,16 @@ namespace WukongCSharpMod
         {
             var myPawn = GameUtils.GetControlledPawn();
             Photon.LocalPlayerState.Pawn = myPawn;
-            
-            var events = BUS_EventCollectionCS.Get(myPawn);
+
+            // var events = BUS_EventCollectionCS.Get(myPawn);
             // events.Evt_TriggerInputActionImpl += SendInputEvents;
             // events.Evt_TriggerRollSkill += SendRollSkill;
         }
 
         private void UnsubscribeFromPlayerEvents()
         {
-            var myPawn = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(myPawn);
+            // var myPawn = GameUtils.GetControlledPawn();
+            // var events = BUS_EventCollectionCS.Get(myPawn);
             // events.Evt_TriggerInputActionImpl -= SendInputEvents;
             // events.Evt_TriggerRollSkill -= SendRollSkill;
         }
@@ -140,20 +139,20 @@ namespace WukongCSharpMod
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                WukongClient.Log($"Player not found: {id}");
+                Helpers.Log($"Player not found: {id}");
                 return;
             }
 
             var clone = player.Pawn;
             var events = BUS_EventCollectionCS.Get(clone);
 
-            WukongClient.Log($"Applying jump skill cue for player {id}");
+            Helpers.Log($"Applying jump skill cue for player {id}");
             events.Evt_TriggerJumpSkill.Cue.Invoke(input, new FVector2D(x, y));
         }
 
         private void SendRollSkill(ESkillDirection rolldir)
         {
-            WukongClient.Log($"Sending roll skill to server: {rolldir}");
+            Helpers.Log($"Sending roll skill to server: {rolldir}");
             Photon.SendRollSkill((byte)rolldir);
         }
 
@@ -161,14 +160,14 @@ namespace WukongCSharpMod
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                WukongClient.Log($"Player not found: {id}");
+                Helpers.Log($"Player not found: {id}");
                 return;
             }
 
             var clone = player.Pawn;
             var events = BUS_EventCollectionCS.Get(clone);
 
-            WukongClient.Log($"Applying roll skill for player {id}");
+            Helpers.Log($"Applying roll skill for player {id}");
             events.Evt_TriggerRollSkill.Invoke(dir);
         }
 
@@ -188,7 +187,7 @@ namespace WukongCSharpMod
                 Pawn = pawn
             };
 
-            WukongClient.Log($"Sending spawn enemy {enemyName} at {loc}");
+            Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
 
@@ -199,7 +198,7 @@ namespace WukongCSharpMod
 
         private BUTamerActor SpawnUnit(byte id, string unitName, float x, float y, float z, bool remote)
         {
-            WukongClient.Log($"Spawn unit called for {unitName}");
+            Helpers.Log($"Spawn unit called for {unitName}");
 
             if (string.IsNullOrEmpty(unitName))
                 return null;
@@ -219,7 +218,7 @@ namespace WukongCSharpMod
             currentRef.OverrideResetType = EBGUResetType.None;
             currentRef.GroupOverrideResetType = EBGUResetType.None;
             buTamerActor.TamerType = ETamerType.Spawned;
-            WukongClient.Log("Spawned enemy: " + buTamerActor.GetName());
+            Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
 
             if (!remote)
                 return buTamerActor;
@@ -235,7 +234,7 @@ namespace WukongCSharpMod
 
             if (events is null)
             {
-                WukongClient.Log("Events is null");
+                Helpers.Log("Events is null");
                 return buTamerActor;
             }
 
@@ -278,7 +277,7 @@ namespace WukongCSharpMod
         {
             if (Photon.ConnectedPlayers.ContainsKey(id))
             {
-                WukongClient.Log($"Player already exists: {id}");
+                Helpers.Log($"Player already exists: {id}");
                 return;
             }
 
@@ -316,23 +315,24 @@ namespace WukongCSharpMod
 
             if (@class is null)
             {
-                WukongClient.Log("Class is null");
+                Helpers.Log("Class is null");
                 return;
             }
 
             var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
 
-            WukongClient.Log("Spawned new controller");
+            Helpers.Log("Spawned new controller");
 
             if (newController != null && newController is ABGUAIPlayerController ctrl)
             {
                 ctrl.Possess(clone);
                 ctrl.CanBeDamaged = false;
-                WukongClient.Log("Possessed new controller");
+                Helpers.Log("Possessed new controller");
             }
 
             // assign in dictionary
             Photon.ConnectedPlayers[id] = new PlayerState(id, clone);
+            Helpers.Log($"Assigned player {id} clone {clone.GetEntityHash()}");
 
             // teleport clone to cloneTransform
             var targetTransform = new FTransform(FRotator.ZeroRotator, new FVector(x, y, z));
@@ -349,7 +349,7 @@ namespace WukongCSharpMod
             KeyState keyState;
             PlayerInput key;
 
-            // WukongClient.Log($"Action: {actionname}, TriggerEvent: {triggerevent}, Value: {value}");
+            // Helpers.Log($"Action: {actionname}, TriggerEvent: {triggerevent}, Value: {value}");
 
             switch (actionname)
             {
@@ -395,7 +395,7 @@ namespace WukongCSharpMod
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                WukongClient.Log($"Player not found: {id}");
+                Helpers.Log($"Player not found: {id}");
                 return;
             }
 
@@ -417,7 +417,7 @@ namespace WukongCSharpMod
         {
             if (_chatWidget != null)
             {
-                WukongClient.Log($"Calling AddMessage function with message {message} from {sender}");
+                Helpers.Log($"Calling AddMessage function with message {message} from {sender}");
                 _chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
             }
             else
@@ -434,7 +434,7 @@ namespace WukongCSharpMod
                 var message = _chatWidget.ToolTipText.ToString();
                 if (message.Length > 0)
                 {
-                    WukongClient.Log($"Got message: {message} in GetSentMessage funcition");
+                    Helpers.Log($"Got message: {message} in GetSentMessage function");
                 }
 
                 return message;
@@ -452,7 +452,7 @@ namespace WukongCSharpMod
                 if (widgets.Count == 1)
                 {
                     _chatWidget = widgets[0];
-                    WukongClient.Log("Chat widget initialized!.");
+                    Helpers.Log("Chat widget initialized!.");
                 }
             }
         }
@@ -461,7 +461,7 @@ namespace WukongCSharpMod
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                WukongClient.Log($"Player not found: {id}");
+                Helpers.Log($"Player not found: {id}");
                 return;
             }
 
@@ -469,24 +469,18 @@ namespace WukongCSharpMod
 
             var events = BUS_EventCollectionCS.Get(clone);
 
-            WukongClient.Log($"Player {id} pressed key {keyPress.Key} with state {keyPress.State}");
+            Helpers.Log($"Player {id} pressed key {keyPress.Key} with state {keyPress.State}");
 
             switch (keyPress.Key)
             {
                 case PlayerInput.LightAttack:
                 {
-                    var prop = events.GetType().GetProperty("Evt_InputCastSkill");
-                    var gottenPropObj = prop.GetValue(events);
-                    var method = gottenPropObj.GetType().GetMethod("Invoke");
-                    method.Invoke(gottenPropObj, new object[] { EInputActionType.LightAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
+                    events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
                     break;
                 }
                 case PlayerInput.HeavyAttack:
                 {
-                    var prop = events.GetType().GetProperty("Evt_InputCastSkill");
-                    var gottenPropObj = prop.GetValue(events);
-                    var method = gottenPropObj.GetType().GetMethod("Invoke");
-                    method.Invoke(gottenPropObj, new object[] { EInputActionType.HeavyAttack, keyPress.State == KeyState.Released, 0, -1, -1 });
+                    events.Evt_InputCastSkill.Invoke(EInputActionType.HeavyAttack, keyPress.State == KeyState.Released);
                     break;
                 }
             }
@@ -494,7 +488,7 @@ namespace WukongCSharpMod
 
         public void DeInit()
         {
-            WukongClient.Log("DeInit");
+            Helpers.Log("DeInit");
         }
     }
 }

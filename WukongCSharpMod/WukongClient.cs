@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using b1;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
-using WukongCSharpMod;
+using UnrealEngine.Runtime;
 
-namespace WukongMp.Common
+namespace WukongCSharpMod
 {
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks
     {
@@ -59,16 +58,6 @@ namespace WukongMp.Common
             _client.RemoveCallbackTarget(this);
         }
 
-#if UNITY_EDITOR
-        private static void Log(string message) {
-            UnityEngine.Debug.Log(message);
-        }
-#else
-        public static void Log(string message)
-        {
-            Console.WriteLine(message);
-        }
-#endif
 
         public void OnEvent(EventData photonEvent)
         {
@@ -110,33 +99,25 @@ namespace WukongMp.Common
                     var currentInputY = BitConverter.ToSingle(jumpSkillCue, 5);
                     OnJumpSkillCue?.Invoke(photonEvent.Sender, startJumpDir, currentInputX, currentInputY);
                     break;
-                case 6:
+                case 6: // TODO: Player actor state, not events
+                {
                     var isFalling = (bool)photonEvent.CustomData;
                     var sender = photonEvent.Sender;
 
                     if (ConnectedPlayers.TryGetValue(sender, out var playerState))
                     {
-                        playerState.LastIsFalling = isFalling;
-                        Log($"Received message: Player {sender} is falling: {isFalling}");
+                        playerState.IsFalling = isFalling;
+                        Helpers.Log($"Received message: Player {sender} is falling: {isFalling}");
                     }
                     else
                     {
-                        Log($"Received message: Player {sender} is falling: {isFalling} (not found)");
-
-                        // assign to all connnected players
-                        foreach (var player in GetOtherPlayersInRoom())
-                        {
-                            if (ConnectedPlayers.TryGetValue(player, out playerState))
-                            {
-                                playerState.LastIsFalling = isFalling;
-                            }
-                        }
+                        Helpers.Log($"Received message: Player {sender} is falling: {isFalling} (not found)");
                     }
 
                     break;
+                }
             }
         }
-
 
         public void StartClient()
         {
@@ -157,7 +138,7 @@ namespace WukongMp.Common
             });
 
             new Thread(LoopGame).Start();
-            Log("Running forever.");
+            Helpers.Log("Running forever.");
         }
 
         // ReSharper disable once FunctionNeverReturns
@@ -174,13 +155,13 @@ namespace WukongMp.Common
         {
             if (_client.CurrentRoom is null)
             {
-                Log("No room joined.");
+                Helpers.Log("No room joined.");
                 yield break;
             }
 
             foreach (var player in _client.CurrentRoom.Players)
             {
-                Log($"Other player: {player.Value.ActorNumber} {player.Value.UserId} local: {player.Value.IsLocal}");
+                Helpers.Log($"Other player: {player.Value.ActorNumber} {player.Value.UserId} local: {player.Value.IsLocal}");
                 if (!player.Value.IsLocal)
                     yield return player.Value.ActorNumber;
             }
@@ -203,7 +184,7 @@ namespace WukongMp.Common
 
         private void OnStateChange(ClientState arg1, ClientState arg2)
         {
-            Log(arg1 + " -> " + arg2);
+            Helpers.Log(arg1 + " -> " + arg2);
         }
 
         private void SendRoomJoined()
@@ -235,11 +216,10 @@ namespace WukongMp.Common
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        public void SendRollSkill(byte rolldir)
+        public void SendRollSkill(byte rollDir)
         {
             const byte eventCode = 4;
-            var evData = rolldir;
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, rollDir, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SendJumpSkillCue(byte startjumpdir, float currentinputX, float currentinputY)
@@ -252,48 +232,174 @@ namespace WukongMp.Common
             _client.OpRaiseEvent(eventCode, evData.ToArray(), RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
+        public void SendIsFlying(bool isFlying)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.IsFlying = isFlying;
+                Helpers.Log($"Assigned IsFlying ({isFlying}) to player {id}");
+            }
+#endif
+        }
+
         public void SendIsFalling(bool isFalling)
         {
-            const byte eventCode = 6;
-            _client.OpRaiseEvent(eventCode, isFalling, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.IsFalling = isFalling;
+                Helpers.Log($"Assigned IsFalling ({isFalling}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendIsLastFrameFalling(bool lastIsLastFrameFalling)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.IsLastFrameFalling = lastIsLastFrameFalling;
+                Helpers.Log($"Assigned IsLastFrameFalling ({lastIsLastFrameFalling}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendIsLandingMove(bool lastIsLandingMove)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.IsLandingMove = lastIsLandingMove;
+                Helpers.Log($"Assigned IsLandingMove ({lastIsLandingMove}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendActorLocation(FVector actorLocation)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.ActorLocation = actorLocation;
+                Helpers.Log($"Assigned ActorLocation ({actorLocation}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendActorRotation(FRotator actorRotation)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.ActorRotation = actorRotation;
+                Helpers.Log($"Assigned ActorRotation ({actorRotation}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendForwardVector(FVector forwardVector)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.ForwardVector = forwardVector;
+                Helpers.Log($"Assigned ForwardVector ({forwardVector}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendVelocity(FVector velocity)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.Velocity = velocity;
+                Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendLeftFootPos(FVector leftFootPos)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.LeftFootPos = leftFootPos;
+                Helpers.Log($"Assigned LeftFootPos ({leftFootPos}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendRightFootPos(FVector rightFootPos)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.RightFootPos = rightFootPos;
+                Helpers.Log($"Assigned RightFootPos ({rightFootPos}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendMoveAcceleration(FVector moveAcceleration)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.MoveAcceleration = moveAcceleration;
+                Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
+            }
+#endif
+        }
+
+        public void SendVerticalSpeed(float verticalSpeed)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.VerticalSpeed = verticalSpeed;
+                Helpers.Log($"Assigned VerticalSpeed ({verticalSpeed}) to player {id}");
+            }
+#endif
         }
 
         #region IConnectionCallbacks
 
         public void OnConnected()
         {
-            Log("Connected");
+            Helpers.Log("Connected");
         }
 
         public void OnConnectedToMaster()
         {
-            Log("Connected to master server: " + _client.RealtimePeer.ServerIpAddress);
+            Helpers.Log("Connected to master server: " + _client.RealtimePeer.ServerIpAddress);
             MyJoinRandomOrCreateRoom();
         }
 
         public void OnDisconnected(DisconnectCause cause)
         {
-            Log($"Disconnected: {cause}");
+            Helpers.Log($"Disconnected: {cause}");
         }
 
         public void OnRegionListReceived(RegionHandler regionHandler)
         {
-            Log("Region list received");
+            Helpers.Log("Region list received");
         }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
         {
-            Log("Custom authentication response");
+            Helpers.Log("Custom authentication response");
 
             foreach (var kvp in data)
             {
-                Log($"{kvp.Key}: {kvp.Value}");
+                Helpers.Log($"{kvp.Key}: {kvp.Value}");
             }
         }
 
         public void OnCustomAuthenticationFailed(string debugMessage)
         {
-            Log("Custom authentication failed: " + debugMessage);
+            Helpers.Log("Custom authentication failed: " + debugMessage);
         }
 
         #endregion
@@ -302,39 +408,39 @@ namespace WukongMp.Common
 
         public void OnFriendListUpdate(List<FriendInfo> friendList)
         {
-            Log("Friend list update");
+            Helpers.Log("Friend list update");
         }
 
         public void OnCreatedRoom()
         {
-            Log("Created room");
+            Helpers.Log("Created room");
         }
 
         public void OnCreateRoomFailed(short returnCode, string message)
         {
-            Log("Create room failed: " + message);
+            Helpers.Log("Create room failed: " + message);
         }
 
         public void OnJoinedRoom()
         {
-            Log("Joined room");
+            Helpers.Log("Joined room");
             _joinedRoomCallback?.Invoke();
             SendRoomJoined();
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
         {
-            Log("Join room failed: " + message);
+            Helpers.Log("Join room failed: " + message);
         }
 
         public void OnJoinRandomFailed(short returnCode, string message)
         {
-            Log("Join random failed: " + message);
+            Helpers.Log("Join random failed: " + message);
         }
 
         public void OnLeftRoom()
         {
-            Log("Left room");
+            Helpers.Log("Left room");
         }
 
         #endregion

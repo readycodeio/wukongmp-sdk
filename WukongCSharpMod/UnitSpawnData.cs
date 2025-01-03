@@ -1,7 +1,8 @@
-﻿using Photon.Client;
-using System;
+﻿using System;
+using System.Text;
+using Photon.Client;
 
-namespace WukongMp.Common
+namespace WukongCSharpMod
 {
     public readonly struct UnitSpawnData
     {
@@ -24,7 +25,7 @@ namespace WukongMp.Common
         {
             var spawnData = (UnitSpawnData)unitSpawnData;
 
-            var nameBytes = System.Text.Encoding.UTF8.GetBytes(spawnData.Name);
+            var nameBytes = Encoding.UTF8.GetBytes(spawnData.Name);
             var nameLength = (short)nameBytes.Length;
 
             outstream.WriteByte(spawnData.Id);
@@ -47,7 +48,7 @@ namespace WukongMp.Common
 
             var nameBytes = new byte[nameLength];
             instream.Read(nameBytes, 0, nameLength);
-            var name = System.Text.Encoding.UTF8.GetString(nameBytes);
+            var name = Encoding.UTF8.GetString(nameBytes);
 
             var floatBytes = new byte[4];
             instream.Read(floatBytes, 0, 4);
