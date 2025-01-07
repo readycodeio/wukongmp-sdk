@@ -161,11 +161,9 @@ namespace WukongCSharpMod
                     __instance.MoveAcceleration = FVector.ZeroVector;
                     playerState.MoveAcceleration = FVector.ZeroVector;
                 }
-                
-                __instance.ActorRotation = playerState.ActorRotation;
 
                 var events = BUS_EventCollectionCS.Get(Owner);
-                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, FRotator.ZeroRotator, 0.033f, true, false, true, true);
+                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, 0.033f, true, false, false, true);
             }
         }
     }
