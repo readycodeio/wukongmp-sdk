@@ -383,6 +383,12 @@ namespace WukongCSharpMod
                 playerState.ActorRotation = new FRotator(a[0], a[1], a[2]);
                 Helpers.Log($"Assigned ActorRotation ({actorRotation}) to player {id}");
             }
+            
+            if (changedProps.TryGetValue(nameof(PlayerState.OrientRotationToMovement), out var orientRotationToMovement))
+            {
+                playerState.OrientRotationToMovement = (bool)orientRotationToMovement;
+                Helpers.Log($"Assigned OrientRotationToMovement ({orientRotationToMovement}) to player {id}");
+            }
         }
 
         public void OnMasterClientSwitched(Player newMasterClient) { }

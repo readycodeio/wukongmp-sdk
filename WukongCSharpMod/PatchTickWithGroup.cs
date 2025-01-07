@@ -220,6 +220,13 @@ namespace WukongCSharpMod
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
                     Helpers.Log($"Sent TurnInplaceRemainAngle ({photon.LocalPlayerState.TurnInplaceRemainAngle})");
                 }
+
+                if (localState.OrientRotationToMovement != __instance.bOrientRotationToMovement)
+                {
+                    photon.LocalPlayerState.OrientRotationToMovement = __instance.bOrientRotationToMovement;
+                    photon.SetPlayerProperty(nameof(PlayerState.OrientRotationToMovement), photon.LocalPlayerState.OrientRotationToMovement);
+                    Helpers.Log($"Sent OrientRotationToMovement ({photon.LocalPlayerState.OrientRotationToMovement})");
+                }
             }
             else
             {
@@ -234,6 +241,7 @@ namespace WukongCSharpMod
                 __instance.IsAttacking = playerState.IsAttacking;
                 __instance.TurnInplaceTargetRotation = playerState.TurnInplaceTargetRotation;
                 __instance.TurnInplaceRemainAngle = playerState.TurnInplaceRemainAngle;
+                __instance.bOrientRotationToMovement = playerState.OrientRotationToMovement;
             }
         }
     }

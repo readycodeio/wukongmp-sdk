@@ -19,6 +19,7 @@ namespace WukongCSharpMod
         public float TurnInplaceRemainAngle { get; set; }
         public FRotator ActorRotation { get; set; }
         public bool IsAttacking { get; set; }
+        public bool OrientRotationToMovement { get; set; }
 
         public PlayerState(int photonId, APawn pawn)
         {
