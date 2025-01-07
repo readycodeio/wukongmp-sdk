@@ -275,7 +275,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.Velocity)] = velocity;
+            _playerProperties[nameof(PlayerState.Velocity)] = new float[] { velocity.X, velocity.Y, velocity.Z };
 #endif
         }
 
@@ -288,7 +288,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.MoveAcceleration)] = moveAcceleration;
+            _playerProperties[nameof(PlayerState.MoveAcceleration)] = new float[] { moveAcceleration.X, moveAcceleration.Y, moveAcceleration.Z };
 #endif
         }
 
@@ -402,9 +402,12 @@ namespace WukongCSharpMod
         {
             var id = targetPlayer.ActorNumber;
 
-            if (targetPlayer.IsLocal || !ConnectedPlayers.TryGetValue(id, out var playerState))
+            if (targetPlayer.IsLocal)
+                return;
+
+            if (!ConnectedPlayers.TryGetValue(id, out var playerState))
             {
-                Helpers.Log($"Player {id} is local or not found.");
+                Helpers.Log($"Player {id} not found.");
                 return;
             }
 
@@ -428,13 +431,15 @@ namespace WukongCSharpMod
 
             if (changedProps.TryGetValue(nameof(PlayerState.Velocity), out var velocity))
             {
-                playerState.Velocity = (FVector)velocity;
+                var v = (float[])velocity;
+                playerState.Velocity = new FVector(v[0], v[1], v[2]);
                 Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
             }
 
             if (changedProps.TryGetValue(nameof(PlayerState.MoveAcceleration), out var moveAcceleration))
             {
-                playerState.MoveAcceleration = (FVector)moveAcceleration;
+                var a = (float[])moveAcceleration;
+                playerState.MoveAcceleration = new FVector(a[0], a[1], a[2]);
                 Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
             }
 
