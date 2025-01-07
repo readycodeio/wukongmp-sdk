@@ -222,8 +222,15 @@ namespace WukongCSharpMod
             if (_playerProperties.Count == 0)
                 return;
 
-            _client.OpSetCustomPropertiesOfActor(Id, _playerProperties);
+            var toSend = new PhotonHashtable(_playerProperties.Count);
+            foreach (var (key, value) in _playerProperties)
+            {
+                toSend[key] = value;
+            }
+
             _playerProperties.Clear();
+
+            _client.OpSetCustomPropertiesOfActor(Id, toSend);
         }
 
         public void SendIsFlying(bool isFlying)

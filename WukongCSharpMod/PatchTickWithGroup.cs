@@ -14,24 +14,11 @@ namespace WukongCSharpMod
             return AccessTools.Method("b1.BGS_TamerManagerSystem:OnTickWithGroup");
         }
 
-        private static void Prefix(float DeltaTime, int TickGroup)
-        {
-            try
-            {
-                // MyMod.Instance.Photon.DispatchIncomingEvents();
-            }
-            catch (Exception ex)
-            {
-                Helpers.Log("PatchTickWithGroup Prefix Error {ex}");
-            }
-        }
-
         private static void Postfix(float DeltaTime, int TickGroup)
         {
             try
             {
                 Global.TickWithGroup(DeltaTime);
-                // MyMod.Instance.Photon.SendOutgoingCommands();
             }
             catch (Exception ex)
             {
@@ -93,21 +80,21 @@ namespace WukongCSharpMod
                     Helpers.Log($"Sent MoveAcceleration ({photon.LocalPlayerState.MoveAcceleration})");
                 }
             }
-            
-            photon.SendUpdatedPlayerProperties();
-
-            var playerState = photon.GetByActor(Owner);
-
-            if (playerState == null)
+            else
             {
-                return;
-            }
+                var playerState = photon.GetByActor(Owner);
 
-            __instance.IsFlying = playerState.IsFlying;
-            __instance.IsFalling = playerState.IsFalling;
-            __instance.IsLandingMove = playerState.IsLandingMove;
-            __instance.Velocity = playerState.Velocity;
-            __instance.MoveAcceleration = playerState.MoveAcceleration;
+                if (playerState == null)
+                {
+                    return;
+                }
+
+                __instance.IsFlying = playerState.IsFlying;
+                __instance.IsFalling = playerState.IsFalling;
+                __instance.IsLandingMove = playerState.IsLandingMove;
+                __instance.Velocity = playerState.Velocity;
+                __instance.MoveAcceleration = playerState.MoveAcceleration;
+            }
         }
     }
 
@@ -143,17 +130,26 @@ namespace WukongCSharpMod
                     Helpers.Log($"Sent InJump ({photon.LocalPlayerState.InJump})");
                 }
             }
-
-            var playerState = photon.GetByActor(Owner);
-
-            if (playerState == null)
+            else
             {
-                return;
-            }
+                var playerState = photon.GetByActor(Owner);
 
-            __instance.bInJump = playerState.InJump;
-            
-            // TODO: photon.SendUpdatedPlayerProperties(); ??
+                if (playerState == null)
+                {
+                    return;
+                }
+
+                __instance.bInJump = playerState.InJump;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnTickImpl")]
+    public class PatchTick
+    {
+        public static void Postfix(float DeltaTime, bool IsThreadTick)
+        {
+            MyMod.Instance.Photon?.SendUpdatedPlayerProperties();
         }
     }
 }
