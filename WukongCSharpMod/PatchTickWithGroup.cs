@@ -93,6 +93,8 @@ namespace WukongCSharpMod
                     Helpers.Log($"Sent MoveAcceleration ({photon.LocalPlayerState.MoveAcceleration})");
                 }
             }
+            
+            photon.SendUpdatedPlayerProperties();
 
             var playerState = photon.GetByActor(Owner);
 
@@ -150,6 +152,8 @@ namespace WukongCSharpMod
             }
 
             __instance.bInJump = playerState.InJump;
+            
+            // TODO: photon.SendUpdatedPlayerProperties(); ??
         }
     }
 }

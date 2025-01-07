@@ -235,7 +235,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned IsFlying ({isFlying}) to player {id}");
             }
 #else
-            _playerProperties.Add(nameof(PlayerState.IsFlying), isFlying);
+            _playerProperties[nameof(PlayerState.IsFlying)] = isFlying;
 #endif
         }
 
@@ -249,7 +249,7 @@ namespace WukongCSharpMod
             }
 
 #else
-            _playerProperties.Add(nameof(PlayerState.IsFalling), isFalling);
+            _playerProperties[nameof(PlayerState.IsFalling)] = isFalling;
 #endif
         }
 
@@ -262,7 +262,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned IsLandingMove ({lastIsLandingMove}) to player {id}");
             }
 #else
-            _playerProperties.Add(nameof(PlayerState.IsLandingMove), lastIsLandingMove);
+            _playerProperties[nameof(PlayerState.IsLandingMove)] = lastIsLandingMove;
 #endif
         }
 
@@ -275,7 +275,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
             }
 #else
-            _playerProperties.Add(nameof(PlayerState.Velocity), velocity);
+            _playerProperties[nameof(PlayerState.Velocity)] = velocity;
 #endif
         }
 
@@ -288,7 +288,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
             }
 #else
-            _playerProperties.Add(nameof(PlayerState.MoveAcceleration), moveAcceleration);
+            _playerProperties[nameof(PlayerState.MoveAcceleration)] = moveAcceleration;
 #endif
         }
 
@@ -301,7 +301,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
             }
 #else
-            _playerProperties.Add(nameof(PlayerState.InJump), inJump);
+            _playerProperties[nameof(PlayerState.InJump)] = inJump;
 #endif
         }
 
