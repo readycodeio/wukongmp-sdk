@@ -3,7 +3,9 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using UnrealEngine.Engine;
+using UnrealEngine.Plugins.EnhancedInput;
 using UnrealEngine.Runtime;
+using FInputActionValue = b1.FInputActionValue;
 
 namespace WukongCSharpMod
 {
@@ -25,6 +27,44 @@ namespace WukongCSharpMod
             {
                 Helpers.Log("PatchTickWithGroup Postfix Error {ex}");
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnTriggerInputActionImpl")]
+    public class PatchPlayerInputs
+    {
+        public static void Postfix(
+            string ActionName,
+            ETriggerEvent TriggerEvent,
+            FInputActionValue Value)
+        {
+            var photon = MyMod.Instance.Photon;
+
+            if (photon == null)
+            {
+                return;
+            }
+
+            KeyState keyState;
+            PlayerInput key;
+
+            Helpers.Log($"Action: {ActionName}, TriggerEvent: {TriggerEvent}, Value: {Value}");
+
+            switch (ActionName)
+            {
+                case "IA_B1LightAttack":
+                    key = PlayerInput.LightAttack;
+                    keyState = TriggerEvent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                case "IA_B1HeavyAttack":
+                    key = PlayerInput.HeavyAttack;
+                    keyState = TriggerEvent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
+                    break;
+                default:
+                    return;
+            }
+
+            photon.SendKeyPressed(key, keyState);
         }
     }
 
@@ -69,6 +109,12 @@ namespace WukongCSharpMod
 
                 if (!localState.Velocity.Equals(__instance.Velocity, Tolerance))
                 {
+                    // fix running in place
+                    if (__instance.Velocity.Size() < 1f)
+                    {
+                        __instance.Velocity = FVector.ZeroVector;
+                    }
+
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
                     photon.SendVelocity(photon.LocalPlayerState.Velocity);
                     Helpers.Log($"Sent Velocity ({photon.LocalPlayerState.Velocity})");

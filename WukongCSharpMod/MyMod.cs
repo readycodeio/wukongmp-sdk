@@ -105,8 +105,6 @@ namespace WukongCSharpMod
             Photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
             Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
-            // Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
-            // Photon.OnJumpSkillCue += (id, input, x, y) => Utils.TryRunOnGameThread(() => ApplyJumpSkillCue(id, (ESkillDirection)input, x, y));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -121,15 +119,13 @@ namespace WukongCSharpMod
             var myPawn = GameUtils.GetControlledPawn();
             Photon.LocalPlayerState.Pawn = myPawn;
 
-            var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_TriggerInputActionImpl += SendInputEvents;
+            // var events = BUS_EventCollectionCS.Get(myPawn);
         }
 
         private void UnsubscribeFromPlayerEvents()
         {
-            var myPawn = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_TriggerInputActionImpl -= SendInputEvents;
+            // var myPawn = GameUtils.GetControlledPawn();
+            // var events = BUS_EventCollectionCS.Get(myPawn);
         }
 
         private void SpawnEnemy(string enemyName)
@@ -303,30 +299,6 @@ namespace WukongCSharpMod
             controlledPawn.SetActorTransform(new FTransform(oldPawnRot, oldPawnPos), false, out _, false);
 
             SubscribeToPlayerEvents();
-        }
-
-        private void SendInputEvents(string actionname, ETriggerEvent triggerevent, FInputActionValue value)
-        {
-            KeyState keyState;
-            PlayerInput key;
-
-            // Helpers.Log($"Action: {actionname}, TriggerEvent: {triggerevent}, Value: {value}");
-
-            switch (actionname)
-            {
-                case "IA_B1LightAttack":
-                    key = PlayerInput.LightAttack;
-                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
-                    break;
-                case "IA_B1HeavyAttack":
-                    key = PlayerInput.HeavyAttack;
-                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
-                    break;
-                default:
-                    return;
-            }
-
-            Photon.SendKeyPressed(key, keyState);
         }
 
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
