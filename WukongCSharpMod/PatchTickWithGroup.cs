@@ -104,7 +104,7 @@ namespace WukongCSharpMod
                 __instance.MoveAcceleration = playerState.MoveAcceleration;
 
                 var events = BUS_EventCollectionCS.Get(Owner);
-                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, FRotator.ZeroRotator, DeltaTime, true, false, true, true);
+                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, FRotator.ZeroRotator, 0.033f, true, false, true, true);
             }
         }
     }

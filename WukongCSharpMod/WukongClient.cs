@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -215,8 +216,8 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData.ToArray(), RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        private PhotonHashtable _playerProperties = new PhotonHashtable();
-        private PhotonHashtable _playerPropertiesRo = new PhotonHashtable();
+        private ConcurrentDictionary<string, object> _playerProperties = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<string, object> _playerPropertiesRo = new ConcurrentDictionary<string, object>();
 
         private readonly object _playerPropertiesLock = new object();
 
@@ -229,14 +230,14 @@ namespace WukongCSharpMod
                 if (_playerPropertiesRo.Count == 0)
                     return;
 
-                var toSend = new PhotonHashtable();
+                var hashtable = new PhotonHashtable();
                 foreach (var (key, value) in _playerPropertiesRo)
                 {
-                    toSend[key] = value;
+                    hashtable[key] = value;
                 }
 
                 _playerPropertiesRo.Clear();
-                _client.OpSetCustomPropertiesOfActor(Id, toSend);
+                _client.OpSetCustomPropertiesOfActor(Id, hashtable);
             }
         }
 
@@ -289,7 +290,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.Velocity)] = new float[] { velocity.X, velocity.Y, velocity.Z };
+            _playerProperties[nameof(PlayerState.Velocity)] = new[] { velocity.X, velocity.Y, velocity.Z };
 #endif
         }
 
@@ -302,7 +303,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.MoveAcceleration)] = new float[] { moveAcceleration.X, moveAcceleration.Y, moveAcceleration.Z };
+            _playerProperties[nameof(PlayerState.MoveAcceleration)] = new[] { moveAcceleration.X, moveAcceleration.Y, moveAcceleration.Z };
 #endif
         }
 
@@ -315,7 +316,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned ActorLocation ({actorLocation}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.ActorLocation)] = new float[] { actorLocation.X, actorLocation.Y, actorLocation.Z };
+            _playerProperties[nameof(PlayerState.ActorLocation)] = new[] { actorLocation.X, actorLocation.Y, actorLocation.Z };
 #endif
         }
 
