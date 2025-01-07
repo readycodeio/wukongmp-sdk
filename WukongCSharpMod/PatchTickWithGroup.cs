@@ -3,7 +3,6 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 
 namespace WukongCSharpMod
 {
@@ -40,27 +39,6 @@ namespace WukongCSharpMod
             }
         }
     }
-
-    // [HarmonyPatch(typeof(BUC_ABPPlayerLocomotionData), nameof(BUC_ABPPlayerLocomotionData.Update))]
-    // public class LocomotionPatch
-    // {
-    //     private const float Tolerance = 0.01f;
-    //     
-    //     private static void Prefix(
-    //         BUC_ABPPlayerLocomotionData __instance,
-    //         AActor Owner,
-    //         IBUC_ABPCommonSettingData CommonData,
-    //         IBUC_ABPBasicData BasicData,
-    //         IBUC_ABPCharacterData ChrData,
-    //         IBUC_ABPBGUCharacterData BGUData,
-    //         IBUC_ABPCommonLocomotionData LocomotionData,
-    //         IBUC_ABPSpecialMoveData SpecialMoveData,
-    //         IBUC_ABPHelperData HelperData,
-    //         float DeltaTime)
-    //     {
-    //         var characterData = (BUC_ABPCharacterData)ChrData;
-    //     }
-    // }
 
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     public class PatchPlayerAnimation

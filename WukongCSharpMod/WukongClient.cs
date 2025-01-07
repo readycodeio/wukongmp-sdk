@@ -10,7 +10,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongCSharpMod
 {
-    public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks
+    public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         private readonly RealtimeClient _client = new RealtimeClient();
         private readonly WukongChatter _wukongChat = new WukongChatter();
@@ -99,23 +99,6 @@ namespace WukongCSharpMod
                     var currentInputY = BitConverter.ToSingle(jumpSkillCue, 5);
                     OnJumpSkillCue?.Invoke(photonEvent.Sender, startJumpDir, currentInputX, currentInputY);
                     break;
-                case 6: // TODO: Player actor state, not events
-                {
-                    var isFalling = (bool)photonEvent.CustomData;
-                    var sender = photonEvent.Sender;
-
-                    if (ConnectedPlayers.TryGetValue(sender, out var playerState))
-                    {
-                        playerState.IsFalling = isFalling;
-                        Helpers.Log($"Received message: Player {sender} is falling: {isFalling}");
-                    }
-                    else
-                    {
-                        Helpers.Log($"Received message: Player {sender} is falling: {isFalling} (not found)");
-                    }
-
-                    break;
-                }
             }
         }
 
@@ -232,6 +215,17 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData.ToArray(), RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
+        private readonly PhotonHashtable _playerProperties = new PhotonHashtable();
+
+        public void SendUpdatedPlayerProperties()
+        {
+            if (_playerProperties.Count == 0)
+                return;
+
+            _client.OpSetCustomPropertiesOfActor(Id, _playerProperties);
+            _playerProperties.Clear();
+        }
+
         public void SendIsFlying(bool isFlying)
         {
 #if LOCAL_TESTING
@@ -240,6 +234,8 @@ namespace WukongCSharpMod
                 state.IsFlying = isFlying;
                 Helpers.Log($"Assigned IsFlying ({isFlying}) to player {id}");
             }
+#else
+            _playerProperties.Add(nameof(PlayerState.IsFlying), isFlying);
 #endif
         }
 
@@ -251,6 +247,9 @@ namespace WukongCSharpMod
                 state.IsFalling = isFalling;
                 Helpers.Log($"Assigned IsFalling ({isFalling}) to player {id}");
             }
+
+#else
+            _playerProperties.Add(nameof(PlayerState.IsFalling), isFalling);
 #endif
         }
 
@@ -262,6 +261,8 @@ namespace WukongCSharpMod
                 state.IsLandingMove = lastIsLandingMove;
                 Helpers.Log($"Assigned IsLandingMove ({lastIsLandingMove}) to player {id}");
             }
+#else
+            _playerProperties.Add(nameof(PlayerState.IsLandingMove), lastIsLandingMove);
 #endif
         }
 
@@ -273,6 +274,8 @@ namespace WukongCSharpMod
                 state.Velocity = velocity;
                 Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
             }
+#else
+            _playerProperties.Add(nameof(PlayerState.Velocity), velocity);
 #endif
         }
 
@@ -284,6 +287,8 @@ namespace WukongCSharpMod
                 state.MoveAcceleration = moveAcceleration;
                 Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
             }
+#else
+            _playerProperties.Add(nameof(PlayerState.MoveAcceleration), moveAcceleration);
 #endif
         }
 
@@ -295,6 +300,8 @@ namespace WukongCSharpMod
                 state.InJump = inJump;
                 Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
             }
+#else
+            _playerProperties.Add(nameof(PlayerState.InJump), inJump);
 #endif
         }
 
@@ -378,5 +385,66 @@ namespace WukongCSharpMod
         }
 
         #endregion
+
+        public void OnPlayerEnteredRoom(Player newPlayer)
+        {
+            Helpers.Log($"Player {newPlayer.UserId} entered the room");
+        }
+
+        public void OnPlayerLeftRoom(Player otherPlayer)
+        {
+            Helpers.Log($"Player {otherPlayer.UserId} left the room");
+        }
+
+        public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged) { }
+
+        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
+        {
+            var id = targetPlayer.ActorNumber;
+
+            if (targetPlayer.IsLocal || !ConnectedPlayers.TryGetValue(id, out var playerState))
+            {
+                Helpers.Log($"Player {id} is local or not found.");
+                return;
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.IsFlying), out var isFlying))
+            {
+                playerState.IsFlying = (bool)isFlying;
+                Helpers.Log($"Assigned IsFlying ({isFlying}) to player {id}");
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.IsFalling), out var isFalling))
+            {
+                playerState.IsFalling = (bool)isFalling;
+                Helpers.Log($"Assigned IsFalling ({isFalling}) to player {id}");
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.IsLandingMove), out var isLandingMove))
+            {
+                playerState.IsLandingMove = (bool)isLandingMove;
+                Helpers.Log($"Assigned IsLandingMove ({isLandingMove}) to player {id}");
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.Velocity), out var velocity))
+            {
+                playerState.Velocity = (FVector)velocity;
+                Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.MoveAcceleration), out var moveAcceleration))
+            {
+                playerState.MoveAcceleration = (FVector)moveAcceleration;
+                Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.InJump), out var inJump))
+            {
+                playerState.InJump = (bool)inJump;
+                Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
+            }
+        }
+
+        public void OnMasterClientSwitched(Player newMasterClient) { }
     }
 }
