@@ -215,20 +215,23 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData.ToArray(), RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        private readonly PhotonHashtable _playerProperties = new PhotonHashtable();
+        private PhotonHashtable _playerPropertiesWritable = new PhotonHashtable();
+        private PhotonHashtable _playerPropertiesReadable = new PhotonHashtable();
 
         public void SendUpdatedPlayerProperties()
         {
-            if (_playerProperties.Count == 0)
+            (_playerPropertiesWritable, _playerPropertiesReadable) = (_playerPropertiesReadable, _playerPropertiesWritable);
+
+            if (_playerPropertiesReadable.Count == 0)
                 return;
 
-            var toSend = new PhotonHashtable(_playerProperties.Count);
-            foreach (var (key, value) in _playerProperties)
+            var toSend = new PhotonHashtable();
+            foreach (var (key, value) in _playerPropertiesReadable)
             {
                 toSend[key] = value;
             }
 
-            _playerProperties.Clear();
+            _playerPropertiesReadable.Clear();
 
             _client.OpSetCustomPropertiesOfActor(Id, toSend);
         }
@@ -242,7 +245,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned IsFlying ({isFlying}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.IsFlying)] = isFlying;
+            _playerPropertiesWritable[nameof(PlayerState.IsFlying)] = isFlying;
 #endif
         }
 
@@ -256,7 +259,7 @@ namespace WukongCSharpMod
             }
 
 #else
-            _playerProperties[nameof(PlayerState.IsFalling)] = isFalling;
+            _playerPropertiesWritable[nameof(PlayerState.IsFalling)] = isFalling;
 #endif
         }
 
@@ -269,7 +272,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned IsLandingMove ({lastIsLandingMove}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.IsLandingMove)] = lastIsLandingMove;
+            _playerPropertiesWritable[nameof(PlayerState.IsLandingMove)] = lastIsLandingMove;
 #endif
         }
 
@@ -282,7 +285,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.Velocity)] = new float[] { velocity.X, velocity.Y, velocity.Z };
+            _playerPropertiesWritable[nameof(PlayerState.Velocity)] = new float[] { velocity.X, velocity.Y, velocity.Z };
 #endif
         }
 
@@ -295,7 +298,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.MoveAcceleration)] = new float[] { moveAcceleration.X, moveAcceleration.Y, moveAcceleration.Z };
+            _playerPropertiesWritable[nameof(PlayerState.MoveAcceleration)] = new float[] { moveAcceleration.X, moveAcceleration.Y, moveAcceleration.Z };
 #endif
         }
 
@@ -308,7 +311,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned ActorLocation ({actorLocation}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.ActorLocation)] = new float[] { actorLocation.X, actorLocation.Y, actorLocation.Z };
+            _playerPropertiesWritable[nameof(PlayerState.ActorLocation)] = new float[] { actorLocation.X, actorLocation.Y, actorLocation.Z };
 #endif
         }
 
@@ -321,7 +324,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
             }
 #else
-            _playerProperties[nameof(PlayerState.InJump)] = inJump;
+            _playerPropertiesWritable[nameof(PlayerState.InJump)] = inJump;
 #endif
         }
 

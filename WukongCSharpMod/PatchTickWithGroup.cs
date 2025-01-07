@@ -158,7 +158,10 @@ namespace WukongCSharpMod
     {
         public static void Postfix(float DeltaTime, bool IsThreadTick)
         {
-            MyMod.Instance.Photon?.SendUpdatedPlayerProperties();
+            if (IsThreadTick)
+            {
+                MyMod.Instance.Photon?.SendUpdatedPlayerProperties();
+            }
         }
     }
 }
