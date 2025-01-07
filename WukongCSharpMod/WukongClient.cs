@@ -358,6 +358,25 @@ namespace WukongCSharpMod
                 playerState.TurnInplaceTargetRotation = new FRotator(t[0], t[1], t[2]);
                 Helpers.Log($"Assigned TurnInplaceTargetRotation ({turnInplaceTargetRotation}) to player {id}");
             }
+            
+            if (changedProps.TryGetValue(nameof(PlayerState.IsStandRotate), out var isStandRotate))
+            {
+                playerState.IsStandRotate = (bool)isStandRotate;
+                Helpers.Log($"Assigned IsStandRotate ({isStandRotate}) to player {id}");
+            }
+            
+            if (changedProps.TryGetValue(nameof(PlayerState.TurnInplaceRemainAngle), out var turnInplaceRemainAngle))
+            {
+                playerState.TurnInplaceRemainAngle = (float)turnInplaceRemainAngle;
+                Helpers.Log($"Assigned TurnInplaceRemainAngle ({turnInplaceRemainAngle}) to player {id}");
+            }
+            
+            if (changedProps.TryGetValue(nameof(PlayerState.ActorRotation), out var actorRotation))
+            {
+                var a = (float[])actorRotation;
+                playerState.ActorRotation = new FRotator(a[0], a[1], a[2]);
+                Helpers.Log($"Assigned ActorRotation ({actorRotation}) to player {id}");
+            }
         }
 
         public void OnMasterClientSwitched(Player newMasterClient) { }

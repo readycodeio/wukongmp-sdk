@@ -133,6 +133,13 @@ namespace WukongCSharpMod
                     photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), new[] { photon.LocalPlayerState.ActorLocation.X, photon.LocalPlayerState.ActorLocation.Y, photon.LocalPlayerState.ActorLocation.Z });
                     Helpers.Log($"Sent ActorLocation ({photon.LocalPlayerState.ActorLocation})");
                 }
+                
+                if (!localState.ActorRotation.Equals(__instance.ActorRotation, Tolerance))
+                {
+                    photon.LocalPlayerState.ActorRotation = __instance.ActorRotation;
+                    photon.SetPlayerProperty(nameof(PlayerState.ActorRotation), new[] { photon.LocalPlayerState.ActorRotation.Pitch, photon.LocalPlayerState.ActorRotation.Yaw, photon.LocalPlayerState.ActorRotation.Roll });
+                    Helpers.Log($"Sent ActorRotation ({photon.LocalPlayerState.ActorRotation})");
+                }
             }
             else
             {
@@ -178,7 +185,7 @@ namespace WukongCSharpMod
             {
                 var localState = photon.LocalPlayerState;
 
-                if (!localState.IsStandRotate != __instance.IsStandRotate)
+                if (localState.IsStandRotate != __instance.IsStandRotate)
                 {
                     photon.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
                     photon.SetPlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
