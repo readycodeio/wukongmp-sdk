@@ -365,6 +365,12 @@ namespace WukongCSharpMod
                 Helpers.Log($"Assigned IsStandRotate ({isStandRotate}) to player {id}");
             }
             
+            if (changedProps.TryGetValue(nameof(PlayerState.IsAttacking), out var isAttacking))
+            {
+                playerState.IsAttacking = (bool)isAttacking;
+                Helpers.Log($"Assigned IsAttacking ({isAttacking}) to player {id}");
+            }
+            
             if (changedProps.TryGetValue(nameof(PlayerState.TurnInplaceRemainAngle), out var turnInplaceRemainAngle))
             {
                 playerState.TurnInplaceRemainAngle = (float)turnInplaceRemainAngle;

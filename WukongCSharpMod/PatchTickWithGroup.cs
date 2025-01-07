@@ -109,12 +109,6 @@ namespace WukongCSharpMod
 
                 if (!localState.Velocity.Equals(__instance.Velocity, Tolerance))
                 {
-                    // fix running in place
-                    if (__instance.Velocity.Size() < 1f)
-                    {
-                        __instance.Velocity = FVector.ZeroVector;
-                    }
-
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
                     photon.SetPlayerProperty(nameof(PlayerState.Velocity), new[] { photon.LocalPlayerState.Velocity.X, photon.LocalPlayerState.Velocity.Y, photon.LocalPlayerState.Velocity.Z });
                     Helpers.Log($"Sent Velocity ({photon.LocalPlayerState.Velocity})");
@@ -133,7 +127,7 @@ namespace WukongCSharpMod
                     photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), new[] { photon.LocalPlayerState.ActorLocation.X, photon.LocalPlayerState.ActorLocation.Y, photon.LocalPlayerState.ActorLocation.Z });
                     Helpers.Log($"Sent ActorLocation ({photon.LocalPlayerState.ActorLocation})");
                 }
-                
+
                 if (!localState.ActorRotation.Equals(__instance.ActorRotation, Tolerance))
                 {
                     photon.LocalPlayerState.ActorRotation = __instance.ActorRotation;
@@ -153,8 +147,22 @@ namespace WukongCSharpMod
                 __instance.IsFlying = playerState.IsFlying;
                 __instance.IsFalling = playerState.IsFalling;
                 __instance.IsLandingMove = playerState.IsLandingMove;
+
                 __instance.Velocity = playerState.Velocity;
+                if (__instance.Velocity.IsNearlyZero())
+                {
+                    __instance.Velocity = FVector.ZeroVector;
+                    playerState.Velocity = FVector.ZeroVector;
+                }
+
                 __instance.MoveAcceleration = playerState.MoveAcceleration;
+                if (__instance.MoveAcceleration.IsNearlyZero())
+                {
+                    __instance.MoveAcceleration = FVector.ZeroVector;
+                    playerState.MoveAcceleration = FVector.ZeroVector;
+                }
+                
+                __instance.ActorRotation = playerState.ActorRotation;
 
                 var events = BUS_EventCollectionCS.Get(Owner);
                 events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, FRotator.ZeroRotator, 0.033f, true, false, true, true);
@@ -191,6 +199,13 @@ namespace WukongCSharpMod
                     photon.SetPlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
                     Helpers.Log($"Sent IsStandRotate ({photon.LocalPlayerState.IsStandRotate})");
                 }
+                
+                if (localState.IsAttacking != __instance.IsAttacking)
+                {
+                    photon.LocalPlayerState.IsAttacking = __instance.IsAttacking;
+                    photon.SetPlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
+                    Helpers.Log($"Sent IsAttacking ({photon.LocalPlayerState.IsAttacking})");
+                }
 
                 if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Tolerance))
                 {
@@ -216,6 +231,7 @@ namespace WukongCSharpMod
                 }
 
                 __instance.IsStandRotate = playerState.IsStandRotate;
+                __instance.IsAttacking = playerState.IsAttacking;
                 __instance.TurnInplaceTargetRotation = playerState.TurnInplaceTargetRotation;
                 __instance.TurnInplaceRemainAngle = playerState.TurnInplaceRemainAngle;
             }
