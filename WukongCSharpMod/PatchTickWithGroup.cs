@@ -83,7 +83,7 @@ namespace WukongCSharpMod
                 if (!localState.ActorLocation.Equals(__instance.ActorLocation, Tolerance))
                 {
                     photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
-                    photon.SendMoveAcceleration(photon.LocalPlayerState.ActorLocation);
+                    photon.SendActorLocation(photon.LocalPlayerState.ActorLocation);
                     Helpers.Log($"Sent ActorLocation ({photon.LocalPlayerState.ActorLocation})");
                 }
             }
@@ -101,6 +101,8 @@ namespace WukongCSharpMod
                 __instance.IsLandingMove = playerState.IsLandingMove;
                 __instance.Velocity = playerState.Velocity;
                 __instance.MoveAcceleration = playerState.MoveAcceleration;
+
+                Owner.BGUSetActorLocation(playerState.ActorLocation, false, true, false, true);
             }
         }
     }
