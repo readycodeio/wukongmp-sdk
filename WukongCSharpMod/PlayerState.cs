@@ -14,6 +14,7 @@ namespace WukongCSharpMod
         public FVector Velocity { get; set; }
         public FVector MoveAcceleration { get; set; }
         public FVector ActorLocation { get; set; }
+        public FRotator TurnInplaceTargetRotation { get; set; }
 
         public PlayerState(int photonId, APawn pawn)
         {

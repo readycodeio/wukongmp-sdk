@@ -198,94 +198,42 @@ namespace WukongCSharpMod
 
         public void SendIsFlying(bool isFlying)
         {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.IsFlying = isFlying;
-                Helpers.Log($"Assigned IsFlying ({isFlying}) to player {id}");
-            }
-#else
             _playerProperties[nameof(PlayerState.IsFlying)] = isFlying;
-#endif
         }
 
         public void SendIsFalling(bool isFalling)
         {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.IsFalling = isFalling;
-                Helpers.Log($"Assigned IsFalling ({isFalling}) to player {id}");
-            }
-
-#else
             _playerProperties[nameof(PlayerState.IsFalling)] = isFalling;
-#endif
         }
 
         public void SendIsLandingMove(bool lastIsLandingMove)
         {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.IsLandingMove = lastIsLandingMove;
-                Helpers.Log($"Assigned IsLandingMove ({lastIsLandingMove}) to player {id}");
-            }
-#else
             _playerProperties[nameof(PlayerState.IsLandingMove)] = lastIsLandingMove;
-#endif
         }
 
         public void SendVelocity(FVector velocity)
         {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.Velocity = velocity;
-                Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
-            }
-#else
             _playerProperties[nameof(PlayerState.Velocity)] = new[] { velocity.X, velocity.Y, velocity.Z };
-#endif
         }
 
         public void SendMoveAcceleration(FVector moveAcceleration)
         {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.MoveAcceleration = moveAcceleration;
-                Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
-            }
-#else
             _playerProperties[nameof(PlayerState.MoveAcceleration)] = new[] { moveAcceleration.X, moveAcceleration.Y, moveAcceleration.Z };
-#endif
         }
 
         public void SendActorLocation(FVector actorLocation)
         {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.ActorLocation = actorLocation;
-                Helpers.Log($"Assigned ActorLocation ({actorLocation}) to player {id}");
-            }
-#else
             _playerProperties[nameof(PlayerState.ActorLocation)] = new[] { actorLocation.X, actorLocation.Y, actorLocation.Z };
-#endif
         }
 
         public void SendInJump(bool inJump)
         {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.InJump = inJump;
-                Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
-            }
-#else
             _playerProperties[nameof(PlayerState.InJump)] = inJump;
-#endif
+        }
+
+        public void SendTurnInplaceTargetRotation(FRotator turnInplaceTargetRotation)
+        {
+            _playerProperties[nameof(PlayerState.TurnInplaceTargetRotation)] = new[] { turnInplaceTargetRotation.Pitch, turnInplaceTargetRotation.Yaw, turnInplaceTargetRotation.Roll };
         }
 
         #region IConnectionCallbacks
@@ -437,6 +385,13 @@ namespace WukongCSharpMod
             {
                 playerState.InJump = (bool)inJump;
                 Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.TurnInplaceTargetRotation), out var turnInplaceTargetRotation))
+            {
+                var t = (float[])turnInplaceTargetRotation;
+                playerState.TurnInplaceTargetRotation = new FRotator(t[0], t[1], t[2]);
+                Helpers.Log($"Assigned TurnInplaceTargetRotation ({turnInplaceTargetRotation}) to player {id}");
             }
         }
 

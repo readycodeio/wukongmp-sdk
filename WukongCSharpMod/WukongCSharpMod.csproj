@@ -8,7 +8,6 @@
         <AssemblyName>WukongCSharpMod</AssemblyName>
         <RootNamespace>WukongCSharpMod</RootNamespace>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-<!--        <DefineConstants>LOCAL_TESTING</DefineConstants>-->
     </PropertyGroup>
 
     <ItemGroup>

@@ -7,10 +7,8 @@ using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
 using UnrealEngine.Engine;
-using UnrealEngine.Plugins.EnhancedInput;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using FInputActionValue = b1.FInputActionValue;
 
 namespace WukongCSharpMod
 {

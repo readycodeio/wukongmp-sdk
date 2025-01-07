@@ -155,6 +155,50 @@ namespace WukongCSharpMod
         }
     }
 
+    [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
+    public class PatchBGUPlayerAnimation
+    {
+        private const float Tolerance = 0.01f;
+
+        public static void Postfix(
+            BUC_ABPBGUCharacterData __instance,
+            AActor Owner,
+            IBUC_ABPCharacterData ChrData,
+            IBUC_SpeedCtrlData SpeedCtrlData,
+            float DeltaTime)
+        {
+            var photon = MyMod.Instance.Photon;
+
+            if (photon == null)
+            {
+                return;
+            }
+
+            if (Owner == photon.LocalPlayerState.Pawn)
+            {
+                var localState = photon.LocalPlayerState;
+
+                if (localState.TurnInplaceTargetRotation != __instance.TurnInplaceTargetRotation)
+                {
+                    photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
+                    photon.SendTurnInplaceTargetRotation(photon.LocalPlayerState.TurnInplaceTargetRotation);
+                    Helpers.Log($"Sent TurnInplaceTargetRotation ({photon.LocalPlayerState.TurnInplaceTargetRotation})");
+                }
+            }
+            else
+            {
+                var playerState = photon.GetByActor(Owner);
+
+                if (playerState == null)
+                {
+                    return;
+                }
+
+                __instance.TurnInplaceTargetRotation = playerState.TurnInplaceTargetRotation;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(BUC_ABPJumpV2Data), nameof(BUC_ABPJumpV2Data.Update))]
     public class PatchJumpData
     {
