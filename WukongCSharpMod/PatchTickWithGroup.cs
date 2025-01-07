@@ -3,6 +3,7 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 
 namespace WukongCSharpMod
 {
@@ -102,7 +103,8 @@ namespace WukongCSharpMod
                 __instance.Velocity = playerState.Velocity;
                 __instance.MoveAcceleration = playerState.MoveAcceleration;
 
-                Owner.BGUSetActorLocation(playerState.ActorLocation, false, true, false, true);
+                var events = BUS_EventCollectionCS.Get(Owner);
+                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, FRotator.ZeroRotator, DeltaTime, true, false, true, true);
             }
         }
     }
