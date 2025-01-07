@@ -299,6 +299,19 @@ namespace WukongCSharpMod
 #endif
         }
 
+        public void SendActorLocation(FVector actorLocation)
+        {
+#if LOCAL_TESTING
+            foreach (var (id, state) in ConnectedPlayers)
+            {
+                state.ActorLocation = actorLocation;
+                Helpers.Log($"Assigned ActorLocation ({actorLocation}) to player {id}");
+            }
+#else
+            _playerProperties[nameof(PlayerState.ActorLocation)] = new float[] { actorLocation.X, actorLocation.Y, actorLocation.Z };
+#endif
+        }
+
         public void SendInJump(bool inJump)
         {
 #if LOCAL_TESTING
@@ -448,6 +461,13 @@ namespace WukongCSharpMod
                 var a = (float[])moveAcceleration;
                 playerState.MoveAcceleration = new FVector(a[0], a[1], a[2]);
                 Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
+            }
+
+            if (changedProps.TryGetValue(nameof(PlayerState.ActorLocation), out var actorLocation))
+            {
+                var a = (float[])actorLocation;
+                playerState.ActorLocation = new FVector(a[0], a[1], a[2]);
+                Helpers.Log($"Assigned MoveAcceleration ({actorLocation}) to player {id}");
             }
 
             if (changedProps.TryGetValue(nameof(PlayerState.InJump), out var inJump))

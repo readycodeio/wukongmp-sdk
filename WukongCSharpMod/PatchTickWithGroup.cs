@@ -79,6 +79,13 @@ namespace WukongCSharpMod
                     photon.SendMoveAcceleration(photon.LocalPlayerState.MoveAcceleration);
                     Helpers.Log($"Sent MoveAcceleration ({photon.LocalPlayerState.MoveAcceleration})");
                 }
+
+                if (!localState.ActorLocation.Equals(__instance.ActorLocation, Tolerance))
+                {
+                    photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
+                    photon.SendMoveAcceleration(photon.LocalPlayerState.ActorLocation);
+                    Helpers.Log($"Sent ActorLocation ({photon.LocalPlayerState.ActorLocation})");
+                }
             }
             else
             {

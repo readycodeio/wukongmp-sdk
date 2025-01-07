@@ -13,6 +13,7 @@ namespace WukongCSharpMod
         public bool IsLandingMove { get; set; }
         public FVector Velocity { get; set; }
         public FVector MoveAcceleration { get; set; }
+        public FVector ActorLocation { get; set; }
 
         public PlayerState(int photonId, APawn pawn)
         {
