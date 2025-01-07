@@ -254,17 +254,6 @@ namespace WukongCSharpMod
 #endif
         }
 
-        public void SendIsLastFrameFalling(bool lastIsLastFrameFalling)
-        {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.IsLastFrameFalling = lastIsLastFrameFalling;
-                Helpers.Log($"Assigned IsLastFrameFalling ({lastIsLastFrameFalling}) to player {id}");
-            }
-#endif
-        }
-
         public void SendIsLandingMove(bool lastIsLandingMove)
         {
 #if LOCAL_TESTING
@@ -272,39 +261,6 @@ namespace WukongCSharpMod
             {
                 state.IsLandingMove = lastIsLandingMove;
                 Helpers.Log($"Assigned IsLandingMove ({lastIsLandingMove}) to player {id}");
-            }
-#endif
-        }
-
-        public void SendActorLocation(FVector actorLocation)
-        {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.ActorLocation = actorLocation;
-                Helpers.Log($"Assigned ActorLocation ({actorLocation}) to player {id}");
-            }
-#endif
-        }
-
-        public void SendActorRotation(FRotator actorRotation)
-        {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.ActorRotation = actorRotation;
-                Helpers.Log($"Assigned ActorRotation ({actorRotation}) to player {id}");
-            }
-#endif
-        }
-
-        public void SendForwardVector(FVector forwardVector)
-        {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.ForwardVector = forwardVector;
-                Helpers.Log($"Assigned ForwardVector ({forwardVector}) to player {id}");
             }
 #endif
         }
@@ -320,28 +276,6 @@ namespace WukongCSharpMod
 #endif
         }
 
-        public void SendLeftFootPos(FVector leftFootPos)
-        {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.LeftFootPos = leftFootPos;
-                Helpers.Log($"Assigned LeftFootPos ({leftFootPos}) to player {id}");
-            }
-#endif
-        }
-
-        public void SendRightFootPos(FVector rightFootPos)
-        {
-#if LOCAL_TESTING
-            foreach (var (id, state) in ConnectedPlayers)
-            {
-                state.RightFootPos = rightFootPos;
-                Helpers.Log($"Assigned RightFootPos ({rightFootPos}) to player {id}");
-            }
-#endif
-        }
-
         public void SendMoveAcceleration(FVector moveAcceleration)
         {
 #if LOCAL_TESTING
@@ -353,13 +287,13 @@ namespace WukongCSharpMod
 #endif
         }
 
-        public void SendVerticalSpeed(float verticalSpeed)
+        public void SendInJump(bool inJump)
         {
 #if LOCAL_TESTING
             foreach (var (id, state) in ConnectedPlayers)
             {
-                state.VerticalSpeed = verticalSpeed;
-                Helpers.Log($"Assigned VerticalSpeed ({verticalSpeed}) to player {id}");
+                state.InJump = inJump;
+                Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
             }
 #endif
         }
