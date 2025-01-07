@@ -89,21 +89,21 @@ namespace WukongCSharpMod
                 if (localState.IsFlying != __instance.IsFlying)
                 {
                     photon.LocalPlayerState.IsFlying = __instance.IsFlying;
-                    photon.SendIsFlying(photon.LocalPlayerState.IsFlying);
+                    photon.SetPlayerProperty(nameof(PlayerState.IsFlying), photon.LocalPlayerState.IsFlying);
                     Helpers.Log($"Sent IsFlying ({photon.LocalPlayerState.IsFlying})");
                 }
 
                 if (localState.IsFalling != __instance.IsFalling)
                 {
                     photon.LocalPlayerState.IsFalling = __instance.IsFalling;
-                    photon.SendIsFalling(photon.LocalPlayerState.IsFalling);
+                    photon.SetPlayerProperty(nameof(PlayerState.IsFalling), photon.LocalPlayerState.IsFalling);
                     Helpers.Log($"Sent IsFalling ({photon.LocalPlayerState.IsFalling})");
                 }
 
                 if (localState.IsLandingMove != __instance.IsLandingMove)
                 {
                     photon.LocalPlayerState.IsLandingMove = __instance.IsLandingMove;
-                    photon.SendIsLandingMove(photon.LocalPlayerState.IsLandingMove);
+                    photon.SetPlayerProperty(nameof(PlayerState.IsLandingMove), photon.LocalPlayerState.IsLandingMove);
                     Helpers.Log($"Sent IsLandingMove ({photon.LocalPlayerState.IsLandingMove})");
                 }
 
@@ -116,21 +116,21 @@ namespace WukongCSharpMod
                     }
 
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
-                    photon.SendVelocity(photon.LocalPlayerState.Velocity);
+                    photon.SetPlayerProperty(nameof(PlayerState.Velocity), new[] { photon.LocalPlayerState.Velocity.X, photon.LocalPlayerState.Velocity.Y, photon.LocalPlayerState.Velocity.Z });
                     Helpers.Log($"Sent Velocity ({photon.LocalPlayerState.Velocity})");
                 }
 
                 if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Tolerance))
                 {
                     photon.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
-                    photon.SendMoveAcceleration(photon.LocalPlayerState.MoveAcceleration);
+                    photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), new[] { photon.LocalPlayerState.MoveAcceleration.X, photon.LocalPlayerState.MoveAcceleration.Y, photon.LocalPlayerState.MoveAcceleration.Z });
                     Helpers.Log($"Sent MoveAcceleration ({photon.LocalPlayerState.MoveAcceleration})");
                 }
 
                 if (!localState.ActorLocation.Equals(__instance.ActorLocation, Tolerance))
                 {
                     photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
-                    photon.SendActorLocation(photon.LocalPlayerState.ActorLocation);
+                    photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), new[] { photon.LocalPlayerState.ActorLocation.X, photon.LocalPlayerState.ActorLocation.Y, photon.LocalPlayerState.ActorLocation.Z });
                     Helpers.Log($"Sent ActorLocation ({photon.LocalPlayerState.ActorLocation})");
                 }
             }
@@ -178,11 +178,25 @@ namespace WukongCSharpMod
             {
                 var localState = photon.LocalPlayerState;
 
-                if (localState.TurnInplaceTargetRotation != __instance.TurnInplaceTargetRotation)
+                if (!localState.IsStandRotate != __instance.IsStandRotate)
+                {
+                    photon.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
+                    photon.SetPlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
+                    Helpers.Log($"Sent IsStandRotate ({photon.LocalPlayerState.IsStandRotate})");
+                }
+
+                if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Tolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
-                    photon.SendTurnInplaceTargetRotation(photon.LocalPlayerState.TurnInplaceTargetRotation);
+                    photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), new[] { photon.LocalPlayerState.TurnInplaceTargetRotation.Pitch, photon.LocalPlayerState.TurnInplaceTargetRotation.Yaw, photon.LocalPlayerState.TurnInplaceTargetRotation.Roll });
                     Helpers.Log($"Sent TurnInplaceTargetRotation ({photon.LocalPlayerState.TurnInplaceTargetRotation})");
+                }
+
+                if (MathF.Abs(localState.TurnInplaceRemainAngle - __instance.TurnInplaceRemainAngle) > Tolerance)
+                {
+                    photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
+                    photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
+                    Helpers.Log($"Sent TurnInplaceRemainAngle ({photon.LocalPlayerState.TurnInplaceRemainAngle})");
                 }
             }
             else
@@ -194,7 +208,9 @@ namespace WukongCSharpMod
                     return;
                 }
 
+                __instance.IsStandRotate = playerState.IsStandRotate;
                 __instance.TurnInplaceTargetRotation = playerState.TurnInplaceTargetRotation;
+                __instance.TurnInplaceRemainAngle = playerState.TurnInplaceRemainAngle;
             }
         }
     }
@@ -227,7 +243,7 @@ namespace WukongCSharpMod
                 if (localState.InJump != __instance.bInJump)
                 {
                     photon.LocalPlayerState.InJump = __instance.bInJump;
-                    photon.SendInJump(photon.LocalPlayerState.InJump);
+                    photon.SetPlayerProperty(nameof(PlayerState.InJump), photon.LocalPlayerState.InJump);
                     Helpers.Log($"Sent InJump ({photon.LocalPlayerState.InJump})");
                 }
             }

@@ -195,45 +195,10 @@ namespace WukongCSharpMod
                 _client.OpSetCustomPropertiesOfActor(Id, hashtable);
             }
         }
-
-        public void SendIsFlying(bool isFlying)
+        
+        public void SetPlayerProperty(string key, object value)
         {
-            _playerProperties[nameof(PlayerState.IsFlying)] = isFlying;
-        }
-
-        public void SendIsFalling(bool isFalling)
-        {
-            _playerProperties[nameof(PlayerState.IsFalling)] = isFalling;
-        }
-
-        public void SendIsLandingMove(bool lastIsLandingMove)
-        {
-            _playerProperties[nameof(PlayerState.IsLandingMove)] = lastIsLandingMove;
-        }
-
-        public void SendVelocity(FVector velocity)
-        {
-            _playerProperties[nameof(PlayerState.Velocity)] = new[] { velocity.X, velocity.Y, velocity.Z };
-        }
-
-        public void SendMoveAcceleration(FVector moveAcceleration)
-        {
-            _playerProperties[nameof(PlayerState.MoveAcceleration)] = new[] { moveAcceleration.X, moveAcceleration.Y, moveAcceleration.Z };
-        }
-
-        public void SendActorLocation(FVector actorLocation)
-        {
-            _playerProperties[nameof(PlayerState.ActorLocation)] = new[] { actorLocation.X, actorLocation.Y, actorLocation.Z };
-        }
-
-        public void SendInJump(bool inJump)
-        {
-            _playerProperties[nameof(PlayerState.InJump)] = inJump;
-        }
-
-        public void SendTurnInplaceTargetRotation(FRotator turnInplaceTargetRotation)
-        {
-            _playerProperties[nameof(PlayerState.TurnInplaceTargetRotation)] = new[] { turnInplaceTargetRotation.Pitch, turnInplaceTargetRotation.Yaw, turnInplaceTargetRotation.Roll };
+            _playerProperties[key] = value;
         }
 
         #region IConnectionCallbacks
