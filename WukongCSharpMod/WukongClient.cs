@@ -21,11 +21,8 @@ namespace WukongCSharpMod
 
         private readonly Action _joinedRoomCallback;
         public event Action<int, float, float, float> OnPlayerJoined;
-        public event Action<int, float[]> OnPlayerPosition;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
         public event Action<int, KeyPress> OnKeyReceived;
-        public event Action<int, byte> OnRollSkill;
-        public event Action<int, byte, float, float> OnJumpSkillCue;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
@@ -72,33 +69,14 @@ namespace WukongCSharpMod
                     break;
                 }
                 case 1:
-                {
-                    // position update
-                    var posAndRot = (float[])photonEvent.CustomData;
-                    OnPlayerPosition?.Invoke(photonEvent.Sender, posAndRot);
-                    break;
-                }
-                case 2:
-                    // key press
-                    var key = (KeyPress)photonEvent.CustomData;
-                    OnKeyReceived?.Invoke(photonEvent.Sender, key);
-                    break;
-                case 3:
                     // key press
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
                     OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Id, unitData.Name, unitData.X, unitData.Y, unitData.Z);
                     break;
-                case 4:
-                    // roll skill
-                    OnRollSkill?.Invoke(photonEvent.Sender, (byte)photonEvent.CustomData);
-                    break;
-                case 5:
-                    // jump skill cue
-                    var jumpSkillCue = (byte[])photonEvent.CustomData;
-                    var startJumpDir = jumpSkillCue[0];
-                    var currentInputX = BitConverter.ToSingle(jumpSkillCue, 1);
-                    var currentInputY = BitConverter.ToSingle(jumpSkillCue, 5);
-                    OnJumpSkillCue?.Invoke(photonEvent.Sender, startJumpDir, currentInputX, currentInputY);
+                case 2:
+                    // key press
+                    var key = (KeyPress)photonEvent.CustomData;
+                    OnKeyReceived?.Invoke(photonEvent.Sender, key);
                     break;
             }
         }
@@ -179,10 +157,10 @@ namespace WukongCSharpMod
             _wukongChat.InitializeChat(UserName);
         }
 
-        public void SendPositionUpdate(float x, float y, float z, float rx, float ry, float rz, float rw)
+        public void SpawnUnit(byte id, string unitName, float x, float y, float z)
         {
             const byte eventCode = 1;
-            var evData = new[] { x, y, z, rx, ry, rz, rw };
+            var evData = new UnitSpawnData(id, unitName, x, y, z);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
@@ -191,29 +169,6 @@ namespace WukongCSharpMod
             var press = new KeyPress(key, state);
             const byte eventCode = 2;
             _client.OpRaiseEvent(eventCode, press, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SpawnUnit(byte id, string unitName, float x, float y, float z)
-        {
-            const byte eventCode = 3;
-            var evData = new UnitSpawnData(id, unitName, x, y, z);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendRollSkill(byte rollDir)
-        {
-            const byte eventCode = 4;
-            _client.OpRaiseEvent(eventCode, rollDir, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendJumpSkillCue(byte startjumpdir, float currentinputX, float currentinputY)
-        {
-            const byte eventCode = 5;
-            var evData = new List<byte> { startjumpdir };
-            evData.AddRange(BitConverter.GetBytes(currentinputX));
-            evData.AddRange(BitConverter.GetBytes(currentinputY));
-
-            _client.OpRaiseEvent(eventCode, evData.ToArray(), RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         private ConcurrentDictionary<string, object> _playerProperties = new ConcurrentDictionary<string, object>();

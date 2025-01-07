@@ -103,8 +103,7 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
-            // Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
-            Photon.OnPlayerPosition += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerPosition(id, data));
+            Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             // Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
             // Photon.OnJumpSkillCue += (id, input, x, y) => Utils.TryRunOnGameThread(() => ApplyJumpSkillCue(id, (ESkillDirection)input, x, y));
@@ -122,53 +121,15 @@ namespace WukongCSharpMod
             var myPawn = GameUtils.GetControlledPawn();
             Photon.LocalPlayerState.Pawn = myPawn;
 
-            // var events = BUS_EventCollectionCS.Get(myPawn);
-            // events.Evt_TriggerInputActionImpl += SendInputEvents;
-            // events.Evt_TriggerRollSkill += SendRollSkill;
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            events.Evt_TriggerInputActionImpl += SendInputEvents;
         }
 
         private void UnsubscribeFromPlayerEvents()
         {
-            // var myPawn = GameUtils.GetControlledPawn();
-            // var events = BUS_EventCollectionCS.Get(myPawn);
-            // events.Evt_TriggerInputActionImpl -= SendInputEvents;
-            // events.Evt_TriggerRollSkill -= SendRollSkill;
-        }
-
-        private void ApplyJumpSkillCue(int id, ESkillDirection input, float x, float y)
-        {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
-            {
-                Helpers.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            Helpers.Log($"Applying jump skill cue for player {id}");
-            events.Evt_TriggerJumpSkill.Cue.Invoke(input, new FVector2D(x, y));
-        }
-
-        private void SendRollSkill(ESkillDirection rolldir)
-        {
-            Helpers.Log($"Sending roll skill to server: {rolldir}");
-            Photon.SendRollSkill((byte)rolldir);
-        }
-
-        private void ApplyRollSkill(int id, ESkillDirection dir)
-        {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
-            {
-                Helpers.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            Helpers.Log($"Applying roll skill for player {id}");
-            events.Evt_TriggerRollSkill.Invoke(dir);
+            var myPawn = GameUtils.GetControlledPawn();
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            events.Evt_TriggerInputActionImpl -= SendInputEvents;
         }
 
         private void SpawnEnemy(string enemyName)
@@ -353,21 +314,6 @@ namespace WukongCSharpMod
 
             switch (actionname)
             {
-                case "IA_B1MoveForward":
-                case "IA_B1MoveSideways":
-                    if (triggerevent == ETriggerEvent.Triggered)
-                    {
-                        var transform = GameUtils.GetControlledPawn().BGUGetActorTransform();
-                        var pos = transform.GetLocation();
-                        var rot = transform.GetRotation();
-                        Photon.SendPositionUpdate(pos.X, pos.Y, pos.Z, rot.X, rot.Y, rot.Z, rot.W);
-                    }
-                    else if (triggerevent == ETriggerEvent.Completed)
-                    {
-                        // TODO: stopped moving, set to idle? (not really, 2 keys can be held at the same time)
-                    }
-
-                    return;
                 case "IA_B1LightAttack":
                     key = PlayerInput.LightAttack;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
@@ -376,41 +322,11 @@ namespace WukongCSharpMod
                     key = PlayerInput.HeavyAttack;
                     keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
                     break;
-                case "IA_B1Walk":
-                    key = PlayerInput.Walk;
-                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
-                    break;
-                case "IA_B1Sprint_KB":
-                    key = PlayerInput.Sprint;
-                    keyState = triggerevent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
-                    break;
                 default:
                     return;
             }
 
             Photon.SendKeyPressed(key, keyState);
-        }
-
-        private void ApplyPlayerPosition(int id, float[] data)
-        {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
-            {
-                Helpers.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            var goal = new FVector(data[0], data[1], data[2]);
-            try
-            {
-                events.Evt_AIMoveTo.Invoke(goal, null, EAIMoveSpeedType.JOG, 10f, EBGUMoveAIType.None, false, false, "", "");
-            }
-            catch
-            {
-                // ignore
-            }
         }
 
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
