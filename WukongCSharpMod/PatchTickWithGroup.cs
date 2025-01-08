@@ -75,7 +75,6 @@ namespace WukongCSharpMod
                 {
                     photon.LocalPlayerState.IsFlying = __instance.IsFlying;
                     photon.SetPlayerProperty(nameof(PlayerState.IsFlying), photon.LocalPlayerState.IsFlying);
-                    Helpers.Log($"Sent IsFlying ({photon.LocalPlayerState.IsFlying})");
                 }
 
                 if (localState.IsFalling != __instance.IsFalling)

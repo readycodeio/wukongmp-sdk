@@ -83,11 +83,13 @@ namespace WukongCSharpMod
                 case 5:
                     // change abp
                     var abpPath = (string)photonEvent.CustomData;
+                    Helpers.Log($"Received ABP: {abpPath}");
                     OnChangeABP?.Invoke(photonEvent.Sender, abpPath);
                     break;
                 case 6:
                     // change anim mode
                     var evData = (string[])photonEvent.CustomData;
+                    Helpers.Log($"Received anim mode: {evData[0]} {evData[1]}");
                     OnChangeAnimMode?.Invoke(photonEvent.Sender, (EAnimationMode)Enum.Parse(typeof(EAnimationMode), evData[0]), evData[1]);
                     break;
             }
@@ -232,13 +234,15 @@ namespace WukongCSharpMod
         public void SendChangeABP(string abpPath)
         {
             const byte eventCode = 5;
+            Helpers.Log($"Sending ABP: {abpPath}");
             _client.OpRaiseEvent(eventCode, abpPath, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SendChangeAnimMode(EAnimationMode animmode, string abpPath)
         {
             const byte eventCode = 6;
-            var evData = new string[] { animmode.ToString(), abpPath };
+            var evData = new[] { animmode.ToString(), abpPath };
+            Helpers.Log($"Sending anim mode: {animmode} {abpPath}");
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
@@ -392,7 +396,11 @@ namespace WukongCSharpMod
                     PropertySetters[propertyName] = setter;
                 }
 
-                Helpers.Log($"Assigning {propertyName} = {kvp.Value} to player {id}");
+                if (!(kvp.Value is FVector || kvp.Value is FRotator || kvp.Value is float))
+                {
+                    Helpers.Log($"Assigning {propertyName} = {kvp.Value} to player {id}");
+                }
+
                 setter(playerState, kvp.Value);
             }
         }
