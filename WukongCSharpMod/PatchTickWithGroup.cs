@@ -71,7 +71,7 @@ namespace WukongCSharpMod
     [HarmonyPatch(typeof(BUS_DodgeComp), "TriggerRollSkill")]
     public class PatchRollSkill
     {
-        public static void Postfix(ESkillDirection rollDir)
+        public static void Postfix(ESkillDirection RollDir)
         {
             var photon = MyMod.Instance.Photon;
 
@@ -80,9 +80,9 @@ namespace WukongCSharpMod
                 return;
             }
 
-            Helpers.Log($"Action: RollSkill, Direction: {rollDir}");
+            Helpers.Log($"Action: RollSkill, Direction: {RollDir}");
 
-            photon.SendRollSkill((byte)rollDir);
+            photon.SendRollSkill((byte)RollDir);
         }
     }
 
