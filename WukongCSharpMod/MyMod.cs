@@ -87,8 +87,7 @@ namespace WukongCSharpMod
 
         private void InitPhoton()
         {
-            var myLocation = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
-            Photon = new WukongClient(SpawnPlayersAlreadyInRoom, myLocation.X, myLocation.Y, myLocation.Z);
+            Photon = new WukongClient(SpawnPlayersAlreadyInRoom);
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
         }
@@ -115,7 +114,7 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-            Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
+            Photon.OnCastSkill += (id, type, released, skillId, typeId, itemId) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, type, released, skillId, typeId, itemId));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
@@ -132,13 +131,20 @@ namespace WukongCSharpMod
             var myPawn = GameUtils.GetControlledPawn();
             Photon.LocalPlayerState.Pawn = myPawn;
 
-            // var events = BUS_EventCollectionCS.Get(myPawn);
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            events.Evt_InputCastSkill += OnEventsEvtInputCastSkill;
         }
 
         private void UnsubscribeFromPlayerEvents()
         {
-            // var myPawn = GameUtils.GetControlledPawn();
-            // var events = BUS_EventCollectionCS.Get(myPawn);
+            var myPawn = GameUtils.GetControlledPawn();
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            events.Evt_InputCastSkill -= OnEventsEvtInputCastSkill;
+        }
+
+        private void OnEventsEvtInputCastSkill(EInputActionType type, bool released, int skillId, int typeId, int itemId)
+        {
+            Photon.SendCastSkill(type, released, skillId, typeId, itemId);
         }
 
         private void SpawnEnemy(string enemyName)
@@ -352,7 +358,7 @@ namespace WukongCSharpMod
             }
         }
 
-        private void ApplyPlayerInput(int id, KeyPress keyPress)
+        private void ApplyPlayerInput(int id, EInputActionType type, bool released, int skillId, int typeId, int itemId)
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
@@ -361,24 +367,10 @@ namespace WukongCSharpMod
             }
 
             var clone = player.Pawn;
-
             var events = BUS_EventCollectionCS.Get(clone);
 
-            Helpers.Log($"Player {id} pressed key {keyPress.Key} with state {keyPress.State}");
-
-            switch (keyPress.Key)
-            {
-                case PlayerInput.LightAttack:
-                {
-                    events.Evt_InputCastSkill.Invoke(EInputActionType.LightAttack, keyPress.State == KeyState.Released);
-                    break;
-                }
-                case PlayerInput.HeavyAttack:
-                {
-                    events.Evt_InputCastSkill.Invoke(EInputActionType.HeavyAttack, keyPress.State == KeyState.Released);
-                    break;
-                }
-            }
+            events.Evt_InputCastSkill.Invoke(type, released, skillId, typeId, itemId);
+            Helpers.Log($"Player {id} invoked action {type} (released = {released}) with skill {skillId}, type {typeId}, item {itemId}");
         }
 
         private void ApplyRollSkill(int id, ESkillDirection dir)

@@ -7,6 +7,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using b1;
+using BtlShare;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -24,16 +25,12 @@ namespace WukongCSharpMod
 
         private readonly Action _joinedRoomCallback;
         public event Action<int> OnPlayerJoined;
+        public event Action<int, EInputActionType, bool, int, int, int> OnCastSkill;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
-        public event Action<int, KeyPress> OnKeyReceived;
         public event Action<int, byte> OnRollSkill;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
-
-        private readonly float _initialX;
-        private readonly float _initialY;
-        private readonly float _initialZ;
 
         public PlayerState LocalPlayerState { get; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
@@ -44,13 +41,9 @@ namespace WukongCSharpMod
             return kvp.Value;
         }
 
-        public WukongClient(Action onJoinedRoom, float x, float y, float z)
+        public WukongClient(Action onJoinedRoom)
         {
             _joinedRoomCallback = onJoinedRoom;
-            _initialX = x;
-            _initialY = y;
-            _initialZ = z;
-
             LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, null);
         }
 
@@ -72,14 +65,14 @@ namespace WukongCSharpMod
                     break;
                 }
                 case 1:
-                    // key press
+                    // unit spawn
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
                     OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Id, unitData.Name, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
-                    // key press
-                    var key = (KeyPress)photonEvent.CustomData;
-                    OnKeyReceived?.Invoke(photonEvent.Sender, key);
+                    // cast skill
+                    var data = (int[])photonEvent.CustomData;
+                    OnCastSkill?.Invoke(photonEvent.Sender, (EInputActionType)data[0], data[1] == 1, data[2], data[3], data[4]);
                     break;
                 case 4:
                     // roll skill
@@ -91,9 +84,8 @@ namespace WukongCSharpMod
         public void StartClient()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            PhotonPeer.RegisterType(typeof(KeyPress), 255, KeyPress.Serialize, KeyPress.Deserialize);
-            PhotonPeer.RegisterType(typeof(UnitSpawnData), 254, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
-            PhotonPeer.RegisterType(typeof(FVector), 253, (stream, obj) =>
+            PhotonPeer.RegisterType(typeof(UnitSpawnData), 255, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
+            PhotonPeer.RegisterType(typeof(FVector), 254, (stream, obj) =>
             {
                 var vec = (FVector)obj;
                 stream.Write(BitConverter.GetBytes(vec.X), 0, 4);
@@ -111,7 +103,7 @@ namespace WukongCSharpMod
                 var z = BitConverter.ToSingle(floatBytes, 0);
                 return new FVector(x, y, z);
             });
-            PhotonPeer.RegisterType(typeof(FRotator), 252, (stream, obj) =>
+            PhotonPeer.RegisterType(typeof(FRotator), 253, (stream, obj) =>
             {
                 var vec = (FRotator)obj;
                 stream.Write(BitConverter.GetBytes(vec.Pitch), 0, 4);
@@ -129,7 +121,7 @@ namespace WukongCSharpMod
                 var roll = BitConverter.ToSingle(floatBytes, 0);
                 return new FRotator(pitch, yaw, roll);
             });
-            PhotonPeer.RegisterType(typeof(EMoveSpeedLevel), 251, (stream, obj) =>
+            PhotonPeer.RegisterType(typeof(EMoveSpeedLevel), 252, (stream, obj) =>
             {
                 stream.WriteByte((byte)obj);
                 return 1;
@@ -211,11 +203,11 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        public void SendKeyPressed(PlayerInput key, KeyState state)
+        public void SendCastSkill(EInputActionType inputActionType, bool isRelease, int skillId, int descId, int itemId)
         {
-            var press = new KeyPress(key, state);
             const byte eventCode = 2;
-            _client.OpRaiseEvent(eventCode, press, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            var evData = new[] { (int)inputActionType, isRelease ? 1 : 0, skillId, descId, itemId };
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void SendRollSkill(byte rolldir)

@@ -3,9 +3,7 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using UnrealEngine.Engine;
-using UnrealEngine.Plugins.EnhancedInput;
 using UnrealEngine.Runtime;
-using FInputActionValue = b1.FInputActionValue;
 
 namespace WukongCSharpMod
 {
@@ -27,44 +25,6 @@ namespace WukongCSharpMod
             {
                 Helpers.Log("PatchTickWithGroup Postfix Error {ex}");
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnTriggerInputActionImpl")]
-    public class PatchPlayerInputs
-    {
-        public static void Postfix(
-            string ActionName,
-            ETriggerEvent TriggerEvent,
-            FInputActionValue Value)
-        {
-            var photon = MyMod.Instance.Photon;
-
-            if (photon == null)
-            {
-                return;
-            }
-
-            KeyState keyState;
-            PlayerInput key;
-
-            // Helpers.Log($"Action: {ActionName}, TriggerEvent: {TriggerEvent}, Value: {Value}");
-
-            switch (ActionName)
-            {
-                case "IA_B1LightAttack":
-                    key = PlayerInput.LightAttack;
-                    keyState = TriggerEvent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
-                    break;
-                case "IA_B1HeavyAttack":
-                    key = PlayerInput.HeavyAttack;
-                    keyState = TriggerEvent == ETriggerEvent.Started ? KeyState.Pressed : KeyState.Released;
-                    break;
-                default:
-                    return;
-            }
-
-            photon.SendKeyPressed(key, keyState);
         }
     }
 
@@ -163,6 +123,8 @@ namespace WukongCSharpMod
                     return;
                 }
 
+                var events = BUS_EventCollectionCS.Get(Owner);
+
                 __instance.IsFlying = playerState.IsFlying;
                 __instance.IsFalling = playerState.IsFalling;
                 __instance.IsLandingMove = playerState.IsLandingMove;
@@ -172,6 +134,7 @@ namespace WukongCSharpMod
                 {
                     __instance.Velocity = FVector.ZeroVector;
                     playerState.Velocity = FVector.ZeroVector;
+                    events.Evt_StopCurrentMove.Invoke();
                 }
 
                 __instance.MoveAcceleration = playerState.MoveAcceleration;
@@ -181,7 +144,6 @@ namespace WukongCSharpMod
                     playerState.MoveAcceleration = FVector.ZeroVector;
                 }
 
-                var events = BUS_EventCollectionCS.Get(Owner);
                 events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, 0.033f, true, false, false, true);
             }
         }

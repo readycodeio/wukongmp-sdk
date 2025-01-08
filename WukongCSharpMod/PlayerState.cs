@@ -21,8 +21,8 @@ namespace WukongCSharpMod
         public FRotator ActorRotation { get; set; }
         public bool IsAttacking { get; set; }
         public bool OrientRotationToMovement { get; set; }
-        public EMoveSpeedLevel MoveSpeedLevel { get; set; }
-        public EMoveSpeedLevel MoveSpeedState { get; set; }
+        public EMoveSpeedLevel MoveSpeedLevel { get; set; } = EMoveSpeedLevel.Run;
+        public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
 
         public PlayerState(int photonId, APawn pawn)
         {
