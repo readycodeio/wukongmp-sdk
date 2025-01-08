@@ -139,8 +139,11 @@ namespace WukongCSharpMod
 
             Helpers.Log($"Applying montage callback for player {id} with montage {data.MontagePath} ({data.Reason}, {data.State})");
 
-            var animInstance = ((ACharacter)clone).Mesh.GetAnimInstance();
-            animInstance.Montage_Play(montage);
+            if (data.State == EMontageCallbackState.OnStarted)
+            {
+                var animInstance = ((ACharacter)clone).Mesh.GetAnimInstance();
+                animInstance.Montage_Play(montage);
+            }
 
             var events = BUS_EventCollectionCS.Get(clone);
             events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
