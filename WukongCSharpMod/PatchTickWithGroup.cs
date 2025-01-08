@@ -48,7 +48,7 @@ namespace WukongCSharpMod
             KeyState keyState;
             PlayerInput key;
 
-            Helpers.Log($"Action: {ActionName}, TriggerEvent: {TriggerEvent}, Value: {Value}");
+            // Helpers.Log($"Action: {ActionName}, TriggerEvent: {TriggerEvent}, Value: {Value}");
 
             switch (ActionName)
             {
@@ -126,25 +126,25 @@ namespace WukongCSharpMod
                 if (!localState.Velocity.Equals(__instance.Velocity, Tolerance))
                 {
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
-                    photon.SetPlayerProperty(nameof(PlayerState.Velocity), new[] { photon.LocalPlayerState.Velocity.X, photon.LocalPlayerState.Velocity.Y, photon.LocalPlayerState.Velocity.Z });
+                    photon.SetPlayerProperty(nameof(PlayerState.Velocity), photon.LocalPlayerState.Velocity);
                 }
 
                 if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Tolerance))
                 {
                     photon.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
-                    photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), new[] { photon.LocalPlayerState.MoveAcceleration.X, photon.LocalPlayerState.MoveAcceleration.Y, photon.LocalPlayerState.MoveAcceleration.Z });
+                    photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), photon.LocalPlayerState.MoveAcceleration);
                 }
 
                 if (!localState.ActorLocation.Equals(__instance.ActorLocation, Tolerance))
                 {
                     photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
-                    photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), new[] { photon.LocalPlayerState.ActorLocation.X, photon.LocalPlayerState.ActorLocation.Y, photon.LocalPlayerState.ActorLocation.Z });
+                    photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), photon.LocalPlayerState.ActorLocation);
                 }
 
                 if (!localState.ActorRotation.Equals(__instance.ActorRotation, Tolerance))
                 {
                     photon.LocalPlayerState.ActorRotation = __instance.ActorRotation;
-                    photon.SetPlayerProperty(nameof(PlayerState.ActorRotation), new[] { photon.LocalPlayerState.ActorRotation.Pitch, photon.LocalPlayerState.ActorRotation.Yaw, photon.LocalPlayerState.ActorRotation.Roll });
+                    photon.SetPlayerProperty(nameof(PlayerState.ActorRotation), photon.LocalPlayerState.ActorRotation);
                 }
             }
             else
@@ -218,7 +218,7 @@ namespace WukongCSharpMod
                 if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Tolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
-                    photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), new[] { photon.LocalPlayerState.TurnInplaceTargetRotation.Pitch, photon.LocalPlayerState.TurnInplaceTargetRotation.Yaw, photon.LocalPlayerState.TurnInplaceTargetRotation.Roll });
+                    photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
                 }
 
                 if (MathF.Abs(localState.TurnInplaceRemainAngle - __instance.TurnInplaceRemainAngle) > Tolerance)

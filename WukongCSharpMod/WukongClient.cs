@@ -387,8 +387,8 @@ namespace WukongCSharpMod
                     PropertySetters[propertyName] = setter;
                 }
 
+                Helpers.Log($"Assigning {propertyName} = {kvp.Value} to player {id}");
                 setter(playerState, kvp.Value);
-                Helpers.Log($"Assigned {propertyName} = {kvp.Value} to player {id}");
             }
         }
 
