@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35514.174 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongCSharpMod", "WukongCSharpMod\WukongCSharpMod.csproj", "{9168670A-C7BC-41DA-B4B4-3C2097F18A13}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonRealtimeApi", "PhotonRealtimeApi\PhotonRealtimeApi.csproj", "{A5054542-5C47-40EC-8C6E-AD8B41AB9B54}"
@@ -22,5 +25,10 @@ Global
 		{A5054542-5C47-40EC-8C6E-AD8B41AB9B54}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D0CA2B6A-B99D-4837-B973-9DE94C41D9E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D0CA2B6A-B99D-4837-B973-9DE94C41D9E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0CA2B6A-B99D-4837-B973-9DE94C41D9E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0CA2B6A-B99D-4837-B973-9DE94C41D9E4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
