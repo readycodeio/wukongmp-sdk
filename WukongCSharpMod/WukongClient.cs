@@ -6,9 +6,11 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
 using System.Threading;
+using b1;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 
 namespace WukongCSharpMod
 {
@@ -91,6 +93,47 @@ namespace WukongCSharpMod
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             PhotonPeer.RegisterType(typeof(KeyPress), 255, KeyPress.Serialize, KeyPress.Deserialize);
             PhotonPeer.RegisterType(typeof(UnitSpawnData), 254, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
+            PhotonPeer.RegisterType(typeof(FVector), 253, (stream, obj) =>
+            {
+                var vec = (FVector)obj;
+                stream.Write(BitConverter.GetBytes(vec.X), 0, 4);
+                stream.Write(BitConverter.GetBytes(vec.Y), 0, 4);
+                stream.Write(BitConverter.GetBytes(vec.Z), 0, 4);
+                return 12;
+            }, (stream, length) =>
+            {
+                var floatBytes = new byte[4];
+                stream.Read(floatBytes, 0, 4);
+                var x = BitConverter.ToSingle(floatBytes, 0);
+                stream.Read(floatBytes, 0, 4);
+                var y = BitConverter.ToSingle(floatBytes, 0);
+                stream.Read(floatBytes, 0, 4);
+                var z = BitConverter.ToSingle(floatBytes, 0);
+                return new FVector(x, y, z);
+            });
+            PhotonPeer.RegisterType(typeof(FRotator), 252, (stream, obj) =>
+            {
+                var vec = (FRotator)obj;
+                stream.Write(BitConverter.GetBytes(vec.Pitch), 0, 4);
+                stream.Write(BitConverter.GetBytes(vec.Yaw), 0, 4);
+                stream.Write(BitConverter.GetBytes(vec.Roll), 0, 4);
+                return 12;
+            }, (stream, length) =>
+            {
+                var floatBytes = new byte[4];
+                stream.Read(floatBytes, 0, 4);
+                var pitch = BitConverter.ToSingle(floatBytes, 0);
+                stream.Read(floatBytes, 0, 4);
+                var yaw = BitConverter.ToSingle(floatBytes, 0);
+                stream.Read(floatBytes, 0, 4);
+                var roll = BitConverter.ToSingle(floatBytes, 0);
+                return new FRotator(pitch, yaw, roll);
+            });
+            PhotonPeer.RegisterType(typeof(EMoveSpeedLevel), 251, (stream, obj) =>
+            {
+                stream.WriteByte((byte)obj);
+                return 1;
+            }, (stream, length) => (EMoveSpeedLevel)stream.ReadByte());
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
