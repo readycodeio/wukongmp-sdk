@@ -68,6 +68,24 @@ namespace WukongCSharpMod
         }
     }
 
+    [HarmonyPatch(typeof(BUS_DodgeComp), "TriggerRollSkill")]
+    public class PatchRollSkill
+    {
+        public static void Postfix(ESkillDirection rollDir)
+        {
+            var photon = MyMod.Instance.Photon;
+
+            if (photon == null)
+            {
+                return;
+            }
+
+            Helpers.Log($"Action: RollSkill, Direction: {rollDir}");
+
+            photon.SendRollSkill((byte)rollDir);
+        }
+    }
+
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     public class PatchPlayerAnimation
     {

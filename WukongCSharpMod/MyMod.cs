@@ -103,6 +103,7 @@ namespace WukongCSharpMod
             Photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
             Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
+            Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -370,6 +371,21 @@ namespace WukongCSharpMod
                     break;
                 }
             }
+        }
+
+        private void ApplyRollSkill(int id, ESkillDirection dir)
+        {
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
+            {
+                Helpers.Log($"Player not found: {id}");
+                return;
+            }
+
+            var clone = player.Pawn;
+            var events = BUS_EventCollectionCS.Get(clone);
+
+            Helpers.Log($"Applying roll skill for player {id}");
+            events.Evt_TriggerRollSkill.Invoke(dir);
         }
 
         public void DeInit()

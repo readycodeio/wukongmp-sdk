@@ -23,6 +23,7 @@ namespace WukongCSharpMod
         public event Action<int, float, float, float> OnPlayerJoined;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
         public event Action<int, KeyPress> OnKeyReceived;
+        public event Action<int, byte> OnRollSkill;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
@@ -77,6 +78,10 @@ namespace WukongCSharpMod
                     // key press
                     var key = (KeyPress)photonEvent.CustomData;
                     OnKeyReceived?.Invoke(photonEvent.Sender, key);
+                    break;
+                case 4:
+                    // roll skill
+                    OnRollSkill?.Invoke(photonEvent.Sender, (byte)photonEvent.CustomData);
                     break;
             }
         }
@@ -169,6 +174,13 @@ namespace WukongCSharpMod
             var press = new KeyPress(key, state);
             const byte eventCode = 2;
             _client.OpRaiseEvent(eventCode, press, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SendRollSkill(byte rolldir)
+        {
+            const byte eventCode = 4;
+            var evData = rolldir;
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         private ConcurrentDictionary<string, object> _playerProperties = new ConcurrentDictionary<string, object>();
