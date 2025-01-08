@@ -54,6 +54,20 @@ namespace WukongCSharpMod
                 InitializeChatWidget();
                 InitPhoton();
             });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
+            {
+                Helpers.Log("Alt + C");
+
+                // dump player state to console for me
+                Helpers.Log($"Local player state: {Photon.LocalPlayerState}");
+
+                // dump player state to console for each connected player
+                foreach (var (id, state) in Photon.ConnectedPlayers)
+                {
+                    Helpers.Log($"Player {id} state: {state}");
+                }
+            });
         }
 
         // ReSharper disable once UnusedMember.Local

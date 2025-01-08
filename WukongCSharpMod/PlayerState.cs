@@ -29,5 +29,10 @@ namespace WukongCSharpMod
             PhotonId = photonId;
             Pawn = pawn;
         }
+
+        public override string ToString()
+        {
+            return $"PlayerState(PhotonId: {PhotonId}, InJump: {InJump}, IsFlying: {IsFlying}, IsFalling: {IsFalling}, IsLandingMove: {IsLandingMove}, Velocity: {Velocity}, MoveAcceleration: {MoveAcceleration}, ActorLocation: {ActorLocation}, TurnInplaceTargetRotation: {TurnInplaceTargetRotation}, IsStandRotate: {IsStandRotate}, TurnInplaceRemainAngle: {TurnInplaceRemainAngle}, ActorRotation: {ActorRotation}, IsAttacking: {IsAttacking}, OrientRotationToMovement: {OrientRotationToMovement}, MoveSpeedLevel: {MoveSpeedLevel}, MoveSpeedState: {MoveSpeedState})";
+        }
     }
 }
