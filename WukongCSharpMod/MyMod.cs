@@ -39,14 +39,6 @@ namespace WukongCSharpMod
 
             // InitWorldCallbacks();
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
-            {
-                Helpers.Log("Alt + X");
-
-                InitPhoton();
-                Connect();
-            });
-
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
             {
                 Helpers.Log("Alt + H");
@@ -144,6 +136,11 @@ namespace WukongCSharpMod
                 Helpers.Log($"Montage not found: {data.MontagePath}");
                 return;
             }
+
+            Helpers.Log($"Applying montage callback for player {id} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+
+            var animInstance = ((ACharacter)clone).Mesh.GetAnimInstance();
+            animInstance.Montage_Play(montage);
 
             var events = BUS_EventCollectionCS.Get(clone);
             events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
