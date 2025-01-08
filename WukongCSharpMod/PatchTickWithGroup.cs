@@ -71,11 +71,18 @@ namespace WukongCSharpMod
     [HarmonyPatch(typeof(BUS_DodgeComp), "TriggerRollSkill")]
     public class PatchRollSkill
     {
-        public static void Postfix(ESkillDirection RollDir)
+        public static void Postfix(BUS_DodgeComp __instance, ESkillDirection RollDir)
         {
             var photon = MyMod.Instance.Photon;
 
             if (photon == null)
+            {
+                return;
+            }
+
+            var owner = __instance.GetOwner();
+
+            if (owner != photon.LocalPlayerState.Pawn)
             {
                 return;
             }
