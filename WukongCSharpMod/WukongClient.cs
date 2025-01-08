@@ -246,22 +246,10 @@ namespace WukongCSharpMod
         {
             _playerProperties[key] = value;
 
-            // if value is float[] or any other array, format it to string
-            string formatted;
-            switch (value)
+            if (!(value is FVector || value is FRotator || value is float))
             {
-                case float[] array:
-                    formatted = string.Join(", ", array);
-                    break;
-                case float f:
-                    formatted = f.ToString("F2");
-                    break;
-                default:
-                    formatted = value.ToString();
-                    break;
+                Helpers.Log($"SetPlayerProperty: {key} = {value}");
             }
-
-            Helpers.Log($"SetPlayerProperty: {key} = {formatted}");
         }
 
         #region IConnectionCallbacks
