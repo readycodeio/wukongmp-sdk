@@ -115,42 +115,36 @@ namespace WukongCSharpMod
                 {
                     photon.LocalPlayerState.IsFalling = __instance.IsFalling;
                     photon.SetPlayerProperty(nameof(PlayerState.IsFalling), photon.LocalPlayerState.IsFalling);
-                    Helpers.Log($"Sent IsFalling ({photon.LocalPlayerState.IsFalling})");
                 }
 
                 if (localState.IsLandingMove != __instance.IsLandingMove)
                 {
                     photon.LocalPlayerState.IsLandingMove = __instance.IsLandingMove;
                     photon.SetPlayerProperty(nameof(PlayerState.IsLandingMove), photon.LocalPlayerState.IsLandingMove);
-                    Helpers.Log($"Sent IsLandingMove ({photon.LocalPlayerState.IsLandingMove})");
                 }
 
                 if (!localState.Velocity.Equals(__instance.Velocity, Tolerance))
                 {
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
                     photon.SetPlayerProperty(nameof(PlayerState.Velocity), new[] { photon.LocalPlayerState.Velocity.X, photon.LocalPlayerState.Velocity.Y, photon.LocalPlayerState.Velocity.Z });
-                    Helpers.Log($"Sent Velocity ({photon.LocalPlayerState.Velocity})");
                 }
 
                 if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Tolerance))
                 {
                     photon.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
                     photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), new[] { photon.LocalPlayerState.MoveAcceleration.X, photon.LocalPlayerState.MoveAcceleration.Y, photon.LocalPlayerState.MoveAcceleration.Z });
-                    Helpers.Log($"Sent MoveAcceleration ({photon.LocalPlayerState.MoveAcceleration})");
                 }
 
                 if (!localState.ActorLocation.Equals(__instance.ActorLocation, Tolerance))
                 {
                     photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
                     photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), new[] { photon.LocalPlayerState.ActorLocation.X, photon.LocalPlayerState.ActorLocation.Y, photon.LocalPlayerState.ActorLocation.Z });
-                    Helpers.Log($"Sent ActorLocation ({photon.LocalPlayerState.ActorLocation})");
                 }
 
                 if (!localState.ActorRotation.Equals(__instance.ActorRotation, Tolerance))
                 {
                     photon.LocalPlayerState.ActorRotation = __instance.ActorRotation;
                     photon.SetPlayerProperty(nameof(PlayerState.ActorRotation), new[] { photon.LocalPlayerState.ActorRotation.Pitch, photon.LocalPlayerState.ActorRotation.Yaw, photon.LocalPlayerState.ActorRotation.Roll });
-                    Helpers.Log($"Sent ActorRotation ({photon.LocalPlayerState.ActorRotation})");
                 }
             }
             else
@@ -213,35 +207,30 @@ namespace WukongCSharpMod
                 {
                     photon.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
                     photon.SetPlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
-                    Helpers.Log($"Sent IsStandRotate ({photon.LocalPlayerState.IsStandRotate})");
                 }
-                
+
                 if (localState.IsAttacking != __instance.IsAttacking)
                 {
                     photon.LocalPlayerState.IsAttacking = __instance.IsAttacking;
                     photon.SetPlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
-                    Helpers.Log($"Sent IsAttacking ({photon.LocalPlayerState.IsAttacking})");
                 }
 
                 if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Tolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), new[] { photon.LocalPlayerState.TurnInplaceTargetRotation.Pitch, photon.LocalPlayerState.TurnInplaceTargetRotation.Yaw, photon.LocalPlayerState.TurnInplaceTargetRotation.Roll });
-                    Helpers.Log($"Sent TurnInplaceTargetRotation ({photon.LocalPlayerState.TurnInplaceTargetRotation})");
                 }
 
                 if (MathF.Abs(localState.TurnInplaceRemainAngle - __instance.TurnInplaceRemainAngle) > Tolerance)
                 {
                     photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
-                    Helpers.Log($"Sent TurnInplaceRemainAngle ({photon.LocalPlayerState.TurnInplaceRemainAngle})");
                 }
 
                 if (localState.OrientRotationToMovement != __instance.bOrientRotationToMovement)
                 {
                     photon.LocalPlayerState.OrientRotationToMovement = __instance.bOrientRotationToMovement;
                     photon.SetPlayerProperty(nameof(PlayerState.OrientRotationToMovement), photon.LocalPlayerState.OrientRotationToMovement);
-                    Helpers.Log($"Sent OrientRotationToMovement ({photon.LocalPlayerState.OrientRotationToMovement})");
                 }
             }
             else
@@ -291,7 +280,6 @@ namespace WukongCSharpMod
                 {
                     photon.LocalPlayerState.InJump = __instance.bInJump;
                     photon.SetPlayerProperty(nameof(PlayerState.InJump), photon.LocalPlayerState.InJump);
-                    Helpers.Log($"Sent InJump ({photon.LocalPlayerState.InJump})");
                 }
             }
             else
@@ -304,6 +292,55 @@ namespace WukongCSharpMod
                 }
 
                 __instance.bInJump = playerState.InJump;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUC_ABPBasicData), nameof(BUC_ABPBasicData.Update_WorkThread))]
+    public class PatchBasicData
+    {
+        public static void Postfix(
+            BUC_ABPBasicData __instance,
+            AActor Owner,
+            IBUC_ABPCharacterData ChrData,
+            IBUC_ABPBGUCharacterData BGUData,
+            IBUC_SpeedCtrlData SpeedCtrlData,
+            float DeltaTime)
+        {
+            var photon = MyMod.Instance.Photon;
+
+            if (photon == null)
+            {
+                return;
+            }
+
+            if (Owner == photon.LocalPlayerState.Pawn)
+            {
+                var localState = photon.LocalPlayerState;
+
+                if (localState.MoveSpeedLevel != __instance.MoveSpeedLevel)
+                {
+                    photon.LocalPlayerState.MoveSpeedLevel = __instance.MoveSpeedLevel;
+                    photon.SetPlayerProperty(nameof(PlayerState.MoveSpeedLevel), photon.LocalPlayerState.MoveSpeedLevel);
+                }
+
+                if (localState.MoveSpeedState != __instance.MoveSpeedState)
+                {
+                    photon.LocalPlayerState.MoveSpeedState = __instance.MoveSpeedState;
+                    photon.SetPlayerProperty(nameof(PlayerState.MoveSpeedState), photon.LocalPlayerState.MoveSpeedState);
+                }
+            }
+            else
+            {
+                var playerState = photon.GetByActor(Owner);
+
+                if (playerState == null)
+                {
+                    return;
+                }
+
+                __instance.MoveSpeedLevel = playerState.MoveSpeedLevel;
+                __instance.MoveSpeedState = playerState.MoveSpeedState;
             }
         }
     }

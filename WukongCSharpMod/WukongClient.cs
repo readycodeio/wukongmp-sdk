@@ -2,12 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 
 namespace WukongCSharpMod
 {
@@ -20,7 +21,7 @@ namespace WukongCSharpMod
         public bool Ready => _client.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
-        public event Action<int, float, float, float> OnPlayerJoined;
+        public event Action<int> OnPlayerJoined;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
         public event Action<int, KeyPress> OnKeyReceived;
         public event Action<int, byte> OnRollSkill;
@@ -65,8 +66,7 @@ namespace WukongCSharpMod
                 case 0:
                 {
                     // room joined
-                    var pos = (float[])photonEvent.CustomData;
-                    OnPlayerJoined?.Invoke(photonEvent.Sender, pos[0], pos[1], pos[2]);
+                    OnPlayerJoined?.Invoke(photonEvent.Sender);
                     break;
                 }
                 case 1:
@@ -157,8 +157,7 @@ namespace WukongCSharpMod
         private void SendRoomJoined()
         {
             const byte eventCode = 0;
-            var evData = new[] { _initialX, _initialY, _initialZ };
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendUnreliable);
             _wukongChat.InitializeChat(UserName);
         }
 
@@ -207,10 +206,27 @@ namespace WukongCSharpMod
                 _client.OpSetCustomPropertiesOfActor(Id, hashtable);
             }
         }
-        
+
         public void SetPlayerProperty(string key, object value)
         {
             _playerProperties[key] = value;
+
+            // if value is float[] or any other array, format it to string
+            string formatted;
+            switch (value)
+            {
+                case float[] array:
+                    formatted = string.Join(", ", array);
+                    break;
+                case float f:
+                    formatted = f.ToString("F2");
+                    break;
+                default:
+                    formatted = value.ToString();
+                    break;
+            }
+
+            Helpers.Log($"SetPlayerProperty: {key} = {formatted}");
         }
 
         #region IConnectionCallbacks
@@ -319,90 +335,42 @@ namespace WukongCSharpMod
                 return;
             }
 
-            if (changedProps.TryGetValue(nameof(PlayerState.IsFlying), out var isFlying))
+            foreach (var kvp in changedProps)
             {
-                playerState.IsFlying = (bool)isFlying;
-                Helpers.Log($"Assigned IsFlying ({isFlying}) to player {id}");
-            }
+                var propertyName = (string)kvp.Key;
+                if (!PropertySetters.TryGetValue(propertyName, out var setter))
+                {
+                    setter = CreateSetter(propertyName);
+                    PropertySetters[propertyName] = setter;
+                }
 
-            if (changedProps.TryGetValue(nameof(PlayerState.IsFalling), out var isFalling))
-            {
-                playerState.IsFalling = (bool)isFalling;
-                Helpers.Log($"Assigned IsFalling ({isFalling}) to player {id}");
-            }
-
-            if (changedProps.TryGetValue(nameof(PlayerState.IsLandingMove), out var isLandingMove))
-            {
-                playerState.IsLandingMove = (bool)isLandingMove;
-                Helpers.Log($"Assigned IsLandingMove ({isLandingMove}) to player {id}");
-            }
-
-            if (changedProps.TryGetValue(nameof(PlayerState.Velocity), out var velocity))
-            {
-                var v = (float[])velocity;
-                playerState.Velocity = new FVector(v[0], v[1], v[2]);
-                Helpers.Log($"Assigned Velocity ({velocity}) to player {id}");
-            }
-
-            if (changedProps.TryGetValue(nameof(PlayerState.MoveAcceleration), out var moveAcceleration))
-            {
-                var a = (float[])moveAcceleration;
-                playerState.MoveAcceleration = new FVector(a[0], a[1], a[2]);
-                Helpers.Log($"Assigned MoveAcceleration ({moveAcceleration}) to player {id}");
-            }
-
-            if (changedProps.TryGetValue(nameof(PlayerState.ActorLocation), out var actorLocation))
-            {
-                var a = (float[])actorLocation;
-                playerState.ActorLocation = new FVector(a[0], a[1], a[2]);
-                Helpers.Log($"Assigned MoveAcceleration ({actorLocation}) to player {id}");
-            }
-
-            if (changedProps.TryGetValue(nameof(PlayerState.InJump), out var inJump))
-            {
-                playerState.InJump = (bool)inJump;
-                Helpers.Log($"Assigned InJump ({inJump}) to player {id}");
-            }
-
-            if (changedProps.TryGetValue(nameof(PlayerState.TurnInplaceTargetRotation), out var turnInplaceTargetRotation))
-            {
-                var t = (float[])turnInplaceTargetRotation;
-                playerState.TurnInplaceTargetRotation = new FRotator(t[0], t[1], t[2]);
-                Helpers.Log($"Assigned TurnInplaceTargetRotation ({turnInplaceTargetRotation}) to player {id}");
-            }
-            
-            if (changedProps.TryGetValue(nameof(PlayerState.IsStandRotate), out var isStandRotate))
-            {
-                playerState.IsStandRotate = (bool)isStandRotate;
-                Helpers.Log($"Assigned IsStandRotate ({isStandRotate}) to player {id}");
-            }
-            
-            if (changedProps.TryGetValue(nameof(PlayerState.IsAttacking), out var isAttacking))
-            {
-                playerState.IsAttacking = (bool)isAttacking;
-                Helpers.Log($"Assigned IsAttacking ({isAttacking}) to player {id}");
-            }
-            
-            if (changedProps.TryGetValue(nameof(PlayerState.TurnInplaceRemainAngle), out var turnInplaceRemainAngle))
-            {
-                playerState.TurnInplaceRemainAngle = (float)turnInplaceRemainAngle;
-                Helpers.Log($"Assigned TurnInplaceRemainAngle ({turnInplaceRemainAngle}) to player {id}");
-            }
-            
-            if (changedProps.TryGetValue(nameof(PlayerState.ActorRotation), out var actorRotation))
-            {
-                var a = (float[])actorRotation;
-                playerState.ActorRotation = new FRotator(a[0], a[1], a[2]);
-                Helpers.Log($"Assigned ActorRotation ({actorRotation}) to player {id}");
-            }
-            
-            if (changedProps.TryGetValue(nameof(PlayerState.OrientRotationToMovement), out var orientRotationToMovement))
-            {
-                playerState.OrientRotationToMovement = (bool)orientRotationToMovement;
-                Helpers.Log($"Assigned OrientRotationToMovement ({orientRotationToMovement}) to player {id}");
+                setter(playerState, kvp.Value);
+                Helpers.Log($"Assigned {propertyName} = {kvp.Value} to player {id}");
             }
         }
 
         public void OnMasterClientSwitched(Player newMasterClient) { }
+
+        private static readonly Dictionary<string, Action<PlayerState, object>> PropertySetters = new Dictionary<string, Action<PlayerState, object>>();
+
+        private static Action<PlayerState, object> CreateSetter(string propertyName)
+        {
+            var property = typeof(PlayerState).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            if (property == null)
+                throw new InvalidOperationException($"Property '{propertyName}' not found on PlayerState.");
+
+            // Create the lambda (PlayerState state, object value) => state.Property = (T)value;
+            var stateParam = Expression.Parameter(typeof(PlayerState), "state");
+            var valueParam = Expression.Parameter(typeof(object), "value");
+
+            // Cast value to the correct type
+            var convertedValue = Expression.Convert(valueParam, property.PropertyType);
+
+            // Build the assignment: state.Property = (T)value;
+            var body = Expression.Assign(Expression.Property(stateParam, property), convertedValue);
+
+            // Compile the lambda expression
+            return Expression.Lambda<Action<PlayerState, object>>(body, stateParam, valueParam).Compile();
+        }
     }
 }

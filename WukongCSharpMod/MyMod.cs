@@ -100,7 +100,7 @@ namespace WukongCSharpMod
                 return;
             }
 
-            Photon.OnPlayerJoined += (id, x, y, z) => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, x, y, z));
+            Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             Photon.OnKeyReceived += (id, key) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, key));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
@@ -220,16 +220,14 @@ namespace WukongCSharpMod
 
         private void SpawnPlayersAlreadyInRoom()
         {
-            var localTransform = GameUtils.GetControlledPawn().GetActorTransform().GetLocation();
-
             // when joining game, spawn all players already in room
             foreach (var id in Photon.GetOtherPlayersInRoom())
             {
-                Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id, localTransform.X, localTransform.Y, localTransform.Z));
+                Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             }
         }
 
-        private void SpawnCloneForJoiningPlayer(int id, float x, float y, float z)
+        private void SpawnCloneForJoiningPlayer(int id)
         {
             if (Photon.ConnectedPlayers.ContainsKey(id))
             {
@@ -289,10 +287,6 @@ namespace WukongCSharpMod
             // assign in dictionary
             Photon.ConnectedPlayers[id] = new PlayerState(id, clone);
             Helpers.Log($"Assigned player {id} clone {clone.GetEntityHash()}");
-
-            // teleport clone to cloneTransform
-            var targetTransform = new FTransform(FRotator.ZeroRotator, new FVector(x, y, z));
-            clone.SetActorTransform(targetTransform, false, out _, true);
 
             var controlledPawn = GameUtils.GetControlledPawn();
             controlledPawn.SetActorTransform(new FTransform(oldPawnRot, oldPawnPos), false, out _, false);

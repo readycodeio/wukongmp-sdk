@@ -1,4 +1,5 @@
-﻿using UnrealEngine.Engine;
+﻿using b1;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
 namespace WukongCSharpMod
@@ -20,6 +21,8 @@ namespace WukongCSharpMod
         public FRotator ActorRotation { get; set; }
         public bool IsAttacking { get; set; }
         public bool OrientRotationToMovement { get; set; }
+        public EMoveSpeedLevel MoveSpeedLevel { get; set; }
+        public EMoveSpeedLevel MoveSpeedState { get; set; }
 
         public PlayerState(int photonId, APawn pawn)
         {
