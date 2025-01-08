@@ -28,6 +28,8 @@ namespace WukongCSharpMod
         public event Action<int, EInputActionType, bool, int, int, int> OnCastSkill;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
         public event Action<int, byte> OnRollSkill;
+        public event Action<int, string> OnChangeABP;
+        public event Action<int, EAnimationMode, string> OnChangeAnimMode;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
@@ -77,6 +79,16 @@ namespace WukongCSharpMod
                 case 4:
                     // roll skill
                     OnRollSkill?.Invoke(photonEvent.Sender, (byte)photonEvent.CustomData);
+                    break;
+                case 5:
+                    // change abp
+                    var abpPath = (string)photonEvent.CustomData;
+                    OnChangeABP?.Invoke(photonEvent.Sender, abpPath);
+                    break;
+                case 6:
+                    // change anim mode
+                    var evData = (string[])photonEvent.CustomData;
+                    OnChangeAnimMode?.Invoke(photonEvent.Sender, (EAnimationMode)Enum.Parse(typeof(EAnimationMode), evData[0]), evData[1]);
                     break;
             }
         }
@@ -214,6 +226,19 @@ namespace WukongCSharpMod
         {
             const byte eventCode = 4;
             var evData = rolldir;
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SendChangeABP(string abpPath)
+        {
+            const byte eventCode = 5;
+            _client.OpRaiseEvent(eventCode, abpPath, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SendChangeAnimMode(EAnimationMode animmode, string abpPath)
+        {
+            const byte eventCode = 6;
+            var evData = new string[] { animmode.ToString(), abpPath };
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 

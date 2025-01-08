@@ -114,7 +114,9 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-            Photon.OnCastSkill += (id, type, released, skillId, typeId, itemId) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, type, released, skillId, typeId, itemId));
+            // Photon.OnCastSkill += (id, type, released, skillId, typeId, itemId) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, type, released, skillId, typeId, itemId));
+            Photon.OnChangeAnimMode += (id, animMode, abpPath) => Utils.TryRunOnGameThread(() => ApplyChangeAnimMode(id, animMode, abpPath));
+            Photon.OnChangeABP += (id, abpPath) => Utils.TryRunOnGameThread(() => ApplyChangeABP(id, abpPath));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
@@ -126,20 +128,53 @@ namespace WukongCSharpMod
             SubscribeToPlayerEvents();
         }
 
+        private void ApplyChangeABP(int id, string abpPath)
+        {
+            var pawn = Photon.ConnectedPlayers[id].Pawn;
+            var events = BUS_EventCollectionCS.Get(pawn);
+            var subclass = UClass.GetClass(abpPath);
+            events.Evt_OnChangeABP.Invoke(subclass);
+        }
+
+        private void ApplyChangeAnimMode(int id, EAnimationMode animMode, string abpPath)
+        {
+            var pawn = Photon.ConnectedPlayers[id].Pawn;
+            var events = BUS_EventCollectionCS.Get(pawn);
+            var subclass = UClass.GetClass(abpPath);
+            events.Evt_ChangeAnimMode.Invoke(animMode, subclass);
+        }
+
         private void SubscribeToPlayerEvents()
         {
             var myPawn = GameUtils.GetControlledPawn();
             Photon.LocalPlayerState.Pawn = myPawn;
 
             var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_InputCastSkill += OnEventsEvtInputCastSkill;
+            // events.Evt_InputCastSkill += OnEventsEvtInputCastSkill;
+            events.Evt_ChangeAnimMode += OnChangeAnimMode;
+            events.Evt_OnChangeABP += OnOnChangeABP;
+        }
+
+        private void OnOnChangeABP(TSubclassOf<UAnimInstance> newabpclass)
+        {
+            var abpPath = newabpclass.Value.PathName;
+            Photon.SendChangeABP(abpPath);
+        }
+
+        private void OnChangeAnimMode(EAnimationMode animmode, TSubclassOf<UAnimInstance> abpclass)
+        {
+            // get unreal engine path for abpclass
+            var abpPath = abpclass.Value.PathName;
+            Photon.SendChangeAnimMode(animmode, abpPath);
         }
 
         private void UnsubscribeFromPlayerEvents()
         {
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_InputCastSkill -= OnEventsEvtInputCastSkill;
+            // events.Evt_InputCastSkill -= OnEventsEvtInputCastSkill;
+            events.Evt_ChangeAnimMode -= OnChangeAnimMode;
+            events.Evt_OnChangeABP -= OnOnChangeABP;
         }
 
         private void OnEventsEvtInputCastSkill(EInputActionType type, bool released, int skillId, int typeId, int itemId)
