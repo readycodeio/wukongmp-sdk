@@ -115,10 +115,9 @@ namespace WukongCSharpMod
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             // Photon.OnCastSkill += (id, type, released, skillId, typeId, itemId) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, type, released, skillId, typeId, itemId));
-            Photon.OnChangeAnimMode += (id, animMode, abpPath) => Utils.TryRunOnGameThread(() => ApplyChangeAnimMode(id, animMode, abpPath));
-            Photon.OnChangeABP += (id, abpPath) => Utils.TryRunOnGameThread(() => ApplyChangeABP(id, abpPath));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
-            Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
+            Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMontageCallback(id, data));
+            // Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -128,20 +127,26 @@ namespace WukongCSharpMod
             SubscribeToPlayerEvents();
         }
 
-        private void ApplyChangeABP(int id, string abpPath)
+        private void ApplyMontageCallback(int id, MontageCallbackData data)
         {
-            var pawn = Photon.ConnectedPlayers[id].Pawn;
-            var events = BUS_EventCollectionCS.Get(pawn);
-            var subclass = UClass.GetClass(abpPath);
-            events.Evt_OnChangeABP.Invoke(subclass);
-        }
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
+            {
+                Helpers.Log($"Player not found: {id}");
+                return;
+            }
 
-        private void ApplyChangeAnimMode(int id, EAnimationMode animMode, string abpPath)
-        {
-            var pawn = Photon.ConnectedPlayers[id].Pawn;
-            var events = BUS_EventCollectionCS.Get(pawn);
-            var subclass = UClass.GetClass(abpPath);
-            events.Evt_ChangeAnimMode.Invoke(animMode, subclass);
+            var clone = player.Pawn;
+
+            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);
+
+            if (montage is null)
+            {
+                Helpers.Log($"Montage not found: {data.MontagePath}");
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(clone);
+            events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
         }
 
         private void SubscribeToPlayerEvents()
@@ -150,31 +155,21 @@ namespace WukongCSharpMod
             Photon.LocalPlayerState.Pawn = myPawn;
 
             var events = BUS_EventCollectionCS.Get(myPawn);
-            // events.Evt_InputCastSkill += OnEventsEvtInputCastSkill;
-            events.Evt_ChangeAnimMode += OnChangeAnimMode;
-            events.Evt_OnChangeABP += OnOnChangeABP;
-        }
-
-        private void OnOnChangeABP(TSubclassOf<UAnimInstance> newabpclass)
-        {
-            var abpPath = newabpclass.Value.PathName;
-            Photon.SendChangeABP(abpPath);
-        }
-
-        private void OnChangeAnimMode(EAnimationMode animmode, TSubclassOf<UAnimInstance> abpclass)
-        {
-            // get unreal engine path for abpclass
-            var abpPath = abpclass.Value.PathName;
-            Photon.SendChangeAnimMode(animmode, abpPath);
+            events.Evt_PlayMontageCallback += OnPlayMontageCallback;
         }
 
         private void UnsubscribeFromPlayerEvents()
         {
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
-            // events.Evt_InputCastSkill -= OnEventsEvtInputCastSkill;
-            events.Evt_ChangeAnimMode -= OnChangeAnimMode;
-            events.Evt_OnChangeABP -= OnOnChangeABP;
+            events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
+        }
+
+        private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
+        {
+            var montagePath = montage.GetPathName();
+            Helpers.Log($"Montage callback: {reason} {montagePath} {state}");
+            Photon.SendMontageCallback(reason, montagePath, state);
         }
 
         private void OnEventsEvtInputCastSkill(EInputActionType type, bool released, int skillId, int typeId, int itemId)

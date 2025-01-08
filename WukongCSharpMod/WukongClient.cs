@@ -26,10 +26,9 @@ namespace WukongCSharpMod
         private readonly Action _joinedRoomCallback;
         public event Action<int> OnPlayerJoined;
         public event Action<int, EInputActionType, bool, int, int, int> OnCastSkill;
+        public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
         public event Action<int, byte> OnRollSkill;
-        public event Action<int, string> OnChangeABP;
-        public event Action<int, EAnimationMode, string> OnChangeAnimMode;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
@@ -76,21 +75,14 @@ namespace WukongCSharpMod
                     var data = (int[])photonEvent.CustomData;
                     OnCastSkill?.Invoke(photonEvent.Sender, (EInputActionType)data[0], data[1] == 1, data[2], data[3], data[4]);
                     break;
+                case 3:
+                    // montage callback
+                    var montData = (MontageCallbackData)photonEvent.CustomData;
+                    OnMontageCallback?.Invoke(photonEvent.Sender, montData);
+                    break;
                 case 4:
                     // roll skill
                     OnRollSkill?.Invoke(photonEvent.Sender, (byte)photonEvent.CustomData);
-                    break;
-                case 5:
-                    // change abp
-                    var abpPath = (string)photonEvent.CustomData;
-                    Helpers.Log($"Received ABP: {abpPath}");
-                    OnChangeABP?.Invoke(photonEvent.Sender, abpPath);
-                    break;
-                case 6:
-                    // change anim mode
-                    var evData = (string[])photonEvent.CustomData;
-                    Helpers.Log($"Received anim mode: {evData[0]} {evData[1]}");
-                    OnChangeAnimMode?.Invoke(photonEvent.Sender, (EAnimationMode)Enum.Parse(typeof(EAnimationMode), evData[0]), evData[1]);
                     break;
             }
         }
@@ -140,6 +132,8 @@ namespace WukongCSharpMod
                 stream.WriteByte((byte)obj);
                 return 1;
             }, (stream, length) => (EMoveSpeedLevel)stream.ReadByte());
+
+            PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
@@ -224,25 +218,17 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
+        public void SendMontageCallback(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
+        {
+            const byte eventCode = 3;
+            var evData = new MontageCallbackData(reason, montagePath, state);
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
         public void SendRollSkill(byte rolldir)
         {
             const byte eventCode = 4;
             var evData = rolldir;
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendChangeABP(string abpPath)
-        {
-            const byte eventCode = 5;
-            Helpers.Log($"Sending ABP: {abpPath}");
-            _client.OpRaiseEvent(eventCode, abpPath, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendChangeAnimMode(EAnimationMode animmode, string abpPath)
-        {
-            const byte eventCode = 6;
-            var evData = new[] { animmode.ToString(), abpPath };
-            Helpers.Log($"Sending anim mode: {animmode} {abpPath}");
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
