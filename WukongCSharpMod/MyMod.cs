@@ -159,7 +159,7 @@ namespace WukongCSharpMod
             {
                 if (animInstance.GetCurrentActiveMontage().PathName == montage.PathName)
                 {
-                    animInstance.Montage_Stop(0.1f, montage);
+                    animInstance.Montage_Stop(1f, montage);
                 }
             }
 
