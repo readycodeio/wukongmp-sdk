@@ -143,7 +143,7 @@ namespace WukongCSharpMod
                     playerState.MoveAcceleration = FVector.ZeroVector;
                 }
 
-                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, 0.033f, true, false, false, true);
+                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
             }
         }
     }
