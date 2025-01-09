@@ -108,8 +108,11 @@ namespace WukongCSharpMod
                 {
                     __instance.Velocity = FVector.ZeroVector;
                     playerState.Velocity = FVector.ZeroVector;
-                    __instance.MovementComp.Velocity = FVector.ZeroVector;
+                    __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
+                    __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
+                    __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
                     events.Evt_StopCurrentMove.Invoke();
+                    events.Evt_MovementForceStop.Invoke();
                 }
 
                 __instance.MoveAcceleration = playerState.MoveAcceleration;
