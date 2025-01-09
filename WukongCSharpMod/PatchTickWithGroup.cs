@@ -28,31 +28,6 @@ namespace WukongCSharpMod
         }
     }
 
-    [HarmonyPatch(typeof(BUS_DodgeComp), "TriggerRollSkill")]
-    public class PatchRollSkill
-    {
-        public static void Postfix(BUS_DodgeComp __instance, ESkillDirection RollDir)
-        {
-            var photon = MyMod.Instance.Photon;
-
-            if (photon == null)
-            {
-                return;
-            }
-
-            var owner = __instance.GetOwner();
-
-            if (owner != photon.LocalPlayerState.Pawn)
-            {
-                return;
-            }
-
-            Helpers.Log($"Action: RollSkill, Direction: {RollDir}");
-
-            photon.SendRollSkill((byte)RollDir);
-        }
-    }
-
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     public class PatchPlayerAnimation
     {

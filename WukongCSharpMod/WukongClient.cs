@@ -28,7 +28,7 @@ namespace WukongCSharpMod
         public event Action<int, EInputActionType, bool, int, int, int> OnCastSkill;
         public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
-        public event Action<int, byte> OnRollSkill;
+        public event Action<int, int, bool, bool> OnSkillEffect;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
@@ -81,8 +81,9 @@ namespace WukongCSharpMod
                     OnMontageCallback?.Invoke(photonEvent.Sender, montData);
                     break;
                 case 4:
-                    // roll skill
-                    OnRollSkill?.Invoke(photonEvent.Sender, (byte)photonEvent.CustomData);
+                    // skill effect
+                    var effectData = (int[])photonEvent.CustomData;
+                    OnSkillEffect?.Invoke(photonEvent.Sender, effectData[0], effectData[1] == 1, effectData[2] == 1);
                     break;
             }
         }
@@ -225,14 +226,15 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        public void SendRollSkill(byte rolldir)
+        public void SendSkillEffect(int effectid, bool b, bool bwithrpcevent)
         {
             const byte eventCode = 4;
-            var evData = rolldir;
+            var evData = new[] { effectid, b ? 1 : 0, bwithrpcevent ? 1 : 0 };
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         private ConcurrentDictionary<string, object> _playerProperties = new ConcurrentDictionary<string, object>();
+
         private ConcurrentDictionary<string, object> _playerPropertiesRo = new ConcurrentDictionary<string, object>();
 
         private readonly object _playerPropertiesLock = new object();

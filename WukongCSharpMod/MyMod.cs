@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using b1;
 using b1.BGW;
@@ -106,10 +107,9 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-            // Photon.OnCastSkill += (id, type, released, skillId, typeId, itemId) => Utils.TryRunOnGameThread(() => ApplyPlayerInput(id, type, released, skillId, typeId, itemId));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMontageCallback(id, data));
-            // Photon.OnRollSkill += (id, dir) => Utils.TryRunOnGameThread(() => ApplyRollSkill(id, (ESkillDirection)dir));
+            Photon.OnSkillEffect += (id, skillId, playerNotNull, bwithrpcevent) => Utils.TryRunOnGameThread(() => ApplySkillEffect(id, skillId, playerNotNull, bwithrpcevent));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -117,6 +117,17 @@ namespace WukongCSharpMod
 
             Photon.StartClient();
             SubscribeToPlayerEvents();
+        }
+
+        private void ApplySkillEffect(int id, int skillId, bool playerNotNull, bool bwithrpcevent)
+        {
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
+            {
+                Helpers.Log($"Player not found: {id}");
+                return;
+            }
+
+            BGUFunctionLibraryCS.TriggerEffectToTarget(player.Pawn, skillId, playerNotNull ? player.Pawn : null);
         }
 
         private void ApplyMontageCallback(int id, MontageCallbackData data)
@@ -163,6 +174,9 @@ namespace WukongCSharpMod
 
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_PlayMontageCallback += OnPlayMontageCallback;
+            // events.Evt_RequestSpawnFXByDispConfigDA += OnEventsEvtRequestSpawnFxByDispConfigDa;
+            // events.Evt_RequestSpawnFXByDispConfig += OnEventsEvtRequestSpawnFxByDispConfig;
+            events.Evt_TriggerSkillEffect += OnEventsEvtInputCastSkill;
         }
 
         private void UnsubscribeFromPlayerEvents()
@@ -170,6 +184,18 @@ namespace WukongCSharpMod
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
+            // events.Evt_RequestSpawnFXByDispConfigDA -= OnEventsEvtRequestSpawnFxByDispConfigDa;
+            // events.Evt_RequestSpawnFXByDispConfig -= OnEventsEvtRequestSpawnFxByDispConfig;
+            events.Evt_TriggerSkillEffect -= OnEventsEvtInputCastSkill;
+        }
+
+        private void OnEventsEvtInputCastSkill(int effectid, FEffectInstReq effectinstreq, AActor innertarget, bool bwithrpcevent)
+        {
+            if (innertarget == null || innertarget.PathName == Photon.LocalPlayerState.Pawn.PathName)
+            {
+                Helpers.Log($"Triggering skill effect {effectid} on {innertarget?.PathName}");
+                Photon.SendSkillEffect(effectid, innertarget != null, bwithrpcevent);
+            }
         }
 
         private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
@@ -177,11 +203,6 @@ namespace WukongCSharpMod
             var montagePath = montage.GetPathName();
             Helpers.Log($"Montage callback: {reason} {montagePath} {state}");
             Photon.SendMontageCallback(reason, montagePath, state);
-        }
-
-        private void OnEventsEvtInputCastSkill(EInputActionType type, bool released, int skillId, int typeId, int itemId)
-        {
-            Photon.SendCastSkill(type, released, skillId, typeId, itemId);
         }
 
         private void SpawnEnemy(string enemyName)
@@ -393,36 +414,6 @@ namespace WukongCSharpMod
                     Helpers.Log("Chat widget initialized!.");
                 }
             }
-        }
-
-        private void ApplyPlayerInput(int id, EInputActionType type, bool released, int skillId, int typeId, int itemId)
-        {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
-            {
-                Helpers.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            events.Evt_InputCastSkill.Invoke(type, released, skillId, typeId, itemId);
-            Helpers.Log($"Player {id} invoked action {type} (released = {released}) with skill {skillId}, type {typeId}, item {itemId}");
-        }
-
-        private void ApplyRollSkill(int id, ESkillDirection dir)
-        {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
-            {
-                Helpers.Log($"Player not found: {id}");
-                return;
-            }
-
-            var clone = player.Pawn;
-            var events = BUS_EventCollectionCS.Get(clone);
-
-            Helpers.Log($"Applying roll skill for player {id}");
-            events.Evt_TriggerRollSkill.Invoke(dir);
         }
 
         public void DeInit()
