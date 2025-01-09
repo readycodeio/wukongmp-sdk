@@ -31,8 +31,6 @@ namespace WukongCSharpMod
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     public class PatchPlayerAnimation
     {
-        private const float Tolerance = 0.01f;
-
         public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
             var photon = MyMod.Instance.Photon;
@@ -64,25 +62,25 @@ namespace WukongCSharpMod
                     photon.SetPlayerProperty(nameof(PlayerState.IsLandingMove), photon.LocalPlayerState.IsLandingMove);
                 }
 
-                if (!localState.Velocity.Equals(__instance.Velocity, Tolerance))
+                if (!localState.Velocity.Equals(__instance.Velocity, Constants.MovementSyncTolerance))
                 {
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
                     photon.SetPlayerProperty(nameof(PlayerState.Velocity), photon.LocalPlayerState.Velocity);
                 }
 
-                if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Tolerance))
+                if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.MovementSyncTolerance))
                 {
                     photon.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
                     photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), photon.LocalPlayerState.MoveAcceleration);
                 }
 
-                if (!localState.ActorLocation.Equals(__instance.ActorLocation, Tolerance))
+                if (!localState.ActorLocation.Equals(__instance.ActorLocation, Constants.MovementSyncTolerance))
                 {
                     photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
                     photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), photon.LocalPlayerState.ActorLocation);
                 }
 
-                if (!localState.ActorRotation.Equals(__instance.ActorRotation, Tolerance))
+                if (!localState.ActorRotation.Equals(__instance.ActorRotation, Constants.MovementSyncTolerance))
                 {
                     photon.LocalPlayerState.ActorRotation = __instance.ActorRotation;
                     photon.SetPlayerProperty(nameof(PlayerState.ActorRotation), photon.LocalPlayerState.ActorRotation);
@@ -122,7 +120,10 @@ namespace WukongCSharpMod
                     playerState.MoveAcceleration = FVector.ZeroVector;
                 }
 
-                events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                if (!playerState.ActorLocation.Equals(__instance.ActorLocation, Constants.MovementSyncTolerance))
+                {
+                    events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                }
             }
         }
     }
@@ -130,8 +131,6 @@ namespace WukongCSharpMod
     [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
     public class PatchBGUPlayerAnimation
     {
-        private const float Tolerance = 0.01f;
-
         public static void Postfix(
             BUC_ABPBGUCharacterData __instance,
             AActor Owner,
@@ -162,13 +161,13 @@ namespace WukongCSharpMod
                     photon.SetPlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
                 }
 
-                if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Tolerance))
+                if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.MovementSyncTolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
                 }
 
-                if (MathF.Abs(localState.TurnInplaceRemainAngle - __instance.TurnInplaceRemainAngle) > Tolerance)
+                if (MathF.Abs(localState.TurnInplaceRemainAngle - __instance.TurnInplaceRemainAngle) > Constants.MovementSyncTolerance)
                 {
                     photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
@@ -201,8 +200,6 @@ namespace WukongCSharpMod
     [HarmonyPatch(typeof(BUC_ABPJumpV2Data), nameof(BUC_ABPJumpV2Data.Update))]
     public class PatchJumpData
     {
-        private const float Tolerance = 0.01f;
-
         public static void Postfix(
             BUC_ABPJumpV2Data __instance,
             AActor Owner,

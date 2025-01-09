@@ -109,7 +109,7 @@ namespace WukongCSharpMod
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMontageCallback(id, data));
-            Photon.OnSkillEffect += (id, skillId, playerNotNull, bwithrpcevent) => Utils.TryRunOnGameThread(() => ApplySkillEffect(id, skillId, playerNotNull, bwithrpcevent));
+            // Photon.OnSkillEffect += (id, skillId, playerNotNull, bwithrpcevent) => Utils.TryRunOnGameThread(() => ApplySkillEffect(id, skillId, playerNotNull, bwithrpcevent));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -176,7 +176,7 @@ namespace WukongCSharpMod
             events.Evt_PlayMontageCallback += OnPlayMontageCallback;
             // events.Evt_RequestSpawnFXByDispConfigDA += OnEventsEvtRequestSpawnFxByDispConfigDa;
             // events.Evt_RequestSpawnFXByDispConfig += OnEventsEvtRequestSpawnFxByDispConfig;
-            events.Evt_TriggerSkillEffect += OnEventsEvtInputCastSkill;
+            // events.Evt_TriggerSkillEffect += OnEventsEvtInputCastSkill;
         }
 
         private void UnsubscribeFromPlayerEvents()
@@ -186,7 +186,7 @@ namespace WukongCSharpMod
             events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
             // events.Evt_RequestSpawnFXByDispConfigDA -= OnEventsEvtRequestSpawnFxByDispConfigDa;
             // events.Evt_RequestSpawnFXByDispConfig -= OnEventsEvtRequestSpawnFxByDispConfig;
-            events.Evt_TriggerSkillEffect -= OnEventsEvtInputCastSkill;
+            // events.Evt_TriggerSkillEffect -= OnEventsEvtInputCastSkill;
         }
 
         private void OnEventsEvtInputCastSkill(int effectid, FEffectInstReq effectinstreq, AActor innertarget, bool bwithrpcevent)
