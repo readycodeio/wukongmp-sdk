@@ -332,3 +332,30 @@ namespace WukongCSharpMod
         }
     }
 }
+    [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
+    public class PatchOnAIPerceptionSetting
+    {
+        public static bool Prefix(bool bEnable)
+        {
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_AIComp), "OnAIPauseBT")]
+    public class PatchOnAIPauseBT
+    {
+        public static bool Prefix(bool bEnable)
+        {
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_FsmComp), "OnAIPauseFsm")]
+    public class PatchOnAIPauseFsm
+    {
+        public static bool Prefix(bool IsPause)
+        {
+            return false;
+        }
+    }
+}
