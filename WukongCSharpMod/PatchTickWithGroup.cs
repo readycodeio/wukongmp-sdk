@@ -344,7 +344,7 @@ namespace WukongCSharpMod
     [HarmonyPatch(typeof(BUS_AIComp), "OnAIPauseBT")]
     public class PatchOnAIPauseBT
     {
-        public static bool Prefix(bool bEnable)
+        public static bool Prefix(bool IsPause)
         {
             return false;
         }
