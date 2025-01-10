@@ -285,9 +285,6 @@ namespace WukongCSharpMod
         public void OnConnected()
         {
             Helpers.Log("Connected");
-
-            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
-            Helpers.Log("Patched with Harmony");
         }
 
         public void OnConnectedToMaster()
@@ -343,6 +340,10 @@ namespace WukongCSharpMod
         public void OnJoinedRoom()
         {
             Helpers.Log("Joined room");
+
+            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+            Helpers.Log("Patched with Harmony");
+
             _joinedRoomCallback?.Invoke();
             SendRoomJoined();
         }

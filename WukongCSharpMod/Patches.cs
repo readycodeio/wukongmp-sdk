@@ -319,13 +319,11 @@ namespace WukongCSharpMod
             if (IsThreadTick)
             {
                 var photon = MyMod.Instance.Photon;
-                if (photon != null)
+                photon.SendUpdatedPlayerProperties();
+
+                if (photon.IsMasterClient)
                 {
-                    photon.SendUpdatedPlayerProperties();
-                    if (photon.IsMasterClient)
-                    {
-                        photon.SendUpdatedMonsterProperties();
-                    }
+                    photon.SendUpdatedMonsterProperties();
                 }
             }
         }

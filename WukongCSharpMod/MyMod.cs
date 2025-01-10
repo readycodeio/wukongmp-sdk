@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
-using b1;
+﻿using b1;
 using b1.BGW;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -79,7 +77,7 @@ namespace WukongCSharpMod
             }
         }
 
-        private void SpawnAllMonsters()
+        private static void SpawnAllMonsters()
         {
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
