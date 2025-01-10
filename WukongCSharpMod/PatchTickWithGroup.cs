@@ -300,4 +300,35 @@ namespace WukongCSharpMod
             }
         }
     }
+
+    [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
+    public class PatchTamerLoad
+    {
+        public static void Postfix(FTamerRef __instance)
+        {
+            if (__instance.IsMonsterValid())
+            {
+                var monster = __instance.MonsterInstancePtr.Get();
+
+                if (monster == null)
+                {
+                    Helpers.Log("Monster is null but should not be");
+                    return;
+                }
+                var events = BUS_EventCollectionCS.Get(monster);
+
+                if (events is null)
+                {
+                    Helpers.Log("Events is null");
+                    return;
+                }
+
+                events.Evt_AIPerceptionSetting.Invoke(false);
+                events.Evt_AIPauseBT.Invoke(true);
+                events.Evt_AIPauseFsm.Invoke(true);
+
+                Helpers.Log("Tamer actor disabled.");
+            }
+        }
+    }
 }

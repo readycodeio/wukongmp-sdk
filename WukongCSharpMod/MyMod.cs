@@ -245,13 +245,6 @@ namespace WukongCSharpMod
             UClass cachedResourceObj = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitName, ELoadResourceType.SyncLoadAndCache);
             AActor actor = BGUFunctionLibraryCS.BGUSpawnActor(world, (TSubclassOf<AActor>)cachedResourceObj, loc, rot);
             BUTamerActor buTamerActor = actor as BUTamerActor;
-            FTamerRef currentRef = buTamerActor.CurrentRef;
-            FieldInfo field = typeof(FTamerRef).GetField("_phase", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (field.GetValue(currentRef).ToString() == "Dead")
-                field.SetValue(currentRef, ETamerPhase.PreBegunPlay);
-            currentRef.OverrideResetType = EBGUResetType.None;
-            currentRef.GroupOverrideResetType = EBGUResetType.None;
-            buTamerActor.TamerType = ETamerType.Spawned;
             Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
 
             if (!remote)
