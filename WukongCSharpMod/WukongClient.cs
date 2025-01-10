@@ -292,7 +292,6 @@ namespace WukongCSharpMod
 
         public void SendUpdatedMonsterProperties()
         {
-            Helpers.Log("Will start sending monster properties");
             lock (_monsterPropertiesLock)
             {
                 (_monsterProperties, _monsterPropertiesRo) = (_monsterPropertiesRo, _monsterProperties);

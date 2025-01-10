@@ -40,7 +40,6 @@ namespace WukongCSharpMod
                     {
                         state.Location = location;
                         photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
-                        Helpers.Log($"Syncing monster {id} location to {state.Location}");
                     }
 
                     var rotation = state.Pawn.GetActorRotation();
@@ -48,7 +47,6 @@ namespace WukongCSharpMod
                     {
                         state.Rotation = rotation;
                         photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
-                        Helpers.Log($"Syncing monster {id} rotation to {state.Rotation}");
                     }
                 }
             }
@@ -58,49 +56,11 @@ namespace WukongCSharpMod
                 {
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
 
-                    if (!state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
+                    if (!state.Location.IsNearlyZero() && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
                     {
-                        Helpers.Log($"Moving monster {id} to {state.Location}");
                         events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
                 }
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(BUC_ABPMonsterLocomotionData), nameof(BUC_ABPMonsterLocomotionData.Update))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchMonsterLocomotion
-    {
-        public static void Postfix(
-            BUC_ABPMonsterLocomotionData __instance,
-            AActor Owner,
-            IBUC_ABPCommonSettingData CommonData,
-            IBUC_ABPCharacterData ChrData,
-            IBUC_ABPBGUCharacterData BGUData,
-            IBUC_ABPCommonLocomotionData LocomotionData,
-            float DeltaTime)
-        {
-            var photon = MyMod.Instance.Photon;
-            var monsterState = photon.GetMonsterStateByActor(Owner);
-            if (monsterState == null)
-            {
-                return;
-            }
-
-            if (photon.IsMasterClient)
-            {
-                // sync VelocityBlendAlpha
-                if (!monsterState.VelocityBlendAlpha.Equals(__instance.VelocityBlendAlpha, Constants.MovementSyncTolerance))
-                {
-                    monsterState.VelocityBlendAlpha = __instance.VelocityBlendAlpha;
-                    photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.VelocityBlendAlpha), monsterState.VelocityBlendAlpha);
-                }
-            }
-            else
-            {
-                // apply VelocityBlendAlpha
-                __instance.VelocityBlendAlpha = monsterState.VelocityBlendAlpha;
             }
         }
     }
@@ -163,39 +123,67 @@ namespace WukongCSharpMod
             {
                 var playerState = photon.GetByActor(Owner);
 
-                if (playerState == null)
+                if (playerState != null)
                 {
-                    return;
+                    var events = BUS_EventCollectionCS.Get(Owner);
+
+                    __instance.IsFlying = playerState.IsFlying;
+                    __instance.IsFalling = playerState.IsFalling;
+                    __instance.IsLandingMove = playerState.IsLandingMove;
+
+                    __instance.Velocity = playerState.Velocity;
+                    if (__instance.Velocity.IsNearlyZero())
+                    {
+                        __instance.Velocity = FVector.ZeroVector;
+                        playerState.Velocity = FVector.ZeroVector;
+                        __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
+                        __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
+                        __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
+                        events.Evt_StopCurrentMove.Invoke();
+                        events.Evt_MovementForceStop.Invoke();
+                    }
+
+                    __instance.MoveAcceleration = playerState.MoveAcceleration;
+                    if (__instance.MoveAcceleration.IsNearlyZero())
+                    {
+                        __instance.MoveAcceleration = FVector.ZeroVector;
+                        playerState.MoveAcceleration = FVector.ZeroVector;
+                    }
+
+                    if (!playerState.ActorLocation.Equals(__instance.ActorLocation, Constants.MovementSyncTolerance))
+                    {
+                        events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                    }
                 }
-
-                var events = BUS_EventCollectionCS.Get(Owner);
-
-                __instance.IsFlying = playerState.IsFlying;
-                __instance.IsFalling = playerState.IsFalling;
-                __instance.IsLandingMove = playerState.IsLandingMove;
-
-                __instance.Velocity = playerState.Velocity;
-                if (__instance.Velocity.IsNearlyZero())
+                else
                 {
-                    __instance.Velocity = FVector.ZeroVector;
-                    playerState.Velocity = FVector.ZeroVector;
-                    __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
-                    __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
-                    __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
-                    events.Evt_StopCurrentMove.Invoke();
-                    events.Evt_MovementForceStop.Invoke();
-                }
+                    // maybe it's a monster
+                    var monsterState = photon.GetMonsterStateByActor(Owner);
 
-                __instance.MoveAcceleration = playerState.MoveAcceleration;
-                if (__instance.MoveAcceleration.IsNearlyZero())
-                {
-                    __instance.MoveAcceleration = FVector.ZeroVector;
-                    playerState.MoveAcceleration = FVector.ZeroVector;
-                }
+                    if (monsterState != null)
+                    {
+                        // sync velocity and moveacceleration
+                        if (photon.IsMasterClient)
+                        {
+                            if (!monsterState.Velocity.Equals(__instance.Velocity, Constants.MovementSyncTolerance))
+                            {
+                                monsterState.Velocity = __instance.Velocity;
+                                photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.Velocity), monsterState.Velocity);
+                            }
 
-                if (!playerState.ActorLocation.Equals(__instance.ActorLocation, Constants.MovementSyncTolerance))
-                {
-                    events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                            if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.MovementSyncTolerance))
+                            {
+                                monsterState.MoveAcceleration = __instance.MoveAcceleration;
+                                photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
+                            }
+                        }
+                        else
+                        {
+                            Helpers.Log("Received monster movement data");
+                            __instance.Velocity = monsterState.Velocity;
+                            __instance.MoveAcceleration = monsterState.MoveAcceleration;
+                        }
+                    }
                 }
             }
         }
