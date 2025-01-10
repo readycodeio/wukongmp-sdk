@@ -9,7 +9,7 @@ namespace WukongCSharpMod
 {
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchTickWithGroup
+    public class Patches
     {
         private static MethodBase TargetMethod()
         {
@@ -24,30 +24,42 @@ namespace WukongCSharpMod
             }
             catch (Exception ex)
             {
-                Helpers.Log("PatchTickWithGroup Postfix Error {ex}");
+                Helpers.Log("Patch Postfix Error {ex}");
             }
-            
+
             // send updates for each monster
             var photon = MyMod.Instance.Photon;
 
-            if (!photon.IsMasterClient)
-                return;
-
-            foreach (var (id, state) in photon.SyncedMonsters)
+            if (photon.IsMasterClient)
             {
-                // sync location
-                var location = state.Pawn.GetActorLocation();
-                if (!location.Equals(state.Location, Constants.MovementSyncTolerance))
+                foreach (var (id, state) in photon.SyncedMonsters)
                 {
-                    state.Location = location;
-                    photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
-                }
+                    // sync location
+                    var location = state.Pawn.GetActorLocation();
+                    if (!location.Equals(state.Location, Constants.MovementSyncTolerance))
+                    {
+                        state.Location = location;
+                        photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
+                    }
 
-                var rotation = state.Pawn.GetActorRotation();
-                if (!rotation.Equals(state.Rotation, Constants.MovementSyncTolerance))
+                    var rotation = state.Pawn.GetActorRotation();
+                    if (!rotation.Equals(state.Rotation, Constants.MovementSyncTolerance))
+                    {
+                        state.Rotation = rotation;
+                        photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var (id, state) in photon.SyncedMonsters)
                 {
-                    state.Rotation = rotation;
-                    photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
+                    var events = BUS_EventCollectionCS.Get(state.Pawn);
+
+                    if (!state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
+                    {
+                        events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                    }
                 }
             }
         }
