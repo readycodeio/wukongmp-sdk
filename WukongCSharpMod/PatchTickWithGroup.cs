@@ -8,6 +8,7 @@ using UnrealEngine.Runtime;
 namespace WukongCSharpMod
 {
     [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchTickWithGroup
     {
         private static MethodBase TargetMethod()
@@ -25,20 +26,40 @@ namespace WukongCSharpMod
             {
                 Helpers.Log("PatchTickWithGroup Postfix Error {ex}");
             }
+            
+            // send updates for each monster
+            var photon = MyMod.Instance.Photon;
+
+            if (!photon.IsMasterClient)
+                return;
+
+            foreach (var (id, state) in photon.SyncedMonsters)
+            {
+                // sync location
+                var location = state.Pawn.GetActorLocation();
+                if (!location.Equals(state.Location, Constants.MovementSyncTolerance))
+                {
+                    state.Location = location;
+                    photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
+                }
+
+                var rotation = state.Pawn.GetActorRotation();
+                if (!rotation.Equals(state.Rotation, Constants.MovementSyncTolerance))
+                {
+                    state.Rotation = rotation;
+                    photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
+                }
+            }
         }
     }
 
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchPlayerAnimation
     {
         public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
             var photon = MyMod.Instance.Photon;
-
-            if (photon == null)
-            {
-                return;
-            }
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -129,6 +150,7 @@ namespace WukongCSharpMod
     }
 
     [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchBGUPlayerAnimation
     {
         public static void Postfix(
@@ -139,11 +161,6 @@ namespace WukongCSharpMod
             float DeltaTime)
         {
             var photon = MyMod.Instance.Photon;
-
-            if (photon == null)
-            {
-                return;
-            }
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -198,6 +215,7 @@ namespace WukongCSharpMod
     }
 
     [HarmonyPatch(typeof(BUC_ABPJumpV2Data), nameof(BUC_ABPJumpV2Data.Update))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchJumpData
     {
         public static void Postfix(
@@ -210,11 +228,6 @@ namespace WukongCSharpMod
             float DeltaTime)
         {
             var photon = MyMod.Instance.Photon;
-
-            if (photon == null)
-            {
-                return;
-            }
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -241,6 +254,7 @@ namespace WukongCSharpMod
     }
 
     [HarmonyPatch(typeof(BUC_ABPBasicData), nameof(BUC_ABPBasicData.Update_WorkThread))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchBasicData
     {
         public static void Postfix(
@@ -252,11 +266,6 @@ namespace WukongCSharpMod
             float DeltaTime)
         {
             var photon = MyMod.Instance.Photon;
-
-            if (photon == null)
-            {
-                return;
-            }
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -290,22 +299,35 @@ namespace WukongCSharpMod
     }
 
     [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnTickImpl")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchTick
     {
         public static void Postfix(float DeltaTime, bool IsThreadTick)
         {
             if (IsThreadTick)
             {
-                MyMod.Instance.Photon?.SendUpdatedPlayerProperties();
+                var photon = MyMod.Instance.Photon;
+                if (photon != null)
+                {
+                    photon.SendUpdatedPlayerProperties();
+                    if (photon.IsMasterClient)
+                    {
+                        photon.SendUpdatedMonsterProperties();
+                    }
+                }
             }
         }
     }
 
     [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchTamerLoad
     {
         public static void Postfix(FTamerRef __instance)
         {
+            if (MyMod.Instance.Photon.IsMasterClient)
+                return;
+
             if (__instance.IsMonsterValid())
             {
                 var monster = __instance.MonsterInstancePtr.Get();
@@ -315,6 +337,7 @@ namespace WukongCSharpMod
                     Helpers.Log("Monster is null but should not be");
                     return;
                 }
+
                 var events = BUS_EventCollectionCS.Get(monster);
 
                 if (events is null)
@@ -335,43 +358,60 @@ namespace WukongCSharpMod
     }
 
     [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchOnAIPerceptionSetting
     {
         public static bool Prefix(bool bEnable)
         {
+            if (MyMod.Instance.Photon.IsMasterClient)
+                return true;
+
             return !bEnable;
         }
     }
 
     [HarmonyPatch(typeof(BUS_AIComp), "OnAIPauseBT")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchOnAIPauseBT
     {
         public static bool Prefix(bool IsPause)
         {
+            if (MyMod.Instance.Photon.IsMasterClient)
+                return true;
+
             return IsPause;
         }
     }
 
 
     [HarmonyPatch(typeof(BUS_AIComp), "OnEnableCanSetBT")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchOnEnableCanSetBT
     {
         public static bool Prefix(bool bEnable)
         {
+            if (MyMod.Instance.Photon.IsMasterClient)
+                return true;
+
             return !bEnable;
         }
     }
 
     [HarmonyPatch(typeof(BUS_FsmComp), "OnAIPauseFsm")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchOnAIPauseFsm
     {
         public static bool Prefix(bool IsPause)
         {
+            if (MyMod.Instance.Photon.IsMasterClient)
+                return true;
+
             return IsPause;
         }
     }
 
     [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchOnEnableCanUpdateHatred
     {
         private static MethodBase TargetMethod()
@@ -381,6 +421,9 @@ namespace WukongCSharpMod
 
         public static bool Prefix(bool bEnable)
         {
+            if (MyMod.Instance.Photon.IsMasterClient)
+                return true;
+
             return !bEnable;
         }
     }

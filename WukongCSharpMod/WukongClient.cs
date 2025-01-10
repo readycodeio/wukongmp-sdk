@@ -7,7 +7,6 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using b1;
-using BtlShare;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -21,20 +20,20 @@ namespace WukongCSharpMod
         private readonly WukongChatter _wukongChat = new WukongChatter();
 
         private int Id => _client.LocalPlayer.ActorNumber;
+        public bool IsMasterClient => _client.CurrentRoom.MasterClientId == Id;
         public bool Ready => _client.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
         public event Action<int> OnPlayerJoined;
-        public event Action<int, EInputActionType, bool, int, int, int> OnCastSkill;
         public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, byte, string, float, float, float> OnUnitSpawn;
-        public event Action<int, int, bool, bool> OnSkillEffect;
 
         private const string UserName = "ReadyM_julkiewicz";
         public WukongChatter WukongChat => _wukongChat;
 
         public PlayerState LocalPlayerState { get; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
+        public readonly Dictionary<int, MonsterState> SyncedMonsters = new Dictionary<int, MonsterState>();
 
         public PlayerState GetByActor(AActor actor)
         {
@@ -71,19 +70,9 @@ namespace WukongCSharpMod
                     OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Id, unitData.Name, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
-                    // cast skill
-                    var data = (int[])photonEvent.CustomData;
-                    OnCastSkill?.Invoke(photonEvent.Sender, (EInputActionType)data[0], data[1] == 1, data[2], data[3], data[4]);
-                    break;
-                case 3:
                     // montage callback
                     var montData = (MontageCallbackData)photonEvent.CustomData;
                     OnMontageCallback?.Invoke(photonEvent.Sender, montData);
-                    break;
-                case 4:
-                    // skill effect
-                    var effectData = (int[])photonEvent.CustomData;
-                    OnSkillEffect?.Invoke(photonEvent.Sender, effectData[0], effectData[1] == 1, effectData[2] == 1);
                     break;
             }
         }
@@ -212,24 +201,10 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        public void SendCastSkill(EInputActionType inputActionType, bool isRelease, int skillId, int descId, int itemId)
-        {
-            const byte eventCode = 2;
-            var evData = new[] { (int)inputActionType, isRelease ? 1 : 0, skillId, descId, itemId };
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
         public void SendMontageCallback(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
-            const byte eventCode = 3;
+            const byte eventCode = 2;
             var evData = new MontageCallbackData(reason, montagePath, state);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
-        }
-
-        public void SendSkillEffect(int effectid, bool b, bool bwithrpcevent)
-        {
-            const byte eventCode = 4;
-            var evData = new[] { effectid, b ? 1 : 0, bwithrpcevent ? 1 : 0 };
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
@@ -269,11 +244,50 @@ namespace WukongCSharpMod
             }
         }
 
+        private ConcurrentDictionary<(int, string), object> _monsterProperties = new ConcurrentDictionary<(int, string), object>();
+
+        private ConcurrentDictionary<(int, string), object> _monsterPropertiesRo = new ConcurrentDictionary<(int, string), object>();
+
+        private readonly object _monsterPropertiesLock = new object();
+
+        public void SendUpdatedMonsterProperties()
+        {
+            lock (_monsterPropertiesLock)
+            {
+                (_monsterProperties, _monsterPropertiesRo) = (_monsterPropertiesRo, _monsterProperties);
+
+                if (_monsterPropertiesRo.Count == 0)
+                    return;
+
+                var hashtable = new PhotonHashtable();
+                foreach (var (key, value) in _monsterPropertiesRo)
+                {
+                    hashtable[key] = value;
+                }
+
+                _monsterPropertiesRo.Clear();
+                _client.OpSetCustomPropertiesOfRoom(hashtable);
+            }
+        }
+
+        public void SetMonsterProperty(int id, string prop, object value)
+        {
+            _monsterProperties[(id, prop)] = value;
+
+            if (!(value is FVector || value is FRotator || value is float))
+            {
+                Helpers.Log($"SetMonsterProperty [{id}]: {prop} = {value}");
+            }
+        }
+
         #region IConnectionCallbacks
 
         public void OnConnected()
         {
             Helpers.Log("Connected");
+
+            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+            Helpers.Log("Patched with Harmony");
         }
 
         public void OnConnectedToMaster()
@@ -360,7 +374,29 @@ namespace WukongCSharpMod
             Helpers.Log($"Player {otherPlayer.UserId} left the room");
         }
 
-        public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged) { }
+        public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
+        {
+            // propertiesThatChanged contains monster ID and possibly other properties such as location, rotation, etc.
+
+            foreach (var (key, value) in propertiesThatChanged)
+            {
+                var (id, propName) = ((int, string))key;
+
+                if (!SyncedMonsters.TryGetValue(id, out var monsterState))
+                {
+                    Helpers.Log($"Monster {id} not found.");
+                    continue;
+                }
+
+                if (!MonsterSetters.TryGetValue(propName, out var setter))
+                {
+                    setter = CreateSetter<MonsterState>(propName);
+                    MonsterSetters[propName] = setter;
+                }
+
+                setter(monsterState, value);
+            }
+        }
 
         public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
         {
@@ -378,10 +414,10 @@ namespace WukongCSharpMod
             foreach (var kvp in changedProps)
             {
                 var propertyName = (string)kvp.Key;
-                if (!PropertySetters.TryGetValue(propertyName, out var setter))
+                if (!PlayerSetters.TryGetValue(propertyName, out var setter))
                 {
-                    setter = CreateSetter(propertyName);
-                    PropertySetters[propertyName] = setter;
+                    setter = CreateSetter<PlayerState>(propertyName);
+                    PlayerSetters[propertyName] = setter;
                 }
 
                 if (!(kvp.Value is FVector || kvp.Value is FRotator || kvp.Value is float))
@@ -395,16 +431,17 @@ namespace WukongCSharpMod
 
         public void OnMasterClientSwitched(Player newMasterClient) { }
 
-        private static readonly Dictionary<string, Action<PlayerState, object>> PropertySetters = new Dictionary<string, Action<PlayerState, object>>();
+        private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new Dictionary<string, Action<PlayerState, object>>();
+        private static readonly Dictionary<string, Action<MonsterState, object>> MonsterSetters = new Dictionary<string, Action<MonsterState, object>>();
 
-        private static Action<PlayerState, object> CreateSetter(string propertyName)
+        private static Action<T, object> CreateSetter<T>(string propertyName)
         {
-            var property = typeof(PlayerState).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            var property = typeof(T).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
             if (property == null)
-                throw new InvalidOperationException($"Property '{propertyName}' not found on PlayerState.");
+                throw new InvalidOperationException($"Property '{propertyName}' not found on {typeof(T).Name}.");
 
-            // Create the lambda (PlayerState state, object value) => state.Property = (T)value;
-            var stateParam = Expression.Parameter(typeof(PlayerState), "state");
+            // Create the lambda (T state, object value) => state.Property = (T)value;
+            var stateParam = Expression.Parameter(typeof(T), "state");
             var valueParam = Expression.Parameter(typeof(object), "value");
 
             // Cast value to the correct type
@@ -414,7 +451,7 @@ namespace WukongCSharpMod
             var body = Expression.Assign(Expression.Property(stateParam, property), convertedValue);
 
             // Compile the lambda expression
-            return Expression.Lambda<Action<PlayerState, object>>(body, stateParam, valueParam).Compile();
+            return Expression.Lambda<Action<T, object>>(body, stateParam, valueParam).Compile();
         }
     }
 }

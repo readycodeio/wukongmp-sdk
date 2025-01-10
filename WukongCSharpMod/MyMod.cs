@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using b1;
 using b1.BGW;
-using BtlShare;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
@@ -22,7 +20,7 @@ namespace WukongCSharpMod
 
         public WukongClient Photon { get; private set; }
 
-        private readonly Harmony _harmony = new Harmony("WukongMP");
+        public readonly Harmony Harmony = new Harmony("WukongMP");
 
         private readonly Dictionary<byte, MonsterState> _monsters = new Dictionary<byte, MonsterState>();
 
@@ -35,8 +33,6 @@ namespace WukongCSharpMod
             Instance = this;
 
             Helpers.Log("Init");
-            _harmony.PatchAll(Assembly.GetExecutingAssembly());
-            Helpers.Log("Patched with Harmony");
 
             // InitWorldCallbacks();
 
@@ -135,7 +131,6 @@ namespace WukongCSharpMod
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMontageCallback(id, data));
-            // Photon.OnSkillEffect += (id, skillId, playerNotNull, bwithrpcevent) => Utils.TryRunOnGameThread(() => ApplySkillEffect(id, skillId, playerNotNull, bwithrpcevent));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -144,17 +139,6 @@ namespace WukongCSharpMod
             Photon.StartClient();
             SubscribeToPlayerEvents();
             SpawnAllMonsters();
-        }
-
-        private void ApplySkillEffect(int id, int skillId, bool playerNotNull, bool bwithrpcevent)
-        {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
-            {
-                Helpers.Log($"Player not found: {id}");
-                return;
-            }
-
-            BGUFunctionLibraryCS.TriggerEffectToTarget(player.Pawn, skillId, playerNotNull ? player.Pawn : null);
         }
 
         private void ApplyMontageCallback(int id, MontageCallbackData data)
@@ -201,9 +185,6 @@ namespace WukongCSharpMod
 
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_PlayMontageCallback += OnPlayMontageCallback;
-            // events.Evt_RequestSpawnFXByDispConfigDA += OnEventsEvtRequestSpawnFxByDispConfigDa;
-            // events.Evt_RequestSpawnFXByDispConfig += OnEventsEvtRequestSpawnFxByDispConfig;
-            // events.Evt_TriggerSkillEffect += OnEventsEvtInputCastSkill;
         }
 
         private void UnsubscribeFromPlayerEvents()
@@ -211,18 +192,6 @@ namespace WukongCSharpMod
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
-            // events.Evt_RequestSpawnFXByDispConfigDA -= OnEventsEvtRequestSpawnFxByDispConfigDa;
-            // events.Evt_RequestSpawnFXByDispConfig -= OnEventsEvtRequestSpawnFxByDispConfig;
-            // events.Evt_TriggerSkillEffect -= OnEventsEvtInputCastSkill;
-        }
-
-        private void OnEventsEvtInputCastSkill(int effectid, FEffectInstReq effectinstreq, AActor innertarget, bool bwithrpcevent)
-        {
-            if (innertarget == null || innertarget.PathName == Photon.LocalPlayerState.Pawn.PathName)
-            {
-                Helpers.Log($"Triggering skill effect {effectid} on {innertarget?.PathName}");
-                Photon.SendSkillEffect(effectid, innertarget != null, bwithrpcevent);
-            }
         }
 
         private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
@@ -241,12 +210,7 @@ namespace WukongCSharpMod
             var id = (byte)_monsters.Count; // TODO: Overflow??
             var pawn = SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z, false);
 
-            _monsters[id] = new MonsterState
-            {
-                Id = id,
-                Local = true,
-                Pawn = pawn
-            };
+            _monsters[id] = new MonsterState(id, pawn);
 
             Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
@@ -277,12 +241,7 @@ namespace WukongCSharpMod
             if (!remote)
                 return buTamerActor;
 
-            _monsters.Add(id, new MonsterState
-            {
-                Id = id,
-                Local = false,
-                Pawn = buTamerActor
-            });
+            _monsters.Add(id, new MonsterState(id, buTamerActor));
 
             var events = BUS_EventCollectionCS.Get(buTamerActor);
 
