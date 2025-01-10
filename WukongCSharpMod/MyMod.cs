@@ -42,6 +42,13 @@ namespace WukongCSharpMod
                 InitPhoton();
             });
 
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
+            {
+                Helpers.Log("Alt + V");
+
+                SpawnAllMonsters();
+            });
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Helpers.Log("Alt + C");
@@ -135,7 +142,6 @@ namespace WukongCSharpMod
 
             Photon.StartClient();
             SubscribeToPlayerEvents();
-            SpawnAllMonsters();
         }
 
         private void ApplyMontageCallback(int id, MontageCallbackData data)
