@@ -40,6 +40,7 @@ namespace WukongCSharpMod
                     {
                         state.Location = location;
                         photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
+                        Helpers.Log($"Syncing monster {id} location to {state.Location}");
                     }
 
                     var rotation = state.Pawn.GetActorRotation();
@@ -47,6 +48,7 @@ namespace WukongCSharpMod
                     {
                         state.Rotation = rotation;
                         photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
+                        Helpers.Log($"Syncing monster {id} rotation to {state.Rotation}");
                     }
                 }
             }
@@ -58,6 +60,7 @@ namespace WukongCSharpMod
 
                     if (!state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
                     {
+                        Helpers.Log($"Moving monster {id} to {state.Location}");
                         events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
                 }

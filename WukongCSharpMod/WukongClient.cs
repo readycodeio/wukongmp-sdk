@@ -252,6 +252,7 @@ namespace WukongCSharpMod
 
         public void SendUpdatedMonsterProperties()
         {
+            Helpers.Log("Will start sending monster properties");
             lock (_monsterPropertiesLock)
             {
                 (_monsterProperties, _monsterPropertiesRo) = (_monsterPropertiesRo, _monsterProperties);
@@ -266,6 +267,8 @@ namespace WukongCSharpMod
                 }
 
                 _monsterPropertiesRo.Clear();
+
+                Helpers.Log($"Will set custom properties of room: {hashtable.Count}");
                 _client.OpSetCustomPropertiesOfRoom(hashtable);
             }
         }
@@ -377,7 +380,7 @@ namespace WukongCSharpMod
 
         public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
         {
-            // propertiesThatChanged contains monster ID and possibly other properties such as location, rotation, etc.
+            Helpers.Log("Will apply room properties: " + propertiesThatChanged.Count);
 
             foreach (var (key, value) in propertiesThatChanged)
             {
