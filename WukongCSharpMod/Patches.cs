@@ -71,9 +71,12 @@ namespace WukongCSharpMod
     {
         public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
+            if (!(Owner is BGUCharacterCS character))
+                return;
+
             var photon = MyMod.Instance.Photon;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (character == photon.LocalPlayerState.Pawn)
             {
                 var localState = photon.LocalPlayerState;
 
@@ -121,11 +124,11 @@ namespace WukongCSharpMod
             }
             else
             {
-                var playerState = photon.GetByActor(Owner);
+                var playerState = photon.GetByActor(character);
 
                 if (playerState != null)
                 {
-                    var events = BUS_EventCollectionCS.Get(Owner);
+                    var events = BUS_EventCollectionCS.Get(character);
 
                     __instance.IsFlying = playerState.IsFlying;
                     __instance.IsFalling = playerState.IsFalling;
@@ -158,7 +161,7 @@ namespace WukongCSharpMod
                 else
                 {
                     // maybe it's a monster
-                    var monsterState = photon.GetMonsterByCharacter((BGUCharacterCS)Owner);
+                    var monsterState = photon.GetMonsterByCharacter(character);
 
                     if (monsterState != null)
                     {
