@@ -56,7 +56,7 @@ namespace WukongCSharpMod
                 {
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
 
-                    if (!state.Location.IsNearlyZero() && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
+                    if (!state.Location.Equals(FVector.ZeroVector, Constants.MovementSyncTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
                     {
                         events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
@@ -135,7 +135,7 @@ namespace WukongCSharpMod
                     __instance.IsLandingMove = playerState.IsLandingMove;
 
                     __instance.Velocity = playerState.Velocity;
-                    if (__instance.Velocity.IsNearlyZero())
+                    if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.MovementSyncTolerance))
                     {
                         __instance.Velocity = FVector.ZeroVector;
                         playerState.Velocity = FVector.ZeroVector;
@@ -147,7 +147,7 @@ namespace WukongCSharpMod
                     }
 
                     __instance.MoveAcceleration = playerState.MoveAcceleration;
-                    if (__instance.MoveAcceleration.IsNearlyZero())
+                    if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.MovementSyncTolerance))
                     {
                         __instance.MoveAcceleration = FVector.ZeroVector;
                         playerState.MoveAcceleration = FVector.ZeroVector;
