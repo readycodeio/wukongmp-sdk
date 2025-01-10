@@ -53,7 +53,6 @@ namespace WukongCSharpMod
             _client.RemoveCallbackTarget(this);
         }
 
-
         public void OnEvent(EventData photonEvent)
         {
             switch (photonEvent.Code)
@@ -73,6 +72,10 @@ namespace WukongCSharpMod
                     // montage callback
                     var montData = (MontageCallbackData)photonEvent.CustomData;
                     OnMontageCallback?.Invoke(photonEvent.Sender, montData);
+                    break;
+                case 3:
+                    // monster properties
+                    ApplyMonsterMove(photonEvent.CustomData as PhotonHashtable);
                     break;
             }
         }
@@ -208,6 +211,28 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
+        private void ApplyMonsterMove(PhotonHashtable props)
+        {
+            foreach (var (key, value) in props)
+            {
+                var (id, propName) = ((int, string))key;
+
+                if (!SyncedMonsters.TryGetValue(id, out var monsterState))
+                {
+                    Helpers.Log($"Monster {id} not found.");
+                    continue;
+                }
+
+                if (!MonsterSetters.TryGetValue(propName, out var setter))
+                {
+                    setter = CreateSetter<MonsterState>(propName);
+                    MonsterSetters[propName] = setter;
+                }
+
+                setter(monsterState, value);
+            }
+        }
+
         private ConcurrentDictionary<string, object> _playerProperties = new ConcurrentDictionary<string, object>();
 
         private ConcurrentDictionary<string, object> _playerPropertiesRo = new ConcurrentDictionary<string, object>();
@@ -269,7 +294,9 @@ namespace WukongCSharpMod
                 _monsterPropertiesRo.Clear();
 
                 Helpers.Log($"Will set custom properties of room: {hashtable.Count}");
-                _client.OpSetCustomPropertiesOfRoom(hashtable);
+
+                const byte eventCode = 3;
+                _client.OpRaiseEvent(eventCode, hashtable, RaiseEventArgs.Default, SendOptions.SendUnreliable);
             }
         }
 
@@ -380,26 +407,7 @@ namespace WukongCSharpMod
 
         public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
         {
-            Helpers.Log("Will apply room properties: " + propertiesThatChanged.Count);
-
-            foreach (var (key, value) in propertiesThatChanged)
-            {
-                var (id, propName) = ((int, string))key;
-
-                if (!SyncedMonsters.TryGetValue(id, out var monsterState))
-                {
-                    Helpers.Log($"Monster {id} not found.");
-                    continue;
-                }
-
-                if (!MonsterSetters.TryGetValue(propName, out var setter))
-                {
-                    setter = CreateSetter<MonsterState>(propName);
-                    MonsterSetters[propName] = setter;
-                }
-
-                setter(monsterState, value);
-            }
+            // nothing
         }
 
         public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
