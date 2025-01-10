@@ -9,6 +9,7 @@ namespace WukongCSharpMod
         public BUTamerActor Pawn { get; set; }
         public FVector Location { get; set; }
         public FRotator Rotation { get; set; }
+        public FVector4 VelocityBlendAlpha { get; set; }
 
         public MonsterState(int id, BUTamerActor pawn)
         {

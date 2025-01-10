@@ -41,6 +41,12 @@ namespace WukongCSharpMod
             return kvp.Value;
         }
 
+        public MonsterState GetMonsterStateByActor(AActor owner)
+        {
+            var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn == owner);
+            return kvp.Value;
+        }
+
         public WukongClient(Action onJoinedRoom)
         {
             _joinedRoomCallback = onJoinedRoom;
@@ -222,7 +228,7 @@ namespace WukongCSharpMod
                     Helpers.Log($"Invalid key: {compositeKey}");
                     continue;
                 }
-                
+
                 var id = int.Parse(parts[0]);
                 var propName = parts[1];
 

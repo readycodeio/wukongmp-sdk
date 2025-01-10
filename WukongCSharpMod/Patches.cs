@@ -68,6 +68,43 @@ namespace WukongCSharpMod
         }
     }
 
+    [HarmonyPatch(typeof(BUC_ABPMonsterLocomotionData), nameof(BUC_ABPMonsterLocomotionData.Update))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchMonsterLocomotion
+    {
+        public static void Postfix(
+            BUC_ABPMonsterLocomotionData __instance,
+            AActor Owner,
+            IBUC_ABPCommonSettingData CommonData,
+            IBUC_ABPCharacterData ChrData,
+            IBUC_ABPBGUCharacterData BGUData,
+            IBUC_ABPCommonLocomotionData LocomotionData,
+            float DeltaTime)
+        {
+            var photon = MyMod.Instance.Photon;
+            var monsterState = photon.GetMonsterStateByActor(Owner);
+            if (monsterState == null)
+            {
+                return;
+            }
+
+            if (photon.IsMasterClient)
+            {
+                // sync VelocityBlendAlpha
+                if (!monsterState.VelocityBlendAlpha.Equals(__instance.VelocityBlendAlpha, Constants.MovementSyncTolerance))
+                {
+                    monsterState.VelocityBlendAlpha = __instance.VelocityBlendAlpha;
+                    photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.VelocityBlendAlpha), monsterState.VelocityBlendAlpha);
+                }
+            }
+            else
+            {
+                // apply VelocityBlendAlpha
+                __instance.VelocityBlendAlpha = monsterState.VelocityBlendAlpha;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchPlayerAnimation
