@@ -78,6 +78,32 @@ namespace WukongCSharpMod
             }
         }
 
+        private void SpawnAllMonsters()
+        {
+            AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            foreach (var actor in allActorsOfClass)
+            {
+                var tamerActor = actor as BUTamerActor;
+                var evenst = BGS_GSEventCollection.Get(tamerActor);
+                if (evenst != null)
+                {
+                    if (tamerActor.GetMonster() == null)
+                    {
+                        Helpers.Log($"Spawning monster for tamer with guid: {tamerActor.CurrentRef.TamerGuid}.");
+                        evenst.Evt_TamerBlockingSpawnImmediately.Invoke(tamerActor.CurrentRef.TamerGuid);
+                    }
+                    else
+                    {
+                        Helpers.Log($"Monster already spawned for tamer with guid: {tamerActor.CurrentRef.TamerGuid}.");
+                    }
+                }
+                else
+                {
+                    Helpers.Log("Event is null");
+                }
+            }
+        }
+
         private void InitPhoton()
         {
             Photon = new WukongClient(SpawnPlayersAlreadyInRoom);
@@ -117,6 +143,7 @@ namespace WukongCSharpMod
 
             Photon.StartClient();
             SubscribeToPlayerEvents();
+            SpawnAllMonsters();
         }
 
         private void ApplySkillEffect(int id, int skillId, bool playerNotNull, bool bwithrpcevent)
