@@ -368,7 +368,7 @@ namespace WukongCSharpMod
             if (MyMod.Instance.Photon.IsMasterClient)
             {
                 var monsterState = MyMod.Instance.Photon.GetByTamerActor(__instance.InstancePtr.Get());
-                if (monsterState.Pawn != null)
+                if (monsterState != null)
                 {
                     var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
                     events.Evt_PlayMontageCallback += (reason, montage, state) => MyMod.Instance.OnPlayMonsterMontageCallback(monsterState.Id, reason, montage, state);
