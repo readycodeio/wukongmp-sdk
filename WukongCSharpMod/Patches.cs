@@ -158,22 +158,24 @@ namespace WukongCSharpMod
                 else
                 {
                     // maybe it's a monster
-                    var monsterState = photon.GetMonsterStateByActor(Owner);
+                    var monsterState = photon.GetMonsterByCharacter((BGUCharacterCS)Owner);
 
                     if (monsterState != null)
                     {
-                        // sync velocity and moveacceleration
                         if (photon.IsMasterClient)
                         {
+                            Helpers.Log("Will send monster movement data");
                             if (!monsterState.Velocity.Equals(__instance.Velocity, Constants.MovementSyncTolerance))
                             {
                                 monsterState.Velocity = __instance.Velocity;
+                                Helpers.Log("Will send velocity");
                                 photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.Velocity), monsterState.Velocity);
                             }
 
                             if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.MovementSyncTolerance))
                             {
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
+                                Helpers.Log("Will send move acceleration");
                                 photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
                             }
                         }
@@ -365,12 +367,13 @@ namespace WukongCSharpMod
         {
             if (MyMod.Instance.Photon.IsMasterClient)
             {
-                var monsterState = MyMod.Instance.Photon.GetMonsterStateByActor(__instance.InstancePtr.Get());
+                var monsterState = MyMod.Instance.Photon.GetByTamerActor(__instance.InstancePtr.Get());
                 if (monsterState.Pawn != null)
                 {
                     var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
                     events.Evt_PlayMontageCallback += (reason, montage, state) => MyMod.Instance.OnPlayMonsterMontageCallback(monsterState.Id, reason, montage, state);
                 }
+
                 return;
             }
 

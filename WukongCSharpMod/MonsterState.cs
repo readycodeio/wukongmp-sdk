@@ -5,8 +5,8 @@ namespace WukongCSharpMod
 {
     public class MonsterState
     {
-        public int Id { get; set; }
-        public BUTamerActor Pawn { get; set; }
+        public int Id { get; }
+        public BUTamerActor Pawn { get; }
         public FVector Location { get; set; }
         public FRotator Rotation { get; set; }
         public FVector Velocity { get; set; }

@@ -42,9 +42,15 @@ namespace WukongCSharpMod
             return kvp.Value;
         }
 
-        public MonsterState GetMonsterStateByActor(AActor owner)
+        public MonsterState GetByTamerActor(BUTamerActor owner)
         {
             var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn == owner);
+            return kvp.Value;
+        }
+        
+        public MonsterState GetMonsterByCharacter(BGUCharacterCS owner)
+        {
+            var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn.GetMonster() == owner);
             return kvp.Value;
         }
 
