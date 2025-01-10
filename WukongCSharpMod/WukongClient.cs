@@ -215,7 +215,16 @@ namespace WukongCSharpMod
         {
             foreach (var (key, value) in props)
             {
-                var (id, propName) = ((int, string))key;
+                var compositeKey = (string)key;
+                var parts = compositeKey.Split('_');
+                if (parts.Length != 2)
+                {
+                    Helpers.Log($"Invalid key: {compositeKey}");
+                    continue;
+                }
+                
+                var id = int.Parse(parts[0]);
+                var propName = parts[1];
 
                 if (!SyncedMonsters.TryGetValue(id, out var monsterState))
                 {
@@ -269,9 +278,9 @@ namespace WukongCSharpMod
             }
         }
 
-        private ConcurrentDictionary<(int, string), object> _monsterProperties = new ConcurrentDictionary<(int, string), object>();
+        private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();
 
-        private ConcurrentDictionary<(int, string), object> _monsterPropertiesRo = new ConcurrentDictionary<(int, string), object>();
+        private ConcurrentDictionary<string, object> _monsterPropertiesRo = new ConcurrentDictionary<string, object>();
 
         private readonly object _monsterPropertiesLock = new object();
 
@@ -302,7 +311,7 @@ namespace WukongCSharpMod
 
         public void SetMonsterProperty(int id, string prop, object value)
         {
-            _monsterProperties[(id, prop)] = value;
+            _monsterProperties[$"{id}_{prop}"] = value;
 
             if (!(value is FVector || value is FRotator || value is float))
             {
