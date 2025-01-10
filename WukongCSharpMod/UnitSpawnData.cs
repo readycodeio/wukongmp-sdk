@@ -6,13 +6,13 @@ namespace WukongCSharpMod
 {
     public readonly struct UnitSpawnData
     {
-        public readonly byte Id;
+        public readonly int Id;
         public readonly string Name;
         public readonly float X;
         public readonly float Y;
         public readonly float Z;
 
-        public UnitSpawnData(byte id, string name, float x, float y, float z)
+        public UnitSpawnData(int id, string name, float x, float y, float z)
         {
             Id = id;
             Name = name;
@@ -28,19 +28,21 @@ namespace WukongCSharpMod
             var nameBytes = Encoding.UTF8.GetBytes(spawnData.Name);
             var nameLength = (short)nameBytes.Length;
 
-            outstream.WriteByte(spawnData.Id);
+            outstream.Write(BitConverter.GetBytes(spawnData.Id), 0, 4);
             outstream.Write(BitConverter.GetBytes(nameLength), 0, 2);
             outstream.Write(nameBytes, 0, nameBytes.Length);
             outstream.Write(BitConverter.GetBytes(spawnData.X), 0, 4);
             outstream.Write(BitConverter.GetBytes(spawnData.Y), 0, 4);
             outstream.Write(BitConverter.GetBytes(spawnData.Z), 0, 4);
 
-            return (short)(1 + 2 + nameBytes.Length + 12);
+            return (short)(4 + 2 + nameBytes.Length + 12);
         }
 
         public static object Deserialize(StreamBuffer instream, short length)
         {
-            var id = instream.ReadByte();
+            var intBytes = new byte[4];
+            instream.Read(intBytes, 0, 4);
+            var id = BitConverter.ToInt32(intBytes, 0);
             
             var nameLengthBytes = new byte[2];
             instream.Read(nameLengthBytes, 0, 2);

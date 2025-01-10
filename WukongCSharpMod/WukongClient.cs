@@ -26,9 +26,9 @@ namespace WukongCSharpMod
         private readonly Action _joinedRoomCallback;
         public event Action<int> OnPlayerJoined;
         public event Action<int, MontageCallbackData> OnMontageCallback;
-        public event Action<int, byte, string, float, float, float> OnUnitSpawn;
+        public event Action<int, int, string, float, float, float> OnUnitSpawn;
 
-        private const string UserName = "ReadyM_julkiewicz";
+        private const string UserName = "ReadyM_JakuJ";
         public WukongChatter WukongChat => _wukongChat;
 
         public PlayerState LocalPlayerState { get; }
@@ -194,7 +194,7 @@ namespace WukongCSharpMod
             _wukongChat.InitializeChat(UserName);
         }
 
-        public void SpawnUnit(byte id, string unitName, float x, float y, float z)
+        public void SpawnUnit(int id, string unitName, float x, float y, float z)
         {
             const byte eventCode = 1;
             var evData = new UnitSpawnData(id, unitName, x, y, z);

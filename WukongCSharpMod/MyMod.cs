@@ -22,8 +22,6 @@ namespace WukongCSharpMod
 
         public readonly Harmony Harmony = new Harmony("WukongMP");
 
-        private readonly Dictionary<byte, MonsterState> _monsters = new Dictionary<byte, MonsterState>();
-
         private FVector _savedPosition;
 
         public static MyMod Instance { get; private set; }
@@ -76,21 +74,20 @@ namespace WukongCSharpMod
 
         private void SpawnAllMonsters()
         {
-            AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
-                var tamerActor = actor as BUTamerActor;
-                var evenst = BGS_GSEventCollection.Get(tamerActor);
-                if (evenst != null)
+                var events = BGS_GSEventCollection.Get(actor);
+                if (events != null)
                 {
-                    if (tamerActor.GetMonster() == null)
+                    if (actor.GetMonster() == null)
                     {
-                        Helpers.Log($"Spawning monster for tamer with guid: {tamerActor.CurrentRef.TamerGuid}.");
-                        evenst.Evt_TamerBlockingSpawnImmediately.Invoke(tamerActor.CurrentRef.TamerGuid);
+                        Helpers.Log($"Spawning monster for tamer with guid: {actor.CurrentRef.TamerGuid}.");
+                        events.Evt_TamerBlockingSpawnImmediately.Invoke(actor.CurrentRef.TamerGuid);
                     }
                     else
                     {
-                        Helpers.Log($"Monster already spawned for tamer with guid: {tamerActor.CurrentRef.TamerGuid}.");
+                        Helpers.Log($"Monster already spawned for tamer with guid: {actor.CurrentRef.TamerGuid}.");
                     }
                 }
                 else
@@ -207,21 +204,21 @@ namespace WukongCSharpMod
 
             var loc = Global.CameraLookPosition;
 
-            var id = (byte)_monsters.Count; // TODO: Overflow??
-            var pawn = SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z, false);
+            var id = Photon.SyncedMonsters.Count;
+            var pawn = SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
 
-            _monsters[id] = new MonsterState(id, pawn);
+            Photon.SyncedMonsters[id] = new MonsterState(id, pawn);
 
             Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
 
-        private void SpawnRemoteUnit(byte id, string unitName, float x, float y, float z)
+        private void SpawnRemoteUnit(int id, string unitName, float x, float y, float z)
         {
-            SpawnUnit(id, unitName, x, y, z, true);
+            SpawnUnit(id, unitName, x, y, z);
         }
 
-        private BUTamerActor SpawnUnit(byte id, string unitName, float x, float y, float z, bool remote)
+        private BUTamerActor SpawnUnit(int id, string unitName, float x, float y, float z)
         {
             Helpers.Log($"Spawn unit called for {unitName}");
 
@@ -238,22 +235,7 @@ namespace WukongCSharpMod
             BUTamerActor buTamerActor = actor as BUTamerActor;
             Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
 
-            if (!remote)
-                return buTamerActor;
-
-            _monsters.Add(id, new MonsterState(id, buTamerActor));
-
-            var events = BUS_EventCollectionCS.Get(buTamerActor);
-
-            if (events is null)
-            {
-                Helpers.Log("Events is null");
-                return buTamerActor;
-            }
-
-            events.Evt_AIPerceptionSetting.Invoke(false);
-            events.Evt_AIPauseBT.Invoke(true);
-
+            Photon.SyncedMonsters.Add(id, new MonsterState(id, buTamerActor));
             return buTamerActor;
         }
 
