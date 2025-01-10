@@ -326,18 +326,20 @@ namespace WukongCSharpMod
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);
                 events.Evt_AIPauseFsm.Invoke(true);
+                events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
+                events.Evt_EnableCanSetBT.Invoke(P1: false);
 
                 Helpers.Log("Tamer actor disabled.");
             }
         }
     }
-}
+
     [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
     public class PatchOnAIPerceptionSetting
     {
         public static bool Prefix(bool bEnable)
         {
-            return false;
+            return !bEnable;
         }
     }
 
@@ -346,7 +348,17 @@ namespace WukongCSharpMod
     {
         public static bool Prefix(bool IsPause)
         {
-            return false;
+            return IsPause;
+        }
+    }
+
+
+    [HarmonyPatch(typeof(BUS_AIComp), "OnEnableCanSetBT")]
+    public class PatchOnEnableCanSetBT
+    {
+        public static bool Prefix(bool bEnable)
+        {
+            return !bEnable;
         }
     }
 
@@ -355,7 +367,21 @@ namespace WukongCSharpMod
     {
         public static bool Prefix(bool IsPause)
         {
-            return false;
+            return IsPause;
+        }
+    }
+
+    [HarmonyPatch]
+    public class PatchOnEnableCanUpdateHatred
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BattleStateComp:OnEnableCanUpdateHatred");
+        }
+
+        public static bool Prefix(bool bEnable)
+        {
+            return !bEnable;
         }
     }
 }
