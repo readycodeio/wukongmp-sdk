@@ -132,7 +132,8 @@ namespace WukongCSharpMod
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
-            Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMontageCallback(id, data));
+            Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
+            Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMosterMontageCallback(id, data));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -142,7 +143,7 @@ namespace WukongCSharpMod
             SubscribeToPlayerEvents();
         }
 
-        private void ApplyMontageCallback(int id, MontageCallbackData data)
+        private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
@@ -179,6 +180,41 @@ namespace WukongCSharpMod
             events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
         }
 
+        private void ApplyMosterMontageCallback(int id, MonsterMontageCallbackData data)
+        {
+            if (!Photon.SyncedMonsters.TryGetValue(data.MonsterId, out var monster))
+            {
+                Helpers.Log($"Player not found: {id}");
+                return;
+            }
+            var tamerActor = monster.Pawn;
+
+            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);
+
+            if (montage is null)
+            {
+                Helpers.Log($"Montage not found: {data.MontagePath}");
+                return;
+            }
+            Helpers.Log($"Applying montage callback for monster {data.MonsterId} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            var animInstance = ((ACharacter)tamerActor.GetMonster()).Mesh.GetAnimInstance();
+
+            if (data.State == EMontageCallbackState.OnStarted)
+            {
+                animInstance.Montage_Play(montage);
+            }
+            else if (data.State == EMontageCallbackState.OnInterrupted)
+            {
+                if (animInstance.GetCurrentActiveMontage().PathName == montage.PathName)
+                {
+                    animInstance.Montage_Stop(1f, montage);
+                }
+            }
+
+            var events = BUS_EventCollectionCS.Get(tamerActor);
+            events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
+        }
+
         private void SubscribeToPlayerEvents()
         {
             var myPawn = GameUtils.GetControlledPawn();
@@ -200,6 +236,13 @@ namespace WukongCSharpMod
             var montagePath = montage.GetPathName();
             Helpers.Log($"Montage callback: {reason} {montagePath} {state}");
             Photon.SendMontageCallback(reason, montagePath, state);
+        }
+
+        public void OnPlayMonsterMontageCallback(int monsterId, EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
+        {
+            var montagePath = montage.GetPathName();
+            Helpers.Log($"Monster montage callback: {monsterId} {reason} {montagePath} {state}");
+            Photon.SendMonsterMontageCallback(monsterId, reason, montagePath, state);
         }
 
         private void SpawnEnemy(string enemyName)

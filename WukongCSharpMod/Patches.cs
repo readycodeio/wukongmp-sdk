@@ -364,7 +364,15 @@ namespace WukongCSharpMod
         public static void Postfix(FTamerRef __instance)
         {
             if (MyMod.Instance.Photon.IsMasterClient)
+            {
+                var monsterState = MyMod.Instance.Photon.GetMonsterStateByActor(__instance.InstancePtr.Get());
+                if (monsterState.Pawn != null)
+                {
+                    var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+                    events.Evt_PlayMontageCallback += (reason, montage, state) => MyMod.Instance.OnPlayMonsterMontageCallback(monsterState.Id, reason, montage, state);
+                }
                 return;
+            }
 
             if (__instance.IsMonsterValid())
             {

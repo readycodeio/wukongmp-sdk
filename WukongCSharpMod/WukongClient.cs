@@ -26,6 +26,7 @@ namespace WukongCSharpMod
         private readonly Action _joinedRoomCallback;
         public event Action<int> OnPlayerJoined;
         public event Action<int, MontageCallbackData> OnMontageCallback;
+        public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, int, string, float, float, float> OnUnitSpawn;
 
         private const string UserName = "ReadyM_JakuJ";
@@ -83,6 +84,11 @@ namespace WukongCSharpMod
                     // monster properties
                     ApplyMonsterMove(photonEvent.CustomData as PhotonHashtable);
                     break;
+                case 4:
+                    // montage callback
+                    var monsterMontageData = (MonsterMontageCallbackData)photonEvent.CustomData;
+                    OnMonsterMontageCallback?.Invoke(photonEvent.Sender, monsterMontageData);
+                    break;
             }
         }
 
@@ -133,6 +139,7 @@ namespace WukongCSharpMod
             }, (stream, length) => (EMoveSpeedLevel)stream.ReadByte());
 
             PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
+            PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
@@ -214,6 +221,13 @@ namespace WukongCSharpMod
         {
             const byte eventCode = 2;
             var evData = new MontageCallbackData(reason, montagePath, state);
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void SendMonsterMontageCallback(int monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
+        {
+            const byte eventCode = 4;
+            var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
