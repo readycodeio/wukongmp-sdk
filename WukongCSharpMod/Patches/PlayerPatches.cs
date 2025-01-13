@@ -82,11 +82,8 @@ namespace WukongCSharpMod.Patches
                     {
                         __instance.Velocity = FVector.ZeroVector;
                         playerState.Velocity = FVector.ZeroVector;
-                        __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
-                        __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
-                        __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
-                        events.Evt_StopCurrentMove.Invoke();
-                        events.Evt_MovementForceStop.Invoke();
+                        var playerLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_ABPPlayerLocomotionData, BUC_ABPPlayerLocomotionData>(character) as BUC_ABPPlayerLocomotionData;
+                        playerLocomotionData.bShouldWaitRotateFinished = false;
                     }
 
                     __instance.MoveAcceleration = playerState.MoveAcceleration;
