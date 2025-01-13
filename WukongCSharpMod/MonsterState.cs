@@ -18,9 +18,7 @@ namespace WukongCSharpMod
         {
             Id = id;
             Pawn = pawn;
-
-            var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-            Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
+            Hp = 1; // TODO: Hack, get the HP from the monster
         }
     }
 }
