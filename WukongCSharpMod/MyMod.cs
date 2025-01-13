@@ -220,6 +220,11 @@ namespace WukongCSharpMod
             }
 
             Helpers.Log($"Applying montage callback for monster {data.MonsterId} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            if (tamerActor.GetMonster() == null)
+            {
+                Helpers.LogError($"Monster is null in {nameof(ApplyMonsterMontageCallback)}");
+                return;
+            }
             var animInstance = tamerActor.GetMonster().Mesh.GetAnimInstance();
 
             if (data.State == EMontageCallbackState.OnStarted)
@@ -235,7 +240,14 @@ namespace WukongCSharpMod
             }
 
             var events = BUS_EventCollectionCS.Get(tamerActor);
-            events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
+            if (events != null)
+            {
+                events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
+            }
+            else
+            {
+                Helpers.LogError($"events is null in {nameof(ApplyMonsterMontageCallback)}");
+            }
         }
 
         private void SubscribeToPlayerEvents()
