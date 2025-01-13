@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using b1;
 using BtlShare;
 using HarmonyLib;
@@ -143,7 +142,7 @@ namespace WukongCSharpMod.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
-            if (!(Owner is BGUCharacterCS character))
+            if (!(Owner is BGUCharacterCS))
                 return;
 
             var photon = MyMod.Instance.Photon;
@@ -217,7 +216,7 @@ namespace WukongCSharpMod.Patches
             float DeltaTime)
         {
 
-            if (!(Owner is BGUCharacterCS character))
+            if (!(Owner is BGUCharacterCS))
                 return;
 
             var photon = MyMod.Instance.Photon;
@@ -259,7 +258,7 @@ namespace WukongCSharpMod.Patches
             IBUC_ABPSpecialMoveData SpecialMoveData,
             float DeltaTime)
         {
-            if (!(Owner is BGUCharacterCS character))
+            if (!(Owner is BGUCharacterCS))
                 return;
 
             var photon = MyMod.Instance.Photon;
@@ -300,7 +299,7 @@ namespace WukongCSharpMod.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
-            if (!(Owner is BGUCharacterCS character))
+            if (!(Owner is BGUCharacterCS))
                 return;
 
             var photon = MyMod.Instance.Photon;

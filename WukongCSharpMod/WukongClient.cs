@@ -7,7 +7,6 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using b1;
-using BtlShare;
 using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
@@ -214,7 +213,7 @@ namespace WukongCSharpMod
         private void SendRoomJoined()
         {
             const byte eventCode = 0;
-            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendReliable);
             _wukongChat.InitializeChat(UserName);
         }
 
@@ -222,21 +221,21 @@ namespace WukongCSharpMod
         {
             const byte eventCode = 1;
             var evData = new UnitSpawnData(id, unitName, x, y, z);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void SendMontageCallback(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 2;
             var evData = new MontageCallbackData(reason, montagePath, state);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void SendMonsterMontageCallback(int monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 4;
             var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         private void ApplyMonsterMove(PhotonHashtable props)

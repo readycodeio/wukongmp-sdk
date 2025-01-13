@@ -148,7 +148,7 @@ namespace WukongCSharpMod
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
-            Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMosterMontageCallback(id, data));
+            Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -201,7 +201,7 @@ namespace WukongCSharpMod
             events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
         }
 
-        private void ApplyMosterMontageCallback(int id, MonsterMontageCallbackData data)
+        private void ApplyMonsterMontageCallback(int id, MonsterMontageCallbackData data)
         {
             if (!Photon.SyncedMonsters.TryGetValue(data.MonsterId, out var monster))
             {
