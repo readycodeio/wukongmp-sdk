@@ -1,4 +1,5 @@
 ﻿using b1;
+using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -29,13 +30,16 @@ namespace WukongCSharpMod
 
         #endregion
 
-        public float HpMax { get; set; }
         public float Hp { get; set; }
 
         public PlayerState(int photonId, APawn pawn)
         {
             PhotonId = photonId;
             Pawn = pawn;
+
+            // get the BUC_AttrContainer
+            var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
+            Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
         }
 
         public override string ToString()

@@ -35,14 +35,14 @@ namespace WukongCSharpMod.Patches
                 {
                     // sync location
                     var location = state.Pawn.GetActorLocation();
-                    if (!location.Equals(state.Location, Constants.MovementSyncTolerance))
+                    if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
                         state.Location = location;
                         photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
                     }
 
                     var rotation = state.Pawn.GetActorRotation();
-                    if (!rotation.Equals(state.Rotation, Constants.MovementSyncTolerance))
+                    if (!rotation.Equals(state.Rotation, Constants.FloatComparisonTolerance))
                     {
                         state.Rotation = rotation;
                         photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
@@ -55,7 +55,7 @@ namespace WukongCSharpMod.Patches
                 {
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
 
-                    if (!state.Location.Equals(FVector.ZeroVector, Constants.MovementSyncTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
+                    if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
                         events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }

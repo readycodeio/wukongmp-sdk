@@ -41,25 +41,25 @@ namespace WukongCSharpMod.Patches
                     photon.SetPlayerProperty(nameof(PlayerState.IsLandingMove), photon.LocalPlayerState.IsLandingMove);
                 }
 
-                if (!localState.Velocity.Equals(__instance.Velocity, Constants.MovementSyncTolerance))
+                if (!localState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
                     photon.SetPlayerProperty(nameof(PlayerState.Velocity), photon.LocalPlayerState.Velocity);
                 }
 
-                if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.MovementSyncTolerance))
+                if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
                     photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), photon.LocalPlayerState.MoveAcceleration);
                 }
 
-                if (!localState.ActorLocation.Equals(__instance.ActorLocation, Constants.MovementSyncTolerance))
+                if (!localState.ActorLocation.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
                     photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), photon.LocalPlayerState.ActorLocation);
                 }
 
-                if (!localState.ActorRotation.Equals(__instance.ActorRotation, Constants.MovementSyncTolerance))
+                if (!localState.ActorRotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.ActorRotation = __instance.ActorRotation;
                     photon.SetPlayerProperty(nameof(PlayerState.ActorRotation), photon.LocalPlayerState.ActorRotation);
@@ -78,7 +78,7 @@ namespace WukongCSharpMod.Patches
                     __instance.IsLandingMove = playerState.IsLandingMove;
 
                     __instance.Velocity = playerState.Velocity;
-                    if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.MovementSyncTolerance))
+                    if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.Velocity = FVector.ZeroVector;
                         playerState.Velocity = FVector.ZeroVector;
@@ -90,13 +90,13 @@ namespace WukongCSharpMod.Patches
                     }
 
                     __instance.MoveAcceleration = playerState.MoveAcceleration;
-                    if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.MovementSyncTolerance))
+                    if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.MoveAcceleration = FVector.ZeroVector;
                         playerState.MoveAcceleration = FVector.ZeroVector;
                     }
 
-                    if (!playerState.ActorLocation.Equals(__instance.ActorLocation, Constants.MovementSyncTolerance))
+                    if (!playerState.ActorLocation.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
                         events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
@@ -111,14 +111,14 @@ namespace WukongCSharpMod.Patches
                         if (photon.IsMasterClient)
                         {
                             Helpers.Log("Will send monster movement data");
-                            if (!monsterState.Velocity.Equals(__instance.Velocity, Constants.MovementSyncTolerance))
+                            if (!monsterState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.Velocity = __instance.Velocity;
                                 Helpers.Log("Will send velocity");
                                 photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.Velocity), monsterState.Velocity);
                             }
 
-                            if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.MovementSyncTolerance))
+                            if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
                                 Helpers.Log("Will send move acceleration");
@@ -169,13 +169,13 @@ namespace WukongCSharpMod.Patches
                     photon.SetPlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
                 }
 
-                if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.MovementSyncTolerance))
+                if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
                 }
 
-                if (MathF.Abs(localState.TurnInplaceRemainAngle - __instance.TurnInplaceRemainAngle) > Constants.MovementSyncTolerance)
+                if (MathF.Abs(localState.TurnInplaceRemainAngle - __instance.TurnInplaceRemainAngle) > Constants.FloatComparisonTolerance)
                 {
                     photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
@@ -332,8 +332,7 @@ namespace WukongCSharpMod.Patches
             {
                 // local player (client)
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
-                __instance.SetFloatValue(EBGUAttrFloat.HpMax, photon.LocalPlayerState.HpMax);
-                Helpers.Log($"Setting local player Hp: {photon.LocalPlayerState.Hp}/{photon.LocalPlayerState.HpMax}");
+                Helpers.Log($"Setting local player Hp: {photon.LocalPlayerState.Hp}");
             }
             else
             {
@@ -343,8 +342,7 @@ namespace WukongCSharpMod.Patches
                 if (playerState != null)
                 {
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
-                    __instance.SetFloatValue(EBGUAttrFloat.HpMax, playerState.HpMax);
-                    Helpers.Log($"Setting remote player Hp: {playerState.Hp}/{playerState.HpMax}");
+                    Helpers.Log($"Setting remote player Hp: {playerState.Hp}");
                 }
                 else
                 {
@@ -354,8 +352,7 @@ namespace WukongCSharpMod.Patches
                     if (monster != null)
                     {
                         __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp);
-                        __instance.SetFloatValue(EBGUAttrFloat.HpMax, monster.HpMax);
-                        Helpers.Log($"Setting monster Hp: {monster.Hp}/{monster.HpMax}");
+                        Helpers.Log($"Setting monster Hp: {monster.Hp}");
                     }
                 }
             }
@@ -370,7 +367,7 @@ namespace WukongCSharpMod.Patches
         {
             var photon = MyMod.Instance.Photon;
 
-            if (AttrID == EBGUAttrFloat.Hp || AttrID == EBGUAttrFloat.HpMax)
+            if (AttrID == EBGUAttrFloat.Hp)
             {
                 var owner = __instance.GetOwner();
 
@@ -380,7 +377,12 @@ namespace WukongCSharpMod.Patches
                     // I was damaged, set my Hp
                     if (owner == photon.LocalPlayerState.Pawn)
                     {
-                        photon.SetPlayerProperty(AttrID.ToString(), NewValue);
+                        if (MathF.Abs(photon.LocalPlayerState.Hp - NewValue) > Constants.FloatComparisonTolerance)
+                        {
+                            photon.LocalPlayerState.Hp = NewValue;
+                            photon.SetPlayerProperty(AttrID.ToString(), NewValue);
+                        }
+
                         return true;
                     }
 
@@ -388,7 +390,12 @@ namespace WukongCSharpMod.Patches
                     var remotePlayer = MyMod.Instance.Photon.GetByActor(owner);
                     if (remotePlayer != null)
                     {
-                        photon.SendRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
+                        if (MathF.Abs(remotePlayer.Hp - NewValue) > Constants.FloatComparisonTolerance)
+                        {
+                            remotePlayer.Hp = NewValue;
+                            photon.SendRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
+                        }
+
                         return true;
                     }
 
@@ -396,7 +403,12 @@ namespace WukongCSharpMod.Patches
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (monster != null)
                     {
-                        photon.SetMonsterProperty(monster.Id, AttrID.ToString(), NewValue);
+                        if (MathF.Abs(monster.Hp - NewValue) > Constants.FloatComparisonTolerance)
+                        {
+                            monster.Hp = NewValue;
+                            photon.SetMonsterProperty(monster.Id, AttrID.ToString(), NewValue);
+                        }
+
                         return true;
                     }
 
