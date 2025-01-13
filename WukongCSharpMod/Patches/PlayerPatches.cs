@@ -82,8 +82,6 @@ namespace WukongCSharpMod.Patches
                     {
                         __instance.Velocity = FVector.ZeroVector;
                         playerState.Velocity = FVector.ZeroVector;
-                        var playerLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_ABPPlayerLocomotionData, BUC_ABPPlayerLocomotionData>(character) as BUC_ABPPlayerLocomotionData;
-                        playerLocomotionData.bShouldWaitRotateFinished = false;
                     }
 
                     __instance.MoveAcceleration = playerState.MoveAcceleration;
@@ -198,6 +196,52 @@ namespace WukongCSharpMod.Patches
                 __instance.TurnInplaceTargetRotation = playerState.TurnInplaceTargetRotation;
                 __instance.TurnInplaceRemainAngle = playerState.TurnInplaceRemainAngle;
                 __instance.bOrientRotationToMovement = playerState.OrientRotationToMovement;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUC_ABPPlayerLocomotionData), nameof(BUC_ABPPlayerLocomotionData.Update))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchPlayerLocomotion
+    {
+        public static void Postfix(
+            BUC_ABPPlayerLocomotionData __instance,
+            AActor Owner,
+            IBUC_ABPCommonSettingData CommonData,
+            IBUC_ABPBasicData BasicData,
+            IBUC_ABPCharacterData ChrData,
+            IBUC_ABPBGUCharacterData BGUData,
+            IBUC_ABPCommonLocomotionData LocomotionData,
+            IBUC_ABPSpecialMoveData SpecialMoveData,
+            IBUC_ABPHelperData HelperData,
+            float DeltaTime)
+        {
+
+            if (!(Owner is BGUCharacterCS character))
+                return;
+
+            var photon = MyMod.Instance.Photon;
+
+            if (Owner == photon.LocalPlayerState.Pawn)
+            {
+                var localState = photon.LocalPlayerState;
+
+                if (localState.ShouldWaitRotateFinished != __instance.bShouldWaitRotateFinished)
+                {
+                    photon.LocalPlayerState.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
+                    photon.SetPlayerProperty(nameof(PlayerState.ShouldWaitRotateFinished), photon.LocalPlayerState.ShouldWaitRotateFinished);
+                }
+            }
+            else
+            {
+                var playerState = photon.GetByActor(Owner);
+
+                if (playerState == null)
+                {
+                    return;
+                }
+
+                __instance.bShouldWaitRotateFinished = playerState.ShouldWaitRotateFinished;
             }
         }
     }

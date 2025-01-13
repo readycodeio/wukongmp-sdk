@@ -27,6 +27,7 @@ namespace WukongCSharpMod
         public bool OrientRotationToMovement { get; set; }
         public EMoveSpeedLevel MoveSpeedLevel { get; set; } = EMoveSpeedLevel.Run;
         public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
+        public bool ShouldWaitRotateFinished { get; set; }
 
         #endregion
 
@@ -44,7 +45,7 @@ namespace WukongCSharpMod
 
         public override string ToString()
         {
-            return $"PlayerState(PhotonId: {PhotonId}, InJump: {InJump}, IsFlying: {IsFlying}, IsFalling: {IsFalling}, IsLandingMove: {IsLandingMove}, Velocity: {Velocity}, MoveAcceleration: {MoveAcceleration}, ActorLocation: {ActorLocation}, TurnInplaceTargetRotation: {TurnInplaceTargetRotation}, IsStandRotate: {IsStandRotate}, TurnInplaceRemainAngle: {TurnInplaceRemainAngle}, ActorRotation: {ActorRotation}, IsAttacking: {IsAttacking}, OrientRotationToMovement: {OrientRotationToMovement}, MoveSpeedLevel: {MoveSpeedLevel}, MoveSpeedState: {MoveSpeedState})";
+            return $"PlayerState(PhotonId: {PhotonId}, InJump: {InJump}, IsFlying: {IsFlying}, IsFalling: {IsFalling}, IsLandingMove: {IsLandingMove}, Velocity: {Velocity}, MoveAcceleration: {MoveAcceleration}, ActorLocation: {ActorLocation}, TurnInplaceTargetRotation: {TurnInplaceTargetRotation}, IsStandRotate: {IsStandRotate}, TurnInplaceRemainAngle: {TurnInplaceRemainAngle}, ActorRotation: {ActorRotation}, IsAttacking: {IsAttacking}, OrientRotationToMovement: {OrientRotationToMovement}, MoveSpeedLevel: {MoveSpeedLevel}, MoveSpeedState: {MoveSpeedState}, ShouldWaitRotateFinished: {ShouldWaitRotateFinished})";
         }
     }
 }
