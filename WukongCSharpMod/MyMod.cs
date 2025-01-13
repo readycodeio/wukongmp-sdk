@@ -3,6 +3,7 @@ using b1.BGW;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
+using System.Reflection;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
@@ -53,11 +54,12 @@ namespace WukongCSharpMod
 
                 // dump player state to console for me
                 Helpers.Log($"Local player state: {Photon.LocalPlayerState}");
-
+                PrintPlayerLocomotionData(Photon.LocalPlayerState.Pawn);
                 // dump player state to console for each connected player
                 foreach (var (id, state) in Photon.ConnectedPlayers)
                 {
                     Helpers.Log($"Player {id} state: {state}");
+                    PrintPlayerLocomotionData(state.Pawn);
                 }
             });
         }
@@ -74,6 +76,19 @@ namespace WukongCSharpMod
             else
             {
                 Helpers.Log("World is null.");
+            }
+        }
+
+        private void PrintPlayerLocomotionData(AActor player)
+        {
+            var playerLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_ABPPlayerLocomotionData, BUC_ABPPlayerLocomotionData>(player);
+            Helpers.Log("PlayerLocomotionData:");
+            var propertyInfos = typeof(BUC_ABPPlayerLocomotionData).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+
+            foreach (PropertyInfo propertyInfo in propertyInfos)
+            {
+                var property = propertyInfo.GetValue(playerLocomotionData);
+                Helpers.Log($"{propertyInfo.Name}: {property}");
             }
         }
 
