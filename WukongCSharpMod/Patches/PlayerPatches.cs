@@ -148,6 +148,9 @@ namespace WukongCSharpMod.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
+            if (!(Owner is BGUCharacterCS character))
+                return;
+
             var photon = MyMod.Instance.Photon;
 
             if (Owner == photon.LocalPlayerState.Pawn)
@@ -215,6 +218,9 @@ namespace WukongCSharpMod.Patches
             IBUC_ABPSpecialMoveData SpecialMoveData,
             float DeltaTime)
         {
+            if (!(Owner is BGUCharacterCS character))
+                return;
+
             var photon = MyMod.Instance.Photon;
 
             if (Owner == photon.LocalPlayerState.Pawn)
@@ -253,6 +259,9 @@ namespace WukongCSharpMod.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
+            if (!(Owner is BGUCharacterCS character))
+                return;
+
             var photon = MyMod.Instance.Photon;
 
             if (Owner == photon.LocalPlayerState.Pawn)
