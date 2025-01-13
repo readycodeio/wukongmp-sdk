@@ -76,7 +76,12 @@ namespace WukongCSharpMod.Patches
                 if (monsterState != null)
                 {
                     var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
-                    events.Evt_PlayMontageCallback += (reason, montage, state) => MyMod.Instance.OnPlayMonsterMontageCallback(monsterState.Id, reason, montage, state);
+                    events.Evt_PlayMontageCallback += (reason, montage, state) =>
+                    {
+                        var montagePath = montage.GetPathName();
+                        Helpers.Log($"Monster montage callback: {monsterState.Id} {reason} {montagePath} {state}");
+                        MyMod.Instance.Photon.SendMonsterMontageCallback(monsterState.Id, reason, montagePath, state);
+                    };
                 }
 
                 return;

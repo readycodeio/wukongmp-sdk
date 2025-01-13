@@ -178,7 +178,7 @@ namespace WukongCSharpMod
 
             Helpers.Log($"Applying montage callback for player {id} with montage {data.MontagePath} ({data.Reason}, {data.State})");
             var animInstance = ((ACharacter)clone).Mesh.GetAnimInstance();
-            
+
             if (animInstance is null)
             {
                 Helpers.Log("AnimInstance is null");
@@ -208,6 +208,7 @@ namespace WukongCSharpMod
                 Helpers.Log($"Player not found: {id}");
                 return;
             }
+
             var tamerActor = monster.Pawn;
 
             var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);
@@ -217,8 +218,9 @@ namespace WukongCSharpMod
                 Helpers.Log($"Montage not found: {data.MontagePath}");
                 return;
             }
+
             Helpers.Log($"Applying montage callback for monster {data.MonsterId} with montage {data.MontagePath} ({data.Reason}, {data.State})");
-            var animInstance = ((ACharacter)tamerActor.GetMonster()).Mesh.GetAnimInstance();
+            var animInstance = tamerActor.GetMonster().Mesh.GetAnimInstance();
 
             if (data.State == EMontageCallbackState.OnStarted)
             {
@@ -259,13 +261,6 @@ namespace WukongCSharpMod
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
-        public void OnPlayMonsterMontageCallback(int monsterId, EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
-        {
-            var montagePath = montage.GetPathName();
-            Helpers.Log($"Monster montage callback: {monsterId} {reason} {montagePath} {state}");
-            Photon.SendMonsterMontageCallback(monsterId, reason, montagePath, state);
-        }
-
         private void SpawnEnemy(string enemyName)
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
@@ -273,10 +268,8 @@ namespace WukongCSharpMod
             var loc = Global.CameraLookPosition;
 
             var id = Photon.SyncedMonsters.Count;
-            var pawn = SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
-
-            Photon.SyncedMonsters[id] = new MonsterState(id, pawn);
-
+            SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
+            
             Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
@@ -286,12 +279,12 @@ namespace WukongCSharpMod
             SpawnUnit(id, unitName, x, y, z);
         }
 
-        private BUTamerActor SpawnUnit(int id, string unitName, float x, float y, float z)
+        private void SpawnUnit(int id, string unitName, float x, float y, float z)
         {
             Helpers.Log($"Spawn unit called for {unitName}");
 
-            if (string.IsNullOrEmpty(unitName))
-                return null;
+            if (string.IsNullOrEmpty(unitName)) 
+                return;
 
             var loc = new FVector(x, y, z);
             var rot = new FRotator();
@@ -304,7 +297,6 @@ namespace WukongCSharpMod
             Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
 
             Photon.SyncedMonsters.Add(id, new MonsterState(id, buTamerActor));
-            return buTamerActor;
         }
 
         private void LoadSavedPosition()

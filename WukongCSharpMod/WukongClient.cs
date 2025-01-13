@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using b1;
 using BtlShare;
+using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -319,7 +320,8 @@ namespace WukongCSharpMod
             };
 
             Helpers.Log($"Sending remote player property: {key} = {value}");
-            _client.OpSetCustomPropertiesOfActor(playerId, hashtable);
+
+            Utils.TryRunOnGameThread(() => { _client.OpSetCustomPropertiesOfActor(playerId, hashtable); });
         }
 
         private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();

@@ -332,7 +332,6 @@ namespace WukongCSharpMod.Patches
             {
                 // local player (client)
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
-                Helpers.Log($"Setting local player Hp: {photon.LocalPlayerState.Hp}");
             }
             else
             {
@@ -342,7 +341,6 @@ namespace WukongCSharpMod.Patches
                 if (playerState != null)
                 {
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
-                    Helpers.Log($"Setting remote player Hp: {playerState.Hp}");
                 }
                 else
                 {
@@ -352,7 +350,12 @@ namespace WukongCSharpMod.Patches
                     if (monster != null)
                     {
                         __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp);
-                        Helpers.Log($"Setting monster Hp: {monster.Hp}");
+
+                        if (monster.Hp <= 0)
+                        {
+                            var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                            events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); // TODO: Sync other dead reasons?
+                        }
                     }
                 }
             }
