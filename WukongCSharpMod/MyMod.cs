@@ -163,6 +163,12 @@ namespace WukongCSharpMod
 
             Helpers.Log($"Applying montage callback for player {id} with montage {data.MontagePath} ({data.Reason}, {data.State})");
             var animInstance = ((ACharacter)clone).Mesh.GetAnimInstance();
+            
+            if (animInstance is null)
+            {
+                Helpers.Log("AnimInstance is null");
+                return;
+            }
 
             if (data.State == EMontageCallbackState.OnStarted)
             {

@@ -7,6 +7,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using b1;
+using BtlShare;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -47,7 +48,7 @@ namespace WukongCSharpMod
             var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn == owner);
             return kvp.Value;
         }
-        
+
         public MonsterState GetMonsterByCharacter(BGUCharacterCS owner)
         {
             var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn.GetMonster() == owner);
@@ -298,10 +299,27 @@ namespace WukongCSharpMod
         {
             _playerProperties[key] = value;
 
-            if (!(value is FVector || value is FRotator || value is float))
+            if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
             {
                 Helpers.Log($"SetPlayerProperty: {key} = {value}");
             }
+        }
+
+        public void SendRemotePlayerProperty(int playerId, string key, object value)
+        {
+            if (!IsMasterClient)
+            {
+                Helpers.Log("Only master client can send remote player properties.");
+                return;
+            }
+
+            var hashtable = new PhotonHashtable
+            {
+                [key] = value
+            };
+
+            Helpers.Log($"Sending remote player property: {key} = {value}");
+            _client.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
         private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();
@@ -327,8 +345,6 @@ namespace WukongCSharpMod
 
                 _monsterPropertiesRo.Clear();
 
-                Helpers.Log($"Will set custom properties of room: {hashtable.Count}");
-
                 const byte eventCode = 3;
                 _client.OpRaiseEvent(eventCode, hashtable, RaiseEventArgs.Default, SendOptions.SendUnreliable);
             }
@@ -338,7 +354,7 @@ namespace WukongCSharpMod
         {
             _monsterProperties[$"{id}_{prop}"] = value;
 
-            if (!(value is FVector || value is FRotator || value is float))
+            if (!(value is FVector || value is FRotator))
             {
                 Helpers.Log($"SetMonsterProperty [{id}]: {prop} = {value}");
             }
@@ -448,10 +464,13 @@ namespace WukongCSharpMod
         {
             var id = targetPlayer.ActorNumber;
 
-            if (targetPlayer.IsLocal)
-                return;
+            PlayerState playerState;
 
-            if (!ConnectedPlayers.TryGetValue(id, out var playerState))
+            if (targetPlayer.IsLocal)
+            {
+                playerState = LocalPlayerState;
+            }
+            else if (!ConnectedPlayers.TryGetValue(id, out playerState))
             {
                 Helpers.Log($"Player {id} not found.");
                 return;
@@ -460,6 +479,7 @@ namespace WukongCSharpMod
             foreach (var kvp in changedProps)
             {
                 var propertyName = (string)kvp.Key;
+
                 if (!PlayerSetters.TryGetValue(propertyName, out var setter))
                 {
                     setter = CreateSetter<PlayerState>(propertyName);

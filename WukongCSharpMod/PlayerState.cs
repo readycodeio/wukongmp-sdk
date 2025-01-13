@@ -8,6 +8,9 @@ namespace WukongCSharpMod
     {
         public int PhotonId { get; }
         public APawn Pawn { get; set; }
+
+        #region Animation
+
         public bool InJump { get; set; }
         public bool IsFlying { get; set; }
         public bool IsFalling { get; set; }
@@ -23,6 +26,11 @@ namespace WukongCSharpMod
         public bool OrientRotationToMovement { get; set; }
         public EMoveSpeedLevel MoveSpeedLevel { get; set; } = EMoveSpeedLevel.Run;
         public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
+
+        #endregion
+
+        public float HpMax { get; set; }
+        public float Hp { get; set; }
 
         public PlayerState(int photonId, APawn pawn)
         {

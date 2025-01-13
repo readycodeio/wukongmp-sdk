@@ -1,70 +1,13 @@
 ﻿using System;
 using System.Reflection;
 using b1;
+using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
-namespace WukongCSharpMod
+namespace WukongCSharpMod.Patches
 {
-    [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class Patches
-    {
-        private static MethodBase TargetMethod()
-        {
-            return AccessTools.Method("b1.BGS_TamerManagerSystem:OnTickWithGroup");
-        }
-
-        private static void Postfix(float DeltaTime, int TickGroup)
-        {
-            try
-            {
-                Global.TickWithGroup(DeltaTime);
-            }
-            catch (Exception ex)
-            {
-                Helpers.Log("Patch Postfix Error {ex}");
-            }
-
-            // send updates for each monster
-            var photon = MyMod.Instance.Photon;
-
-            if (photon.IsMasterClient)
-            {
-                foreach (var (id, state) in photon.SyncedMonsters)
-                {
-                    // sync location
-                    var location = state.Pawn.GetActorLocation();
-                    if (!location.Equals(state.Location, Constants.MovementSyncTolerance))
-                    {
-                        state.Location = location;
-                        photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
-                    }
-
-                    var rotation = state.Pawn.GetActorRotation();
-                    if (!rotation.Equals(state.Rotation, Constants.MovementSyncTolerance))
-                    {
-                        state.Rotation = rotation;
-                        photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
-                    }
-                }
-            }
-            else
-            {
-                foreach (var (id, state) in photon.SyncedMonsters)
-                {
-                    var events = BUS_EventCollectionCS.Get(state.Pawn);
-
-                    if (!state.Location.Equals(FVector.ZeroVector, Constants.MovementSyncTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.MovementSyncTolerance))
-                    {
-                        events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                    }
-                }
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchPlayerAnimation
@@ -362,121 +305,101 @@ namespace WukongCSharpMod
         }
     }
 
-    [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
+    [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
     [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchTamerLoad
+    public static class PatchAttrs
     {
-        public static void Postfix(FTamerRef __instance)
+        public static void Postfix(BUC_AttrContainer __instance)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
-            {
-                var monsterState = MyMod.Instance.Photon.GetByTamerActor(__instance.InstancePtr.Get());
-                if (monsterState != null)
-                {
-                    var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
-                    events.Evt_PlayMontageCallback += (reason, montage, state) => MyMod.Instance.OnPlayMonsterMontageCallback(monsterState.Id, reason, montage, state);
-                }
+            var photon = MyMod.Instance.Photon;
 
+            if (photon.IsMasterClient)
+            {
+                // master client always has the latest data
                 return;
             }
 
-            if (__instance.IsMonsterValid())
+            if (__instance.Owner == photon.LocalPlayerState.Pawn)
             {
-                var monster = __instance.MonsterInstancePtr.Get();
+                // local player (client)
+                __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
+                __instance.SetFloatValue(EBGUAttrFloat.HpMax, photon.LocalPlayerState.HpMax);
+                Helpers.Log($"Setting local player Hp: {photon.LocalPlayerState.Hp}/{photon.LocalPlayerState.HpMax}");
+            }
+            else
+            {
+                var playerState = photon.GetByActor(__instance.Owner as BGUCharacterCS);
 
-                if (monster == null)
+                // remote player
+                if (playerState != null)
                 {
-                    Helpers.Log("Monster is null but should not be");
-                    return;
+                    __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
+                    __instance.SetFloatValue(EBGUAttrFloat.HpMax, playerState.HpMax);
+                    Helpers.Log($"Setting remote player Hp: {playerState.Hp}/{playerState.HpMax}");
                 }
-
-                var events = BUS_EventCollectionCS.Get(monster);
-
-                if (events is null)
+                else
                 {
-                    Helpers.Log("Events is null");
-                    return;
+                    var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+
+                    // monster
+                    if (monster != null)
+                    {
+                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp);
+                        __instance.SetFloatValue(EBGUAttrFloat.HpMax, monster.HpMax);
+                        Helpers.Log($"Setting monster Hp: {monster.Hp}/{monster.HpMax}");
+                    }
                 }
-
-                events.Evt_AIPerceptionSetting.Invoke(false);
-                events.Evt_AIPauseBT.Invoke(true);
-                events.Evt_AIPauseFsm.Invoke(true);
-                events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
-                events.Evt_EnableCanSetBT.Invoke(P1: false);
-
-                Helpers.Log("Tamer actor disabled.");
             }
         }
     }
 
-    [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
+    [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
     [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchOnAIPerceptionSetting
+    public static class PatchHp
     {
-        public static bool Prefix(bool bEnable)
+        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
-                return true;
+            var photon = MyMod.Instance.Photon;
 
-            return !bEnable;
-        }
-    }
+            if (AttrID == EBGUAttrFloat.Hp || AttrID == EBGUAttrFloat.HpMax)
+            {
+                var owner = __instance.GetOwner();
 
-    [HarmonyPatch(typeof(BUS_AIComp), "OnAIPauseBT")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchOnAIPauseBT
-    {
-        public static bool Prefix(bool IsPause)
-        {
-            if (MyMod.Instance.Photon.IsMasterClient)
-                return true;
+                // I am a server
+                if (photon.IsMasterClient)
+                {
+                    // I was damaged, set my Hp
+                    if (owner == photon.LocalPlayerState.Pawn)
+                    {
+                        photon.SetPlayerProperty(AttrID.ToString(), NewValue);
+                        return true;
+                    }
 
-            return IsPause;
-        }
-    }
+                    // remote player was damaged, set his properties
+                    var remotePlayer = MyMod.Instance.Photon.GetByActor(owner);
+                    if (remotePlayer != null)
+                    {
+                        photon.SendRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
+                        return true;
+                    }
 
+                    // monster was damaged
+                    var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
+                    if (monster != null)
+                    {
+                        photon.SetMonsterProperty(monster.Id, AttrID.ToString(), NewValue);
+                        return true;
+                    }
 
-    [HarmonyPatch(typeof(BUS_AIComp), "OnEnableCanSetBT")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchOnEnableCanSetBT
-    {
-        public static bool Prefix(bool bEnable)
-        {
-            if (MyMod.Instance.Photon.IsMasterClient)
-                return true;
+                    // unsynced monster or sth else
+                    return true;
+                }
 
-            return !bEnable;
-        }
-    }
+                // I am a client
+                return false;
+            }
 
-    [HarmonyPatch(typeof(BUS_FsmComp), "OnAIPauseFsm")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchOnAIPauseFsm
-    {
-        public static bool Prefix(bool IsPause)
-        {
-            if (MyMod.Instance.Photon.IsMasterClient)
-                return true;
-
-            return IsPause;
-        }
-    }
-
-    [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchOnEnableCanUpdateHatred
-    {
-        private static MethodBase TargetMethod()
-        {
-            return AccessTools.Method("b1.BUS_BattleStateComp:OnEnableCanUpdateHatred");
-        }
-
-        public static bool Prefix(bool bEnable)
-        {
-            if (MyMod.Instance.Photon.IsMasterClient)
-                return true;
-
-            return !bEnable;
+            return true;
         }
     }
 }

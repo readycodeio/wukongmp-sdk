@@ -11,6 +11,8 @@ namespace WukongCSharpMod
         public FRotator Rotation { get; set; }
         public FVector Velocity { get; set; }
         public FVector MoveAcceleration { get; set; }
+        public float Hp { get; set; }
+        public float HpMax { get; set; }
 
         public MonsterState(int id, BUTamerActor pawn)
         {
