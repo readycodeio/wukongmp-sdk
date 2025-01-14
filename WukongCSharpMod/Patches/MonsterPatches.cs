@@ -18,15 +18,6 @@ namespace WukongCSharpMod.Patches
 
         private static void Postfix(float DeltaTime, int TickGroup)
         {
-            try
-            {
-                Global.TickWithGroup(DeltaTime);
-            }
-            catch (Exception ex)
-            {
-                Helpers.Log("Patch Postfix Error {ex}");
-            }
-
             // send updates for each monster
             var photon = MyMod.Instance.Photon;
 

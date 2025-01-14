@@ -223,6 +223,7 @@ namespace WukongCSharpMod
                 Helpers.LogError($"Monster is null in {nameof(ApplyMonsterMontageCallback)}");
                 return;
             }
+
             var animInstance = tamerActor.GetMonster().Mesh.GetAnimInstance();
 
             if (data.State == EMontageCallbackState.OnStarted)
@@ -274,12 +275,12 @@ namespace WukongCSharpMod
         private void SpawnEnemy(string enemyName)
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
-
-            var loc = Global.CameraLookPosition;
+            var player = GameUtils.GetControlledPawn();
+            var loc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
 
             var id = Photon.SyncedMonsters.Count;
             SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
-            
+
             Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
@@ -293,7 +294,7 @@ namespace WukongCSharpMod
         {
             Helpers.Log($"Spawn unit called for {unitName}");
 
-            if (string.IsNullOrEmpty(unitName)) 
+            if (string.IsNullOrEmpty(unitName))
                 return;
 
             var loc = new FVector(x, y, z);
