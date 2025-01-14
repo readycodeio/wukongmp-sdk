@@ -304,7 +304,7 @@ namespace WukongCSharpMod
                 Task.Run(async () =>
                 {
                     // wait for i * 200ms
-                    await Task.Delay(localI * 200);
+                    await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
                     Utils.TryRunOnGameThread(() => { SpawnEnemyMaster(enemyName, loc); });
                 });
             }
