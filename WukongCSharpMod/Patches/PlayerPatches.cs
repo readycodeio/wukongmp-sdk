@@ -1,5 +1,4 @@
-﻿using System;
-using b1;
+﻿using b1;
 using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Engine;
@@ -360,6 +359,7 @@ namespace WukongCSharpMod.Patches
         }
     }
 
+
     [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public static class PatchAttrs
@@ -412,12 +412,12 @@ namespace WukongCSharpMod.Patches
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public static class PatchHp
     {
-        public static bool Prefix(BUS_AttrComp __instance, ref EBGUAttrFloat AttrID, float NewValue)
+        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue, object[] __args)
         {
             if (AttrID == Constants.MonsterHp)
             {
                 // this is only true for clients
-                AttrID = EBGUAttrFloat.Hp;
+                __args[0] = EBGUAttrFloat.Hp;
                 return true;
             }
 

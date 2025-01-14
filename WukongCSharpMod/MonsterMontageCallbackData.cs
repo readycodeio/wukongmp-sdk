@@ -2,7 +2,6 @@
 using System.Text;
 using b1;
 using Photon.Client;
-using Sentry;
 
 namespace WukongCSharpMod
 {

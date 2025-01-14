@@ -1,9 +1,9 @@
-﻿using b1;
+﻿using System.Reflection;
+using b1;
 using b1.BGW;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
-using System.Reflection;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
@@ -81,7 +81,7 @@ namespace WukongCSharpMod
         {
             var playerLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_ABPPlayerLocomotionData, BUC_ABPPlayerLocomotionData>(player);
             Helpers.Log("PlayerLocomotionData:");
-            var propertyInfos = typeof(BUC_ABPPlayerLocomotionData).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+            var propertyInfos = typeof(BUC_ABPPlayerLocomotionData).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
             foreach (PropertyInfo propertyInfo in propertyInfos)
             {

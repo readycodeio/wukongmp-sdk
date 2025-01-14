@@ -11,6 +11,6 @@ namespace WukongCSharpMod
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
-        public const EBGUAttrFloat MonsterHp = (EBGUAttrFloat)250;
+        public static EBGUAttrFloat MonsterHp => (EBGUAttrFloat)250;
     }
 }
