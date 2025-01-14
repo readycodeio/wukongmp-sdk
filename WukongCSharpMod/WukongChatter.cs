@@ -147,6 +147,7 @@ namespace WukongCSharpMod
 
         public void OnChatStateChange(ChatState state)
         {
+            Console.WriteLine($"Chat state changed to: {state}");
         }
 
         public void OnConnected()
