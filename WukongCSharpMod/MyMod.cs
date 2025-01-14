@@ -54,12 +54,10 @@ namespace WukongCSharpMod
 
                 // dump player state to console for me
                 Helpers.Log($"Local player state: {Photon.LocalPlayerState}");
-                PrintPlayerLocomotionData(Photon.LocalPlayerState.Pawn);
                 // dump player state to console for each connected player
                 foreach (var (id, state) in Photon.ConnectedPlayers)
                 {
                     Helpers.Log($"Player {id} state: {state}");
-                    PrintPlayerLocomotionData(state.Pawn);
                 }
             });
         }
