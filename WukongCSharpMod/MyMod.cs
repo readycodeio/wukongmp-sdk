@@ -150,7 +150,7 @@ namespace WukongCSharpMod
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            Photon.WukongChat.OnSpawnEnemy += name => Utils.TryRunOnGameThread(() => SpawnEnemy(name));
+            Photon.WukongChat.OnSpawnEnemy += (name, count) => Utils.TryRunOnGameThread(() => SpawnEnemies(name, count));
 
             Photon.StartClient();
             SubscribeToPlayerEvents();
@@ -272,24 +272,37 @@ namespace WukongCSharpMod
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
-        private void SpawnEnemy(string enemyName)
+        private void SpawnEnemies(string enemyName, int count)
         {
-            var unitName = UnitPathsConfig.GetUnitPath(enemyName);
             var player = GameUtils.GetControlledPawn();
             var traceLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
             // trace vertacally for spawn height
-            var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), traceLoc, traceLoc -  FVector.UpVector * Constants.MonsterSpawnTraceHeight, out var hitResultSimple);
-            FVector loc;
+            var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), traceLoc, traceLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight, out var hitResultSimple);
+            FVector centerLoc;
             if (hit)
             {
-                loc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
+                centerLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
                 Helpers.Log($"Spawning enemy by line trace");
             }
             else
             {
-                loc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
+                centerLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
                 Helpers.Log($"Spawning enemy by player forward vector");
             }
+
+            // spawn in a spiral around center point, separated by 100 units
+            for (var i = 0; i < count; i++)
+            {
+                var angle = i * 2 * FMath.PI / count;
+                var loc = centerLoc + new FVector(FMath.Cos(angle), FMath.Sin(angle), 0) * Constants.MonsterSpawnSpread;
+                SpawnEnemy(enemyName, loc);
+            }
+        }
+
+        private void SpawnEnemy(string enemyName, FVector loc)
+        {
+            var unitName = UnitPathsConfig.GetUnitPath(enemyName);
+
             var id = Photon.SyncedMonsters.Count;
             SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
 

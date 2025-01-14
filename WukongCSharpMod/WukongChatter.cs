@@ -27,9 +27,9 @@ namespace WukongCSharpMod
         public event Action OnSavePosition;
         public event Action OnLoadPosition;
         public event Action OnConnectRequest;
-        public event Action<string> OnSpawnEnemy;
+        public event Action<string, int> OnSpawnEnemy;
 
-        private const char Separator = ':';
+        private const char Separator = ' ';
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
 
         public WukongChatter()
@@ -51,46 +51,55 @@ namespace WukongCSharpMod
         private void SetupCommands()
         {
             _commands.Add(
-                "\\savePos",
+                "/savePos",
                 new Command
                 {
-                    Name = "Save check point",
-                    Handler = data =>
-                    {
-                        OnSavePosition?.Invoke();
-                    }
+                    Name = "Save checkpoint",
+                    Handler = data => { OnSavePosition?.Invoke(); }
                 });
 
             _commands.Add(
-                "\\loadPos",
+                "/loadPos",
                 new Command
                 {
-                    Name = "Load check point",
-                    Handler = data =>
-                    {
-                        OnLoadPosition?.Invoke();
-                    }
+                    Name = "Load checkpoint",
+                    Handler = data => { OnLoadPosition?.Invoke(); }
                 });
 
             _commands.Add(
-                "\\spawn",
+                "/spawn",
                 new Command
                 {
                     Name = "Spawn enemy NPC",
                     Handler = data =>
                     {
-                        OnSpawnEnemy?.Invoke(data);
+                        // if name number, then pass, else 1
+                        var parts = data.Split(Separator);
+                        switch (parts.Length)
+                        {
+                            case 1:
+                                OnSpawnEnemy?.Invoke(data, 1);
+                                SendChatMessage(ServerChannelName, "Spawned monster");
+                                break;
+                            case 2:
+                            {
+                                if (int.TryParse(parts[1], out var count))
+                                {
+                                    OnSpawnEnemy?.Invoke(parts[0], count);
+                                    SendChatMessage(ServerChannelName, $"Spawned {count} monsters");
+                                }
+
+                                break;
+                            }
+                        }
                     }
                 });
             _commands.Add(
-                "\\connect",
+                "/connect",
                 new Command
                 {
                     Name = "Connect",
-                    Handler = data =>
-                    {
-                        OnConnectRequest?.Invoke();
-                    }
+                    Handler = data => { OnConnectRequest?.Invoke(); }
                 });
         }
 
@@ -123,6 +132,7 @@ namespace WukongCSharpMod
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -141,9 +151,7 @@ namespace WukongCSharpMod
             _chatClient.PublishMessage(channel, message);
         }
 
-        public void DebugReturn(LogLevel level, string message)
-        {
-        }
+        public void DebugReturn(LogLevel level, string message) { }
 
         public void OnChatStateChange(ChatState state)
         {
@@ -158,13 +166,9 @@ namespace WukongCSharpMod
             SendChatMessage(ServerChannelName, $"{_userName} has joined!");
         }
 
-        public void OnCustomAuthenticationFailed(string debugMessage)
-        {
-        }
+        public void OnCustomAuthenticationFailed(string debugMessage) { }
 
-        public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
-        {
-        }
+        public void OnCustomAuthenticationResponse(Dictionary<string, object> data) { }
 
         public void OnDisconnected()
         {
@@ -188,13 +192,9 @@ namespace WukongCSharpMod
             }
         }
 
-        public void OnPrivateMessage(string sender, object message, string channelName)
-        {
-        }
+        public void OnPrivateMessage(string sender, object message, string channelName) { }
 
-        public void OnStatusUpdate(string user, int status, bool gotMessage, object message)
-        {
-        }
+        public void OnStatusUpdate(string user, int status, bool gotMessage, object message) { }
 
         public void OnSubscribed(string[] channels, bool[] results)
         {
@@ -204,16 +204,10 @@ namespace WukongCSharpMod
             }
         }
 
-        public void OnUnsubscribed(string[] channels)
-        {
-        }
+        public void OnUnsubscribed(string[] channels) { }
 
-        public void OnUserSubscribed(string channel, string user)
-        {
-        }
+        public void OnUserSubscribed(string channel, string user) { }
 
-        public void OnUserUnsubscribed(string channel, string user)
-        {
-        }
+        public void OnUserUnsubscribed(string channel, string user) { }
     }
 }
