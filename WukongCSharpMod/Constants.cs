@@ -9,6 +9,6 @@
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
-        public const float MonsterSpawnSpread = 100f;
+        public const float MonsterSpawnSpread = 250f;
     }
 }

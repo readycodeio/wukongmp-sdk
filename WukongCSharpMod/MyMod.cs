@@ -292,10 +292,12 @@ namespace WukongCSharpMod
             }
 
             // spawn in a spiral around center point, separated by 100 units
+            var dAngle = 2 * FMath.PI / FMath.Min(count, 6);
             for (var i = 0; i < count; i++)
             {
-                var angle = i * 2 * FMath.PI / count;
-                var loc = centerLoc + new FVector(FMath.Cos(angle), FMath.Sin(angle), 0) * Constants.MonsterSpawnSpread;
+                var angle = i * dAngle;
+                var radius = i * Constants.MonsterSpawnSpread;
+                var loc = centerLoc + new FVector(FMath.Cos(angle), FMath.Sin(angle), 0) * radius;
                 SpawnEnemy(enemyName, loc);
             }
         }
