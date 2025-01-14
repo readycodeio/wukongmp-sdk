@@ -81,6 +81,13 @@ namespace WukongCSharpMod.Patches
                     {
                         __instance.Velocity = FVector.ZeroVector;
                         playerState.Velocity = FVector.ZeroVector;
+                        
+                        // without these 5 lines the character will not jump
+                        __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
+                        __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
+                        __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
+                        events.Evt_StopCurrentMove.Invoke();
+                        events.Evt_MovementForceStop.Invoke();
                     }
 
                     __instance.MoveAcceleration = playerState.MoveAcceleration;
