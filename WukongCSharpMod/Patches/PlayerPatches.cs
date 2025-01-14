@@ -393,11 +393,11 @@ namespace WukongCSharpMod.Patches
                     var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
 
                     // monster
-                    if (monster != null)
+                    if (monster?.Hp != null)
                     {
-                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp);
+                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
 
-                        if (monster.Hp <= 0)
+                        if (monster.Hp.Value <= 0)
                         {
                             var events = BUS_EventCollectionCS.Get(__instance.Owner);
                             events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); // TODO: Sync other dead reasons?
@@ -452,7 +452,7 @@ namespace WukongCSharpMod.Patches
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (monster != null)
                     {
-                        if (!monster.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             monster.Hp = NewValue;
                             photon.SetMonsterProperty(monster.Id, AttrID.ToString(), NewValue);
