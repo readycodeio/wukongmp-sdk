@@ -45,7 +45,7 @@ namespace WukongCSharpMod
 
         public override string ToString()
         {
-            return $"PlayerState(PhotonId: {PhotonId}, InJump: {InJump}, IsFlying: {IsFlying}, IsFalling: {IsFalling}, IsLandingMove: {IsLandingMove}, Velocity: {Velocity}, MoveAcceleration: {MoveAcceleration}, ActorLocation: {ActorLocation}, TurnInplaceTargetRotation: {TurnInplaceTargetRotation}, IsStandRotate: {IsStandRotate}, TurnInplaceRemainAngle: {TurnInplaceRemainAngle}, ActorRotation: {ActorRotation}, IsAttacking: {IsAttacking}, OrientRotationToMovement: {OrientRotationToMovement}, MoveSpeedLevel: {MoveSpeedLevel}, MoveSpeedState: {MoveSpeedState}, ShouldWaitRotateFinished: {ShouldWaitRotateFinished})";
+            return $"PlayerState(PhotonId: {PhotonId},\nInJump: {InJump},\nIsFlying: {IsFlying},\nIsFalling: {IsFalling},\nIsLandingMove: {IsLandingMove},\nVelocity: {Velocity},\nMoveAcceleration: {MoveAcceleration},\nActorLocation: {ActorLocation},\nTurnInplaceTargetRotation: {TurnInplaceTargetRotation},\nIsStandRotate: {IsStandRotate},\nTurnInplaceRemainAngle: {TurnInplaceRemainAngle},\nActorRotation: {ActorRotation},\nIsAttacking: {IsAttacking},\nOrientRotationToMovement: {OrientRotationToMovement},\nMoveSpeedLevel: {MoveSpeedLevel},\nMoveSpeedState: {MoveSpeedState},\nShouldWaitRotateFinished: {ShouldWaitRotateFinished})\n";
         }
     }
 }
