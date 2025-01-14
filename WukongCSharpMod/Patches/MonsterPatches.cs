@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using b1;
+using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Runtime;
 
@@ -70,9 +71,11 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(FTamerRef __instance)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
+            var photon = MyMod.Instance.Photon;
+
+            if (photon.IsMasterClient)
             {
-                var monsterState = MyMod.Instance.Photon.GetByTamerActor(__instance.InstancePtr.Get());
+                var monsterState = photon.GetByTamerActor(__instance.InstancePtr.Get());
                 if (monsterState != null)
                 {
                     var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
@@ -80,7 +83,7 @@ namespace WukongCSharpMod.Patches
                     {
                         var montagePath = montage.GetPathName();
                         Helpers.Log($"Monster montage callback: {monsterState.Id} {reason} {montagePath} {state}");
-                        MyMod.Instance.Photon.SendMonsterMontageCallback(monsterState.Id, reason, montagePath, state);
+                        photon.SendMonsterMontageCallback(monsterState.Id, reason, montagePath, state);
                     };
                 }
 
@@ -95,6 +98,17 @@ namespace WukongCSharpMod.Patches
                 {
                     Helpers.Log("Monster is null but should not be");
                     return;
+                }
+
+                if (photon.IsMasterClient)
+                {
+                    var state = photon.GetMonsterByCharacter(monster);
+
+                    if (state != null)
+                    {
+                        var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
+                        state.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                    }
                 }
 
                 var events = BUS_EventCollectionCS.Get(monster);
