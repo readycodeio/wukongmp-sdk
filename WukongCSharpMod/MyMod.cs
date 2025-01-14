@@ -276,18 +276,19 @@ namespace WukongCSharpMod
         {
             var player = GameUtils.GetControlledPawn();
             var traceLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
-            // trace vertacally for spawn height
+
+            // trace vertically for spawn height
             var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), traceLoc, traceLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight, out var hitResultSimple);
             FVector centerLoc;
             if (hit)
             {
                 centerLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
-                Helpers.Log($"Spawning enemy by line trace");
+                Helpers.Log("Spawning enemy by line trace");
             }
             else
             {
                 centerLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
-                Helpers.Log($"Spawning enemy by player forward vector");
+                Helpers.Log("Spawning enemy by player forward vector");
             }
 
             // spawn in a spiral around center point, separated by 100 units

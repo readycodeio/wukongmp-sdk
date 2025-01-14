@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Photon.Chat;
 using Photon.Client;
@@ -10,7 +11,7 @@ namespace WukongCSharpMod
     internal class Command
     {
         public string Name { get; set; }
-        public Action<string> Handler { get; set; }
+        public Action<string[]> Handler { get; set; }
     }
 
     public class WukongChatter : IChatClientListener
@@ -55,7 +56,7 @@ namespace WukongCSharpMod
                 new Command
                 {
                     Name = "Save checkpoint",
-                    Handler = data => { OnSavePosition?.Invoke(); }
+                    Handler = args => { OnSavePosition?.Invoke(); }
                 });
 
             _commands.Add(
@@ -63,7 +64,7 @@ namespace WukongCSharpMod
                 new Command
                 {
                     Name = "Load checkpoint",
-                    Handler = data => { OnLoadPosition?.Invoke(); }
+                    Handler = args => { OnLoadPosition?.Invoke(); }
                 });
 
             _commands.Add(
@@ -71,21 +72,20 @@ namespace WukongCSharpMod
                 new Command
                 {
                     Name = "Spawn enemy NPC",
-                    Handler = data =>
+                    Handler = args =>
                     {
                         // if name number, then pass, else 1
-                        var parts = data.Split(Separator);
-                        switch (parts.Length)
+                        switch (args.Length)
                         {
                             case 1:
-                                OnSpawnEnemy?.Invoke(data, 1);
+                                OnSpawnEnemy?.Invoke(args[0], 1);
                                 SendChatMessage(ServerChannelName, "Spawned monster");
                                 break;
                             case 2:
                             {
-                                if (int.TryParse(parts[1], out var count))
+                                if (int.TryParse(args[1], out var count))
                                 {
-                                    OnSpawnEnemy?.Invoke(parts[0], count);
+                                    OnSpawnEnemy?.Invoke(args[0], count);
                                     SendChatMessage(ServerChannelName, $"Spawned {count} monsters");
                                 }
 
@@ -99,7 +99,7 @@ namespace WukongCSharpMod
                 new Command
                 {
                     Name = "Connect",
-                    Handler = data => { OnConnectRequest?.Invoke(); }
+                    Handler = args => { OnConnectRequest?.Invoke(); }
                 });
         }
 
@@ -128,7 +128,8 @@ namespace WukongCSharpMod
                 if (_commands.ContainsKey(commandParts[0]))
                 {
                     var cmd = _commands[commandParts[0]];
-                    cmd.Handler(commandParts.Length > 1 ? commandParts[1] : "");
+                    var rest = commandParts.Skip(1).ToArray();
+                    cmd.Handler(rest);
                     return true;
                 }
             }
