@@ -30,7 +30,7 @@ namespace WukongCSharpMod
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, int, string, float, float, float> OnUnitSpawn;
 
-        private const string UserName = "ReadyM_JakuJ";
+        private const string UserName = Constants.PhotonUserName;
         public WukongChatter WukongChat => _wukongChat;
 
         public PlayerState LocalPlayerState { get; }
