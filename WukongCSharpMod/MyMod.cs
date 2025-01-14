@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using CSharpModBase;
@@ -150,7 +151,7 @@ namespace WukongCSharpMod
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            Photon.WukongChat.OnSpawnEnemy += (name, count) => Utils.TryRunOnGameThread(() => SpawnEnemies(name, count));
+            Photon.WukongChat.OnSpawnEnemy += (name, count) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count));
 
             Photon.StartClient();
             SubscribeToPlayerEvents();
@@ -272,7 +273,7 @@ namespace WukongCSharpMod
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
-        private void SpawnEnemies(string enemyName, int count)
+        private void SpawnEnemiesMaster(string enemyName, int count)
         {
             var player = GameUtils.GetControlledPawn();
             var traceLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
@@ -298,16 +299,23 @@ namespace WukongCSharpMod
                 var angle = i * dAngle;
                 var radius = i * Constants.MonsterSpawnSpread;
                 var loc = centerLoc + new FVector(FMath.Cos(angle), FMath.Sin(angle), 0) * radius;
-                SpawnEnemy(enemyName, loc);
+
+                var localI = i;
+                Task.Run(async () =>
+                {
+                    // wait for i * 200ms
+                    await Task.Delay(localI * 200);
+                    Utils.TryRunOnGameThread(() => { SpawnEnemyMaster(enemyName, loc); });
+                });
             }
         }
 
-        private void SpawnEnemy(string enemyName, FVector loc)
+        private void SpawnEnemyMaster(string enemyName, FVector loc)
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
             var id = Photon.SyncedMonsters.Count;
-            SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
+            SpawnUnitLocally(id, unitName, loc.X, loc.Y, loc.Z);
 
             Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
@@ -315,10 +323,10 @@ namespace WukongCSharpMod
 
         private void SpawnRemoteUnit(int id, string unitName, float x, float y, float z)
         {
-            SpawnUnit(id, unitName, x, y, z);
+            SpawnUnitLocally(id, unitName, x, y, z);
         }
 
-        private void SpawnUnit(int id, string unitName, float x, float y, float z)
+        private void SpawnUnitLocally(int id, string unitName, float x, float y, float z)
         {
             Helpers.Log($"Spawn unit called for {unitName}");
 
