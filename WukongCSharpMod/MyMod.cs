@@ -276,8 +276,20 @@ namespace WukongCSharpMod
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
             var player = GameUtils.GetControlledPawn();
-            var loc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
-
+            var traceLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
+            // trace vertacally for spawn height
+            var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), traceLoc, traceLoc -  FVector.UpVector * Constants.MonsterSpawnTraceHeight, out var hitResultSimple);
+            FVector loc;
+            if (hit)
+            {
+                loc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
+                Helpers.Log($"Spawning enemy by line trace");
+            }
+            else
+            {
+                loc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
+                Helpers.Log($"Spawning enemy by player forward vector");
+            }
             var id = Photon.SyncedMonsters.Count;
             SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
 
