@@ -81,7 +81,7 @@ namespace WukongCSharpMod.Patches
                     {
                         __instance.Velocity = FVector.ZeroVector;
                         playerState.Velocity = FVector.ZeroVector;
-                        
+
                         // without these 5 lines the character will not jump
                         __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
                         __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
@@ -377,7 +377,7 @@ namespace WukongCSharpMod.Patches
             if (__instance.Owner == photon.LocalPlayerState.Pawn)
             {
                 // local player (client)
-                __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
+                __instance.SetFloatValue(Constants.MonsterHp, photon.LocalPlayerState.Hp);
             }
             else
             {
@@ -386,7 +386,7 @@ namespace WukongCSharpMod.Patches
                 // remote player
                 if (playerState != null)
                 {
-                    __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
+                    __instance.SetFloatValue(Constants.MonsterHp, playerState.Hp);
                 }
                 else
                 {
@@ -395,7 +395,7 @@ namespace WukongCSharpMod.Patches
                     // monster
                     if (monster != null)
                     {
-                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp);
+                        __instance.SetFloatValue(Constants.MonsterHp, monster.Hp);
 
                         if (monster.Hp <= 0)
                         {
@@ -412,8 +412,15 @@ namespace WukongCSharpMod.Patches
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public static class PatchHp
     {
-        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
+        public static bool Prefix(BUS_AttrComp __instance, ref EBGUAttrFloat AttrID, float NewValue)
         {
+            if (AttrID == Constants.MonsterHp)
+            {
+                // this is only true for clients
+                AttrID = EBGUAttrFloat.Hp;
+                return true;
+            }
+
             var photon = MyMod.Instance.Photon;
 
             if (AttrID == EBGUAttrFloat.Hp)

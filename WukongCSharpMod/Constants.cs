@@ -1,4 +1,6 @@
-﻿namespace WukongCSharpMod
+﻿using BtlShare;
+
+namespace WukongCSharpMod
 {
     public static class Constants
     {
@@ -9,5 +11,6 @@
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
+        public const EBGUAttrFloat MonsterHp = (EBGUAttrFloat)250;
     }
 }
