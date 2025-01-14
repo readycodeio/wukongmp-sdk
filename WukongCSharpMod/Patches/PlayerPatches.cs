@@ -175,7 +175,7 @@ namespace WukongCSharpMod.Patches
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
                 }
 
-                if (localState.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
+                if (!localState.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
                     photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
@@ -426,7 +426,7 @@ namespace WukongCSharpMod.Patches
                     // I was damaged, set my Hp
                     if (owner == photon.LocalPlayerState.Pawn)
                     {
-                        if (photon.LocalPlayerState.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!photon.LocalPlayerState.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             photon.LocalPlayerState.Hp = NewValue;
                             photon.SetPlayerProperty(AttrID.ToString(), NewValue);
@@ -439,7 +439,7 @@ namespace WukongCSharpMod.Patches
                     var remotePlayer = MyMod.Instance.Photon.GetByActor(owner);
                     if (remotePlayer != null)
                     {
-                        if (remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             remotePlayer.Hp = NewValue;
                             photon.SendRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
@@ -452,7 +452,7 @@ namespace WukongCSharpMod.Patches
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (monster != null)
                     {
-                        if (monster.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!monster.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             monster.Hp = NewValue;
                             photon.SetMonsterProperty(monster.Id, AttrID.ToString(), NewValue);
