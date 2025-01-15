@@ -387,18 +387,35 @@ namespace WukongCSharpMod
             }
         }
 
-        private APawn SpawnWukong(ABGPPlayerController Controller, UWorld World, UClass PawnClass, FTransform SpawnTransform)
+        private APawn SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
         {
-            APawn aPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(World, PawnClass, SpawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
-            Controller.Possess(aPawn);
-            ACharacter obj = aPawn as ACharacter;
+            APawn newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(oldController.World, pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
+            oldController.Possess(newPawn);
+            ACharacter obj = newPawn as ACharacter;
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
-            BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(World, aPawn, SpawnTransform);
+            BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, newPawn, spawnTransform);
+            BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
+            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(ECSExtension.ToEntity(oldPawn), ECSExtension.ToEntity(newPawn));
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
             UGSE_ActorFuncLib.UpdateActorOverlaps(obj);
-            return aPawn;
+            return newPawn;
+        }
+
+        private void BackToOldPawn(ABGPPlayerController oldController, ABGPPlayerController newController, APawn oldPawn, APawn newPawn)
+        {
+            oldController.Possess(oldPawn);
+            ACharacter obj = oldPawn as ACharacter;
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+            BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(oldPawn);
+            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(ECSExtension.ToEntity(newPawn), ECSExtension.ToEntity(oldPawn));
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+            UGSE_ActorFuncLib.UpdateActorOverlaps(obj);
+
+            newController.Possess(newPawn);
         }
 
         private void SpawnCloneForJoiningPlayer(int id)
@@ -422,18 +439,17 @@ namespace WukongCSharpMod
                 return;
             }
             var oldController = GameUtils.GetPlayerController();
-            var newPlayer = SpawnWukong(oldController, GameUtils.GetWorld(), playerPawnClass, new FTransform(rot, loc));
+            var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
             // assign in dictionary
-            Photon.ConnectedPlayers[id] = new PlayerState(id, newPlayer);
-            Helpers.Log($"Assigned player {id} clone {newPlayer.GetEntityHash()}");
+            Photon.ConnectedPlayers[id] = new PlayerState(id, newPawn);
+            Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
 
-            oldController.Possess(oldPawn);
-            var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
-            if (newController != null && newController is ABGPPlayerController ctrl)
+            var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
+            if (newControllerActor != null && newControllerActor is ABGPPlayerController newController)
             {
                 Helpers.Log("Spawned new controller");
-                ctrl.Possess(newPlayer);
+                BackToOldPawn(oldController, newController, oldPawn, newPawn);
             }
         }
 
