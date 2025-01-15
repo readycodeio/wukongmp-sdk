@@ -403,19 +403,18 @@ namespace WukongCSharpMod
             return newPawn;
         }
 
-        private void BackToOldPawn(ABGPPlayerController oldController, ABGPPlayerController newController, APawn oldPawn, APawn newPawn)
+        private void BackToOldPawn(ABGPPlayerController oldController, APawn oldPawn, APawn newPawn, FTransform spawnTransform)
         {
             oldController.Possess(oldPawn);
             ACharacter obj = oldPawn as ACharacter;
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+            BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, oldPawn, spawnTransform);
             BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(oldPawn);
             BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(ECSExtension.ToEntity(newPawn), ECSExtension.ToEntity(oldPawn));
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
             UGSE_ActorFuncLib.UpdateActorOverlaps(obj);
-
-            newController.Possess(newPawn);
         }
 
         private void SpawnCloneForJoiningPlayer(int id)
@@ -431,7 +430,7 @@ namespace WukongCSharpMod
 
             var loc = oldPawn.GetActorLocation() + new FVector(200, 200, 100);
             var rot = oldPawn.GetActorRotation();
-            var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
+            var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
             {
@@ -441,15 +440,16 @@ namespace WukongCSharpMod
             var oldController = GameUtils.GetPlayerController();
             var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
+            BackToOldPawn(oldController, oldPawn, newPawn, oldPawn.GetActorTransform());
             // assign in dictionary
             Photon.ConnectedPlayers[id] = new PlayerState(id, newPawn);
             Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
 
             var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
-            if (newControllerActor != null && newControllerActor is ABGPPlayerController newController)
+            if (newControllerActor != null && newControllerActor is ABGUAIPlayerController newController)
             {
                 Helpers.Log("Spawned new controller");
-                BackToOldPawn(oldController, newController, oldPawn, newPawn);
+                newController.Possess(newPawn);
             }
         }
 
