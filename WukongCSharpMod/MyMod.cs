@@ -8,6 +8,7 @@ using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
+using static b1.BGUFuncLibPlayer;
 
 namespace WukongCSharpMod
 {
@@ -387,6 +388,19 @@ namespace WukongCSharpMod
             }
         }
 
+        private APawn SpawnWukong(UWorld World, UClass PawnClass, FTransform SpawnTransform)
+        {
+            APawn aPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(World, PawnClass, SpawnTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
+            ACharacter obj = aPawn as ACharacter;
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+            BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(World, aPawn, SpawnTransform);
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+            UGSE_ActorFuncLib.UpdateActorOverlaps(obj);
+            return aPawn;
+        }
+
         private void SpawnCloneForJoiningPlayer(int id)
         {
             if (Photon.ConnectedPlayers.ContainsKey(id))
@@ -395,36 +409,11 @@ namespace WukongCSharpMod
                 return;
             }
 
-            UnsubscribeFromPlayerEvents();
-
-            var controller = GameUtils.GetPlayerController();
             var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
             var oldPawn = GameUtils.GetControlledPawn();
-            var oldPawnPos = oldPawn.GetActorTransform().GetLocation();
-            var oldPawnRot = oldPawn.GetActorTransform().GetRotation();
 
-            BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, oldPawn.GetActorTransform(), pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
-            {
-                NeedBlend = false
-            });
-
-            // BGU_UnrealWorldUtil.DestroyActor(oldPawn);
-            var clone = oldPawn;
-
-            var cloneCharacter = clone as BGUPlayerCharacterCS;
-
-            FActorSpawnParameters spawnInfo = new FActorSpawnParameters
-            {
-                Instigator = cloneCharacter.GetInstigator(),
-                SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod.AlwaysSpawn,
-                OverrideLevel = cloneCharacter.GetLevel(),
-                ObjectFlags = EObjectFlags.Transient // We never want to save AI controllers into a map
-            };
-
-            var loc = cloneCharacter.GetActorLocation();
-            var rot = cloneCharacter.GetActorRotation();
-
-            // var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
+            var loc = oldPawn.GetActorLocation() + new FVector(200, 200, 100);
+            var rot = oldPawn.GetActorRotation();
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
@@ -433,25 +422,18 @@ namespace WukongCSharpMod
                 return;
             }
 
-            var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
-
-            Helpers.Log("Spawned new controller");
+            var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
 
             if (newController != null && newController is ABGUAIPlayerController ctrl)
             {
-                ctrl.Possess(clone);
-                ctrl.CanBeDamaged = false;
-                Helpers.Log("Possessed new controller");
+                Helpers.Log("Spawned new controller");
+
+                var newPlayer = SpawnWukong(GameUtils.GetWorld(), playerPawnClass, new FTransform(rot, loc));
+                ctrl.Possess(newPlayer);
+                // assign in dictionary
+                Photon.ConnectedPlayers[id] = new PlayerState(id, newPlayer);
+                Helpers.Log($"Assigned player {id} clone {newPlayer.GetEntityHash()}");
             }
-
-            // assign in dictionary
-            Photon.ConnectedPlayers[id] = new PlayerState(id, clone);
-            Helpers.Log($"Assigned player {id} clone {clone.GetEntityHash()}");
-
-            var controlledPawn = GameUtils.GetControlledPawn();
-            controlledPawn.SetActorTransform(new FTransform(oldPawnRot, oldPawnPos), false, out _, false);
-
-            SubscribeToPlayerEvents();
         }
 
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
