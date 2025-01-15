@@ -39,6 +39,7 @@ namespace WukongCSharpMod
                 Helpers.Log("Alt + H");
 
                 //InitializeChatWidget();
+                CleanUpPhoton();
                 InitPhoton();
                 Connect();
             });
@@ -115,6 +116,11 @@ namespace WukongCSharpMod
                     Helpers.Log("Event is null");
                 }
             }
+        }
+
+        private void CleanUpPhoton()
+        {
+            Photon?.StopClient();
         }
 
         private void InitPhoton()
@@ -347,6 +353,7 @@ namespace WukongCSharpMod
                 Helpers.LogError("Could not spawn enemy: " + unitName);
                 return;
             }
+
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
 

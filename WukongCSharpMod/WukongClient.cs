@@ -163,6 +163,11 @@ namespace WukongCSharpMod
             new Thread(LoopGame).Start();
             Helpers.Log("Running forever.");
         }
+        
+        public void StopClient()
+        {
+            _client.Disconnect();
+        }
 
         // ReSharper disable once FunctionNeverReturns
         private void LoopGame(object state)
@@ -422,8 +427,11 @@ namespace WukongCSharpMod
         {
             Helpers.Log("Joined room");
 
-            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
-            Helpers.Log("Patched with Harmony");
+            Utils.TryRunOnGameThread(() =>
+            {
+                MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+                Helpers.Log("Patched with Harmony");
+            });
 
             _joinedRoomCallback?.Invoke();
             SendRoomJoined();
