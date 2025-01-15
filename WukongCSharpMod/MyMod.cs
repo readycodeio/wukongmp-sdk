@@ -446,6 +446,12 @@ namespace WukongCSharpMod
                 Helpers.Log("Spawned new controller");
                 newController.Possess(newPawn);
             }
+
+            // Reset falling timer.
+            var events = BUS_EventCollectionCS.Get(newPawn);
+            events.Evt_OnLeaveFalling.Invoke();
+            events = BUS_EventCollectionCS.Get(oldPawn);
+            events.Evt_OnLeaveFalling.Invoke();
         }
 
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
