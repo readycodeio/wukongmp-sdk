@@ -163,7 +163,7 @@ namespace WukongCSharpMod
             new Thread(LoopGame).Start();
             Helpers.Log("Running forever.");
         }
-        
+
         public void StopClient()
         {
             _client.Disconnect();
@@ -450,6 +450,12 @@ namespace WukongCSharpMod
         public void OnLeftRoom()
         {
             Helpers.Log("Left room");
+
+            Utils.TryRunOnGameThread(() =>
+            {
+                MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
+                Helpers.Log("Unpatched Harmony");
+            });
         }
 
         #endregion
