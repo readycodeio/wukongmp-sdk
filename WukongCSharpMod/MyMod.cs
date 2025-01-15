@@ -421,17 +421,19 @@ namespace WukongCSharpMod
                 Helpers.Log("Class is null");
                 return;
             }
+            var oldController = GameUtils.GetPlayerController();
+            var newPlayer = SpawnWukong(oldController, GameUtils.GetWorld(), playerPawnClass, new FTransform(rot, loc));
 
+            // assign in dictionary
+            Photon.ConnectedPlayers[id] = new PlayerState(id, newPlayer);
+            Helpers.Log($"Assigned player {id} clone {newPlayer.GetEntityHash()}");
+
+            oldController.Possess(oldPawn);
             var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
-
             if (newController != null && newController is ABGPPlayerController ctrl)
             {
                 Helpers.Log("Spawned new controller");
-
-                var newPlayer = SpawnWukong(ctrl, GameUtils.GetWorld(), playerPawnClass, new FTransform(rot, loc));
-                // assign in dictionary
-                Photon.ConnectedPlayers[id] = new PlayerState(id, newPlayer);
-                Helpers.Log($"Assigned player {id} clone {newPlayer.GetEntityHash()}");
+                ctrl.Possess(newPlayer);
             }
         }
 
