@@ -93,34 +93,33 @@ namespace WukongCSharpMod.Patches
                 }
 
                 var state = photon.GetMonsterByCharacter(monster);
-                if (photon.IsMasterClient)
+                if (state != null)
                 {
-
-                    if (state != null)
+                    if (photon.IsMasterClient)
                     {
                         var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
                         state.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                     }
-                }
-                else
-                {
-                    var events = BUS_EventCollectionCS.Get(monster);
-
-                    if (events is null)
+                    else
                     {
-                        Helpers.Log("Events is null");
-                        return;
+                        var events = BUS_EventCollectionCS.Get(monster);
+
+                        if (events is null)
+                        {
+                            Helpers.Log("Events is null");
+                            return;
+                        }
+
+                        events.Evt_AIPerceptionSetting.Invoke(false);
+                        events.Evt_AIPauseBT.Invoke(true);
+                        events.Evt_AIPauseFsm.Invoke(true);
+                        events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
+                        events.Evt_EnableCanSetBT.Invoke(P1: false);
+
+                        Helpers.Log("Tamer actor disabled.");
                     }
-
-                    events.Evt_AIPerceptionSetting.Invoke(false);
-                    events.Evt_AIPauseBT.Invoke(true);
-                    events.Evt_AIPauseFsm.Invoke(true);
-                    events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
-                    events.Evt_EnableCanSetBT.Invoke(P1: false);
-
-                    Helpers.Log("Tamer actor disabled.");
+                    state.IsSpawned = true;
                 }
-                state.IsSpawned = true;
             }
         }
     }
