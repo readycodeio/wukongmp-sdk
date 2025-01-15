@@ -377,6 +377,11 @@ namespace WukongCSharpMod.Patches
             if (__instance.Owner == photon.LocalPlayerState.Pawn)
             {
                 // local player (client)
+                if (photon.LocalPlayerState.Hp <= -80000)
+                {
+                    Helpers.Log($"Would set hp to {photon.LocalPlayerState.Hp}  but will not");
+                    return;
+                }
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
             }
             else
@@ -386,6 +391,11 @@ namespace WukongCSharpMod.Patches
                 // remote player
                 if (playerState != null)
                 {
+                    if (playerState.Hp <= -80000)
+                    {
+                        Helpers.Log($"Would set hp to {playerState.Hp} but will not");
+                        return;
+                    }
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
                 }
                 else
