@@ -25,6 +25,9 @@ namespace WukongCSharpMod.Patches
                 foreach (var (id, state) in photon.SyncedMonsters)
                 {
                     // sync location
+                    if (!state.IsSpawned)
+                        continue;
+
                     var location = state.Pawn.GetActorLocation();
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
@@ -75,9 +78,8 @@ namespace WukongCSharpMod.Patches
                         Helpers.Log($"Monster montage callback: {monsterState.Id} {reason} {montagePath} {state}");
                         photon.SendMonsterMontageCallback(monsterState.Id, reason, montagePath, state);
                     };
-                }
 
-                return;
+                }
             }
 
             if (__instance.IsMonsterValid())
@@ -90,9 +92,9 @@ namespace WukongCSharpMod.Patches
                     return;
                 }
 
+                var state = photon.GetMonsterByCharacter(monster);
                 if (photon.IsMasterClient)
                 {
-                    var state = photon.GetMonsterByCharacter(monster);
 
                     if (state != null)
                     {
@@ -100,22 +102,25 @@ namespace WukongCSharpMod.Patches
                         state.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                     }
                 }
-
-                var events = BUS_EventCollectionCS.Get(monster);
-
-                if (events is null)
+                else
                 {
-                    Helpers.Log("Events is null");
-                    return;
+                    var events = BUS_EventCollectionCS.Get(monster);
+
+                    if (events is null)
+                    {
+                        Helpers.Log("Events is null");
+                        return;
+                    }
+
+                    events.Evt_AIPerceptionSetting.Invoke(false);
+                    events.Evt_AIPauseBT.Invoke(true);
+                    events.Evt_AIPauseFsm.Invoke(true);
+                    events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
+                    events.Evt_EnableCanSetBT.Invoke(P1: false);
+
+                    Helpers.Log("Tamer actor disabled.");
                 }
-
-                events.Evt_AIPerceptionSetting.Invoke(false);
-                events.Evt_AIPauseBT.Invoke(true);
-                events.Evt_AIPauseFsm.Invoke(true);
-                events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
-                events.Evt_EnableCanSetBT.Invoke(P1: false);
-
-                Helpers.Log("Tamer actor disabled.");
+                state.IsSpawned = true;
             }
         }
     }

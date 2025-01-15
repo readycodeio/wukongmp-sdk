@@ -1,6 +1,7 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
+using System.Threading;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -106,7 +107,7 @@ namespace WukongCSharpMod.Patches
                     // maybe it's a monster
                     var monsterState = photon.GetMonsterByCharacter(character);
 
-                    if (monsterState != null)
+                    if (monsterState != null && monsterState.IsSpawned)
                     {
                         if (photon.IsMasterClient)
                         {
@@ -393,7 +394,7 @@ namespace WukongCSharpMod.Patches
                     var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
 
                     // monster
-                    if (monster?.Hp != null)
+                    if (monster != null && monster.Hp != null && monster.IsSpawned)
                     {
                         __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
 
@@ -450,7 +451,7 @@ namespace WukongCSharpMod.Patches
 
                     // monster was damaged
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
-                    if (monster != null)
+                    if (monster != null && monster.IsSpawned)
                     {
                         if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
