@@ -8,7 +8,6 @@ using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using static b1.BGUFuncLibPlayer;
 
 namespace WukongCSharpMod
 {
@@ -388,9 +387,10 @@ namespace WukongCSharpMod
             }
         }
 
-        private APawn SpawnWukong(UWorld World, UClass PawnClass, FTransform SpawnTransform)
+        private APawn SpawnWukong(ABGPPlayerController Controller, UWorld World, UClass PawnClass, FTransform SpawnTransform)
         {
             APawn aPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(World, PawnClass, SpawnTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
+            Controller.Possess(aPawn);
             ACharacter obj = aPawn as ACharacter;
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
@@ -414,7 +414,7 @@ namespace WukongCSharpMod
 
             var loc = oldPawn.GetActorLocation() + new FVector(200, 200, 100);
             var rot = oldPawn.GetActorRotation();
-            var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
+            var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
             {
@@ -424,12 +424,11 @@ namespace WukongCSharpMod
 
             var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
 
-            if (newController != null && newController is ABGUAIPlayerController ctrl)
+            if (newController != null && newController is ABGPPlayerController ctrl)
             {
                 Helpers.Log("Spawned new controller");
 
-                var newPlayer = SpawnWukong(GameUtils.GetWorld(), playerPawnClass, new FTransform(rot, loc));
-                ctrl.Possess(newPlayer);
+                var newPlayer = SpawnWukong(ctrl, GameUtils.GetWorld(), playerPawnClass, new FTransform(rot, loc));
                 // assign in dictionary
                 Photon.ConnectedPlayers[id] = new PlayerState(id, newPlayer);
                 Helpers.Log($"Assigned player {id} clone {newPlayer.GetEntityHash()}");
