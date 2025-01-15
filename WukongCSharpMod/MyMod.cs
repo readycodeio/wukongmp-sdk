@@ -339,8 +339,14 @@ namespace WukongCSharpMod
             var world = GameUtils.GetWorld();
 
             UClass cachedResourceObj = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitName, ELoadResourceType.SyncLoadAndCache);
-            AActor actor = BGUFunctionLibraryCS.BGUSpawnActor(world, (TSubclassOf<AActor>)cachedResourceObj, loc, rot);
-            BUTamerActor buTamerActor = actor as BUTamerActor;
+            FTransform transform = new FTransform(rot, loc);
+            BUTamerActor buTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)cachedResourceObj, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
+            if (buTamerActor == null)
+            {
+                Helpers.LogError("Could not spawn enemy: " + unitName);
+                return;
+            }
+            UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
 
             Photon.SyncedMonsters.Add(id, new MonsterState(id, buTamerActor));
