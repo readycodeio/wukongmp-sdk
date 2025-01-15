@@ -389,7 +389,7 @@ namespace WukongCSharpMod
 
         private APawn SpawnWukong(ABGPPlayerController Controller, UWorld World, UClass PawnClass, FTransform SpawnTransform)
         {
-            APawn aPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(World, PawnClass, SpawnTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
+            APawn aPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(World, PawnClass, SpawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
             Controller.Possess(aPawn);
             ACharacter obj = aPawn as ACharacter;
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);

@@ -10,10 +10,6 @@ namespace WukongCSharpMod
     public static class GameUtils
     {
         private static UWorld _world;
-        private static readonly object _lockObj = new object();
-        private static bool _isExecuting = false;
-
-        public static string Name => typeof(GameUtils).Namespace;
 
         public static UWorld GetWorld()
         {
