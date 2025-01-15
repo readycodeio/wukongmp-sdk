@@ -405,16 +405,11 @@ namespace WukongCSharpMod
 
         private void BackToOldPawn(ABGPPlayerController oldController, APawn oldPawn, APawn newPawn, FTransform spawnTransform)
         {
+            oldController.UnPossess();
             oldController.Possess(oldPawn);
             ACharacter obj = oldPawn as ACharacter;
-            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
-            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
-            BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, oldPawn, spawnTransform);
             BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(oldPawn);
             BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(ECSExtension.ToEntity(newPawn), ECSExtension.ToEntity(oldPawn));
-            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
-            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
-            UGSE_ActorFuncLib.UpdateActorOverlaps(obj);
         }
 
         private void SpawnCloneForJoiningPlayer(int id)
