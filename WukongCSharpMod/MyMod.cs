@@ -38,8 +38,9 @@ namespace WukongCSharpMod
             {
                 Helpers.Log("Alt + H");
 
-                InitializeChatWidget();
+                //InitializeChatWidget();
                 InitPhoton();
+                Connect();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
@@ -119,8 +120,8 @@ namespace WukongCSharpMod
         private void InitPhoton()
         {
             Photon = new WukongClient(SpawnPlayersAlreadyInRoom);
-            Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
-            Photon.WukongChat.OnConnectRequest += Connect;
+            // Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+            //Photon.WukongChat.OnConnectRequest += Connect;
         }
 
         private void OnMapLoaded()
