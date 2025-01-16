@@ -25,7 +25,7 @@ namespace WukongCSharpMod.Patches
                 foreach (var (id, state) in photon.SyncedMonsters)
                 {
                     // sync location
-                    if (!state.IsSpawned)
+                    if (!state.IsSynced)
                         continue;
 
                     var location = state.Pawn.GetActorLocation();
@@ -69,64 +69,8 @@ namespace WukongCSharpMod.Patches
 
             var photon = MyMod.Instance.Photon;
             var tamer = __instance.InstancePtr.Get();
-            var monster = __instance.MonsterInstancePtr.Get();
-            var guid = BGU_DataUtil.GetActorGuid(monster);
 
-            // register in Photon if not present
-            var monsterState = photon.GetByTamerActor(tamer);
-            if (monsterState == null)
-            {
-                monsterState = new MonsterState(guid, tamer);
-                photon.SyncedMonsters.Add(guid, monsterState);
-
-                // notify other clients
-                photon.SendMonsterWakeUp(guid);
-            }
-
-            // sanity check guid
-            if (monsterState.Guid != guid)
-            {
-                Helpers.LogError($"Guid mismatch: {monsterState.Guid} {guid}");
-                return;
-            }
-
-            if (photon.IsMasterClient)
-            {
-                // subscribe to events on master
-                var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
-                events.Evt_PlayMontageCallback += (reason, montage, state) =>
-                {
-                    var montagePath = montage.GetPathName();
-                    Helpers.Log($"Monster montage callback: {monsterState.Guid} {reason} {montagePath} {state}");
-                    photon.SendMonsterMontageCallback(monsterState.Guid, reason, montagePath, state);
-                };
-
-                // also, set HP
-                var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
-                monsterState.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-            }
-            else
-            {
-                // disable AI on clients
-                var events = BUS_EventCollectionCS.Get(monster);
-
-                if (events is null)
-                {
-                    Helpers.LogError("Events is null");
-                    return;
-                }
-
-                events.Evt_AIPerceptionSetting.Invoke(false);
-                events.Evt_AIPauseBT.Invoke(true);
-                events.Evt_AIPauseFsm.Invoke(true);
-                events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
-                events.Evt_EnableCanSetBT.Invoke(P1: false);
-
-                Helpers.Log("Tamer actor disabled.");
-            }
-
-            // at this point the monster exists, so we set IsSpawned
-            monsterState.IsSpawned = true;
+            PhotonUtils.SyncMonsterAndNotify(photon, tamer);
         }
     }
 

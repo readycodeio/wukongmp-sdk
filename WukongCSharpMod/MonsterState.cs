@@ -12,7 +12,7 @@ namespace WukongCSharpMod
         public FVector Velocity { get; set; }
         public FVector MoveAcceleration { get; set; }
         public float? Hp { get; set; }
-        public bool IsSpawned {  get; set; }
+        public bool IsSynced {  get; set; }
 
         public MonsterState(string guid, BUTamerActor pawn)
         {

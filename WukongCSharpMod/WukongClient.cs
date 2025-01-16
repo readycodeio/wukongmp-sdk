@@ -449,6 +449,8 @@ namespace WukongCSharpMod
 
             _joinedRoomCallback?.Invoke();
             SendRoomJoined();
+
+            Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
