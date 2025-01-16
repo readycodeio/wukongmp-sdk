@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -23,15 +25,35 @@ namespace WukongCSharpMod
         public readonly Harmony Harmony = new Harmony("WukongMP");
 
         private FVector _savedPosition;
+        private string _userName;
 
         public static MyMod Instance { get; private set; }
 
+        private void InitUserName()
+        {
+            try
+            {
+                Helpers.Log($"Loading player name from {Path.Join(Directory.GetCurrentDirectory(), "PhotonUserName.txt")}");
+                var allLines = File.ReadLines("PhotonUserName.txt").ToList();
+                _userName = allLines[0];
+                Helpers.Log($"Player name is = '{_userName}'");
+            }
+            catch (System.Exception ex)
+            {
+                Helpers.LogError("Couldn't player name from file");
+                Helpers.LogError(ex.ToString());
+                _userName = Constants.DefaultPhotonUserName;
+            }
+        }
+        
         public void Init()
         {
             Instance = this;
 
             Helpers.Log("Init");
 
+            InitUserName();
+            
             // InitWorldCallbacks();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
@@ -125,7 +147,7 @@ namespace WukongCSharpMod
 
         private void InitPhoton()
         {
-            Photon = new WukongClient(SpawnPlayersAlreadyInRoom);
+            Photon = new WukongClient(SpawnPlayersAlreadyInRoom, _userName);
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
         }

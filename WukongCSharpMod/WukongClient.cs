@@ -19,6 +19,7 @@ namespace WukongCSharpMod
     {
         private readonly RealtimeClient _client = new RealtimeClient();
         private readonly WukongChatter _wukongChat = new WukongChatter();
+        private readonly string _userName;
 
         private int Id => _client.LocalPlayer.ActorNumber;
         public bool IsMasterClient => _client.CurrentRoom.MasterClientId == Id;
@@ -30,7 +31,6 @@ namespace WukongCSharpMod
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, int, string, float, float, float> OnUnitSpawn;
 
-        private const string UserName = Constants.PhotonUserName;
         public WukongChatter WukongChat => _wukongChat;
 
         public PlayerState LocalPlayerState { get; }
@@ -55,8 +55,9 @@ namespace WukongCSharpMod
             return kvp.Value;
         }
 
-        public WukongClient(Action onJoinedRoom)
+        public WukongClient(Action onJoinedRoom, string userName)
         {
+            _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
             LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn());
         }
@@ -219,7 +220,7 @@ namespace WukongCSharpMod
         {
             const byte eventCode = 0;
             _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendReliable);
-            _wukongChat.InitializeChat(UserName);
+            _wukongChat.InitializeChat(_userName);
         }
 
         public void SpawnUnit(int id, string unitName, float x, float y, float z)
