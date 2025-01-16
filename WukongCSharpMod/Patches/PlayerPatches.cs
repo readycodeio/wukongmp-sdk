@@ -12,6 +12,12 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
+            if (__instance == null)
+            {
+                Helpers.LogError("__instance is null in BUC_ABPCharacterData.Update_GameThread");
+                return;
+            }
+
             if (!(Owner is BGUCharacterCS character))
                 return;
 
@@ -148,6 +154,12 @@ namespace WukongCSharpMod.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
+            if (__instance == null)
+            {
+                Helpers.LogError("__instance is null in BUC_ABPBGUCharacterData.Update_GameThread");
+                return;
+            }
+
             if (!(Owner is BGUCharacterCS))
                 return;
 
