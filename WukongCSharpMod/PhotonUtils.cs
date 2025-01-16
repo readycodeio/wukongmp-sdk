@@ -32,6 +32,7 @@ namespace WukongCSharpMod
             if (monsterState == null)
             {
                 monsterState = new MonsterState(guid, tamer);
+                Helpers.Log($"Registering local monster in Photon: {guid}");
                 photon.SyncedMonsters.Add(guid, monsterState);
 
                 // notify other clients

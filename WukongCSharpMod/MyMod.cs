@@ -416,7 +416,6 @@ namespace WukongCSharpMod
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
-
             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor));
         }
 
