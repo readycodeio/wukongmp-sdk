@@ -31,6 +31,7 @@ namespace WukongCSharpMod
         public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, string, string, float, float, float> OnUnitSpawn;
+        public event Action<string> OnMonsterWakeUp;
 
         public WukongChatter WukongChat => _wukongChat;
 
@@ -97,6 +98,11 @@ namespace WukongCSharpMod
                     // montage callback
                     var monsterMontageData = (MonsterMontageCallbackData)photonEvent.CustomData;
                     OnMonsterMontageCallback?.Invoke(photonEvent.Sender, monsterMontageData);
+                    break;
+                case 5:
+                    // monster wake up
+                    var guid = (string)photonEvent.CustomData;
+                    OnMonsterWakeUp?.Invoke(guid);
                     break;
             }
         }
@@ -243,6 +249,12 @@ namespace WukongCSharpMod
             const byte eventCode = 4;
             var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendMonsterWakeUp(string guid)
+        {
+            const byte eventCode = 5;
+            _client.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         private void ApplyMonsterMove(PhotonHashtable props)

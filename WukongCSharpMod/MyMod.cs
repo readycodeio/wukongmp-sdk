@@ -141,12 +141,12 @@ namespace WukongCSharpMod
             }
         }
 
-        private void WakeUpMonster(string Guid)
+        private void WakeUpMonster(string guid)
         {
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
-                if (BGU_DataUtil.GetActorGuid(actor) != Guid)
+                if (BGU_DataUtil.GetActorGuid(actor) != guid)
                     continue;
 
                 var events = BGS_GSEventCollection.Get(actor);
@@ -154,19 +154,20 @@ namespace WukongCSharpMod
                 {
                     if (actor.GetMonster() == null)
                     {
-                        Helpers.Log($"Spawning monster for tamer with guid: {Guid}.");
-                        events.Evt_TamerBlockingSpawnImmediately.Invoke(Guid);
+                        Helpers.Log($"Spawning monster for tamer with guid: {guid}.");
+                        Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor));
+                        events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
                     }
                     else
                     {
-                        Helpers.Log($"Monster already spawned for tamer with guid: {Guid}.");
+                        Helpers.Log($"Monster already spawned for tamer with guid: {guid}.");
                     }
-                    //Photon.SyncedMonsters.Add(Guid, new MonsterState(Guid, actor));
                 }
                 else
                 {
                     Helpers.Log("Event is null");
                 }
+
                 return;
             }
         }
@@ -208,6 +209,7 @@ namespace WukongCSharpMod
             Photon.OnUnitSpawn += (_, guid, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(guid, name, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
+            Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
