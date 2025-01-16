@@ -70,6 +70,7 @@ namespace WukongCSharpMod.Patches
             var photon = MyMod.Instance.Photon;
             var tamer = __instance.InstancePtr.Get();
 
+            Helpers.Log($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
             PhotonUtils.SyncMonsterAndNotify(photon, tamer);
         }
     }

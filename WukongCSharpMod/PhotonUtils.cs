@@ -13,6 +13,7 @@ namespace WukongCSharpMod
             {
                 if (actor.GetMonster() != null)
                 {
+                    Helpers.Log($"Discovered monster: {BGU_DataUtil.GetActorGuid(actor.GetMonster())}");
                     SyncMonsterAndNotify(MyMod.Instance.Photon, actor);
                 }
             }
