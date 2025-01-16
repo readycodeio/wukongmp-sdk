@@ -38,10 +38,10 @@ namespace WukongCSharpMod
             {
                 Helpers.Log("Alt + H");
 
-                //InitializeChatWidget();
+                InitializeChatWidget();
                 CleanUpPhoton();
                 InitPhoton();
-                Connect();
+                // Connect();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
@@ -126,8 +126,8 @@ namespace WukongCSharpMod
         private void InitPhoton()
         {
             Photon = new WukongClient(SpawnPlayersAlreadyInRoom);
-            // Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
-            //Photon.WukongChat.OnConnectRequest += Connect;
+            Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+            Photon.WukongChat.OnConnectRequest += Connect;
         }
 
         private void OnMapLoaded()
@@ -432,6 +432,7 @@ namespace WukongCSharpMod
                 Helpers.Log("Class is null");
                 return;
             }
+
             var oldController = GameUtils.GetPlayerController();
             var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
