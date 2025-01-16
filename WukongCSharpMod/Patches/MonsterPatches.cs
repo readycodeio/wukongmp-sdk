@@ -64,7 +64,7 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(FTamerRef __instance)
         {
-            if (!__instance.IsMonsterValid())
+            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                 return;
 
             var photon = MyMod.Instance.Photon;
@@ -72,6 +72,17 @@ namespace WukongCSharpMod.Patches
 
             Helpers.Log($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
             PhotonUtils.SyncMonsterAndNotify(photon, tamer);
+        }
+    }
+
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    class Patch
+    {
+        static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
         }
     }
 
