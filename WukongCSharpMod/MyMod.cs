@@ -140,6 +140,36 @@ namespace WukongCSharpMod
             }
         }
 
+        private void WakeUpMonster(string Guid)
+        {
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            foreach (var actor in allActorsOfClass)
+            {
+                if (BGU_DataUtil.GetActorGuid(actor) != Guid)
+                    continue;
+
+                var events = BGS_GSEventCollection.Get(actor);
+                if (events != null)
+                {
+                    if (actor.GetMonster() == null)
+                    {
+                        Helpers.Log($"Spawning monster for tamer with guid: {Guid}.");
+                        events.Evt_TamerBlockingSpawnImmediately.Invoke(Guid);
+                    }
+                    else
+                    {
+                        Helpers.Log($"Monster already spawned for tamer with guid: {Guid}.");
+                    }
+                    //Photon.SyncedMonsters.Add(Guid, new MonsterState(Guid, actor));
+                }
+                else
+                {
+                    Helpers.Log("Event is null");
+                }
+                return;
+            }
+        }
+
         private void CleanUpPhoton()
         {
             Photon?.StopClient();
