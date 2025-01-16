@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace WukongCSharpMod
                 _userName = Constants.DefaultPhotonUserName;
             }
         }
-        
+
         public void Init()
         {
             Instance = this;
@@ -53,7 +54,7 @@ namespace WukongCSharpMod
             Helpers.Log("Init");
 
             InitUserName();
-            
+
             // InitWorldCallbacks();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
@@ -204,7 +205,7 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-            Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
+            Photon.OnUnitSpawn += (_, guid, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(guid, name, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
@@ -259,11 +260,11 @@ namespace WukongCSharpMod
             events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
         }
 
-        private void ApplyMonsterMontageCallback(int id, MonsterMontageCallbackData data)
+        private void ApplyMonsterMontageCallback(int playerId, MonsterMontageCallbackData data)
         {
-            if (!Photon.SyncedMonsters.TryGetValue(data.MonsterId, out var monster))
+            if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
             {
-                Helpers.Log($"Player not found: {id}");
+                Helpers.Log($"Player not found: {playerId}");
                 return;
             }
 
@@ -277,7 +278,7 @@ namespace WukongCSharpMod
                 return;
             }
 
-            Helpers.Log($"Applying montage callback for monster {data.MonsterId} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            Helpers.Log($"Applying montage callback for monster {data.MonsterGuid} with montage {data.MontagePath} ({data.Reason}, {data.State})");
             if (tamerActor.GetMonster() == null)
             {
                 Helpers.LogError($"Monster is null in {nameof(ApplyMonsterMontageCallback)}");
@@ -373,19 +374,19 @@ namespace WukongCSharpMod
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
-            var id = Photon.SyncedMonsters.Count;
+            var id = Guid.NewGuid().ToString(); // TODO: use ActorGuid
             SpawnUnitLocally(id, unitName, loc.X, loc.Y, loc.Z);
 
             Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
         }
 
-        private void SpawnRemoteUnit(int id, string unitName, float x, float y, float z)
+        private void SpawnRemoteUnit(string guid, string unitName, float x, float y, float z)
         {
-            SpawnUnitLocally(id, unitName, x, y, z);
+            SpawnUnitLocally(guid, unitName, x, y, z);
         }
 
-        private void SpawnUnitLocally(int id, string unitName, float x, float y, float z)
+        private void SpawnUnitLocally(string guid, string unitName, float x, float y, float z)
         {
             Helpers.Log($"Spawn unit called for {unitName}");
 
@@ -409,7 +410,7 @@ namespace WukongCSharpMod
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
 
-            Photon.SyncedMonsters.Add(id, new MonsterState(id, buTamerActor));
+            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor));
         }
 
         private void LoadSavedPosition()
@@ -448,7 +449,7 @@ namespace WukongCSharpMod
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
             BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, newPawn, spawnTransform);
             BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
-            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(ECSExtension.ToEntity(oldPawn), ECSExtension.ToEntity(newPawn));
+            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(oldPawn.ToEntity(), newPawn.ToEntity());
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
             obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
             UGSE_ActorFuncLib.UpdateActorOverlaps(obj);
@@ -459,9 +460,8 @@ namespace WukongCSharpMod
         {
             oldController.UnPossess();
             oldController.Possess(oldPawn);
-            ACharacter obj = oldPawn as ACharacter;
             BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(oldPawn);
-            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(ECSExtension.ToEntity(newPawn), ECSExtension.ToEntity(oldPawn));
+            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), oldPawn.ToEntity());
         }
 
         private void SpawnCloneForJoiningPlayer(int id)

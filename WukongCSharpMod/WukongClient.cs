@@ -20,6 +20,7 @@ namespace WukongCSharpMod
         private readonly RealtimeClient _client = new RealtimeClient();
         private readonly WukongChatter _wukongChat = new WukongChatter();
         private readonly string _userName;
+        private const char MonsterHashtableKeySeparator = ';';
 
         private int Id => _client.LocalPlayer.ActorNumber;
         public bool IsMasterClient => _client.CurrentRoom.MasterClientId == Id;
@@ -29,13 +30,13 @@ namespace WukongCSharpMod
         public event Action<int> OnPlayerJoined;
         public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
-        public event Action<int, int, string, float, float, float> OnUnitSpawn;
+        public event Action<int, string, string, float, float, float> OnUnitSpawn;
 
         public WukongChatter WukongChat => _wukongChat;
 
         public PlayerState LocalPlayerState { get; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
-        public readonly Dictionary<int, MonsterState> SyncedMonsters = new Dictionary<int, MonsterState>();
+        public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
 
         public PlayerState GetByActor(AActor actor)
         {
@@ -81,7 +82,7 @@ namespace WukongCSharpMod
                 case 1:
                     // unit spawn
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
-                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Id, unitData.Name, unitData.X, unitData.Y, unitData.Z);
+                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
                     // montage callback
@@ -223,7 +224,7 @@ namespace WukongCSharpMod
             _wukongChat.InitializeChat(_userName);
         }
 
-        public void SpawnUnit(int id, string unitName, float x, float y, float z)
+        public void SpawnUnit(string id, string unitName, float x, float y, float z)
         {
             const byte eventCode = 1;
             var evData = new UnitSpawnData(id, unitName, x, y, z);
@@ -237,7 +238,7 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        public void SendMonsterMontageCallback(int monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
+        public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 4;
             var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
@@ -249,19 +250,19 @@ namespace WukongCSharpMod
             foreach (var (key, value) in props)
             {
                 var compositeKey = (string)key;
-                var parts = compositeKey.Split('_');
+                var parts = compositeKey.Split(MonsterHashtableKeySeparator);
                 if (parts.Length != 2)
                 {
                     Helpers.Log($"Invalid key: {compositeKey}");
                     continue;
                 }
 
-                var id = int.Parse(parts[0]);
+                var guid = parts[0];
                 var propName = parts[1];
 
-                if (!SyncedMonsters.TryGetValue(id, out var monsterState))
+                if (!SyncedMonsters.TryGetValue(guid, out var monsterState))
                 {
-                    Helpers.Log($"Monster {id} not found.");
+                    Helpers.Log($"Monster {guid} not found.");
                     continue;
                 }
 
@@ -357,13 +358,13 @@ namespace WukongCSharpMod
             }
         }
 
-        public void SetMonsterProperty(int id, string prop, object value)
+        public void SetMonsterProperty(string guid, string prop, object value)
         {
-            _monsterProperties[$"{id}_{prop}"] = value;
+            _monsterProperties[$"{guid}{MonsterHashtableKeySeparator}{prop}"] = value;
 
             if (!(value is FVector || value is FRotator))
             {
-                Helpers.Log($"SetMonsterProperty [{id}]: {prop} = {value}");
+                Helpers.Log($"SetMonsterProperty [{guid}]: {prop} = {value}");
             }
         }
 

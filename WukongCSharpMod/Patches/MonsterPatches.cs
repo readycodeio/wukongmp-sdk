@@ -75,10 +75,9 @@ namespace WukongCSharpMod.Patches
                     events.Evt_PlayMontageCallback += (reason, montage, state) =>
                     {
                         var montagePath = montage.GetPathName();
-                        Helpers.Log($"Monster montage callback: {monsterState.Id} {reason} {montagePath} {state}");
-                        photon.SendMonsterMontageCallback(monsterState.Id, reason, montagePath, state);
+                        Helpers.Log($"Monster montage callback: {monsterState.Guid} {reason} {montagePath} {state}");
+                        photon.SendMonsterMontageCallback(monsterState.Guid, reason, montagePath, state);
                     };
-
                 }
             }
 
@@ -118,6 +117,7 @@ namespace WukongCSharpMod.Patches
 
                         Helpers.Log("Tamer actor disabled.");
                     }
+
                     state.IsSpawned = true;
                 }
             }

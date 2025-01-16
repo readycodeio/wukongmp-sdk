@@ -5,7 +5,7 @@ namespace WukongCSharpMod
 {
     public class MonsterState
     {
-        public int Id { get; }
+        public string Guid { get; }
         public BUTamerActor Pawn { get; }
         public FVector Location { get; set; }
         public FRotator Rotation { get; set; }
@@ -14,9 +14,9 @@ namespace WukongCSharpMod
         public float? Hp { get; set; }
         public bool IsSpawned {  get; set; }
 
-        public MonsterState(int id, BUTamerActor pawn)
+        public MonsterState(string guid, BUTamerActor pawn)
         {
-            Id = id;
+            Guid = guid;
             Pawn = pawn;
         }
     }

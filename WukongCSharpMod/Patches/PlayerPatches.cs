@@ -115,14 +115,14 @@ namespace WukongCSharpMod.Patches
                             {
                                 monsterState.Velocity = __instance.Velocity;
                                 Helpers.Log("Will send velocity");
-                                photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.Velocity), monsterState.Velocity);
+                                photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.Velocity), monsterState.Velocity);
                             }
 
                             if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
                                 Helpers.Log("Will send move acceleration");
-                                photon.SetMonsterProperty(monsterState.Id, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
+                                photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
                             }
                         }
                         else
@@ -465,7 +465,7 @@ namespace WukongCSharpMod.Patches
                         if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             monster.Hp = NewValue;
-                            photon.SetMonsterProperty(monster.Id, AttrID.ToString(), NewValue);
+                            photon.SetMonsterProperty(monster.Guid, AttrID.ToString(), NewValue);
                         }
 
                         return true;
