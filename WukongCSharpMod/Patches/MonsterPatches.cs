@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using b1;
 using HarmonyLib;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongCSharpMod.State;
 
@@ -54,6 +55,61 @@ namespace WukongCSharpMod.Patches
                         events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
                 }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUC_ABPAdvancedMonsterLocomotionData), nameof(BUC_ABPAdvancedMonsterLocomotionData.Update))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchMonsterLocomotion
+    {
+        public static void Postfix(BUC_ABPAdvancedMonsterLocomotionData __instance,
+            AActor Owner,
+            IBUC_ABPCommonSettingData CommonData,
+            IBUC_ABPBasicData BasicData,
+            IBUC_ABPCharacterData ChrData,
+            IBUC_ABPBGUCharacterData BGUData,
+            IBUC_ABPCommonLocomotionData LocomotionData,
+            IBUC_ABPSpecialMoveData SpecialMoveData,
+            IBUC_ABPHelperData HelperData,
+            float DeltaTime)
+        {
+            // sync GaitGroundedState
+            var photon = MyMod.Instance.Photon;
+
+            if (!(Owner is BGUCharacterCS monster))
+                return;
+
+            var state = photon.GetMonsterByCharacter(monster);
+
+            if (state is null)
+                return;
+
+            if (photon.IsMasterClient)
+            {
+                if (state.GaitGroundedState != __instance.GaitGroundedState)
+                {
+                    state.GaitGroundedState = __instance.GaitGroundedState;
+                    photon.SetMonsterProperty(state.Guid, nameof(MonsterState.GaitGroundedState), state.GaitGroundedState);
+                }
+
+                if (state.GaitGroundedStateTemp != __instance.GaitGroundedStateTemp)
+                {
+                    state.GaitGroundedStateTemp = __instance.GaitGroundedStateTemp;
+                    photon.SetMonsterProperty(state.Guid, nameof(MonsterState.GaitGroundedStateTemp), state.GaitGroundedStateTemp);
+                }
+
+                if (state.MoveGaitGroundedState != __instance.MoveGaitGroundedState)
+                {
+                    state.MoveGaitGroundedState = __instance.MoveGaitGroundedState;
+                    photon.SetMonsterProperty(state.Guid, nameof(MonsterState.MoveGaitGroundedState), state.MoveGaitGroundedState);
+                }
+            }
+            else
+            {
+                __instance.GaitGroundedState = state.GaitGroundedState;
+                __instance.GaitGroundedStateTemp = state.GaitGroundedStateTemp;
+                __instance.MoveGaitGroundedState = state.MoveGaitGroundedState;
             }
         }
     }
