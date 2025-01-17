@@ -114,6 +114,59 @@ namespace WukongCSharpMod.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUC_ABPMonsterLocomotionData), nameof(BUC_ABPMonsterLocomotionData.Update))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchMonsterLocomotionData
+    {
+        public static void Postfix(
+            BUC_ABPMonsterLocomotionData __instance,
+            AActor Owner,
+            IBUC_ABPCommonSettingData CommonData,
+            IBUC_ABPCharacterData ChrData,
+            IBUC_ABPBGUCharacterData BGUData,
+            IBUC_ABPCommonLocomotionData LocomotionData,
+            float DeltaTime)
+        {
+            var photon = MyMod.Instance.Photon;
+
+            if (!(Owner is BGUCharacterCS monster))
+                return;
+
+            var state = photon.GetMonsterByCharacter(monster);
+
+            if (state is null)
+                return;
+
+            if (photon.IsMasterClient)
+            {
+                if (state.bIdleToMove != __instance.bIdleToMove)
+                {
+                    state.bIdleToMove = __instance.bIdleToMove;
+                    photon.SetMonsterProperty(state.Guid, nameof(MonsterState.bIdleToMove), state.bIdleToMove);
+                }
+
+                if (state.bMoveToBlendStop != __instance.bMoveToBlendStop)
+                {
+                    state.bMoveToBlendStop = __instance.bMoveToBlendStop;
+                    photon.SetMonsterProperty(state.Guid, nameof(MonsterState.bMoveToBlendStop), state.bMoveToBlendStop);
+                }
+
+                if (state.bMoveToStandardFreeStop != __instance.bMoveToStandardFreeStop)
+                {
+                    state.bMoveToStandardFreeStop = __instance.bMoveToStandardFreeStop;
+                    photon.SetMonsterProperty(state.Guid, nameof(MonsterState.bMoveToStandardFreeStop), state.bMoveToStandardFreeStop);
+                }
+            }
+            else
+            {
+                __instance.bIdleToMove = state.bIdleToMove;
+                __instance.bMoveToBlendStop = state.bMoveToBlendStop;
+                __instance.bMoveToStandardFreeStop = state.bMoveToStandardFreeStop;
+            }
+        }
+    }
+
+
     [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchTamerLoad

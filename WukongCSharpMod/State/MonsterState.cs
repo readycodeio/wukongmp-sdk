@@ -14,6 +14,9 @@ namespace WukongCSharpMod.State
         public EGaitGroundedState GaitGroundedStateTemp { get; set; }
 
         public EGaitGroundedState MoveGaitGroundedState { get; set; }
+        public bool bIdleToMove {  get; set; }
+        public bool bMoveToBlendStop {  get; set; }
+        public bool bMoveToStandardFreeStop {  get; set; }
 
         public MonsterState(string guid, BUTamerActor pawn)
         {
