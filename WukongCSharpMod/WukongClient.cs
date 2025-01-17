@@ -383,7 +383,7 @@ namespace WukongCSharpMod
 
             if (!(value is FVector || value is FRotator))
             {
-                Helpers.Log($"SetMonsterProperty [{guid}]: {prop} = {value}");
+                Helpers.Log($"Set monster property [{guid}]: {prop} = {value}");
             }
         }
 

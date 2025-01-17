@@ -40,7 +40,7 @@ namespace WukongCSharpMod
                 _userName = allLines[0];
                 Helpers.Log($"Player name is = '{_userName}'");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Helpers.LogError("Couldn't player name from file");
                 Helpers.LogError(ex.ToString());
