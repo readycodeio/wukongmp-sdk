@@ -24,7 +24,7 @@ namespace WukongCSharpMod
         public static short Serialize(StreamBuffer outstream, object unitSpawnData)
         {
             var spawnData = (UnitSpawnData)unitSpawnData;
-            
+
             var guidBytes = Encoding.UTF8.GetBytes(spawnData.Guid);
             var guidLength = (short)guidBytes.Length;
 
@@ -47,11 +47,11 @@ namespace WukongCSharpMod
             var guidLengthBytes = new byte[2];
             instream.Read(guidLengthBytes, 0, 2);
             var guidLength = BitConverter.ToInt16(guidLengthBytes, 0);
-            
+
             var guidBytes = new byte[guidLength];
             instream.Read(guidBytes, 0, guidLength);
             var guid = Encoding.UTF8.GetString(guidBytes);
-            
+
             var nameLengthBytes = new byte[2];
             instream.Read(nameLengthBytes, 0, 2);
             var nameLength = BitConverter.ToInt16(nameLengthBytes, 0);

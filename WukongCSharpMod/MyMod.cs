@@ -174,7 +174,7 @@ namespace WukongCSharpMod
 
                 return;
             }
-            
+
             // TODO: Spawn if not found
         }
 
@@ -414,6 +414,7 @@ namespace WukongCSharpMod
                 Helpers.LogError("Could not spawn enemy: " + unitName);
                 return;
             }
+
             buTamerActor.SpawnedTamerGuid = guid;
             // Update final guid
             buTamerActor.GetFinalGuid();

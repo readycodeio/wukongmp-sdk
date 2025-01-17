@@ -7,16 +7,7 @@ namespace WukongCSharpMod.State
         public string Guid { get; }
         public BUTamerActor Pawn { get; }
         public float? Hp { get; set; }
-        public bool IsSynced {  get; set; }
-        
-        public EGaitGroundedState GaitGroundedState { get; set; }
-
-        public EGaitGroundedState GaitGroundedStateTemp { get; set; }
-
-        public EGaitGroundedState MoveGaitGroundedState { get; set; }
-        public bool bIdleToMove {  get; set; }
-        public bool bMoveToBlendStop {  get; set; }
-        public bool bMoveToStandardFreeStop {  get; set; }
+        public bool IsSynced { get; set; }
 
         public MonsterState(string guid, BUTamerActor pawn)
         {
