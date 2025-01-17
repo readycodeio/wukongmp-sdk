@@ -414,9 +414,12 @@ namespace WukongCSharpMod
                 Helpers.LogError("Could not spawn enemy: " + unitName);
                 return;
             }
+            buTamerActor.SpawnedTamerGuid = guid;
+            // Update final guid
+            buTamerActor.GetFinalGuid();
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
-            Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
+            Helpers.Log($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor));
         }
 
