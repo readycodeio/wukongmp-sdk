@@ -19,6 +19,8 @@ namespace WukongCSharpMod
             { "soldier", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_07a.TAMER_gycy_lang_07a_C" },
             //{ "lang_08", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_08.TAMER_gycy_lang_08_C" },
             { "archer", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_08_NotMove.TAMER_gycy_lang_08_NotMove_C" },
+            { "boss", "/Game/00Main/Design/Units/HYS/TAMER_hys_honghaier_01a_C" },
+            { "boss_alt", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_yanjianxi_01b_C" }
             //{ "lingxuzi_01", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lingxuzi_01.TAMER_gycy_lingxuzi_01_C" },
             //{ "seng_01", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_seng_01.TAMER_gycy_seng_01_C" },
             //{ "seng_02", "/Game/00Main/Design/Units/GYCY/TAMER_gycy_seng_02.TAMER_gycy_seng_02_C" },
