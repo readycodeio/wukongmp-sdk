@@ -11,6 +11,7 @@ using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
+using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
 {

@@ -3,9 +3,9 @@ using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
-namespace WukongCSharpMod
+namespace WukongCSharpMod.State
 {
-    public class PlayerState
+    public class PlayerState : CharacterState
     {
         public int PhotonId { get; }
         public APawn Pawn { get; set; }
@@ -16,17 +16,11 @@ namespace WukongCSharpMod
         public bool IsFlying { get; set; }
         public bool IsFalling { get; set; }
         public bool IsLandingMove { get; set; }
-        public FVector Velocity { get; set; }
-        public FVector MoveAcceleration { get; set; }
-        public FVector ActorLocation { get; set; }
         public FRotator TurnInplaceTargetRotation { get; set; }
         public bool IsStandRotate { get; set; }
         public float TurnInplaceRemainAngle { get; set; }
-        public FRotator ActorRotation { get; set; }
         public bool IsAttacking { get; set; }
         public bool OrientRotationToMovement { get; set; }
-        public EMoveSpeedLevel MoveSpeedLevel { get; set; } = EMoveSpeedLevel.Run;
-        public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
         public bool ShouldWaitRotateFinished { get; set; }
 
         #endregion
@@ -45,7 +39,7 @@ namespace WukongCSharpMod
 
         public override string ToString()
         {
-            return $"PlayerState(PhotonId: {PhotonId},\nInJump: {InJump},\nIsFlying: {IsFlying},\nIsFalling: {IsFalling},\nIsLandingMove: {IsLandingMove},\nVelocity: {Velocity},\nMoveAcceleration: {MoveAcceleration},\nActorLocation: {ActorLocation},\nTurnInplaceTargetRotation: {TurnInplaceTargetRotation},\nIsStandRotate: {IsStandRotate},\nTurnInplaceRemainAngle: {TurnInplaceRemainAngle},\nActorRotation: {ActorRotation},\nIsAttacking: {IsAttacking},\nOrientRotationToMovement: {OrientRotationToMovement},\nMoveSpeedLevel: {MoveSpeedLevel},\nMoveSpeedState: {MoveSpeedState},\nShouldWaitRotateFinished: {ShouldWaitRotateFinished})\n";
+            return $"PlayerState(PhotonId: {PhotonId},\nInJump: {InJump},\nIsFlying: {IsFlying},\nIsFalling: {IsFalling},\nIsLandingMove: {IsLandingMove},\nVelocity: {Velocity},\nMoveAcceleration: {MoveAcceleration},\nActorLocation: {Location},\nActorRotation: {Rotation},\nTurnInplaceTargetRotation: {TurnInplaceTargetRotation},\nIsStandRotate: {IsStandRotate},\nTurnInplaceRemainAngle: {TurnInplaceRemainAngle},\nIsAttacking: {IsAttacking},\nOrientRotationToMovement: {OrientRotationToMovement},\nMoveSpeedLevel: {MoveSpeedLevel},\nMoveSpeedState: {MoveSpeedState},\nShouldWaitRotateFinished: {ShouldWaitRotateFinished})\n";
         }
     }
 }

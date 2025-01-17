@@ -3,6 +3,7 @@ using b1;
 using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Runtime;
+using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
 {
@@ -77,7 +78,7 @@ namespace WukongCSharpMod.Patches
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
     [HarmonyPatchCategory(Constants.RoomPatches)]
-    class Patch
+    public class PatchTurnBack2Loaded
     {
         static bool Prefix(ref bool __result)
         {

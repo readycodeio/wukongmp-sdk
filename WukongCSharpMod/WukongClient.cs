@@ -12,6 +12,7 @@ using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
 {
@@ -55,6 +56,12 @@ namespace WukongCSharpMod
         {
             var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn.GetMonster() == owner);
             return kvp.Value;
+        }
+
+        public CharacterState GetCharacterState(BGUCharacterCS owner)
+        {
+            CharacterState monster = GetMonsterByCharacter(owner);
+            return monster ?? GetByActor(owner);
         }
 
         public WukongClient(Action onJoinedRoom, string userName)

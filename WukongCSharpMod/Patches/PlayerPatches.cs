@@ -3,6 +3,7 @@ using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
 {
@@ -57,16 +58,16 @@ namespace WukongCSharpMod.Patches
                     photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), photon.LocalPlayerState.MoveAcceleration);
                 }
 
-                if (!localState.ActorLocation.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                if (!localState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                 {
-                    photon.LocalPlayerState.ActorLocation = __instance.ActorLocation;
-                    photon.SetPlayerProperty(nameof(PlayerState.ActorLocation), photon.LocalPlayerState.ActorLocation);
+                    photon.LocalPlayerState.Location = __instance.ActorLocation;
+                    photon.SetPlayerProperty(nameof(PlayerState.Location), photon.LocalPlayerState.Location);
                 }
 
-                if (!localState.ActorRotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                if (!localState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                 {
-                    photon.LocalPlayerState.ActorRotation = __instance.ActorRotation;
-                    photon.SetPlayerProperty(nameof(PlayerState.ActorRotation), photon.LocalPlayerState.ActorRotation);
+                    photon.LocalPlayerState.Rotation = __instance.ActorRotation;
+                    photon.SetPlayerProperty(nameof(PlayerState.Rotation), photon.LocalPlayerState.Rotation);
                 }
             }
             else
@@ -102,9 +103,9 @@ namespace WukongCSharpMod.Patches
                         playerState.MoveAcceleration = FVector.ZeroVector;
                     }
 
-                    if (!playerState.ActorLocation.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                    if (!playerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
-                        events.Evt_InterpolationMove.Invoke(playerState.ActorLocation, playerState.ActorRotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
                 }
                 else
@@ -316,7 +317,7 @@ namespace WukongCSharpMod.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
-            if (!(Owner is BGUCharacterCS))
+            if (!(Owner is BGUCharacterCS character))
                 return;
 
             var photon = MyMod.Instance.Photon;
@@ -341,13 +342,40 @@ namespace WukongCSharpMod.Patches
             {
                 var playerState = photon.GetByActor(Owner);
 
-                if (playerState == null)
+                if (playerState != null)
                 {
-                    return;
+                    __instance.MoveSpeedLevel = playerState.MoveSpeedLevel;
+                    __instance.MoveSpeedState = playerState.MoveSpeedState;
                 }
+                else
+                {
+                    var monsterState = photon.GetMonsterByCharacter(character);
 
-                __instance.MoveSpeedLevel = playerState.MoveSpeedLevel;
-                __instance.MoveSpeedState = playerState.MoveSpeedState;
+                    if (monsterState == null)
+                        return; // unsynced entity
+
+                    if (photon.IsMasterClient)
+                    {
+                        // send monster speed data
+                        if (monsterState.MoveSpeedLevel != __instance.MoveSpeedLevel)
+                        {
+                            monsterState.MoveSpeedLevel = __instance.MoveSpeedLevel;
+                            photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
+                        }
+
+                        if (monsterState.MoveSpeedState != __instance.MoveSpeedState)
+                        {
+                            monsterState.MoveSpeedState = __instance.MoveSpeedState;
+                            photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
+                        }
+                    }
+                    else
+                    {
+                        // apply monster speed data
+                        __instance.MoveSpeedLevel = monsterState.MoveSpeedLevel;
+                        __instance.MoveSpeedState = monsterState.MoveSpeedState;
+                    }
+                }
             }
         }
     }
@@ -394,6 +422,7 @@ namespace WukongCSharpMod.Patches
                     Helpers.Log($"Would set hp to {photon.LocalPlayerState.Hp}  but will not");
                     return;
                 }
+
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
             }
             else
@@ -408,6 +437,7 @@ namespace WukongCSharpMod.Patches
                         Helpers.Log($"Would set hp to {playerState.Hp} but will not");
                         return;
                     }
+
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
                 }
                 else
