@@ -18,15 +18,18 @@ namespace WukongCSharpMod
         {
             var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>((UObject)GameUtils.GetWorld());
 
-            var oldTeamId = actor.GetTeamIDInCS();
-            var oldRelationInfo = teamRelationData.TeamHostileInfos[oldTeamId];
-
-            var newRelationInfo = new TeamRelationInfo
+            if (!teamRelationData.TeamHostileInfos.ContainsKey(newTeamId))
             {
-                HostileTeamIDs = new List<int>(oldRelationInfo.HostileTeamIDs),
-                TeamDamageReductionRatios = new Dictionary<int, int>(oldRelationInfo.TeamDamageReductionRatios)
-            };
-            teamRelationData.TeamHostileInfos.Add(newTeamId, newRelationInfo);
+                var oldTeamId = actor.GetTeamIDInCS();
+                var oldRelationInfo = teamRelationData.TeamHostileInfos[oldTeamId];
+
+                var newRelationInfo = new TeamRelationInfo
+                {
+                    HostileTeamIDs = new List<int>(oldRelationInfo.HostileTeamIDs),
+                    TeamDamageReductionRatios = new Dictionary<int, int>(oldRelationInfo.TeamDamageReductionRatios)
+                };
+                teamRelationData.TeamHostileInfos.Add(newTeamId, newRelationInfo);
+            }
 
             actor.SetTeamIDInCS(newTeamId);
         }
