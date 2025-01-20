@@ -14,9 +14,22 @@ namespace WukongCSharpMod
             return Constants.BaseTeamID + playerId;
         }
 
+        public static void RegisterTeamHostility(int team1, int team2)
+        {
+            var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
+
+            var team1RelationInfo = teamRelationData.TeamHostileInfos[team1];
+            var team2RelationInfo = teamRelationData.TeamHostileInfos[team2];
+
+            team1RelationInfo.HostileTeamIDs.Add(team2);
+            team2RelationInfo.HostileTeamIDs.Add(team1);
+
+            // TODO: set damage reduction ratio
+        }
+
         public static void RegisterNewPlayerTeam(BGUCharacterCS actor, int newTeamId)
         {
-            var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>((UObject)GameUtils.GetWorld());
+            var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
 
             if (!teamRelationData.TeamHostileInfos.ContainsKey(newTeamId))
             {

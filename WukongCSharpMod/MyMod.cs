@@ -67,14 +67,29 @@ namespace WukongCSharpMod
                 InitializeChatWidget();
                 CleanUpPhoton();
                 InitPhoton();
-                // Connect();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             {
                 Helpers.Log("Alt + V");
 
-                SpawnAllMonsters();
+                var myTeam = Photon.LocalPlayerState.TeamID;
+                var otherTeams = Photon.ConnectedPlayers.Values
+                    .Where(p => p.TeamID != myTeam)
+                    .Select(p => p.TeamID)
+                    .Distinct()
+                    .ToList();
+
+                Helpers.Log($"My team: {myTeam}");
+                Helpers.Log($"Other teams: {string.Join(", ", otherTeams)}");
+
+                Utils.TryRunOnGameThread(() =>
+                {
+                    foreach (var team in otherTeams)
+                    {
+                        PhotonUtils.RegisterTeamHostility(myTeam, team);
+                    }
+                });
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
@@ -116,31 +131,6 @@ namespace WukongCSharpMod
             {
                 var property = propertyInfo.GetValue(playerLocomotionData);
                 Helpers.Log($"{propertyInfo.Name}: {property}");
-            }
-        }
-
-        private static void SpawnAllMonsters()
-        {
-            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            foreach (var actor in allActorsOfClass)
-            {
-                var events = BGS_GSEventCollection.Get(actor);
-                if (events != null)
-                {
-                    if (actor.GetMonster() == null)
-                    {
-                        Helpers.Log($"Spawning monster for tamer with guid: {actor.CurrentRef.TamerGuid}.");
-                        events.Evt_TamerBlockingSpawnImmediately.Invoke(actor.CurrentRef.TamerGuid);
-                    }
-                    else
-                    {
-                        Helpers.Log($"Monster already spawned for tamer with guid: {actor.CurrentRef.TamerGuid}.");
-                    }
-                }
-                else
-                {
-                    Helpers.Log("Event is null");
-                }
             }
         }
 

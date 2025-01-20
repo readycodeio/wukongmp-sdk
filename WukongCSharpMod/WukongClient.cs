@@ -36,7 +36,7 @@ namespace WukongCSharpMod
 
         public WukongChatter WukongChat => _wukongChat;
 
-        public PlayerState LocalPlayerState { get; set; }
+        public PlayerState LocalPlayerState { get; private set; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
 
