@@ -24,7 +24,7 @@ namespace WukongCSharpMod
         private const char MonsterHashtableKeySeparator = ';';
 
         private int Id => _client.LocalPlayer.ActorNumber;
-        public bool IsMasterClient => _client.CurrentRoom.MasterClientId == Id;
+        public bool IsMasterClient => _client.CurrentRoom?.MasterClientId == Id;
         public bool Ready => _client.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
