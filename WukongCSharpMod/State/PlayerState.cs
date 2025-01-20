@@ -27,17 +27,17 @@ namespace WukongCSharpMod.State
 
         public float Hp { get; set; }
 
-        public PlayerState(int photonId, APawn pawn, int teamID)
+        public PlayerState(int photonId, APawn pawn, int teamId)
         {
             PhotonId = photonId;
             Pawn = pawn;
-            TeamID = teamID;
+            TeamID = teamId;
 
             // get the BUC_AttrContainer
             var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
             Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
 
-            PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamID);
+            PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
         }
 
         public override string ToString()

@@ -148,14 +148,23 @@ namespace WukongCSharpMod
                     if (actor.GetMonster() == null)
                     {
                         Helpers.Log($"Spawning monster for tamer with guid: {guid}.");
-                        Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor));
+
+                        if (!Photon.SyncedMonsters.ContainsKey(guid))
+                        {
+                            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor));
+                            Helpers.Log("Monster was not synced, adding to synced monsters.");
+                        }
+
+                        Helpers.Log("Invoking Evt_TamerBlockingSpawnImmediately.");
                         events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
                     }
                     else if (!Photon.SyncedMonsters.ContainsKey(guid))
                     {
                         Helpers.Log($"Monster already spawned but not synced: {guid}.");
+
                         var state = new MonsterState(guid, actor);
                         Photon.SyncedMonsters.Add(guid, state);
+
                         PhotonUtils.PrepareMonsterForSync(Photon, state);
                     }
                 }

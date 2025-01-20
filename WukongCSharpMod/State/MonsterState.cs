@@ -23,11 +23,11 @@ namespace WukongCSharpMod.State
             }
         }
 
-        public MonsterState(string guid, BUTamerActor pawn, int teamID)
+        public MonsterState(string guid, BUTamerActor pawn, int teamId)
         {
             Guid = guid;
             Pawn = pawn;
-            TeamID = teamID;
+            TeamID = teamId;
         }
     }
 }
