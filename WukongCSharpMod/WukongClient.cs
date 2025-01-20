@@ -36,7 +36,7 @@ namespace WukongCSharpMod
 
         public WukongChatter WukongChat => _wukongChat;
 
-        public PlayerState LocalPlayerState { get; }
+        public PlayerState LocalPlayerState { get; set; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
 
@@ -69,8 +69,6 @@ namespace WukongCSharpMod
             _wukongChat = new WukongChatter(this);
             _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
-            var teamID = PhotonUtils.GetTeamIDForPlayer(_client.LocalPlayer.ActorNumber);
-            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn(), teamID);
         }
 
         ~WukongClient()
@@ -449,6 +447,9 @@ namespace WukongCSharpMod
         public void OnJoinedRoom()
         {
             Helpers.Log("Joined room");
+
+            var teamId = PhotonUtils.GetTeamIdForPlayer(_client.LocalPlayer.ActorNumber);
+            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn(), teamId);
 
             Utils.TryRunOnGameThread(() =>
             {

@@ -9,9 +9,9 @@ namespace WukongCSharpMod
 {
     public class PhotonUtils
     {
-        public static int GetTeamIDForPlayer(int playerID)
+        public static int GetTeamIdForPlayer(int playerId)
         {
-            return Constants.BaseTeamID + playerID;
+            return Constants.BaseTeamID + playerId;
         }
 
         public static void RegisterNewPlayerTeam(BGUCharacterCS actor, int newTeamId)

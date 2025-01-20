@@ -53,7 +53,7 @@ namespace WukongCSharpMod
             Instance = this;
 
             Helpers.Log("Init");
-            
+
             Harmony.PatchAllUncategorized();
 
             InitUserName();
@@ -182,12 +182,13 @@ namespace WukongCSharpMod
 
         private void CleanUpPhoton()
         {
+            UnsubscribeFromPlayerEvents();
             Photon?.StopClient();
         }
 
         private void InitPhoton()
         {
-            Photon = new WukongClient(SpawnPlayersAlreadyInRoom, _userName);
+            Photon = new WukongClient(OnJoinedRoomCallback, _userName);
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
         }
@@ -224,7 +225,6 @@ namespace WukongCSharpMod
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamID) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count, teamID));
 
             Photon.StartClient();
-            SubscribeToPlayerEvents();
         }
 
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
@@ -444,6 +444,12 @@ namespace WukongCSharpMod
             }
         }
 
+        private void OnJoinedRoomCallback()
+        {
+            SubscribeToPlayerEvents();
+            SpawnPlayersAlreadyInRoom();
+        }
+
         private void SpawnPlayersAlreadyInRoom()
         {
             // when joining game, spawn all players already in room
@@ -503,7 +509,7 @@ namespace WukongCSharpMod
 
             BackToOldPawn(oldController, oldPawn, newPawn, oldPawn.GetActorTransform());
             // assign in dictionary
-            var teamID = PhotonUtils.GetTeamIDForPlayer(id);
+            var teamID = PhotonUtils.GetTeamIdForPlayer(id);
             Photon.ConnectedPlayers[id] = new PlayerState(id, newPawn, teamID);
 
             Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
