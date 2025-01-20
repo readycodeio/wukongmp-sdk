@@ -53,6 +53,8 @@ namespace WukongCSharpMod
             Instance = this;
 
             Helpers.Log("Init");
+            
+            Harmony.PatchAllUncategorized();
 
             InitUserName();
 
