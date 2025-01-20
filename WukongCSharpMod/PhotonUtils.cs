@@ -2,14 +2,22 @@
 using b1;
 using BtlShare;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
 {
     public class PhotonUtils
     {
-        public static void RegisterNewPlayerTeam(BGC_TeamRelationData teamRelationData, BGUCharacterCS actor, int newTeamId)
+        public static int GetTeamIDForPlayer(int playerID)
         {
+            return Constants.BaseTeamID + playerID;
+        }
+
+        public static void RegisterNewPlayerTeam(BGUCharacterCS actor, int newTeamId)
+        {
+            var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>((UObject)GameUtils.GetWorld());
+
             var oldTeamId = actor.GetTeamIDInCS();
             var oldRelationInfo = teamRelationData.TeamHostileInfos[oldTeamId];
 
@@ -31,7 +39,7 @@ namespace WukongCSharpMod
                 if (actor.GetMonster() != null)
                 {
                     Helpers.Log($"Discovered monster: {BGU_DataUtil.GetActorGuid(actor.GetMonster())}");
-                    SyncMonsterAndNotify(MyMod.Instance.Photon, actor);
+                    SyncMonsterAndNotify(MyMod.Instance.Photon, actor); // Neutral monsters
                 }
             }
         }
@@ -47,24 +55,26 @@ namespace WukongCSharpMod
 
             // register in Photon if not present
             var monsterState = photon.GetByTamerActor(tamer);
+
             if (monsterState == null)
             {
                 monsterState = new MonsterState(guid, tamer);
                 Helpers.Log($"Registering local monster in Photon: {guid}");
                 photon.SyncedMonsters.Add(guid, monsterState);
-
-                // notify other clients
-                photon.SendMonsterWakeUp(guid);
             }
-
             // sanity check guid
-            if (monsterState.Guid != guid)
+            else if (monsterState.Guid != guid)
             {
                 Helpers.LogError($"Guid mismatch: {monsterState.Guid} {guid}");
                 return;
             }
 
-            PrepareMonsterForSync(photon, monsterState);
+            if (!monsterState.IsSynced)
+            {
+                // notify other clients
+                photon.SendMonsterWakeUp(guid);
+                PrepareMonsterForSync(photon, monsterState);
+            }
         }
 
         /// <summary>
@@ -122,6 +132,7 @@ namespace WukongCSharpMod
                 Helpers.Log("Tamer actor disabled.");
             }
 
+            RegisterNewPlayerTeam(monster, monsterState.TeamID);
             // at this point the monster exists, so we set IsSpawned
             monsterState.IsSynced = true;
         }

@@ -8,14 +8,16 @@ namespace WukongCSharpMod
     {
         public readonly string Guid;
         public readonly string Name;
+        public readonly int TeamID;
         public readonly float X;
         public readonly float Y;
         public readonly float Z;
 
-        public UnitSpawnData(string guid, string name, float x, float y, float z)
+        public UnitSpawnData(string guid, string name, int teamID, float x, float y, float z)
         {
             Guid = guid;
             Name = name;
+            TeamID = teamID;
             X = x;
             Y = y;
             Z = z;
@@ -35,6 +37,7 @@ namespace WukongCSharpMod
             outstream.Write(guidBytes, 0, guidBytes.Length);
             outstream.Write(BitConverter.GetBytes(nameLength), 0, 2);
             outstream.Write(nameBytes, 0, nameBytes.Length);
+            outstream.Write(BitConverter.GetBytes(spawnData.TeamID), 0, 4);
             outstream.Write(BitConverter.GetBytes(spawnData.X), 0, 4);
             outstream.Write(BitConverter.GetBytes(spawnData.Y), 0, 4);
             outstream.Write(BitConverter.GetBytes(spawnData.Z), 0, 4);
@@ -60,6 +63,10 @@ namespace WukongCSharpMod
             instream.Read(nameBytes, 0, nameLength);
             var name = Encoding.UTF8.GetString(nameBytes);
 
+            var intBytes = new byte[4];
+            instream.Read(intBytes, 0, 4);
+            var teamID = BitConverter.ToInt32(intBytes, 0);
+
             var floatBytes = new byte[4];
             instream.Read(floatBytes, 0, 4);
             var x = BitConverter.ToSingle(floatBytes, 0);
@@ -68,7 +75,7 @@ namespace WukongCSharpMod
             instream.Read(floatBytes, 0, 4);
             var z = BitConverter.ToSingle(floatBytes, 0);
 
-            return new UnitSpawnData(guid, name, x, y, z);
+            return new UnitSpawnData(guid, name, teamID, x, y, z);
         }
     }
 }

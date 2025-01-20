@@ -17,6 +17,7 @@ namespace WukongCSharpMod
     public class WukongChatter : IChatClientListener
     {
         private ChatClient _chatClient;
+        private WukongClient _wukongClient;
 
         private const string GeneralChannelName = "General";
         private const string ServerChannelName = "Server";
@@ -28,13 +29,14 @@ namespace WukongCSharpMod
         public event Action OnSavePosition;
         public event Action OnLoadPosition;
         public event Action OnConnectRequest;
-        public event Action<string, int> OnSpawnEnemy;
+        public event Action<string, int, int> OnSpawnEnemy;
 
         private const char Separator = ' ';
         private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
 
-        public WukongChatter()
+        public WukongChatter(WukongClient owner)
         {
+            _wukongClient = owner;
             SetupCommands();
 
             new Thread(LoopChat).Start();
@@ -78,14 +80,14 @@ namespace WukongCSharpMod
                         switch (args.Length)
                         {
                             case 1:
-                                OnSpawnEnemy?.Invoke(args[0], 1);
+                                OnSpawnEnemy?.Invoke(args[0], 1, _wukongClient.LocalPlayerState.TeamID);
                                 SendChatMessage(ServerChannelName, "Spawned monster");
                                 break;
                             case 2:
                             {
                                 if (int.TryParse(args[1], out var count))
                                 {
-                                    OnSpawnEnemy?.Invoke(args[0], count);
+                                    OnSpawnEnemy?.Invoke(args[0], count, _wukongClient.LocalPlayerState.TeamID);
                                     SendChatMessage(ServerChannelName, $"Spawned {count} monsters");
                                 }
 

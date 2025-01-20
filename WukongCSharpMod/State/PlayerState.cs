@@ -36,6 +36,8 @@ namespace WukongCSharpMod.State
             // get the BUC_AttrContainer
             var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
             Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
+
+            PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamID);
         }
 
         public override string ToString()

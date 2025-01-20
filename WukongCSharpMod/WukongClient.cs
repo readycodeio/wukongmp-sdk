@@ -19,7 +19,7 @@ namespace WukongCSharpMod
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         private readonly RealtimeClient _client = new RealtimeClient();
-        private readonly WukongChatter _wukongChat = new WukongChatter();
+        private readonly WukongChatter _wukongChat;
         private readonly string _userName;
         private const char MonsterHashtableKeySeparator = ';';
 
@@ -31,7 +31,7 @@ namespace WukongCSharpMod
         public event Action<int> OnPlayerJoined;
         public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
-        public event Action<int, string, string, float, float, float> OnUnitSpawn;
+        public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
 
         public WukongChatter WukongChat => _wukongChat;
@@ -66,9 +66,11 @@ namespace WukongCSharpMod
 
         public WukongClient(Action onJoinedRoom, string userName)
         {
+            _wukongChat = new WukongChatter(this);
             _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
-            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn(), Constants.BaseTeamID + _client.LocalPlayer.ActorNumber);
+            var teamID = PhotonUtils.GetTeamIDForPlayer(_client.LocalPlayer.ActorNumber);
+            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn(), teamID);
         }
 
         ~WukongClient()
@@ -90,7 +92,7 @@ namespace WukongCSharpMod
                 case 1:
                     // unit spawn
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
-                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.X, unitData.Y, unitData.Z);
+                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.TeamID, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
                     // montage callback
@@ -237,10 +239,10 @@ namespace WukongCSharpMod
             _wukongChat.InitializeChat(_userName);
         }
 
-        public void SpawnUnit(string id, string unitName, float x, float y, float z)
+        public void SpawnUnit(string id, string unitName, int teamID, float x, float y, float z)
         {
             const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, unitName, x, y, z);
+            var evData = new UnitSpawnData(id, unitName, teamID, x, y, z);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
