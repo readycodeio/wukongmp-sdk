@@ -68,7 +68,7 @@ namespace WukongCSharpMod
         {
             _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
-            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn());
+            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn(), Constants.BaseTeamID + _client.LocalPlayer.ActorNumber);
         }
 
         ~WukongClient()

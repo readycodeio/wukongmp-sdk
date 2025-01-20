@@ -11,5 +11,6 @@
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 100f;
         public const int MonsterSpawnDelayMs = 500;
+        public const int BaseTeamID = -999999999;
     }
 }

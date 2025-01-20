@@ -503,7 +503,7 @@ namespace WukongCSharpMod
 
             BackToOldPawn(oldController, oldPawn, newPawn, oldPawn.GetActorTransform());
             // assign in dictionary
-            Photon.ConnectedPlayers[id] = new PlayerState(id, newPawn);
+            Photon.ConnectedPlayers[id] = new PlayerState(id, newPawn, Constants.BaseTeamID);
             Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
 
             var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
