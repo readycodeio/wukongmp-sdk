@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using b1;
 using BtlShare;
 using UnrealEngine.Engine;
 using WukongCSharpMod.State;
@@ -7,6 +8,21 @@ namespace WukongCSharpMod
 {
     public class PhotonUtils
     {
+        public static void RegisterNewPlayerTeam(BGC_TeamRelationData teamRelationData, BGUCharacterCS actor, int newTeamId)
+        {
+            var oldTeamId = actor.GetTeamIDInCS();
+            var oldRelationInfo = teamRelationData.TeamHostileInfos[oldTeamId];
+
+            var newRelationInfo = new TeamRelationInfo
+            {
+                HostileTeamIDs = new List<int>(oldRelationInfo.HostileTeamIDs),
+                TeamDamageReductionRatios = new Dictionary<int, int>(oldRelationInfo.TeamDamageReductionRatios)
+            };
+            teamRelationData.TeamHostileInfos.Add(newTeamId, newRelationInfo);
+
+            actor.SetTeamIDInCS(newTeamId);
+        }
+
         public static void DiscoverMonsters()
         {
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
