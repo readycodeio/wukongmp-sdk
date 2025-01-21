@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using b1;
-using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Runtime;
+using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
 {
@@ -25,6 +25,9 @@ namespace WukongCSharpMod.Patches
                 foreach (var (id, state) in photon.SyncedMonsters)
                 {
                     // sync location
+                    if (!state.IsSynced)
+                        continue;
+
                     var location = state.Pawn.GetActorLocation();
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
@@ -61,62 +64,25 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(FTamerRef __instance)
         {
-            var photon = MyMod.Instance.Photon;
-
-            if (photon.IsMasterClient)
-            {
-                var monsterState = photon.GetByTamerActor(__instance.InstancePtr.Get());
-                if (monsterState != null)
-                {
-                    var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
-                    events.Evt_PlayMontageCallback += (reason, montage, state) =>
-                    {
-                        var montagePath = montage.GetPathName();
-                        Helpers.Log($"Monster montage callback: {monsterState.Id} {reason} {montagePath} {state}");
-                        photon.SendMonsterMontageCallback(monsterState.Id, reason, montagePath, state);
-                    };
-                }
-
+            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                 return;
-            }
 
-            if (__instance.IsMonsterValid())
-            {
-                var monster = __instance.MonsterInstancePtr.Get();
+            var photon = MyMod.Instance.Photon;
+            var tamer = __instance.InstancePtr.Get();
 
-                if (monster == null)
-                {
-                    Helpers.Log("Monster is null but should not be");
-                    return;
-                }
+            Helpers.Log($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
+            PhotonUtils.SyncMonsterAndNotify(photon, tamer);
+        }
+    }
 
-                if (photon.IsMasterClient)
-                {
-                    var state = photon.GetMonsterByCharacter(monster);
-
-                    if (state != null)
-                    {
-                        var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
-                        state.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                    }
-                }
-
-                var events = BUS_EventCollectionCS.Get(monster);
-
-                if (events is null)
-                {
-                    Helpers.Log("Events is null");
-                    return;
-                }
-
-                events.Evt_AIPerceptionSetting.Invoke(false);
-                events.Evt_AIPauseBT.Invoke(true);
-                events.Evt_AIPauseFsm.Invoke(true);
-                events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
-                events.Evt_EnableCanSetBT.Invoke(P1: false);
-
-                Helpers.Log("Tamer actor disabled.");
-            }
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchTurnBack2Loaded
+    {
+        static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
         }
     }
 

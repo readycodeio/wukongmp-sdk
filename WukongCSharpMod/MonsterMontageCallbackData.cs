@@ -7,14 +7,14 @@ namespace WukongCSharpMod
 {
     public class MonsterMontageCallbackData
     {
-        public int MonsterId { get; }
+        public string MonsterGuid { get; }
         public EMontageBindReason Reason { get; }
         public string MontagePath { get; }
         public EMontageCallbackState State { get; }
 
-        public MonsterMontageCallbackData(int monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
+        public MonsterMontageCallbackData(string monsterGuid, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
-            MonsterId = monsterId;
+            MonsterGuid = monsterGuid;
             Reason = reason;
             MontagePath = montagePath;
             State = state;
@@ -23,7 +23,13 @@ namespace WukongCSharpMod
         public static short Serialize(StreamBuffer outstream, object customobject)
         {
             var data = (MonsterMontageCallbackData)customobject;
-            outstream.Write(BitConverter.GetBytes(data.MonsterId), 0, 4);
+
+            var guidBytes = Encoding.UTF8.GetBytes(data.MonsterGuid);
+            var guidLength = (short)guidBytes.Length;
+
+            outstream.Write(BitConverter.GetBytes(guidLength), 0, 2);
+            outstream.Write(guidBytes, 0, guidBytes.Length);
+
             outstream.WriteByte((byte)data.Reason);
             outstream.WriteByte((byte)data.State);
 
@@ -33,14 +39,18 @@ namespace WukongCSharpMod
             outstream.Write(BitConverter.GetBytes(nameLength), 0, 2);
             outstream.Write(nameBytes, 0, nameBytes.Length);
 
-            return (short)(4 + 2 + 2 + nameLength);
+            return (short)(2 + guidLength + 2 + 2 + nameLength);
         }
 
         public static object Deserialize(StreamBuffer instream, short length)
         {
-            var intBytes = new byte[4];
-            instream.Read(intBytes, 0, 4);
-            var monsterid = BitConverter.ToInt32(intBytes, 0);
+            var guidLengthBytes = new byte[2];
+            instream.Read(guidLengthBytes, 0, 2);
+            var guidLength = BitConverter.ToInt16(guidLengthBytes, 0);
+
+            var guidBytes = new byte[guidLength];
+            instream.Read(guidBytes, 0, guidLength);
+            var guid = Encoding.UTF8.GetString(guidBytes);
 
             var reason = (EMontageBindReason)instream.ReadByte();
             var state = (EMontageCallbackState)instream.ReadByte();
@@ -53,7 +63,7 @@ namespace WukongCSharpMod
             instream.Read(nameBytes, 0, nameLength);
             var name = Encoding.UTF8.GetString(nameBytes);
 
-            return new MonsterMontageCallbackData(monsterid, reason, name, state);
+            return new MonsterMontageCallbackData(guid, reason, name, state);
         }
     }
 }

@@ -12,30 +12,33 @@ using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
 {
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         private readonly RealtimeClient _client = new RealtimeClient();
-        private readonly WukongChatter _wukongChat = new WukongChatter();
+        private readonly WukongChatter _wukongChat;
+        private readonly string _userName;
+        private const char MonsterHashtableKeySeparator = ';';
 
         private int Id => _client.LocalPlayer.ActorNumber;
-        public bool IsMasterClient => _client.CurrentRoom.MasterClientId == Id;
+        public bool IsMasterClient => _client.CurrentRoom?.MasterClientId == Id;
         public bool Ready => _client.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
         public event Action<int> OnPlayerJoined;
         public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
-        public event Action<int, int, string, float, float, float> OnUnitSpawn;
+        public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
+        public event Action<string> OnMonsterWakeUp;
 
-        private const string UserName = Constants.PhotonUserName;
         public WukongChatter WukongChat => _wukongChat;
 
-        public PlayerState LocalPlayerState { get; }
+        public PlayerState LocalPlayerState { get; private set; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
-        public readonly Dictionary<int, MonsterState> SyncedMonsters = new Dictionary<int, MonsterState>();
+        public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
 
         public PlayerState GetByActor(AActor actor)
         {
@@ -55,10 +58,17 @@ namespace WukongCSharpMod
             return kvp.Value;
         }
 
-        public WukongClient(Action onJoinedRoom)
+        public CharacterState GetCharacterState(BGUCharacterCS owner)
         {
+            CharacterState monster = GetMonsterByCharacter(owner);
+            return monster ?? GetByActor(owner);
+        }
+
+        public WukongClient(Action onJoinedRoom, string userName)
+        {
+            _wukongChat = new WukongChatter(this);
+            _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
-            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn());
         }
 
         ~WukongClient()
@@ -80,7 +90,7 @@ namespace WukongCSharpMod
                 case 1:
                     // unit spawn
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
-                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Id, unitData.Name, unitData.X, unitData.Y, unitData.Z);
+                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.TeamID, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
                     // montage callback
@@ -95,6 +105,11 @@ namespace WukongCSharpMod
                     // montage callback
                     var monsterMontageData = (MonsterMontageCallbackData)photonEvent.CustomData;
                     OnMonsterMontageCallback?.Invoke(photonEvent.Sender, monsterMontageData);
+                    break;
+                case 5:
+                    // monster wake up
+                    var guid = (string)photonEvent.CustomData;
+                    OnMonsterWakeUp?.Invoke(guid);
                     break;
             }
         }
@@ -164,6 +179,11 @@ namespace WukongCSharpMod
             Helpers.Log("Running forever.");
         }
 
+        public void StopClient()
+        {
+            _client.Disconnect();
+        }
+
         // ReSharper disable once FunctionNeverReturns
         private void LoopGame(object state)
         {
@@ -214,13 +234,13 @@ namespace WukongCSharpMod
         {
             const byte eventCode = 0;
             _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendReliable);
-            _wukongChat.InitializeChat(UserName);
+            _wukongChat.InitializeChat(_userName);
         }
 
-        public void SpawnUnit(int id, string unitName, float x, float y, float z)
+        public void SpawnUnit(string id, string unitName, int teamID, float x, float y, float z)
         {
             const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, unitName, x, y, z);
+            var evData = new UnitSpawnData(id, unitName, teamID, x, y, z);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
@@ -231,11 +251,17 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        public void SendMonsterMontageCallback(int monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
+        public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 4;
             var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendMonsterWakeUp(string guid)
+        {
+            const byte eventCode = 5;
+            _client.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         private void ApplyMonsterMove(PhotonHashtable props)
@@ -243,19 +269,19 @@ namespace WukongCSharpMod
             foreach (var (key, value) in props)
             {
                 var compositeKey = (string)key;
-                var parts = compositeKey.Split('_');
+                var parts = compositeKey.Split(MonsterHashtableKeySeparator);
                 if (parts.Length != 2)
                 {
                     Helpers.Log($"Invalid key: {compositeKey}");
                     continue;
                 }
 
-                var id = int.Parse(parts[0]);
+                var guid = parts[0];
                 var propName = parts[1];
 
-                if (!SyncedMonsters.TryGetValue(id, out var monsterState))
+                if (!SyncedMonsters.TryGetValue(guid, out var monsterState))
                 {
-                    Helpers.Log($"Monster {id} not found.");
+                    Helpers.Log($"Monster {guid} not found.");
                     continue;
                 }
 
@@ -351,13 +377,13 @@ namespace WukongCSharpMod
             }
         }
 
-        public void SetMonsterProperty(int id, string prop, object value)
+        public void SetMonsterProperty(string guid, string prop, object value)
         {
-            _monsterProperties[$"{id}_{prop}"] = value;
+            _monsterProperties[$"{guid}{MonsterHashtableKeySeparator}{prop}"] = value;
 
             if (!(value is FVector || value is FRotator))
             {
-                Helpers.Log($"SetMonsterProperty [{id}]: {prop} = {value}");
+                Helpers.Log($"Set monster property [{guid}]: {prop} = {value}");
             }
         }
 
@@ -422,11 +448,19 @@ namespace WukongCSharpMod
         {
             Helpers.Log("Joined room");
 
-            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
-            Helpers.Log("Patched with Harmony");
+            var teamId = PhotonUtils.GetTeamIdForPlayer(_client.LocalPlayer.ActorNumber);
+            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn(), teamId);
+
+            Utils.TryRunOnGameThread(() =>
+            {
+                MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+                Helpers.Log("Patched with Harmony");
+            });
 
             _joinedRoomCallback?.Invoke();
             SendRoomJoined();
+
+            Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
@@ -442,6 +476,12 @@ namespace WukongCSharpMod
         public void OnLeftRoom()
         {
             Helpers.Log("Left room");
+
+            Utils.TryRunOnGameThread(() =>
+            {
+                MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
+                Helpers.Log("Unpatched Harmony");
+            });
         }
 
         #endregion

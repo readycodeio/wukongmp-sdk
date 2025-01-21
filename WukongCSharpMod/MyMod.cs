@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -8,6 +11,7 @@ using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
+using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
 {
@@ -23,14 +27,36 @@ namespace WukongCSharpMod
         public readonly Harmony Harmony = new Harmony("WukongMP");
 
         private FVector _savedPosition;
+        private string _userName;
 
         public static MyMod Instance { get; private set; }
+
+        private void InitUserName()
+        {
+            try
+            {
+                Helpers.Log($"Loading player name from {Path.Join(Directory.GetCurrentDirectory(), "PhotonUserName.txt")}");
+                var allLines = File.ReadLines("PhotonUserName.txt").ToList();
+                _userName = allLines[0];
+                Helpers.Log($"Player name is = '{_userName}'");
+            }
+            catch (Exception ex)
+            {
+                Helpers.LogError("Couldn't player name from file");
+                Helpers.LogError(ex.ToString());
+                _userName = Constants.DefaultPhotonUserName;
+            }
+        }
 
         public void Init()
         {
             Instance = this;
 
             Helpers.Log("Init");
+
+            Harmony.PatchAllUncategorized();
+
+            InitUserName();
 
             // InitWorldCallbacks();
 
@@ -39,6 +65,7 @@ namespace WukongCSharpMod
                 Helpers.Log("Alt + H");
 
                 InitializeChatWidget();
+                CleanUpPhoton();
                 InitPhoton();
             });
 
@@ -46,7 +73,23 @@ namespace WukongCSharpMod
             {
                 Helpers.Log("Alt + V");
 
-                SpawnAllMonsters();
+                var myTeam = Photon.LocalPlayerState.TeamID;
+                var otherTeams = Photon.ConnectedPlayers.Values
+                    .Where(p => p.TeamID != myTeam)
+                    .Select(p => p.TeamID)
+                    .Distinct()
+                    .ToList();
+
+                Helpers.Log($"My team: {myTeam}");
+                Helpers.Log($"Other teams: {string.Join(", ", otherTeams)}");
+
+                Utils.TryRunOnGameThread(() =>
+                {
+                    foreach (var team in otherTeams)
+                    {
+                        PhotonUtils.RegisterTeamHostility(myTeam, team);
+                    }
+                });
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
@@ -91,34 +134,60 @@ namespace WukongCSharpMod
             }
         }
 
-        private static void SpawnAllMonsters()
+        private void WakeUpMonster(string guid)
         {
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
+                if (BGU_DataUtil.GetActorGuid(actor) != guid)
+                    continue;
+
                 var events = BGS_GSEventCollection.Get(actor);
                 if (events != null)
                 {
                     if (actor.GetMonster() == null)
                     {
-                        Helpers.Log($"Spawning monster for tamer with guid: {actor.CurrentRef.TamerGuid}.");
-                        events.Evt_TamerBlockingSpawnImmediately.Invoke(actor.CurrentRef.TamerGuid);
+                        Helpers.Log($"Spawning monster for tamer with guid: {guid}.");
+
+                        if (!Photon.SyncedMonsters.ContainsKey(guid))
+                        {
+                            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor));
+                            Helpers.Log("Monster was not synced, adding to synced monsters.");
+                        }
+
+                        Helpers.Log("Invoking Evt_TamerBlockingSpawnImmediately.");
+                        events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
                     }
-                    else
+                    else if (!Photon.SyncedMonsters.ContainsKey(guid))
                     {
-                        Helpers.Log($"Monster already spawned for tamer with guid: {actor.CurrentRef.TamerGuid}.");
+                        Helpers.Log($"Monster already spawned but not synced: {guid}.");
+
+                        var state = new MonsterState(guid, actor);
+                        Photon.SyncedMonsters.Add(guid, state);
+
+                        PhotonUtils.PrepareMonsterForSync(Photon, state);
                     }
                 }
                 else
                 {
                     Helpers.Log("Event is null");
                 }
+
+                return;
             }
+
+            // TODO: Spawn if not found
+        }
+
+        private void CleanUpPhoton()
+        {
+            UnsubscribeFromPlayerEvents();
+            Photon?.StopClient();
         }
 
         private void InitPhoton()
         {
-            Photon = new WukongClient(SpawnPlayersAlreadyInRoom);
+            Photon = new WukongClient(OnJoinedRoomCallback, _userName);
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
         }
@@ -145,16 +214,16 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-            Photon.OnUnitSpawn += (_, id, name, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(id, name, x, y, z));
+            Photon.OnUnitSpawn += (_, guid, name, teamID, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(guid, name, teamID, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
+            Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            Photon.WukongChat.OnSpawnEnemy += (name, count) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count));
+            Photon.WukongChat.OnSpawnEnemy += (name, count, teamID) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count, teamID));
 
             Photon.StartClient();
-            SubscribeToPlayerEvents();
         }
 
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
@@ -200,11 +269,11 @@ namespace WukongCSharpMod
             events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
         }
 
-        private void ApplyMonsterMontageCallback(int id, MonsterMontageCallbackData data)
+        private void ApplyMonsterMontageCallback(int playerId, MonsterMontageCallbackData data)
         {
-            if (!Photon.SyncedMonsters.TryGetValue(data.MonsterId, out var monster))
+            if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
             {
-                Helpers.Log($"Player not found: {id}");
+                Helpers.Log($"Player not found: {playerId}");
                 return;
             }
 
@@ -218,7 +287,7 @@ namespace WukongCSharpMod
                 return;
             }
 
-            Helpers.Log($"Applying montage callback for monster {data.MonsterId} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            Helpers.Log($"Applying montage callback for monster {data.MonsterGuid} with montage {data.MontagePath} ({data.Reason}, {data.State})");
             if (tamerActor.GetMonster() == null)
             {
                 Helpers.LogError($"Monster is null in {nameof(ApplyMonsterMontageCallback)}");
@@ -273,7 +342,7 @@ namespace WukongCSharpMod
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
-        private void SpawnEnemiesMaster(string enemyName, int count)
+        private void SpawnEnemiesMaster(string enemyName, int count, int teamID)
         {
             var player = GameUtils.GetControlledPawn();
             var traceLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
@@ -305,28 +374,28 @@ namespace WukongCSharpMod
                 {
                     // wait for i * 200ms
                     await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                    Utils.TryRunOnGameThread(() => { SpawnEnemyMaster(enemyName, loc); });
+                    Utils.TryRunOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, teamID); });
                 });
             }
         }
 
-        private void SpawnEnemyMaster(string enemyName, FVector loc)
+        private void SpawnEnemyMaster(string enemyName, FVector loc, int teamId)
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
-            var id = Photon.SyncedMonsters.Count;
-            SpawnUnitLocally(id, unitName, loc.X, loc.Y, loc.Z);
+            var id = Guid.NewGuid().ToString(); // TODO: use ActorGuid
+            SpawnUnitLocally(id, unitName, teamId, loc.X, loc.Y, loc.Z);
 
             Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
-            Photon.SpawnUnit(id, unitName, loc.X, loc.Y, loc.Z);
+            Photon.SpawnUnit(id, unitName, teamId, loc.X, loc.Y, loc.Z);
         }
 
-        private void SpawnRemoteUnit(int id, string unitName, float x, float y, float z)
+        private void SpawnRemoteUnit(string guid, string unitName, int teamID, float x, float y, float z)
         {
-            SpawnUnitLocally(id, unitName, x, y, z);
+            SpawnUnitLocally(guid, unitName, teamID, x, y, z);
         }
 
-        private void SpawnUnitLocally(int id, string unitName, float x, float y, float z)
+        private void SpawnUnitLocally(string guid, string unitName, int teamID, float x, float y, float z)
         {
             Helpers.Log($"Spawn unit called for {unitName}");
 
@@ -339,11 +408,21 @@ namespace WukongCSharpMod
             var world = GameUtils.GetWorld();
 
             UClass cachedResourceObj = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitName, ELoadResourceType.SyncLoadAndCache);
-            AActor actor = BGUFunctionLibraryCS.BGUSpawnActor(world, (TSubclassOf<AActor>)cachedResourceObj, loc, rot);
-            BUTamerActor buTamerActor = actor as BUTamerActor;
-            Helpers.Log("Spawned enemy: " + buTamerActor.GetName());
+            FTransform transform = new FTransform(rot, loc);
+            BUTamerActor buTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)cachedResourceObj, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
+            if (buTamerActor == null)
+            {
+                Helpers.LogError("Could not spawn enemy: " + unitName);
+                return;
+            }
 
-            Photon.SyncedMonsters.Add(id, new MonsterState(id, buTamerActor));
+            buTamerActor.SpawnedTamerGuid = guid;
+            // Update final guid
+            buTamerActor.GetFinalGuid();
+
+            UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
+            Helpers.Log($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
+            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamID));
         }
 
         private void LoadSavedPosition()
@@ -364,6 +443,12 @@ namespace WukongCSharpMod
             }
         }
 
+        private void OnJoinedRoomCallback()
+        {
+            SubscribeToPlayerEvents();
+            SpawnPlayersAlreadyInRoom();
+        }
+
         private void SpawnPlayersAlreadyInRoom()
         {
             // when joining game, spawn all players already in room
@@ -371,6 +456,30 @@ namespace WukongCSharpMod
             {
                 Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
             }
+        }
+
+        private APawn SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
+        {
+            APawn newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(oldController.World, pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
+            oldController.Possess(newPawn);
+            ACharacter obj = newPawn as ACharacter;
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+            BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, newPawn, spawnTransform);
+            BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
+            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(oldPawn.ToEntity(), newPawn.ToEntity());
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+            obj.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+            UGSE_ActorFuncLib.UpdateActorOverlaps(obj);
+            return newPawn;
+        }
+
+        private void BackToOldPawn(ABGPPlayerController oldController, APawn oldPawn, APawn newPawn, FTransform spawnTransform)
+        {
+            oldController.UnPossess();
+            oldController.Possess(oldPawn);
+            BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(oldPawn);
+            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), oldPawn.ToEntity());
         }
 
         private void SpawnCloneForJoiningPlayer(int id)
@@ -381,36 +490,11 @@ namespace WukongCSharpMod
                 return;
             }
 
-            UnsubscribeFromPlayerEvents();
-
-            var controller = GameUtils.GetPlayerController();
             var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
             var oldPawn = GameUtils.GetControlledPawn();
-            var oldPawnPos = oldPawn.GetActorTransform().GetLocation();
-            var oldPawnRot = oldPawn.GetActorTransform().GetRotation();
 
-            BGUFuncLibPlayer.SpwanAndPossesPlayerContrlledPawn(controller, playerPawnClass, oldPawn.GetActorTransform(), pawn => { }, new BGUFuncLibPlayer.SpawnControlledPawnBlendParam
-            {
-                NeedBlend = false
-            });
-
-            // BGU_UnrealWorldUtil.DestroyActor(oldPawn);
-            var clone = oldPawn;
-
-            var cloneCharacter = clone as BGUPlayerCharacterCS;
-
-            FActorSpawnParameters spawnInfo = new FActorSpawnParameters
-            {
-                Instigator = cloneCharacter.GetInstigator(),
-                SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod.AlwaysSpawn,
-                OverrideLevel = cloneCharacter.GetLevel(),
-                ObjectFlags = EObjectFlags.Transient // We never want to save AI controllers into a map
-            };
-
-            var loc = cloneCharacter.GetActorLocation();
-            var rot = cloneCharacter.GetActorRotation();
-
-            // var @class = UClass.GetClass("BGPPlayerController"); // "BGPPlayerController" works for sure
+            var loc = oldPawn.GetActorLocation() + new FVector(200, 200, 100);
+            var rot = oldPawn.GetActorRotation();
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
@@ -419,25 +503,28 @@ namespace WukongCSharpMod
                 return;
             }
 
-            var newController = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot, ref spawnInfo);
+            var oldController = GameUtils.GetPlayerController();
+            var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
-            Helpers.Log("Spawned new controller");
+            BackToOldPawn(oldController, oldPawn, newPawn, oldPawn.GetActorTransform());
+            // assign in dictionary
+            var teamID = PhotonUtils.GetTeamIdForPlayer(id);
+            Photon.ConnectedPlayers[id] = new PlayerState(id, newPawn, teamID);
 
-            if (newController != null && newController is ABGUAIPlayerController ctrl)
+            Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
+
+            var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
+            if (newControllerActor != null && newControllerActor is ABGUAIPlayerController newController)
             {
-                ctrl.Possess(clone);
-                ctrl.CanBeDamaged = false;
-                Helpers.Log("Possessed new controller");
+                Helpers.Log("Spawned new controller");
+                newController.Possess(newPawn);
             }
 
-            // assign in dictionary
-            Photon.ConnectedPlayers[id] = new PlayerState(id, clone);
-            Helpers.Log($"Assigned player {id} clone {clone.GetEntityHash()}");
-
-            var controlledPawn = GameUtils.GetControlledPawn();
-            controlledPawn.SetActorTransform(new FTransform(oldPawnRot, oldPawnPos), false, out _, false);
-
-            SubscribeToPlayerEvents();
+            // Reset falling timer.
+            var events = BUS_EventCollectionCS.Get(newPawn);
+            events.Evt_OnLeaveFalling.Invoke();
+            events = BUS_EventCollectionCS.Get(oldPawn);
+            events.Evt_OnLeaveFalling.Invoke();
         }
 
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
