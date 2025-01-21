@@ -52,7 +52,12 @@ namespace WukongCSharpMod.Patches
 
                     if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
-                        Utils.TryRunOnGameThread(() => events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true));
+                        Helpers.Log("Will run on game thread: interpolation move");
+                        Utils.TryRunOnGameThread(() =>
+                        {
+                            Helpers.Log("Running on game thread: interpolation move");
+                            events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        });
                     }
                 }
             }

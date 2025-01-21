@@ -139,16 +139,21 @@ namespace WukongCSharpMod
                     return;
                 }
 
-                Utils.TryRunOnGameThread(() => events.Evt_AIPerceptionSetting.Invoke(false));
-                Utils.TryRunOnGameThread(() => events.Evt_AIPauseBT.Invoke(true));
-                Utils.TryRunOnGameThread(() => events.Evt_AIPauseFsm.Invoke(true));
-                Utils.TryRunOnGameThread(() => events.Evt_EnableCanUpdateHatred.Invoke(P1: false));
-                Utils.TryRunOnGameThread(() => events.Evt_EnableCanSetBT.Invoke(P1: false));
-
-                Helpers.Log("Tamer actor disabled.");
+                Helpers.Log("Will run on game thread: disabling AI");
+                Utils.TryRunOnGameThread(() =>
+                {
+                    Helpers.Log("Running on game thread: disabling AI");
+                    events.Evt_AIPerceptionSetting.Invoke(false);
+                    events.Evt_AIPauseBT.Invoke(true);
+                    events.Evt_AIPauseFsm.Invoke(true);
+                    events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
+                    events.Evt_EnableCanSetBT.Invoke(P1: false);
+                });
             }
 
+            Helpers.Log("Tamer actor disabled.");
             RegisterNewPlayerTeam(monster, monsterState.TeamID);
+
             // at this point the monster exists, so we set IsSpawned
             monsterState.IsSynced = true;
         }
