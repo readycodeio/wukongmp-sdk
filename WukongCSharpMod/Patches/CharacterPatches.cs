@@ -1,5 +1,6 @@
 ﻿using b1;
 using BtlShare;
+using CSharpModBase;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -78,7 +79,7 @@ namespace WukongCSharpMod.Patches
                         if (monster.Hp.Value <= 0)
                         {
                             var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                            events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); // TODO: Sync other dead reasons?
+                            Utils.TryRunOnGameThread(() => events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage)); // TODO: Sync other dead reasons?
                         }
                     }
                 }
@@ -237,8 +238,8 @@ namespace WukongCSharpMod.Patches
                         __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
                         __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
                         __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
-                        events.Evt_StopCurrentMove.Invoke();
-                        events.Evt_MovementForceStop.Invoke();
+                        Utils.TryRunOnGameThread(() => events.Evt_StopCurrentMove.Invoke());
+                        Utils.TryRunOnGameThread(() => events.Evt_MovementForceStop.Invoke());
                     }
 
                     __instance.MoveAcceleration = playerState.MoveAcceleration;
@@ -250,7 +251,7 @@ namespace WukongCSharpMod.Patches
 
                     if (!playerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
-                        events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        Utils.TryRunOnGameThread(() => events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true));
                     }
                 }
                 else
