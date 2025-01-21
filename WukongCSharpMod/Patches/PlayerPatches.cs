@@ -13,7 +13,7 @@ namespace WukongCSharpMod.Patches
             BUC_ABPBGUCharacterData __instance,
             AActor Owner,
             IBUC_ABPCharacterData ChrData,
-            IBUC_SpeedCtrlData SpeedCtrlData,   
+            IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
             if (__instance == null)

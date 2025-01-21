@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
-using CSharpModBase;
 using UnrealEngine.Engine;
 using WukongCSharpMod.State;
 
@@ -139,16 +138,11 @@ namespace WukongCSharpMod
                     return;
                 }
 
-                Helpers.Log("Will run on game thread: disabling AI");
-                Utils.TryRunOnGameThread(() =>
-                {
-                    Helpers.Log("Running on game thread: disabling AI");
-                    events.Evt_AIPerceptionSetting.Invoke(false);
-                    events.Evt_AIPauseBT.Invoke(true);
-                    events.Evt_AIPauseFsm.Invoke(true);
-                    events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
-                    events.Evt_EnableCanSetBT.Invoke(P1: false);
-                });
+                events.Evt_AIPerceptionSetting.Invoke(false);
+                events.Evt_AIPauseBT.Invoke(true);
+                events.Evt_AIPauseFsm.Invoke(true);
+                events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
+                events.Evt_EnableCanSetBT.Invoke(P1: false);
             }
 
             Helpers.Log("Tamer actor disabled.");
