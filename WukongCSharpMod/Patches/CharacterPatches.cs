@@ -244,13 +244,8 @@ namespace WukongCSharpMod.Patches
                         __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
                         __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
 
-                        Helpers.Log("Will run on game thread: stop current move");
-                        Utils.TryRunOnGameThread(() =>
-                        {
-                            Helpers.Log("Running on game thread: stop current move");
-                            events.Evt_StopCurrentMove.Invoke();
-                            events.Evt_MovementForceStop.Invoke();
-                        });
+                        events.Evt_StopCurrentMove.Invoke();
+                        events.Evt_MovementForceStop.Invoke();
                     }
 
                     __instance.MoveAcceleration = playerState.MoveAcceleration;
