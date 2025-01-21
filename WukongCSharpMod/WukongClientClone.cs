@@ -1,0 +1,50 @@
+﻿using UnrealEngine.Runtime;
+using WukongCSharpMod.State;
+
+namespace WukongCSharpMod
+{
+    public class WukongClientClone : WukongClient
+    {
+        private static int _counter;
+        private readonly FVector _locationOffset;
+        private readonly WukongClient _owner;
+
+        public WukongClientClone(WukongClient owner) : base($"Clone_{_counter++}", () => { })
+        {
+            _owner = owner;
+
+            // spawn each clone at 6 positions (hexagon) starting from R = 200 with 6 clones on 1st circle, then the same at R = 300, R = 400 etc.
+            var r = 200 + 100 * (_counter / 6);
+            var angle = 60 * (_counter % 6);
+            var even = _counter % 2 == 0;
+            angle += even ? 0 : 30;
+            var x = r * FMath.Cos(FMath.DegreesToRadians(angle));
+            var y = r * FMath.Sin(FMath.DegreesToRadians(angle));
+            _locationOffset = new FVector(x, y, 0);
+        }
+
+        public override void SetPlayerProperty(string key, object value)
+        {
+            if (key == nameof(PlayerState.Location))
+            {
+                var val = (FVector)value;
+                val += _locationOffset;
+                base.SetPlayerProperty(key, val);
+            }
+            else
+            {
+                base.SetPlayerProperty(key, value);
+            }
+        }
+
+        public override void OnJoinedRoom()
+        {
+            Helpers.Log("Clone joined room");
+
+            var teamId = PhotonUtils.GetTeamIdForPlayer(_owner.PhotonId);
+            LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
+
+            SendRoomJoined();
+        }
+    }
+}

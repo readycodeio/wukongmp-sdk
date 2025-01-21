@@ -37,6 +37,7 @@ namespace WukongCSharpMod.State
             var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
             Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
 
+            Helpers.Log($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
         }
 

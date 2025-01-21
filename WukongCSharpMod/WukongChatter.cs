@@ -101,8 +101,13 @@ namespace WukongCSharpMod
                 new Command
                 {
                     Name = "Connect",
-                    Handler = args => { OnConnectRequest?.Invoke(); }
+                    Handler = args => { RequestConnect(); }
                 });
+        }
+
+        public void RequestConnect()
+        {
+            OnConnectRequest?.Invoke();
         }
 
         private void ServiceChat()

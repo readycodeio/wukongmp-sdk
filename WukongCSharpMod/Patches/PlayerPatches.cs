@@ -5,19 +5,6 @@ using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
 {
-    [HarmonyPatch(typeof(BGC_TeamRelationData), nameof(BGC_TeamRelationData.IsEnemyTeam), typeof(AActor), typeof(AActor))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchEnemyCheck
-    {
-        public static void Postfix(AActor Actor1, AActor Actor2, ref bool __result)
-        {
-            if (Actor1.GetName().Contains("Wukong") && Actor2.GetName().Contains("Wukong"))
-            {
-                __result = true;
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchBGUPlayerAnimation

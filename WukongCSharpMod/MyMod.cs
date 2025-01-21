@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -104,6 +103,12 @@ namespace WukongCSharpMod
                     Helpers.Log($"Player {id} state: {state}");
                 }
             });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.A, () =>
+            {
+                Helpers.Log("Alt + A");
+                Photon.SpawnClone();
+            });
         }
 
         // ReSharper disable once UnusedMember.Local
@@ -118,19 +123,6 @@ namespace WukongCSharpMod
             else
             {
                 Helpers.Log("World is null.");
-            }
-        }
-
-        private void PrintPlayerLocomotionData(AActor player)
-        {
-            var playerLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_ABPPlayerLocomotionData, BUC_ABPPlayerLocomotionData>(player);
-            Helpers.Log("PlayerLocomotionData:");
-            var propertyInfos = typeof(BUC_ABPPlayerLocomotionData).GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-            foreach (PropertyInfo propertyInfo in propertyInfos)
-            {
-                var property = propertyInfo.GetValue(playerLocomotionData);
-                Helpers.Log($"{propertyInfo.Name}: {property}");
             }
         }
 
@@ -187,7 +179,7 @@ namespace WukongCSharpMod
 
         private void InitPhoton()
         {
-            Photon = new WukongClient(OnJoinedRoomCallback, _userName);
+            Photon = new WukongClient(_userName, OnJoinedRoomCallback);
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
         }
@@ -214,16 +206,26 @@ namespace WukongCSharpMod
             }
 
             Photon.OnPlayerJoined += id => Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(id));
-            Photon.OnUnitSpawn += (_, guid, name, teamID, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(guid, name, teamID, x, y, z));
+            Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
             Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            Photon.WukongChat.OnSpawnEnemy += (name, count, teamID) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count, teamID));
+            Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count, teamId));
 
             Photon.StartClient();
+        }
+
+        private void ConnectClone(WukongClientClone clone)
+        {
+            if (clone.Ready)
+            {
+                return;
+            }
+
+            clone.StartClient();
         }
 
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)

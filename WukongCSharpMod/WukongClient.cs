@@ -23,8 +23,8 @@ namespace WukongCSharpMod
         private readonly string _userName;
         private const char MonsterHashtableKeySeparator = ';';
 
-        private int Id => _client.LocalPlayer.ActorNumber;
-        public bool IsMasterClient => _client.CurrentRoom?.MasterClientId == Id;
+        public int PhotonId => _client.LocalPlayer.ActorNumber;
+        public bool IsMasterClient => _client.CurrentRoom?.MasterClientId == PhotonId;
         public bool Ready => _client.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
@@ -36,9 +36,11 @@ namespace WukongCSharpMod
 
         public WukongChatter WukongChat => _wukongChat;
 
-        public PlayerState LocalPlayerState { get; private set; }
+        public PlayerState LocalPlayerState { get; protected set; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
+
+        private readonly List<WukongClientClone> _photonClones = new List<WukongClientClone>();
 
         public PlayerState GetByActor(AActor actor)
         {
@@ -58,13 +60,7 @@ namespace WukongCSharpMod
             return kvp.Value;
         }
 
-        public CharacterState GetCharacterState(BGUCharacterCS owner)
-        {
-            CharacterState monster = GetMonsterByCharacter(owner);
-            return monster ?? GetByActor(owner);
-        }
-
-        public WukongClient(Action onJoinedRoom, string userName)
+        public WukongClient(string userName, Action onJoinedRoom)
         {
             _wukongChat = new WukongChatter(this);
             _userName = userName;
@@ -194,6 +190,15 @@ namespace WukongCSharpMod
             }
         }
 
+        public void SpawnClone()
+        {
+            var clone = new WukongClientClone(this);
+            _photonClones.Add(clone);
+
+            clone.WukongChat.OnConnectRequest += () => { clone.StartClient(); };
+            clone.WukongChat.RequestConnect();
+        }
+
         public IEnumerable<int> GetOtherPlayersInRoom()
         {
             if (_client.CurrentRoom is null)
@@ -219,7 +224,7 @@ namespace WukongCSharpMod
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation,
-                RoomName = "Kuba123123"
+                RoomName = "KubaCloneTest"
             };
 
             _client.OpJoinOrCreateRoom(enterRoomParams);
@@ -230,7 +235,7 @@ namespace WukongCSharpMod
             Helpers.Log(arg1 + " -> " + arg2);
         }
 
-        private void SendRoomJoined()
+        protected void SendRoomJoined()
         {
             const byte eventCode = 0;
             _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendReliable);
@@ -249,6 +254,11 @@ namespace WukongCSharpMod
             const byte eventCode = 2;
             var evData = new MontageCallbackData(reason, montagePath, state);
             _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+
+            foreach (var clone in _photonClones)
+            {
+                clone.SendMontageCallback(reason, montagePath, state);
+            }
         }
 
         public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
@@ -317,17 +327,27 @@ namespace WukongCSharpMod
                 }
 
                 _playerPropertiesRo.Clear();
-                _client.OpSetCustomPropertiesOfActor(Id, hashtable);
+                _client.OpSetCustomPropertiesOfActor(PhotonId, hashtable);
+            }
+
+            foreach (var clone in _photonClones)
+            {
+                clone.SendUpdatedPlayerProperties();
             }
         }
 
-        public void SetPlayerProperty(string key, object value)
+        public virtual void SetPlayerProperty(string key, object value)
         {
             _playerProperties[key] = value;
 
             if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
             {
                 Helpers.Log($"SetPlayerProperty: {key} = {value}");
+            }
+
+            foreach (var clone in _photonClones)
+            {
+                clone.SetPlayerProperty(key, value);
             }
         }
 
@@ -444,12 +464,12 @@ namespace WukongCSharpMod
             Helpers.Log("Create room failed: " + message);
         }
 
-        public void OnJoinedRoom()
+        public virtual void OnJoinedRoom()
         {
             Helpers.Log("Joined room");
 
-            var teamId = PhotonUtils.GetTeamIdForPlayer(_client.LocalPlayer.ActorNumber);
-            LocalPlayerState = new PlayerState(_client.LocalPlayer.ActorNumber, GameUtils.GetControlledPawn(), teamId);
+            var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
+            LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
             Utils.TryRunOnGameThread(() =>
             {
