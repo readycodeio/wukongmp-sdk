@@ -111,26 +111,26 @@ namespace WukongCSharpMod.Patches
                     // I was damaged, set my Hp
                     if (owner == photon.LocalPlayerState.Pawn)
                     {
-                        //if (!photon.LocalPlayerState.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
-                        //{
-                        //    photon.LocalPlayerState.Hp = NewValue;
-                        //    photon.SetPlayerProperty(AttrID.ToString(), NewValue);
-                        //}
+                        if (!photon.LocalPlayerState.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        {
+                            photon.LocalPlayerState.Hp = NewValue;
+                            photon.SetPlayerProperty(AttrID.ToString(), NewValue);
+                        }
 
-                        return false;
+                        return true;
                     }
 
                     // remote player was damaged, set his properties
                     var remotePlayer = MyMod.Instance.Photon.GetByActor(owner);
                     if (remotePlayer != null)
                     {
-                        //if (!remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
-                        //{
-                        //    remotePlayer.Hp = NewValue;
-                        //    photon.SendRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
-                        //}
+                        if (!remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        {
+                            remotePlayer.Hp = NewValue;
+                            photon.SendRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
+                        }
 
-                        return false;
+                        return true;
                     }
 
                     // monster was damaged
