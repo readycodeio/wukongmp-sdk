@@ -257,12 +257,7 @@ namespace WukongCSharpMod.Patches
 
                     if (!playerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
-                        Helpers.Log("Will run on game thread: interpolation move (character)");
-                        Utils.TryRunOnGameThread(() =>
-                        {
-                            Helpers.Log("Running on game thread: interpolation move (character)");
-                            events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                        });
+                        events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
                 }
                 else
