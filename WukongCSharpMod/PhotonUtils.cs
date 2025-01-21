@@ -6,7 +6,7 @@ using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
 {
-    public class PhotonUtils
+    public static class PhotonUtils
     {
         public static int GetTeamIdForPlayer(int playerId)
         {

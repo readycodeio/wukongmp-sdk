@@ -279,6 +279,9 @@ namespace WukongCSharpMod
                 return;
             }
 
+            if (!monster.IsTamerValid)
+                return;
+
             var tamerActor = monster.Pawn;
 
             var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);

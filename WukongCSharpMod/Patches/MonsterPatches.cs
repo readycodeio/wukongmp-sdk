@@ -29,6 +29,9 @@ namespace WukongCSharpMod.Patches
                     if (!state.IsSynced)
                         continue;
 
+                    if (!state.IsTamerValid)
+                        continue;
+
                     var location = state.Pawn.GetActorLocation();
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
@@ -48,6 +51,9 @@ namespace WukongCSharpMod.Patches
             {
                 foreach (var state in photon.SyncedMonsters.Values)
                 {
+                    if (!state.IsTamerValid)
+                        continue;
+
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
 
                     if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance))
