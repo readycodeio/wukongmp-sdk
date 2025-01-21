@@ -31,7 +31,7 @@ namespace WukongCSharpMod.State
         {
             PhotonId = photonId;
             Pawn = pawn;
-            TeamID = teamId;
+            TeamId = teamId;
 
             // get the BUC_AttrContainer
             var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
@@ -43,7 +43,7 @@ namespace WukongCSharpMod.State
 
         public override string ToString()
         {
-            return $"PlayerState(PhotonId: {PhotonId},\nInJump: {InJump},\nIsFlying: {IsFlying},\nIsFalling: {IsFalling},\nIsLandingMove: {IsLandingMove},\nVelocity: {Velocity},\nMoveAcceleration: {MoveAcceleration},\nActorLocation: {Location},\nActorRotation: {Rotation},\nTurnInplaceTargetRotation: {TurnInplaceTargetRotation},\nIsStandRotate: {IsStandRotate},\nTurnInplaceRemainAngle: {TurnInplaceRemainAngle},\nIsAttacking: {IsAttacking},\nOrientRotationToMovement: {OrientRotationToMovement},\nMoveSpeedLevel: {MoveSpeedLevel},\nMoveSpeedState: {MoveSpeedState},\nShouldWaitRotateFinished: {ShouldWaitRotateFinished},\nTeamID: {TeamID})\n";
+            return $"PlayerState(PhotonId: {PhotonId},\nInJump: {InJump},\nIsFlying: {IsFlying},\nIsFalling: {IsFalling},\nIsLandingMove: {IsLandingMove},\nVelocity: {Velocity},\nMoveAcceleration: {MoveAcceleration},\nActorLocation: {Location},\nActorRotation: {Rotation},\nTurnInplaceTargetRotation: {TurnInplaceTargetRotation},\nIsStandRotate: {IsStandRotate},\nTurnInplaceRemainAngle: {TurnInplaceRemainAngle},\nIsAttacking: {IsAttacking},\nOrientRotationToMovement: {OrientRotationToMovement},\nMoveSpeedLevel: {MoveSpeedLevel},\nMoveSpeedState: {MoveSpeedState},\nShouldWaitRotateFinished: {ShouldWaitRotateFinished},\nTeamID: {TeamId})\n";
         }
     }
 }

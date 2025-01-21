@@ -11,6 +11,6 @@ namespace WukongCSharpMod.State
         public FVector MoveAcceleration { get; set; }
         public EMoveSpeedLevel MoveSpeedLevel { get; set; } = EMoveSpeedLevel.Run;
         public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
-        public int TeamID { get; set; }
+        public int TeamId { get; protected set; }
     }
 }

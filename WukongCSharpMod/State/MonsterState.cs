@@ -1,21 +1,27 @@
-﻿using b1;
+﻿using System;
+using b1;
 
 namespace WukongCSharpMod.State
 {
     public class MonsterState : CharacterState
     {
         public string Guid { get; }
-        public BUTamerActor Pawn { get; }
+        private readonly BUTamerActor _pawn;
+
+        public BUTamerActor Pawn =>
+            _pawn == null || _pawn.IsDestroyed ? throw new Exception("Attempting to access a destroyed Tamer") : _pawn;
+
         public float? Hp { get; set; }
         public bool IsSynced { get; set; }
 
         public MonsterState(string guid, BUTamerActor pawn)
         {
             Guid = guid;
-            Pawn = pawn;
+            _pawn = pawn;
+
             if (pawn.GetMonster() != null)
             {
-                TeamID = pawn.GetMonster().GetTeamIDInCS();
+                TeamId = pawn.GetMonster().GetTeamIDInCS();
             }
             else
             {
@@ -26,8 +32,8 @@ namespace WukongCSharpMod.State
         public MonsterState(string guid, BUTamerActor pawn, int teamId)
         {
             Guid = guid;
-            Pawn = pawn;
-            TeamID = teamId;
+            _pawn = pawn;
+            TeamId = teamId;
         }
     }
 }

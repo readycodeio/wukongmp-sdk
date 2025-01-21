@@ -80,14 +80,14 @@ namespace WukongCSharpMod
                         switch (args.Length)
                         {
                             case 1:
-                                OnSpawnEnemy?.Invoke(args[0], 1, _wukongClient.LocalPlayerState.TeamID);
+                                OnSpawnEnemy?.Invoke(args[0], 1, _wukongClient.LocalPlayerState.TeamId);
                                 SendChatMessage(ServerChannelName, "Spawned monster");
                                 break;
                             case 2:
                             {
                                 if (int.TryParse(args[1], out var count))
                                 {
-                                    OnSpawnEnemy?.Invoke(args[0], count, _wukongClient.LocalPlayerState.TeamID);
+                                    OnSpawnEnemy?.Invoke(args[0], count, _wukongClient.LocalPlayerState.TeamId);
                                     SendChatMessage(ServerChannelName, $"Spawned {count} monsters");
                                 }
 

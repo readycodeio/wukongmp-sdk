@@ -46,7 +46,7 @@ namespace WukongCSharpMod.Patches
             }
             else
             {
-                foreach (var (id, state) in photon.SyncedMonsters)
+                foreach (var state in photon.SyncedMonsters.Values)
                 {
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
 

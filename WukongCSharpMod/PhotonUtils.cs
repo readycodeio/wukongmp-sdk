@@ -146,7 +146,7 @@ namespace WukongCSharpMod
             }
 
             Helpers.Log("Tamer actor disabled.");
-            RegisterNewPlayerTeam(monster, monsterState.TeamID);
+            RegisterNewPlayerTeam(monster, monsterState.TeamId);
 
             // at this point the monster exists, so we set IsSpawned
             monsterState.IsSynced = true;

@@ -60,6 +60,11 @@ namespace WukongCSharpMod
             return kvp.Value;
         }
 
+        public void RemoveMonster(string monsterGuid)
+        {
+            SyncedMonsters.Remove(monsterGuid);
+        }
+
         public WukongClient(string userName, Action onJoinedRoom)
         {
             _wukongChat = new WukongChatter(this);

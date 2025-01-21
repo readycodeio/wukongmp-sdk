@@ -72,10 +72,10 @@ namespace WukongCSharpMod
             {
                 Helpers.Log("Alt + V");
 
-                var myTeam = Photon.LocalPlayerState.TeamID;
+                var myTeam = Photon.LocalPlayerState.TeamId;
                 var otherTeams = Photon.ConnectedPlayers.Values
-                    .Where(p => p.TeamID != myTeam)
-                    .Select(p => p.TeamID)
+                    .Where(p => p.TeamId != myTeam)
+                    .Select(p => p.TeamId)
                     .Distinct()
                     .ToList();
 

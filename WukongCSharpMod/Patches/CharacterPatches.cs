@@ -84,6 +84,9 @@ namespace WukongCSharpMod.Patches
                             {
                                 Helpers.Log("Running on game thread: unit dead");
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
+
+                                // remove from collection
+                                photon.RemoveMonster(monster.Guid);
                             }); // TODO: Sync other dead reasons?
                         }
                     }
@@ -141,6 +144,12 @@ namespace WukongCSharpMod.Patches
                         {
                             monster.Hp = NewValue;
                             photon.SetMonsterProperty(monster.Guid, AttrID.ToString(), NewValue);
+
+                            if (NewValue <= 0)
+                            {
+                                // remove dead monster from sync
+                                photon.RemoveMonster(monster.Guid);
+                            }
                         }
 
                         return true;
