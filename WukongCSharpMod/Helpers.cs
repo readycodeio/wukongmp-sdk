@@ -19,6 +19,13 @@ namespace WukongCSharpMod
             Console.WriteLine(message);
         }
 
+        public static void LogWarning(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(message);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+        
         public static void LogError(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;

@@ -8,27 +8,6 @@ using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
 {
-    [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
-    public class PatchIncrementalBeginPlay
-    {
-        public static Exception Finalizer(Exception __exception, FTamerRef __instance, ref bool __result)
-        {
-            Helpers.LogError("---------- IGNORING EXCEPTION ----------");
-            Helpers.LogError(__exception.Message);
-            Helpers.LogError("-------------- TAMER INFO --------------");
-            Helpers.LogError($"Name: {__instance.TamerName}");
-            Helpers.LogError($"Phase: {__instance.Phase.ToString()}");
-            Helpers.LogError($"Tamer type: {__instance.TamerType}");
-            Helpers.LogError($"Spawn rule: {__instance.SpawnRuleFlags}");
-            Helpers.LogError($"Monster valid: {__instance.IsMonsterValid()}");
-            Helpers.LogError($"Monster destroyed: {__instance.IsMonsterDestroyed()}");
-            Helpers.LogError($"Instance valid: {__instance.InstancePtr.IsValid()}");
-            Helpers.LogError("----------------------------------------");
-            __result = false;
-            return null;
-        }
-    }
-
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchTamerManagerTick
@@ -73,14 +52,14 @@ namespace WukongCSharpMod.Patches
             {
                 foreach (var state in photon.SyncedMonsters.Values)
                 {
-                    if (!state.IsTamerValid)
+                    if (!state.IsTamerValid || !state.IsSynced)
                         continue;
 
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
 
                     if (events == null)
                     {
-                        Helpers.LogError($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
+                        Helpers.LogWarning($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
                         continue;
                     }
 
@@ -99,14 +78,24 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(FTamerRef __instance)
         {
-            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
-                return;
+            try
+            {
+                if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
+                    return;
 
-            var photon = MyMod.Instance.Photon;
-            var tamer = __instance.InstancePtr.Get();
+                var photon = MyMod.Instance.Photon;
+                var tamer = __instance.InstancePtr.Get();
 
-            Helpers.Log($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
-            PhotonUtils.SyncMonsterAndNotify(photon, tamer);
+                Helpers.Log($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
+                PhotonUtils.SyncMonsterAndNotify(photon, tamer);
+            }
+            catch (Exception e)
+            {
+                // print and ignore
+                Helpers.LogError("Error in PatchTamerLoad.Postfix");
+                Helpers.LogError(e.Message);
+                Helpers.LogError(e.StackTrace);
+            }
         }
     }
 
