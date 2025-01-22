@@ -13,8 +13,8 @@ namespace WukongCSharpMod
         {
             _owner = owner;
 
-            // spawn each clone at 6 positions (hexagon) starting from R = 200 with 6 clones on 1st circle, then the same at R = 300, R = 400 etc.
-            var r = 200 + 100 * (_counter / 6);
+            // spawn each clone at 6 positions (hexagon) starting from R = 400 with 6 clones on 1st circle, then the same at R = 600, R = 800 etc.
+            var r = 400 + 200 * (_counter / 6);
             var angle = 60 * (_counter % 6);
             var even = _counter % 2 == 0;
             angle += even ? 0 : 30;
