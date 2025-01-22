@@ -1,4 +1,6 @@
-﻿using UnrealEngine.Runtime;
+﻿using Photon.Client;
+using Photon.Realtime;
+using UnrealEngine.Runtime;
 using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
@@ -7,12 +9,9 @@ namespace WukongCSharpMod
     {
         private static int _counter;
         private readonly FVector _locationOffset;
-        private readonly WukongClient _owner;
 
-        public WukongClientClone(WukongClient owner) : base($"Clone_{_counter++}", () => { })
+        public WukongClientClone() : base($"Clone_{_counter++}", () => { })
         {
-            _owner = owner;
-
             // spawn each clone at 6 positions (hexagon) starting from R = 400 with 6 clones on 1st circle, then the same at R = 600, R = 800 etc.
             var r = 400 + 200 * (_counter / 6);
             var angle = 60 * (_counter % 6);
@@ -41,10 +40,18 @@ namespace WukongCSharpMod
         {
             Helpers.Log("Clone joined room");
 
-            var teamId = PhotonUtils.GetTeamIdForPlayer(_owner.PhotonId);
+            var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
             SendRoomJoined();
+        }
+
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
+        {
+            if (targetPlayer.IsLocal)
+            {
+                base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
+            }
         }
     }
 }

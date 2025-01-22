@@ -218,16 +218,6 @@ namespace WukongCSharpMod
             Photon.StartClient();
         }
 
-        private void ConnectClone(WukongClientClone clone)
-        {
-            if (clone.Ready)
-            {
-                return;
-            }
-
-            clone.StartClient();
-        }
-
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
@@ -271,11 +261,11 @@ namespace WukongCSharpMod
             events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
         }
 
-        private void ApplyMonsterMontageCallback(int playerId, MonsterMontageCallbackData data)
+        private void ApplyMonsterMontageCallback(int _, MonsterMontageCallbackData data)
         {
             if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
             {
-                Helpers.Log($"Player not found: {playerId}");
+                Helpers.Log($"Monster not found: {data.MonsterGuid}");
                 return;
             }
 
@@ -513,8 +503,9 @@ namespace WukongCSharpMod
 
             BackToOldPawn(oldController, oldPawn, newPawn, oldPawn.GetActorTransform());
             // assign in dictionary
-            var teamID = PhotonUtils.GetTeamIdForPlayer(id);
-            Photon.ConnectedPlayers[id] = new PlayerState(id, newPawn, teamID);
+            var teamId = PhotonUtils.GetTeamIdForPlayer(id);
+            
+            Photon.RegisterPlayer(new PlayerState(id, newPawn, teamId));
 
             Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
 

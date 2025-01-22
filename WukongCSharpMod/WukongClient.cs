@@ -42,6 +42,11 @@ namespace WukongCSharpMod
 
         private readonly List<WukongClientClone> _photonClones = new List<WukongClientClone>();
 
+        public void RegisterPlayer(PlayerState state)
+        {
+            ConnectedPlayers.Add(state.PhotonId, state);
+        }
+
         public PlayerState GetByActor(AActor actor)
         {
             var kvp = ConnectedPlayers.FirstOrDefault(x => x.Value.Pawn == actor);
@@ -197,7 +202,7 @@ namespace WukongCSharpMod
 
         public void SpawnClone()
         {
-            var clone = new WukongClientClone(this);
+            var clone = new WukongClientClone();
             _photonClones.Add(clone);
 
             clone.WukongChat.OnConnectRequest += () => { clone.StartClient(); };
@@ -526,7 +531,7 @@ namespace WukongCSharpMod
             // nothing
         }
 
-        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
+        public virtual void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
         {
             var id = targetPlayer.ActorNumber;
 
