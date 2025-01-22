@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using b1;
 using CSharpModBase;
 using HarmonyLib;
@@ -7,6 +8,26 @@ using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
 {
+    [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
+    public class PatchIncrementalBeginPlay
+    {
+        public static Exception Finalizer(Exception __exception, FTamerRef __instance)
+        {
+            Helpers.LogError("---------- IGNORING EXCEPTION ----------");
+            Helpers.LogError(__exception.Message);
+            Helpers.LogError("-------------- TAMER INFO --------------");
+            Helpers.LogError($"Name: {__instance.TamerName}");
+            Helpers.LogError($"Phase: {__instance.Phase.ToString()}");
+            Helpers.LogError($"Tamer type: {__instance.TamerType}");
+            Helpers.LogError($"Spawn rule: {__instance.SpawnRuleFlags}");
+            Helpers.LogError($"Monster valid: {__instance.IsMonsterValid()}");
+            Helpers.LogError($"Monster destroyed: {__instance.IsMonsterDestroyed()}");
+            Helpers.LogError($"Instance valid: {__instance.InstancePtr.IsValid()}");
+            Helpers.LogError("----------------------------------------");
+            return null;
+        }
+    }
+
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchTamerManagerTick
@@ -55,6 +76,12 @@ namespace WukongCSharpMod.Patches
                         continue;
 
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
+
+                    if (events == null)
+                    {
+                        Helpers.LogError($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
+                        continue;
+                    }
 
                     if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
