@@ -11,7 +11,7 @@ namespace WukongCSharpMod.Patches
     [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
     public class PatchIncrementalBeginPlay
     {
-        public static Exception Finalizer(Exception __exception, FTamerRef __instance)
+        public static Exception Finalizer(Exception __exception, FTamerRef __instance, ref bool __result)
         {
             Helpers.LogError("---------- IGNORING EXCEPTION ----------");
             Helpers.LogError(__exception.Message);
@@ -24,6 +24,7 @@ namespace WukongCSharpMod.Patches
             Helpers.LogError($"Monster destroyed: {__instance.IsMonsterDestroyed()}");
             Helpers.LogError($"Instance valid: {__instance.InstancePtr.IsValid()}");
             Helpers.LogError("----------------------------------------");
+            __result = false;
             return null;
         }
     }
