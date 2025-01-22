@@ -284,7 +284,7 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        private void ApplyMonsterMove(PhotonHashtable props)
+        protected virtual void ApplyMonsterMove(PhotonHashtable props)
         {
             foreach (var (key, value) in props)
             {

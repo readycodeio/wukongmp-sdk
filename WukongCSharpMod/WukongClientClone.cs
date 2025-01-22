@@ -53,5 +53,10 @@ namespace WukongCSharpMod
                 base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
             }
         }
+
+        protected override void ApplyMonsterMove(PhotonHashtable props)
+        {
+            // do nothing
+        }
     }
 }
