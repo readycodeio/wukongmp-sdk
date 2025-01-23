@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
+using BtlB1;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
@@ -210,12 +212,36 @@ namespace WukongCSharpMod
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
             Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
+            Photon.OnEqChange += (id, position, newEq) => Utils.TryRunOnGameThread(() => ChangeEquipment(id, position, newEq));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count, teamId));
 
             Photon.StartClient();
+        }
+
+        private void ChangeEquipment(int id, EquipPosition position, int newEq)
+        {
+            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
+            {
+                Helpers.Log($"Player not found: {id}");
+                return;
+            }
+
+            var clone = (BGUCharacterCS)player.Pawn;
+
+            var equipComp = Traverse.Create(clone.ActorCompContainerCS).Field<List<UActorCompBaseCS>>("CompCSs").Value
+                .FirstOrDefault(x => x is BUS_EquipComp);
+
+            if (equipComp == null)
+            {
+                Helpers.LogError("EquipComp is null");
+                return;
+            }
+
+            var eq = (BUS_EquipComp)equipComp;
+            Traverse.Create(eq).Method("OnChangeEquip", position, newEq).GetValue();
         }
 
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
@@ -504,7 +530,7 @@ namespace WukongCSharpMod
             BackToOldPawn(oldController, oldPawn, newPawn, oldPawn.GetActorTransform());
             // assign in dictionary
             var teamId = PhotonUtils.GetTeamIdForPlayer(id);
-            
+
             Photon.RegisterPlayer(new PlayerState(id, newPawn, teamId));
 
             Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");

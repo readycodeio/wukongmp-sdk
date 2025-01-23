@@ -16,7 +16,7 @@ namespace WukongCSharpMod
             var r = 400 + 200 * (_counter / 6);
             var angle = 60 * (_counter % 6);
             var even = _counter % 2 == 0;
-            angle += even ? 0 : 30;
+            r += even ? 0 : 100;
             var x = r * FMath.Cos(FMath.DegreesToRadians(angle));
             var y = r * FMath.Sin(FMath.DegreesToRadians(angle));
             _locationOffset = new FVector(x, y, 0);

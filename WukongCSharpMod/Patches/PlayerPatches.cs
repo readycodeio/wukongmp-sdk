@@ -1,4 +1,5 @@
 ﻿using b1;
+using BtlB1;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using WukongCSharpMod.State;
@@ -238,6 +239,36 @@ namespace WukongCSharpMod.Patches
                     }
                 }
             }
+        }
+    }
+
+    // [HarmonyPatch(typeof(BUS_CharacterModularCompImpl), "RefreshSkeletalMesh")]
+    // [HarmonyPatchCategory(Constants.RoomPatches)]
+    // public class PatchEqMeshChange
+    // {
+    //     public static bool Prefix(BUS_CharacterModularCompImpl __instance)
+    //     {
+    //         var photon = MyMod.Instance.Photon;
+    //         var owner = __instance.GetOwner();
+    //
+    //         return owner.GetName() == "Unit_EquipPreview_Wukong_C_2" || owner == photon.LocalPlayerState.Pawn;
+    //     }
+    // }
+
+    [HarmonyPatch(typeof(BUS_EquipComp), "OnEquipListAnyOneValueChange")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchEqCompUpdate
+    {
+        public static bool Prefix(BUS_EquipComp __instance, EquipPosition Position, int NewEquipId)
+        {
+            var photon = MyMod.Instance.Photon;
+            var owner = __instance.GetOwner();
+
+            if (owner != photon.LocalPlayerState.Pawn)
+                return false;
+
+            photon.SendEqChange(Position, NewEquipId);
+            return true;
         }
     }
 }

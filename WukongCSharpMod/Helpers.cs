@@ -25,7 +25,7 @@ namespace WukongCSharpMod
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.White;
         }
-        
+
         public static void LogError(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;

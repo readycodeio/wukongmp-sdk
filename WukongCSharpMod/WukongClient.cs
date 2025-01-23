@@ -7,6 +7,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using b1;
+using BtlB1;
 using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
@@ -33,6 +34,7 @@ namespace WukongCSharpMod
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
+        public event Action<int, EquipPosition, int> OnEqChange;
 
         public WukongChatter WukongChat => _wukongChat;
 
@@ -116,6 +118,11 @@ namespace WukongCSharpMod
                     // monster wake up
                     var guid = (string)photonEvent.CustomData;
                     OnMonsterWakeUp?.Invoke(guid);
+                    break;
+                case 6:
+                    // change Eq
+                    var data = (int[])photonEvent.CustomData;
+                    OnEqChange?.Invoke(photonEvent.Sender, (EquipPosition)data[0], data[1]);
                     break;
             }
         }
@@ -284,6 +291,12 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
+        public void SendEqChange(EquipPosition position, int newEq)
+        {
+            const byte eventCode = 6;
+            _client.OpRaiseEvent(eventCode, new[] { (int)position, newEq }, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
         protected virtual void ApplyMonsterMove(PhotonHashtable props)
         {
             foreach (var (key, value) in props)
@@ -349,10 +362,9 @@ namespace WukongCSharpMod
         public virtual void SetPlayerProperty(string key, object value)
         {
             _playerProperties[key] = value;
-
             if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
             {
-                Helpers.Log($"SetPlayerProperty: {key} = {value}");
+                Helpers.Log($"Set player property: {key} = {value}");
             }
 
             foreach (var clone in _photonClones)
