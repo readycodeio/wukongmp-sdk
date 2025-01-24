@@ -56,4 +56,14 @@ namespace WukongCSharpMod.Patches
         }
     }
 
+    // Disable game saves while multiplayer is enabled
+    [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), "CheckSaveTask")]
+    [HarmonyPatchCategory(Constants.MultiplayerPatches)]
+    public class PatchArchiveReadWriter
+    {
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
 }
