@@ -35,31 +35,31 @@ namespace WukongCSharpMod.Patches
                 if (localState.IsStandRotate != __instance.IsStandRotate)
                 {
                     photon.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
-                    photon.SetPlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
+                    photon.CachePlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
                 }
 
                 if (localState.IsAttacking != __instance.IsAttacking)
                 {
                     photon.LocalPlayerState.IsAttacking = __instance.IsAttacking;
-                    photon.SetPlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
+                    photon.CachePlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
                 }
 
                 if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
-                    photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
+                    photon.CachePlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
                 }
 
                 if (!localState.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
-                    photon.SetPlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
+                    photon.CachePlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
                 }
 
                 if (localState.OrientRotationToMovement != __instance.bOrientRotationToMovement)
                 {
                     photon.LocalPlayerState.OrientRotationToMovement = __instance.bOrientRotationToMovement;
-                    photon.SetPlayerProperty(nameof(PlayerState.OrientRotationToMovement), photon.LocalPlayerState.OrientRotationToMovement);
+                    photon.CachePlayerProperty(nameof(PlayerState.OrientRotationToMovement), photon.LocalPlayerState.OrientRotationToMovement);
                 }
             }
             else
@@ -108,7 +108,7 @@ namespace WukongCSharpMod.Patches
                 if (localState.ShouldWaitRotateFinished != __instance.bShouldWaitRotateFinished)
                 {
                     photon.LocalPlayerState.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
-                    photon.SetPlayerProperty(nameof(PlayerState.ShouldWaitRotateFinished), photon.LocalPlayerState.ShouldWaitRotateFinished);
+                    photon.CachePlayerProperty(nameof(PlayerState.ShouldWaitRotateFinished), photon.LocalPlayerState.ShouldWaitRotateFinished);
                 }
             }
             else
@@ -150,7 +150,7 @@ namespace WukongCSharpMod.Patches
                 if (localState.InJump != __instance.bInJump)
                 {
                     photon.LocalPlayerState.InJump = __instance.bInJump;
-                    photon.SetPlayerProperty(nameof(PlayerState.InJump), photon.LocalPlayerState.InJump);
+                    photon.CachePlayerProperty(nameof(PlayerState.InJump), photon.LocalPlayerState.InJump);
                 }
             }
             else
@@ -191,13 +191,13 @@ namespace WukongCSharpMod.Patches
                 if (localState.MoveSpeedLevel != __instance.MoveSpeedLevel)
                 {
                     photon.LocalPlayerState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                    photon.SetPlayerProperty(nameof(PlayerState.MoveSpeedLevel), photon.LocalPlayerState.MoveSpeedLevel);
+                    photon.CachePlayerProperty(nameof(PlayerState.MoveSpeedLevel), photon.LocalPlayerState.MoveSpeedLevel);
                 }
 
                 if (localState.MoveSpeedState != __instance.MoveSpeedState)
                 {
                     photon.LocalPlayerState.MoveSpeedState = __instance.MoveSpeedState;
-                    photon.SetPlayerProperty(nameof(PlayerState.MoveSpeedState), photon.LocalPlayerState.MoveSpeedState);
+                    photon.CachePlayerProperty(nameof(PlayerState.MoveSpeedState), photon.LocalPlayerState.MoveSpeedState);
                 }
             }
             else
@@ -222,13 +222,13 @@ namespace WukongCSharpMod.Patches
                         if (monsterState.MoveSpeedLevel != __instance.MoveSpeedLevel)
                         {
                             monsterState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                            photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
+                            photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
                         }
 
                         if (monsterState.MoveSpeedState != __instance.MoveSpeedState)
                         {
                             monsterState.MoveSpeedState = __instance.MoveSpeedState;
-                            photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
+                            photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
                         }
                     }
                     else
@@ -242,24 +242,11 @@ namespace WukongCSharpMod.Patches
         }
     }
 
-    // [HarmonyPatch(typeof(BUS_CharacterModularCompImpl), "RefreshSkeletalMesh")]
-    // [HarmonyPatchCategory(Constants.RoomPatches)]
-    // public class PatchEqMeshChange
-    // {
-    //     public static bool Prefix(BUS_CharacterModularCompImpl __instance)
-    //     {
-    //         var photon = MyMod.Instance.Photon;
-    //         var owner = __instance.GetOwner();
-    //
-    //         return owner.GetName() == "Unit_EquipPreview_Wukong_C_2" || owner == photon.LocalPlayerState.Pawn;
-    //     }
-    // }
-
     [HarmonyPatch(typeof(BUS_EquipComp), "OnChangeEquip")]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchEqCompUpdate
     {
-        public static bool Prefix(BUS_EquipComp __instance, EquipPosition Position, int EquipID)
+        public static bool Prefix(BUS_EquipComp __instance, EquipPosition EquipPosition, int EquipID)
         {
             var photon = MyMod.Instance.Photon;
             var owner = __instance.GetOwner();
@@ -267,7 +254,7 @@ namespace WukongCSharpMod.Patches
             if (owner != photon.LocalPlayerState.Pawn)
                 return false;
 
-            photon.SendEqChange(Position, EquipID);
+            photon.SendEqChange(EquipPosition, EquipID);
             return true;
         }
     }

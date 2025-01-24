@@ -37,14 +37,14 @@ namespace WukongCSharpMod.Patches
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
                         state.Location = location;
-                        photon.SetMonsterProperty(id, nameof(MonsterState.Location), state.Location);
+                        photon.CacheMonsterProperty(id, nameof(MonsterState.Location), state.Location);
                     }
 
                     var rotation = state.Pawn.GetActorRotation();
                     if (!rotation.Equals(state.Rotation, Constants.FloatComparisonTolerance))
                     {
                         state.Rotation = rotation;
-                        photon.SetMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
+                        photon.CacheMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
                     }
                 }
             }

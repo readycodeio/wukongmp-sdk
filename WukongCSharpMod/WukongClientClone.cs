@@ -10,7 +10,7 @@ namespace WukongCSharpMod
         private static int _counter;
         private readonly FVector _locationOffset;
 
-        public WukongClientClone() : base($"Clone_{_counter++}", () => { })
+        public WukongClientClone() : base($"Clone_{_counter++}", () => { }, _ => { })
         {
             // spawn each clone at 6 positions (hexagon) starting from R = 400 with 6 clones on 1st circle, then the same at R = 600, R = 800 etc.
             var r = 400 + 200 * (_counter / 6);
@@ -22,17 +22,17 @@ namespace WukongCSharpMod
             _locationOffset = new FVector(x, y, 0);
         }
 
-        public override void SetPlayerProperty(string key, object value)
+        public override void CachePlayerProperty(string key, object value)
         {
             if (key == nameof(PlayerState.Location))
             {
                 var val = (FVector)value;
                 val += _locationOffset;
-                base.SetPlayerProperty(key, val);
+                base.CachePlayerProperty(key, val);
             }
             else
             {
-                base.SetPlayerProperty(key, value);
+                base.CachePlayerProperty(key, value);
             }
         }
 
@@ -42,8 +42,6 @@ namespace WukongCSharpMod
 
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
-
-            SendRoomJoined();
         }
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)

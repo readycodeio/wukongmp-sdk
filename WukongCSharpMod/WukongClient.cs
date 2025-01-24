@@ -29,7 +29,7 @@ namespace WukongCSharpMod
         public bool Ready => _client.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
-        public event Action<int> OnPlayerJoined;
+        private readonly Action<Player> _playerJoinedCallback;
         public event Action<int, MontageCallbackData> OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
@@ -72,11 +72,12 @@ namespace WukongCSharpMod
             SyncedMonsters.Remove(monsterGuid);
         }
 
-        public WukongClient(string userName, Action onJoinedRoom)
+        public WukongClient(string userName, Action onJoinedRoom, Action<Player> onPlayerJoined)
         {
             _wukongChat = new WukongChatter(this);
             _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
+            _playerJoinedCallback = onPlayerJoined;
         }
 
         ~WukongClient()
@@ -89,12 +90,6 @@ namespace WukongCSharpMod
         {
             switch (photonEvent.Code)
             {
-                case 0:
-                {
-                    // room joined
-                    OnPlayerJoined?.Invoke(photonEvent.Sender);
-                    break;
-                }
                 case 1:
                     // unit spawn
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
@@ -211,7 +206,7 @@ namespace WukongCSharpMod
             clone.WukongChat.RequestConnect();
         }
 
-        public IEnumerable<int> GetOtherPlayersInRoom()
+        public IEnumerable<Player> GetOtherPlayersInRoom()
         {
             if (_client.CurrentRoom is null)
             {
@@ -223,7 +218,7 @@ namespace WukongCSharpMod
             {
                 Helpers.Log($"Other player: {player.Value.ActorNumber} {player.Value.UserId} local: {player.Value.IsLocal}");
                 if (!player.Value.IsLocal)
-                    yield return player.Value.ActorNumber;
+                    yield return player.Value;
             }
         }
 
@@ -245,13 +240,6 @@ namespace WukongCSharpMod
         private void OnStateChange(ClientState arg1, ClientState arg2)
         {
             Helpers.Log(arg1 + " -> " + arg2);
-        }
-
-        protected void SendRoomJoined()
-        {
-            const byte eventCode = 0;
-            _client.OpRaiseEvent(eventCode, null, RaiseEventArgs.Default, SendOptions.SendReliable);
-            _wukongChat.InitializeChat(_userName);
         }
 
         public void SpawnUnit(string id, string unitName, int teamID, float x, float y, float z)
@@ -291,28 +279,28 @@ namespace WukongCSharpMod
             switch (position)
             {
                 case EquipPosition.Head:
-                    SetPlayerProperty(nameof(PlayerState.EquipHead), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipHead), newEq);
                     break;
                 case EquipPosition.Upwear:
-                    SetPlayerProperty(nameof(PlayerState.EquipUpwear), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipUpwear), newEq);
                     break;
                 case EquipPosition.Arm:
-                    SetPlayerProperty(nameof(PlayerState.EquipArm), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipArm), newEq);
                     break;
                 case EquipPosition.Foot:
-                    SetPlayerProperty(nameof(PlayerState.EquipFoot), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipFoot), newEq);
                     break;
                 case EquipPosition.Hulu:
-                    SetPlayerProperty(nameof(PlayerState.EquipHulu), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipHulu), newEq);
                     break;
                 case EquipPosition.Weapon:
-                    SetPlayerProperty(nameof(PlayerState.EquipWeapon), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipWeapon), newEq);
                     break;
                 case EquipPosition.Fabao:
-                    SetPlayerProperty(nameof(PlayerState.FabaoEquipId), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipFabao), newEq);
                     break;
                 case EquipPosition.Accessory:
-                    SetPlayerProperty(nameof(PlayerState.AccessoryEquipId), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipAccessory), newEq);
                     break;
                 case EquipPosition.EnumMax:
                 default:
@@ -357,7 +345,7 @@ namespace WukongCSharpMod
 
         private readonly object _playerPropertiesLock = new object();
 
-        public void SendUpdatedPlayerProperties()
+        public void SetCachedPlayerProperties()
         {
             lock (_playerPropertiesLock)
             {
@@ -373,16 +361,16 @@ namespace WukongCSharpMod
                 }
 
                 _playerPropertiesRo.Clear();
-                _client.OpSetCustomPropertiesOfActor(PhotonId, hashtable);
+                _client.LocalPlayer.SetCustomProperties(hashtable);
             }
 
             foreach (var clone in _photonClones)
             {
-                clone.SendUpdatedPlayerProperties();
+                clone.SetCachedPlayerProperties();
             }
         }
 
-        public virtual void SetPlayerProperty(string key, object value)
+        public virtual void CachePlayerProperty(string key, object value)
         {
             _playerProperties[key] = value;
             if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
@@ -392,11 +380,11 @@ namespace WukongCSharpMod
 
             foreach (var clone in _photonClones)
             {
-                clone.SetPlayerProperty(key, value);
+                clone.CachePlayerProperty(key, value);
             }
         }
 
-        public void SendRemotePlayerProperty(int playerId, string key, object value)
+        public void SetRemotePlayerProperty(int playerId, string key, object value)
         {
             if (!IsMasterClient)
             {
@@ -442,7 +430,7 @@ namespace WukongCSharpMod
             }
         }
 
-        public void SetMonsterProperty(string guid, string prop, object value)
+        public void CacheMonsterProperty(string guid, string prop, object value)
         {
             _monsterProperties[$"{guid}{MonsterHashtableKeySeparator}{prop}"] = value;
 
@@ -523,7 +511,7 @@ namespace WukongCSharpMod
             });
 
             _joinedRoomCallback?.Invoke();
-            SendRoomJoined();
+            _wukongChat.InitializeChat(_userName);
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
         }
@@ -554,6 +542,8 @@ namespace WukongCSharpMod
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
             Helpers.Log($"Player {newPlayer.UserId} entered the room");
+
+            _playerJoinedCallback?.Invoke(newPlayer);
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)

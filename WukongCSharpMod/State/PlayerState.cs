@@ -38,8 +38,8 @@ namespace WukongCSharpMod.State
         public int EquipFoot { get; set; }
         public int EquipHulu { get; set; }
         public int EquipWeapon { get; set; }
-        public int FabaoEquipId { get; set; }
-        public int AccessoryEquipId { get; set; }
+        public int EquipFabao { get; set; }
+        public int EquipAccessory { get; set; }
 
         #endregion
 
@@ -51,7 +51,14 @@ namespace WukongCSharpMod.State
 
             // get the BUC_AttrContainer
             var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-            Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
+            if (data != null)
+            {
+                Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
+            }
+            else
+            {
+                Helpers.LogError("Failed to get BUC_AttrContainer from pawn");
+            }
 
             Helpers.Log($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);

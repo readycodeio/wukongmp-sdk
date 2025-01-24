@@ -17,7 +17,7 @@ namespace WukongCSharpMod.Patches
             if (IsThreadTick)
             {
                 var photon = MyMod.Instance.Photon;
-                photon.SendUpdatedPlayerProperties();
+                photon.SetCachedPlayerProperties();
 
                 if (photon.IsMasterClient)
                 {
@@ -117,7 +117,7 @@ namespace WukongCSharpMod.Patches
                         if (!photon.LocalPlayerState.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             photon.LocalPlayerState.Hp = NewValue;
-                            photon.SetPlayerProperty(AttrID.ToString(), NewValue);
+                            photon.CachePlayerProperty(AttrID.ToString(), NewValue);
                         }
 
                         return true;
@@ -130,7 +130,7 @@ namespace WukongCSharpMod.Patches
                         if (!remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             remotePlayer.Hp = NewValue;
-                            photon.SendRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
+                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
                         }
 
                         return true;
@@ -143,7 +143,7 @@ namespace WukongCSharpMod.Patches
                         if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(NewValue, Constants.FloatComparisonTolerance))
                         {
                             monster.Hp = NewValue;
-                            photon.SetMonsterProperty(monster.Guid, AttrID.ToString(), NewValue);
+                            photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), NewValue);
 
                             if (NewValue <= 0)
                             {
@@ -191,43 +191,43 @@ namespace WukongCSharpMod.Patches
                 if (localState.IsFlying != __instance.IsFlying)
                 {
                     photon.LocalPlayerState.IsFlying = __instance.IsFlying;
-                    photon.SetPlayerProperty(nameof(PlayerState.IsFlying), photon.LocalPlayerState.IsFlying);
+                    photon.CachePlayerProperty(nameof(PlayerState.IsFlying), photon.LocalPlayerState.IsFlying);
                 }
 
                 if (localState.IsFalling != __instance.IsFalling)
                 {
                     photon.LocalPlayerState.IsFalling = __instance.IsFalling;
-                    photon.SetPlayerProperty(nameof(PlayerState.IsFalling), photon.LocalPlayerState.IsFalling);
+                    photon.CachePlayerProperty(nameof(PlayerState.IsFalling), photon.LocalPlayerState.IsFalling);
                 }
 
                 if (localState.IsLandingMove != __instance.IsLandingMove)
                 {
                     photon.LocalPlayerState.IsLandingMove = __instance.IsLandingMove;
-                    photon.SetPlayerProperty(nameof(PlayerState.IsLandingMove), photon.LocalPlayerState.IsLandingMove);
+                    photon.CachePlayerProperty(nameof(PlayerState.IsLandingMove), photon.LocalPlayerState.IsLandingMove);
                 }
 
                 if (!localState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.Velocity = __instance.Velocity;
-                    photon.SetPlayerProperty(nameof(PlayerState.Velocity), photon.LocalPlayerState.Velocity);
+                    photon.CachePlayerProperty(nameof(PlayerState.Velocity), photon.LocalPlayerState.Velocity);
                 }
 
                 if (!localState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
-                    photon.SetPlayerProperty(nameof(PlayerState.MoveAcceleration), photon.LocalPlayerState.MoveAcceleration);
+                    photon.CachePlayerProperty(nameof(PlayerState.MoveAcceleration), photon.LocalPlayerState.MoveAcceleration);
                 }
 
                 if (!localState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.Location = __instance.ActorLocation;
-                    photon.SetPlayerProperty(nameof(PlayerState.Location), photon.LocalPlayerState.Location);
+                    photon.CachePlayerProperty(nameof(PlayerState.Location), photon.LocalPlayerState.Location);
                 }
 
                 if (!localState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                 {
                     photon.LocalPlayerState.Rotation = __instance.ActorRotation;
-                    photon.SetPlayerProperty(nameof(PlayerState.Rotation), photon.LocalPlayerState.Rotation);
+                    photon.CachePlayerProperty(nameof(PlayerState.Rotation), photon.LocalPlayerState.Rotation);
                 }
             }
             else
@@ -281,13 +281,13 @@ namespace WukongCSharpMod.Patches
                             if (!monsterState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.Velocity = __instance.Velocity;
-                                photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.Velocity), monsterState.Velocity);
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Velocity), monsterState.Velocity);
                             }
 
                             if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
-                                photon.SetMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
                             }
                         }
                         else
