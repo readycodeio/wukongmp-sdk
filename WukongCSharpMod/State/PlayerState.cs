@@ -1,4 +1,6 @@
-﻿using b1;
+﻿using System;
+using b1;
+using BtlB1;
 using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -26,6 +28,20 @@ namespace WukongCSharpMod.State
         #endregion
 
         public float Hp { get; set; }
+
+        #region Equipment
+
+        // names must start with Constants.EquipmentPrefix
+        public int EquipHead { get; set; }
+        public int EquipUpwear { get; set; }
+        public int EquipArm { get; set; }
+        public int EquipFoot { get; set; }
+        public int EquipHulu { get; set; }
+        public int EquipWeapon { get; set; }
+        public int FabaoEquipId { get; set; }
+        public int AccessoryEquipId { get; set; }
+
+        #endregion
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {

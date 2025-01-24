@@ -212,7 +212,7 @@ namespace WukongCSharpMod
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
             Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
-            Photon.OnEqChange += (id, position, newEq) => Utils.TryRunOnGameThread(() => ChangeEquipment(id, position, newEq));
+            Photon.OnEquipmentChange += (id, position, newEq) => Utils.TryRunOnGameThread(() => ChangeEquipment(id, position, newEq));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -241,7 +241,7 @@ namespace WukongCSharpMod
             }
 
             var eq = (BUS_EquipComp)equipComp;
-            Traverse.Create(eq).Method("OnChangeEquip", position, newEq).GetValue();
+            Traverse.Create(eq).Method("OnChangeEquipReal", position, newEq).GetValue();
         }
 
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)

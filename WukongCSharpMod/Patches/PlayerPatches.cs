@@ -255,11 +255,11 @@ namespace WukongCSharpMod.Patches
     //     }
     // }
 
-    [HarmonyPatch(typeof(BUS_EquipComp), "OnEquipListAnyOneValueChange")]
+    [HarmonyPatch(typeof(BUS_EquipComp), "OnChangeEquip")]
     [HarmonyPatchCategory(Constants.RoomPatches)]
     public class PatchEqCompUpdate
     {
-        public static bool Prefix(BUS_EquipComp __instance, EquipPosition Position, int NewEquipId)
+        public static bool Prefix(BUS_EquipComp __instance, EquipPosition Position, int EquipID)
         {
             var photon = MyMod.Instance.Photon;
             var owner = __instance.GetOwner();
@@ -267,7 +267,7 @@ namespace WukongCSharpMod.Patches
             if (owner != photon.LocalPlayerState.Pawn)
                 return false;
 
-            photon.SendEqChange(Position, NewEquipId);
+            photon.SendEqChange(Position, EquipID);
             return true;
         }
     }

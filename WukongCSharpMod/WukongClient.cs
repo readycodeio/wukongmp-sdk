@@ -34,7 +34,7 @@ namespace WukongCSharpMod
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
-        public event Action<int, EquipPosition, int> OnEqChange;
+        public event Action<int, EquipPosition, int> OnEquipmentChange;
 
         public WukongChatter WukongChat => _wukongChat;
 
@@ -118,11 +118,6 @@ namespace WukongCSharpMod
                     // monster wake up
                     var guid = (string)photonEvent.CustomData;
                     OnMonsterWakeUp?.Invoke(guid);
-                    break;
-                case 6:
-                    // change Eq
-                    var data = (int[])photonEvent.CustomData;
-                    OnEqChange?.Invoke(photonEvent.Sender, (EquipPosition)data[0], data[1]);
                     break;
             }
         }
@@ -293,8 +288,36 @@ namespace WukongCSharpMod
 
         public void SendEqChange(EquipPosition position, int newEq)
         {
-            const byte eventCode = 6;
-            _client.OpRaiseEvent(eventCode, new[] { (int)position, newEq }, RaiseEventArgs.Default, SendOptions.SendReliable);
+            switch (position)
+            {
+                case EquipPosition.Head:
+                    SetPlayerProperty(nameof(PlayerState.EquipHead), newEq);
+                    break;
+                case EquipPosition.Upwear:
+                    SetPlayerProperty(nameof(PlayerState.EquipUpwear), newEq);
+                    break;
+                case EquipPosition.Arm:
+                    SetPlayerProperty(nameof(PlayerState.EquipArm), newEq);
+                    break;
+                case EquipPosition.Foot:
+                    SetPlayerProperty(nameof(PlayerState.EquipFoot), newEq);
+                    break;
+                case EquipPosition.Hulu:
+                    SetPlayerProperty(nameof(PlayerState.EquipHulu), newEq);
+                    break;
+                case EquipPosition.Weapon:
+                    SetPlayerProperty(nameof(PlayerState.EquipWeapon), newEq);
+                    break;
+                case EquipPosition.Fabao:
+                    SetPlayerProperty(nameof(PlayerState.FabaoEquipId), newEq);
+                    break;
+                case EquipPosition.Accessory:
+                    SetPlayerProperty(nameof(PlayerState.AccessoryEquipId), newEq);
+                    break;
+                case EquipPosition.EnumMax:
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(position), position, null);
+            }
         }
 
         protected virtual void ApplyMonsterMove(PhotonHashtable props)
@@ -575,6 +598,12 @@ namespace WukongCSharpMod
                 }
 
                 setter(playerState, kvp.Value);
+
+                if (propertyName.StartsWith(Constants.EquipmentPrefix))
+                {
+                    OnEquipmentChange?.Invoke(id, (EquipPosition)Enum.Parse(typeof(EquipPosition), propertyName.Substring(Constants.EquipmentPrefix.Length)), (int)kvp.Value);
+                    break;
+                }
             }
         }
 
