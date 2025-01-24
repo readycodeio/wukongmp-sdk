@@ -201,7 +201,7 @@ namespace WukongCSharpMod
 
         private void InitPhoton()
         {
-            Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => Utils.TryRunOnGameThread(() => SpawnCloneForPlayer(p)));
+            Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(p)); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
         }
@@ -213,6 +213,7 @@ namespace WukongCSharpMod
                 return;
             }
 
+            Photon.OnBeforeJoinRoom += SetPlayerProperties;
             Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z));
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
@@ -224,6 +225,15 @@ namespace WukongCSharpMod
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count, teamId));
 
             Photon.StartClient();
+        }
+
+        private void SetPlayerProperties()
+        {
+            var player = GameUtils.GetControlledPawn();
+
+            Photon.SetPlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
+            Photon.SetPlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
+            Photon.SendUpdatedPlayerProperties();
         }
 
         private void ChangeEquipment(int id, EquipPosition position, int newEq)
@@ -482,7 +492,7 @@ namespace WukongCSharpMod
             // when joining game, spawn all players already in room
             foreach (var player in Photon.GetOtherPlayersInRoom())
             {
-                Utils.TryRunOnGameThread(() => SpawnCloneForPlayer(player));
+                Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(player));
             }
         }
 

@@ -35,6 +35,7 @@ namespace WukongCSharpMod
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipPosition, int> OnEquipmentChange;
+        public event Action OnBeforeJoinRoom;
 
         public WukongChatter WukongChat => _wukongChat;
 
@@ -72,12 +73,12 @@ namespace WukongCSharpMod
             SyncedMonsters.Remove(monsterGuid);
         }
 
-        public WukongClient(string userName, Action onJoinedRoom, Action<Player> onPlayerJoined)
+        public WukongClient(string userName, Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
             _wukongChat = new WukongChatter(this);
             _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
-            _playerJoinedCallback = onPlayerJoined;
+            _playerJoinedCallback = playerJoinedCallback;
         }
 
         ~WukongClient()
@@ -168,6 +169,8 @@ namespace WukongCSharpMod
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
+            
+            OnBeforeJoinRoom?.Invoke();
 
             _client.ConnectUsingSettings(new AppSettings
             {
@@ -297,10 +300,10 @@ namespace WukongCSharpMod
                     CachePlayerProperty(nameof(PlayerState.EquipWeapon), newEq);
                     break;
                 case EquipPosition.Fabao:
-                    CachePlayerProperty(nameof(PlayerState.EquipFabao), newEq);
+                    SetPlayerProperty(nameof(PlayerState.EquipFabao), newEq);
                     break;
                 case EquipPosition.Accessory:
-                    CachePlayerProperty(nameof(PlayerState.EquipAccessory), newEq);
+                    SetPlayerProperty(nameof(PlayerState.EquipAccessory), newEq);
                     break;
                 case EquipPosition.EnumMax:
                 default:
@@ -542,7 +545,6 @@ namespace WukongCSharpMod
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
             Helpers.Log($"Player {newPlayer.UserId} entered the room");
-
             _playerJoinedCallback?.Invoke(newPlayer);
         }
 

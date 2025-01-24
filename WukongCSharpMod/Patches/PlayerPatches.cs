@@ -251,11 +251,12 @@ namespace WukongCSharpMod.Patches
             var photon = MyMod.Instance.Photon;
             var owner = __instance.GetOwner();
 
-            if (owner != photon.LocalPlayerState.Pawn)
-                return false;
+            if (owner == photon.LocalPlayerState.Pawn)
+            {
+                photon.SendEqChange(EquipPosition, EquipID);
+            }
 
-            photon.SendEqChange(EquipPosition, EquipID);
-            return true;
+            return owner == photon.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison
         }
     }
 }
