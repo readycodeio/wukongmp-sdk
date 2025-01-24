@@ -93,5 +93,16 @@ namespace WukongCSharpMod
 
             return userWidgets;
         }
+
+        public static string GetSaveDirectory()
+        {
+            return FPaths.Combine(FPaths.ProjectDir, "Saved", "Readycode");
+        }
+
+        public static string GetSaveFileFullName(string SlotName)
+        {
+            SlotName += ".sav";
+            return FPaths.Combine(GetSaveDirectory(), SlotName);
+        }
     }
 }

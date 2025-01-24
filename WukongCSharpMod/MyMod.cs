@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -32,6 +33,8 @@ namespace WukongCSharpMod
         private string _userName;
 
         public static MyMod Instance { get; private set; }
+
+        private bool _multiplayerEnabled;
 
         private void InitUserName()
         {
@@ -112,6 +115,37 @@ namespace WukongCSharpMod
                 Helpers.Log("Alt + A");
                 Photon.SpawnClone();
             });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.M, () =>
+            {
+                Helpers.Log("Alt + M");
+                if (_multiplayerEnabled)
+                    return;
+
+                var world = GameUtils.GetWorld();
+                if (world == null)
+                    return;
+                CommB1.ArchiveSummaryData latestArchive = BGW_GameArchiveMgr.Get(world).GetLatestArchive();
+                if (latestArchive == null)
+                    return;
+
+                Utils.TryRunOnGameThread(() =>
+                {
+                    Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.MultiplayerPatches);
+                    Helpers.Log("Multiplayer mode patched with Harmony");
+                });
+
+                // Load archive
+                BGW_EventCollection.Get(world).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, (object)new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel()
+                {
+                    ArchiveId = latestArchive.ArchiveId
+                });
+            });
+        }
+
+        public void SetMultiplayerEnabled()
+        {
+            _multiplayerEnabled = true;
         }
 
         private void WakeUpMonster(string guid)
