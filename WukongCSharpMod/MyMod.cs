@@ -575,11 +575,53 @@ namespace WukongCSharpMod
             // assign in dictionary
             var teamId = PhotonUtils.GetTeamIdForPlayer(id);
 
-            Photon.RegisterPlayer(new PlayerState(id, newPawn, teamId)
+            var playerState = new PlayerState(id, newPawn, teamId)
             {
                 Location = loc,
                 Rotation = rot
-            });
+            };
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipAccessory), out var eqAccessory))
+            {
+                playerState.EquipAccessory = (int)eqAccessory;
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipArm), out var eqArm))
+            {
+                playerState.EquipArm = (int)eqArm;
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFabao), out var eqFabao))
+            {
+                playerState.EquipFabao = (int)eqFabao;
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFoot), out var eqFoot))
+            {
+                playerState.EquipFoot = (int)eqFoot;
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHead), out var eqHead))
+            {
+                playerState.EquipHead = (int)eqHead;
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHulu), out var eqHulu))
+            {
+                playerState.EquipHulu = (int)eqHulu;
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipUpwear), out var eqUpwear))
+            {
+                playerState.EquipUpwear = (int)eqUpwear;
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipWeapon), out var eqWeapon))
+            {
+                playerState.EquipWeapon = (int)eqWeapon;
+            }
+
+            Photon.RegisterPlayer(playerState);
 
             Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
 
