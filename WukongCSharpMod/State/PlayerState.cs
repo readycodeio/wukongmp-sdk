@@ -26,7 +26,7 @@ namespace WukongCSharpMod.State
         #endregion
 
         public float Hp { get; set; }
-        public EquipmentState Equipment { get; set; } = new EquipmentState();
+        public EquipmentState Equipment { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {
@@ -44,6 +44,8 @@ namespace WukongCSharpMod.State
             {
                 Logging.LogError("Failed to get BUC_AttrContainer from pawn");
             }
+            
+            Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
 
             Logging.LogDebug($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);

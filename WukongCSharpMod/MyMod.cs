@@ -235,11 +235,7 @@ namespace WukongCSharpMod
             Photon.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
 
             // equipment
-            var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(player.PlayerState);
-
-            var eq = new EquipmentState(roleData.EquipList.Select(kvp => (kvp.Key, kvp.Value)));
-
-            Photon.LocalPlayerState.Equipment = eq;
+            var eq = EquipmentHelpers.GetCurrentEquipmentStateForActor(player);
             Photon.CachePlayerProperty(nameof(PlayerState.Equipment), eq);
 
             Photon.SetCachedPlayerProperties();

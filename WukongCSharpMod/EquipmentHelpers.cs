@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using b1;
 using HarmonyLib;
+using UnrealEngine.Engine;
 using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
@@ -10,6 +11,12 @@ namespace WukongCSharpMod
     public static class EquipmentHelpers
     {
         private static readonly MethodInfo OnChangeEquipReal = typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public static EquipmentState GetCurrentEquipmentStateForActor(APawn player)
+        {
+            var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(player.PlayerState);
+            return new EquipmentState(roleData.EquipList.Select(kvp => (kvp.Key, kvp.Value)));
+        }
 
         public static void SetRemoteActorEquipment(BGUCharacterCS actor, EquipmentState equipment)
         {
