@@ -581,44 +581,55 @@ namespace WukongCSharpMod
                 Rotation = rot
             };
 
+            // force update equipment
+            var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(newPawn.PlayerState);
+
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipAccessory), out var eqAccessory))
             {
                 playerState.EquipAccessory = (int)eqAccessory;
+                roleData.EquipList[EquipPosition.Accessory] = playerState.EquipAccessory;
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipArm), out var eqArm))
             {
                 playerState.EquipArm = (int)eqArm;
+                roleData.EquipList[EquipPosition.Arm] = playerState.EquipArm;
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFabao), out var eqFabao))
             {
                 playerState.EquipFabao = (int)eqFabao;
+                roleData.EquipList[EquipPosition.Fabao] = playerState.EquipFabao;
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFoot), out var eqFoot))
             {
                 playerState.EquipFoot = (int)eqFoot;
+                roleData.EquipList[EquipPosition.Foot] = playerState.EquipFoot;
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHead), out var eqHead))
             {
                 playerState.EquipHead = (int)eqHead;
+                roleData.EquipList[EquipPosition.Head] = playerState.EquipHead;
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHulu), out var eqHulu))
             {
                 playerState.EquipHulu = (int)eqHulu;
+                roleData.EquipList[EquipPosition.Hulu] = playerState.EquipHulu;
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipUpwear), out var eqUpwear))
             {
                 playerState.EquipUpwear = (int)eqUpwear;
+                roleData.EquipList[EquipPosition.Upwear] = playerState.EquipUpwear;
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipWeapon), out var eqWeapon))
             {
                 playerState.EquipWeapon = (int)eqWeapon;
+                roleData.EquipList[EquipPosition.Weapon] = playerState.EquipWeapon;
             }
 
             Photon.RegisterPlayer(playerState);
