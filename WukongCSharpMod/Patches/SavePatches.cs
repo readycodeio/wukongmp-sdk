@@ -2,6 +2,7 @@
 using b1;
 using CommB1;
 using HarmonyLib;
+using System.Collections.Generic;
 
 namespace WukongCSharpMod.Patches
 {
@@ -19,7 +20,7 @@ namespace WukongCSharpMod.Patches
             if (!SavePatchesData.CustomSaveEnabled)
                 return true;
 
-            __result = GameUtils.GetReadySaveFileFullName(SlotName);
+            __result = GameUtils.GetSaveFileFullName(SlotName);
             return false;
         }
     }
@@ -62,6 +63,27 @@ namespace WukongCSharpMod.Patches
     public class PatchArchiveReadWriter
     {
         public static bool Prefix()
+        {
+            return false;
+        }
+    }
+
+    // Disable adding save game requests
+    [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), new[] { typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>) })]
+    [HarmonyPatchCategory(Constants.MultiplayerPatches)]
+    public class PatchArchiveReadWriterAppendArchive1
+    {
+        public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
+        {
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.MarkSaveSetting))]
+    [HarmonyPatchCategory(Constants.MultiplayerPatches)]
+    public class PatchArchiveReadWriterAppendArchive2
+    {
+        public static bool Prefix(UISettingArchiveData UISettingArchiveData)
         {
             return false;
         }
