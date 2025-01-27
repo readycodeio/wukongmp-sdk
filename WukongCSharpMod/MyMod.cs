@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
-using BtlB1;
 using CommB1;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -240,6 +238,8 @@ namespace WukongCSharpMod
             var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(player.PlayerState);
 
             var eq = new EquipmentState(roleData.EquipList.Select(kvp => (kvp.Key, kvp.Value)));
+
+            Photon.LocalPlayerState.Equipment = eq;
             Photon.CachePlayerProperty(nameof(PlayerState.Equipment), eq);
 
             Photon.SetCachedPlayerProperties();

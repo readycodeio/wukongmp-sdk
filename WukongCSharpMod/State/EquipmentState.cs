@@ -9,7 +9,7 @@ namespace WukongCSharpMod.State
     {
         private readonly Dictionary<EquipPosition, int> _equipments = new Dictionary<EquipPosition, int>();
 
-        private EquipmentState() { }
+        public EquipmentState() { }
 
         public EquipmentState(IEnumerable<(EquipPosition, int)> equipments)
         {

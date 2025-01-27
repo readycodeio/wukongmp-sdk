@@ -26,7 +26,7 @@ namespace WukongCSharpMod.State
         #endregion
 
         public float Hp { get; set; }
-        public EquipmentState Equipment { get; set; }
+        public EquipmentState Equipment { get; set; } = new EquipmentState();
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {
