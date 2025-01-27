@@ -601,54 +601,54 @@ namespace WukongCSharpMod
             var equipComp = Traverse.Create(((BGUCharacterCS)newPawn).ActorCompContainerCS).Field<List<UActorCompBaseCS>>("CompCSs").Value
                 .FirstOrDefault(x => x is BUS_EquipComp);
 
-            var onChangeEq = Traverse.Create(equipComp).Method("OnChangeEquipReal");
+            var onChangeEq = typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipAccessory), out var eqAccessory))
             {
                 playerState.EquipAccessory = (int)eqAccessory;
-                onChangeEq.GetValue(EquipPosition.Accessory, playerState.EquipAccessory);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Accessory, playerState.EquipAccessory });
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipArm), out var eqArm))
             {
                 playerState.EquipArm = (int)eqArm;
-                onChangeEq.GetValue(EquipPosition.Arm, playerState.EquipArm);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Arm, playerState.EquipArm });
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFabao), out var eqFabao))
             {
                 playerState.EquipFabao = (int)eqFabao;
-                onChangeEq.GetValue(EquipPosition.Fabao, playerState.EquipFabao);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Fabao, playerState.EquipFabao });
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFoot), out var eqFoot))
             {
                 playerState.EquipFoot = (int)eqFoot;
-                onChangeEq.GetValue(EquipPosition.Foot, playerState.EquipFoot);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Foot, playerState.EquipFoot });
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHead), out var eqHead))
             {
                 playerState.EquipHead = (int)eqHead;
-                onChangeEq.GetValue(EquipPosition.Head, playerState.EquipHead);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Head, playerState.EquipHead });
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHulu), out var eqHulu))
             {
                 playerState.EquipHulu = (int)eqHulu;
-                onChangeEq.GetValue(EquipPosition.Hulu, playerState.EquipHulu);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Hulu, playerState.EquipHulu });
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipUpwear), out var eqUpwear))
             {
                 playerState.EquipUpwear = (int)eqUpwear;
-                onChangeEq.GetValue(EquipPosition.Upwear, playerState.EquipUpwear);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Upwear, playerState.EquipUpwear });
             }
 
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipWeapon), out var eqWeapon))
             {
                 playerState.EquipWeapon = (int)eqWeapon;
-                onChangeEq.GetValue(EquipPosition.Weapon, playerState.EquipWeapon);
+                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Weapon, playerState.EquipWeapon });
             }
 
             Photon.RegisterPlayer(playerState);
