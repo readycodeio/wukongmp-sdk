@@ -17,7 +17,7 @@ namespace WukongCSharpMod
     public class WukongChatter : IChatClientListener
     {
         private ChatClient _chatClient;
-        private WukongClient _wukongClient;
+        private readonly WukongClient _wukongClient;
 
         private const string GeneralChannelName = "General";
         private const string ServerChannelName = "Server";

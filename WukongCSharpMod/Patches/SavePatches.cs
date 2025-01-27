@@ -33,7 +33,7 @@ namespace WukongCSharpMod.Patches
         {
             if (__result != ReadArchiveResult.Success)
             {
-                Helpers.LogError($"Original readArchiveData Failed, Result:{__result}");
+                Logging.LogError($"Original readArchiveData Failed, Result:{__result}");
                 return;
             }
 
@@ -42,7 +42,7 @@ namespace WukongCSharpMod.Patches
             ReadArchiveResult readArchiveResult = __instance.ReadArchiveData(0, out ArchiveFileUnpacked GameArchiveData, out EArchiveRepairStatus ArchiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
-                Helpers.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");
+                Logging.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");
                 return;
             }
 

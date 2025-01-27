@@ -46,7 +46,7 @@ namespace WukongCSharpMod.Patches
                 // local player (client)
                 if (photon.LocalPlayerState.Hp <= -80000)
                 {
-                    Helpers.Log($"Would set hp to {photon.LocalPlayerState.Hp}  but will not");
+                    Logging.LogDebug($"Would set hp to {photon.LocalPlayerState.Hp}  but will not");
                     return;
                 }
 
@@ -61,7 +61,7 @@ namespace WukongCSharpMod.Patches
                 {
                     if (playerState.Hp <= -80000)
                     {
-                        Helpers.Log($"Would set hp to {playerState.Hp} but will not");
+                        Logging.LogDebug($"Would set hp to {playerState.Hp} but will not");
                         return;
                     }
 
@@ -79,10 +79,10 @@ namespace WukongCSharpMod.Patches
                         if (monster.Hp.Value <= 0)
                         {
                             var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                            Helpers.Log("Will run on game thread: unit dead");
+                            Logging.LogDebug("Will run on game thread: unit dead");
                             Utils.TryRunOnGameThread(() =>
                             {
-                                Helpers.Log("Running on game thread: unit dead");
+                                Logging.LogDebug("Running on game thread: unit dead");
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
 
                                 // remove from collection
@@ -175,7 +175,7 @@ namespace WukongCSharpMod.Patches
         {
             if (__instance == null)
             {
-                Helpers.LogError("__instance is null in BUC_ABPCharacterData.Update_GameThread");
+                Logging.LogError("__instance is null in BUC_ABPCharacterData.Update_GameThread");
                 return;
             }
 

@@ -42,15 +42,15 @@ namespace WukongCSharpMod
         {
             try
             {
-                Helpers.Log($"Loading player name from {Path.Join(Directory.GetCurrentDirectory(), "PhotonUserName.txt")}");
+                Logging.LogDebug($"Loading player name from {Path.Join(Directory.GetCurrentDirectory(), "PhotonUserName.txt")}");
                 var allLines = File.ReadLines("PhotonUserName.txt").ToList();
                 _userName = allLines[0];
-                Helpers.Log($"Player name is = '{_userName}'");
+                Logging.LogDebug($"Player name is = '{_userName}'");
             }
             catch (Exception ex)
             {
-                Helpers.LogError("Couldn't player name from file");
-                Helpers.LogError(ex.ToString());
+                Logging.LogError("Couldn't player name from file");
+                Logging.LogError(ex.ToString());
                 _userName = Constants.DefaultPhotonUserName;
             }
         }
@@ -59,7 +59,7 @@ namespace WukongCSharpMod
         {
             Instance = this;
 
-            Helpers.Log("Init");
+            Logging.LogDebug("Init");
 
             Harmony.PatchAllUncategorized();
 
@@ -69,7 +69,7 @@ namespace WukongCSharpMod
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
             {
-                Helpers.Log("Alt + H");
+                Logging.LogDebug("Alt + H");
 
                 InitializeChatWidget();
                 CleanUpPhoton();
@@ -78,7 +78,7 @@ namespace WukongCSharpMod
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             {
-                Helpers.Log("Alt + V");
+                Logging.LogDebug("Alt + V");
 
                 var myTeam = Photon.LocalPlayerState.TeamId;
                 var otherTeams = Photon.ConnectedPlayers.Values
@@ -87,8 +87,8 @@ namespace WukongCSharpMod
                     .Distinct()
                     .ToList();
 
-                Helpers.Log($"My team: {myTeam}");
-                Helpers.Log($"Other teams: {string.Join(", ", otherTeams)}");
+                Logging.LogDebug($"My team: {myTeam}");
+                Logging.LogDebug($"Other teams: {string.Join(", ", otherTeams)}");
 
                 Utils.TryRunOnGameThread(() =>
                 {
@@ -101,26 +101,26 @@ namespace WukongCSharpMod
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
-                Helpers.Log("Alt + C");
+                Logging.LogDebug("Alt + C");
 
                 // dump player state to console for me
-                Helpers.Log($"Local player state: {Photon.LocalPlayerState}");
+                Logging.LogDebug($"Local player state: {Photon.LocalPlayerState}");
                 // dump player state to console for each connected player
                 foreach (var (id, state) in Photon.ConnectedPlayers)
                 {
-                    Helpers.Log($"Player {id} state: {state}");
+                    Logging.LogDebug($"Player {id} state: {state}");
                 }
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.A, () =>
             {
-                Helpers.Log("Alt + A");
+                Logging.LogDebug("Alt + A");
                 Photon.SpawnClone();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.M, () =>
             {
-                Helpers.Log("Alt + M");
+                Logging.LogDebug("Alt + M");
                 if (_multiplayerEnabled)
                     return;
 
@@ -134,7 +134,7 @@ namespace WukongCSharpMod
                 Utils.TryRunOnGameThread(() =>
                 {
                     Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.MultiplayerPatches);
-                    Helpers.Log("Multiplayer mode patched with Harmony");
+                    Logging.LogDebug("Multiplayer mode patched with Harmony");
                 });
 
                 // Load archive
@@ -163,20 +163,20 @@ namespace WukongCSharpMod
                 {
                     if (actor.GetMonster() == null)
                     {
-                        Helpers.Log($"Spawning monster for tamer with guid: {guid}.");
+                        Logging.LogDebug($"Spawning monster for tamer with guid: {guid}.");
 
                         if (!Photon.SyncedMonsters.ContainsKey(guid))
                         {
                             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor));
-                            Helpers.Log("Monster was not synced, adding to synced monsters.");
+                            Logging.LogDebug("Monster was not synced, adding to synced monsters.");
                         }
 
-                        Helpers.Log("Invoking Evt_TamerBlockingSpawnImmediately.");
+                        Logging.LogDebug("Invoking Evt_TamerBlockingSpawnImmediately.");
                         events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
                     }
                     else if (!Photon.SyncedMonsters.ContainsKey(guid))
                     {
-                        Helpers.Log($"Monster already spawned but not synced: {guid}.");
+                        Logging.LogDebug($"Monster already spawned but not synced: {guid}.");
 
                         var state = new MonsterState(guid, actor);
                         Photon.SyncedMonsters.Add(guid, state);
@@ -186,7 +186,7 @@ namespace WukongCSharpMod
                 }
                 else
                 {
-                    Helpers.Log("Event is null");
+                    Logging.LogDebug("Event is null");
                 }
 
                 return;
@@ -239,21 +239,19 @@ namespace WukongCSharpMod
             // equipment
             var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(player.PlayerState);
 
-            foreach (var (position, id) in roleData.EquipList)
-            {
-                Photon.CachePlayerProperty($"{Constants.EquipmentPrefix}{position}", id);
-            }
+            var eq = new EquipmentState(roleData.EquipList.Select(kvp => (kvp.Key, kvp.Value)));
+            Photon.CachePlayerProperty(nameof(PlayerState.Equipment), eq);
 
             Photon.SetCachedPlayerProperties();
         }
 
         private void ChangeEquipment(int id, EquipPosition position, int newEq)
         {
-            Helpers.Log($"Change equipment for player {id} at position {position} to {newEq}");
+            Logging.LogDebug($"Change equipment for player {id} at position {position} to {newEq}");
 
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Helpers.Log($"Player not found: {id}");
+                Logging.LogDebug($"Player not found: {id}");
                 return;
             }
 
@@ -264,7 +262,7 @@ namespace WukongCSharpMod
 
             if (equipComp == null)
             {
-                Helpers.LogError("EquipComp is null");
+                Logging.LogError("EquipComp is null");
                 return;
             }
 
@@ -276,7 +274,7 @@ namespace WukongCSharpMod
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Helpers.Log($"Player not found: {id}");
+                Logging.LogDebug($"Player not found: {id}");
                 return;
             }
 
@@ -286,16 +284,16 @@ namespace WukongCSharpMod
 
             if (montage is null)
             {
-                Helpers.Log($"Montage not found: {data.MontagePath}");
+                Logging.LogDebug($"Montage not found: {data.MontagePath}");
                 return;
             }
 
-            Helpers.Log($"Applying montage callback for player {id} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            Logging.LogDebug($"Applying montage callback for player {id} with montage {data.MontagePath} ({data.Reason}, {data.State})");
             var animInstance = ((ACharacter)clone).Mesh.GetAnimInstance();
 
             if (animInstance is null)
             {
-                Helpers.Log("AnimInstance is null");
+                Logging.LogDebug("AnimInstance is null");
                 return;
             }
 
@@ -319,7 +317,7 @@ namespace WukongCSharpMod
         {
             if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
             {
-                Helpers.Log($"Monster not found: {data.MonsterGuid}");
+                Logging.LogDebug($"Monster not found: {data.MonsterGuid}");
                 return;
             }
 
@@ -332,14 +330,14 @@ namespace WukongCSharpMod
 
             if (montage is null)
             {
-                Helpers.Log($"Montage not found: {data.MontagePath}");
+                Logging.LogDebug($"Montage not found: {data.MontagePath}");
                 return;
             }
 
-            Helpers.Log($"Applying montage callback for monster {data.MonsterGuid} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            Logging.LogDebug($"Applying montage callback for monster {data.MonsterGuid} with montage {data.MontagePath} ({data.Reason}, {data.State})");
             if (tamerActor.GetMonster() == null)
             {
-                Helpers.LogError($"Monster is null in {nameof(ApplyMonsterMontageCallback)}");
+                Logging.LogError($"Monster is null in {nameof(ApplyMonsterMontageCallback)}");
                 return;
             }
 
@@ -364,7 +362,7 @@ namespace WukongCSharpMod
             }
             else
             {
-                Helpers.LogError($"events is null in {nameof(ApplyMonsterMontageCallback)}");
+                Logging.LogError($"events is null in {nameof(ApplyMonsterMontageCallback)}");
             }
         }
 
@@ -387,7 +385,7 @@ namespace WukongCSharpMod
         private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
         {
             var montagePath = montage.GetPathName();
-            Helpers.Log($"Montage callback: {reason} {montagePath} {state}");
+            Logging.LogDebug($"Montage callback: {reason} {montagePath} {state}");
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
@@ -402,12 +400,12 @@ namespace WukongCSharpMod
             if (hit)
             {
                 centerLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
-                Helpers.Log("Spawning enemy by line trace");
+                Logging.LogDebug("Spawning enemy by line trace");
             }
             else
             {
                 centerLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
-                Helpers.Log("Spawning enemy by player forward vector");
+                Logging.LogDebug("Spawning enemy by player forward vector");
             }
 
             // spawn in a spiral around center point, separated by 100 units
@@ -435,7 +433,7 @@ namespace WukongCSharpMod
             var id = Guid.NewGuid().ToString(); // TODO: use ActorGuid
             SpawnUnitLocally(id, unitName, teamId, loc.X, loc.Y, loc.Z);
 
-            Helpers.Log($"Sending spawn enemy {enemyName} at {loc}");
+            Logging.LogDebug($"Sending spawn enemy {enemyName} at {loc}");
             Photon.SpawnUnit(id, unitName, teamId, loc.X, loc.Y, loc.Z);
         }
 
@@ -446,7 +444,7 @@ namespace WukongCSharpMod
 
         private void SpawnUnitLocally(string guid, string unitName, int teamID, float x, float y, float z)
         {
-            Helpers.Log($"Spawn unit called for {unitName}");
+            Logging.LogDebug($"Spawn unit called for {unitName}");
 
             if (string.IsNullOrEmpty(unitName))
                 return;
@@ -461,7 +459,7 @@ namespace WukongCSharpMod
             var buTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)cachedResourceObj, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
             if (buTamerActor == null)
             {
-                Helpers.LogError("Could not spawn enemy: " + unitName);
+                Logging.LogError("Could not spawn enemy: " + unitName);
                 return;
             }
 
@@ -470,7 +468,7 @@ namespace WukongCSharpMod
             buTamerActor.GetFinalGuid();
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
-            Helpers.Log($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
+            Logging.LogDebug($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamID));
         }
 
@@ -537,7 +535,7 @@ namespace WukongCSharpMod
 
             if (Photon.ConnectedPlayers.ContainsKey(id))
             {
-                Helpers.LogError($"Player already exists: {id}");
+                Logging.LogError($"Player already exists: {id}");
                 return;
             }
 
@@ -557,14 +555,14 @@ namespace WukongCSharpMod
                 rot = (FRotator)playerRot;
             }
 
-            Helpers.Log($"Player {id} location: {loc}");
-            Helpers.Log($"Player {id} rotation: {rot}");
+            Logging.LogDebug($"Player {id} location: {loc}");
+            Logging.LogDebug($"Player {id} rotation: {rot}");
 
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
             {
-                Helpers.Log("Class is null");
+                Logging.LogDebug("Class is null");
                 return;
             }
 
@@ -573,12 +571,12 @@ namespace WukongCSharpMod
 
             BackToOldPawn(oldController, oldPawn, newPawn);
 
-            Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
+            Logging.LogDebug($"Assigned player {id} clone {newPawn.GetEntityHash()}");
 
             var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
             if (newControllerActor != null && newControllerActor is ABGUAIPlayerController newController)
             {
-                Helpers.Log("Spawned new controller");
+                Logging.LogDebug("Spawned new controller");
                 newController.Possess(newPawn);
             }
 
@@ -597,58 +595,11 @@ namespace WukongCSharpMod
                 Rotation = rot
             };
 
-            // force update equipment
-            var equipComp = Traverse.Create(((BGUCharacterCS)newPawn).ActorCompContainerCS).Field<List<UActorCompBaseCS>>("CompCSs").Value
-                .FirstOrDefault(x => x is BUS_EquipComp);
-
-            var onChangeEq = typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipAccessory), out var eqAccessory))
+            // update equipment
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.Equipment), out var eq))
             {
-                playerState.EquipAccessory = (int)eqAccessory;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Accessory, playerState.EquipAccessory });
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipArm), out var eqArm))
-            {
-                playerState.EquipArm = (int)eqArm;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Arm, playerState.EquipArm });
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFabao), out var eqFabao))
-            {
-                playerState.EquipFabao = (int)eqFabao;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Fabao, playerState.EquipFabao });
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFoot), out var eqFoot))
-            {
-                playerState.EquipFoot = (int)eqFoot;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Foot, playerState.EquipFoot });
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHead), out var eqHead))
-            {
-                playerState.EquipHead = (int)eqHead;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Head, playerState.EquipHead });
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHulu), out var eqHulu))
-            {
-                playerState.EquipHulu = (int)eqHulu;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Hulu, playerState.EquipHulu });
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipUpwear), out var eqUpwear))
-            {
-                playerState.EquipUpwear = (int)eqUpwear;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Upwear, playerState.EquipUpwear });
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipWeapon), out var eqWeapon))
-            {
-                playerState.EquipWeapon = (int)eqWeapon;
-                onChangeEq.Invoke(equipComp, new object[] { EquipPosition.Weapon, playerState.EquipWeapon });
+                playerState.Equipment = (EquipmentState)eq;
+                EquipmentHelpers.SetRemoteActorEquipment((BGUCharacterCS)newPawn, playerState.Equipment);
             }
 
             Photon.RegisterPlayer(playerState);
@@ -658,7 +609,7 @@ namespace WukongCSharpMod
         {
             if (_chatWidget != null)
             {
-                Helpers.Log($"Calling AddMessage function with message {message} from {sender}");
+                Logging.LogDebug($"Calling AddMessage function with message {message} from {sender}");
                 _chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
             }
             else
@@ -675,7 +626,7 @@ namespace WukongCSharpMod
                 var message = _chatWidget.ToolTipText.ToString();
                 if (message.Length > 0)
                 {
-                    Helpers.Log($"Got message: {message} in GetSentMessage function");
+                    Logging.LogDebug($"Got message: {message} in GetSentMessage function");
                 }
 
                 return message;
@@ -693,14 +644,14 @@ namespace WukongCSharpMod
                 if (widgets.Count == 1)
                 {
                     _chatWidget = widgets[0];
-                    Helpers.Log("Chat widget initialized!.");
+                    Logging.LogDebug("Chat widget initialized!.");
                 }
             }
         }
 
         public void DeInit()
         {
-            Helpers.Log("DeInit");
+            Logging.LogDebug("DeInit");
         }
     }
 }

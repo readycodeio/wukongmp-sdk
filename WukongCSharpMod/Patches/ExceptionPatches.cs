@@ -9,10 +9,10 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(Exception e)
         {
-            Helpers.LogError("-------------- EXCEPTION --------------");
-            Helpers.LogError(e.Message);
-            Helpers.LogError(e.StackTrace);
-            Helpers.LogError("---------------------------------------");
+            Logging.LogError("-------------- EXCEPTION --------------");
+            Logging.LogError(e.Message);
+            Logging.LogError(e.StackTrace);
+            Logging.LogError("---------------------------------------");
         }
     }
 }

@@ -19,7 +19,7 @@ namespace WukongCSharpMod.Patches
         {
             if (__instance == null)
             {
-                Helpers.LogError("__instance is null in BUC_ABPBGUCharacterData.Update_GameThread");
+                Logging.LogError("__instance is null in BUC_ABPBGUCharacterData.Update_GameThread");
                 return;
             }
 
@@ -253,7 +253,7 @@ namespace WukongCSharpMod.Patches
 
             if (owner == photon.LocalPlayerState.Pawn)
             {
-                photon.SendEqChange(EquipPosition, EquipID);
+                photon.CacheEquipmentChange(EquipPosition, EquipID);
             }
 
             return owner == photon.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison

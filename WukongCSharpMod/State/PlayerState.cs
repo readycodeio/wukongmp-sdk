@@ -26,20 +26,7 @@ namespace WukongCSharpMod.State
         #endregion
 
         public float Hp { get; set; }
-
-        #region Equipment
-
-        // names must start with Constants.EquipmentPrefix
-        public int EquipHead { get; set; }
-        public int EquipUpwear { get; set; }
-        public int EquipArm { get; set; }
-        public int EquipFoot { get; set; }
-        public int EquipHulu { get; set; }
-        public int EquipWeapon { get; set; }
-        public int EquipFabao { get; set; }
-        public int EquipAccessory { get; set; }
-
-        #endregion
+        public EquipmentState Equipment { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {
@@ -55,10 +42,10 @@ namespace WukongCSharpMod.State
             }
             else
             {
-                Helpers.LogError("Failed to get BUC_AttrContainer from pawn");
+                Logging.LogError("Failed to get BUC_AttrContainer from pawn");
             }
 
-            Helpers.Log($"Assigning team ID {teamId} to player");
+            Logging.LogDebug($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
         }
 

@@ -21,7 +21,7 @@ namespace WukongCSharpMod.State
             }
             else
             {
-                Helpers.LogError("Monster is null when creating monster state");
+                Logging.LogError("Monster is null when creating monster state");
             }
         }
 

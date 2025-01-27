@@ -2,7 +2,7 @@
 
 namespace WukongCSharpMod
 {
-    public static class Helpers
+    public static class Logging
     {
 #if UNITY_EDITOR
         private static void Log(string message) {
@@ -14,7 +14,7 @@ namespace WukongCSharpMod
             UnityEngine.Debug.Log(message);
         }
 #else
-        public static void Log(string message)
+        public static void LogDebug(string message)
         {
             Console.WriteLine(message);
         }

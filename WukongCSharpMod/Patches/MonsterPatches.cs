@@ -59,7 +59,7 @@ namespace WukongCSharpMod.Patches
 
                     if (events == null)
                     {
-                        Helpers.LogWarning($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
+                        Logging.LogWarning($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
                         continue;
                     }
 
@@ -86,15 +86,15 @@ namespace WukongCSharpMod.Patches
                 var photon = MyMod.Instance.Photon;
                 var tamer = __instance.InstancePtr.Get();
 
-                Helpers.Log($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
+                Logging.LogDebug($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
                 PhotonUtils.SyncMonsterAndNotify(photon, tamer);
             }
             catch (Exception e)
             {
                 // print and ignore
-                Helpers.LogError("Error in PatchTamerLoad.Postfix");
-                Helpers.LogError(e.Message);
-                Helpers.LogError(e.StackTrace);
+                Logging.LogError("Error in PatchTamerLoad.Postfix");
+                Logging.LogError(e.Message);
+                Logging.LogError(e.StackTrace);
             }
         }
     }

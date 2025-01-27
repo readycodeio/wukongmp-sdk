@@ -53,7 +53,7 @@ namespace WukongCSharpMod
             {
                 if (actor.GetMonster() != null)
                 {
-                    Helpers.Log($"Discovered monster: {BGU_DataUtil.GetActorGuid(actor.GetMonster())}");
+                    Logging.LogDebug($"Discovered monster: {BGU_DataUtil.GetActorGuid(actor.GetMonster())}");
                     SyncMonsterAndNotify(MyMod.Instance.Photon, actor); // Neutral monsters
                 }
             }
@@ -74,13 +74,13 @@ namespace WukongCSharpMod
             if (monsterState == null)
             {
                 monsterState = new MonsterState(guid, tamer);
-                Helpers.Log($"Registering local monster in Photon: {guid}");
+                Logging.LogDebug($"Registering local monster in Photon: {guid}");
                 photon.SyncedMonsters.Add(guid, monsterState);
             }
             // sanity check guid
             else if (monsterState.Guid != guid)
             {
-                Helpers.LogError($"Guid mismatch: {monsterState.Guid} {guid}");
+                Logging.LogError($"Guid mismatch: {monsterState.Guid} {guid}");
                 return;
             }
 
@@ -99,7 +99,7 @@ namespace WukongCSharpMod
         {
             if (monsterState.IsSynced)
             {
-                Helpers.LogError("Attempting to prepare monster that is already synced.");
+                Logging.LogError("Attempting to prepare monster that is already synced.");
                 return;
             }
 
@@ -108,7 +108,7 @@ namespace WukongCSharpMod
             // sanity check
             if (monster is null)
             {
-                Helpers.LogError("Monster is null");
+                Logging.LogError("Monster is null");
                 return;
             }
 
@@ -119,7 +119,7 @@ namespace WukongCSharpMod
                 events.Evt_PlayMontageCallback += (reason, montage, state) =>
                 {
                     var montagePath = montage.GetPathName();
-                    Helpers.Log($"Monster montage callback: {monsterState.Guid} {reason} {montagePath} {state}");
+                    Logging.LogDebug($"Monster montage callback: {monsterState.Guid} {reason} {montagePath} {state}");
                     photon.SendMonsterMontageCallback(monsterState.Guid, reason, montagePath, state);
                 };
 
@@ -134,7 +134,7 @@ namespace WukongCSharpMod
 
                 if (events is null)
                 {
-                    Helpers.LogError("Events is null");
+                    Logging.LogError("Events is null");
                     return;
                 }
 
@@ -145,7 +145,7 @@ namespace WukongCSharpMod
                 events.Evt_EnableCanSetBT.Invoke(P1: false);
             }
 
-            Helpers.Log("Tamer actor disabled.");
+            Logging.LogDebug("Tamer actor disabled.");
             RegisterNewPlayerTeam(monster, monsterState.TeamId);
 
             // at this point the monster exists, so we set IsSpawned

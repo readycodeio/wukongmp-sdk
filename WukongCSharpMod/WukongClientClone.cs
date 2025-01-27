@@ -38,7 +38,7 @@ namespace WukongCSharpMod
 
         public override void OnJoinedRoom()
         {
-            Helpers.Log("Clone joined room");
+            Logging.LogDebug("Clone joined room");
 
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);

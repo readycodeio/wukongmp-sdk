@@ -24,7 +24,7 @@ namespace WukongCSharpMod
         private readonly string _userName;
         private const char MonsterHashtableKeySeparator = ';';
 
-        public int PhotonId => _client.LocalPlayer.ActorNumber;
+        protected int PhotonId => _client.LocalPlayer.ActorNumber;
         public bool IsMasterClient => _client.CurrentRoom?.MasterClientId == PhotonId;
         public bool Ready => _client.IsConnectedAndReady;
 
@@ -94,7 +94,7 @@ namespace WukongCSharpMod
                 case 1:
                     // unit spawn
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
-                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.TeamID, unitData.X, unitData.Y, unitData.Z);
+                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
                     // montage callback
@@ -122,42 +122,8 @@ namespace WukongCSharpMod
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             PhotonPeer.RegisterType(typeof(UnitSpawnData), 255, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
-            PhotonPeer.RegisterType(typeof(FVector), 254, (stream, obj) =>
-            {
-                var vec = (FVector)obj;
-                stream.Write(BitConverter.GetBytes(vec.X), 0, 4);
-                stream.Write(BitConverter.GetBytes(vec.Y), 0, 4);
-                stream.Write(BitConverter.GetBytes(vec.Z), 0, 4);
-                return 12;
-            }, (stream, length) =>
-            {
-                var floatBytes = new byte[4];
-                stream.Read(floatBytes, 0, 4);
-                var x = BitConverter.ToSingle(floatBytes, 0);
-                stream.Read(floatBytes, 0, 4);
-                var y = BitConverter.ToSingle(floatBytes, 0);
-                stream.Read(floatBytes, 0, 4);
-                var z = BitConverter.ToSingle(floatBytes, 0);
-                return new FVector(x, y, z);
-            });
-            PhotonPeer.RegisterType(typeof(FRotator), 253, (stream, obj) =>
-            {
-                var vec = (FRotator)obj;
-                stream.Write(BitConverter.GetBytes(vec.Pitch), 0, 4);
-                stream.Write(BitConverter.GetBytes(vec.Yaw), 0, 4);
-                stream.Write(BitConverter.GetBytes(vec.Roll), 0, 4);
-                return 12;
-            }, (stream, length) =>
-            {
-                var floatBytes = new byte[4];
-                stream.Read(floatBytes, 0, 4);
-                var pitch = BitConverter.ToSingle(floatBytes, 0);
-                stream.Read(floatBytes, 0, 4);
-                var yaw = BitConverter.ToSingle(floatBytes, 0);
-                stream.Read(floatBytes, 0, 4);
-                var roll = BitConverter.ToSingle(floatBytes, 0);
-                return new FRotator(pitch, yaw, roll);
-            });
+            PhotonPeer.RegisterType(typeof(FVector), 254, SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
+            PhotonPeer.RegisterType(typeof(FRotator), 253, SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
             PhotonPeer.RegisterType(typeof(EMoveSpeedLevel), 252, (stream, obj) =>
             {
                 stream.WriteByte((byte)obj);
@@ -166,6 +132,7 @@ namespace WukongCSharpMod
 
             PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
             PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
+            PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
@@ -182,7 +149,7 @@ namespace WukongCSharpMod
             });
 
             new Thread(LoopGame).Start();
-            Helpers.Log("Running forever.");
+            Logging.LogDebug("Running forever.");
         }
 
         public void StopClient()
@@ -213,13 +180,13 @@ namespace WukongCSharpMod
         {
             if (_client.CurrentRoom is null)
             {
-                Helpers.Log("No room joined.");
+                Logging.LogDebug("No room joined.");
                 yield break;
             }
 
             foreach (var player in _client.CurrentRoom.Players)
             {
-                Helpers.Log($"Other player: {player.Value.ActorNumber} {player.Value.UserId} local: {player.Value.IsLocal}");
+                Logging.LogDebug($"Other player: {player.Value.ActorNumber} {player.Value.UserId} local: {player.Value.IsLocal}");
                 if (!player.Value.IsLocal)
                     yield return player.Value;
             }
@@ -242,7 +209,7 @@ namespace WukongCSharpMod
 
         private void OnStateChange(ClientState arg1, ClientState arg2)
         {
-            Helpers.Log(arg1 + " -> " + arg2);
+            Logging.LogDebug(arg1 + " -> " + arg2);
         }
 
         public void SpawnUnit(string id, string unitName, int teamID, float x, float y, float z)
@@ -277,38 +244,10 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        public void SendEqChange(EquipPosition position, int newEq)
+        public void CacheEquipmentChange(EquipPosition position, int newEq)
         {
-            switch (position)
-            {
-                case EquipPosition.Head:
-                    CachePlayerProperty(nameof(PlayerState.EquipHead), newEq);
-                    break;
-                case EquipPosition.Upwear:
-                    CachePlayerProperty(nameof(PlayerState.EquipUpwear), newEq);
-                    break;
-                case EquipPosition.Arm:
-                    CachePlayerProperty(nameof(PlayerState.EquipArm), newEq);
-                    break;
-                case EquipPosition.Foot:
-                    CachePlayerProperty(nameof(PlayerState.EquipFoot), newEq);
-                    break;
-                case EquipPosition.Hulu:
-                    CachePlayerProperty(nameof(PlayerState.EquipHulu), newEq);
-                    break;
-                case EquipPosition.Weapon:
-                    CachePlayerProperty(nameof(PlayerState.EquipWeapon), newEq);
-                    break;
-                case EquipPosition.Fabao:
-                    CachePlayerProperty(nameof(PlayerState.EquipFabao), newEq);
-                    break;
-                case EquipPosition.Accessory:
-                    CachePlayerProperty(nameof(PlayerState.EquipAccessory), newEq);
-                    break;
-                case EquipPosition.EnumMax:
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(position), position, null);
-            }
+            LocalPlayerState.Equipment.SetEquipment(position, newEq);
+            CachePlayerProperty(nameof(PlayerState.Equipment), LocalPlayerState.Equipment);
         }
 
         protected virtual void ApplyMonsterMove(PhotonHashtable props)
@@ -319,7 +258,7 @@ namespace WukongCSharpMod
                 var parts = compositeKey.Split(MonsterHashtableKeySeparator);
                 if (parts.Length != 2)
                 {
-                    Helpers.Log($"Invalid key: {compositeKey}");
+                    Logging.LogDebug($"Invalid key: {compositeKey}");
                     continue;
                 }
 
@@ -328,7 +267,7 @@ namespace WukongCSharpMod
 
                 if (!SyncedMonsters.TryGetValue(guid, out var monsterState))
                 {
-                    Helpers.Log($"Monster {guid} not found.");
+                    Logging.LogDebug($"Monster {guid} not found.");
                     continue;
                 }
 
@@ -378,7 +317,7 @@ namespace WukongCSharpMod
             _playerProperties[key] = value;
             if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
             {
-                Helpers.Log($"Set player property: {key} = {value}");
+                Logging.LogDebug($"Set player property: {key} = {value}");
             }
 
             foreach (var clone in _photonClones)
@@ -391,7 +330,7 @@ namespace WukongCSharpMod
         {
             if (!IsMasterClient)
             {
-                Helpers.Log("Only master client can send remote player properties.");
+                Logging.LogDebug("Only master client can send remote player properties.");
                 return;
             }
 
@@ -400,7 +339,7 @@ namespace WukongCSharpMod
                 [key] = value
             };
 
-            Helpers.Log($"Sending remote player property: {key} = {value}");
+            Logging.LogDebug($"Sending remote player property: {key} = {value}");
 
             Utils.TryRunOnGameThread(() => { _client.OpSetCustomPropertiesOfActor(playerId, hashtable); });
         }
@@ -439,7 +378,7 @@ namespace WukongCSharpMod
 
             if (!(value is FVector || value is FRotator))
             {
-                Helpers.Log($"Set monster property [{guid}]: {prop} = {value}");
+                Logging.LogDebug($"Set monster property [{guid}]: {prop} = {value}");
             }
         }
 
@@ -447,38 +386,38 @@ namespace WukongCSharpMod
 
         public void OnConnected()
         {
-            Helpers.Log("Connected");
+            Logging.LogDebug("Connected");
         }
 
         public void OnConnectedToMaster()
         {
-            Helpers.Log("Connected to master server: " + _client.RealtimePeer.ServerIpAddress);
+            Logging.LogDebug("Connected to master server: " + _client.RealtimePeer.ServerIpAddress);
             MyJoinRandomOrCreateRoom();
         }
 
         public void OnDisconnected(DisconnectCause cause)
         {
-            Helpers.Log($"Disconnected: {cause}");
+            Logging.LogDebug($"Disconnected: {cause}");
         }
 
         public void OnRegionListReceived(RegionHandler regionHandler)
         {
-            Helpers.Log("Region list received");
+            Logging.LogDebug("Region list received");
         }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
         {
-            Helpers.Log("Custom authentication response");
+            Logging.LogDebug("Custom authentication response");
 
             foreach (var kvp in data)
             {
-                Helpers.Log($"{kvp.Key}: {kvp.Value}");
+                Logging.LogDebug($"{kvp.Key}: {kvp.Value}");
             }
         }
 
         public void OnCustomAuthenticationFailed(string debugMessage)
         {
-            Helpers.Log("Custom authentication failed: " + debugMessage);
+            Logging.LogDebug("Custom authentication failed: " + debugMessage);
         }
 
         #endregion
@@ -487,22 +426,22 @@ namespace WukongCSharpMod
 
         public void OnFriendListUpdate(List<FriendInfo> friendList)
         {
-            Helpers.Log("Friend list update");
+            Logging.LogDebug("Friend list update");
         }
 
         public void OnCreatedRoom()
         {
-            Helpers.Log("Created room");
+            Logging.LogDebug("Created room");
         }
 
         public void OnCreateRoomFailed(short returnCode, string message)
         {
-            Helpers.Log("Create room failed: " + message);
+            Logging.LogDebug("Create room failed: " + message);
         }
 
         public virtual void OnJoinedRoom()
         {
-            Helpers.Log("Joined room");
+            Logging.LogDebug("Joined room");
 
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
@@ -510,7 +449,7 @@ namespace WukongCSharpMod
             Utils.TryRunOnGameThread(() =>
             {
                 MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
-                Helpers.Log("Patched with Harmony");
+                Logging.LogDebug("Patched with Harmony");
             });
 
             _joinedRoomCallback?.Invoke();
@@ -521,22 +460,22 @@ namespace WukongCSharpMod
 
         public void OnJoinRoomFailed(short returnCode, string message)
         {
-            Helpers.Log("Join room failed: " + message);
+            Logging.LogDebug("Join room failed: " + message);
         }
 
         public void OnJoinRandomFailed(short returnCode, string message)
         {
-            Helpers.Log("Join random failed: " + message);
+            Logging.LogDebug("Join random failed: " + message);
         }
 
         public void OnLeftRoom()
         {
-            Helpers.Log("Left room");
+            Logging.LogDebug("Left room");
 
             Utils.TryRunOnGameThread(() =>
             {
                 MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
-                Helpers.Log("Unpatched Harmony");
+                Logging.LogDebug("Unpatched Harmony");
             });
         }
 
@@ -544,13 +483,13 @@ namespace WukongCSharpMod
 
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
-            Helpers.Log($"Player {newPlayer.UserId} entered the room");
+            Logging.LogDebug($"Player {newPlayer.UserId} entered the room");
             _playerJoinedCallback?.Invoke(newPlayer);
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)
         {
-            Helpers.Log($"Player {otherPlayer.UserId} left the room");
+            Logging.LogDebug($"Player {otherPlayer.UserId} left the room");
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
@@ -570,7 +509,7 @@ namespace WukongCSharpMod
             }
             else if (!ConnectedPlayers.TryGetValue(id, out playerState))
             {
-                Helpers.Log($"Player {id} not found.");
+                Logging.LogDebug($"Player {id} not found.");
                 return;
             }
 
@@ -586,7 +525,7 @@ namespace WukongCSharpMod
 
                 if (!(kvp.Value is FVector || kvp.Value is FRotator || kvp.Value is float))
                 {
-                    Helpers.Log($"Assigning {propertyName} = {kvp.Value} to player {id}");
+                    Logging.LogDebug($"Assigning {propertyName} = {kvp.Value} to player {id}");
                 }
 
                 setter(playerState, kvp.Value);
