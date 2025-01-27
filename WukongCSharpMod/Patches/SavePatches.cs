@@ -8,7 +8,7 @@ namespace WukongCSharpMod.Patches
 {
     static class SavePatchesData
     {
-        public static bool CustomSaveEnabled = false;
+        public static bool CustomSaveEnabled;
     }
 
     [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
@@ -45,6 +45,7 @@ namespace WukongCSharpMod.Patches
                 Helpers.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");
                 return;
             }
+
             SavePatchesData.CustomSaveEnabled = false;
 
             // Keep only RoleData with player state

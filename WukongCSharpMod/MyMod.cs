@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using BtlB1;
+using CommB1;
 using CSharpModBase;
 using CSharpModBase.Input;
 using HarmonyLib;
@@ -15,6 +16,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongCSharpMod.State;
+using PlayerState = WukongCSharpMod.State.PlayerState;
 
 namespace WukongCSharpMod
 {
@@ -125,7 +127,7 @@ namespace WukongCSharpMod
                 var world = GameUtils.GetWorld();
                 if (world == null)
                     return;
-                CommB1.ArchiveSummaryData latestArchive = BGW_GameArchiveMgr.Get(world).GetLatestArchive();
+                ArchiveSummaryData latestArchive = BGW_GameArchiveMgr.Get(world).GetLatestArchive();
                 if (latestArchive == null)
                     return;
 
@@ -201,7 +203,7 @@ namespace WukongCSharpMod
 
         private void InitPhoton()
         {
-            Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(p)); });
+            Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { Utils.TryRunOnGameThread(() => SpawnCloneForPlayer(p)); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
         }
@@ -231,9 +233,9 @@ namespace WukongCSharpMod
         {
             var player = GameUtils.GetControlledPawn();
 
-            Photon.SetPlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
-            Photon.SetPlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
-            Photon.SendUpdatedPlayerProperties();
+            Photon.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
+            Photon.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
+            Photon.SetCachedPlayerProperties();
         }
 
         private void ChangeEquipment(int id, EquipPosition position, int newEq)
@@ -492,7 +494,7 @@ namespace WukongCSharpMod
             // when joining game, spawn all players already in room
             foreach (var player in Photon.GetOtherPlayersInRoom())
             {
-                Utils.TryRunOnGameThread(() => SpawnCloneForJoiningPlayer(player));
+                Utils.TryRunOnGameThread(() => SpawnCloneForPlayer(player));
             }
         }
 

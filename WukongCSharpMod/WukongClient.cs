@@ -169,7 +169,7 @@ namespace WukongCSharpMod
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
-            
+
             OnBeforeJoinRoom?.Invoke();
 
             _client.ConnectUsingSettings(new AppSettings
@@ -300,10 +300,10 @@ namespace WukongCSharpMod
                     CachePlayerProperty(nameof(PlayerState.EquipWeapon), newEq);
                     break;
                 case EquipPosition.Fabao:
-                    SetPlayerProperty(nameof(PlayerState.EquipFabao), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipFabao), newEq);
                     break;
                 case EquipPosition.Accessory:
-                    SetPlayerProperty(nameof(PlayerState.EquipAccessory), newEq);
+                    CachePlayerProperty(nameof(PlayerState.EquipAccessory), newEq);
                     break;
                 case EquipPosition.EnumMax:
                 default:
