@@ -235,6 +235,15 @@ namespace WukongCSharpMod
 
             Photon.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
             Photon.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
+
+            // equipment
+            var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(player.PlayerState);
+
+            foreach (var (position, id) in roleData.EquipList)
+            {
+                Photon.CachePlayerProperty($"{Constants.EquipmentPrefix}{position}", id);
+            }
+
             Photon.SetCachedPlayerProperties();
         }
 
