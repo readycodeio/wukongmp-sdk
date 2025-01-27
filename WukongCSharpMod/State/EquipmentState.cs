@@ -9,6 +9,8 @@ namespace WukongCSharpMod.State
     {
         private readonly Dictionary<EquipPosition, int> _equipments = new Dictionary<EquipPosition, int>();
 
+        private EquipmentState() { }
+
         public EquipmentState(IEnumerable<(EquipPosition, int)> equipments)
         {
             foreach (var (position, id) in equipments)
@@ -39,33 +41,31 @@ namespace WukongCSharpMod.State
         {
             var state = (EquipmentState)customObject;
 
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Head));
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Upwear));
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Arm));
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Foot));
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Hulu));
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Weapon));
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Fabao));
-            outStream.WriteByte((byte)state.GetEquipment(EquipPosition.Accessory));
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Head)), 0, 4);
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Upwear)), 0, 4);
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Arm)), 0, 4);
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Foot)), 0, 4);
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Hulu)), 0, 4);
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Weapon)), 0, 4);
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Fabao)), 0, 4);
+            outStream.Write(BitConverter.GetBytes(state.GetEquipment(EquipPosition.Accessory)), 0, 4);
 
-            return 8;
+            return 8 * 4;
         }
 
         public static object Deserialize(StreamBuffer inStream, short length)
         {
-            var equipments = new (EquipPosition, int)[]
-            {
-                (EquipPosition.Head, inStream.ReadByte()),
-                (EquipPosition.Upwear, inStream.ReadByte()),
-                (EquipPosition.Arm, inStream.ReadByte()),
-                (EquipPosition.Foot, inStream.ReadByte()),
-                (EquipPosition.Hulu, inStream.ReadByte()),
-                (EquipPosition.Weapon, inStream.ReadByte()),
-                (EquipPosition.Fabao, inStream.ReadByte()),
-                (EquipPosition.Accessory, inStream.ReadByte())
-            };
+            var intBuffer = new byte[4];
+            var eq = new EquipmentState();
 
-            return new EquipmentState(equipments);
+            for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
+            {
+                inStream.Read(intBuffer, 0, 4);
+                var part = BitConverter.ToInt32(intBuffer, 0);
+                eq.SetEquipment((EquipPosition)i, part);
+            }
+
+            return eq;
         }
     }
 }
