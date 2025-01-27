@@ -220,7 +220,7 @@ namespace WukongCSharpMod
             Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
             Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
-            Photon.OnEquipmentChange += (id, position, newEq) => Utils.TryRunOnGameThread(() => ChangeEquipment(id, position, newEq));
+            Photon.OnEquipmentChange += (id, eq) => Utils.TryRunOnGameThread(() => ChangeEquipment(id, eq));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -245,10 +245,8 @@ namespace WukongCSharpMod
             Photon.SetCachedPlayerProperties();
         }
 
-        private void ChangeEquipment(int id, EquipPosition position, int newEq)
+        private void ChangeEquipment(int id, EquipmentState eq)
         {
-            Logging.LogDebug($"Change equipment for player {id} at position {position} to {newEq}");
-
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
                 Logging.LogDebug($"Player not found: {id}");
@@ -256,18 +254,7 @@ namespace WukongCSharpMod
             }
 
             var clone = (BGUCharacterCS)player.Pawn;
-
-            var equipComp = Traverse.Create(clone.ActorCompContainerCS).Field<List<UActorCompBaseCS>>("CompCSs").Value
-                .FirstOrDefault(x => x is BUS_EquipComp);
-
-            if (equipComp == null)
-            {
-                Logging.LogError("EquipComp is null");
-                return;
-            }
-
-            var eq = (BUS_EquipComp)equipComp;
-            Traverse.Create(eq).Method("OnChangeEquipReal", position, newEq).GetValue();
+            EquipmentHelpers.SetRemoteActorEquipment(clone, eq);
         }
 
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)

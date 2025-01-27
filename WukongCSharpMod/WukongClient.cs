@@ -34,7 +34,7 @@ namespace WukongCSharpMod
         public event Action<int, MonsterMontageCallbackData> OnMonsterMontageCallback;
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
-        public event Action<int, EquipPosition, int> OnEquipmentChange;
+        public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action OnBeforeJoinRoom;
 
         public WukongChatter WukongChat => _wukongChat;
@@ -530,9 +530,9 @@ namespace WukongCSharpMod
 
                 setter(playerState, kvp.Value);
 
-                if (propertyName.StartsWith(Constants.EquipmentPrefix))
+                if (propertyName == nameof(PlayerState.Equipment))
                 {
-                    OnEquipmentChange?.Invoke(id, (EquipPosition)Enum.Parse(typeof(EquipPosition), propertyName.Substring(Constants.EquipmentPrefix.Length)), (int)kvp.Value);
+                    OnEquipmentChange?.Invoke(id, (EquipmentState)kvp.Value);
                     break;
                 }
             }
