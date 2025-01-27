@@ -572,67 +572,6 @@ namespace WukongCSharpMod
             var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
             BackToOldPawn(oldController, oldPawn, newPawn);
-            // assign in dictionary
-            var teamId = PhotonUtils.GetTeamIdForPlayer(id);
-
-            var playerState = new PlayerState(id, newPawn, teamId)
-            {
-                Location = loc,
-                Rotation = rot
-            };
-
-            // force update equipment
-            var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(newPawn.PlayerState);
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipAccessory), out var eqAccessory))
-            {
-                playerState.EquipAccessory = (int)eqAccessory;
-                roleData.EquipList[EquipPosition.Accessory] = playerState.EquipAccessory;
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipArm), out var eqArm))
-            {
-                playerState.EquipArm = (int)eqArm;
-                roleData.EquipList[EquipPosition.Arm] = playerState.EquipArm;
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFabao), out var eqFabao))
-            {
-                playerState.EquipFabao = (int)eqFabao;
-                roleData.EquipList[EquipPosition.Fabao] = playerState.EquipFabao;
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFoot), out var eqFoot))
-            {
-                playerState.EquipFoot = (int)eqFoot;
-                roleData.EquipList[EquipPosition.Foot] = playerState.EquipFoot;
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHead), out var eqHead))
-            {
-                playerState.EquipHead = (int)eqHead;
-                roleData.EquipList[EquipPosition.Head] = playerState.EquipHead;
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHulu), out var eqHulu))
-            {
-                playerState.EquipHulu = (int)eqHulu;
-                roleData.EquipList[EquipPosition.Hulu] = playerState.EquipHulu;
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipUpwear), out var eqUpwear))
-            {
-                playerState.EquipUpwear = (int)eqUpwear;
-                roleData.EquipList[EquipPosition.Upwear] = playerState.EquipUpwear;
-            }
-
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipWeapon), out var eqWeapon))
-            {
-                playerState.EquipWeapon = (int)eqWeapon;
-                roleData.EquipList[EquipPosition.Weapon] = playerState.EquipWeapon;
-            }
-
-            Photon.RegisterPlayer(playerState);
 
             Helpers.Log($"Assigned player {id} clone {newPawn.GetEntityHash()}");
 
@@ -648,6 +587,71 @@ namespace WukongCSharpMod
             events.Evt_OnLeaveFalling.Invoke();
             events = BUS_EventCollectionCS.Get(oldPawn);
             events.Evt_OnLeaveFalling.Invoke();
+
+            // assign in dictionary
+            var teamId = PhotonUtils.GetTeamIdForPlayer(id);
+
+            var playerState = new PlayerState(id, newPawn, teamId)
+            {
+                Location = loc,
+                Rotation = rot
+            };
+
+            // force update equipment
+            var equipComp = Traverse.Create(((BGUCharacterCS)newPawn).ActorCompContainerCS).Field<List<UActorCompBaseCS>>("CompCSs").Value
+                .FirstOrDefault(x => x is BUS_EquipComp);
+
+            var onChangeEq = Traverse.Create(equipComp).Method("OnChangeEquipReal");
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipAccessory), out var eqAccessory))
+            {
+                playerState.EquipAccessory = (int)eqAccessory;
+                onChangeEq.GetValue(EquipPosition.Accessory, playerState.EquipAccessory);
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipArm), out var eqArm))
+            {
+                playerState.EquipArm = (int)eqArm;
+                onChangeEq.GetValue(EquipPosition.Arm, playerState.EquipArm);
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFabao), out var eqFabao))
+            {
+                playerState.EquipFabao = (int)eqFabao;
+                onChangeEq.GetValue(EquipPosition.Fabao, playerState.EquipFabao);
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipFoot), out var eqFoot))
+            {
+                playerState.EquipFoot = (int)eqFoot;
+                onChangeEq.GetValue(EquipPosition.Foot, playerState.EquipFoot);
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHead), out var eqHead))
+            {
+                playerState.EquipHead = (int)eqHead;
+                onChangeEq.GetValue(EquipPosition.Head, playerState.EquipHead);
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipHulu), out var eqHulu))
+            {
+                playerState.EquipHulu = (int)eqHulu;
+                onChangeEq.GetValue(EquipPosition.Hulu, playerState.EquipHulu);
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipUpwear), out var eqUpwear))
+            {
+                playerState.EquipUpwear = (int)eqUpwear;
+                onChangeEq.GetValue(EquipPosition.Upwear, playerState.EquipUpwear);
+            }
+
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.EquipWeapon), out var eqWeapon))
+            {
+                playerState.EquipWeapon = (int)eqWeapon;
+                onChangeEq.GetValue(EquipPosition.Weapon, playerState.EquipWeapon);
+            }
+
+            Photon.RegisterPlayer(playerState);
         }
 
         private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
