@@ -211,7 +211,18 @@ namespace WukongCSharpMod
 
         private void HandleRebirth()
         {
-            GSG.BattleLogicSvc.TriggerRebirth();
+            APawn curPlayer = Photon.LocalPlayerState.Pawn;
+            IBUC_UnitStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_UnitStateData, BUC_UnitStateData>(curPlayer);
+            if (readOnlyData == null)
+            {
+                return;
+            }
+            if (!readOnlyData.HasState(EBGUUnitState.Dead))
+            {
+                return;
+            }
+            BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
+            return;
         }
 
         private void Connect()
