@@ -211,7 +211,7 @@ namespace WukongCSharpMod
 
         private void HandleRebirth()
         {
-            GSG.BattleLogicSvc.DeathAnimPlayFinished();
+            GSG.BattleLogicSvc.TriggerRebirth();
         }
 
         private void Connect()
