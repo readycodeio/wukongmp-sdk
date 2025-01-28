@@ -29,6 +29,7 @@ namespace WukongCSharpMod
         public event Action OnSavePosition;
         public event Action OnLoadPosition;
         public event Action OnConnectRequest;
+        public event Action OnEnablePvP;
         public event Action<string, int, int> OnSpawnEnemy;
 
         private const char Separator = ' ';
@@ -101,8 +102,21 @@ namespace WukongCSharpMod
                 new Command
                 {
                     Name = "Connect",
-                    Handler = args => { RequestConnect(); }
+                    Handler = _ => { RequestConnect(); }
                 });
+            _commands.Add(
+                "/pvp",
+                new Command
+                {
+                    Name = "Enable PvP",
+                    Handler = _ => { EnablePvP(); }
+                });
+        }
+
+        private void EnablePvP()
+        {
+            OnEnablePvP?.Invoke();
+            SendChatMessage(ServerChannelName, $"Player {_userName} enabled PvP (team: {_wukongClient.LocalPlayerState.TeamId - Constants.BaseTeamID})");
         }
 
         public void RequestConnect()

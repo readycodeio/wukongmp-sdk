@@ -74,29 +74,6 @@ namespace WukongCSharpMod
                 InitPhoton();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
-            {
-                Logging.LogDebug("Alt + V");
-
-                var myTeam = Photon.LocalPlayerState.TeamId;
-                var otherTeams = Photon.ConnectedPlayers.Values
-                    .Where(p => p.TeamId != myTeam)
-                    .Select(p => p.TeamId)
-                    .Distinct()
-                    .ToList();
-
-                Logging.LogDebug($"My team: {myTeam}");
-                Logging.LogDebug($"Other teams: {string.Join(", ", otherTeams)}");
-
-                Utils.TryRunOnGameThread(() =>
-                {
-                    foreach (var team in otherTeams)
-                    {
-                        PhotonUtils.RegisterTeamHostility(myTeam, team);
-                    }
-                });
-            });
-
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
@@ -136,10 +113,33 @@ namespace WukongCSharpMod
                 });
 
                 // Load archive
-                BGW_EventCollection.Get(world).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, (object)new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel()
+                BGW_EventCollection.Get(world).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
                 {
                     ArchiveId = latestArchive.ArchiveId
                 });
+            });
+        }
+
+        private void EnablePvP()
+        {
+            Logging.LogDebug("Enabled PvP");
+
+            var myTeam = Photon.LocalPlayerState.TeamId;
+            var otherTeams = Photon.ConnectedPlayers.Values
+                .Where(p => p.TeamId != myTeam)
+                .Select(p => p.TeamId)
+                .Distinct()
+                .ToList();
+
+            Logging.LogDebug($"My team: {myTeam}");
+            Logging.LogDebug($"Other teams: {string.Join(", ", otherTeams)}");
+
+            Utils.TryRunOnGameThread(() =>
+            {
+                foreach (var team in otherTeams)
+                {
+                    PhotonUtils.RegisterTeamHostility(myTeam, team);
+                }
             });
         }
 
@@ -204,6 +204,7 @@ namespace WukongCSharpMod
             Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { Utils.TryRunOnGameThread(() => SpawnCloneForPlayer(p)); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
+            Photon.WukongChat.OnEnablePvP += EnablePvP;
         }
 
         private void Connect()
