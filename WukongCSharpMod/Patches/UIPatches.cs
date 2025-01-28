@@ -13,18 +13,15 @@ namespace WukongCSharpMod.Patches
             return AccessTools.Method("b1.BUS_UIControlSystemV2:OnDisplayDamageNumUI");
         }
 
-        public static bool Prefix(DamageNumParam param)
+        public static bool Prefix(DamageNumParam Param)
         {
             var photon = MyMod.Instance.Photon;
-            if (photon.IsMasterClient)
-            {
-                photon.SendDamageNum(param);
-                return true;
-            }
-            else
-            {
+
+            if (!photon.IsMasterClient)
                 return false;
-            }
+
+            photon.SendDamageNum(Param);
+            return true;
         }
     }
 }
