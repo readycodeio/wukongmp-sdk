@@ -3,6 +3,7 @@ using B1UI.GSUI;
 using BtlB1;
 using HarmonyLib;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
@@ -266,6 +267,16 @@ namespace WukongCSharpMod.Patches
     public class PatchUIDeath
     {
         public static bool Prefix()
+        {
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "OnMoveCameraSpringArm2CustomRotation")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchCameraRotation
+    {
+        public static bool Prefix(FRotator InCustomRotation)
         {
             return false;
         }
