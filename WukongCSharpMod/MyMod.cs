@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
+using B1UI;
 using CommB1;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -210,7 +211,7 @@ namespace WukongCSharpMod
 
         private void HandleRebirth()
         {
-            throw new NotImplementedException();
+            GSG.BattleLogicSvc.DeathAnimPlayFinished();
         }
 
         private void Connect()
