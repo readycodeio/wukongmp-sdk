@@ -1,4 +1,5 @@
 ﻿using b1;
+using B1UI.GSUI;
 using BtlB1;
 using HarmonyLib;
 using UnrealEngine.Engine;
@@ -257,6 +258,16 @@ namespace WukongCSharpMod.Patches
             }
 
             return owner == photon.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison
+        }
+    }
+
+    [HarmonyPatch(typeof(UIDeath), "DoShowIn")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public class PatchUIDeath
+    {
+        public static bool Prefix()
+        {
+            return false;
         }
     }
 }
