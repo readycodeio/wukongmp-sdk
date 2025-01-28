@@ -30,6 +30,7 @@ namespace WukongCSharpMod
         public event Action OnLoadPosition;
         public event Action OnConnectRequest;
         public event Action OnEnablePvP;
+        public event Action OnRebirthRequested;
         public event Action<string, int, int> OnSpawnEnemy;
 
         private const char Separator = ' ';
@@ -111,6 +112,19 @@ namespace WukongCSharpMod
                     Name = "Enable PvP",
                     Handler = _ => { EnablePvP(); }
                 });
+            _commands.Add(
+                "/rebirth",
+                new Command
+                {
+                    Name = "Rebirth",
+                    Handler = _ => { RequestRebirth(); }
+                });
+        }
+
+        private void RequestRebirth()
+        {
+            OnRebirthRequested?.Invoke();
+            SendChatMessage(ServerChannelName, $"Player {_userName} requested rebirth");
         }
 
         private void EnablePvP()

@@ -87,9 +87,9 @@ namespace WukongCSharpMod
                 }
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.A, () =>
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             {
-                Logging.LogDebug("Alt + A");
+                Logging.LogDebug("Alt + V");
                 Photon.SpawnClone();
             });
 
@@ -205,6 +205,12 @@ namespace WukongCSharpMod
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
             Photon.WukongChat.OnEnablePvP += EnablePvP;
+            Photon.WukongChat.OnRebirthRequested += HandleRebirth;
+        }
+
+        private void HandleRebirth()
+        {
+            throw new NotImplementedException();
         }
 
         private void Connect()
