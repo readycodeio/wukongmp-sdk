@@ -36,6 +36,7 @@ namespace WukongCSharpMod
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action OnBeforeJoinRoom;
+        public event Action<DamageNumParam> OnDamageNum;
 
         public WukongChatter WukongChat => _wukongChat;
 
@@ -115,6 +116,11 @@ namespace WukongCSharpMod
                     var guid = (string)photonEvent.CustomData;
                     OnMonsterWakeUp?.Invoke(guid);
                     break;
+                case 6:
+                    // damage num
+                    var damageNumParam = (DamageNumParam)photonEvent.CustomData;
+                    OnDamageNum?.Invoke(damageNumParam);
+                    break;
             }
         }
 
@@ -133,6 +139,7 @@ namespace WukongCSharpMod
             PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
             PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
             PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
+            PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
 
             _client.AddCallbackTarget(this);
             _client.StateChanged += OnStateChange;
@@ -242,6 +249,12 @@ namespace WukongCSharpMod
         {
             const byte eventCode = 5;
             _client.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendDamageNum(DamageNumParam damageNumParam)
+        {
+            const byte eventCode = 6;
+            _client.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)

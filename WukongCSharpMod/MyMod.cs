@@ -219,6 +219,7 @@ namespace WukongCSharpMod
             Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
             Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
             Photon.OnEquipmentChange += (id, eq) => Utils.TryRunOnGameThread(() => ChangeEquipment(id, eq));
+            Photon.OnDamageNum += (damageNum) => Utils.TryRunOnGameThread(() => OnDamageNum(damageNum));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -251,6 +252,12 @@ namespace WukongCSharpMod
 
             var clone = (BGUCharacterCS)player.Pawn;
             EquipmentHelpers.SetRemoteActorEquipment(clone, eq);
+        }
+
+        private static void OnDamageNum(DamageNumParam damageNum)
+        {
+            var uiEvt = BGW_UIEventCollection.Get(GameUtils.GetWorld());
+            uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
         }
 
         private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)

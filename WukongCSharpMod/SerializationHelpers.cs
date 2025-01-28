@@ -1,4 +1,5 @@
 ﻿using System;
+using b1;
 using Photon.Client;
 using UnrealEngine.Runtime;
 
@@ -46,6 +47,32 @@ namespace WukongCSharpMod
             inStream.Read(floatBytes, 0, 4);
             var roll = BitConverter.ToSingle(floatBytes, 0);
             return new FRotator(pitch, yaw, roll);
+        }
+
+        public static short SerializeDamageNumParam(StreamBuffer outStream, object obj)
+        {
+            var dmg = (DamageNumParam)obj;
+            outStream.Write(BitConverter.GetBytes(dmg.DamageNum), 0, 4);
+            outStream.WriteByte((byte)dmg.DamageType);
+            var s1 = SerializeFVector(outStream, dmg.RealHitLocation);
+            outStream.Write(BitConverter.GetBytes(dmg.Amplitude), 0, 4);
+            outStream.WriteByte((byte)dmg.AttackerTeamType);
+            var s2 = SerializeFVector(outStream, dmg.RealHitDir);
+            return (short)(4 + 1 + s1 + 4 + 1 + s2);
+        }
+
+        public static object DeserializeDamageNumParam(StreamBuffer inStream, short length)
+        {
+            var intBytes = new byte[4];
+            inStream.Read(intBytes, 0, 4);
+            var damageNum = BitConverter.ToInt32(intBytes, 0);
+            var damageType = (EDamageNumberType)inStream.ReadByte();
+            var realHitLocation = (FVector)DeserializeFVector(inStream, 12);
+            inStream.Read(intBytes, 0, 4);
+            var amplitude = BitConverter.ToSingle(intBytes, 0);
+            var attackerTeamType = (EDmgNumUITeamType)inStream.ReadByte();
+            var realHitDir = (FVector)DeserializeFVector(inStream, 12);
+            return new DamageNumParam(damageType, damageNum, amplitude, realHitLocation, realHitDir, attackerTeamType);
         }
     }
 }
