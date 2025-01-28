@@ -222,7 +222,7 @@ namespace WukongCSharpMod
                 return;
             }
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
-            return;
+            BUS_EventCollectionCS.Get(curPlayer)?.Evt_TriggerPlayerRest.Invoke();
         }
 
         private void Connect()
