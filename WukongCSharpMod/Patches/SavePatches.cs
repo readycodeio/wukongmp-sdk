@@ -1,8 +1,8 @@
-﻿using ArchiveB1;
+﻿using System.Collections.Generic;
+using ArchiveB1;
 using b1;
 using CommB1;
 using HarmonyLib;
-using System.Collections.Generic;
 
 namespace WukongCSharpMod.Patches
 {

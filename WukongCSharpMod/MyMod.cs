@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
-using B1UI;
 using CommB1;
 using CSharpModBase;
 using CSharpModBase.Input;
@@ -14,6 +13,7 @@ using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
+using WukongCSharpMod.Patches;
 using WukongCSharpMod.State;
 using PlayerState = WukongCSharpMod.State.PlayerState;
 
@@ -107,7 +107,7 @@ namespace WukongCSharpMod
                 if (latestArchive == null)
                     return;
 
-                Utils.TryRunOnGameThread(() =>
+                GameLoopPatch.QueueOnGameThread(() =>
                 {
                     Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.MultiplayerPatches);
                     Logging.LogDebug("Multiplayer mode patched with Harmony");
@@ -135,7 +135,7 @@ namespace WukongCSharpMod
             Logging.LogDebug($"My team: {myTeam}");
             Logging.LogDebug($"Other teams: {string.Join(", ", otherTeams)}");
 
-            Utils.TryRunOnGameThread(() =>
+            GameLoopPatch.QueueOnGameThread(() =>
             {
                 foreach (var team in otherTeams)
                 {
@@ -202,7 +202,7 @@ namespace WukongCSharpMod
 
         private void InitPhoton()
         {
-            Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { Utils.TryRunOnGameThread(() => SpawnCloneForPlayer(p)); });
+            Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p)); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
             Photon.WukongChat.OnEnablePvP += EnablePvP;
@@ -217,10 +217,12 @@ namespace WukongCSharpMod
             {
                 return;
             }
+
             if (!readOnlyData.HasState(EBGUUnitState.Dead))
             {
                 return;
             }
+
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_TriggerPlayerRest.Invoke();
         }
@@ -233,16 +235,16 @@ namespace WukongCSharpMod
             }
 
             Photon.OnBeforeJoinRoom += SetPlayerProperties;
-            Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => Utils.TryRunOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z));
-            Photon.OnMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyPlayerMontageCallback(id, data));
-            Photon.OnMonsterMontageCallback += (id, data) => Utils.TryRunOnGameThread(() => ApplyMonsterMontageCallback(id, data));
-            Photon.OnMonsterWakeUp += guid => Utils.TryRunOnGameThread(() => WakeUpMonster(guid));
-            Photon.OnEquipmentChange += (id, eq) => Utils.TryRunOnGameThread(() => ChangeEquipment(id, eq));
-            Photon.OnDamageNum += (damageNum) => Utils.TryRunOnGameThread(() => OnDamageNum(damageNum));
+            Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z));
+            Photon.OnMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(id, data));
+            Photon.OnMonsterMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyMonsterMontageCallback(id, data));
+            Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid));
+            Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq));
+            Photon.OnDamageNum += (damageNum) => GameLoopPatch.QueueOnAnimThread(() => OnDamageNum(damageNum));
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => Utils.TryRunOnGameThread(() => SpawnEnemiesMaster(name, count, teamId));
+            Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId));
 
             Photon.StartClient();
         }
@@ -430,7 +432,7 @@ namespace WukongCSharpMod
                 {
                     // wait for i * 200ms
                     await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                    Utils.TryRunOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, teamID); });
+                    GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, teamID); });
                 });
             }
         }
@@ -510,7 +512,7 @@ namespace WukongCSharpMod
             // when joining game, spawn all players already in room
             foreach (var player in Photon.GetOtherPlayersInRoom())
             {
-                Utils.TryRunOnGameThread(() => SpawnCloneForPlayer(player));
+                GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(player));
             }
         }
 

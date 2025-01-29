@@ -8,11 +8,11 @@ using System.Reflection;
 using System.Threading;
 using b1;
 using BtlB1;
-using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongCSharpMod.Patches;
 using WukongCSharpMod.State;
 
 namespace WukongCSharpMod
@@ -354,7 +354,7 @@ namespace WukongCSharpMod
 
             Logging.LogDebug($"Sending remote player property: {key} = {value}");
 
-            Utils.TryRunOnGameThread(() => { _client.OpSetCustomPropertiesOfActor(playerId, hashtable); });
+            GameLoopPatch.QueueOnGameThread(() => { _client.OpSetCustomPropertiesOfActor(playerId, hashtable); });
         }
 
         private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();
@@ -459,7 +459,7 @@ namespace WukongCSharpMod
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
-            Utils.TryRunOnGameThread(() =>
+            GameLoopPatch.QueueOnGameThread(() =>
             {
                 MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
                 Logging.LogDebug("Patched with Harmony");
@@ -468,7 +468,7 @@ namespace WukongCSharpMod
             _joinedRoomCallback?.Invoke();
             _wukongChat.InitializeChat(_userName);
 
-            Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
+            GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters);
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
@@ -485,7 +485,7 @@ namespace WukongCSharpMod
         {
             Logging.LogDebug("Left room");
 
-            Utils.TryRunOnGameThread(() =>
+            GameLoopPatch.QueueOnGameThread(() =>
             {
                 MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
                 Logging.LogDebug("Unpatched Harmony");

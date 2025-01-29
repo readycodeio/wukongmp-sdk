@@ -1,6 +1,5 @@
 ﻿using b1;
 using BtlShare;
-using CSharpModBase;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -80,7 +79,7 @@ namespace WukongCSharpMod.Patches
                         {
                             var events = BUS_EventCollectionCS.Get(__instance.Owner);
                             Logging.LogDebug("Will run on game thread: unit dead");
-                            Utils.TryRunOnGameThread(() =>
+                            GameLoopPatch.QueueOnGameThread(() =>
                             {
                                 Logging.LogDebug("Running on game thread: unit dead");
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
@@ -315,6 +314,7 @@ namespace WukongCSharpMod.Patches
                 __result = false;
                 return false;
             }
+
             return true;
         }
     }
@@ -333,6 +333,7 @@ namespace WukongCSharpMod.Patches
                 __result = false;
                 return false;
             }
+
             return true;
         }
     }

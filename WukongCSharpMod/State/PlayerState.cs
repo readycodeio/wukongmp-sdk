@@ -44,7 +44,7 @@ namespace WukongCSharpMod.State
             {
                 Logging.LogError("Failed to get BUC_AttrContainer from pawn");
             }
-            
+
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
 
             Logging.LogDebug($"Assigning team ID {teamId} to player");

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using b1;
-using CSharpModBase;
 using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongCSharpMod.State;
@@ -65,7 +64,7 @@ namespace WukongCSharpMod.Patches
 
                     if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
-                        Utils.TryRunOnGameThread(() => { events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
+                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
                     }
                 }
             }
