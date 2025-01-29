@@ -15,6 +15,7 @@ using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongCSharpMod.Patches;
 using WukongCSharpMod.State;
+using Log = Photon.Realtime.Log;
 using PlayerState = WukongCSharpMod.State.PlayerState;
 
 namespace WukongCSharpMod
@@ -26,7 +27,23 @@ namespace WukongCSharpMod
 
         private UUserWidget _chatWidget;
 
-        public WukongClient Photon { get; private set; }
+        private WukongClient _photon;
+
+        public WukongClient Photon
+        {
+            get
+            {
+                if (_photon == null)
+                {
+                    Logging.LogError("Photon is null");
+                    // log stack trace
+                    Logging.LogError(Environment.StackTrace);
+                }
+
+                return _photon;
+            }
+            private set => _photon = value;
+        }
 
         public readonly Harmony Harmony = new Harmony("WukongMP");
 

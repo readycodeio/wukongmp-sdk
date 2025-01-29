@@ -23,9 +23,12 @@ namespace WukongCSharpMod.Patches
 
         public static void Prefix(float DeltaSeconds, int TickGroup)
         {
-            if (TickGroup == 0) // 1024
+            Logging.LogDebug($"Prefix ReceiveTick_Implementation: {TickGroup}");
+
+            if (TickGroup == 101) // 1024
             {
                 // main tick
+                Logging.LogDebug("Main tick dequeue");
                 while (MainThreadActionQueue.TryDequeue(out var action))
                 {
                     try
@@ -34,7 +37,7 @@ namespace WukongCSharpMod.Patches
                     }
                     catch (Exception e)
                     {
-                        Logging.LogError("-------------- EXCEPTION ON GAME THREAD --------------");
+                        Logging.LogError("-------------- EXCEPTION PRE BEFORE ANIM -------------");
                         Logging.LogError(e.Message);
                         Logging.LogError(e.StackTrace);
                         Logging.LogError("------------------------------------------------------");
@@ -44,6 +47,7 @@ namespace WukongCSharpMod.Patches
             else if (TickGroup == 2) // 8
             {
                 // after anim
+                Logging.LogDebug("After Anim tick dequeue");
                 while (AnimThreadActionQueue.TryDequeue(out var action))
                 {
                     try
@@ -52,13 +56,18 @@ namespace WukongCSharpMod.Patches
                     }
                     catch (Exception e)
                     {
-                        Logging.LogError("-------------- EXCEPTION ON GAME THREAD --------------");
+                        Logging.LogError("------------- EXCEPTION POST AFTER ANIM -------------");
                         Logging.LogError(e.Message);
                         Logging.LogError(e.StackTrace);
-                        Logging.LogError("------------------------------------------------------");
+                        Logging.LogError("-----------------------------------------------------");
                     }
                 }
             }
+        }
+
+        public static void Postfix(float DeltaSeconds, int TickGroup)
+        {
+            Logging.LogDebug($"Postfix ReceiveTick_Implementation: {TickGroup}");
         }
     }
 }
