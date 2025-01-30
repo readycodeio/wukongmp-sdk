@@ -8,19 +8,19 @@ namespace WukongCSharpMod.Patches
 {
     public static class GameLoopPatch
     {
-        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<Action>> CustomTickGroupActionQueues
-            = new ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<Action>>();
+        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string Name)>> CustomTickGroupActionQueues
+            = new ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action, string)>>();
 
-        public static void QueueOnGameThread(Action action, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
+        public static void QueueOnGameThread(Action action, string name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
         {
-            Logging.LogDebug("--------- QueueOnGameThread -----------");
-            Logging.LogDebug($"Queue: {action.Method.Name} on group {(int)tickGroup} {tickGroup}");
-            Logging.LogDebug(Environment.StackTrace);
-            Logging.LogDebug("---------------------------------------");
-
-            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<Action>(new[] { action }), (_, queue) =>
+            if (name != null)
             {
-                queue.Enqueue(action);
+                Logging.LogDebug($"Enqueueing action: {name}");
+            }
+
+            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>(new[] { (action, logName: name) }), (_, queue) =>
+            {
+                queue.Enqueue((action, name));
                 return queue;
             });
         }
@@ -82,13 +82,16 @@ namespace WukongCSharpMod.Patches
             if (queue.IsEmpty)
                 return;
 
-            Logging.LogDebug($"Processing {queue.Count} action for tick group {mask}");
-
-            while (queue.TryDequeue(out var action))
+            while (queue.TryDequeue(out var item))
             {
                 try
                 {
-                    action();
+                    if (item.Name != null)
+                    {
+                        Logging.LogDebug($"Processing {item.Name} action for tick group {mask}");
+                    }
+
+                    item.Action();
                 }
                 catch (Exception e)
                 {
@@ -136,13 +139,16 @@ namespace WukongCSharpMod.Patches
             if (queue.IsEmpty)
                 return;
 
-            Logging.LogDebug($"Processing {queue.Count} action for tick group {mask}");
-
-            while (queue.TryDequeue(out var action))
+            while (queue.TryDequeue(out var item))
             {
                 try
                 {
-                    action();
+                    if (item.Name != null)
+                    {
+                        Logging.LogDebug($"Processing {item.Name} action for tick group {mask} (EntityManager)");
+                    }
+
+                    item.Action();
                 }
                 catch (Exception e)
                 {

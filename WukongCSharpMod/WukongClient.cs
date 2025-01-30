@@ -465,7 +465,7 @@ namespace WukongCSharpMod
             _joinedRoomCallback?.Invoke();
             _wukongChat.InitializeChat(_userName);
 
-            GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters);
+            GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
