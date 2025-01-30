@@ -338,4 +338,21 @@ namespace WukongCSharpMod.Patches
     //         return true;
     //     }
     // }
+
+
+    [HarmonyPatch(typeof(BUS_DeadComp), "OnUnitDead")]
+    [HarmonyPatchCategory(Constants.RoomPatches)]
+    public static class PatchUnitDead
+    {
+        public static void Postfix(ref BUS_DeadComp __instance)
+        {
+            var photon = MyMod.Instance.Photon;
+            var character = __instance.GetOwner();
+            var events = BUS_EventCollectionCS.Get(character);
+            if (events != null)
+            {
+                events.Evt_ResetCameraSpringArmRot.Invoke();
+            }
+        }
+    }
 }
