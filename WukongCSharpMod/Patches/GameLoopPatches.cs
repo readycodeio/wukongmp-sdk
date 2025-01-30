@@ -55,15 +55,21 @@ namespace WukongCSharpMod.Patches
     {
         public static void Prefix(int TickGroup)
         {
+            var enumTickGroup = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+            Logging.LogDebug($"Prefix ReceiveTick_Implementation: {(int)enumTickGroup} {enumTickGroup}");
+        }
+
+        public static void Postfix(int TickGroup)
+        {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+
+            Logging.LogDebug($"Postfix ReceiveTick_Implementation: {(int)mask} {mask}");
 
             if (mask == BGW_TickGroupMask.TG_PreTick
                 || mask == BGW_TickGroupMask.TG_OnTick
                 || mask == BGW_TickGroupMask.TG_LateTick
                 || mask == BGW_TickGroupMask.TG_ThreadTick)
                 return;
-
-            Logging.LogDebug($"Prefix ReceiveTick_Implementation: {(int)mask} {mask}");
 
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
                 return;
@@ -88,12 +94,6 @@ namespace WukongCSharpMod.Patches
                 }
             }
         }
-
-        public static void Postfix(int TickGroup)
-        {
-            var enumTickGroup = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
-            Logging.LogDebug($"Postfix ReceiveTick_Implementation: {(int)enumTickGroup} {enumTickGroup}");
-        }
     }
 
     [HarmonyPatch(typeof(EntityManager), nameof(EntityManager.TickAllComponentsWithGroup), typeof(float), typeof(int), typeof(int), typeof(int))]
@@ -105,6 +105,14 @@ namespace WukongCSharpMod.Patches
             int ThreadCount)
         {
             Logging.LogDebug($"Prefix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
+        }
+
+        public static void Postfix(
+            int TickGroup, // this is BGW_TickGroupMask
+            int ThreadIdx,
+            int ThreadCount)
+        {
+            Logging.LogDebug($"Postfix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
 
             if (ThreadIdx != 0)
                 return;
@@ -139,14 +147,6 @@ namespace WukongCSharpMod.Patches
                     Logging.LogError("-----------------------------------------------------------------------");
                 }
             }
-        }
-
-        public static void Postfix(
-            int TickGroup, // this is BGW_TickGroupMask
-            int ThreadIdx,
-            int ThreadCount)
-        {
-            Logging.LogDebug($"Postfix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
         }
     }
 }
