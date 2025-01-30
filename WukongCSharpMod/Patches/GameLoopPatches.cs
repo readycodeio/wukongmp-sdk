@@ -24,15 +24,14 @@ namespace WukongCSharpMod.Patches
 
         public static void Prefix(int TickGroup)
         {
-            Logging.LogDebug($"Prefix ReceiveTick_Implementation: {TickGroup}");
+            var enumTickGroup = CustomTickGroupToTickGroupMask(TickGroup);
+            Logging.LogDebug($"Prefix ReceiveTick_Implementation: {(int)enumTickGroup} {enumTickGroup}");
 
             if (!CustomTickGroupActionQueues.TryGetValue(TickGroup, out var queue))
                 return;
 
             if (queue.IsEmpty)
                 return;
-
-            var enumTickGroup = CustomTickGroupToTickGroupMask(TickGroup);
 
             Logging.LogDebug($"Processing {queue.Count} action for tick group {enumTickGroup}");
 
@@ -54,7 +53,8 @@ namespace WukongCSharpMod.Patches
 
         public static void Postfix(int TickGroup)
         {
-            Logging.LogDebug($"Postfix ReceiveTick_Implementation: {TickGroup}");
+            var enumTickGroup = CustomTickGroupToTickGroupMask(TickGroup);
+            Logging.LogDebug($"Postfix ReceiveTick_Implementation: {(int)enumTickGroup} {enumTickGroup}");
         }
 
         private static int TickGroupMaskToCustomTickGroup(BGW_TickGroupMask mask)
