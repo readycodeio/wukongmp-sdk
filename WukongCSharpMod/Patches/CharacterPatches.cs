@@ -346,9 +346,8 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(ref BUS_DeadComp __instance)
         {
-            var photon = MyMod.Instance.Photon;
-            var character = __instance.GetOwner();
-            var events = BUS_EventCollectionCS.Get(character);
+            var pawn = MyMod.Instance.Photon.LocalPlayerState.Pawn;
+            var events = BUS_EventCollectionCS.Get(pawn);
             if (events != null)
             {
                 events.Evt_ResetCameraSpringArmRot.Invoke();
