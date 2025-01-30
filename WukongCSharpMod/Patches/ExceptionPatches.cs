@@ -15,4 +15,14 @@ namespace WukongCSharpMod.Patches
             Logging.LogError("---------------------------------------");
         }
     }
+
+    [HarmonyPatch(typeof(BGW_ExceptionUIMgr), "HandleFatalExceptionUIClose")]
+    public class FatalExceptionPatches
+    {
+        public static bool Prefix()
+        {
+            Logging.LogError("Would close the game here");
+            return false;
+        }
+    }
 }

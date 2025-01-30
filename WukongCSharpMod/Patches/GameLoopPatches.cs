@@ -18,7 +18,7 @@ namespace WukongCSharpMod.Patches
                 Logging.LogDebug($"Enqueueing action: {name}");
             }
 
-            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>(new[] { (action, logName: name) }), (_, queue) =>
+            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>(new[] { (action, name) }), (_, queue) =>
             {
                 queue.Enqueue((action, name));
                 return queue;
