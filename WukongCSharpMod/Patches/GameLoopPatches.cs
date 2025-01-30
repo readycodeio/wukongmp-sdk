@@ -13,6 +13,11 @@ namespace WukongCSharpMod.Patches
 
         public static void QueueOnGameThread(Action action, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
         {
+            Logging.LogDebug("--------- QueueOnGameThread -----------");
+            Logging.LogDebug($"Queue: {action.Method.Name} on group {(int)tickGroup} {tickGroup}");
+            Logging.LogDebug(Environment.StackTrace);
+            Logging.LogDebug("---------------------------------------");
+
             CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<Action>(new[] { action }), (_, queue) =>
             {
                 queue.Enqueue(action);
