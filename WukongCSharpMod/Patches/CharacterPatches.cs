@@ -300,41 +300,42 @@ namespace WukongCSharpMod.Patches
         }
     }
 
-    [HarmonyPatch(typeof(APawn), "IsLocallyControlled")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public static class PatchIsLocallyControlled
-    {
-        public static bool Prefix(APawn __instance, ref bool __result)
-        {
-            var photon = MyMod.Instance.Photon;
-            var playerState = photon.GetByActor(__instance as BGUCharacterCS);
-            // remote player
-            if (playerState != null)
-            {
-                __result = false;
-                return false;
-            }
+    // [HarmonyPatch(typeof(APawn), "IsLocallyControlled")]
+    // [HarmonyPatchCategory(Constants.RoomPatches)]
+    // public static class PatchIsLocallyControlled
+    // {
+    //     public static bool Prefix(APawn __instance, ref bool __result)
+    //     {
+    //         var photon = MyMod.Instance.Photon;
+    //         var playerState = photon.GetByActor(__instance as BGUCharacterCS);
+    //         // remote player
+    //         if (playerState != null)
+    //         {
+    //             __result = false;
+    //             return false;
+    //         }
+    //
+    //         return true;
+    //     }
+    // }
 
-            return true;
-        }
-    }
-
-    [HarmonyPatch(typeof(APawn), "IsPlayerControlled")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public static class PatchIsPlayerControlled
-    {
-        public static bool Prefix(APawn __instance, ref bool __result)
-        {
-            var photon = MyMod.Instance.Photon;
-            var playerState = photon.GetByActor(__instance as BGUCharacterCS);
-            // remote player
-            if (playerState != null)
-            {
-                __result = false;
-                return false;
-            }
-
-            return true;
-        }
-    }
+    // [HarmonyPatch(typeof(APawn), "IsPlayerControlled")]
+    // [HarmonyPatchCategory(Constants.RoomPatches)]
+    // public static class PatchIsPlayerControlled
+    // {
+    //     public static bool Prefix(APawn __instance, ref bool __result)
+    //     {
+    //         var photon = MyMod.Instance.Photon;
+    //
+    //         var playerState = photon.GetByActor(__instance as BGUCharacterCS);
+    //         // remote player
+    //         if (playerState != null)
+    //         {
+    //             __result = false;
+    //             return false;
+    //         }
+    //
+    //         return true;
+    //     }
+    // }
 }

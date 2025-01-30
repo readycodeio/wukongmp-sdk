@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using b1;
+using b1.ECS;
 using HarmonyLib;
 
 namespace WukongCSharpMod.Patches
@@ -108,6 +109,26 @@ namespace WukongCSharpMod.Patches
                 default:
                     throw new NotImplementedException("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(EntityManager), nameof(EntityManager.TickAllComponentsWithGroup), typeof(float), typeof(int), typeof(int), typeof(int))]
+    public static class PatchEntityManagerTick
+    {
+        public static void Prefix(
+            int TickGroup,
+            int ThreadIdx,
+            int ThreadCount)
+        {
+            Logging.LogDebug($"Prefix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
+        }
+
+        public static void Postfix(
+            int TickGroup,
+            int ThreadIdx,
+            int ThreadCount)
+        {
+            Logging.LogDebug($"Postfix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
         }
     }
 }

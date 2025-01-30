@@ -354,7 +354,7 @@ namespace WukongCSharpMod
 
             Logging.LogDebug($"Sending remote player property: {key} = {value}");
 
-            GameLoopPatch.QueueOnGameThread(() => { _client.OpSetCustomPropertiesOfActor(playerId, hashtable); });
+            _client.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
         private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();
@@ -459,11 +459,8 @@ namespace WukongCSharpMod
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
-            GameLoopPatch.QueueOnGameThread(() =>
-            {
-                MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
-                Logging.LogDebug("Patched with Harmony");
-            });
+            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+            Logging.LogDebug("Patched with Harmony");
 
             _joinedRoomCallback?.Invoke();
             _wukongChat.InitializeChat(_userName);
@@ -485,11 +482,8 @@ namespace WukongCSharpMod
         {
             Logging.LogDebug("Left room");
 
-            GameLoopPatch.QueueOnGameThread(() =>
-            {
-                MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
-                Logging.LogDebug("Unpatched Harmony");
-            });
+            MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
+            Logging.LogDebug("Unpatched Harmony");
         }
 
         #endregion
