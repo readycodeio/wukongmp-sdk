@@ -236,23 +236,12 @@ namespace WukongCSharpMod
                 return;
             }
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
-
             Photon.RebirthCurrentPlayer();
         }
 
         private void RebirthOtherPlayer(int playerId)
         {
             APawn player = Photon.ConnectedPlayers[playerId].Pawn;
-            IBUC_UnitStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_UnitStateData, BUC_UnitStateData>(player);
-            if (readOnlyData == null)
-            {
-                return;
-            }
-
-            if (!readOnlyData.HasState(EBGUUnitState.Dead))
-            {
-                return;
-            }
             BUS_EventCollectionCS.Get(player)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
         }
 
