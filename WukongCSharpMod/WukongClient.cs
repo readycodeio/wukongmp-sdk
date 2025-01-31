@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using b1;
 using BtlB1;
+using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -471,8 +472,11 @@ namespace WukongCSharpMod
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
-            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.ConnectedPatches);
-            Logging.LogDebug("Patched with Harmony");
+            Utils.TryRunOnGameThread(() =>
+            {
+                MyMod.Instance.Harmony.PatchCategory(Constants.ConnectedPatches);
+                Logging.LogDebug("Patched with Harmony");
+            });
 
             _joinedRoomCallback?.Invoke();
             _wukongChat.InitializeChat(_userName);
