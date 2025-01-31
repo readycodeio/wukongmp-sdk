@@ -471,7 +471,7 @@ namespace WukongCSharpMod
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
-            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+            MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.ConnectedPatches);
             Logging.LogDebug("Patched with Harmony");
 
             _joinedRoomCallback?.Invoke();
@@ -494,7 +494,7 @@ namespace WukongCSharpMod
         {
             Logging.LogDebug("Left room");
 
-            MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
+            MyMod.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
             Logging.LogDebug("Unpatched Harmony");
         }
 

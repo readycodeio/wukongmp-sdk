@@ -5,6 +5,7 @@ using HarmonyLib;
 namespace WukongCSharpMod.Patches
 {
     [HarmonyPatch(typeof(BGW_ExceptionUIMgr), "HandleUSharpInvokeFunctionExcpetion")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class ExceptionPatches
     {
         public static void Postfix(Exception e)
@@ -13,16 +14,6 @@ namespace WukongCSharpMod.Patches
             Logging.LogError(e.Message);
             Logging.LogError(e.StackTrace);
             Logging.LogError("---------------------------------------");
-        }
-    }
-
-    [HarmonyPatch(typeof(BGW_ExceptionUIMgr), "HandleFatalExceptionUIClose")]
-    public class FatalExceptionPatches
-    {
-        public static bool Prefix()
-        {
-            Logging.LogError("Would close the game here");
-            return false;
         }
     }
 }

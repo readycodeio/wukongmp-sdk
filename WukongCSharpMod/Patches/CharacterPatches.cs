@@ -8,7 +8,7 @@ using WukongCSharpMod.State;
 namespace WukongCSharpMod.Patches
 {
     [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnTickImpl")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTick
     {
         public static void Postfix(float DeltaTime, bool IsThreadTick)
@@ -27,7 +27,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchAttrs
     {
         public static void Postfix(BUC_AttrContainer __instance)
@@ -107,7 +107,7 @@ namespace WukongCSharpMod.Patches
 
 
     [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchHp
     {
         public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
@@ -178,7 +178,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchCharacterAnimation
     {
         public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)

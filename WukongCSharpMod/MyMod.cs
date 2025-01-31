@@ -75,31 +75,7 @@ namespace WukongCSharpMod
             Instance = this;
 
             Logging.LogDebug("Init");
-
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.F1, () =>
-            {
-                Logging.LogDebug("Alt + F1");
-                Harmony.PatchAllUncategorized();
-            });
-
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.F2, () =>
-            {
-                Logging.LogDebug("Alt + F2");
-                Harmony.UnpatchAll();
-            });
-
-            Utils.RegisterKeyBind(ModifierKeys.Control, Key.F1, () =>
-            {
-                Logging.LogDebug("Ctrl + F1");
-                Harmony.PatchCategory(Constants.RoomPatches);
-            });
-
-            Utils.RegisterKeyBind(ModifierKeys.Control, Key.F2, () =>
-            {
-                Logging.LogDebug("Ctrl + F2");
-                Harmony.UnpatchCategory(Constants.RoomPatches);
-            });
-
+            
             InitUserName();
 
             // InitWorldCallbacks();
@@ -145,7 +121,7 @@ namespace WukongCSharpMod
                 if (latestArchive == null)
                     return;
 
-                Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.MultiplayerPatches);
+                Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GlobalPatches);
                 Logging.LogDebug("Multiplayer mode patched with Harmony");
 
                 // Load archive

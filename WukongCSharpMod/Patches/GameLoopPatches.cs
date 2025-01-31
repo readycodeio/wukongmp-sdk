@@ -56,6 +56,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class ReceiveTickPatch
     {
         public static void Prefix(int TickGroup)
@@ -105,6 +106,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(EntityManager), nameof(EntityManager.TickAllComponentsWithGroup), typeof(float), typeof(int), typeof(int), typeof(int))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchEntityManagerTick
     {
         public static void Prefix(
