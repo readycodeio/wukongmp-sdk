@@ -3,7 +3,6 @@ using B1UI.GSUI;
 using BtlB1;
 using HarmonyLib;
 using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
@@ -271,13 +270,21 @@ namespace WukongCSharpMod.Patches
             return false;
         }
     }
-
-    [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "OnMoveCameraSpringArm2CustomRotation")]
+    
+    [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "OnTickWithGroup")]
     [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchCameraRotation
+    public static class PatchCameraCompTick
     {
-        public static bool Prefix(FRotator InCustomRotation)
+        public static bool Prefix(BUS_PlayerCameraCompImpl __instance)
         {
+            var photon = MyMod.Instance.Photon;
+
+            var localPawn = photon.LocalPlayerState.Pawn;
+            var owner = __instance.GetOwner();
+            if (owner == localPawn)
+            {
+                return true;
+            }
             return false;
         }
     }
