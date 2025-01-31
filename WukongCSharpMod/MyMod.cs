@@ -76,7 +76,29 @@ namespace WukongCSharpMod
 
             Logging.LogDebug("Init");
 
-            Harmony.PatchAllUncategorized();
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.F1, () =>
+            {
+                Logging.LogDebug("Alt + F1");
+                Harmony.PatchAllUncategorized();
+            });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.F2, () =>
+            {
+                Logging.LogDebug("Alt + F2");
+                Harmony.UnpatchAll();
+            });
+
+            Utils.RegisterKeyBind(ModifierKeys.Control, Key.F1, () =>
+            {
+                Logging.LogDebug("Ctrl + F1");
+                Harmony.PatchCategory(Constants.RoomPatches);
+            });
+
+            Utils.RegisterKeyBind(ModifierKeys.Control, Key.F2, () =>
+            {
+                Logging.LogDebug("Ctrl + F2");
+                Harmony.UnpatchCategory(Constants.RoomPatches);
+            });
 
             InitUserName();
 
@@ -235,6 +257,7 @@ namespace WukongCSharpMod
             {
                 return;
             }
+
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
             Photon.RebirthCurrentPlayer();
         }
