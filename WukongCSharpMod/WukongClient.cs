@@ -461,7 +461,7 @@ namespace WukongCSharpMod
 
             GameLoopPatch.QueueOnGameThread(() =>
             {
-                MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+                WukongMP.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
                 Logging.LogDebug("Patched with Harmony");
             });
 
@@ -487,7 +487,7 @@ namespace WukongCSharpMod
 
             GameLoopPatch.QueueOnGameThread(() =>
             {
-                MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
+                WukongMP.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
                 Logging.LogDebug("Unpatched Harmony");
             });
         }

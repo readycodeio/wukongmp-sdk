@@ -28,7 +28,7 @@ namespace WukongCSharpMod.Patches
             if (!(Owner is BGUCharacterCS))
                 return;
 
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -101,7 +101,7 @@ namespace WukongCSharpMod.Patches
             if (!(Owner is BGUCharacterCS))
                 return;
 
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -143,7 +143,7 @@ namespace WukongCSharpMod.Patches
             if (!(Owner is BGUCharacterCS))
                 return;
 
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -184,7 +184,7 @@ namespace WukongCSharpMod.Patches
             if (!(Owner is BGUCharacterCS character))
                 return;
 
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -250,7 +250,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(BUS_EquipComp __instance, EquipPosition EquipPosition, int EquipID)
         {
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
             if (owner == photon.LocalPlayerState.Pawn)

@@ -19,7 +19,7 @@ namespace WukongCSharpMod.Patches
         private static void Postfix(float DeltaTime, int TickGroup)
         {
             // send updates for each monster
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (photon.IsMasterClient)
             {
@@ -82,7 +82,7 @@ namespace WukongCSharpMod.Patches
                 if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                     return;
 
-                var photon = MyMod.Instance.Photon;
+                var photon = WukongMP.Instance.Photon;
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
@@ -115,7 +115,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(bool bEnable)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
             return !bEnable;
@@ -128,7 +128,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(bool IsPause)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
             return IsPause;
@@ -142,7 +142,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(bool bEnable)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
             return !bEnable;
@@ -155,7 +155,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(bool IsPause)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
             return IsPause;
@@ -173,7 +173,7 @@ namespace WukongCSharpMod.Patches
 
         public static bool Prefix(bool bEnable)
         {
-            if (MyMod.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
             return !bEnable;

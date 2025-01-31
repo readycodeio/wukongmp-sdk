@@ -15,7 +15,7 @@ namespace WukongCSharpMod.Patches
         {
             if (IsThreadTick)
             {
-                var photon = MyMod.Instance.Photon;
+                var photon = WukongMP.Instance.Photon;
                 photon.SetCachedPlayerProperties();
 
                 if (photon.IsMasterClient)
@@ -32,7 +32,7 @@ namespace WukongCSharpMod.Patches
     {
         public static void Postfix(BUC_AttrContainer __instance)
         {
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (photon.IsMasterClient)
             {
@@ -101,7 +101,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
         {
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
@@ -123,7 +123,7 @@ namespace WukongCSharpMod.Patches
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = MyMod.Instance.Photon.GetByActor(owner);
+                    var remotePlayer = WukongMP.Instance.Photon.GetByActor(owner);
                     if (remotePlayer != null)
                     {
                         if (!remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
@@ -181,7 +181,7 @@ namespace WukongCSharpMod.Patches
             if (!(Owner is BGUCharacterCS character))
                 return;
 
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (character == photon.LocalPlayerState.Pawn)
             {
@@ -306,7 +306,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(APawn __instance, ref bool __result)
         {
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
             var playerState = photon.GetByActor(__instance as BGUCharacterCS);
             // remote player
             if (playerState != null)
@@ -325,7 +325,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(APawn __instance, ref bool __result)
         {
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
             var playerState = photon.GetByActor(__instance as BGUCharacterCS);
             // remote player
             if (playerState != null)

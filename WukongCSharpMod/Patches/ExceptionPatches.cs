@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace WukongCSharpMod.Patches
 {
-    [HarmonyPatch(typeof(BGW_ExceptionUIMgr), "HandleUSharpInvokeFunctionExcpetion")]
+    [HarmonyPatch(typeof(BGW_ExceptionUIMgr), "HandleUSharpInvokeFunctionException")]
     public class ExceptionPatches
     {
         public static void Postfix(Exception e)

@@ -54,7 +54,7 @@ namespace WukongCSharpMod.Patches
             OutArchiveData.StateMachineArchiveData = GameArchiveData.GameArchiveData.StateMachineArchiveData;
             OutArchiveData.TaskArchiveData = GameArchiveData.GameArchiveData.TaskArchiveData;
 
-            MyMod.Instance.SetMultiplayerEnabled();
+            WukongMP.Instance.SetMultiplayerEnabled();
         }
     }
 

@@ -54,7 +54,7 @@ namespace WukongCSharpMod
                 if (actor.GetMonster() != null)
                 {
                     Logging.LogDebug($"Discovered monster: {BGU_DataUtil.GetActorGuid(actor.GetMonster())}");
-                    SyncMonsterAndNotify(MyMod.Instance.Photon, actor); // Neutral monsters
+                    SyncMonsterAndNotify(WukongMP.Instance.Photon, actor); // Neutral monsters
                 }
             }
         }

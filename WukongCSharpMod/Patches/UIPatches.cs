@@ -26,7 +26,7 @@ namespace WukongCSharpMod.Patches
 
         public static bool Prefix(DamageNumParam Param)
         {
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             if (!photon.IsMasterClient)
                 return false;
