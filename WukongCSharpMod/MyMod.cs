@@ -235,9 +235,25 @@ namespace WukongCSharpMod
             {
                 return;
             }
-
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
-            BUS_EventCollectionCS.Get(curPlayer)?.Evt_TriggerPlayerRest.Invoke();
+
+            Photon.RebirthCurrentPlayer();
+        }
+
+        private void RebirthOtherPlayer(int playerId)
+        {
+            APawn player = Photon.ConnectedPlayers[playerId].Pawn;
+            IBUC_UnitStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_UnitStateData, BUC_UnitStateData>(player);
+            if (readOnlyData == null)
+            {
+                return;
+            }
+
+            if (!readOnlyData.HasState(EBGUUnitState.Dead))
+            {
+                return;
+            }
+            BUS_EventCollectionCS.Get(player)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
         }
 
         private void Connect()
@@ -254,6 +270,7 @@ namespace WukongCSharpMod
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
+            Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthOtherPlayer(id), "RebirthOtherPlayer");
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;

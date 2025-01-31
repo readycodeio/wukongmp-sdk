@@ -35,6 +35,7 @@ namespace WukongCSharpMod
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
+        public event Action<int> OnPlayerRebirth;
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
 
@@ -120,6 +121,11 @@ namespace WukongCSharpMod
                     // damage num
                     var damageNumParam = (DamageNumParam)photonEvent.CustomData;
                     OnDamageNum?.Invoke(damageNumParam);
+                    break;
+                case 7:
+                    // player rebirth
+                    var playerId = (int)photonEvent.CustomData;
+                    OnPlayerRebirth?.Invoke(playerId);
                     break;
             }
         }
@@ -255,6 +261,12 @@ namespace WukongCSharpMod
         {
             const byte eventCode = 6;
             _client.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
+        public void RebirthCurrentPlayer()
+        {
+            const byte eventCode = 7;
+            _client.OpRaiseEvent(eventCode, PhotonId, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)
