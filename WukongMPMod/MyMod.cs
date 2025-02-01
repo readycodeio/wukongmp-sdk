@@ -15,36 +15,31 @@ namespace WukongMPMod
         {
             Logging.LogDebug("Init");
 
-            WukongMP = WukongCSharpMod.WukongMP.Instance;
-            WukongMP.Patch();
+            WukongMP = WukongMP.Instance;
             
             // InitWorldCallbacks();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
             {
                 Logging.LogDebug("Alt + H");
-
                 WukongMP.Init();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
-
                 WukongMP.DumpPlayerState();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             {
                 Logging.LogDebug("Alt + V");
-
-                WukongMP.SpawnClone();
+                WukongMP.Photon.SpawnClone();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.M, () =>
             {
                 Logging.LogDebug("Alt + M");
-
                 WukongMP.EnableMultiplayer();
             });
         }
