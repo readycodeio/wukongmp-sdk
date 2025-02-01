@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using b1;
 using BtlB1;
+using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -35,6 +36,7 @@ namespace WukongCSharpMod
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
+        public event Action<int> OnPlayerRebirth;
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
 
@@ -120,6 +122,11 @@ namespace WukongCSharpMod
                     // damage num
                     var damageNumParam = (DamageNumParam)photonEvent.CustomData;
                     OnDamageNum?.Invoke(damageNumParam);
+                    break;
+                case 7:
+                    // player rebirth
+                    var playerId = (int)photonEvent.CustomData;
+                    OnPlayerRebirth?.Invoke(playerId);
                     break;
             }
         }
@@ -257,6 +264,12 @@ namespace WukongCSharpMod
             _client.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
+        public void RebirthCurrentPlayer()
+        {
+            const byte eventCode = 7;
+            _client.OpRaiseEvent(eventCode, PhotonId, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+        }
+
         public void CacheEquipmentChange(EquipPosition position, int newEq)
         {
             LocalPlayerState.Equipment.SetEquipment(position, newEq);
@@ -354,7 +367,7 @@ namespace WukongCSharpMod
 
             Logging.LogDebug($"Sending remote player property: {key} = {value}");
 
-            GameLoopPatch.QueueOnGameThread(() => { _client.OpSetCustomPropertiesOfActor(playerId, hashtable); });
+            _client.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
         private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();
@@ -459,16 +472,16 @@ namespace WukongCSharpMod
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
-            GameLoopPatch.QueueOnGameThread(() =>
+            Utils.TryRunOnGameThread(() =>
             {
-                MyMod.Instance.Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.RoomPatches);
+                MyMod.Instance.Harmony.PatchCategory(Constants.ConnectedPatches);
                 Logging.LogDebug("Patched with Harmony");
             });
 
             _joinedRoomCallback?.Invoke();
             _wukongChat.InitializeChat(_userName);
 
-            GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters);
+            GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
@@ -485,11 +498,8 @@ namespace WukongCSharpMod
         {
             Logging.LogDebug("Left room");
 
-            GameLoopPatch.QueueOnGameThread(() =>
-            {
-                MyMod.Instance.Harmony.UnpatchCategory(Constants.RoomPatches);
-                Logging.LogDebug("Unpatched Harmony");
-            });
+            MyMod.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
+            Logging.LogDebug("Unpatched Harmony");
         }
 
         #endregion

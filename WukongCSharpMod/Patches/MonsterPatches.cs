@@ -8,7 +8,7 @@ using WukongCSharpMod.State;
 namespace WukongCSharpMod.Patches
 {
     [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerManagerTick
     {
         private static MethodBase TargetMethod()
@@ -72,7 +72,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerLoad
     {
         public static void Postfix(FTamerRef __instance)
@@ -99,7 +99,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTurnBack2Loaded
     {
         static bool Prefix(ref bool __result)
@@ -110,7 +110,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnAIPerceptionSetting
     {
         public static bool Prefix(bool bEnable)
@@ -123,7 +123,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUS_AIComp), "OnAIPauseBT")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnAIPauseBT
     {
         public static bool Prefix(bool IsPause)
@@ -137,7 +137,7 @@ namespace WukongCSharpMod.Patches
 
 
     [HarmonyPatch(typeof(BUS_AIComp), "OnEnableCanSetBT")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnEnableCanSetBT
     {
         public static bool Prefix(bool bEnable)
@@ -150,7 +150,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUS_FsmComp), "OnAIPauseFsm")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnAIPauseFsm
     {
         public static bool Prefix(bool IsPause)
@@ -163,7 +163,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnEnableCanUpdateHatred
     {
         private static MethodBase TargetMethod()

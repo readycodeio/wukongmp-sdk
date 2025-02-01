@@ -3,13 +3,12 @@ using B1UI.GSUI;
 using BtlB1;
 using HarmonyLib;
 using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 using WukongCSharpMod.State;
 
 namespace WukongCSharpMod.Patches
 {
     [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBGUPlayerAnimation
     {
         public static void Postfix(
@@ -83,7 +82,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUC_ABPPlayerLocomotionData), nameof(BUC_ABPPlayerLocomotionData.Update))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchPlayerLocomotion
     {
         public static void Postfix(
@@ -128,7 +127,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUC_ABPJumpV2Data), nameof(BUC_ABPJumpV2Data.Update))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchJumpData
     {
         public static void Postfix(
@@ -170,7 +169,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUC_ABPBasicData), nameof(BUC_ABPBasicData.Update_WorkThread))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBasicData
     {
         public static void Postfix(
@@ -245,7 +244,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUS_EquipComp), "OnChangeEquip")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchEqCompUpdate
     {
         public static bool Prefix(BUS_EquipComp __instance, EquipPosition EquipPosition, int EquipID)
@@ -263,7 +262,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(UIDeath), "DoShowIn")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchUIDeath
     {
         public static bool Prefix()
@@ -271,13 +270,21 @@ namespace WukongCSharpMod.Patches
             return false;
         }
     }
-
-    [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "OnMoveCameraSpringArm2CustomRotation")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public class PatchCameraRotation
+    
+    [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "OnTickWithGroup")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchCameraCompTick
     {
-        public static bool Prefix(FRotator InCustomRotation)
+        public static bool Prefix(BUS_PlayerCameraCompImpl __instance)
         {
+            var photon = MyMod.Instance.Photon;
+
+            var localPawn = photon.LocalPlayerState.Pawn;
+            var owner = __instance.GetOwner();
+            if (owner == localPawn)
+            {
+                return true;
+            }
             return false;
         }
     }

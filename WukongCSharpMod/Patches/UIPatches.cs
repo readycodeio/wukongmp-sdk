@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace WukongCSharpMod.Patches
 {
     [HarmonyPatch(typeof(BUS_BeAttackedComp), "CanShowDmgNumUI")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchCanShowDamage
     {
         public static bool Prefix(ref bool __result)
@@ -16,7 +16,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class UIPatches
     {
         private static MethodBase TargetMethod()
