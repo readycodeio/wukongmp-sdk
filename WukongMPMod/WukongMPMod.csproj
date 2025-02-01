@@ -1,0 +1,163 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+        <LangVersion>7.3</LangVersion>
+        <OutputType>Library</OutputType>
+        <AssemblyName>WukongMpMod</AssemblyName>
+        <RootNamespace>WukongMpMod</RootNamespace>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="b1.Managed">
+            <HintPath>..\WukongApi\Game\b1.Managed.dll</HintPath>
+        </Reference>
+        <Reference Include="b1.Native">
+            <HintPath>..\WukongApi\Game\b1.Native.dll</HintPath>
+        </Reference>
+        <Reference Include="b1.NativePlugins">
+            <HintPath>..\WukongApi\Game\b1.NativePlugins.dll</HintPath>
+        </Reference>
+        <Reference Include="Harmony">
+            <HintPath>..\WukongApi\Core\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="B1UI_GSE.Script">
+            <HintPath>..\WukongApi\Game\B1UI_GSE.Script.dll</HintPath>
+        </Reference>
+        <Reference Include="BtlSvr.Main">
+            <HintPath>..\WukongApi\Game\BtlSvr.Main.dll</HintPath>
+        </Reference>
+        <Reference Include="CSharpModBase">
+            <HintPath>..\WukongApi\Core/CSharpModBase.dll</HintPath>
+        </Reference>
+        <Reference Include="Diana.Client.Common">
+            <HintPath>..\WukongApi\Game\Diana.Client.Common.dll</HintPath>
+        </Reference>
+        <Reference Include="Diana.Common">
+            <HintPath>..\WukongApi\Game\Diana.Common.dll</HintPath>
+        </Reference>
+        <Reference Include="Diana.Server.Common">
+            <HintPath>..\WukongApi\Game\Diana.Server.Common.dll</HintPath>
+        </Reference>
+        <Reference Include="Google.Protobuf">
+            <HintPath>..\WukongApi\Game\Google.Protobuf.dll</HintPath>
+        </Reference>
+        <Reference Include="GSE.Core">
+            <HintPath>..\WukongApi\Game\GSE.Core.dll</HintPath>
+        </Reference>
+        <Reference Include="GSE.GSNet">
+            <HintPath>..\WukongApi\Game\GSE.GSNet.dll</HintPath>
+        </Reference>
+        <Reference Include="GSE.GSSdk">
+            <HintPath>..\WukongApi\Game\GSE.GSSdk.dll</HintPath>
+        </Reference>
+        <Reference Include="GSE.OnlineBase">
+            <HintPath>..\WukongApi\Game\GSE.OnlineBase.dll</HintPath>
+        </Reference>
+        <Reference Include="GSE.ProtobufDB">
+            <HintPath>..\WukongApi\Game\GSE.ProtobufDB.dll</HintPath>
+        </Reference>
+        <Reference Include="GUR.Runtime">
+            <HintPath>..\WukongApi\Game\GUR.Runtime.dll</HintPath>
+        </Reference>
+        <Reference Include="ICSharpCode.SharpZipLib">
+            <HintPath>..\WukongApi\Game\ICSharpCode.SharpZipLib.dll</HintPath>
+        </Reference>
+        <Reference Include="ILRuntime">
+            <HintPath>..\WukongApi\Game\ILRuntime.dll</HintPath>
+        </Reference>
+        <Reference Include="ILRuntime.Mono.Cecil">
+            <HintPath>..\WukongApi\Game\ILRuntime.Mono.Cecil.dll</HintPath>
+        </Reference>
+        <Reference Include="ILRuntime.Mono.Cecil.Mdb">
+            <HintPath>..\WukongApi\Game\ILRuntime.Mono.Cecil.Mdb.dll</HintPath>
+        </Reference>
+        <Reference Include="ILRuntime.Mono.Cecil.Pdb">
+            <HintPath>..\WukongApi\Game\ILRuntime.Mono.Cecil.Pdb.dll</HintPath>
+        </Reference>
+        <Reference Include="LiteNetLib">
+            <HintPath>..\WukongApi\Game\LiteNetLib.dll</HintPath>
+        </Reference>
+        <Reference Include="LitJson">
+            <HintPath>..\WukongApi\Game\LitJson.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Bcl.AsyncInterfaces">
+            <HintPath>..\WukongApi\Game\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Cecil">
+            <HintPath>..\WukongApi\Game\Mono.Cecil.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Data.Sqlite">
+            <HintPath>..\WukongApi\Game\Mono.Data.Sqlite.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Posix">
+            <HintPath>..\WukongApi\Game\Mono.Posix.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.Security">
+            <HintPath>..\WukongApi\Game\Mono.Security.dll</HintPath>
+        </Reference>
+        <Reference Include="Mono.WebBrowser">
+            <HintPath>..\WukongApi\Game\Mono.WebBrowser.dll</HintPath>
+        </Reference>
+        <Reference Include="Novell.Directory.Ldap">
+            <HintPath>..\WukongApi\Game\Novell.Directory.Ldap.dll</HintPath>
+        </Reference>
+        <Reference Include="PhotonClient">
+            <HintPath>..\PhotonLibs\Debug\netstandard2.0\PhotonClient.dll</HintPath>
+        </Reference>
+        <Reference Include="Protobuf.RunTime">
+            <HintPath>..\WukongApi\Game\Protobuf.RunTime.dll</HintPath>
+        </Reference>
+        <Reference Include="Sentry">
+            <HintPath>..\WukongApi\Game\Sentry.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Buffers">
+            <HintPath>..\WukongApi\Game\System.Buffers.dll</HintPath>
+        </Reference>
+        <Reference Include="System.IO.FileSystem">
+            <HintPath>..\WukongApi\Game\System.IO.FileSystem.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Memory">
+            <HintPath>..\WukongApi\Game\System.Memory.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Numerics.Vectors">
+            <HintPath>..\WukongApi\Game\System.Numerics.Vectors.dll</HintPath>
+        </Reference>
+        <Reference Include="System.ServiceModel.Internals">
+            <HintPath>..\WukongApi\Game\System.ServiceModel.Internals.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Threading.Tasks.Extensions">
+            <HintPath>..\WukongApi\Game\System.Threading.Tasks.Extensions.dll</HintPath>
+        </Reference>
+        <Reference Include="UnrealEngine">
+            <HintPath>..\WukongApi\Game\UnrealEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnrealEngine.Runtime">
+            <HintPath>..\WukongApi\Game\UnrealEngine.Runtime.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Mono.Cecil" Version="0.11.5"/>
+        <PackageReference Include="System.Buffers" Version="4.5.1"/>
+        <PackageReference Include="System.Collections.Immutable" Version="5.0.0"/>
+        <PackageReference Include="System.IO.FileSystem" Version="4.3.0"/>
+        <PackageReference Include="System.Memory" Version="4.5.5"/>
+        <PackageReference Include="System.Numerics.Vectors" Version="4.5.0"/>
+        <PackageReference Include="System.Reflection.Emit" Version="4.7.0"/>
+        <PackageReference Include="System.Reflection.Metadata" Version="5.0.0"/>
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0"/>
+        <PackageReference Include="System.Text.Encodings.Web" Version="4.7.2"/>
+        <PackageReference Include="System.Text.Json" Version="4.7.2"/>
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PhotonChatApi\PhotonChatApi.csproj"/>
+        <ProjectReference Include="..\PhotonRealtimeApi\PhotonRealtimeApi.csproj"/>
+        <ProjectReference Include="..\WukongApi\WukongApi.csproj" />
+    </ItemGroup>
+
+</Project>

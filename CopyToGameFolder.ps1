@@ -1,6 +1,7 @@
 # Define the source and destination directories
-$sourceDir = "WukongCSharpMod/bin/Debug/netstandard2.1"
-$destDir = "C:\Program Files (x86)\Steam\steamapps\common\BlackMythWukong\b1\Binaries\Win64\CSharpLoader\Mods\WukongCSharpMod"
+$sourceDir = "WukongMpMod/bin/Debug/netstandard2.1"
+$steamDir = Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam" -Name "InstallPath" | Select-Object -ExpandProperty InstallPath
+$destDir = "$steamDir\steamapps\common\BlackMythWukong\b1\Binaries\Win64\CSharpLoader\Mods\WukongMpMod"
 
 # Create the destination directory if it doesn't exist
 if (!(Test-Path -Path $destDir)) {
@@ -8,7 +9,7 @@ if (!(Test-Path -Path $destDir)) {
 }
 
 # Define the files to copy
-$files = @("WukongCSharpMod.dll", "WukongCSharpMod.pdb", "WukongCSharpMod.deps.json")
+$files = @("WukongApi.dll", "WukongApi.pdb", "WukongApi.deps.json", "WukongMpMod.dll", "WukongMpMod.pdb", "WukongMpMod.deps.json")
 
 # Copy each file to the destination directory
 foreach ($file in $files) {

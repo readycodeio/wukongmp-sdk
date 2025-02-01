@@ -1,0 +1,70 @@
+﻿namespace WukongApi.API
+{
+    public static class CharacterKind
+    {
+        public const string WolfSentinel = "wolf_sentinel";
+        public const string WolfSoldier = "wolf_soldier";
+        public const string WolfArcher = "wolf_archer";
+        public const string WolfArcherMove = "wolf_archer_move";
+        public const string WolfAssassin = "wolf_assassin";
+        public const string WolfScout = "wolf_scout";
+        public const string WolfSwornsword = "wolf_swornsword";
+        public const string WolfStalwart = "wolf_stalwart";
+        public const string WolfGuardian = "wolf_guardian";
+        public const string YakshaArcher = "yaksha_archer";
+        public const string YakshaPatroller = "yaksha_patroller";
+        public const string SnakePatroller = "snake_partoller";
+        public const string Bandit = "bandit";
+        public const string CrowDiviner = "crow_diviner";
+        public const string BlazeBone = "blaze_bone";
+        public const string RatCaptain = "rat_captain";
+        public const string RatSoldier = "rat_soldier";
+        public const string EarthRakshasa = "earth_rakshasa";
+        public const string TurtleTreasure = "turtle_treasure";
+        public const string BullSergeant = "bull_sergeant";
+        public const string BullSoldier = "bull_soldier";
+        public const string BullStalwart = "bull_stalwart";
+        public const string BladeMonk = "blade_monk";
+        public const string EagleSoldier = "eagle_soldier";
+        public const string JackalSoldier = "jackal_soldier";
+        public const string WhitecladNoble = "whiteclad_noble";
+        public const string BlackWind = "black_wind";
+        public const string Mantis = "mantis";
+        public const string NonPure = "non_pure";
+        public const string BlackBear = "black_bear";
+        public const string YellowWind = "yellow_wind";
+        public const string GoreEye = "gore_eye";
+        public const string YellowSquire = "yellow_squire";
+        public const string TigerVanguard = "tiger_vanguard";
+        public const string YinTiger = "yin_tiger";
+        public const string Acolyte = "acolyte";
+        public const string RedBoy = "red_boy";
+        public const string FatherOfStones = "father_of_stones";
+        public const string AxeStalwart = "axe_stalwart";
+        public const string BawLangLang = "baw_lang_lang";
+        public const string BlackLoong = "black_loong";
+        public const string YellowLoong = "yellow_loong";
+        public const string KangLoong = "kang_loong";
+        public const string KangStar = "kang_star";
+        public const string NonVoid = "non_void";
+        public const string ApramanaBat = "apramana_bat";
+        public const string LotusVision = "lotus_vision";
+        public const string RedLoong = "red_loong";
+        public const string CyanLoong = "cyan_loong";
+        public const string MacaqueChief = "macaque_chief";
+        public const string ErlangShen = "erlang_shen";
+        public const string Erlang = "erlang";
+        public const string PoisonChief = "poison_chief";
+        public const string GoldRhino = "gold_rhino";
+        public const string Dear = "dear";
+        public const string EarthWolf = "earth_wolf";
+        public const string Spider = "spider";
+        public const string Spider2 = "spider2";
+        public const string MadTiger = "mad_tiger";
+        public const string StoneMonkey = "stone_moneky";
+        public const string Martialist = "martialist";
+        public const string JiaoLoong = "jiao_loong";
+        public const string BossB = "boss_b";
+        public const string BossC = "boss_c";
+    }
+}
