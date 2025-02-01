@@ -1,110 +1,165 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using b1;
+using b1.ECS;
 using HarmonyLib;
 
 namespace WukongCSharpMod.Patches
 {
-    [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
     public static class GameLoopPatch
     {
-        private struct Entry
-        {
-            public readonly ConcurrentQueue<Action> threadActionQueue;
-            public readonly ConcurrentQueue<Action> loopActionQueue;
+        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string Name)>> CustomTickGroupActionQueues
+            = new ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action, string)>>();
 
-            private Entry(ConcurrentQueue<Action> threadActionQueue, ConcurrentQueue<Action> loopActionQueue)
+        public static void QueueOnGameThread(Action action, string name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
+        {
+            if (name != null)
             {
-                this.threadActionQueue = threadActionQueue;
-                this.loopActionQueue = loopActionQueue;
+                Logging.LogDebug($"Enqueueing action: {name}");
             }
-            
-            public static Entry Create()
-                => new Entry(
-                    new ConcurrentQueue<Action>(), 
-                    new ConcurrentQueue<Action>()
-                );
-        }
-        
-        private static readonly Entry mainThreadEntry = Entry.Create();
-        private static readonly Entry animThreadEntry = Entry.Create();
 
-        public static void LoopOnGameThread(Action action)
-        {
-            mainThreadEntry.loopActionQueue.Enqueue(action);
-        }
-
-        public static void LoopOnAnimThread(Action action)
-        {
-            animThreadEntry.loopActionQueue.Enqueue(action);
-        }
-
-        public static void QueueOnGameThread(Action action)
-        {
-            mainThreadEntry.threadActionQueue.Enqueue(action);
-        }
-
-        public static void QueueOnAnimThread(Action action)
-        {
-            animThreadEntry.threadActionQueue.Enqueue(action);
-        }
-
-        private static void RunEntry(Entry entry, string name)
-        {
-            if (entry.threadActionQueue.Count > 0)
+            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>(new[] { (action, name) }), (_, queue) =>
             {
-                Logging.LogDebug($"'{name}' Tick Dequeue");
-                while (entry.threadActionQueue.TryDequeue(out var action))
-                {
-                    try
-                    {
-                        action();
-                    }
-                    catch (Exception e)
-                    {
-                        Logging.LogError($"-------------- EXCEPTION DEQUEUE '{name}' -------------");
-                        Logging.LogError(e.Message);
-                        Logging.LogError(e.StackTrace);
-                        Logging.LogError("------------------------------------------------------");
-                    }
-                }
+                queue.Enqueue((action, name));
+                return queue;
+            });
+        }
+
+        public static BGW_TickGroupMask CustomTickGroupToTickGroupMask(int tickGroup)
+        {
+            switch (tickGroup)
+            {
+                case 0:
+                    return BGW_TickGroupMask.TG_OnTick;
+                case 1:
+                    return BGW_TickGroupMask.TG_None;
+                case 2:
+                    return BGW_TickGroupMask.TG_AfterAnim;
+                case 3:
+                    return BGW_TickGroupMask.TG_None;
+                case 4:
+                    return BGW_TickGroupMask.TG_PostPhysics;
+                case 5:
+                    return BGW_TickGroupMask.TG_PostUpdateWork;
+                case 101:
+                    return BGW_TickGroupMask.TG_PreAnim;
+                case 111:
+                    return BGW_TickGroupMask.TG_BeforeStartPhsic;
+                case 141:
+                    return BGW_TickGroupMask.TG_BeforePostPhsic;
+                case 151:
+                    return BGW_TickGroupMask.TG_BeforePostUpdateWork;
+                default:
+                    throw new NotImplementedException("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
             }
-            
-            foreach (var action in entry.loopActionQueue)
+        }
+    }
+
+    [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class ReceiveTickPatch
+    {
+        public static void Prefix(int TickGroup)
+        {
+            var enumTickGroup = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+            Logging.LogDebug($"Prefix ReceiveTick_Implementation: {(int)enumTickGroup} {enumTickGroup}");
+        }
+
+        public static void Postfix(int TickGroup)
+        {
+            var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+
+            Logging.LogDebug($"Postfix ReceiveTick_Implementation: {(int)mask} {mask}");
+
+            if (mask == BGW_TickGroupMask.TG_PreTick
+                || mask == BGW_TickGroupMask.TG_OnTick
+                || mask == BGW_TickGroupMask.TG_LateTick
+                || mask == BGW_TickGroupMask.TG_ThreadTick)
+                return;
+
+            if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
+                return;
+
+            if (queue.IsEmpty)
+                return;
+
+            while (queue.TryDequeue(out var item))
             {
                 try
                 {
-                    action();
+                    if (item.Name != null)
+                    {
+                        Logging.LogDebug($"Processing {item.Name} action for tick group {mask}");
+                    }
+
+                    item.Action();
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError($"-------------- EXCEPTION LOOP '{name}' -------------");
+                    Logging.LogError($"-------------- EXCEPTION IN {mask} patch -------------");
                     Logging.LogError(e.Message);
                     Logging.LogError(e.StackTrace);
-                    Logging.LogError("------------------------------------------------------");
+                    Logging.LogError("----------------------------------------------------------------");
                 }
             }
         }
-        
-        public static void Prefix(float DeltaSeconds, int TickGroup)
+    }
+
+    [HarmonyPatch(typeof(EntityManager), nameof(EntityManager.TickAllComponentsWithGroup), typeof(float), typeof(int), typeof(int), typeof(int))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchEntityManagerTick
+    {
+        public static void Prefix(
+            int TickGroup, // this is BGW_TickGroupMask
+            int ThreadIdx,
+            int ThreadCount)
         {
-            // Logging.LogDebug($"Prefix ReceiveTick_Implementation: {TickGroup}");
-            
-            if (TickGroup == 101) // 1024
-            {
-                // main tick
-                RunEntry(mainThreadEntry, "Main");
-            }
-            else if (TickGroup == 2) // 8
-            {
-                // after anim
-                RunEntry(animThreadEntry, "Anim");
-            }
+            Logging.LogDebug($"Prefix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
         }
 
-        public static void Postfix(float DeltaSeconds, int TickGroup)
+        public static void Postfix(
+            int TickGroup, // this is BGW_TickGroupMask
+            int ThreadIdx,
+            int ThreadCount)
         {
-            // Logging.LogDebug($"Postfix ReceiveTick_Implementation: {TickGroup}");
+            Logging.LogDebug($"Postfix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
+
+            if (ThreadIdx != 0)
+                return;
+
+            var mask = (BGW_TickGroupMask)TickGroup;
+
+            if (mask != BGW_TickGroupMask.TG_PreTick
+                && mask != BGW_TickGroupMask.TG_OnTick
+                && mask != BGW_TickGroupMask.TG_LateTick
+                && mask != BGW_TickGroupMask.TG_ThreadTick)
+                return;
+
+            if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
+                return;
+
+            if (queue.IsEmpty)
+                return;
+
+            while (queue.TryDequeue(out var item))
+            {
+                try
+                {
+                    if (item.Name != null)
+                    {
+                        Logging.LogDebug($"Processing {item.Name} action for tick group {mask} (EntityManager)");
+                    }
+
+                    item.Action();
+                }
+                catch (Exception e)
+                {
+                    Logging.LogError($"-------------- EXCEPTION IN {mask} patch (EntityManager) -------------");
+                    Logging.LogError(e.Message);
+                    Logging.LogError(e.StackTrace);
+                    Logging.LogError("-----------------------------------------------------------------------");
+                }
+            }
         }
     }
 }

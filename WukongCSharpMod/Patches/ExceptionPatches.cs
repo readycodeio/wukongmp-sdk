@@ -6,6 +6,7 @@ namespace WukongCSharpMod.Patches
 {
     // NOTE: This type occurs in the original code, it is "Exc-PE-tion" not "Exception"
     [HarmonyPatch(typeof(BGW_ExceptionUIMgr), "HandleUSharpInvokeFunctionExcpetion")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class ExceptionPatches
     {
         public static void Postfix(Exception e)

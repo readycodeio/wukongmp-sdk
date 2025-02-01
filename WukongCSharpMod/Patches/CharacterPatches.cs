@@ -8,7 +8,7 @@ using WukongCSharpMod.State;
 namespace WukongCSharpMod.Patches
 {
     [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnTickImpl")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTick
     {
         public static void Postfix(float DeltaTime, bool IsThreadTick)
@@ -27,7 +27,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchAttrs
     {
         public static void Postfix(BUC_AttrContainer __instance)
@@ -50,6 +50,12 @@ namespace WukongCSharpMod.Patches
                 }
 
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
+
+                if (photon.LocalPlayerState.Hp <= 0)
+                {
+                    var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                }
             }
             else
             {
@@ -65,28 +71,33 @@ namespace WukongCSharpMod.Patches
                     }
 
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
-                }
-                else
-                {
-                    var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
 
-                    // monster
-                    if (monster?.Hp != null && monster.IsSynced)
+                    if (playerState.Hp <= 0)
                     {
-                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
+                        var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
-                        if (monster.Hp.Value <= 0)
+                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    }
+                    else
+                    {
+                        var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+
+                        // monster
+                        if (monster?.Hp != null && monster.IsSynced)
                         {
-                            var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                            Logging.LogDebug("Will run on game thread: unit dead");
-                            GameLoopPatch.QueueOnGameThread(() =>
-                            {
-                                Logging.LogDebug("Running on game thread: unit dead");
-                                events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
+                            __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
 
-                                // remove from collection
-                                photon.RemoveMonster(monster.Guid);
-                            }); // TODO: Sync other dead reasons?
+                            if (monster.Hp.Value <= 0)
+                            {
+                                var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                                GameLoopPatch.QueueOnGameThread(() =>
+                                {
+                                    events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
+
+                                    // remove from collection
+                                    photon.RemoveMonster(monster.Guid);
+                                }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
+                            }
                         }
                     }
                 }
@@ -96,7 +107,7 @@ namespace WukongCSharpMod.Patches
 
 
     [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchHp
     {
         public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
@@ -167,7 +178,7 @@ namespace WukongCSharpMod.Patches
     }
 
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchCharacterAnimation
     {
         public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
@@ -297,44 +308,6 @@ namespace WukongCSharpMod.Patches
                     }
                 }
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(APawn), "IsLocallyControlled")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public static class PatchIsLocallyControlled
-    {
-        public static bool Prefix(APawn __instance, ref bool __result)
-        {
-            var photon = WukongMP.Instance.Photon;
-            var playerState = photon.GetByActor(__instance as BGUCharacterCS);
-            // remote player
-            if (playerState != null)
-            {
-                __result = false;
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-    [HarmonyPatch(typeof(APawn), "IsPlayerControlled")]
-    [HarmonyPatchCategory(Constants.RoomPatches)]
-    public static class PatchIsPlayerControlled
-    {
-        public static bool Prefix(APawn __instance, ref bool __result)
-        {
-            var photon = WukongMP.Instance.Photon;
-            var playerState = photon.GetByActor(__instance as BGUCharacterCS);
-            // remote player
-            if (playerState != null)
-            {
-                __result = false;
-                return false;
-            }
-
-            return true;
         }
     }
 }
