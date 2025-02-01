@@ -13,7 +13,7 @@ namespace WukongCSharpMod.API
         private struct CharacterEntry
         {
             public CharacterId id;
-            public bool isControlled;
+            public bool isProgramControl;
             public AActor actor;
             public APawn pawn;
             public bool destroyed;
@@ -90,7 +90,7 @@ namespace WukongCSharpMod.API
         
         private void EnsureControlled(in CharacterEntry entry)
         {
-            if (!entry.isControlled)
+            if (!entry.isProgramControl)
                 throw new InvalidOperationException($"Character {entry.id} cannot be controlled");
         }
         
@@ -143,12 +143,14 @@ namespace WukongCSharpMod.API
 
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
             Logging.LogDebug($"Spawn unit path is '{unitPath}'");
-            
-            var cachedResourceObj = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
+
+            var cachedResourceObj = BGW_PreloadAssetMgr.Get(world)
+                .TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
             var transform = new FTransform(rotation, actualPos);
             var buTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(
                 world,
-                (TSubclassOf<AActor>)cachedResourceObj, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, 
+                (TSubclassOf<AActor>)cachedResourceObj, transform,
+                ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn,
                 null
             ) as BUTamerActor;
             if (buTamerActor == null)
@@ -159,19 +161,76 @@ namespace WukongCSharpMod.API
 
             var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
             buTamerActor.SpawnedTamerGuid = guid;
+
             // Update final guid
             buTamerActor.GetFinalGuid();
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Logging.LogDebug($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
-            
+
             var characterId = CreateCharacterEntry();
             var entry = _characterEntries[characterId.index];
 
             entry.actor = buTamerActor;
-            entry.pawn = buTamerActor.GetMonster();
+            entry.pawn = null; // Not yet ready
             _characterEntries[characterId.index] = entry;
+
+            return characterId;
+        }
+        
+        private bool GetCharacterReady(ref CharacterEntry entry, out bool result)
+        {
+            if (entry.pawn != null)
+            {
+                result = true;
+                return false;
+            }
+
+            var changed = false;
+            if (entry.actor is BUTamerActor buTamerActor)
+            {
+                entry.pawn = buTamerActor.GetMonster();
+                changed = true;
+            }
             
+            result = entry.pawn != null;
+            return changed;
+        }
+
+        public bool IsCharacterReady(CharacterId character)
+        {
+            EnsureInit();
+            EnsureValidCharacter(character, out var entry);
+
+            if (GetCharacterReady(ref entry, out var result))
+            {
+                _characterEntries[character.index] = entry;
+            }
+            
+            return result;
+        }
+
+        private void EnsureCharacterReady(ref CharacterEntry entry)
+        {
+            if (GetCharacterReady(ref entry, out var result))
+            {
+                _characterEntries[entry.id.index] = entry;
+            }
+                
+            if (!result)
+                throw new InvalidOperationException($"Character {entry.id} is not ready, wait a few frames");
+        }
+
+        public void ControlCharacter(CharacterId character)
+        {
+            EnsureInit();
+            EnsureValidCharacter(character, out var entry);
+            EnsureCharacterReady(ref entry);
+            
+            if (entry.isProgramControl)
+                return;
+
+            entry.isProgramControl = true;
             var events = BUS_EventCollectionCS.Get(entry.actor);
 
             if (events is null)
@@ -187,7 +246,7 @@ namespace WukongCSharpMod.API
                 events.Evt_EnableCanSetBT.Invoke(P1: false);
             }
             
-            return characterId;
+            _characterEntries[character.index] = entry;
         }
         
         public void DestroyCharacter(CharacterId character)
@@ -204,11 +263,14 @@ namespace WukongCSharpMod.API
             _characterEntries[character.index] = entry;
         }
         
-        public void SendJump(CharacterId character)
+        public void SendAttack(CharacterId character)
         {
             EnsureInit();
+            EnsureValidCharacter(character, out var entry);
+            EnsureControlled(entry);
 
-            throw new NotImplementedException();
+            var events = BUS_EventCollectionCS.Get(entry.actor);
+            // events.Evt_AICastSkillWithSkillID.Invoke(0, ECastSkillSourceType.DodgeSkill);
         }
         
         public void SendMoveTo(CharacterId character, FVector targetPos)
@@ -218,7 +280,7 @@ namespace WukongCSharpMod.API
             EnsureControlled(entry);
             
             var events = BUS_EventCollectionCS.Get(entry.actor);
-            events.Evt_AIMoveTo.Invoke(targetPos, null, EAIMoveSpeedType.RUN, 2f, EBGUMoveAIType.None, false, false, "", "");
+            events.Evt_AIMoveTo.Invoke(targetPos, null, EAIMoveSpeedType.SPRINT, 2f, EBGUMoveAIType.KeepFacingTarget, false, false, "", "");
         }
         
         public void RunOnGameThread(Action callback)
