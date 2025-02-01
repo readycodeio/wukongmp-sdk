@@ -286,7 +286,7 @@ namespace WukongCSharpMod.API
         public void RunOnGameThread(Action callback)
         {
             EnsureInit();
-            GameLoopPatch.LoopOnGameThread(callback);
+            GameLoopPatch.QueueOnGameThread(callback);
         }
     }
 }

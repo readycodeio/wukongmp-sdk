@@ -277,7 +277,7 @@ namespace WukongCSharpMod.Patches
     {
         public static bool Prefix(BUS_PlayerCameraCompImpl __instance)
         {
-            var photon = MyMod.Instance.Photon;
+            var photon = WukongMP.Instance.Photon;
 
             var localPawn = photon.LocalPlayerState.Pawn;
             var owner = __instance.GetOwner();

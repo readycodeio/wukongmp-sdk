@@ -9,46 +9,43 @@ namespace WukongMPMod
         public string Name => "WukongMP";
         public string Version => "0.0.1";
 
-        public WukongMP WukongMP;
-        
+        private WukongMP _wukongMp;
+
         public void Init()
         {
             Logging.LogDebug("Init");
 
-            WukongMP = WukongMP.Instance;
-            
-            // InitWorldCallbacks();
+            _wukongMp = WukongMP.Instance;
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.H, () =>
             {
                 Logging.LogDebug("Alt + H");
-                WukongMP.Init();
+                _wukongMp.Init();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
-                WukongMP.DumpPlayerState();
+                _wukongMp.DumpPlayerState();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             {
                 Logging.LogDebug("Alt + V");
-                WukongMP.Photon.SpawnClone();
+                _wukongMp.Photon.SpawnClone();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.M, () =>
             {
                 Logging.LogDebug("Alt + M");
-                WukongMP.EnableMultiplayer();
+                _wukongMp.EnableMultiplayer();
             });
         }
 
         public void DeInit()
         {
             Logging.LogDebug("DeInit");
-            
-            WukongMP.Unpatch();
+            _wukongMp.Unpatch();
         }
     }
 }

@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using CommB1;
-using CSharpModBase;
-using CSharpModBase.Input;
 using HarmonyLib;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -51,6 +49,11 @@ namespace WukongCSharpMod
         private bool _multiplayerEnabled;
 
         private WukongMP()
+        {
+            // empty
+        }
+        
+        public void Patch()
         {
             // empty
         }
