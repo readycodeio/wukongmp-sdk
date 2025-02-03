@@ -24,6 +24,7 @@ namespace WukongApi
     public class WukongMP
     {
         private UUserWidget _chatWidget;
+        public FreeCameraManager FreeCameraManager { get; } = new FreeCameraManager();
 
         public readonly Harmony Harmony = new Harmony("WukongMP");
 
@@ -189,6 +190,7 @@ namespace WukongApi
                 return;
             }
 
+            FreeCameraManager.LeaveFreeCameraMode();
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
             Photon.RebirthCurrentPlayer();
         }
