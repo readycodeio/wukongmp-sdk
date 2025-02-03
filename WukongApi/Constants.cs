@@ -1,4 +1,7 @@
-﻿namespace WukongApi
+﻿using BtlShare;
+using WukongApi.Helpers;
+
+namespace WukongApi
 {
     public static class Constants
     {
@@ -13,5 +16,36 @@
         public const float MonsterSpawnSpread = 100f;
         public const int MonsterSpawnDelayMs = 500;
         public const int BaseTeamId = -999999999;
+        public const string AttributePrefix = "attr_";
+
+        public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new EnumSet<EBGUAttrFloat>(new[]
+        {
+            EBGUAttrFloat.AtkBase,
+            EBGUAttrFloat.DefBase,
+            EBGUAttrFloat.CritRateBase,
+            EBGUAttrFloat.DmgDefBase,
+            EBGUAttrFloat.BurnDefBase,
+            EBGUAttrFloat.BurnAbnormalAccMaxMul,
+            EBGUAttrFloat.PoisonDefBase,
+            EBGUAttrFloat.PoisonAbnormalAccMaxMul,
+            EBGUAttrFloat.FreezeDefBase,
+            EBGUAttrFloat.FreezeAbnormalAccMaxMul,
+            EBGUAttrFloat.PoisonAtkBase,
+            EBGUAttrFloat.PevalueMaxBase,
+            EBGUAttrFloat.FabaoEnergyMax,
+            EBGUAttrFloat.CritMultiplierBase,
+            EBGUAttrFloat.VigorEnergyMax,
+            EBGUAttrFloat.ThunderAtkBase,
+            EBGUAttrFloat.CommDropAddition,
+            EBGUAttrFloat.ThunderDefBase,
+            EBGUAttrFloat.ThunderAbnormalAccMaxMul,
+            EBGUAttrFloat.DmgAdditionBase,
+            EBGUAttrFloat.SpiritDropAddition,
+            EBGUAttrFloat.ExpDropAddition,
+            EBGUAttrFloat.FreezeAtkBase,
+            EBGUAttrFloat.BurnAtkBase,
+            EBGUAttrFloat.EnergyConsumeSpeedMul,
+            EBGUAttrFloat.BloodBottomNumMaxBase,
+        });
     }
 }

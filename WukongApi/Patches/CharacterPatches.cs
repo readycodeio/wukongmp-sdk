@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Linq;
+using b1;
 using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Engine;
@@ -36,9 +37,24 @@ namespace WukongApi.Patches
 
             if (photon.IsMasterClient)
             {
-                // master client always has the latest data
+                // master client always has the latest data for himself, but may need to apply it for others
+                if (__instance.Owner == photon.LocalPlayerState.Pawn)
+                    return;
+
+                var playerState = photon.GetByActor(__instance.Owner as BGUCharacterCS);
+                if (playerState != null)
+                {
+                    foreach (var (attr, value) in playerState.Attributes)
+                    {
+                        __instance.SetFloatValue(attr, value);
+                    }
+                }
+
                 return;
             }
+
+            // for clients, their own attributes are already set by them, and they do not care about attributes of other clients / mosnters
+            // because it's the master client that ultimately calculates damage in combat
 
             if (__instance.Owner == photon.LocalPlayerState.Pawn)
             {
@@ -113,11 +129,10 @@ namespace WukongApi.Patches
         public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
         {
             var photon = WukongMP.Instance.Photon;
+            var owner = __instance.GetOwner();
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
-                var owner = __instance.GetOwner();
-
                 // I am a server
                 if (photon.IsMasterClient)
                 {
@@ -171,6 +186,19 @@ namespace WukongApi.Patches
 
                 // I am a client
                 return false;
+            }
+
+            // only sync attributes that influence combat and are client-authoritative
+            if (Constants.SyncedAttributes.Contains(AttrID) && owner == photon.LocalPlayerState.Pawn)
+            {
+                if (photon.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
+                    && existing.Equals(NewValue, Constants.FloatComparisonTolerance))
+                {
+                    return true;
+                }
+
+                photon.LocalPlayerState.Attributes[AttrID] = NewValue;
+                photon.CachePlayerAttribute(AttrID, NewValue);
             }
 
             return true;

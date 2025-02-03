@@ -58,7 +58,7 @@ namespace WukongApi.Patches
 
                     if (events == null)
                     {
-                        Logging.LogWarning($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
+                        // Logging.LogWarning($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
                         continue;
                     }
 

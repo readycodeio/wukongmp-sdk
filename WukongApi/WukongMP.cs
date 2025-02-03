@@ -233,6 +233,14 @@ namespace WukongApi
             var eq = EquipmentHelpers.GetCurrentEquipmentStateForActor(player);
             Photon.CachePlayerProperty(nameof(PlayerState.Equipment), eq);
 
+            // attributes
+            var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(player);
+            foreach (var attr in Constants.SyncedAttributes)
+            {
+                var value = attrs.GetFloatValue(attr);
+                Photon.CachePlayerAttribute(attr, value);
+            }
+
             Photon.SetCachedPlayerProperties();
         }
 
@@ -539,9 +547,6 @@ namespace WukongApi
                 rot = (FRotator)playerRot;
             }
 
-            Logging.LogDebug($"Player {id} location: {loc}");
-            Logging.LogDebug($"Player {id} rotation: {rot}");
-
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
@@ -578,6 +583,16 @@ namespace WukongApi
                 Location = loc,
                 Rotation = rot
             };
+
+            // set attributes
+            foreach (var attr in Constants.SyncedAttributes)
+            {
+                if (player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
+                {
+                    Logging.LogDebug($"Setting remote player initial attribute {attr} = {value}");
+                    playerState.Attributes[attr] = (float)value;
+                }
+            }
 
             // update equipment
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.Equipment), out var eq))
