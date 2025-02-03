@@ -552,11 +552,12 @@ namespace WukongApi
                 // attributes have special treatment
                 if (propertyName.StartsWith(Constants.AttributePrefix))
                 {
+                    Logging.LogDebug($"Received {propertyName} = {kvp.Value} for player {id}");
+
                     var key = propertyName.Substring(Constants.AttributePrefix.Length);
                     if (Enum.TryParse<EBGUAttrFloat>(key, out var attr))
                     {
                         playerState.Attributes[attr] = (float)kvp.Value;
-                        Logging.LogDebug($"Received {propertyName} = {kvp.Value} for player {id}");
                         continue;
                     }
                 }
@@ -577,7 +578,6 @@ namespace WukongApi
                 if (propertyName == nameof(PlayerState.Equipment))
                 {
                     OnEquipmentChange?.Invoke(id, (EquipmentState)kvp.Value);
-                    break;
                 }
             }
         }

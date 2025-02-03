@@ -586,20 +586,21 @@ namespace WukongApi
                 Rotation = rot
             };
 
-            // update equipment
-            if (player.CustomProperties.TryGetValue(nameof(PlayerState.Equipment), out var eq))
-            {
-                playerState.Equipment = (EquipmentState)eq;
-                EquipmentHelpers.SetRemoteActorEquipment((BGUCharacterCS)newPawn, playerState.Equipment);
-            }
-            
             // set attributes
             foreach (var attr in Constants.SyncedAttributes)
             {
                 if (player.CustomProperties.TryGetValue(attr.ToString(), out var value))
                 {
+                    Logging.LogDebug($"Setting initial attribute {attr} to {value}");
                     playerState.Attributes[attr] = (float)value;
                 }
+            }
+
+            // update equipment
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.Equipment), out var eq))
+            {
+                playerState.Equipment = (EquipmentState)eq;
+                EquipmentHelpers.SetRemoteActorEquipment((BGUCharacterCS)newPawn, playerState.Equipment);
             }
 
             Photon.RegisterPlayer(playerState);
