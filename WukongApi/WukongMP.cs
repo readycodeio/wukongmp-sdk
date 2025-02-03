@@ -23,6 +23,7 @@ namespace WukongApi
     public class WukongMP
     {
         private UUserWidget _chatWidget;
+        public FreeCameraManager FreeCameraManager { get; } = new FreeCameraManager();
 
         public readonly Harmony Harmony = new Harmony("WukongMP");
 

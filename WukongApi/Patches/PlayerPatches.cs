@@ -267,6 +267,7 @@ namespace WukongApi.Patches
     {
         public static bool Prefix()
         {
+            WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
             return false;
         }
     }
