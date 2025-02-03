@@ -60,6 +60,80 @@ namespace WukongApi
             InitPhotonAndConnectToChat();
         }
 
+        public void InitAsync()
+        {
+            StartConditionCheckingTask(IsValidGameInstance, Init, 500);
+        }
+
+        private void StartConditionCheckingTask(Func<bool> condition, Action action, int intervalMs)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (true)
+                    {
+                        if (condition())
+                        {
+                            action();
+                            break; // Exit the task
+                        }
+                        await Task.Delay(intervalMs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.LogError(ex.Message);
+                    Logging.LogError(ex.StackTrace);
+                }
+            });
+        }
+
+        bool IsValidGameInstance()
+        {
+            var gameInstance = BGWGameInstanceCS.Get(null);
+            if (gameInstance != null)
+            {
+                Logging.LogDebug("Found valid GameInstance");
+                return true;
+            }
+            return false;
+        }
+
+        private void InitWorldCallbacks()
+        {
+            var gameInstance = BGWGameInstanceCS.Get(null);
+            if (gameInstance != null)
+            {
+                BGW_EventCollection.Get(gameInstance).Evt_PostLoadMapWithWorld += OnMapLoaded;
+                BGW_EventCollection.Get(gameInstance).Evt_PlayerDelayBeginPlayFinished += OnDelayBeginPlay;
+            }
+            else
+            {
+                Logging.LogError("GameInstance is not valid.");
+            }
+        }
+
+        private void OnMapLoaded()
+        {
+            var world = GameUtils.GetWorld();
+            if (world != null)
+            {
+                Logging.LogDebug($"New level loaded: {world.GetCurrentLevelName()}");
+            }
+        }
+
+        private void OnDelayBeginPlay()
+        {
+            Logging.LogDebug("Delay begin play for player.");
+            if (!Photon.Ready)
+            {
+                InitializeChatWidget();
+                ToggleChatWidget();
+                Connect();
+            }
+        }
+
         public void DumpPlayerState()
         {
             // dump player state to console for me
@@ -649,6 +723,14 @@ namespace WukongApi
                     _chatWidget = widgets[0];
                     Logging.LogDebug("Chat widget initialized!.");
                 }
+            }
+        }
+
+        private void ToggleChatWidget()
+        {
+            if (_chatWidget != null)
+            {
+                _chatWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
             }
         }
 
