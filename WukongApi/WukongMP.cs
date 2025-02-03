@@ -546,9 +546,6 @@ namespace WukongApi
                 rot = (FRotator)playerRot;
             }
 
-            Logging.LogDebug($"Player {id} location: {loc}");
-            Logging.LogDebug($"Player {id} rotation: {rot}");
-
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
@@ -589,9 +586,9 @@ namespace WukongApi
             // set attributes
             foreach (var attr in Constants.SyncedAttributes)
             {
-                if (player.CustomProperties.TryGetValue(attr.ToString(), out var value))
+                if (player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
                 {
-                    Logging.LogDebug($"Setting initial attribute {attr} to {value}");
+                    Logging.LogDebug($"Setting remote player initial attribute {attr} = {value}");
                     playerState.Attributes[attr] = (float)value;
                 }
             }

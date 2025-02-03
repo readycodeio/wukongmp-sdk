@@ -552,14 +552,15 @@ namespace WukongApi
                 // attributes have special treatment
                 if (propertyName.StartsWith(Constants.AttributePrefix))
                 {
-                    Logging.LogDebug($"Received {propertyName} = {kvp.Value} for player {id}");
+                    Logging.LogDebug($"Assigning {propertyName} = {kvp.Value} for player {id}");
 
                     var key = propertyName.Substring(Constants.AttributePrefix.Length);
-                    if (Enum.TryParse<EBGUAttrFloat>(key, out var attr))
-                    {
-                        playerState.Attributes[attr] = (float)kvp.Value;
-                        continue;
-                    }
+
+                    if (!Enum.TryParse<EBGUAttrFloat>(key, out var attr))
+                        throw new InvalidOperationException($"Failed to parse attribute key: {key}");
+
+                    playerState.Attributes[attr] = (float)kvp.Value;
+                    continue;
                 }
 
                 if (!PlayerSetters.TryGetValue(propertyName, out var setter))
