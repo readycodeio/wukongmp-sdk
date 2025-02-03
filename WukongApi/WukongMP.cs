@@ -232,6 +232,14 @@ namespace WukongApi
             var eq = EquipmentHelpers.GetCurrentEquipmentStateForActor(player);
             Photon.CachePlayerProperty(nameof(PlayerState.Equipment), eq);
 
+            // attributes
+            var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(player);
+            foreach (var attr in Constants.SyncedAttributes)
+            {
+                var value = attrs.GetFloatValue(attr);
+                Photon.CachePlayerAttribute(attr, value);
+            }
+
             Photon.SetCachedPlayerProperties();
         }
 

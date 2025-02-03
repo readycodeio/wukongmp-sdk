@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using b1;
 using BtlB1;
+using BtlShare;
 using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
@@ -352,6 +353,11 @@ namespace WukongApi
             }
         }
 
+        public void CachePlayerAttribute(EBGUAttrFloat attr, float value)
+        {
+            CachePlayerProperty($"{Constants.AttributePrefix}{attr}", value);
+        }
+
         public void SetRemotePlayerProperty(int playerId, string key, object value)
         {
             if (!IsMasterClient)
@@ -542,6 +548,18 @@ namespace WukongApi
             foreach (var kvp in changedProps)
             {
                 var propertyName = (string)kvp.Key;
+
+                // attributes have special treatment
+                if (propertyName.StartsWith(Constants.AttributePrefix))
+                {
+                    var key = propertyName.Substring(Constants.AttributePrefix.Length);
+                    if (Enum.TryParse<EBGUAttrFloat>(key, out var attr))
+                    {
+                        playerState.Attributes[attr] = (float)kvp.Value;
+                        Logging.LogDebug($"Received {propertyName} = {kvp.Value} for player {id}");
+                        continue;
+                    }
+                }
 
                 if (!PlayerSetters.TryGetValue(propertyName, out var setter))
                 {

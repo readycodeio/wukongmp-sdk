@@ -61,15 +61,15 @@ namespace WukongApi.Patches
     {
         public static void Prefix(int TickGroup)
         {
-            var enumTickGroup = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
-            Logging.LogDebug($"Prefix ReceiveTick_Implementation: {(int)enumTickGroup} {enumTickGroup}");
+            // var enumTickGroup = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+            // Logging.LogDebug($"Prefix ReceiveTick_Implementation: {(int)enumTickGroup} {enumTickGroup}");
         }
 
         public static void Postfix(int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
 
-            Logging.LogDebug($"Postfix ReceiveTick_Implementation: {(int)mask} {mask}");
+            // Logging.LogDebug($"Postfix ReceiveTick_Implementation: {(int)mask} {mask}");
 
             if (mask == BGW_TickGroupMask.TG_PreTick
                 || mask == BGW_TickGroupMask.TG_OnTick
@@ -114,7 +114,7 @@ namespace WukongApi.Patches
             int ThreadIdx,
             int ThreadCount)
         {
-            Logging.LogDebug($"Prefix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
+            // Logging.LogDebug($"Prefix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
         }
 
         public static void Postfix(
@@ -122,7 +122,7 @@ namespace WukongApi.Patches
             int ThreadIdx,
             int ThreadCount)
         {
-            Logging.LogDebug($"Postfix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
+            // Logging.LogDebug($"Postfix EntityManager.TickAllComponentsWithGroup: {TickGroup} idx: {ThreadIdx} max: {ThreadCount}");
 
             if (ThreadIdx != 0)
                 return;

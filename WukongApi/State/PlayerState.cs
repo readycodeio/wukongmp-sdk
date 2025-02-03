@@ -1,4 +1,6 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using System.Text;
+using b1;
 using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -26,6 +28,7 @@ namespace WukongApi.State
         #endregion
 
         public float Hp { get; set; }
+        public Dictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
@@ -46,6 +49,7 @@ namespace WukongApi.State
             }
 
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
+            Attributes = new Dictionary<EBGUAttrFloat, float>();
 
             Logging.LogDebug($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
@@ -53,7 +57,36 @@ namespace WukongApi.State
 
         public override string ToString()
         {
-            return $"PlayerState(PhotonId: {PhotonId},\nInJump: {InJump},\nIsFlying: {IsFlying},\nIsFalling: {IsFalling},\nIsLandingMove: {IsLandingMove},\nVelocity: {Velocity},\nMoveAcceleration: {MoveAcceleration},\nActorLocation: {Location},\nActorRotation: {Rotation},\nTurnInplaceTargetRotation: {TurnInplaceTargetRotation},\nIsStandRotate: {IsStandRotate},\nTurnInplaceRemainAngle: {TurnInplaceRemainAngle},\nIsAttacking: {IsAttacking},\nOrientRotationToMovement: {OrientRotationToMovement},\nMoveSpeedLevel: {MoveSpeedLevel},\nMoveSpeedState: {MoveSpeedState},\nShouldWaitRotateFinished: {ShouldWaitRotateFinished},\nTeamID: {TeamId})\n";
+            var sb = new StringBuilder("PlayerState");
+            sb.AppendLine($"PhotonId: {PhotonId}");
+            sb.AppendLine($"TeamID: {TeamId}");
+            sb.AppendLine($"Hp: {Hp}");
+            sb.AppendLine("------ ATTRIBUTES ------");
+
+            foreach (var kvp in Attributes)
+            {
+                sb.AppendLine($"{kvp.Key}: {kvp.Value}");
+            }
+
+            sb.AppendLine("------ ANIMATION ------");
+            sb.AppendLine($"InJump: {InJump}");
+            sb.AppendLine($"IsFlying: {IsFlying}");
+            sb.AppendLine($"IsFalling: {IsFalling}");
+            sb.AppendLine($"IsLandingMove: {IsLandingMove}");
+            sb.AppendLine($"Velocity: {Velocity}");
+            sb.AppendLine($"MoveAcceleration: {MoveAcceleration}");
+            sb.AppendLine($"ActorLocation: {Location}");
+            sb.AppendLine($"ActorRotation: {Rotation}");
+            sb.AppendLine($"TurnInplaceTargetRotation: {TurnInplaceTargetRotation}");
+            sb.AppendLine($"IsStandRotate: {IsStandRotate}");
+            sb.AppendLine($"TurnInplaceRemainAngle: {TurnInplaceRemainAngle}");
+            sb.AppendLine($"IsAttacking: {IsAttacking}");
+            sb.AppendLine($"OrientRotationToMovement: {OrientRotationToMovement}");
+            sb.AppendLine($"MoveSpeedLevel: {MoveSpeedLevel}");
+            sb.AppendLine($"MoveSpeedState: {MoveSpeedState}");
+            sb.AppendLine($"ShouldWaitRotateFinished: {ShouldWaitRotateFinished}");
+
+            return sb.ToString();
         }
     }
 }
