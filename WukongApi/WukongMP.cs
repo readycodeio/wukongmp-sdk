@@ -189,6 +189,7 @@ namespace WukongApi
                 return;
             }
 
+            FreeCameraManager.LeaveFreeCameraMode();
             BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
             Photon.RebirthCurrentPlayer();
         }
