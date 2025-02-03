@@ -261,13 +261,28 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_DeadComp), "OnUnitDead")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUnitDead
+    {
+        public static void Postfix(BUS_DeadComp __instance)
+        {
+            var photon = WukongMP.Instance.Photon;
+            var owner = __instance.GetOwner();
+
+            if (owner == photon.LocalPlayerState.Pawn)
+            {
+                WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(UIDeath), "DoShowIn")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchUIDeath
     {
         public static bool Prefix()
         {
-            WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
             return false;
         }
     }
