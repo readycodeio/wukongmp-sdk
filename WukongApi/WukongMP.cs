@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using CommB1;
+using CSharpModBase;
 using HarmonyLib;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -47,7 +48,7 @@ namespace WukongApi
 
         public void Unpatch()
         {
-            Harmony.UnpatchAll();
+            Utils.TryRunOnGameThread(() => { Harmony.UnpatchAll(); });
         }
 
         public void Init()
@@ -231,6 +232,14 @@ namespace WukongApi
             // equipment
             var eq = EquipmentHelpers.GetCurrentEquipmentStateForActor(player);
             Photon.CachePlayerProperty(nameof(PlayerState.Equipment), eq);
+
+            // attributes
+            var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(player);
+            foreach (var attr in Constants.SyncedAttributes)
+            {
+                var value = attrs.GetFloatValue(attr);
+                Photon.CachePlayerAttribute(attr, value);
+            }
 
             Photon.SetCachedPlayerProperties();
         }
@@ -538,9 +547,6 @@ namespace WukongApi
                 rot = (FRotator)playerRot;
             }
 
-            Logging.LogDebug($"Player {id} location: {loc}");
-            Logging.LogDebug($"Player {id} rotation: {rot}");
-
             var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
 
             if (@class is null)
@@ -577,6 +583,16 @@ namespace WukongApi
                 Location = loc,
                 Rotation = rot
             };
+
+            // set attributes
+            foreach (var attr in Constants.SyncedAttributes)
+            {
+                if (player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
+                {
+                    Logging.LogDebug($"Setting remote player initial attribute {attr} = {value}");
+                    playerState.Attributes[attr] = (float)value;
+                }
+            }
 
             // update equipment
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.Equipment), out var eq))
@@ -644,11 +660,11 @@ namespace WukongApi
             if (latestArchive == null)
                 return;
 
-            GameLoopPatch.QueueOnGameThread(() =>
+            Utils.TryRunOnGameThread(() =>
             {
                 Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GlobalPatches);
                 Logging.LogDebug("Multiplayer mode patched with Harmony");
-            }, "Patch multiplayer mode");
+            });
 
             // Load archive
             BGW_EventCollection.Get(world).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel

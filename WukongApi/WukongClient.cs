@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using b1;
 using BtlB1;
+using BtlShare;
 using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
@@ -352,6 +353,11 @@ namespace WukongApi
             }
         }
 
+        public void CachePlayerAttribute(EBGUAttrFloat attr, float value)
+        {
+            CachePlayerProperty($"{Constants.AttributePrefix}{attr}", value);
+        }
+
         public void SetRemotePlayerProperty(int playerId, string key, object value)
         {
             if (!IsMasterClient)
@@ -498,7 +504,7 @@ namespace WukongApi
         {
             Logging.LogDebug("Left room");
 
-            GameLoopPatch.QueueOnGameThread(() =>
+            Utils.TryRunOnGameThread(() =>
             {
                 WukongMP.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
                 Logging.LogDebug("Unpatched Harmony");
@@ -543,6 +549,20 @@ namespace WukongApi
             {
                 var propertyName = (string)kvp.Key;
 
+                // attributes have special treatment
+                if (propertyName.StartsWith(Constants.AttributePrefix))
+                {
+                    Logging.LogDebug($"Assigning {propertyName} = {kvp.Value} for player {id}");
+
+                    var key = propertyName.Substring(Constants.AttributePrefix.Length);
+
+                    if (!Enum.TryParse<EBGUAttrFloat>(key, out var attr))
+                        throw new InvalidOperationException($"Failed to parse attribute key: {key}");
+
+                    playerState.Attributes[attr] = (float)kvp.Value;
+                    continue;
+                }
+
                 if (!PlayerSetters.TryGetValue(propertyName, out var setter))
                 {
                     setter = CreateSetter<PlayerState>(propertyName);
@@ -559,7 +579,6 @@ namespace WukongApi
                 if (propertyName == nameof(PlayerState.Equipment))
                 {
                     OnEquipmentChange?.Invoke(id, (EquipmentState)kvp.Value);
-                    break;
                 }
             }
         }
