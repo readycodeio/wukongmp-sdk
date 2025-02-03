@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using CommB1;
+using CSharpModBase;
 using HarmonyLib;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -47,7 +48,7 @@ namespace WukongApi
 
         public void Unpatch()
         {
-            Harmony.UnpatchAll();
+            Utils.TryRunOnGameThread(() => { Harmony.UnpatchAll(); });
         }
 
         public void Init()
@@ -659,11 +660,11 @@ namespace WukongApi
             if (latestArchive == null)
                 return;
 
-            GameLoopPatch.QueueOnGameThread(() =>
+            Utils.TryRunOnGameThread(() =>
             {
                 Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GlobalPatches);
                 Logging.LogDebug("Multiplayer mode patched with Harmony");
-            }, "Patch multiplayer mode");
+            });
 
             // Load archive
             BGW_EventCollection.Get(world).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel

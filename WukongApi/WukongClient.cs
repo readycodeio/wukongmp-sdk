@@ -504,7 +504,7 @@ namespace WukongApi
         {
             Logging.LogDebug("Left room");
 
-            GameLoopPatch.QueueOnGameThread(() =>
+            Utils.TryRunOnGameThread(() =>
             {
                 WukongMP.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
                 Logging.LogDebug("Unpatched Harmony");
