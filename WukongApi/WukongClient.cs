@@ -22,9 +22,10 @@ namespace WukongApi
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         private readonly RealtimeClient _client = new RealtimeClient();
-        private readonly WukongChatter _wukongChat;
         private readonly string _userName;
         private const char MonsterHashtableKeySeparator = ';';
+
+        private bool _isExit;
 
         protected int PhotonId => _client.LocalPlayer.ActorNumber;
         public bool IsMasterClient => _client.CurrentRoom?.MasterClientId == PhotonId;
@@ -41,7 +42,7 @@ namespace WukongApi
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
 
-        public WukongChatter WukongChat => _wukongChat;
+        public WukongChatter WukongChat { get; }
 
         public PlayerState LocalPlayerState { get; protected set; }
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
@@ -79,7 +80,7 @@ namespace WukongApi
 
         public WukongClient(string userName, Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
-            _wukongChat = new WukongChatter(this);
+            WukongChat = new WukongChatter(this);
             _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
@@ -164,18 +165,41 @@ namespace WukongApi
             });
 
             new Thread(LoopGame).Start();
+
             Logging.LogDebug("Running forever.");
         }
 
         public void StopClient()
         {
+            Logging.LogDebug("Stopping client...");
+
+            _isExit = true;
+
+            WukongChat.Disconnect();
             _client.Disconnect();
+
+            Logging.LogDebug("Stopped client.");
+
+            _client.RemoveCallbackTarget(this);
+
+            // unpatch harmony
+            Utils.TryRunOnGameThread(() =>
+            {
+                WukongMP.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
+                Logging.LogDebug("Unpatched Harmony");
+            });
+
+            // destroy all connected players
+            foreach (var player in ConnectedPlayers.Values)
+            {
+                BGU_UnrealWorldUtil.DestroyActor(player.Pawn);
+            }
         }
 
         // ReSharper disable once FunctionNeverReturns
-        private void LoopGame(object state)
+        private void LoopGame()
         {
-            while (true)
+            while (!_isExit)
             {
                 _client.Service();
                 Thread.Sleep(33);
@@ -485,7 +509,7 @@ namespace WukongApi
             });
 
             _joinedRoomCallback?.Invoke();
-            _wukongChat.InitializeChat(_userName);
+            WukongChat.InitializeChat(_userName);
 
             GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
         }
