@@ -52,6 +52,7 @@ namespace WukongApi
 
         public void RegisterPlayer(PlayerState state)
         {
+            Logging.LogDebug($"Registering player {state.PhotonId}");
             ConnectedPlayers.Add(state.PhotonId, state);
         }
 
@@ -539,13 +540,13 @@ namespace WukongApi
 
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
-            Logging.LogDebug($"Player {newPlayer.UserId} entered the room");
+            Logging.LogDebug($"Player {newPlayer.ActorNumber} entered the room");
             _playerJoinedCallback?.Invoke(newPlayer);
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)
         {
-            Logging.LogDebug($"Player {otherPlayer.UserId} left the room");
+            Logging.LogDebug($"Player {otherPlayer.ActorNumber} left the room");
 
             BGU_UnrealWorldUtil.DestroyActor(ConnectedPlayers[otherPlayer.ActorNumber].Pawn);
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);

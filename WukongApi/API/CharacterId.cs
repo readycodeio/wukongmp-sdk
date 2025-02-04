@@ -8,7 +8,7 @@ namespace WukongApi.API
 
         public int index
             => _index - 1;
-        
+
         public CharacterId(int index)
         {
             _index = index + 1;
@@ -25,7 +25,7 @@ namespace WukongApi.API
 
         public static bool operator ==(CharacterId x, CharacterId y)
             => x._index == y._index;
-        
+
         public static bool operator !=(CharacterId x, CharacterId y)
             => x._index != y._index;
 

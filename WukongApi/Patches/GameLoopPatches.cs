@@ -72,18 +72,11 @@ namespace WukongApi.Patches
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
                 return;
 
-            if (queue.IsEmpty)
-                return;
-
             while (queue.TryDequeue(out var item))
             {
                 try
                 {
-                    if (item.Name != null)
-                    {
-                        Logging.LogDebug($"Processing {item.Name} action for tick group {mask}");
-                    }
-
+                    Logging.LogDebug($"Processing {item.Name} action for tick group {mask}");
                     item.Action();
                 }
                 catch (Exception e)
@@ -120,18 +113,11 @@ namespace WukongApi.Patches
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
                 return;
 
-            if (queue.IsEmpty)
-                return;
-
             while (queue.TryDequeue(out var item))
             {
                 try
                 {
-                    if (item.Name != null)
-                    {
-                        Logging.LogDebug($"Processing {item.Name} action for tick group {mask} (EntityManager)");
-                    }
-
+                    Logging.LogDebug($"Processing {item.Name} action for tick group {mask} (EntityManager)");
                     item.Action();
                 }
                 catch (Exception e)

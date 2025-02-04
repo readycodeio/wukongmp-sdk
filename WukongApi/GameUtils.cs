@@ -104,5 +104,25 @@ namespace WukongApi
             SlotName += ".sav";
             return FPaths.Combine(GetSaveDirectory(), SlotName);
         }
+
+        public static bool IsGameInstanceValid()
+        {
+            if (BGWGameInstanceCS.Get(null) != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsWorldValid()
+        {
+            if (GetWorld() != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

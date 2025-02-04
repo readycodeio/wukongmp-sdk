@@ -1,8 +1,7 @@
 ﻿using b1;
+using b1.BGW;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using b1.BGW;
-using Photon.Client.StructWrapping;
 
 namespace WukongApi
 {
@@ -22,22 +21,26 @@ namespace WukongApi
             {
                 return;
             }
+
             if (_isInFreeCameraMode)
             {
                 return;
             }
+
             ABGPPlayerController aBGPPlayerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world) as ABGPPlayerController;
             if (aBGPPlayerController.IsNullOrDestroyed())
             {
                 Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerController IsNull");
                 return;
             }
+
             _cachePlayerPawn = aBGPPlayerController.GetControlledPawn() as BGUCharacterCS;
             if (_cachePlayerPawn.IsNullOrDestroyed())
             {
                 Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerPawn IsNull");
                 return;
             }
+
             APlayerCameraManager localPlayerCameraManager = UGSE_EngineFuncLib.GetLocalPlayerCameraManager(world);
             if (localPlayerCameraManager.IsNullOrDestroyed())
             {
@@ -50,13 +53,15 @@ namespace WukongApi
             if (_freeCameraActor.IsNullOrDestroyed())
             {
                 var freeCameraActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(_freeCameraActorPath, ELoadResourceType.SyncLoadAndCache);
-                _freeCameraActor = world.SpawnActor(freeCameraActorClass, ref cameraLocation, ref cameraRotation); 
+                _freeCameraActor = world.SpawnActor(freeCameraActorClass, ref cameraLocation, ref cameraRotation);
             }
+
             if (_freeCameraActor.IsNullOrDestroyed())
             {
                 Logging.LogError("[FreeCameraManager] EnterFreeCameraMode Spawn FreeCameraActor Failed");
                 return;
             }
+
             _freeCameraActor.SetActorHiddenInGame(bNewHidden: false);
             _freeCameraActor.SetActorEnableCollision(bNewActorEnableCollision: true);
             _cacheCameraViewTarget = aBGPPlayerController.GetViewTarget();
@@ -76,16 +81,19 @@ namespace WukongApi
             {
                 return;
             }
+
             if (!_isInFreeCameraMode)
             {
                 return;
             }
+
             ABGPPlayerController aBGPPlayerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world) as ABGPPlayerController;
             if (aBGPPlayerController.IsNullOrDestroyed())
             {
                 Logging.LogError("[FreeCameraManager] LeaveFreeCameraMode PlayerController IsNull");
                 return;
             }
+
             if (_cacheCameraViewTarget.IsNullOrDestroyed())
             {
                 BGUCharacterCS bGUCharacterCS = aBGPPlayerController.GetControlledPawn() as BGUCharacterCS;
@@ -94,12 +102,14 @@ namespace WukongApi
                     Logging.LogError("[FreeCameraManager] LeaveFreeCameraMode PlayerCharacter IsNull");
                     return;
                 }
+
                 aBGPPlayerController.SetViewTargetWithBlend(bGUCharacterCS);
             }
             else
             {
                 aBGPPlayerController.SetViewTargetWithBlend(_cacheCameraViewTarget);
             }
+
             _cachePlayerPawn.EnableInput(aBGPPlayerController);
             BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.GameOnly, EGSInputModeChangeReason.Reset);
 
@@ -107,6 +117,7 @@ namespace WukongApi
             {
                 BGU_UnrealWorldUtil.DestroyActor(_freeCameraActor);
             }
+
             _freeCameraActor = null;
             _cachePlayerPawn = null;
             _isInFreeCameraMode = false;

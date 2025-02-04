@@ -18,7 +18,7 @@ using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
-    using PlayerState = State.PlayerState;
+    using PlayerState = PlayerState;
 
     // ReSharper disable once InconsistentNaming
     public class WukongMP
@@ -55,9 +55,62 @@ namespace WukongApi
         public void Init()
         {
             InitUserName();
-            InitializeChatWidget();
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
+            InitWorldCallbacks();
+        }
+
+        public void InitAsync()
+        {
+            Logging.LogDebug("Waiting for the game instance to be initialized.");
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (GameUtils.IsGameInstanceValid())
+                    {
+                        Logging.LogDebug("Found valid GameInstance");
+                        Init();
+                        break; // Exit the task
+                    }
+
+                    await Task.Delay(500);
+                }
+            });
+        }
+
+        private void InitWorldCallbacks()
+        {
+            var gameInstance = BGWGameInstanceCS.Get(null);
+            if (gameInstance != null)
+            {
+                BGW_EventCollection.Get(gameInstance).Evt_PostLoadMapWithWorld += OnMapLoaded;
+                BGW_EventCollection.Get(gameInstance).Evt_PlayerDelayBeginPlayFinished += OnDelayBeginPlay;
+            }
+            else
+            {
+                Logging.LogError("GameInstance is not valid.");
+            }
+        }
+
+        private void OnMapLoaded()
+        {
+            var world = GameUtils.GetWorld();
+            if (world != null)
+            {
+                Logging.LogDebug($"New level loaded: {world.GetCurrentLevelName()}");
+            }
+        }
+
+        private void OnDelayBeginPlay()
+        {
+            Logging.LogDebug("Delay begin play for player.");
+            if (!Photon.Ready)
+            {
+                InitializeChatWidget();
+                ToggleChatWidget();
+                Connect();
+            }
         }
 
         public void DumpPlayerState()
@@ -166,6 +219,7 @@ namespace WukongApi
             Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
+            Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnEnablePvP += EnablePvP;
             Photon.WukongChat.OnRebirthRequested += HandleRebirth;
@@ -219,9 +273,20 @@ namespace WukongApi
             Photon.StartClient();
         }
 
+        private void Reconnect()
+        {
+            DisconnectIfConnected();
+            InitPhotonAndConnectToChat();
+            Connect();
+        }
+
         private void DisconnectIfConnected()
         {
-            UnsubscribeFromPlayerMontageCallbacks();
+            if (GameUtils.IsWorldValid())
+            {
+                UnsubscribeFromPlayerMontageCallbacks();
+            }
+
             Photon?.StopClient();
             Photon = null;
         }
@@ -617,7 +682,7 @@ namespace WukongApi
             }
             else
             {
-                InitializeChatWidget();
+                Logging.LogError("Chat widget not initialized");
             }
         }
 
@@ -635,7 +700,6 @@ namespace WukongApi
                 return message;
             }
 
-            InitializeChatWidget();
             return "";
         }
 
@@ -649,6 +713,14 @@ namespace WukongApi
                     _chatWidget = widgets[0];
                     Logging.LogDebug("Chat widget initialized!.");
                 }
+            }
+        }
+
+        private void ToggleChatWidget()
+        {
+            if (_chatWidget != null)
+            {
+                _chatWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
             }
         }
 
