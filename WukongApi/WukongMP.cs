@@ -56,8 +56,8 @@ namespace WukongApi
         {
             InitUserName();
             InitializeChatWidget();
-            CleanUpPhoton();
-            InitPhoton();
+            DisconnectIfConnected();
+            InitPhotonAndConnectToChat();
         }
 
         public void DumpPlayerState()
@@ -161,17 +161,12 @@ namespace WukongApi
             // TODO: Spawn if not found
         }
 
-        private void CleanUpPhoton()
-        {
-            UnsubscribeFromPlayerEvents();
-            Photon?.StopClient();
-        }
-
-        private void InitPhoton()
+        private void InitPhotonAndConnectToChat()
         {
             Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
+            Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnEnablePvP += EnablePvP;
             Photon.WukongChat.OnRebirthRequested += HandleRebirth;
         }
@@ -222,6 +217,13 @@ namespace WukongApi
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
 
             Photon.StartClient();
+        }
+
+        private void DisconnectIfConnected()
+        {
+            UnsubscribeFromPlayerMontageCallbacks();
+            Photon?.StopClient();
+            Photon = null;
         }
 
         private void SetPlayerProperties()
@@ -360,7 +362,7 @@ namespace WukongApi
             }
         }
 
-        private void SubscribeToPlayerEvents()
+        private void SubscribeToPlayerMontageCallbacks()
         {
             var myPawn = GameUtils.GetControlledPawn();
             Photon.LocalPlayerState.Pawn = myPawn;
@@ -369,7 +371,7 @@ namespace WukongApi
             events.Evt_PlayMontageCallback += OnPlayMontageCallback;
         }
 
-        private void UnsubscribeFromPlayerEvents()
+        private void UnsubscribeFromPlayerMontageCallbacks()
         {
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
@@ -486,7 +488,7 @@ namespace WukongApi
 
         private void OnJoinedRoomCallback()
         {
-            SubscribeToPlayerEvents();
+            SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
         }
 

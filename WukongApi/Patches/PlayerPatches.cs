@@ -286,7 +286,7 @@ namespace WukongApi.Patches
             return false;
         }
     }
-    
+
     [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "OnTickWithGroup")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchCameraCompTick
@@ -301,6 +301,7 @@ namespace WukongApi.Patches
             {
                 return true;
             }
+
             return false;
         }
     }

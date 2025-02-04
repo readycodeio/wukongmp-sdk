@@ -23,12 +23,15 @@ namespace WukongApi
         private const string ServerChannelName = "Server";
         private string _userName;
 
+        private bool _isExit;
+
         public event Func<string> OnGetMessage;
         public event Action<bool, string, string> OnSendMessage;
 
         public event Action OnSavePosition;
         public event Action OnLoadPosition;
         public event Action OnConnectRequest;
+        public event Action OnDisconnectRequest;
         public event Action OnEnablePvP;
         public event Action OnRebirthRequested;
         public event Action<string, int, int> OnSpawnEnemy;
@@ -51,6 +54,12 @@ namespace WukongApi
             _chatClient.Connect("d4af67fe-a776-499e-8f56-f169d3db616e", "1.0", new AuthenticationValues(userName));
 
             Console.WriteLine("\n\nYou are: " + userName);
+        }
+
+        public void Disconnect()
+        {
+            _isExit = true;
+            _chatClient?.Disconnect();
         }
 
         private void SetupCommands()
@@ -106,6 +115,13 @@ namespace WukongApi
                     Handler = _ => { RequestConnect(); }
                 });
             _commands.Add(
+                "/disconnect",
+                new Command
+                {
+                    Name = "Disconnect",
+                    Handler = _ => { RequestDisconnect(); }
+                });
+            _commands.Add(
                 "/pvp",
                 new Command
                 {
@@ -136,6 +152,11 @@ namespace WukongApi
         public void RequestConnect()
         {
             OnConnectRequest?.Invoke();
+        }
+
+        private void RequestDisconnect()
+        {
+            OnDisconnectRequest?.Invoke();
         }
 
         private void ServiceChat()
@@ -172,9 +193,9 @@ namespace WukongApi
             return false;
         }
 
-        private void LoopChat(object state)
+        private void LoopChat()
         {
-            while (true)
+            while (!_isExit)
             {
                 ServiceChat();
                 Thread.Sleep(33);
