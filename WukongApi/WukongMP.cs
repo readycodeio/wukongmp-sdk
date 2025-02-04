@@ -55,13 +55,14 @@ namespace WukongApi
         public void Init()
         {
             InitUserName();
-            InitializeChatWidget();
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
+            InitWorldCallbacks();
         }
 
         public void InitAsync()
         {
+            Logging.LogDebug("Waiting for the game instance to be initialized.");
             Task.Run(async () =>
             {
                 while (true)
@@ -272,7 +273,10 @@ namespace WukongApi
 
         private void DisconnectIfConnected()
         {
-            UnsubscribeFromPlayerMontageCallbacks();
+            if (GameUtils.IsWorldValid())
+            {
+                UnsubscribeFromPlayerMontageCallbacks();
+            }
             Photon?.StopClient();
             Photon = null;
         }
@@ -668,7 +672,7 @@ namespace WukongApi
             }
             else
             {
-                InitializeChatWidget();
+                Logging.LogError("Chat widget not initialized");
             }
         }
 
@@ -685,8 +689,6 @@ namespace WukongApi
 
                 return message;
             }
-
-            InitializeChatWidget();
             return "";
         }
 

@@ -113,5 +113,14 @@ namespace WukongApi
             }
             return false;
         }
+
+        public static bool IsWorldValid()
+        {
+            if (GetWorld() != null)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }
