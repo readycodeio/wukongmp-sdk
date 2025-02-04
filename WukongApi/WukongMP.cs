@@ -18,7 +18,7 @@ using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
-    using PlayerState = State.PlayerState;
+    using PlayerState = PlayerState;
 
     // ReSharper disable once InconsistentNaming
     public class WukongMP
@@ -73,6 +73,7 @@ namespace WukongApi
                         Init();
                         break; // Exit the task
                     }
+
                     await Task.Delay(500);
                 }
             });
@@ -277,6 +278,7 @@ namespace WukongApi
             {
                 UnsubscribeFromPlayerMontageCallbacks();
             }
+
             Photon?.StopClient();
             Photon = null;
         }
@@ -689,6 +691,7 @@ namespace WukongApi
 
                 return message;
             }
+
             return "";
         }
 

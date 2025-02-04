@@ -20,8 +20,9 @@ namespace WukongApi.API
         }
 
         private bool _alreadyInit;
-        
+
         private readonly CharacterId _localWukongCharacter = new CharacterId(0);
+
         private readonly List<CharacterEntry> _characterEntries = new List<CharacterEntry>()
         {
             new CharacterEntry(),
@@ -34,7 +35,7 @@ namespace WukongApi.API
             _alreadyInit = true;
             WukongMP.Instance.Patch();
         }
-        
+
         public void Deinit()
         {
             if (!_alreadyInit)
@@ -42,7 +43,7 @@ namespace WukongApi.API
             _alreadyInit = false;
             WukongMP.Instance.Unpatch();
         }
-        
+
         private void EnsureInit()
         {
             if (!_alreadyInit)
@@ -62,7 +63,7 @@ namespace WukongApi.API
 
             return characterId;
         }
-        
+
         public CharacterId GetLocalWukongCharacter()
         {
             var entry = _characterEntries[_localWukongCharacter.index];
@@ -78,7 +79,7 @@ namespace WukongApi.API
 
             return _localWukongCharacter;
         }
-        
+
         private void EnsureValidCharacter(CharacterId character, out CharacterEntry entry)
         {
             if (character.index < 0 || character.index >= _characterEntries.Count)
@@ -87,13 +88,13 @@ namespace WukongApi.API
             if (entry.destroyed)
                 throw new InvalidOperationException($"Character {character} is destroyed");
         }
-        
+
         private void EnsureControlled(in CharacterEntry entry)
         {
             if (!entry.isProgramControl)
                 throw new InvalidOperationException($"Character {entry.id} cannot be controlled");
         }
-        
+
         public FVector GetPosition(CharacterId character)
         {
             EnsureInit();
@@ -103,7 +104,7 @@ namespace WukongApi.API
 
             return entry.pawn.GetActorLocation();
         }
-        
+
         public FRotator GetRotation(CharacterId character)
         {
             EnsureInit();
@@ -177,7 +178,7 @@ namespace WukongApi.API
 
             return characterId;
         }
-        
+
         private bool GetCharacterReady(ref CharacterEntry entry, out bool result)
         {
             if (entry.pawn != null)
@@ -192,7 +193,7 @@ namespace WukongApi.API
                 entry.pawn = buTamerActor.GetMonster();
                 changed = true;
             }
-            
+
             result = entry.pawn != null;
             return changed;
         }
@@ -206,7 +207,7 @@ namespace WukongApi.API
             {
                 _characterEntries[character.index] = entry;
             }
-            
+
             return result;
         }
 
@@ -216,7 +217,7 @@ namespace WukongApi.API
             {
                 _characterEntries[entry.id.index] = entry;
             }
-                
+
             if (!result)
                 throw new InvalidOperationException($"Character {entry.id} is not ready, wait a few frames");
         }
@@ -226,7 +227,7 @@ namespace WukongApi.API
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
             EnsureCharacterReady(ref entry);
-            
+
             if (entry.isProgramControl)
                 return;
 
@@ -245,10 +246,10 @@ namespace WukongApi.API
                 events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
                 events.Evt_EnableCanSetBT.Invoke(P1: false);
             }
-            
+
             _characterEntries[character.index] = entry;
         }
-        
+
         public void DestroyCharacter(CharacterId character)
         {
             EnsureInit();
@@ -262,7 +263,7 @@ namespace WukongApi.API
             entry.destroyed = true;
             _characterEntries[character.index] = entry;
         }
-        
+
         public void SendAttack(CharacterId character)
         {
             EnsureInit();
@@ -272,17 +273,17 @@ namespace WukongApi.API
             var events = BUS_EventCollectionCS.Get(entry.actor);
             // events.Evt_AICastSkillWithSkillID.Invoke(0, ECastSkillSourceType.DodgeSkill);
         }
-        
+
         public void SendMoveTo(CharacterId character, FVector targetPos)
         {
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
             EnsureControlled(entry);
-            
+
             var events = BUS_EventCollectionCS.Get(entry.actor);
             events.Evt_AIMoveTo.Invoke(targetPos, null, EAIMoveSpeedType.SPRINT, 2f, EBGUMoveAIType.KeepFacingTarget, false, false, "", "");
         }
-        
+
         public void RunOnGameThread(Action callback)
         {
             EnsureInit();

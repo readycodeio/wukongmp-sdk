@@ -12,7 +12,7 @@ namespace WukongApi
             { CharacterKind.WolfSentinel, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_01.TAMER_gycy_lang_01_C" },
             { CharacterKind.WolfSoldier, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_07a.TAMER_gycy_lang_07a_C" },
             { CharacterKind.WolfArcher, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_08_NotMove.TAMER_gycy_lang_08_NotMove_C" },
-            
+
             // Enemies to test
             { CharacterKind.WolfArcherMove, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_08.TAMER_gycy_lang_08_C" },
             { CharacterKind.WolfAssassin, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_02.TAMER_gycy_lang_02_C" },
@@ -47,12 +47,12 @@ namespace WukongApi
             //{ CharacterKind.Seng04, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_seng_04.TAMER_gycy_seng_04_C" },
             //{ CharacterKind.She01, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_she_01.TAMER_gycy_she_01_C" },
             //{ CharacterKind.She02, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_she_02.TAMER_gycy_she_02_C" }
-            
+
             // working bosses
             { CharacterKind.WhitecladNoble, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_baiyi_03.TAMER_gycy_baiyi_03_C" },
             { CharacterKind.BlackWind, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_hfdw.TAMER_gycy_hfdw_C" },
             { CharacterKind.Mantis, "/Game/00Main/Design/Units/Online/SZLC/TAMER_szlc_tanglang01.TAMER_szlc_tanglang01_C" },
-            
+
             // bosses to test
             { CharacterKind.NonPure, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_seng_04.TAMER_gycy_seng_04_C" },
             { CharacterKind.BlackBear, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_xiong_02.TAMER_gycy_xiong_02_C" },
@@ -81,7 +81,7 @@ namespace WukongApi
             { CharacterKind.PoisonChief, "/Game/00Main/Design/Units/Online/SL/TAMER_sl_shitongling.TAMER_sl_shitongling_C" },
             { CharacterKind.GoldRhino, "/Game/00Main/Design/Units/Online/SZLC/TAMER_szlc_xiniu_01.TAMER_szlc_xiniu_01_C" },
             { CharacterKind.Dear, "/Game/00Main/Design/Units/Online/SZLC/TAMER_szlc_yingzuilu_01.TAMER_szlc_yingzuilu_01_C" },
-            
+
             // not syncing bosses
             { CharacterKind.EarthWolf, "/Game/00Main/Design/Units/HFM/TAMER_HFM_Suoyang_01a.TAMER_HFM_Suoyang_01a_C" }, // not synchronized
             { CharacterKind.Spider, "/Game/00Main/Design/Units/Online/SL/TAMER_szlc_zizhuer_01.TAMER_szlc_zizhuer_01_C" }, // debug content
