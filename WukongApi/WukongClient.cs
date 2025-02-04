@@ -546,6 +546,9 @@ namespace WukongApi
         public void OnPlayerLeftRoom(Player otherPlayer)
         {
             Logging.LogDebug($"Player {otherPlayer.UserId} left the room");
+
+            BGU_UnrealWorldUtil.DestroyActor(ConnectedPlayers[otherPlayer.ActorNumber].Pawn);
+            ConnectedPlayers.Remove(otherPlayer.ActorNumber);
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
