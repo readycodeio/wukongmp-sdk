@@ -62,42 +62,19 @@ namespace WukongApi
 
         public void InitAsync()
         {
-            StartConditionCheckingTask(IsValidGameInstance, Init, 500);
-        }
-
-        private void StartConditionCheckingTask(Func<bool> condition, Action action, int intervalMs)
-        {
             Task.Run(async () =>
             {
-                try
+                while (true)
                 {
-                    while (true)
+                    if (GameUtils.IsGameInstanceValid())
                     {
-                        if (condition())
-                        {
-                            action();
-                            break; // Exit the task
-                        }
-                        await Task.Delay(intervalMs);
+                        Logging.LogDebug("Found valid GameInstance");
+                        Init();
+                        break; // Exit the task
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logging.LogError(ex.Message);
-                    Logging.LogError(ex.StackTrace);
+                    await Task.Delay(500);
                 }
             });
-        }
-
-        bool IsValidGameInstance()
-        {
-            var gameInstance = BGWGameInstanceCS.Get(null);
-            if (gameInstance != null)
-            {
-                Logging.LogDebug("Found valid GameInstance");
-                return true;
-            }
-            return false;
         }
 
         private void InitWorldCallbacks()
