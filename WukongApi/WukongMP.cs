@@ -219,6 +219,7 @@ namespace WukongApi
             Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnConnectRequest += Connect;
+            Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnEnablePvP += EnablePvP;
             Photon.WukongChat.OnRebirthRequested += HandleRebirth;
@@ -270,6 +271,13 @@ namespace WukongApi
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
 
             Photon.StartClient();
+        }
+
+        private void Reconnect()
+        {
+            DisconnectIfConnected();
+            InitPhotonAndConnectToChat();
+            Connect();
         }
 
         private void DisconnectIfConnected()

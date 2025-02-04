@@ -31,6 +31,7 @@ namespace WukongApi
         public event Action OnSavePosition;
         public event Action OnLoadPosition;
         public event Action OnConnectRequest;
+        public event Action OnReconnectRequest;
         public event Action OnDisconnectRequest;
         public event Action OnEnablePvP;
         public event Action OnRebirthRequested;
@@ -115,6 +116,13 @@ namespace WukongApi
                     Handler = _ => { RequestConnect(); }
                 });
             _commands.Add(
+                "/reconnect",
+                new Command
+                {
+                    Name = "Reconnect",
+                    Handler = _ => { RequestReconnect(); }
+                });
+            _commands.Add(
                 "/disconnect",
                 new Command
                 {
@@ -152,6 +160,11 @@ namespace WukongApi
         public void RequestConnect()
         {
             OnConnectRequest?.Invoke();
+        }
+
+        public void RequestReconnect()
+        {
+            OnReconnectRequest?.Invoke();
         }
 
         private void RequestDisconnect()
