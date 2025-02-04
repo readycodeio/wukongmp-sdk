@@ -59,8 +59,12 @@ namespace WukongApi
 
         public void Disconnect()
         {
-            _isExit = true;
             _chatClient?.Disconnect();
+        }
+
+        public void StopMessageService()
+        {
+            _isExit = true;
         }
 
         private void SetupCommands()
