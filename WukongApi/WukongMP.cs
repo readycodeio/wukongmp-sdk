@@ -107,6 +107,7 @@ namespace WukongApi
             Logging.LogDebug("Delay begin play for player.");
             if (!Photon.Ready)
             {
+                BlueprintUIUtils.SpawnModActor();
                 InitializeChatWidget();
                 ToggleChatWidget();
                 Connect();
@@ -705,14 +706,14 @@ namespace WukongApi
 
         private void InitializeChatWidget()
         {
-            var widgets = GameUtils.GetWidgets();
-            if (widgets != null)
+            _chatWidget = BlueprintUIUtils.GetChatWidget();
+            if (_chatWidget != null)
             {
-                if (widgets.Count == 1)
-                {
-                    _chatWidget = widgets[0];
-                    Logging.LogDebug("Chat widget initialized!.");
-                }
+                Logging.LogDebug("Chat widget initialized!.");
+            }
+            else
+            {
+                Logging.LogError("Cannot initialize chat widget");
             }
         }
 
