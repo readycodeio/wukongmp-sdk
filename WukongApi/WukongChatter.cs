@@ -33,7 +33,6 @@ namespace WukongApi
         public event Action OnConnectRequest;
         public event Action OnReconnectRequest;
         public event Action OnDisconnectRequest;
-        public event Action OnEnablePvP;
         public event Action OnRebirthRequested;
         public event Action<string, int, int> OnSpawnEnemy;
 
@@ -133,13 +132,6 @@ namespace WukongApi
                     Handler = _ => { RequestDisconnect(); }
                 });
             _commands.Add(
-                "/pvp",
-                new Command
-                {
-                    Name = "Enable PvP",
-                    Handler = _ => { EnablePvP(); }
-                });
-            _commands.Add(
                 "/rebirth",
                 new Command
                 {
@@ -163,10 +155,24 @@ namespace WukongApi
                                 GameUtils.ShowPvPCountDown();
                                 break;
                             case 2:
-                                GameUtils.ShowVanquished();
+                                GameUtils.PlayBossDefeatedSound();
                                 break;
                         }
                     }
+                });
+            _commands.Add(
+                "/ready",
+                new Command
+                {
+                    Name = "Ready",
+                    Handler = _ => { _wukongClient.SignalReadiness(true); }
+                });
+            _commands.Add(
+                "/start",
+                new Command
+                {
+                    Name = "Start",
+                    Handler = _ => { _wukongClient.StartPvP(); }
                 });
         }
 
@@ -174,12 +180,6 @@ namespace WukongApi
         {
             OnRebirthRequested?.Invoke();
             SendChatMessage(ServerChannelName, $"Player {_userName} requested rebirth");
-        }
-
-        private void EnablePvP()
-        {
-            OnEnablePvP?.Invoke();
-            SendChatMessage(ServerChannelName, $"Player {_userName} enabled PvP (team: {_wukongClient.LocalPlayerState.TeamId - Constants.BaseTeamId})");
         }
 
         public void RequestConnect()

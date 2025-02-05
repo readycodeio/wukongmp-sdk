@@ -52,7 +52,7 @@ namespace WukongApi
             Utils.TryRunOnGameThread(() => { Harmony.UnpatchAll(); });
         }
 
-        public void Init()
+        private void Init()
         {
             InitUserName();
             DisconnectIfConnected();
@@ -66,16 +66,23 @@ namespace WukongApi
             Logging.LogDebug("Waiting for the game instance to be initialized.");
             Task.Run(async () =>
             {
-                while (true)
+                try
                 {
-                    if (GameUtils.IsGameInstanceValid())
+                    while (true)
                     {
-                        Logging.LogDebug("Found valid GameInstance");
-                        Init();
-                        break; // Exit the task
-                    }
+                        if (GameUtils.IsGameInstanceValid())
+                        {
+                            Logging.LogDebug("Found valid GameInstance");
+                            Init();
+                            break; // Exit the task
+                        }
 
-                    await Task.Delay(500);
+                        await Task.Delay(500);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logging.LogError(e.ToString());
                 }
             });
         }
@@ -143,7 +150,7 @@ namespace WukongApi
             }
         }
 
-        private void EnablePvP()
+        public void EnablePvP()
         {
             Logging.LogDebug("Enabled PvP");
 
@@ -223,7 +230,6 @@ namespace WukongApi
             Photon.WukongChat.OnConnectRequest += Connect;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
-            Photon.WukongChat.OnEnablePvP += EnablePvP;
             Photon.WukongChat.OnRebirthRequested += HandleRebirth;
         }
 

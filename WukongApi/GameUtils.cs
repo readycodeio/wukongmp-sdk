@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using b1;
 using B1UI;
-using B1UI.GSSvc;
 using B1UI.GSUI;
 using CSharpModBase;
+using GSE.GSICore.Event;
 using GSE.GSUI;
+using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using UnrealEngine.UMG;
 
 namespace WukongApi
 {
@@ -123,35 +126,19 @@ namespace WukongApi
             });
         }
 
-        public static void ShowVanquished()
+        public static void PlayBossDefeatedSound()
         {
             Utils.TryRunOnGameThread(() =>
             {
-                GenAGPage.ShowPage(24, nameof(ShowVanquished));
-
-                var uiPage = GSG.GSPageOP.FindUIPage(24);
-                if (uiPage == null)
-                {
-                    Logging.LogWarning("UIPage is null");
-                    return;
-                }
-
-                if (uiPage.GetType().Name != "UI_Defeated")
-                {
-                    Logging.LogWarning("UIPage is not UI_Defeated");
-                    return;
-                }
-
-                var method = uiPage.GetType().GetMethod("PlayAnimation");
-
-                if (method == null)
-                {
-                    Logging.LogWarning("Method is null");
-                    return;
-                }
-
-                method.Invoke(uiPage, null);
+                var playUiSound = AccessTools.Method("B1UI.Script.GSUI.Util.GSUIAudioUtil:PlayUISound");
+                playUiSound.Invoke(null, new object[] { "EVT_ui_kill_jisha_manjingtou" });
             });
+        }
+
+        public static void ShowDefeatedUI()
+        {
+            PlayBossDefeatedSound();
+            ShowTip("Opponent defeated");
         }
     }
 }
