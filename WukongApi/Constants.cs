@@ -18,6 +18,9 @@ namespace WukongApi
         public const int BaseTeamId = -999999999;
         public const string AttributePrefix = "attr_";
 
+        public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
+        public const string ChatWidgetName = "WBP_MultiplayerChat_C";
+
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new EnumSet<EBGUAttrFloat>(new[]
         {
             EBGUAttrFloat.AtkBase,

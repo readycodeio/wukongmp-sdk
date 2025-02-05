@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using b1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using UnrealEngine.UMG;
 
 namespace WukongApi
 {
@@ -67,31 +66,6 @@ namespace WukongApi
         {
             var controlledPawn = GetControlledPawn();
             return (BGUPlayerCharacterCS)(controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null);
-        }
-
-        public static List<UUserWidget> GetWidgets()
-        {
-            var world = GetWorld();
-            if (world == null)
-                return null;
-
-            var list = new List<UUserWidget>();
-            var userWidgets = new List<UUserWidget>();
-
-            var wiClass = new TSubclassOf<UUserWidget>();
-            wiClass.SetClass<UUserWidget>();
-            UWidgetLibrary.GetAllWidgetsOfClass(world, out list, wiClass, true);
-            foreach (var widget in list)
-            {
-                Console.WriteLine(widget.GetType());
-                Console.WriteLine(widget.GetFullName());
-                if (widget.GetFullName().Contains("WBP_MultiplayerChat_C"))
-                {
-                    userWidgets.Add(widget);
-                }
-            }
-
-            return userWidgets;
         }
 
         public static string GetSaveDirectory()
