@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using b1;
+using GSE.GSUI;
 using B1UI.GSUI;
 using HarmonyLib;
 using UnrealEngine.UMG;
@@ -64,6 +65,32 @@ namespace WukongApi.Patches
             ___TxtMainName.SetText(UnrealEngine.Runtime.FText.FromString(""));
             ___TxtSubName.SetText(UnrealEngine.Runtime.FText.FromString("Wukong Multiplayer Mod"));
             ___TxtSubName.SetRenderScale(new UnrealEngine.Runtime.FVector2D(1.2, 1.2));
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchBossRushTimerCountdown
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("B1UI.GSUI.UIBossRushTime:GetRemainTimeStr");
+        }
+
+        public static bool Prefix(ref string __result)
+        {
+            __result = "00:00";
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(GenAGPage), nameof(GenAGPage.ShowPage))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchShowPage
+    {
+        public static void Prefix(int NewPageID, string Source, ChangeReason Reason = null, object exParam = null)
+        {
+            Logging.LogDebug($"ShowPage: {NewPageID}, {Source}, {Reason}, {exParam}");
         }
     }
 }
