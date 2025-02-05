@@ -739,7 +739,7 @@ namespace WukongApi
 
             Utils.TryRunOnGameThread(() =>
             {
-                Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GlobalPatches);
+                Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GamePatches);
                 Logging.LogDebug("Multiplayer mode patched with Harmony");
             });
 
