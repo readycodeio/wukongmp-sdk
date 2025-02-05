@@ -18,11 +18,6 @@ namespace WukongApi
             _wukongClient = wukongClient;
         }
 
-        public void RegisterPlayerJoined(int playerId)
-        {
-            _playersReady.Add(playerId, false);
-        }
-
         public void RegisterPlayerLeft(int playerId)
         {
             _playersReady.Remove(playerId);
@@ -35,22 +30,27 @@ namespace WukongApi
             var playersReady = _playersReady.Count(pair => pair.Value);
             var allPlayers = _wukongClient.GetOtherPlayersInRoom().Count() + 1;
 
-            GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
+            if (playersReady != allPlayers)
+            {
+                GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
+            }
+            else if (playersReady == 2)
+            {
+                GameUtils.ShowTip("Both players are ready");
+            }
+            else
+            {
+                GameUtils.ShowTip($"All {playersReady} players are ready");
+            }
         }
 
         public void StartRound()
         {
-            if (!_playersReady.GetValueOrDefault(_wukongClient.LocalPlayerState.PhotonId, false))
-            {
-                GameUtils.ShowTip("You must be ready to start the round");
-                return;
-            }
-
             foreach (var player in _wukongClient.GetOtherPlayersInRoom())
             {
                 if (!_playersReady.GetValueOrDefault(player.ActorNumber, false))
                 {
-                    GameUtils.ShowTip($"Player '{player.NickName}' is not ready");
+                    GameUtils.ShowTip($"Player {player.NickName} is not ready"); // TODO: Nickname
                     return;
                 }
             }

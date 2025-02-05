@@ -552,6 +552,8 @@ namespace WukongApi
         {
             Logging.LogDebug("Joined room");
 
+            _client.LocalPlayer.NickName = _userName;
+
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
@@ -614,6 +616,11 @@ namespace WukongApi
 
             BGU_UnrealWorldUtil.DestroyActor(ConnectedPlayers[otherPlayer.ActorNumber].Pawn);
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
+
+            if (IsMasterClient)
+            {
+                LobbyManager.RegisterPlayerLeft(otherPlayer.ActorNumber);
+            }
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
@@ -639,7 +646,8 @@ namespace WukongApi
 
             foreach (var kvp in changedProps)
             {
-                var propertyName = (string)kvp.Key;
+                if (!(kvp.Key is string propertyName))
+                    continue;
 
                 // attributes have special treatment
                 if (propertyName.StartsWith(Constants.AttributePrefix))
