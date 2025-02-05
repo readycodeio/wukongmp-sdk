@@ -58,6 +58,7 @@ namespace WukongApi
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
             InitWorldCallbacks();
+            Harmony.PatchCategory(Constants.GlobalPatches);
         }
 
         public void InitAsync()
