@@ -34,6 +34,10 @@ namespace WukongApi
             {
                 GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
             }
+            else if (playersReady == 1)
+            {
+                GameUtils.ShowTip("You are ready");
+            }
             else if (playersReady == 2)
             {
                 GameUtils.ShowTip("Both players are ready");

@@ -19,9 +19,9 @@ namespace WukongApi
         private ChatClient _chatClient;
         private readonly WukongClient _wukongClient;
 
-        private const string GeneralChannelName = "General";
-        private const string ServerChannelName = "Server";
-        private string _userName;
+        internal const string GeneralChannelName = "General";
+        internal const string ServerChannelName = "Server";
+        private string NickName => _wukongClient.NickName;
 
         private bool _isExit;
 
@@ -49,7 +49,6 @@ namespace WukongApi
 
         public void InitializeChat(string userName)
         {
-            _userName = userName;
             _chatClient = new ChatClient(this);
             _chatClient.Connect("d4af67fe-a776-499e-8f56-f169d3db616e", "1.0", new AuthenticationValues(userName));
 
@@ -165,7 +164,10 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Ready",
-                    Handler = _ => { _wukongClient.SignalReadiness(true); }
+                    Handler = _ =>
+                    {
+                        _wukongClient.SignalReadiness(true);
+                    }
                 });
             _commands.Add(
                 "/start",
@@ -179,7 +181,7 @@ namespace WukongApi
         private void RequestRebirth()
         {
             OnRebirthRequested?.Invoke();
-            SendChatMessage(ServerChannelName, $"Player {_userName} requested rebirth");
+            SendChatMessage(ServerChannelName, $"Player {NickName} requested rebirth");
         }
 
         public void RequestConnect()
@@ -194,6 +196,7 @@ namespace WukongApi
 
         private void RequestDisconnect()
         {
+            SendChatMessage(ServerChannelName, $"{NickName} has left!");
             OnDisconnectRequest?.Invoke();
         }
 
@@ -240,7 +243,7 @@ namespace WukongApi
             }
         }
 
-        private void SendChatMessage(string channel, string message)
+        public void SendChatMessage(string channel, string message)
         {
             Console.WriteLine($"Sending message {message}");
             _chatClient.PublishMessage(channel, message);
@@ -258,7 +261,7 @@ namespace WukongApi
             Console.WriteLine("Chat connected");
             _chatClient.Subscribe(GeneralChannelName);
             _chatClient.Subscribe(ServerChannelName);
-            SendChatMessage(ServerChannelName, $"{_userName} has joined!");
+            SendChatMessage(ServerChannelName, $"{NickName} has joined!");
         }
 
         public void OnCustomAuthenticationFailed(string debugMessage) { }
@@ -268,7 +271,6 @@ namespace WukongApi
         public void OnDisconnected()
         {
             Console.WriteLine("Chat disconnected");
-            SendChatMessage(ServerChannelName, $"{_userName} has left!");
         }
 
         public void OnGetMessages(string channelName, string[] senders, object[] messages)

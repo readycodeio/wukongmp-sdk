@@ -46,6 +46,8 @@ namespace WukongApi
         public LobbyManager LobbyManager { get; private set; }
 
         public PlayerState LocalPlayerState { get; protected set; }
+        public string NickName => _client.NickName;
+
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
 
@@ -140,9 +142,16 @@ namespace WukongApi
                 case 9:
                     // readiness signal (only MC)
                     var isReady = (bool)photonEvent.CustomData;
-                    LobbyManager.SignalReadiness(photonEvent.Sender, isReady);
+                    MarkPlayerReady(photonEvent.Sender, isReady);
                     break;
             }
+        }
+
+        private void MarkPlayerReady(int playerId, bool isReady)
+        {
+            LobbyManager.SignalReadiness(playerId, isReady);
+            var player = _client.CurrentRoom.Players[playerId];
+            WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{player.NickName} is {(isReady ? "ready" : "not ready")}");
         }
 
         public void StartClient()
@@ -311,7 +320,7 @@ namespace WukongApi
         {
             if (!IsMasterClient)
             {
-                Logging.LogError("Only master client can send start countdown.");
+                Logging.LogError("Only room owner can send start countdown.");
                 return;
             }
 
@@ -324,12 +333,6 @@ namespace WukongApi
 
         public void SignalReadiness(bool isReady)
         {
-            if (IsMasterClient)
-            {
-                LobbyManager.SignalReadiness(_client.LocalPlayer.ActorNumber, isReady);
-                return;
-            }
-
             const byte eventCode = 9;
             _client.OpRaiseEvent(eventCode, isReady, new RaiseEventArgs
             {
@@ -347,7 +350,7 @@ namespace WukongApi
         {
             if (!IsMasterClient)
             {
-                GameUtils.ShowTip("Only master client can start PvP.");
+                GameUtils.ShowTip("Only room owner can start PvP.");
                 return;
             }
 
@@ -439,7 +442,7 @@ namespace WukongApi
         {
             if (!IsMasterClient)
             {
-                Logging.LogDebug("Only master client can send remote player properties.");
+                Logging.LogDebug("Only room owner can send remote player properties.");
                 return;
             }
 
@@ -552,7 +555,7 @@ namespace WukongApi
         {
             Logging.LogDebug("Joined room");
 
-            _client.LocalPlayer.NickName = _userName;
+            _client.NickName = _userName;
 
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
