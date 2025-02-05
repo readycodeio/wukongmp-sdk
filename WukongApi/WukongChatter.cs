@@ -164,10 +164,7 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Ready",
-                    Handler = _ =>
-                    {
-                        _wukongClient.SignalReadiness(true);
-                    }
+                    Handler = _ => { _wukongClient.SignalReadiness(true); }
                 });
             _commands.Add(
                 "/start",
