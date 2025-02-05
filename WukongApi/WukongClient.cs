@@ -43,8 +43,11 @@ namespace WukongApi
         public event Action<DamageNumParam> OnDamageNum;
 
         public WukongChatter WukongChat { get; }
+        public LobbyManager LobbyManager { get; private set; }
 
         public PlayerState LocalPlayerState { get; protected set; }
+        public string NickName => _client.NickName;
+
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
 
@@ -131,7 +134,24 @@ namespace WukongApi
                     var playerId = (int)photonEvent.CustomData;
                     OnPlayerRebirth?.Invoke(playerId);
                     break;
+                case 8:
+                    // start countdown
+                    GameUtils.ShowPvPCountDown();
+                    WukongMP.Instance.EnablePvP();
+                    break;
+                case 9:
+                    // readiness signal (only MC)
+                    var isReady = (bool)photonEvent.CustomData;
+                    MarkPlayerReady(photonEvent.Sender, isReady);
+                    break;
             }
+        }
+
+        private void MarkPlayerReady(int playerId, bool isReady)
+        {
+            LobbyManager.SignalReadiness(playerId, isReady);
+            var player = _client.CurrentRoom.Players[playerId];
+            WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{player.NickName} is {(isReady ? "ready" : "not ready")}");
         }
 
         public void StartClient()
@@ -296,10 +316,45 @@ namespace WukongApi
             _client.OpRaiseEvent(eventCode, PhotonId, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
+        public void SendStartCountdown()
+        {
+            if (!IsMasterClient)
+            {
+                Logging.LogError("Only room owner can send start countdown.");
+                return;
+            }
+
+            const byte eventCode = 8;
+            _client.OpRaiseEvent(eventCode, null, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.All
+            }, SendOptions.SendReliable);
+        }
+
+        public void SignalReadiness(bool isReady)
+        {
+            const byte eventCode = 9;
+            _client.OpRaiseEvent(eventCode, isReady, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.MasterClient,
+            }, SendOptions.SendReliable);
+        }
+
         public void CacheEquipmentChange(EquipPosition position, int newEq)
         {
             LocalPlayerState.Equipment.SetEquipment(position, newEq);
             CachePlayerProperty(nameof(PlayerState.Equipment), LocalPlayerState.Equipment);
+        }
+
+        public void StartPvP()
+        {
+            if (!IsMasterClient)
+            {
+                GameUtils.ShowTip("Only room owner can start PvP.");
+                return;
+            }
+
+            LobbyManager.StartRound();
         }
 
         protected virtual void ApplyMonsterMove(PhotonHashtable props)
@@ -387,7 +442,7 @@ namespace WukongApi
         {
             if (!IsMasterClient)
             {
-                Logging.LogDebug("Only master client can send remote player properties.");
+                Logging.LogDebug("Only room owner can send remote player properties.");
                 return;
             }
 
@@ -500,8 +555,16 @@ namespace WukongApi
         {
             Logging.LogDebug("Joined room");
 
+            _client.NickName = _userName;
+
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
+
+            if (IsMasterClient)
+            {
+                LobbyManager = new LobbyManager(this);
+                LobbyManager.PlayerTeleportRequested += OnPlayerTeleportRequested;
+            }
 
             Utils.TryRunOnGameThread(() =>
             {
@@ -513,6 +576,12 @@ namespace WukongApi
             WukongChat.InitializeChat(_userName);
 
             GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
+        }
+
+        private void OnPlayerTeleportRequested(Action continuation)
+        {
+            // TODO: Move players to appropriate positions
+            continuation();
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
@@ -550,6 +619,11 @@ namespace WukongApi
 
             BGU_UnrealWorldUtil.DestroyActor(ConnectedPlayers[otherPlayer.ActorNumber].Pawn);
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
+
+            if (IsMasterClient)
+            {
+                LobbyManager.RegisterPlayerLeft(otherPlayer.ActorNumber);
+            }
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
@@ -575,7 +649,8 @@ namespace WukongApi
 
             foreach (var kvp in changedProps)
             {
-                var propertyName = (string)kvp.Key;
+                if (!(kvp.Key is string propertyName))
+                    continue;
 
                 // attributes have special treatment
                 if (propertyName.StartsWith(Constants.AttributePrefix))

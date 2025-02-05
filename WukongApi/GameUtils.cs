@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using b1;
+using B1UI.GSUI;
+using CSharpModBase;
+using GSE.GSUI;
+using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -97,6 +101,40 @@ namespace WukongApi
             }
 
             return false;
+        }
+
+        public static void ShowTip(string tip)
+        {
+            Utils.TryRunOnGameThread(() =>
+            {
+                GenAGPage.ShowPage(39, nameof(ShowTip));
+                var dSSimTipsData = new DSSimTipsData(ETipsType.WarnTips, FText.FromString(tip), InIsCloseAutoHide: false, 5);
+                GenACommTips.SetTipsData(dSSimTipsData, nameof(ShowTip));
+            });
+        }
+
+        public static void ShowPvPCountDown()
+        {
+            Utils.TryRunOnGameThread(() =>
+            {
+                GenAGPage.ShowPage(95, nameof(ShowPvPCountDown));
+                GenAGPage.ShowPage(93, nameof(ShowPvPCountDown));
+            });
+        }
+
+        public static void PlayBossDefeatedSound()
+        {
+            Utils.TryRunOnGameThread(() =>
+            {
+                var playUiSound = AccessTools.Method("B1UI.Script.GSUI.Util.GSUIAudioUtil:PlayUISound");
+                playUiSound.Invoke(null, new object[] { "EVT_ui_kill_jisha_manjingtou" });
+            });
+        }
+
+        public static void ShowDefeatedUI()
+        {
+            PlayBossDefeatedSound();
+            ShowTip("Opponent defeated");
         }
     }
 }

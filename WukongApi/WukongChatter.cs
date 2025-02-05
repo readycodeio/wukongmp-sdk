@@ -19,9 +19,9 @@ namespace WukongApi
         private ChatClient _chatClient;
         private readonly WukongClient _wukongClient;
 
-        private const string GeneralChannelName = "General";
-        private const string ServerChannelName = "Server";
-        private string _userName;
+        internal const string GeneralChannelName = "General";
+        internal const string ServerChannelName = "Server";
+        private string NickName => _wukongClient.NickName;
 
         private bool _isExit;
 
@@ -33,7 +33,6 @@ namespace WukongApi
         public event Action OnConnectRequest;
         public event Action OnReconnectRequest;
         public event Action OnDisconnectRequest;
-        public event Action OnEnablePvP;
         public event Action OnRebirthRequested;
         public event Action<string, int, int> OnSpawnEnemy;
 
@@ -50,7 +49,6 @@ namespace WukongApi
 
         public void InitializeChat(string userName)
         {
-            _userName = userName;
             _chatClient = new ChatClient(this);
             _chatClient.Connect("d4af67fe-a776-499e-8f56-f169d3db616e", "1.0", new AuthenticationValues(userName));
 
@@ -92,7 +90,6 @@ namespace WukongApi
                     Name = "Spawn enemy NPC",
                     Handler = args =>
                     {
-                        // if name number, then pass, else 1
                         switch (args.Length)
                         {
                             case 1:
@@ -134,31 +131,54 @@ namespace WukongApi
                     Handler = _ => { RequestDisconnect(); }
                 });
             _commands.Add(
-                "/pvp",
-                new Command
-                {
-                    Name = "Enable PvP",
-                    Handler = _ => { EnablePvP(); }
-                });
-            _commands.Add(
                 "/rebirth",
                 new Command
                 {
                     Name = "Rebirth",
                     Handler = _ => { RequestRebirth(); }
                 });
+            _commands.Add(
+                "/message",
+                new Command
+                {
+                    Name = "Message",
+                    Handler = args =>
+                    {
+                        var id = args.Length > 0 ? int.Parse(args[0]) : 0;
+                        switch (id)
+                        {
+                            case 0:
+                                GameUtils.ShowTip("test tip\nmultiline");
+                                break;
+                            case 1:
+                                GameUtils.ShowPvPCountDown();
+                                break;
+                            case 2:
+                                GameUtils.PlayBossDefeatedSound();
+                                break;
+                        }
+                    }
+                });
+            _commands.Add(
+                "/ready",
+                new Command
+                {
+                    Name = "Ready",
+                    Handler = _ => { _wukongClient.SignalReadiness(true); }
+                });
+            _commands.Add(
+                "/start",
+                new Command
+                {
+                    Name = "Start",
+                    Handler = _ => { _wukongClient.StartPvP(); }
+                });
         }
 
         private void RequestRebirth()
         {
             OnRebirthRequested?.Invoke();
-            SendChatMessage(ServerChannelName, $"Player {_userName} requested rebirth");
-        }
-
-        private void EnablePvP()
-        {
-            OnEnablePvP?.Invoke();
-            SendChatMessage(ServerChannelName, $"Player {_userName} enabled PvP (team: {_wukongClient.LocalPlayerState.TeamId - Constants.BaseTeamId})");
+            SendChatMessage(ServerChannelName, $"Player {NickName} requested rebirth");
         }
 
         public void RequestConnect()
@@ -173,6 +193,7 @@ namespace WukongApi
 
         private void RequestDisconnect()
         {
+            SendChatMessage(ServerChannelName, $"{NickName} has left!");
             OnDisconnectRequest?.Invoke();
         }
 
@@ -219,7 +240,7 @@ namespace WukongApi
             }
         }
 
-        private void SendChatMessage(string channel, string message)
+        public void SendChatMessage(string channel, string message)
         {
             Console.WriteLine($"Sending message {message}");
             _chatClient.PublishMessage(channel, message);
@@ -237,7 +258,7 @@ namespace WukongApi
             Console.WriteLine("Chat connected");
             _chatClient.Subscribe(GeneralChannelName);
             _chatClient.Subscribe(ServerChannelName);
-            SendChatMessage(ServerChannelName, $"{_userName} has joined!");
+            SendChatMessage(ServerChannelName, $"{NickName} has joined!");
         }
 
         public void OnCustomAuthenticationFailed(string debugMessage) { }
@@ -247,7 +268,6 @@ namespace WukongApi
         public void OnDisconnected()
         {
             Console.WriteLine("Chat disconnected");
-            SendChatMessage(ServerChannelName, $"{_userName} has left!");
         }
 
         public void OnGetMessages(string channelName, string[] senders, object[] messages)
