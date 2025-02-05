@@ -92,7 +92,6 @@ namespace WukongApi
                     Name = "Spawn enemy NPC",
                     Handler = args =>
                     {
-                        // if name number, then pass, else 1
                         switch (args.Length)
                         {
                             case 1:
@@ -162,6 +161,9 @@ namespace WukongApi
                                 break;
                             case 1:
                                 GameUtils.ShowPvPCountDown();
+                                break;
+                            case 2:
+                                GameUtils.ShowVanquished();
                                 break;
                         }
                     }

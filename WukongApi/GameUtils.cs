@@ -108,9 +108,9 @@ namespace WukongApi
         {
             Utils.TryRunOnGameThread(() =>
             {
-                GenAGPage.ShowPage(39, "ShowCommTips");
+                GenAGPage.ShowPage(39, nameof(ShowTip));
                 var dSSimTipsData = new DSSimTipsData(ETipsType.WarnTips, FText.FromString(tip), InIsCloseAutoHide: false, 5);
-                GenACommTips.SetTipsData(dSSimTipsData, "ShowCommTips");
+                GenACommTips.SetTipsData(dSSimTipsData, nameof(ShowTip));
             });
         }
 
@@ -118,8 +118,39 @@ namespace WukongApi
         {
             Utils.TryRunOnGameThread(() =>
             {
-                GenAGPage.ShowPage(95, "OnReadyBossRushBattleUI");
-                GenAGPage.ShowPage(93, "OnReadyBossRushBattleUI");
+                GenAGPage.ShowPage(95, nameof(ShowPvPCountDown));
+                GenAGPage.ShowPage(93, nameof(ShowPvPCountDown));
+            });
+        }
+
+        public static void ShowVanquished()
+        {
+            Utils.TryRunOnGameThread(() =>
+            {
+                GenAGPage.ShowPage(24, nameof(ShowVanquished));
+
+                var uiPage = GSG.GSPageOP.FindUIPage(24);
+                if (uiPage == null)
+                {
+                    Logging.LogWarning("UIPage is null");
+                    return;
+                }
+
+                if (uiPage.GetType().Name != "UI_Defeated")
+                {
+                    Logging.LogWarning("UIPage is not UI_Defeated");
+                    return;
+                }
+
+                var method = uiPage.GetType().GetMethod("PlayAnimation");
+
+                if (method == null)
+                {
+                    Logging.LogWarning("Method is null");
+                    return;
+                }
+
+                method.Invoke(uiPage, null);
             });
         }
     }

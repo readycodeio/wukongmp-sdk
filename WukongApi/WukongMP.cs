@@ -452,7 +452,7 @@ namespace WukongApi
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
-        private void SpawnEnemiesMaster(string enemyName, int count, int teamID)
+        private void SpawnEnemiesMaster(string enemyName, int count, int teamId)
         {
             var player = GameUtils.GetControlledPawn();
             var traceLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
@@ -484,7 +484,7 @@ namespace WukongApi
                 {
                     // wait for i * 200ms
                     await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                    GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, teamID); }, "SpawnEnemyMaster");
+                    GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, teamId); }, "SpawnEnemyMaster");
                 });
             }
         }
