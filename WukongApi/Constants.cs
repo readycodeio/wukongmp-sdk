@@ -8,6 +8,7 @@ namespace WukongApi
         public const int ToleratedLatencyMs = 50;
         public const float FloatComparisonTolerance = 0.1f;
         public const string ConnectedPatches = "Connected";
+        public const string GamePatches = "Game";
         public const string GlobalPatches = "Global";
         public const string DefaultPhotonUserName = "ReadyM_noname";
         public const float MonsterSpawnDistance = 2000f;

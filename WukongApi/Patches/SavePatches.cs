@@ -12,7 +12,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.GamePatches)]
     public class PatchWindowsSaveGame
     {
         public static bool Prefix(ref string __result, string SlotName, string UserId)
@@ -26,7 +26,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LoadArchive))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.GamePatches)]
     public class PatchGameArchive
     {
         public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData OutArchiveData)
@@ -60,7 +60,7 @@ namespace WukongApi.Patches
 
     // Disable game saves while multiplayer is enabled
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), "CheckSaveTask")]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.GamePatches)]
     public class PatchArchiveReadWriter
     {
         public static bool Prefix()
@@ -71,7 +71,7 @@ namespace WukongApi.Patches
 
     // Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), new[] { typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>) })]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.GamePatches)]
     public class PatchArchiveReadWriterAppendArchive1
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
@@ -81,7 +81,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.MarkSaveSetting))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.GamePatches)]
     public class PatchArchiveReadWriterAppendArchive2
     {
         public static bool Prefix(UISettingArchiveData UISettingArchiveData)

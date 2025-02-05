@@ -58,6 +58,7 @@ namespace WukongApi
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
             InitWorldCallbacks();
+            Harmony.PatchCategory(Constants.GlobalPatches);
         }
 
         public void InitAsync()
@@ -739,7 +740,7 @@ namespace WukongApi
 
             Utils.TryRunOnGameThread(() =>
             {
-                Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GlobalPatches);
+                Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GamePatches);
                 Logging.LogDebug("Multiplayer mode patched with Harmony");
             });
 
