@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using b1;
+using B1UI;
+using B1UI.GSSvc;
 using B1UI.GSUI;
 using CSharpModBase;
 using GSE.GSUI;
@@ -107,7 +109,7 @@ namespace WukongApi
             Utils.TryRunOnGameThread(() =>
             {
                 GenAGPage.ShowPage(39, "ShowCommTips");
-                var dSSimTipsData = new DSSimTipsData(ETipsType.NoticeTips, FText.FromString(tip), InIsCloseAutoHide: false, 5);
+                var dSSimTipsData = new DSSimTipsData(ETipsType.WarnTips, FText.FromString(tip), InIsCloseAutoHide: false, 5);
                 GenACommTips.SetTipsData(dSSimTipsData, "ShowCommTips");
             });
         }
