@@ -39,6 +39,7 @@ namespace WukongApi
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action<int> OnPlayerRebirth;
+        public event Action<int> OnKillPlayer;
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
 
@@ -143,6 +144,11 @@ namespace WukongApi
                     // readiness signal (only MC)
                     var isReady = (bool)photonEvent.CustomData;
                     MarkPlayerReady(photonEvent.Sender, isReady);
+                    break;
+                case 10:
+                    // kill player
+                    var id = (int)photonEvent.CustomData;
+                    OnKillPlayer?.Invoke(id);
                     break;
             }
         }
@@ -335,6 +341,15 @@ namespace WukongApi
         {
             const byte eventCode = 9;
             _client.OpRaiseEvent(eventCode, isReady, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.MasterClient,
+            }, SendOptions.SendReliable);
+        }
+
+        public void KillCurrentPlayer()
+        {
+            const byte eventCode = 10;
+            _client.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.MasterClient,
             }, SendOptions.SendReliable);

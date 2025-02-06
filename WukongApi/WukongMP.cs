@@ -273,12 +273,28 @@ namespace WukongApi
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthOtherPlayer(id), "RebirthOtherPlayer");
+            Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
 
             Photon.StartClient();
+        }
+
+        private void KillPlayer(int playerId)
+        {
+            APawn player = null;
+            if (playerId == Photon.LocalPlayerState.PhotonId)
+                player = Photon.LocalPlayerState.Pawn;
+            else if (Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+                player = playerState.Pawn;
+
+            if (player == null)
+                return;
+            var events = BUS_EventCollectionCS.Get(player);
+            events.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
+            events.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
         }
 
         private void Reconnect()

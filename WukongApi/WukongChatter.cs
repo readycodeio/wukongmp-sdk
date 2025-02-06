@@ -138,6 +138,13 @@ namespace WukongApi
                     Handler = _ => { RequestRebirth(); }
                 });
             _commands.Add(
+                "/giveup",
+                new Command
+                {
+                    Name = "GiveUp",
+                    Handler = _ => { RequestGiveUp(); }
+                });
+            _commands.Add(
                 "/message",
                 new Command
                 {
@@ -179,6 +186,12 @@ namespace WukongApi
         {
             OnRebirthRequested?.Invoke();
             SendChatMessage(ServerChannelName, $"Player {NickName} requested rebirth");
+        }
+
+        private void RequestGiveUp()
+        {
+            SendChatMessage(ServerChannelName, $"Player {NickName} gave up");
+            _wukongClient.KillCurrentPlayer();
         }
 
         public void RequestConnect()
