@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
+using BtlShare;
 using CommB1;
 using CSharpModBase;
 using HarmonyLib;
@@ -248,14 +249,23 @@ namespace WukongApi
             }
 
             FreeCameraManager.LeaveFreeCameraMode();
-            BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
             Photon.RebirthCurrentPlayer();
+            RebirthPlayer(Photon.LocalPlayerState.PhotonId); 
         }
 
-        private void RebirthOtherPlayer(int playerId)
+        private void RebirthPlayer(int playerId)
         {
-            APawn player = Photon.ConnectedPlayers[playerId].Pawn;
-            BUS_EventCollectionCS.Get(player)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
+            APawn player = null;
+            if (playerId == Photon.LocalPlayerState.PhotonId)
+                player = Photon.LocalPlayerState.Pawn;
+            else if (Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+                player = playerState.Pawn;
+
+            if (player == null)
+                return;
+            var events = BUS_EventCollectionCS.Get(player);
+            events?.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
+            events?.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
         }
 
         private void Connect()
@@ -272,7 +282,7 @@ namespace WukongApi
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
-            Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthOtherPlayer(id), "RebirthOtherPlayer");
+            Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
@@ -471,6 +481,11 @@ namespace WukongApi
         {
             var montagePath = montage.GetPathName();
             Logging.LogDebug($"Montage callback: {reason} {montagePath} {state}");
+
+            // Do not send respawn montage callback - it will be played for each player locally.
+            if (montagePath == "/Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo")
+                return;
+
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
