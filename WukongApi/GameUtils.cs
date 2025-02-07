@@ -115,11 +115,7 @@ namespace WukongApi
 
         public static void ShowPvPCountDown()
         {
-            Utils.TryRunOnGameThread(() =>
-            {
-                GenAGPage.ShowPage(95, nameof(ShowPvPCountDown));
-                GenAGPage.ShowPage(93, nameof(ShowPvPCountDown));
-            });
+            Utils.TryRunOnGameThread(() => { GenAGPage.ShowPage(95, nameof(ShowPvPCountDown)); });
         }
 
         public static void PlayBossDefeatedSound()

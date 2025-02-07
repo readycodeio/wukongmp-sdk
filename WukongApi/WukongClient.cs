@@ -639,7 +639,8 @@ namespace WukongApi
 
             if (IsMasterClient)
             {
-                LobbyManager.RegisterPlayerLeft(otherPlayer.ActorNumber);
+                // TODO: null after host migration
+                LobbyManager?.RegisterPlayerLeft(otherPlayer.ActorNumber);
             }
         }
 
