@@ -2,6 +2,7 @@
 using B1UI.GSUI;
 using BtlB1;
 using HarmonyLib;
+using System.Reflection;
 using UnrealEngine.Engine;
 using WukongApi.State;
 
@@ -270,6 +271,12 @@ namespace WukongApi.Patches
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
+            var playerState = photon.GetByActor(owner);
+            if (playerState != null)
+            {
+                playerState.IsDead = true;
+            }
+
             if (owner == photon.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
@@ -301,6 +308,50 @@ namespace WukongApi.Patches
             {
                 return true;
             }
+
+            return false;
+        }
+    }
+    
+    [HarmonyPatch(typeof(BUS_FallingCompl), "SafeFallingTimerTick")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchFallDamage
+    {
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchCommonRebirthLogic
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_RebirthComp:CommonRebirthLogic");
+        }
+
+        public static bool Prefix(AActor ___Owner, BUS_GSEventCollection ___BUSEventCollection, BGW_EventCollection ___BGWEventCollection, BPS_GSEventCollection ___BPSEventCollection)
+        {
+            if (___Owner == WukongMP.Instance.Photon.LocalPlayerState.Pawn)
+            {
+                return true;
+            }
+
+            FUStPlayerCommDesc playerCommDesc = BGW_GameDB.GetPlayerCommDesc((___Owner as BGUCharacterCS).GetResID(), ___Owner);
+            if (playerCommDesc == null || !(___BUSEventCollection != null))
+            {
+                return false;
+            }
+            ___BUSEventCollection.Evt_NotifyCanAddBuff.Invoke();
+            ___BUSEventCollection.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.Rebirth, -1f);
+            ___BUSEventCollection.Evt_UnitRebirthFinished.Invoke();
+            ___BPSEventCollection?.Evt_BPS_UnitRebirthFinished.Invoke();
+            ___BUSEventCollection.Evt_TriggerPlayerRestByReBirth.Invoke();
+            ___BUSEventCollection.Evt_EnableCanSetTarget.Invoke(P1: true);
+            ___BGWEventCollection?.Evt_SetAllUnitCannotDead(P1: false);
+            ___BGWEventCollection?.Evt_IgnoreAllOverlapEvent(P1: false);
 
             return false;
         }

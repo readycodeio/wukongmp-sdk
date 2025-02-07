@@ -39,6 +39,7 @@ namespace WukongApi
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action<int> OnPlayerRebirth;
+        public event Action<int> OnKillPlayer;
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
 
@@ -61,8 +62,19 @@ namespace WukongApi
 
         public PlayerState GetByActor(AActor actor)
         {
+            if (actor == LocalPlayerState.Pawn)
+                return LocalPlayerState;
             var kvp = ConnectedPlayers.FirstOrDefault(x => x.Value.Pawn == actor);
             return kvp.Value;
+        }
+
+        public APawn GetPlayerPawn(int playerId)
+        {
+            if (playerId == LocalPlayerState.PhotonId)
+                return LocalPlayerState.Pawn;
+            else if (ConnectedPlayers.TryGetValue(playerId, out var playerState))
+                return playerState.Pawn;
+            return null;
         }
 
         public MonsterState GetByTamerActor(BUTamerActor owner)
@@ -143,6 +155,11 @@ namespace WukongApi
                     // readiness signal (only MC)
                     var isReady = (bool)photonEvent.CustomData;
                     MarkPlayerReady(photonEvent.Sender, isReady);
+                    break;
+                case 10:
+                    // kill player
+                    var id = (int)photonEvent.CustomData;
+                    OnKillPlayer?.Invoke(id);
                     break;
             }
         }
@@ -232,8 +249,7 @@ namespace WukongApi
             var clone = new WukongClientClone();
             _photonClones.Add(clone);
 
-            clone.WukongChat.OnConnectRequest += () => { clone.StartClient(); };
-            clone.WukongChat.RequestConnect();
+            clone.StartClient();
         }
 
         public IEnumerable<Player> GetOtherPlayersInRoom()
@@ -313,7 +329,10 @@ namespace WukongApi
         public void RebirthCurrentPlayer()
         {
             const byte eventCode = 7;
-            _client.OpRaiseEvent(eventCode, PhotonId, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.All
+            }, SendOptions.SendUnreliable);
         }
 
         public void SendStartCountdown()
@@ -335,6 +354,15 @@ namespace WukongApi
         {
             const byte eventCode = 9;
             _client.OpRaiseEvent(eventCode, isReady, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.MasterClient,
+            }, SendOptions.SendReliable);
+        }
+
+        public void KillCurrentPlayer()
+        {
+            const byte eventCode = 10;
+            _client.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.MasterClient,
             }, SendOptions.SendReliable);
@@ -622,7 +650,8 @@ namespace WukongApi
 
             if (IsMasterClient)
             {
-                LobbyManager.RegisterPlayerLeft(otherPlayer.ActorNumber);
+                // TODO: null after host migration
+                LobbyManager?.RegisterPlayerLeft(otherPlayer.ActorNumber);
             }
         }
 

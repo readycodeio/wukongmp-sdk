@@ -47,6 +47,11 @@ namespace WukongApi.Patches
                     {
                         __instance.SetFloatValue(attr, value);
                     }
+
+                    if (photon.LocalPlayerState.Hp > 0)
+                    {
+                        photon.LocalPlayerState.IsDead = false;
+                    }
                 }
 
                 return;
@@ -60,16 +65,22 @@ namespace WukongApi.Patches
                 // local player (client)
                 if (photon.LocalPlayerState.Hp <= -80000)
                 {
-                    Logging.LogDebug($"Would set hp to {photon.LocalPlayerState.Hp}  but will not");
+                    Logging.LogWarning($"Would set hp to {photon.LocalPlayerState.Hp}  but will not");
                     return;
                 }
 
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
 
-                if (photon.LocalPlayerState.Hp <= 0)
+                if (photon.LocalPlayerState.Hp <= 0 && !photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                    Logging.LogWarning($"Sending unit dead for player {photon.LocalPlayerState.PhotonId}");
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                }
+
+                if (photon.LocalPlayerState.Hp > 0)
+                {
+                    photon.LocalPlayerState.IsDead = false;
                 }
             }
             else
@@ -81,16 +92,22 @@ namespace WukongApi.Patches
                 {
                     if (playerState.Hp <= -80000)
                     {
-                        Logging.LogDebug($"Would set hp to {playerState.Hp} but will not");
+                        Logging.LogWarning($"Would set hp to {playerState.Hp} but will not");
                         return;
                     }
 
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
-                    if (playerState.Hp <= 0)
+                    if (playerState.Hp > 0)
+                    {
+                        playerState.IsDead = false;
+                    }
+
+                    if (playerState.Hp <= 0 && !playerState.IsDead)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
+                        Logging.LogWarning($"Sending unit dead for player {playerState.PhotonId}");
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                     else

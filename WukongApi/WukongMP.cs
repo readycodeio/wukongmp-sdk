@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
+using BtlShare;
 using CommB1;
 using CSharpModBase;
 using HarmonyLib;
@@ -227,10 +228,9 @@ namespace WukongApi
         {
             Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
-            Photon.WukongChat.OnConnectRequest += Connect;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
-            Photon.WukongChat.OnRebirthRequested += HandleRebirth;
+            Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => HandleRebirth(), "HandleRebirth"); };
         }
 
         private void HandleRebirth()
@@ -248,14 +248,24 @@ namespace WukongApi
             }
 
             FreeCameraManager.LeaveFreeCameraMode();
-            BUS_EventCollectionCS.Get(curPlayer)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
             Photon.RebirthCurrentPlayer();
         }
 
-        private void RebirthOtherPlayer(int playerId)
+        private void RebirthPlayer(int playerId)
         {
-            APawn player = Photon.ConnectedPlayers[playerId].Pawn;
-            BUS_EventCollectionCS.Get(player)?.Evt_UnitRebirth.Invoke(ERebirthType.Quick);
+            Logging.LogDebug($"RebirthPlayer for player {playerId} called");
+
+            APawn player = Photon.GetPlayerPawn(playerId);
+            if (player == null)
+                return;
+
+            var events = BUS_EventCollectionCS.Get(player);
+            if (events != null)
+            {
+                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
+                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
+                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
+            }
         }
 
         private void Connect()
@@ -272,13 +282,28 @@ namespace WukongApi
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
-            Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthOtherPlayer(id), "RebirthOtherPlayer");
+            Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
+            Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
 
             Photon.StartClient();
+        }
+
+        private void KillPlayer(int playerId)
+        {
+            APawn player = Photon.GetPlayerPawn(playerId);
+            if (player == null)
+                return;
+
+            var events = BUS_EventCollectionCS.Get(player);
+            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
+            if (Photon.IsMasterClient)
+            {
+                events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
+            }
         }
 
         private void Reconnect()
@@ -366,13 +391,13 @@ namespace WukongApi
                 return;
             }
 
-            if (data.State == EMontageCallbackState.OnStarted)
+            if (data.State == EMontageCallbackState.OnStarted && animInstance.GetCurrentActiveMontage()?.PathName != montage.PathName)
             {
                 animInstance.Montage_Play(montage);
             }
             else if (data.State == EMontageCallbackState.OnInterrupted)
             {
-                if (animInstance.GetCurrentActiveMontage().PathName == montage.PathName)
+                if (animInstance.GetCurrentActiveMontage()?.PathName == montage.PathName)
                 {
                     animInstance.Montage_Stop(1f, montage);
                 }
