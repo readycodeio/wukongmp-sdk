@@ -31,6 +31,8 @@ namespace WukongApi.State
         public Dictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsDead { get; set; }
+        public bool IsReadyForPvP { get; set; }
+        public string NickName { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {

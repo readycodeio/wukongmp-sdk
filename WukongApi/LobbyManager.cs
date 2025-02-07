@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using WukongApi.State;
 
 namespace WukongApi
 {
@@ -11,24 +12,17 @@ namespace WukongApi
         public bool CanPlayersJoin { get; private set; } = true;
 
         private readonly WukongClient _wukongClient;
-        private readonly Dictionary<int, bool> _playersReady = new Dictionary<int, bool>();
 
         public LobbyManager(WukongClient wukongClient)
         {
             _wukongClient = wukongClient;
         }
 
-        public void RegisterPlayerLeft(int playerId)
+        public void DisplayReadinessChangeTips()
         {
-            _playersReady.Remove(playerId);
-        }
-
-        public void SignalReadiness(int playerId, bool ready)
-        {
-            _playersReady[playerId] = ready;
-
-            var playersReady = _playersReady.Count(pair => pair.Value);
-            var allPlayers = _wukongClient.GetOtherPlayersInRoom().Count() + 1;
+            var players = _wukongClient.ConnectedPlayers.Values;
+            var playersReady = players.Count(x => x.IsReadyForPvP) + (_wukongClient.LocalPlayerState.IsReadyForPvP ? 1 : 0);
+            var allPlayers = players.Count + 1;
 
             if (playersReady != allPlayers)
             {
@@ -50,9 +44,9 @@ namespace WukongApi
 
         public void StartRound()
         {
-            foreach (var player in _wukongClient.GetOtherPlayersInRoom())
+            foreach (var player in _wukongClient.ConnectedPlayers.Values)
             {
-                if (!_playersReady.GetValueOrDefault(player.ActorNumber, false))
+                if (!player.IsReadyForPvP)
                 {
                     GameUtils.ShowTip($"Player {player.NickName} is not ready"); // TODO: Nickname
                     return;

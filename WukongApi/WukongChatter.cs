@@ -19,9 +19,9 @@ namespace WukongApi
         private ChatClient _chatClient;
         private readonly WukongClient _wukongClient;
 
-        internal const string GeneralChannelName = "General";
+        private const string GeneralChannelName = "General";
         internal const string ServerChannelName = "Server";
-        private string NickName => _wukongClient.NickName;
+        private string NickName => _wukongClient.LocalPlayerState.NickName;
 
         private bool _isExit;
 
@@ -163,7 +163,10 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Ready",
-                    Handler = _ => { _wukongClient.SignalReadiness(true); }
+                    Handler = _ =>
+                    {
+                        _wukongClient.SignalReadiness(true);
+                    }
                 });
             _commands.Add(
                 "/start",

@@ -16,6 +16,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.Patches;
 using WukongApi.State;
+using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
@@ -47,7 +48,6 @@ namespace WukongApi
         public LobbyManager LobbyManager { get; private set; }
 
         public PlayerState LocalPlayerState { get; protected set; }
-        public string NickName => _client.NickName;
 
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
@@ -152,9 +152,9 @@ namespace WukongApi
                     WukongMP.Instance.EnablePvP();
                     break;
                 case 9:
-                    // readiness signal (only MC)
+                    // readiness signal
                     var isReady = (bool)photonEvent.CustomData;
-                    MarkPlayerReady(photonEvent.Sender, isReady);
+                    OnPlayerReadinessChanged(photonEvent.Sender, isReady);
                     break;
                 case 10:
                     // kill player
@@ -164,11 +164,15 @@ namespace WukongApi
             }
         }
 
-        private void MarkPlayerReady(int playerId, bool isReady)
+        private void OnPlayerReadinessChanged(int playerId, bool isReady)
         {
-            LobbyManager.SignalReadiness(playerId, isReady);
-            var player = _client.CurrentRoom.Players[playerId];
-            WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{player.NickName} is {(isReady ? "ready" : "not ready")}");
+            LobbyManager.DisplayReadinessChangeTips();
+
+            if (IsMasterClient) // send this only once
+            {
+                var player = _client.CurrentRoom.Players[playerId];
+                WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{player.NickName} is {(isReady ? "ready" : "not ready")}");
+            }
         }
 
         public void StartClient()
@@ -256,7 +260,7 @@ namespace WukongApi
         {
             if (_client.CurrentRoom is null)
             {
-                Logging.LogDebug("No room joined.");
+                Logging.LogWarning("No room joined.");
                 yield break;
             }
 
@@ -355,7 +359,7 @@ namespace WukongApi
             const byte eventCode = 9;
             _client.OpRaiseEvent(eventCode, isReady, new RaiseEventArgs
             {
-                Receivers = ReceiverGroup.MasterClient,
+                Receivers = ReceiverGroup.All,
             }, SendOptions.SendReliable);
         }
 
@@ -647,12 +651,6 @@ namespace WukongApi
 
             BGU_UnrealWorldUtil.DestroyActor(ConnectedPlayers[otherPlayer.ActorNumber].Pawn);
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
-
-            if (IsMasterClient)
-            {
-                // TODO: null after host migration
-                LobbyManager?.RegisterPlayerLeft(otherPlayer.ActorNumber);
-            }
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
@@ -679,7 +677,18 @@ namespace WukongApi
             foreach (var kvp in changedProps)
             {
                 if (!(kvp.Key is string propertyName))
+                {
+                    if (kvp.Key is byte numId && numId == ActorProperties.NickName)
+                    {
+                        playerState.NickName = (string)kvp.Value;
+                    }
+                    else
+                    {
+                        Logging.LogWarning($"Unhandled player state key: {kvp.Key}");
+                    }
+
                     continue;
+                }
 
                 // attributes have special treatment
                 if (propertyName.StartsWith(Constants.AttributePrefix))
