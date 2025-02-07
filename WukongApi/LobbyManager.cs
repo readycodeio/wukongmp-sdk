@@ -62,10 +62,19 @@ namespace WukongApi
             _wukongClient.SendStartCountdown();
         }
 
-        public void EndRound()
+        public void EndRound(int winningTeam)
         {
+            _wukongClient.CurrentRoomState.SetLastRoundWinner(winningTeam);
+
             OnRoundEnd?.Invoke();
             CanPlayersJoin = true;
+        }
+
+        public void DisplayRoundStartMessage()
+        {
+            var current = _wukongClient.CurrentRoomState.CurrentRound;
+            var total = _wukongClient.CurrentRoomState.RoundsTotal;
+            GameUtils.ShowTip($"Round {current} of {total}");
         }
     }
 }

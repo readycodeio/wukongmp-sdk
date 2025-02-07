@@ -22,15 +22,15 @@ namespace WukongApi
 {
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
-        private readonly RealtimeClient _client = new RealtimeClient();
+        internal readonly RealtimeClient PhotonClient = new RealtimeClient();
         private readonly string _userName;
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isExit;
 
-        protected int PhotonId => _client.LocalPlayer.ActorNumber;
-        public bool IsMasterClient => _client.CurrentRoom?.MasterClientId == PhotonId;
-        public bool Ready => _client.IsConnectedAndReady;
+        protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
+        public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
+        public bool Ready => PhotonClient.IsConnectedAndReady;
 
         private readonly Action _joinedRoomCallback;
         private readonly Action<Player> _playerJoinedCallback;
@@ -48,6 +48,7 @@ namespace WukongApi
         public LobbyManager LobbyManager { get; private set; }
 
         public PlayerState LocalPlayerState { get; protected set; }
+        public RoomState CurrentRoomState { get; protected set; }
 
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
@@ -97,6 +98,7 @@ namespace WukongApi
         public WukongClient(string userName, Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
+            CurrentRoomState = new RoomState(this);
             _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
@@ -104,8 +106,8 @@ namespace WukongApi
 
         ~WukongClient()
         {
-            _client.Disconnect();
-            _client.RemoveCallbackTarget(this);
+            PhotonClient.Disconnect();
+            PhotonClient.RemoveCallbackTarget(this);
         }
 
         public void OnEvent(EventData photonEvent)
@@ -186,12 +188,12 @@ namespace WukongApi
             PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
 
-            _client.AddCallbackTarget(this);
-            _client.StateChanged += OnStateChange;
+            PhotonClient.AddCallbackTarget(this);
+            PhotonClient.StateChanged += OnStateChange;
 
             OnBeforeJoinRoom?.Invoke();
 
-            _client.ConnectUsingSettings(new AppSettings
+            PhotonClient.ConnectUsingSettings(new AppSettings
             {
                 AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
                 FixedRegion = "eu",
@@ -212,11 +214,11 @@ namespace WukongApi
             _isExit = true;
 
             WukongChat.Disconnect();
-            _client.Disconnect();
+            PhotonClient.Disconnect();
 
             Logging.LogDebug("Stopped client.");
 
-            _client.RemoveCallbackTarget(this);
+            PhotonClient.RemoveCallbackTarget(this);
 
             // unpatch harmony
             Utils.TryRunOnGameThread(() =>
@@ -237,7 +239,7 @@ namespace WukongApi
         {
             while (!_isExit)
             {
-                _client.Service();
+                PhotonClient.Service();
                 Thread.Sleep(33);
             }
         }
@@ -252,13 +254,13 @@ namespace WukongApi
 
         public IEnumerable<Player> GetOtherPlayersInRoom()
         {
-            if (_client.CurrentRoom is null)
+            if (PhotonClient.CurrentRoom is null)
             {
                 Logging.LogWarning("No room joined.");
                 yield break;
             }
 
-            foreach (var player in _client.CurrentRoom.Players)
+            foreach (var player in PhotonClient.CurrentRoom.Players)
             {
                 Logging.LogDebug($"Other player: {player.Value.ActorNumber} {player.Value.UserId} local: {player.Value.IsLocal}");
                 if (!player.Value.IsLocal)
@@ -270,34 +272,39 @@ namespace WukongApi
         {
             var propertiesForRoomCreation = new RoomOptions
             {
-                PublishUserId = true
+                PublishUserId = false,
+                CustomRoomProperties = new PhotonHashtable
+                {
+                    [nameof(RoomState.RoundsTotal)] = 3,
+                    [nameof(RoomState.RoundWinners)] = ""
+                }
             };
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation,
-                RoomName = "KubaCloneTest"
+                RoomName = "KubaCloneTest123123"
             };
 
-            _client.OpJoinOrCreateRoom(enterRoomParams);
+            PhotonClient.OpJoinOrCreateRoom(enterRoomParams);
         }
 
         private void OnStateChange(ClientState arg1, ClientState arg2)
         {
-            Logging.LogDebug(arg1 + " -> " + arg2);
+            Logging.LogDebug($"{arg1} -> {arg2}");
         }
 
         public void SpawnUnit(string id, string unitName, int teamID, float x, float y, float z)
         {
             const byte eventCode = 1;
             var evData = new UnitSpawnData(id, unitName, teamID, x, y, z);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void SendMontageCallback(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 2;
             var evData = new MontageCallbackData(reason, montagePath, state);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
 
             foreach (var clone in _photonClones)
             {
@@ -309,25 +316,25 @@ namespace WukongApi
         {
             const byte eventCode = 4;
             var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
-            _client.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void SendMonsterWakeUp(string guid)
         {
             const byte eventCode = 5;
-            _client.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
+            PhotonClient.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void SendDamageNum(DamageNumParam damageNumParam)
         {
             const byte eventCode = 6;
-            _client.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            PhotonClient.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
         public void RebirthCurrentPlayer()
         {
             const byte eventCode = 7;
-            _client.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
+            PhotonClient.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendUnreliable);
@@ -342,7 +349,7 @@ namespace WukongApi
             }
 
             const byte eventCode = 8;
-            _client.OpRaiseEvent(eventCode, null, new RaiseEventArgs
+            PhotonClient.OpRaiseEvent(eventCode, null, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
@@ -351,7 +358,7 @@ namespace WukongApi
         public void KillCurrentPlayer()
         {
             const byte eventCode = 9;
-            _client.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
+            PhotonClient.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.MasterClient,
             }, SendOptions.SendReliable);
@@ -427,7 +434,7 @@ namespace WukongApi
                 }
 
                 _playerPropertiesRo.Clear();
-                _client.LocalPlayer.SetCustomProperties(hashtable);
+                PhotonClient.LocalPlayer.SetCustomProperties(hashtable);
             }
 
             foreach (var clone in _photonClones)
@@ -470,7 +477,7 @@ namespace WukongApi
 
             Logging.LogDebug($"Sending remote player property: {key} = {value}");
 
-            _client.OpSetCustomPropertiesOfActor(playerId, hashtable);
+            PhotonClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
         private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();
@@ -497,7 +504,7 @@ namespace WukongApi
                 _monsterPropertiesRo.Clear();
 
                 const byte eventCode = 3;
-                _client.OpRaiseEvent(eventCode, hashtable, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+                PhotonClient.OpRaiseEvent(eventCode, hashtable, RaiseEventArgs.Default, SendOptions.SendUnreliable);
             }
         }
 
@@ -520,7 +527,7 @@ namespace WukongApi
 
         public void OnConnectedToMaster()
         {
-            Logging.LogDebug("Connected to master server: " + _client.RealtimePeer.ServerIpAddress);
+            Logging.LogDebug("Connected to master server: " + PhotonClient.RealtimePeer.ServerIpAddress);
             MyJoinRandomOrCreateRoom();
         }
 
@@ -572,9 +579,10 @@ namespace WukongApi
         {
             Logging.LogDebug("Joined room");
 
-            _client.NickName = _userName;
+            PhotonClient.NickName = _userName;
 
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
+
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
 
             if (IsMasterClient)
@@ -638,9 +646,28 @@ namespace WukongApi
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
         }
 
-        public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
+        public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
         {
-            // nothing
+            foreach (var kvp in changedProps)
+            {
+                if (!(kvp.Key is string propertyName))
+                {
+                    continue;
+                }
+
+                if (!RoomSetters.TryGetValue(propertyName, out var setter))
+                {
+                    setter = CreateSetter<RoomState>(propertyName);
+                    RoomSetters[propertyName] = setter;
+                }
+
+                if (!(kvp.Value is FVector || kvp.Value is FRotator || kvp.Value is float))
+                {
+                    Logging.LogDebug($"Assigning room property {propertyName} = {kvp.Value}");
+                }
+
+                setter(CurrentRoomState, kvp.Value);
+            }
         }
 
         public virtual void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
@@ -717,6 +744,7 @@ namespace WukongApi
 
         public void OnMasterClientSwitched(Player newMasterClient) { }
 
+        private static readonly Dictionary<string, Action<RoomState, object>> RoomSetters = new Dictionary<string, Action<RoomState, object>>();
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new Dictionary<string, Action<PlayerState, object>>();
         private static readonly Dictionary<string, Action<MonsterState, object>> MonsterSetters = new Dictionary<string, Action<MonsterState, object>>();
 

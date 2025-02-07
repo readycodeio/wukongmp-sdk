@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
 using CSharpModBase;
@@ -116,6 +118,12 @@ namespace WukongApi
         public static void ShowPvPCountDown()
         {
             Utils.TryRunOnGameThread(() => { GenAGPage.ShowPage(95, nameof(ShowPvPCountDown)); });
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                Utils.TryRunOnGameThread(() => { WukongMP.Instance.Photon.LobbyManager.DisplayRoundStartMessage(); });
+            });
         }
 
         public static void PlayBossDefeatedSound()
