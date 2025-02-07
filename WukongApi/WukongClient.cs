@@ -320,7 +320,10 @@ namespace WukongApi
         public void RebirthCurrentPlayer()
         {
             const byte eventCode = 7;
-            _client.OpRaiseEvent(eventCode, PhotonId, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            _client.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.All
+            }, SendOptions.SendUnreliable);
         }
 
         public void SendStartCountdown()

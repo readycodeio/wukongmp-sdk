@@ -98,7 +98,12 @@ namespace WukongApi.Patches
 
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
-                    if (playerState.Hp <= 0)
+                    if (playerState.Hp > 0)
+                    {
+                        playerState.IsDead = false;
+                    }
+
+                    if (playerState.Hp <= 0 && !playerState.IsDead)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 

@@ -249,7 +249,6 @@ namespace WukongApi
 
             FreeCameraManager.LeaveFreeCameraMode();
             Photon.RebirthCurrentPlayer();
-            RebirthPlayer(Photon.LocalPlayerState.PhotonId); 
         }
 
         private void RebirthPlayer(int playerId)
@@ -266,9 +265,12 @@ namespace WukongApi
                 return;
 
             var events = BUS_EventCollectionCS.Get(player);
-            events?.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
-            events?.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
-            events?.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
+            if (events != null)
+            {
+                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
+                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
+                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
+            }
         }
 
         private void Connect()
@@ -299,15 +301,24 @@ namespace WukongApi
         {
             APawn player = null;
             if (playerId == Photon.LocalPlayerState.PhotonId)
+            {
                 player = Photon.LocalPlayerState.Pawn;
+            }
             else if (Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+            {
                 player = playerState.Pawn;
-
+            }
             if (player == null)
+            {
                 return;
+            }
+
             var events = BUS_EventCollectionCS.Get(player);
             events.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            events.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
+            if (Photon.IsMasterClient)
+            {
+                events.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
+            }
         }
 
         private void Reconnect()
@@ -486,8 +497,8 @@ namespace WukongApi
             Logging.LogDebug($"Montage callback: {reason} {montagePath} {state}");
 
             // Do not send respawn montage callback - it will be played for each player locally.
-            if (montagePath == "/Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo")
-                return;
+            //if (montagePath == "/Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo")
+            //    return;
 
             Photon.SendMontageCallback(reason, montagePath, state);
         }
