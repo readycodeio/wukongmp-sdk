@@ -68,6 +68,15 @@ namespace WukongApi
             return kvp.Value;
         }
 
+        public APawn GetPlayerPawn(int playerId)
+        {
+            if (playerId == LocalPlayerState.PhotonId)
+                return LocalPlayerState.Pawn;
+            else if (ConnectedPlayers.TryGetValue(playerId, out var playerState))
+                return playerState.Pawn;
+            return null;
+        }
+
         public MonsterState GetByTamerActor(BUTamerActor owner)
         {
             var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn == owner);

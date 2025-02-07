@@ -255,12 +255,7 @@ namespace WukongApi
         {
             Logging.LogDebug($"RebirthPlayer for player {playerId} called");
 
-            APawn player = null;
-            if (playerId == Photon.LocalPlayerState.PhotonId)
-                player = Photon.LocalPlayerState.Pawn;
-            else if (Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
-                player = playerState.Pawn;
-
+            APawn player = Photon.GetPlayerPawn(playerId);
             if (player == null)
                 return;
 
@@ -299,25 +294,15 @@ namespace WukongApi
 
         private void KillPlayer(int playerId)
         {
-            APawn player = null;
-            if (playerId == Photon.LocalPlayerState.PhotonId)
-            {
-                player = Photon.LocalPlayerState.Pawn;
-            }
-            else if (Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
-            {
-                player = playerState.Pawn;
-            }
+            APawn player = Photon.GetPlayerPawn(playerId);
             if (player == null)
-            {
                 return;
-            }
 
             var events = BUS_EventCollectionCS.Get(player);
-            events.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
+            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
             if (Photon.IsMasterClient)
             {
-                events.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
+                events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
             }
         }
 
