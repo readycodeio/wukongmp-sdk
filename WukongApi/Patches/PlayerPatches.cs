@@ -311,4 +311,14 @@ namespace WukongApi.Patches
             return false;
         }
     }
+    
+    [HarmonyPatch(typeof(BUS_FallingCompl), "SafeFallingTimerTick")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchFallDamage
+    {
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
 }
