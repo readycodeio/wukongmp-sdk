@@ -270,6 +270,12 @@ namespace WukongApi.Patches
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
+            var playerState = photon.GetByActor(owner);
+            if (playerState != null)
+            {
+                playerState.IsDead = true;
+            }
+
             if (owner == photon.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();

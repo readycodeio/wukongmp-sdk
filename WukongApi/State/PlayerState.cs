@@ -30,6 +30,7 @@ namespace WukongApi.State
         public float Hp { get; set; }
         public Dictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
+        public bool IsDead { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {
@@ -50,6 +51,7 @@ namespace WukongApi.State
 
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new Dictionary<EBGUAttrFloat, float>();
+            IsDead = false;
 
             Logging.LogDebug($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);

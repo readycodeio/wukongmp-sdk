@@ -62,6 +62,8 @@ namespace WukongApi
 
         public PlayerState GetByActor(AActor actor)
         {
+            if (actor == LocalPlayerState.Pawn)
+                return LocalPlayerState;
             var kvp = ConnectedPlayers.FirstOrDefault(x => x.Value.Pawn == actor);
             return kvp.Value;
         }

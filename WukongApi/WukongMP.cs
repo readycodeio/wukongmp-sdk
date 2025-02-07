@@ -231,7 +231,7 @@ namespace WukongApi
             Photon.WukongChat.OnConnectRequest += Connect;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
-            Photon.WukongChat.OnRebirthRequested += HandleRebirth;
+            Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => HandleRebirth(), "HandleRebirth"); };
         }
 
         private void HandleRebirth()
@@ -257,13 +257,21 @@ namespace WukongApi
         {
             APawn player = null;
             if (playerId == Photon.LocalPlayerState.PhotonId)
+            {
                 player = Photon.LocalPlayerState.Pawn;
+                Photon.LocalPlayerState.IsDead = false;
+            }
             else if (Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+            {
                 player = playerState.Pawn;
+                playerState.IsDead = false;
+            }
 
             if (player == null)
                 return;
+
             var events = BUS_EventCollectionCS.Get(player);
+            events?.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
             events?.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
             events?.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
         }

@@ -66,7 +66,7 @@ namespace WukongApi.Patches
 
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
 
-                if (photon.LocalPlayerState.Hp <= 0)
+                if (photon.LocalPlayerState.Hp <= 0 && !photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
                     Logging.LogWarning($"Sending unit dead for player {photon.LocalPlayerState.PhotonId}");
