@@ -391,13 +391,13 @@ namespace WukongApi
                 return;
             }
 
-            if (data.State == EMontageCallbackState.OnStarted && animInstance.GetCurrentActiveMontage().PathName != montage.PathName)
+            if (data.State == EMontageCallbackState.OnStarted && animInstance.GetCurrentActiveMontage()?.PathName != montage.PathName)
             {
                 animInstance.Montage_Play(montage);
             }
             else if (data.State == EMontageCallbackState.OnInterrupted)
             {
-                if (animInstance.GetCurrentActiveMontage().PathName == montage.PathName)
+                if (animInstance.GetCurrentActiveMontage()?.PathName == montage.PathName)
                 {
                     animInstance.Montage_Stop(1f, montage);
                 }
