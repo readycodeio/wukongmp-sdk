@@ -480,11 +480,6 @@ namespace WukongApi
         {
             var montagePath = montage.GetPathName();
             Logging.LogDebug($"Montage callback: {reason} {montagePath} {state}");
-
-            // Do not send respawn montage callback - it will be played for each player locally.
-            //if (montagePath == "/Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo")
-            //    return;
-
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
