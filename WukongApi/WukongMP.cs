@@ -255,6 +255,8 @@ namespace WukongApi
 
         private void RebirthPlayer(int playerId)
         {
+            Logging.LogDebug($"RebirthPlayer for player {playerId} called");
+
             APawn player = null;
             if (playerId == Photon.LocalPlayerState.PhotonId)
                 player = Photon.LocalPlayerState.Pawn;
