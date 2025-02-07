@@ -406,7 +406,7 @@ namespace WukongApi
                 return;
             }
 
-            if (data.State == EMontageCallbackState.OnStarted)
+            if (data.State == EMontageCallbackState.OnStarted && animInstance.GetCurrentActiveMontage().PathName != montage.PathName)
             {
                 animInstance.Montage_Play(montage);
             }
