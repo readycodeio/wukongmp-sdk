@@ -1,8 +1,10 @@
-﻿using b1;
+﻿using System.Linq;
+using b1;
 using B1UI.GSUI;
 using BtlB1;
 using HarmonyLib;
 using System.Reflection;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongApi.State;
 
@@ -281,6 +283,24 @@ namespace WukongApi.Patches
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
             }
+
+            // check if all players but one are dead, if so, end round
+            if (photon.IsMasterClient)
+            {
+                var players = photon.ConnectedPlayers.Values.Append(photon.LocalPlayerState).ToList();
+                var deadPlayers = players.Count(p => p.IsDead);
+
+                if (deadPlayers == players.Count - 1)
+                {
+                    var winner = players.First(p => !p.IsDead);
+
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(5000); // wait 5s before ending round
+                        photon.LobbyManager.EndRound(winner.PhotonId);
+                    });
+                }
+            }
         }
     }
 
@@ -312,7 +332,7 @@ namespace WukongApi.Patches
             return false;
         }
     }
-    
+
     [HarmonyPatch(typeof(BUS_FallingCompl), "SafeFallingTimerTick")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchFallDamage
@@ -344,6 +364,7 @@ namespace WukongApi.Patches
             {
                 return false;
             }
+
             ___BUSEventCollection.Evt_NotifyCanAddBuff.Invoke();
             ___BUSEventCollection.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.Rebirth, -1f);
             ___BUSEventCollection.Evt_UnitRebirthFinished.Invoke();

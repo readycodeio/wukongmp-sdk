@@ -230,41 +230,30 @@ namespace WukongApi
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
-            Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => HandleRebirth(), "HandleRebirth"); };
-        }
-
-        private void HandleRebirth()
-        {
-            APawn curPlayer = Photon.LocalPlayerState.Pawn;
-            IBUC_UnitStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_UnitStateData, BUC_UnitStateData>(curPlayer);
-            if (readOnlyData == null)
-            {
-                return;
-            }
-
-            if (!readOnlyData.HasState(EBGUUnitState.Dead))
-            {
-                return;
-            }
-
-            FreeCameraManager.LeaveFreeCameraMode();
-            Photon.RebirthCurrentPlayer();
+            Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => Photon.BroadcastPlayerRebirth(Photon.LocalPlayerState.PhotonId), "HandleRebirth"); };
         }
 
         private void RebirthPlayer(int playerId)
         {
             Logging.LogDebug($"RebirthPlayer for player {playerId} called");
 
-            APawn player = Photon.GetPlayerPawn(playerId);
+            var player = Photon.GetById(playerId);
             if (player == null)
                 return;
 
-            var events = BUS_EventCollectionCS.Get(player);
+            if (player.PhotonId == Photon.LocalPlayerState.PhotonId)
+            {
+                FreeCameraManager.LeaveFreeCameraMode();
+            }
+
+            var events = BUS_EventCollectionCS.Get(player.Pawn);
             if (events != null)
             {
                 events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
                 events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
                 events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
+
+                player.IsDead = false;
             }
         }
 
@@ -288,13 +277,24 @@ namespace WukongApi
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
-
+            Photon.LobbyManager.OnRoundEnd += RebirthAllDeadPlayers;
             Photon.StartClient();
+        }
+
+        private void RebirthAllDeadPlayers()
+        {
+            foreach (var (id, player) in Photon.ConnectedPlayers)
+            {
+                if (player.IsDead)
+                {
+                    Photon.BroadcastPlayerRebirth(id);
+                }
+            }
         }
 
         private void KillPlayer(int playerId)
         {
-            APawn player = Photon.GetPlayerPawn(playerId);
+            var player = Photon.GetById(playerId).Pawn;
             if (player == null)
                 return;
 
@@ -473,7 +473,11 @@ namespace WukongApi
         {
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
+
+            if (events != null)
+            {
+                events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
+            }
         }
 
         private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)

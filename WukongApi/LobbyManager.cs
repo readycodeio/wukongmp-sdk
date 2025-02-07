@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using WukongApi.State;
 
 namespace WukongApi
 {
@@ -9,7 +7,6 @@ namespace WukongApi
     {
         public event Action<Action> PlayerTeleportRequested;
         public event Action OnRoundEnd;
-        public bool CanPlayersJoin { get; private set; } = true;
 
         private readonly WukongClient _wukongClient;
 
@@ -53,7 +50,6 @@ namespace WukongApi
                 }
             }
 
-            CanPlayersJoin = false;
             PlayerTeleportRequested?.Invoke(PlayersTeleported);
         }
 
@@ -62,12 +58,11 @@ namespace WukongApi
             _wukongClient.SendStartCountdown();
         }
 
-        public void EndRound(int winningTeam)
+        public void EndRound(int winner)
         {
-            _wukongClient.CurrentRoomState.SetLastRoundWinner(winningTeam);
+            _wukongClient.CurrentRoomState.SetLastRoundWinner(winner);
 
             OnRoundEnd?.Invoke();
-            CanPlayersJoin = true;
         }
 
         public void DisplayRoundStartMessage()

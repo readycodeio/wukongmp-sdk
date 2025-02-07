@@ -69,13 +69,11 @@ namespace WukongApi
             return kvp.Value;
         }
 
-        public APawn GetPlayerPawn(int playerId)
+        public PlayerState GetById(int playerId)
         {
             if (playerId == LocalPlayerState.PhotonId)
-                return LocalPlayerState.Pawn;
-            else if (ConnectedPlayers.TryGetValue(playerId, out var playerState))
-                return playerState.Pawn;
-            return null;
+                return LocalPlayerState;
+            return ConnectedPlayers.GetValueOrDefault(playerId);
         }
 
         public MonsterState GetByTamerActor(BUTamerActor owner)
@@ -282,7 +280,7 @@ namespace WukongApi
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation,
-                RoomName = "KubaCloneTest123123"
+                RoomName = "WukongMP"
             };
 
             PhotonClient.OpJoinOrCreateRoom(enterRoomParams);
@@ -331,13 +329,13 @@ namespace WukongApi
             PhotonClient.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
         }
 
-        public void RebirthCurrentPlayer()
+        public void BroadcastPlayerRebirth(int playerId)
         {
             const byte eventCode = 7;
-            PhotonClient.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
+            PhotonClient.OpRaiseEvent(eventCode, playerId, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.All
-            }, SendOptions.SendUnreliable);
+            }, SendOptions.SendReliable);
         }
 
         public void SendStartCountdown()
