@@ -228,7 +228,6 @@ namespace WukongApi
         {
             Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
             Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
-            Photon.WukongChat.OnConnectRequest += Connect;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => HandleRebirth(), "HandleRebirth"); };

@@ -30,7 +30,6 @@ namespace WukongApi
 
         public event Action OnSavePosition;
         public event Action OnLoadPosition;
-        public event Action OnConnectRequest;
         public event Action OnReconnectRequest;
         public event Action OnDisconnectRequest;
         public event Action OnRebirthRequested;
@@ -110,13 +109,6 @@ namespace WukongApi
                     }
                 });
             _commands.Add(
-                "/connect",
-                new Command
-                {
-                    Name = "Connect",
-                    Handler = _ => { RequestConnect(); }
-                });
-            _commands.Add(
                 "/reconnect",
                 new Command
                 {
@@ -192,11 +184,6 @@ namespace WukongApi
         {
             SendChatMessage(ServerChannelName, $"Player {NickName} gave up");
             _wukongClient.KillCurrentPlayer();
-        }
-
-        public void RequestConnect()
-        {
-            OnConnectRequest?.Invoke();
         }
 
         public void RequestReconnect()

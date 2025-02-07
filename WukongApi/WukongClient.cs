@@ -240,8 +240,7 @@ namespace WukongApi
             var clone = new WukongClientClone();
             _photonClones.Add(clone);
 
-            clone.WukongChat.OnConnectRequest += () => { clone.StartClient(); };
-            clone.WukongChat.RequestConnect();
+            clone.StartClient();
         }
 
         public IEnumerable<Player> GetOtherPlayersInRoom()
