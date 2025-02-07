@@ -47,6 +47,11 @@ namespace WukongApi.Patches
                     {
                         __instance.SetFloatValue(attr, value);
                     }
+
+                    if (photon.LocalPlayerState.Hp > 0)
+                    {
+                        photon.LocalPlayerState.IsDead = false;
+                    }
                 }
 
                 return;
@@ -71,6 +76,11 @@ namespace WukongApi.Patches
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
                     Logging.LogWarning($"Sending unit dead for player {photon.LocalPlayerState.PhotonId}");
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                }
+
+                if (photon.LocalPlayerState.Hp > 0)
+                {
+                    photon.LocalPlayerState.IsDead = false;
                 }
             }
             else

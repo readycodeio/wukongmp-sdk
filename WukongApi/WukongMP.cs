@@ -257,15 +257,9 @@ namespace WukongApi
         {
             APawn player = null;
             if (playerId == Photon.LocalPlayerState.PhotonId)
-            {
                 player = Photon.LocalPlayerState.Pawn;
-                Photon.LocalPlayerState.IsDead = false;
-            }
             else if (Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
-            {
                 player = playerState.Pawn;
-                playerState.IsDead = false;
-            }
 
             if (player == null)
                 return;
