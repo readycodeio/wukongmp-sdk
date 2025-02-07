@@ -152,11 +152,6 @@ namespace WukongApi
                     WukongMP.Instance.EnablePvP();
                     break;
                 case 9:
-                    // readiness signal
-                    var isReady = (bool)photonEvent.CustomData;
-                    OnPlayerReadinessChanged(photonEvent.Sender, isReady);
-                    break;
-                case 10:
                     // kill player
                     var id = (int)photonEvent.CustomData;
                     OnKillPlayer?.Invoke(id);
@@ -164,13 +159,12 @@ namespace WukongApi
             }
         }
 
-        private void OnPlayerReadinessChanged(int playerId, bool isReady)
+        private void OnPlayerReadinessChanged(Player player, bool isReady)
         {
             LobbyManager.DisplayReadinessChangeTips();
 
             if (IsMasterClient) // send this only once
             {
-                var player = _client.CurrentRoom.Players[playerId];
                 WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{player.NickName} is {(isReady ? "ready" : "not ready")}");
             }
         }
@@ -354,18 +348,9 @@ namespace WukongApi
             }, SendOptions.SendReliable);
         }
 
-        public void SignalReadiness(bool isReady)
-        {
-            const byte eventCode = 9;
-            _client.OpRaiseEvent(eventCode, isReady, new RaiseEventArgs
-            {
-                Receivers = ReceiverGroup.All,
-            }, SendOptions.SendReliable);
-        }
-
         public void KillCurrentPlayer()
         {
-            const byte eventCode = 10;
+            const byte eventCode = 9;
             _client.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.MasterClient,
@@ -717,9 +702,15 @@ namespace WukongApi
 
                 setter(playerState, kvp.Value);
 
-                if (propertyName == nameof(PlayerState.Equipment))
+                // special handlers for some properties
+                switch (propertyName)
                 {
-                    OnEquipmentChange?.Invoke(id, (EquipmentState)kvp.Value);
+                    case nameof(PlayerState.Equipment):
+                        OnEquipmentChange?.Invoke(id, (EquipmentState)kvp.Value);
+                        break;
+                    case nameof(PlayerState.IsReadyForPvP):
+                        OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
+                        continue;
                 }
             }
         }

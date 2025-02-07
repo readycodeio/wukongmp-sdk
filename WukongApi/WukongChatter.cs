@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using Photon.Chat;
 using Photon.Client;
+using Photon.Realtime;
+using WukongApi.State;
 using AuthenticationValues = Photon.Chat.AuthenticationValues;
 
 namespace WukongApi
@@ -163,10 +165,7 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Ready",
-                    Handler = _ =>
-                    {
-                        _wukongClient.SignalReadiness(true);
-                    }
+                    Handler = _ => { _wukongClient.CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), true); }
                 });
             _commands.Add(
                 "/start",
