@@ -113,7 +113,6 @@ namespace WukongApi
         {
             Logging.LogDebug("Delay begin play for player.");
             DestroyAllMonsters();
-            SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
             if (!Photon.Ready)
             {
                 BlueprintUIUtils.SpawnModActor();
@@ -121,6 +120,7 @@ namespace WukongApi
                 ToggleChatWidget();
                 Connect();
             }
+            SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
         }
 
         public void DumpPlayerState()
