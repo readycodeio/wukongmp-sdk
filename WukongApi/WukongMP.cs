@@ -114,6 +114,8 @@ namespace WukongApi
         private void OnDelayBeginPlay()
         {
             Logging.LogDebug("Delay begin play for player.");
+            DestroyAllMonsters();
+            TeleportPlayerToStartLocation();
             if (!Photon.Ready)
             {
                 BlueprintUIUtils.SpawnModActor();
@@ -254,6 +256,21 @@ namespace WukongApi
                 events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
 
                 player.IsDead = false;
+            }
+        }
+
+        public void TeleportPlayerToStartLocation()
+        {
+            var player = GameUtils.GetControlledPawn();
+            player.SetActorLocation(Constants.StartingLocation, false, out _, true);
+        }
+
+        public void DestroyAllMonsters()
+        {
+            AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            foreach (var actor in allActorsOfClass)
+            {
+                BGU_UnrealWorldUtil.DestroyActor(actor);
             }
         }
 

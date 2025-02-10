@@ -23,6 +23,10 @@ namespace WukongApi
             }
 
             // TODO: Teleport players
+            foreach (var playerState in _wukongClient.ConnectedPlayers.Values)
+            {
+                playerState.Pawn.SetActorLocation(Constants.StartingLocation, false, out _, true);
+            }
 
             Task.Run(async () =>
             {
