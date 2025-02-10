@@ -16,7 +16,7 @@ namespace WukongApi
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 100f;
         public const int MonsterSpawnDelayMs = 500;
-        public const int BaseTeamId = -999999999;
+        public const int BaseTeamId = -9999;
         public const string AttributePrefix = "attr_";
 
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";

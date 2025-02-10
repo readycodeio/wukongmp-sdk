@@ -48,7 +48,7 @@ namespace WukongApi.State
             }
         }
 
-        public void SetLastRoundWinner(int winner)
+        public void SetLastRoundWinnerTeam(int winner)
         {
             var winners = RoundWinners.ToList();
             winners.Add(winner);

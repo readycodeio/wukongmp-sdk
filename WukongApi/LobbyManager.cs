@@ -23,17 +23,20 @@ namespace WukongApi
             {
                 GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
             }
-            else if (playersReady == 1)
-            {
-                GameUtils.ShowTip("You are ready");
-            }
-            else if (playersReady == 2)
-            {
-                GameUtils.ShowTip("Both players are ready");
-            }
             else
             {
-                GameUtils.ShowTip($"All {playersReady} players are ready");
+                switch (playersReady)
+                {
+                    case 1:
+                        GameUtils.ShowTip("You are ready");
+                        break;
+                    case 2:
+                        GameUtils.ShowTip("Both players are ready");
+                        break;
+                    default:
+                        GameUtils.ShowTip($"All {playersReady} players are ready");
+                        break;
+                }
             }
         }
 
@@ -59,7 +62,8 @@ namespace WukongApi
 
         public void EndRound(int winner)
         {
-            _wukongClient.CurrentRoomState.SetLastRoundWinner(winner);
+            // increment round number
+            _wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
 
             // resurrect dead players
             foreach (var (id, player) in _wukongClient.ConnectedPlayers)
@@ -68,6 +72,11 @@ namespace WukongApi
                 {
                     _wukongClient.BroadcastPlayerRebirth(id);
                 }
+            }
+
+            if (_wukongClient.CurrentRoomState.CurrentRound < _wukongClient.CurrentRoomState.RoundsTotal)
+            {
+                StartRound();
             }
         }
 

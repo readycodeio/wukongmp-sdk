@@ -297,7 +297,7 @@ namespace WukongApi.Patches
                     Task.Run(async () =>
                     {
                         await Task.Delay(5000); // wait 5s before ending round
-                        photon.LobbyManager.EndRound(winner.PhotonId);
+                        photon.LobbyManager.EndRound(winner.TeamId);
                     });
                 }
             }
