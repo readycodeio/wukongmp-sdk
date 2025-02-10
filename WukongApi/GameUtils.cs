@@ -120,7 +120,7 @@ namespace WukongApi
 
             Task.Run(async () =>
             {
-                await Task.Delay(3000);
+                await Task.Delay(4000);
                 Utils.TryRunOnGameThread(() =>
                 {
                     var photon = WukongMP.Instance.Photon;
@@ -138,12 +138,6 @@ namespace WukongApi
                 var playUiSound = AccessTools.Method("B1UI.Script.GSUI.Util.GSUIAudioUtil:PlayUISound");
                 playUiSound.Invoke(null, new object[] { "EVT_ui_kill_jisha_manjingtou" });
             });
-        }
-
-        public static void ShowDefeatedUI()
-        {
-            PlayBossDefeatedSound();
-            ShowTip("Opponent defeated");
         }
     }
 }

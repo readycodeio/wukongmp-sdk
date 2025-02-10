@@ -147,15 +147,39 @@ namespace WukongApi
                     OnPlayerRebirth?.Invoke(playerId);
                     break;
                 case 8:
-                    // start countdown
-                    GameUtils.ShowPvPCountDown();
-                    WukongMP.Instance.EnablePvP();
+                    // PvP event
+                    var ev = (PvPEvent)photonEvent.CustomData;
+                    HandlePvPEvent(ev);
                     break;
                 case 9:
                     // kill player
                     var id = (int)photonEvent.CustomData;
                     OnKillPlayer?.Invoke(id);
                     break;
+            }
+        }
+
+        private void HandlePvPEvent(PvPEvent ev)
+        {
+            switch (ev)
+            {
+                case PvPEvent.CountDown:
+                    GameUtils.ShowPvPCountDown();
+                    break;
+                case PvPEvent.RoundEnd:
+                    break;
+                case PvPEvent.PvPEnable:
+                    WukongMP.Instance.EnablePvP();
+                    break;
+                case PvPEvent.PvPDisable:
+                    WukongMP.Instance.DisablePvP();
+                    break;
+                case PvPEvent.TournamentStart:
+                    break;
+                case PvPEvent.TournamentEnd:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(ev), ev, null);
             }
         }
 
@@ -359,7 +383,7 @@ namespace WukongApi
             }, SendOptions.SendReliable);
         }
 
-        public void SendStartCountdown()
+        public void SendPvPEvent(PvPEvent ev)
         {
             if (!IsMasterClient)
             {
@@ -368,7 +392,7 @@ namespace WukongApi
             }
 
             const byte eventCode = 8;
-            PhotonClient.OpRaiseEvent(eventCode, null, new RaiseEventArgs
+            PhotonClient.OpRaiseEvent(eventCode, ev, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
@@ -396,6 +420,9 @@ namespace WukongApi
                 GameUtils.ShowTip("Only room owner can start PvP.");
                 return;
             }
+
+            // clear previous round winners
+            CurrentRoomState.RoundWinners = Enumerable.Empty<int>();
 
             LobbyManager.StartRound();
         }

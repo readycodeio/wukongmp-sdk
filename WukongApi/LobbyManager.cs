@@ -32,7 +32,8 @@ namespace WukongApi
             Task.Run(async () =>
             {
                 await Task.Delay(2000);
-                _wukongClient.SendStartCountdown();
+                _wukongClient.SendPvPEvent(PvPEvent.CountDown);
+                _wukongClient.SendPvPEvent(PvPEvent.PvPEnable);
             });
         }
 
@@ -68,10 +69,16 @@ namespace WukongApi
             }
         }
 
-        public void EndRound(int winner)
+        public async Task EndRoundAsync(int winner)
         {
+            // disable pvp until next round
+            _wukongClient.SendPvPEvent(PvPEvent.PvPDisable);
+
             // increment round number
             _wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
+
+            // wait until all players death animations are finished
+            await Task.Delay(5000);
 
             // resurrect dead players
             foreach (var (id, player) in _wukongClient.ConnectedPlayers)
@@ -82,9 +89,17 @@ namespace WukongApi
                 }
             }
 
+            // wait for that to finish
+            await Task.Delay(5000);
+
             if (_wukongClient.CurrentRoomState.CurrentRound < _wukongClient.CurrentRoomState.RoundsTotal)
             {
+                // start next round
                 StartRound();
+            }
+            else
+            {
+                // that was the final round
             }
         }
     }

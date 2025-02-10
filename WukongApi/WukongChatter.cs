@@ -138,28 +138,6 @@ namespace WukongApi
                     Handler = _ => { RequestGiveUp(); }
                 });
             _commands.Add(
-                "/message",
-                new Command
-                {
-                    Name = "Message",
-                    Handler = args =>
-                    {
-                        var id = args.Length > 0 ? int.Parse(args[0]) : 0;
-                        switch (id)
-                        {
-                            case 0:
-                                GameUtils.ShowTip("test tip\nmultiline");
-                                break;
-                            case 1:
-                                GameUtils.ShowPvPCountDown();
-                                break;
-                            case 2:
-                                GameUtils.PlayBossDefeatedSound();
-                                break;
-                        }
-                    }
-                });
-            _commands.Add(
                 "/ready",
                 new Command
                 {

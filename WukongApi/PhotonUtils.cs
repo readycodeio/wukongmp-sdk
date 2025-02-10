@@ -20,10 +20,30 @@ namespace WukongApi
             var team1RelationInfo = teamRelationData.TeamHostileInfos[team1];
             var team2RelationInfo = teamRelationData.TeamHostileInfos[team2];
 
-            team1RelationInfo.HostileTeamIDs.Add(team2);
-            team2RelationInfo.HostileTeamIDs.Add(team1);
+            if (!team1RelationInfo.HostileTeamIDs.Contains(team2))
+            {
+                team1RelationInfo.HostileTeamIDs.Add(team2);
+            }
+
+            if (!team2RelationInfo.HostileTeamIDs.Contains(team1))
+            {
+                team2RelationInfo.HostileTeamIDs.Add(team1);
+            }
 
             // TODO: set damage reduction ratio
+        }
+
+        public static void UnregisterTeamHostility(int team1, int team2)
+        {
+            var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
+
+            var team1RelationInfo = teamRelationData.TeamHostileInfos[team1];
+            var team2RelationInfo = teamRelationData.TeamHostileInfos[team2];
+
+            team1RelationInfo.HostileTeamIDs.Remove(team2);
+            team2RelationInfo.HostileTeamIDs.Remove(team1);
+
+            // TODO: unset damage reduction ratio
         }
 
         public static void RegisterNewPlayerTeam(BGUCharacterCS actor, int newTeamId)

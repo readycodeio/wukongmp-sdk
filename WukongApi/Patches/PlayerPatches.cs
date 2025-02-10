@@ -284,21 +284,22 @@ namespace WukongApi.Patches
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
             }
 
-            // check if all players but one are dead, if so, end round
-            if (photon.IsMasterClient)
+            // check if all players but one are dead
+            var players = photon.ConnectedPlayers.Values.Append(photon.LocalPlayerState).ToList();
+            var deadPlayers = players.Count(p => p.IsDead);
+
+            if (deadPlayers == players.Count - 1)
             {
-                var players = photon.ConnectedPlayers.Values.Append(photon.LocalPlayerState).ToList();
-                var deadPlayers = players.Count(p => p.IsDead);
+                var winner = players.First(p => !p.IsDead);
 
-                if (deadPlayers == players.Count - 1)
+                if (winner.TeamId == photon.LocalPlayerState.TeamId)
                 {
-                    var winner = players.First(p => !p.IsDead);
+                    GameUtils.PlayBossDefeatedSound();
+                }
 
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(5000); // wait 5s before ending round
-                        photon.LobbyManager.EndRound(winner.TeamId);
-                    });
+                if (photon.IsMasterClient)
+                {
+                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
                 }
             }
         }

@@ -173,6 +173,29 @@ namespace WukongApi
                 }
             }, "Register team hostility");
         }
+        
+        public void DisablePvP()
+        {
+            Logging.LogDebug("Disabled PvP");
+
+            var myTeam = Photon.LocalPlayerState.TeamId;
+            var otherTeams = Photon.ConnectedPlayers.Values
+                .Where(p => p.TeamId != myTeam)
+                .Select(p => p.TeamId)
+                .Distinct()
+                .ToList();
+
+            Logging.LogDebug($"My team: {myTeam}");
+            Logging.LogDebug($"Other teams: {string.Join(", ", otherTeams)}");
+
+            GameLoopPatch.QueueOnGameThread(() =>
+            {
+                foreach (var team in otherTeams)
+                {
+                    PhotonUtils.UnregisterTeamHostility(myTeam, team);
+                }
+            }, "Register team hostility");
+        }
 
         private void WakeUpMonster(string guid)
         {
