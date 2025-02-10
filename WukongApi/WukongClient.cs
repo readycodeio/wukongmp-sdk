@@ -161,7 +161,28 @@ namespace WukongApi
 
         private void OnPlayerReadinessChanged(Player player, bool isReady)
         {
-            LobbyManager.DisplayReadinessChangeTips();
+            var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (LocalPlayerState.IsReadyForPvP ? 1 : 0);
+            var allPlayers = ConnectedPlayers.Count + 1;
+
+            if (playersReady != allPlayers)
+            {
+                GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
+            }
+            else
+            {
+                switch (playersReady)
+                {
+                    case 1:
+                        GameUtils.ShowTip("You are ready");
+                        break;
+                    case 2:
+                        GameUtils.ShowTip("Both players are ready");
+                        break;
+                    default:
+                        GameUtils.ShowTip($"All {playersReady} players are ready");
+                        break;
+                }
+            }
 
             if (IsMasterClient) // send this only once
             {

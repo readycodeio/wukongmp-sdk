@@ -10,27 +10,11 @@ namespace WukongApi.State
     {
         private readonly WukongClient _client;
 
+        private Room Room => _client.PhotonClient.CurrentRoom;
+
         public RoomState(WukongClient client)
         {
             _client = client;
-        }
-
-        private Room Room => _client.PhotonClient.CurrentRoom;
-
-        private void SetProperty(string name, object value)
-        {
-            var hash = new PhotonHashtable
-            {
-                [name] = value
-            };
-            Room.SetCustomProperties(hash);
-        }
-
-        private T GetProperty<T>(string name)
-        {
-            if (Room.CustomProperties.TryGetValue(name, out var obj))
-                return (T)obj;
-            return default;
         }
 
         public int RoundsTotal
@@ -46,15 +30,32 @@ namespace WukongApi.State
                 var str = GetProperty<string>(nameof(RoundWinners));
                 return str == null ? Enumerable.Empty<int>() : str.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse);
             }
+            set => SetProperty(nameof(RoundWinners), string.Join(";", value));
         }
+
+        public int CurrentRound => RoundWinners.Count() + 1;
 
         public void SetLastRoundWinnerTeam(int winner)
         {
             var winners = RoundWinners.ToList();
             winners.Add(winner);
-            SetProperty(nameof(RoundWinners), string.Join(";", winners));
+            RoundWinners = winners;
         }
 
-        public int CurrentRound => RoundWinners.Count() + 1;
+        private T GetProperty<T>(string name)
+        {
+            if (Room.CustomProperties.TryGetValue(name, out var obj))
+                return (T)obj;
+            return default;
+        }
+
+        private void SetProperty(string name, object value)
+        {
+            var hash = new PhotonHashtable
+            {
+                [name] = value
+            };
+            Room.SetCustomProperties(hash);
+        }
     }
 }

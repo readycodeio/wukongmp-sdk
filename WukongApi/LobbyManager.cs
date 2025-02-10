@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace WukongApi
 {
@@ -11,33 +9,6 @@ namespace WukongApi
         public LobbyManager(WukongClient wukongClient)
         {
             _wukongClient = wukongClient;
-        }
-
-        public void DisplayReadinessChangeTips()
-        {
-            var players = _wukongClient.ConnectedPlayers.Values;
-            var playersReady = players.Count(x => x.IsReadyForPvP) + (_wukongClient.LocalPlayerState.IsReadyForPvP ? 1 : 0);
-            var allPlayers = players.Count + 1;
-
-            if (playersReady != allPlayers)
-            {
-                GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
-            }
-            else
-            {
-                switch (playersReady)
-                {
-                    case 1:
-                        GameUtils.ShowTip("You are ready");
-                        break;
-                    case 2:
-                        GameUtils.ShowTip("Both players are ready");
-                        break;
-                    default:
-                        GameUtils.ShowTip($"All {playersReady} players are ready");
-                        break;
-                }
-            }
         }
 
         public void StartRound()
