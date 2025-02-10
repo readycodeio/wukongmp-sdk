@@ -269,9 +269,7 @@ namespace WukongApi
             {
                 events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
                 events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
-                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats.
-
-                player.IsDead = false;
+                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
             }
         }
 
