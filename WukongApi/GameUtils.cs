@@ -114,20 +114,18 @@ namespace WukongApi
             });
         }
 
-        public static void ShowPvPCountDown()
+        public static async Task ShowPvPCountDown()
         {
             Utils.TryRunOnGameThread(() => { GenAGPage.ShowPage(95, nameof(ShowPvPCountDown)); });
 
-            Task.Run(async () =>
+            await Task.Delay(4000);
+
+            Utils.TryRunOnGameThread(() =>
             {
-                await Task.Delay(4000);
-                Utils.TryRunOnGameThread(() =>
-                {
-                    var photon = WukongMP.Instance.Photon;
-                    var current = photon.CurrentRoomState.CurrentRound;
-                    var total = photon.CurrentRoomState.RoundsTotal;
-                    ShowTip($"Round {current} of {total}");
-                });
+                var photon = WukongMP.Instance.Photon;
+                var current = photon.CurrentRoomState.CurrentRound;
+                var total = photon.CurrentRoomState.RoundsTotal;
+                ShowTip($"Round {current} of {total}");
             });
         }
 

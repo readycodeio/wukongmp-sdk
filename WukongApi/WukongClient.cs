@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using b1;
 using BtlB1;
 using BtlShare;
@@ -48,10 +49,13 @@ namespace WukongApi
         public LobbyManager LobbyManager { get; private set; }
 
         public PlayerState LocalPlayerState { get; protected set; }
-        public RoomState CurrentRoomState { get; protected set; }
+        public RoomState CurrentRoomState { get; }
 
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
+
+        public IEnumerable<PlayerState> AllConnectedPlayers
+            => ConnectedPlayers.Values.Append(LocalPlayerState);
 
         private readonly List<WukongClientClone> _photonClones = new List<WukongClientClone>();
 
@@ -159,14 +163,14 @@ namespace WukongApi
             }
         }
 
-        private void HandlePvPEvent(PvPEvent ev)
+        private static void HandlePvPEvent(PvPEvent ev)
         {
+            Logging.LogDebug($"Received PvP event: {ev}");
+
             switch (ev)
             {
                 case PvPEvent.CountDown:
-                    GameUtils.ShowPvPCountDown();
-                    break;
-                case PvPEvent.RoundEnd:
+                    Task.Run(GameUtils.ShowPvPCountDown);
                     break;
                 case PvPEvent.PvPEnable:
                     WukongMP.Instance.EnablePvP();
@@ -174,9 +178,8 @@ namespace WukongApi
                 case PvPEvent.PvPDisable:
                     WukongMP.Instance.DisablePvP();
                     break;
-                case PvPEvent.TournamentStart:
-                    break;
                 case PvPEvent.TournamentEnd:
+                    GameUtils.ShowTip("Tournament ended"); // TODO: Winner
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ev), ev, null);
@@ -391,6 +394,8 @@ namespace WukongApi
                 return;
             }
 
+            Logging.LogDebug($"Sending PvP event: {ev}");
+
             const byte eventCode = 8;
             PhotonClient.OpRaiseEvent(eventCode, ev, new RaiseEventArgs
             {
@@ -424,7 +429,7 @@ namespace WukongApi
             // clear previous round winners
             CurrentRoomState.RoundWinners = Enumerable.Empty<int>();
 
-            LobbyManager.StartRound();
+            Task.Run(LobbyManager.StartRoundAsync);
         }
 
         protected virtual void ApplyMonsterMove(PhotonHashtable props)

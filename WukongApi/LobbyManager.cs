@@ -16,7 +16,7 @@ namespace WukongApi
             _wukongClient = wukongClient;
         }
 
-        public void StartRound()
+        public async Task StartRoundAsync()
         {
             foreach (var player in _wukongClient.ConnectedPlayers.Values)
             {
@@ -29,12 +29,10 @@ namespace WukongApi
 
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
 
-            Task.Run(async () =>
-            {
-                await Task.Delay(2000);
-                _wukongClient.SendPvPEvent(PvPEvent.CountDown);
-                _wukongClient.SendPvPEvent(PvPEvent.PvPEnable);
-            });
+            await Task.Delay(3000);
+
+            _wukongClient.SendPvPEvent(PvPEvent.CountDown);
+            _wukongClient.SendPvPEvent(PvPEvent.PvPEnable);
         }
 
         private void PlacePlayers(FVector center, float radius)
@@ -42,8 +40,8 @@ namespace WukongApi
             var playerStates = _wukongClient.ConnectedPlayers.Values.ToList();
             playerStates.Add(_wukongClient.LocalPlayerState);
 
-            var teamsIds = playerStates.Select(playerState => playerState.TeamId).Distinct();
-            var teamsCount = teamsIds.Count();
+            var teamsIds = playerStates.Select(playerState => playerState.TeamId).Distinct().ToList();
+            var teamsCount = teamsIds.Count;
             float teamAngleStep = 2 * MathF.PI / teamsCount;
 
             float entityOffsetAngle = 0.1f;
@@ -81,11 +79,11 @@ namespace WukongApi
             await Task.Delay(5000);
 
             // resurrect dead players
-            foreach (var (id, player) in _wukongClient.ConnectedPlayers)
+            foreach (var player in _wukongClient.AllConnectedPlayers)
             {
                 if (player.IsDead)
                 {
-                    _wukongClient.BroadcastPlayerRebirth(id);
+                    _wukongClient.BroadcastPlayerRebirth(player.PhotonId);
                 }
             }
 
@@ -95,11 +93,12 @@ namespace WukongApi
             if (_wukongClient.CurrentRoomState.CurrentRound < _wukongClient.CurrentRoomState.RoundsTotal)
             {
                 // start next round
-                StartRound();
+                await StartRoundAsync();
             }
             else
             {
                 // that was the final round
+                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd);
             }
         }
     }
