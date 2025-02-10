@@ -274,10 +274,12 @@ namespace WukongApi.Patches
             var owner = __instance.GetOwner();
 
             var playerState = photon.GetByActor(owner);
-            if (playerState != null)
+            if (playerState == null)
             {
-                playerState.IsDead = true;
+                return;
             }
+
+            playerState.IsDead = true;
 
             if (owner == photon.LocalPlayerState.Pawn)
             {
@@ -287,6 +289,8 @@ namespace WukongApi.Patches
             // check if all players but one are dead
             var players = photon.AllConnectedPlayers.ToList();
             var deadPlayers = players.Count(p => p.IsDead);
+
+            Logging.LogWarning($"Dead players: {deadPlayers}");
 
             if (deadPlayers == players.Count - 1)
             {

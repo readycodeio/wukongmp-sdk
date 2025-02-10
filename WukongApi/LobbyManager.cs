@@ -91,15 +91,28 @@ namespace WukongApi
             // wait for that to finish
             await Task.Delay(6000);
 
-            if (_wukongClient.CurrentRoomState.CurrentRound <= _wukongClient.CurrentRoomState.RoundsTotal)
+            // resolve tournament
+            var winnersSoFar = _wukongClient.CurrentRoomState.RoundWinners.ToList();
+            var winnersByTeam = winnersSoFar.GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
+
+            // check if any team won more than half of the rounds
+            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _wukongClient.CurrentRoomState.RoundsTotal / 2);
+            if (winnerTeam.Key != 0)
             {
-                // start next round
-                await StartRoundAsync();
+                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd);
+                return;
             }
-            else
+
+            // otherwise, check if we have a tie
+            if (_wukongClient.CurrentRoomState.CurrentRound > _wukongClient.CurrentRoomState.RoundsTotal)
             {
                 // that was the final round
                 _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd);
+            }
+            else
+            {
+                // start next round
+                await StartRoundAsync();
             }
         }
     }

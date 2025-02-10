@@ -190,8 +190,14 @@ namespace WukongApi
                     WukongMP.Instance.DisablePvP();
                     break;
                 case PvPEvent.TournamentEnd:
-                    GameUtils.ShowTip("Tournament ended"); // TODO: Winner
+                {
+                    var winnerTeam = CurrentRoomState.RoundWinners.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
+                    var winners = AllConnectedPlayers.Where(x => x.TeamId == winnerTeam).Select(x => x.NickName).ToList();
+                    var winnerString = string.Join(", ", winners);
+                    var plural = winners.Count > 1 ? "s" : "";
+                    GameUtils.ShowTip($"Winner{plural}: {winnerString}"); // TODO: Ties
                     break;
+                }
                 case PvPEvent.ResetStats:
                     if (!LocalPlayerState.IsDead)
                     {
