@@ -149,10 +149,12 @@ namespace WukongApi.Patches
             return AttrID != EBGUAttrFloat.Hp || WukongMP.Instance.Photon.IsMasterClient;
         }
 
-        public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float __result)
+        public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
         {
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
+
+            var result = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(AttrID);
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
@@ -162,10 +164,10 @@ namespace WukongApi.Patches
                     // I was damaged, set my Hp
                     if (owner == photon.LocalPlayerState.Pawn)
                     {
-                        if (!photon.LocalPlayerState.Hp.Equals(__result, Constants.FloatComparisonTolerance))
+                        if (!photon.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            photon.LocalPlayerState.Hp = __result;
-                            photon.CachePlayerProperty(nameof(PlayerState.Hp), __result);
+                            photon.LocalPlayerState.Hp = result;
+                            photon.CachePlayerProperty(nameof(PlayerState.Hp), result);
                         }
 
                         return;
@@ -175,10 +177,10 @@ namespace WukongApi.Patches
                     var remotePlayer = WukongMP.Instance.Photon.GetByActor(owner);
                     if (remotePlayer != null)
                     {
-                        if (!remotePlayer.Hp.Equals(__result, Constants.FloatComparisonTolerance))
+                        if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            remotePlayer.Hp = __result;
-                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, nameof(PlayerState.Hp), __result);
+                            remotePlayer.Hp = result;
+                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, nameof(PlayerState.Hp), result);
                         }
 
                         return;
@@ -188,12 +190,12 @@ namespace WukongApi.Patches
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (monster != null && monster.IsSynced)
                     {
-                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(__result, Constants.FloatComparisonTolerance))
+                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            monster.Hp = __result;
-                            photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), __result);
+                            monster.Hp = result;
+                            photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), result);
 
-                            if (__result <= 0)
+                            if (result <= 0)
                             {
                                 // remove dead monster from sync
                                 photon.RemoveMonster(monster.Guid);
@@ -215,13 +217,13 @@ namespace WukongApi.Patches
             if (Constants.SyncedAttributes.Contains(AttrID) && owner == photon.LocalPlayerState.Pawn)
             {
                 if (photon.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
-                    && existing.Equals(__result, Constants.FloatComparisonTolerance))
+                    && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
                     return;
                 }
 
-                photon.LocalPlayerState.Attributes[AttrID] = __result;
-                photon.CachePlayerAttribute(AttrID, __result);
+                photon.LocalPlayerState.Attributes[AttrID] = result;
+                photon.CachePlayerAttribute(AttrID, result);
             }
         }
     }
