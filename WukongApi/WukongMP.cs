@@ -535,12 +535,12 @@ namespace WukongApi
             Photon.SpawnUnit(id, unitName, teamId, loc.X, loc.Y, loc.Z);
         }
 
-        private void SpawnRemoteUnit(string guid, string unitName, int teamID, float x, float y, float z)
+        private void SpawnRemoteUnit(string guid, string unitName, int teamId, float x, float y, float z)
         {
-            SpawnUnitLocally(guid, unitName, teamID, x, y, z);
+            SpawnUnitLocally(guid, unitName, teamId, x, y, z);
         }
 
-        private void SpawnUnitLocally(string guid, string unitName, int teamID, float x, float y, float z)
+        private void SpawnUnitLocally(string guid, string unitName, int teamId, float x, float y, float z)
         {
             Logging.LogDebug($"Spawn unit called for {unitName}");
 
@@ -567,7 +567,7 @@ namespace WukongApi
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Logging.LogDebug($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
-            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamID));
+            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamId));
         }
 
         private void LoadSavedPosition()

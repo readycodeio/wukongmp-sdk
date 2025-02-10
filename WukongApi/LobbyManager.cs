@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace WukongApi
 {
     public class LobbyManager
     {
-        public event Action<Action> PlayerTeleportRequested;
+        public event Action PlayerTeleportRequested;
         public event Action OnRoundEnd;
 
         private readonly WukongClient _wukongClient;
@@ -50,18 +51,18 @@ namespace WukongApi
                 }
             }
 
-            PlayerTeleportRequested?.Invoke(PlayersTeleported);
-        }
+            PlayerTeleportRequested?.Invoke();
 
-        private void PlayersTeleported()
-        {
-            _wukongClient.SendStartCountdown();
+            Task.Run(async () =>
+            {
+                await Task.Delay(2000);
+                _wukongClient.SendStartCountdown();
+            });
         }
 
         public void EndRound(int winner)
         {
             _wukongClient.CurrentRoomState.SetLastRoundWinner(winner);
-
             OnRoundEnd?.Invoke();
         }
 

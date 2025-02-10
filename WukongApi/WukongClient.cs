@@ -286,15 +286,15 @@ namespace WukongApi
             PhotonClient.OpJoinOrCreateRoom(enterRoomParams);
         }
 
-        private void OnStateChange(ClientState arg1, ClientState arg2)
+        private static void OnStateChange(ClientState arg1, ClientState arg2)
         {
             Logging.LogDebug($"{arg1} -> {arg2}");
         }
 
-        public void SpawnUnit(string id, string unitName, int teamID, float x, float y, float z)
+        public void SpawnUnit(string id, string unitName, int teamId, float x, float y, float z)
         {
             const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, unitName, teamID, x, y, z);
+            var evData = new UnitSpawnData(id, unitName, teamId, x, y, z);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
@@ -601,10 +601,9 @@ namespace WukongApi
             GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
         }
 
-        private void OnPlayerTeleportRequested(Action continuation)
+        private void OnPlayerTeleportRequested()
         {
             // TODO: Move players to appropriate positions
-            continuation();
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
