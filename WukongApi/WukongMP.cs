@@ -252,10 +252,10 @@ namespace WukongApi
             }
         }
 
-        public void TeleportPlayerToStartLocation()
+        private void TeleportPlayerToStartLocation()
         {
             var player = GameUtils.GetControlledPawn();
-            player.SetActorLocation(Constants.StartingLocation, false, out _, true);
+            player.SetActorLocation(Constants.PvpStartingLocation, false, out _, true);
         }
 
         public void DestroyAllMonsters()

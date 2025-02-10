@@ -18,7 +18,8 @@ namespace WukongApi
         public const int MonsterSpawnDelayMs = 500;
         public const int BaseTeamId = -9999;
         public const string AttributePrefix = "attr_";
-        public static readonly FVector StartingLocation = new FVector(-15142.380, -3440.121, 6499.172);
+        public static readonly FVector PvpStartingLocation = new FVector(-15142.380, -3440.121, 6499.172);
+        public const float PvpRadius = 3000;
 
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
