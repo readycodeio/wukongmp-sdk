@@ -69,12 +69,13 @@ namespace WukongApi.Patches
                     return; // do not reapply the same value
                 }
 
+                Logging.LogDebug($"Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {photon.LocalPlayerState.Hp}");
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
 
                 if (photon.LocalPlayerState.Hp <= 0)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                    Logging.LogWarning($"Sending unit dead for player {photon.LocalPlayerState.PhotonId}");
+                    Logging.LogWarning($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
@@ -96,13 +97,14 @@ namespace WukongApi.Patches
                         return; // do not reapply the same value
                     }
 
+                    Logging.LogDebug($"Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {playerState.Hp}");
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
                     if (playerState.Hp <= 0)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
-                        Logging.LogWarning($"Sending unit dead for player {playerState.PhotonId}");
+                        Logging.LogWarning($"Applying unit dead for player {playerState.PhotonId}");
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                     else

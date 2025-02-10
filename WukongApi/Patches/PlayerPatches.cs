@@ -278,7 +278,7 @@ namespace WukongApi.Patches
             {
                 return;
             }
-            
+
             if (owner == photon.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
@@ -288,21 +288,12 @@ namespace WukongApi.Patches
             var players = photon.AllConnectedPlayers.ToList();
             var deadPlayers = players.Count(p => p.IsDead);
 
-            Logging.LogWarning($"Dead players: {deadPlayers}");
 
-            if (deadPlayers == players.Count - 1)
+            if (photon.IsMasterClient && deadPlayers == players.Count - 1)
             {
+                Logging.LogWarning($"Dead players: {deadPlayers}, ending round");
                 var winner = players.First(p => !p.IsDead);
-
-                if (winner.TeamId == photon.LocalPlayerState.TeamId)
-                {
-                    GameUtils.PlayBossDefeatedSound();
-                }
-
-                if (photon.IsMasterClient)
-                {
-                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
-                }
+                Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
             }
         }
     }

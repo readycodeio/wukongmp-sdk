@@ -5,6 +5,7 @@
         CountDown,
         PvPEnable,
         PvPDisable,
+        RoundEnd,
         TournamentEnd,
         ResetStats,
     }

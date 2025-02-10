@@ -189,6 +189,15 @@ namespace WukongApi
                 case PvPEvent.PvPDisable:
                     WukongMP.Instance.DisablePvP();
                     break;
+                case PvPEvent.RoundEnd:
+                    var winner = AllConnectedPlayers.First(p => !p.IsDead);
+
+                    if (winner.TeamId == LocalPlayerState.TeamId)
+                    {
+                        GameUtils.PlayBossDefeatedSound();
+                    }
+
+                    break;
                 case PvPEvent.TournamentEnd:
                 {
                     var winnerTeam = CurrentRoomState.RoundWinners.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;

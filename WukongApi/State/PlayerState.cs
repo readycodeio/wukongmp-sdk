@@ -62,6 +62,7 @@ namespace WukongApi.State
         {
             var sb = new StringBuilder("PlayerState");
             sb.AppendLine($"PhotonId: {PhotonId}");
+            sb.AppendLine($"NickName: {NickName}");
             sb.AppendLine($"TeamID: {TeamId}");
             sb.AppendLine($"Hp: {Hp}");
             sb.AppendLine("------ ATTRIBUTES ------");
