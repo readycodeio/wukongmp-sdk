@@ -149,10 +149,12 @@ namespace WukongApi
                     OnDamageNum?.Invoke(damageNumParam);
                     break;
                 case 7:
+                {
                     // player rebirth
                     var playerId = (int)photonEvent.CustomData;
                     OnPlayerRebirth?.Invoke(playerId);
                     break;
+                }
                 case 8:
                     // PvP event
                     var ev = (PvPEvent)photonEvent.CustomData;
@@ -172,7 +174,7 @@ namespace WukongApi
             }
         }
 
-        private static void HandlePvPEvent(PvPEvent ev)
+        private void HandlePvPEvent(PvPEvent ev)
         {
             Logging.LogDebug($"Received PvP event: {ev}");
 
@@ -189,6 +191,14 @@ namespace WukongApi
                     break;
                 case PvPEvent.TournamentEnd:
                     GameUtils.ShowTip("Tournament ended"); // TODO: Winner
+                    break;
+                case PvPEvent.ResetStats:
+                    if (!LocalPlayerState.IsDead)
+                    {
+                        var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
+                        events.Evt_TriggerTeleportResetPlayer.Invoke();
+                    }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ev), ev, null);

@@ -6,5 +6,6 @@
         PvPEnable,
         PvPDisable,
         TournamentEnd,
+        ResetStats,
     }
 }

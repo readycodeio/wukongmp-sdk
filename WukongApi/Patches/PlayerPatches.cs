@@ -285,7 +285,7 @@ namespace WukongApi.Patches
             }
 
             // check if all players but one are dead
-            var players = photon.ConnectedPlayers.Values.Append(photon.LocalPlayerState).ToList();
+            var players = photon.AllConnectedPlayers.ToList();
             var deadPlayers = players.Count(p => p.IsDead);
 
             if (deadPlayers == players.Count - 1)

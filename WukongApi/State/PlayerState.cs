@@ -65,6 +65,7 @@ namespace WukongApi.State
             sb.AppendLine($"PhotonId: {PhotonId}");
             sb.AppendLine($"TeamID: {TeamId}");
             sb.AppendLine($"Hp: {Hp}");
+            sb.AppendLine($"IsDead: {IsDead}");
             sb.AppendLine("------ ATTRIBUTES ------");
 
             foreach (var kvp in Attributes)

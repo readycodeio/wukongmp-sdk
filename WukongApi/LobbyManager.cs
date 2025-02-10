@@ -77,7 +77,8 @@ namespace WukongApi
             // wait until all players death animations are finished
             await Task.Delay(5000);
 
-            // resurrect dead players
+            // resurrect dead players and restore health to living ones
+            _wukongClient.SendPvPEvent(PvPEvent.ResetStats);
             foreach (var player in _wukongClient.AllConnectedPlayers)
             {
                 if (player.IsDead)
