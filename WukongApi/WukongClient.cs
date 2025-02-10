@@ -660,26 +660,7 @@ namespace WukongApi
 
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
         {
-            foreach (var kvp in changedProps)
-            {
-                if (!(kvp.Key is string propertyName))
-                {
-                    continue;
-                }
-
-                if (!RoomSetters.TryGetValue(propertyName, out var setter))
-                {
-                    setter = CreateSetter<RoomState>(propertyName);
-                    RoomSetters[propertyName] = setter;
-                }
-
-                if (!(kvp.Value is FVector || kvp.Value is FRotator || kvp.Value is float))
-                {
-                    Logging.LogDebug($"Assigning room property {propertyName} = {kvp.Value}");
-                }
-
-                setter(CurrentRoomState, kvp.Value);
-            }
+            // empty, RoomState is a proxy to this hashtable
         }
 
         public virtual void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)

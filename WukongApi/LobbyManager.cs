@@ -54,12 +54,5 @@ namespace WukongApi
                 StartRound();
             }
         }
-
-        public void DisplayRoundStartMessage()
-        {
-            var current = _wukongClient.CurrentRoomState.CurrentRound;
-            var total = _wukongClient.CurrentRoomState.RoundsTotal;
-            GameUtils.ShowTip($"Round {current} of {total}");
-        }
     }
 }

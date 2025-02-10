@@ -121,7 +121,13 @@ namespace WukongApi
             Task.Run(async () =>
             {
                 await Task.Delay(3000);
-                Utils.TryRunOnGameThread(() => { WukongMP.Instance.Photon.LobbyManager.DisplayRoundStartMessage(); });
+                Utils.TryRunOnGameThread(() =>
+                {
+                    var photon = WukongMP.Instance.Photon;
+                    var current = photon.CurrentRoomState.CurrentRound;
+                    var total = photon.CurrentRoomState.RoundsTotal;
+                    ShowTip($"Round {current} of {total}");
+                });
             });
         }
 
