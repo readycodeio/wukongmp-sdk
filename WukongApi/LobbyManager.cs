@@ -61,7 +61,8 @@ namespace WukongApi
                 float y = center.Y + radius * MathF.Sin(angle);
 
                 teamMemberIndex[playerState.TeamId]++;
-                _wukongClient.BroadcastPlayerTransform(playerState.PhotonId, new FVector(x, y, center.Z), UMathLibrary.FindLookAtRotation(playerState.Location, center));
+                var newPlayterLocation = new FVector(x, y, center.Z);
+                _wukongClient.BroadcastPlayerTransform(playerState.PhotonId, newPlayterLocation, UMathLibrary.FindLookAtRotation(newPlayterLocation, center));
             }
         }
 
@@ -88,7 +89,7 @@ namespace WukongApi
             // wait for that to finish
             await Task.Delay(5000);
 
-            if (_wukongClient.CurrentRoomState.CurrentRound < _wukongClient.CurrentRoomState.RoundsTotal)
+            if (_wukongClient.CurrentRoomState.CurrentRound <= _wukongClient.CurrentRoomState.RoundsTotal)
             {
                 // start next round
                 await StartRoundAsync();

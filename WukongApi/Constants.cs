@@ -19,7 +19,7 @@ namespace WukongApi
         public const int BaseTeamId = -9999;
         public const string AttributePrefix = "attr_";
         public static readonly FVector PvpStartingLocation = new FVector(-11146.926, -3229.771, 6497.035);
-        public const float PvpRadius = 5000;
+        public const float PvpRadius = 4000;
 
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
