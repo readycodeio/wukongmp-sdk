@@ -29,7 +29,7 @@ namespace WukongApi
 
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
 
-            await Task.Delay(3000);
+            await Task.Delay(4000);
 
             _wukongClient.SendPvPEvent(PvPEvent.CountDown);
             _wukongClient.SendPvPEvent(PvPEvent.PvPEnable);
@@ -87,7 +87,7 @@ namespace WukongApi
             }
 
             // wait for that to finish
-            await Task.Delay(5000);
+            await Task.Delay(6000);
 
             if (_wukongClient.CurrentRoomState.CurrentRound <= _wukongClient.CurrentRoomState.RoundsTotal)
             {
