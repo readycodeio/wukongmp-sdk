@@ -176,7 +176,7 @@ namespace WukongApi
 
         private void HandlePvPEvent(PvPEvent ev)
         {
-            Logging.LogDebug($"Received PvP event: {ev}");
+            Logging.LogWarning($"Received PvP event: {ev}");
 
             switch (ev)
             {

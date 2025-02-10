@@ -120,6 +120,7 @@ namespace WukongApi
                 ToggleChatWidget();
                 Connect();
             }
+
             SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
         }
 
@@ -173,7 +174,7 @@ namespace WukongApi
                 }
             }, "Register team hostility");
         }
-        
+
         public void DisablePvP()
         {
             Logging.LogDebug("Disabled PvP");
@@ -319,7 +320,7 @@ namespace WukongApi
                 events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
             }
         }
-        
+
         private void SetPlayerTransform(FVector location, FRotator rotation)
         {
             GameUtils.GetBguPlayerCharacterCs()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
@@ -362,6 +363,10 @@ namespace WukongApi
                 var value = attrs.GetFloatValue(attr);
                 Photon.CachePlayerAttribute(attr, value);
             }
+
+            // hp
+            var hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+            Photon.CachePlayerProperty(nameof(PlayerState.Hp), hp);
 
             Photon.SetCachedPlayerProperties();
         }
