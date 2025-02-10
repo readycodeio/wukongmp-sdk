@@ -45,14 +45,16 @@ namespace WukongApi
 
             float entityOffsetAngle = 0.15f;
             Dictionary<int, int> teamMemberIndex = new Dictionary<int, int>();
-            foreach (var teamId in teamsIds)
+            Dictionary<int, int> teamIndex = new Dictionary<int, int>();
+            for (int i = 0; i < teamsIds.Count; i++)
             {
-                teamMemberIndex[teamId] = 0;
+                teamMemberIndex[teamsIds[i]] = 0;
+                teamIndex[teamsIds[i]] = i;
             }
 
             foreach (var playerState in playerStates)
             {
-                float teamBaseAngle = playerState.TeamId * teamAngleStep;
+                float teamBaseAngle = teamIndex[playerState.TeamId] * teamAngleStep;
                 int memberIndex = teamMemberIndex[playerState.TeamId];
 
                 float angle = teamBaseAngle + (memberIndex + 1) * entityOffsetAngle;
