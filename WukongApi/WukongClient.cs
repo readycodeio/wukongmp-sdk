@@ -195,8 +195,11 @@ namespace WukongApi
                 case PvPEvent.ResetStats:
                     if (!LocalPlayerState.IsDead)
                     {
-                        var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
-                        events.Evt_TriggerTeleportResetPlayer.Invoke();
+                        Utils.TryRunOnGameThread(() =>
+                        {
+                            var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
+                            events.Evt_TriggerTeleportResetPlayer.Invoke();
+                        });
                     }
 
                     break;

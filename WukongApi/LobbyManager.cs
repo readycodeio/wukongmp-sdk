@@ -37,8 +37,7 @@ namespace WukongApi
 
         private void PlacePlayers(FVector center, float radius)
         {
-            var playerStates = _wukongClient.ConnectedPlayers.Values.ToList();
-            playerStates.Add(_wukongClient.LocalPlayerState);
+            var playerStates = _wukongClient.AllConnectedPlayers.ToList();
 
             var teamsIds = playerStates.Select(playerState => playerState.TeamId).Distinct().ToList();
             var teamsCount = teamsIds.Count;
@@ -61,8 +60,8 @@ namespace WukongApi
                 float y = center.Y + radius * MathF.Sin(angle);
 
                 teamMemberIndex[playerState.TeamId]++;
-                var newPlayterLocation = new FVector(x, y, center.Z);
-                _wukongClient.BroadcastPlayerTransform(playerState.PhotonId, newPlayterLocation, UMathLibrary.FindLookAtRotation(newPlayterLocation, center));
+                var newPlayerLocation = new FVector(x, y, center.Z);
+                _wukongClient.BroadcastPlayerTransform(playerState.PhotonId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center));
             }
         }
 
