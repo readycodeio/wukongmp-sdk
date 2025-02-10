@@ -144,7 +144,12 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchHp
     {
-        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
+        public static bool Prefix(EBGUAttrFloat AttrID)
+        {
+            return AttrID != EBGUAttrFloat.Hp || WukongMP.Instance.Photon.IsMasterClient;
+        }
+
+        public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float __result)
         {
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
@@ -157,69 +162,67 @@ namespace WukongApi.Patches
                     // I was damaged, set my Hp
                     if (owner == photon.LocalPlayerState.Pawn)
                     {
-                        if (!photon.LocalPlayerState.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!photon.LocalPlayerState.Hp.Equals(__result, Constants.FloatComparisonTolerance))
                         {
-                            photon.LocalPlayerState.Hp = NewValue;
-                            photon.CachePlayerProperty(AttrID.ToString(), NewValue);
+                            photon.LocalPlayerState.Hp = __result;
+                            photon.CachePlayerProperty(nameof(PlayerState.Hp), __result);
                         }
 
-                        return true;
+                        return;
                     }
 
                     // remote player was damaged, set his properties
                     var remotePlayer = WukongMP.Instance.Photon.GetByActor(owner);
                     if (remotePlayer != null)
                     {
-                        if (!remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!remotePlayer.Hp.Equals(__result, Constants.FloatComparisonTolerance))
                         {
-                            remotePlayer.Hp = NewValue;
-                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
+                            remotePlayer.Hp = __result;
+                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, nameof(PlayerState.Hp), __result);
                         }
 
-                        return true;
+                        return;
                     }
 
                     // monster was damaged
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (monster != null && monster.IsSynced)
                     {
-                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(__result, Constants.FloatComparisonTolerance))
                         {
-                            monster.Hp = NewValue;
-                            photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), NewValue);
+                            monster.Hp = __result;
+                            photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), __result);
 
-                            if (NewValue <= 0)
+                            if (__result <= 0)
                             {
                                 // remove dead monster from sync
                                 photon.RemoveMonster(monster.Guid);
                             }
                         }
 
-                        return true;
+                        return;
                     }
 
                     // unsynced monster or sth else
-                    return true;
+                    return;
                 }
 
                 // I am a client
-                return false;
+                return;
             }
 
             // only sync attributes that influence combat and are client-authoritative
             if (Constants.SyncedAttributes.Contains(AttrID) && owner == photon.LocalPlayerState.Pawn)
             {
                 if (photon.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
-                    && existing.Equals(NewValue, Constants.FloatComparisonTolerance))
+                    && existing.Equals(__result, Constants.FloatComparisonTolerance))
                 {
-                    return true;
+                    return;
                 }
 
-                photon.LocalPlayerState.Attributes[AttrID] = NewValue;
-                photon.CachePlayerAttribute(AttrID, NewValue);
+                photon.LocalPlayerState.Attributes[AttrID] = __result;
+                photon.CachePlayerAttribute(AttrID, __result);
             }
-
-            return true;
         }
     }
 
