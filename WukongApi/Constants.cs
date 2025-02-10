@@ -26,6 +26,9 @@ namespace WukongApi
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new EnumSet<EBGUAttrFloat>(new[]
         {
+            EBGUAttrFloat.HpMax,
+            EBGUAttrFloat.HpMaxBase,
+            EBGUAttrFloat.HpMaxMul,
             EBGUAttrFloat.AtkBase,
             EBGUAttrFloat.DefBase,
             EBGUAttrFloat.CritRateBase,
