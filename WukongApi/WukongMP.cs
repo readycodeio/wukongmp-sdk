@@ -322,8 +322,8 @@ namespace WukongApi
         
         private void SetPlayerTransform(FVector location, FRotator rotation)
         {
-            Photon.LocalPlayerState.Pawn.SetActorTransform(new FTransform(rotation, location), false, out _, true);
-            GameUtils.GetPlayerController().SetControlRotation(rotation);
+            GameUtils.GetBguPlayerCharacterCs()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
+            GameUtils.GetPlayerController()?.SetControlRotation(rotation);
         }
 
         private void Reconnect()
