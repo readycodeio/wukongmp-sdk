@@ -278,9 +278,7 @@ namespace WukongApi.Patches
             {
                 return;
             }
-
-            playerState.IsDead = true;
-
+            
             if (owner == photon.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();

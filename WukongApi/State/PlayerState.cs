@@ -28,9 +28,9 @@ namespace WukongApi.State
         #endregion
 
         public float Hp { get; set; }
+        public bool IsDead => Hp <= 0;
         public Dictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
-        public bool IsDead { get; set; }
         public bool IsReadyForPvP { get; set; }
         public string NickName { get; set; }
 
@@ -53,7 +53,6 @@ namespace WukongApi.State
 
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new Dictionary<EBGUAttrFloat, float>();
-            IsDead = false;
 
             Logging.LogDebug($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
@@ -65,7 +64,6 @@ namespace WukongApi.State
             sb.AppendLine($"PhotonId: {PhotonId}");
             sb.AppendLine($"TeamID: {TeamId}");
             sb.AppendLine($"Hp: {Hp}");
-            sb.AppendLine($"IsDead: {IsDead}");
             sb.AppendLine("------ ATTRIBUTES ------");
 
             foreach (var kvp in Attributes)

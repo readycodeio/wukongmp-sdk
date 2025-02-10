@@ -47,17 +47,12 @@ namespace WukongApi.Patches
                     {
                         __instance.SetFloatValue(attr, value);
                     }
-
-                    if (photon.LocalPlayerState.Hp > 0)
-                    {
-                        photon.LocalPlayerState.IsDead = false;
-                    }
                 }
 
                 return;
             }
 
-            // for clients, their own attributes are already set by them, and they do not care about attributes of other clients / mosnters
+            // for clients, their own attributes are already set by them, and they do not care about attributes of other clients / monsters
             // because it's the master client that ultimately calculates damage in combat
 
             if (__instance.Owner == photon.LocalPlayerState.Pawn)
@@ -69,18 +64,18 @@ namespace WukongApi.Patches
                     return;
                 }
 
+                if (photon.LocalPlayerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                {
+                    return; // do not reapply the same value
+                }
+
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
 
-                if (photon.LocalPlayerState.Hp <= 0 && !photon.LocalPlayerState.IsDead)
+                if (photon.LocalPlayerState.Hp <= 0)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
                     Logging.LogWarning($"Sending unit dead for player {photon.LocalPlayerState.PhotonId}");
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
-                }
-
-                if (photon.LocalPlayerState.Hp > 0)
-                {
-                    photon.LocalPlayerState.IsDead = false;
                 }
             }
             else
@@ -96,14 +91,14 @@ namespace WukongApi.Patches
                         return;
                     }
 
-                    __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
-
-                    if (playerState.Hp > 0)
+                    if (playerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                     {
-                        playerState.IsDead = false;
+                        return; // do not reapply the same value
                     }
 
-                    if (playerState.Hp <= 0 && !playerState.IsDead)
+                    __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
+
+                    if (playerState.Hp <= 0)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
@@ -117,6 +112,11 @@ namespace WukongApi.Patches
                         // monster
                         if (monster?.Hp != null && monster.IsSynced)
                         {
+                            if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                            {
+                                return; // do not reapply the same value
+                            }
+
                             __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
 
                             if (monster.Hp.Value <= 0)
