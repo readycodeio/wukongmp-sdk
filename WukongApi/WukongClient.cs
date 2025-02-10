@@ -678,8 +678,6 @@ namespace WukongApi
         {
             Logging.LogDebug("Joined room");
 
-            PhotonClient.NickName = _userName;
-
             var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
 
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
@@ -694,6 +692,8 @@ namespace WukongApi
                 WukongMP.Instance.Harmony.PatchCategory(Constants.ConnectedPatches);
                 Logging.LogDebug("Patched with Harmony");
             });
+
+            PhotonClient.NickName = _userName;
 
             _joinedRoomCallback?.Invoke();
             WukongChat.InitializeChat(_userName);

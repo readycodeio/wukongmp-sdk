@@ -64,15 +64,21 @@ namespace WukongApi.Patches
                     return;
                 }
 
-                if (photon.LocalPlayerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                var currentHp = __instance.GetFloatValue(EBGUAttrFloat.Hp);
+
+                if (photon.LocalPlayerState.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
                 {
                     return; // do not reapply the same value
                 }
 
-                Logging.LogDebug($"Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {photon.LocalPlayerState.Hp}");
-                __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
+                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
 
-                if (photon.LocalPlayerState.Hp <= 0)
+                if (!set.Equals(photon.LocalPlayerState.Hp, Constants.FloatComparisonTolerance))
+                {
+                    Logging.LogWarning($"Attempted to set player {photon.LocalPlayerState.NickName} HP to {photon.LocalPlayerState.Hp}, instead set to {set}");
+                }
+
+                if (photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
                     Logging.LogWarning($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
@@ -86,6 +92,12 @@ namespace WukongApi.Patches
                 // remote player
                 if (playerState != null)
                 {
+                    // set their attributes
+                    foreach (var (attr, value) in playerState.Attributes)
+                    {
+                        __instance.SetFloatValue(attr, value);
+                    }
+
                     if (playerState.Hp <= -80000)
                     {
                         Logging.LogWarning($"Would set hp to {playerState.Hp} but will not");
@@ -98,9 +110,14 @@ namespace WukongApi.Patches
                     }
 
                     Logging.LogDebug($"Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {playerState.Hp}");
-                    __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
+                    var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
-                    if (playerState.Hp <= 0)
+                    if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
+                    {
+                        Logging.LogWarning($"Attempted to set player {playerState.NickName} HP to {playerState.Hp}, instead set to {set}");
+                    }
+
+                    if (playerState.IsDead)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
