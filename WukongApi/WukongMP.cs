@@ -36,8 +36,6 @@ namespace WukongApi
 
         public static WukongMP Instance { get; } = new WukongMP();
 
-        private bool _multiplayerEnabled;
-
         private WukongMP()
         {
             // empty
@@ -174,11 +172,6 @@ namespace WukongApi
                     PhotonUtils.RegisterTeamHostility(myTeam, team);
                 }
             }, "Register team hostility");
-        }
-
-        public void SetMultiplayerEnabled()
-        {
-            _multiplayerEnabled = true;
         }
 
         private void WakeUpMonster(string guid)
@@ -764,31 +757,6 @@ namespace WukongApi
             {
                 _chatWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
             }
-        }
-
-        public void EnableMultiplayer()
-        {
-            if (_multiplayerEnabled)
-                return;
-
-            var world = GameUtils.GetWorld();
-            if (world == null)
-                return;
-            ArchiveSummaryData latestArchive = BGW_GameArchiveMgr.Get(world).GetLatestArchive();
-            if (latestArchive == null)
-                return;
-
-            Utils.TryRunOnGameThread(() =>
-            {
-                Harmony.PatchCategory(Assembly.GetExecutingAssembly(), Constants.GamePatches);
-                Logging.LogDebug("Multiplayer mode patched with Harmony");
-            });
-
-            // Load archive
-            BGW_EventCollection.Get(world).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
-            {
-                ArchiveId = latestArchive.ArchiveId
-            });
         }
     }
 }

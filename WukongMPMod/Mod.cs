@@ -31,12 +31,6 @@ namespace WukongMPMod
                 Logging.LogDebug("Alt + V");
                 _wukongMp.Photon.SpawnClone();
             });
-
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.M, () =>
-            {
-                Logging.LogDebug("Alt + M");
-                _wukongMp.EnableMultiplayer();
-            });
         }
 
         public void DeInit()

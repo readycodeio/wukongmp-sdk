@@ -53,8 +53,6 @@ namespace WukongApi.Patches
             OutArchiveData.PersistentECSData = GameArchiveData.GameArchiveData.PersistentECSData;
             OutArchiveData.StateMachineArchiveData = GameArchiveData.GameArchiveData.StateMachineArchiveData;
             OutArchiveData.TaskArchiveData = GameArchiveData.GameArchiveData.TaskArchiveData;
-
-            WukongMP.Instance.SetMultiplayerEnabled();
         }
     }
 
