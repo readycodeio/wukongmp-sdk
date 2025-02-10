@@ -113,7 +113,7 @@ namespace WukongApi
         {
             Logging.LogDebug("Delay begin play for player.");
             DestroyAllMonsters();
-            TeleportPlayerToStartLocation();
+            SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
             if (!Photon.Ready)
             {
                 BlueprintUIUtils.SpawnModActor();
@@ -273,12 +273,6 @@ namespace WukongApi
             }
         }
 
-        private void TeleportPlayerToStartLocation()
-        {
-            var player = GameUtils.GetControlledPawn();
-            player.SetActorLocation(Constants.PvpStartingLocation, false, out _, true);
-        }
-
         public void DestroyAllMonsters()
         {
             AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
@@ -329,6 +323,7 @@ namespace WukongApi
         private void SetPlayerTransform(FVector location, FRotator rotation)
         {
             Photon.LocalPlayerState.Pawn.SetActorTransform(new FTransform(rotation, location), false, out _, true);
+            GameUtils.GetPlayerController().SetControlRotation(rotation);
         }
 
         private void Reconnect()
