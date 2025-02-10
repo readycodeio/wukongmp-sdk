@@ -44,7 +44,7 @@ namespace WukongApi
             var teamsCount = teamsIds.Count;
             float teamAngleStep = 2 * MathF.PI / teamsCount;
 
-            float entityOffsetAngle = 0.1f;
+            float entityOffsetAngle = 0.15f;
             Dictionary<int, int> teamMemberIndex = new Dictionary<int, int>();
             foreach (var teamId in teamsIds)
             {
@@ -61,9 +61,7 @@ namespace WukongApi
                 float y = center.Y + radius * MathF.Sin(angle);
 
                 teamMemberIndex[playerState.TeamId]++;
-                playerState.Location = new FVector(x, y, center.Z);
-                playerState.Rotation = UMathLibrary.FindLookAtRotation(playerState.Location, center);
-                playerState.Pawn.SetActorTransform(new FTransform(playerState.Rotation, playerState.Location), false, out _, true);
+                _wukongClient.BroadcastPlayerTransform(playerState.PhotonId, new FVector(x, y, center.Z), UMathLibrary.FindLookAtRotation(playerState.Location, center));
             }
         }
 

@@ -13,10 +13,12 @@ using BtlShare;
 using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
+using ResB1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.Patches;
 using WukongApi.State;
+using static ResUpdator.GSEFileDownloader;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -42,6 +44,7 @@ namespace WukongApi
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action<int> OnPlayerRebirth;
         public event Action<int> OnKillPlayer;
+        public event Action<FVector, FRotator> OnSetPlayerTransform;
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
 
@@ -160,6 +163,12 @@ namespace WukongApi
                     var id = (int)photonEvent.CustomData;
                     OnKillPlayer?.Invoke(id);
                     break;
+                case 10:
+                    // player transform
+                    var playerData = (PlayerTransformData)photonEvent.CustomData;
+                    if (playerData.PlayerId == LocalPlayerState.PhotonId)
+                        OnSetPlayerTransform?.Invoke(playerData.Location, playerData.Rotation);
+                    break;
             }
         }
 
@@ -233,6 +242,7 @@ namespace WukongApi
             PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
             PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
+            PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
 
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
@@ -409,6 +419,16 @@ namespace WukongApi
             PhotonClient.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.MasterClient,
+            }, SendOptions.SendReliable);
+        }
+
+        public void BroadcastPlayerTransform(int playerId, FVector location, FRotator rotation)
+        {
+            const byte eventCode = 10;
+            var evData = new PlayerTransformData(playerId, location, rotation);
+            PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
         }
 

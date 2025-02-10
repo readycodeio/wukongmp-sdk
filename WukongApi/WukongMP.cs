@@ -306,6 +306,7 @@ namespace WukongApi
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
+            Photon.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
             Photon.WukongChat.OnSendMessage += AddMessageToWidget;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -325,6 +326,11 @@ namespace WukongApi
             {
                 events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
             }
+        }
+        
+        private void SetPlayerTransform(FVector location, FRotator rotation)
+        {
+            Photon.LocalPlayerState.Pawn.SetActorTransform(new FTransform(rotation, location), false, out _, true);
         }
 
         private void Reconnect()
