@@ -586,7 +586,6 @@ namespace WukongApi
             if (IsMasterClient)
             {
                 LobbyManager = new LobbyManager(this);
-                LobbyManager.PlayerTeleportRequested += OnPlayerTeleportRequested;
             }
 
             Utils.TryRunOnGameThread(() =>
@@ -599,11 +598,6 @@ namespace WukongApi
             WukongChat.InitializeChat(_userName);
 
             GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
-        }
-
-        private void OnPlayerTeleportRequested()
-        {
-            // TODO: Move players to appropriate positions
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)

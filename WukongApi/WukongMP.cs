@@ -277,19 +277,7 @@ namespace WukongApi
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
-            Photon.LobbyManager.OnRoundEnd += RebirthAllDeadPlayers;
             Photon.StartClient();
-        }
-
-        private void RebirthAllDeadPlayers()
-        {
-            foreach (var (id, player) in Photon.ConnectedPlayers)
-            {
-                if (player.IsDead)
-                {
-                    Photon.BroadcastPlayerRebirth(id);
-                }
-            }
         }
 
         private void KillPlayer(int playerId)

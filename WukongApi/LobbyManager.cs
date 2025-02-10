@@ -6,9 +6,6 @@ namespace WukongApi
 {
     public class LobbyManager
     {
-        public event Action PlayerTeleportRequested;
-        public event Action OnRoundEnd;
-
         private readonly WukongClient _wukongClient;
 
         public LobbyManager(WukongClient wukongClient)
@@ -51,7 +48,7 @@ namespace WukongApi
                 }
             }
 
-            PlayerTeleportRequested?.Invoke();
+            // TODO: Teleport players
 
             Task.Run(async () =>
             {
@@ -63,7 +60,15 @@ namespace WukongApi
         public void EndRound(int winner)
         {
             _wukongClient.CurrentRoomState.SetLastRoundWinner(winner);
-            OnRoundEnd?.Invoke();
+
+            // resurrect dead players
+            foreach (var (id, player) in _wukongClient.ConnectedPlayers)
+            {
+                if (player.IsDead)
+                {
+                    _wukongClient.BroadcastPlayerRebirth(id);
+                }
+            }
         }
 
         public void DisplayRoundStartMessage()
