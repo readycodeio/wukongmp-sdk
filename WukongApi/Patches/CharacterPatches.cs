@@ -76,6 +76,7 @@ namespace WukongApi.Patches
                 if (!set.Equals(photon.LocalPlayerState.Hp, Constants.FloatComparisonTolerance))
                 {
                     Logging.LogWarning($"Attempted to set player {photon.LocalPlayerState.NickName} HP to {photon.LocalPlayerState.Hp}, instead set to {set}");
+                    photon.CachePlayerProperty(nameof(PlayerState.Hp), set);
                 }
 
                 if (photon.LocalPlayerState.IsDead)

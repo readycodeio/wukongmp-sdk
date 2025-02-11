@@ -30,8 +30,7 @@ namespace WukongApi
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
             await Task.Delay(500);
 
-            _wukongClient.SendPvPEvent(PvPEvent.CountDown);
-            _wukongClient.SendPvPEvent(PvPEvent.PvPEnable);
+            _wukongClient.SendPvPEvent(PvPEvent.RoundStart);
         }
 
         private void PlacePlayers(FVector center, float radius)
@@ -70,7 +69,6 @@ namespace WukongApi
         {
             // disable pvp until next round
             _wukongClient.SendPvPEvent(PvPEvent.RoundEnd);
-            _wukongClient.SendPvPEvent(PvPEvent.PvPDisable);
 
             // increment round number
             _wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
@@ -88,7 +86,7 @@ namespace WukongApi
             var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _wukongClient.CurrentRoomState.RoundsTotal / 2);
             if (winnerTeam.Key != 0)
             {
-                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd);
+                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
                 return;
             }
 

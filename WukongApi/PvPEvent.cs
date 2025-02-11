@@ -2,9 +2,7 @@
 {
     public enum PvPEvent : byte
     {
-        CountDown,
-        PvPEnable,
-        PvPDisable,
+        RoundStart,
         RoundEnd,
         TournamentEnd,
         ResetStats,

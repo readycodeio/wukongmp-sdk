@@ -155,8 +155,8 @@ namespace WukongApi
                 }
                 case 8:
                     // PvP event
-                    var ev = (PvPEvent)photonEvent.CustomData;
-                    HandlePvPEvent(ev);
+                    var ev = (int[])photonEvent.CustomData;
+                    HandlePvPEvent((PvPEvent)ev[0], ev[1]);
                     break;
                 case 9:
                     // kill player
@@ -172,37 +172,25 @@ namespace WukongApi
             }
         }
 
-        private void HandlePvPEvent(PvPEvent ev)
+        private void HandlePvPEvent(PvPEvent ev, int data)
         {
             Logging.LogWarning($"Received PvP event: {ev}");
 
             switch (ev)
             {
-                case PvPEvent.CountDown:
+                case PvPEvent.RoundStart:
                     Task.Run(GameUtils.ShowPvPCountDown);
-                    break;
-                case PvPEvent.PvPEnable:
                     WukongMP.Instance.EnablePvP();
                     break;
-                case PvPEvent.PvPDisable:
-                    WukongMP.Instance.DisablePvP();
-                    break;
                 case PvPEvent.RoundEnd:
-                    var alivePlayers = AllConnectedPlayers.Where(p => !p.IsDead).ToList();
+                    WukongMP.Instance.DisablePvP();
+                    var winner = AllConnectedPlayers.FirstOrDefault(x => x.TeamId == data);
 
-                    if (alivePlayers.Count != 1)
+                    if (winner is null)
                     {
-                        Logging.LogWarning($"Round ended, but there are {alivePlayers.Count} alive players.");
-
-                        foreach (var p in AllConnectedPlayers)
-                        {
-                            Logging.LogWarning($"{p.NickName} ({p.TeamId}) has {p.Hp} health");
-                        }
-
-                        break;
+                        Logging.LogError("No winner found.");
+                        return;
                     }
-
-                    var winner = alivePlayers.Single();
 
                     Logging.LogWarning($"Round ended, winner: {winner.NickName} {winner.TeamId}");
 
@@ -214,8 +202,7 @@ namespace WukongApi
                     break;
                 case PvPEvent.TournamentEnd:
                 {
-                    var winnerTeam = CurrentRoomState.RoundWinners.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
-                    var winners = AllConnectedPlayers.Where(x => x.TeamId == winnerTeam).Select(x => x.NickName).ToList();
+                    var winners = AllConnectedPlayers.Where(x => x.TeamId == data).Select(x => x.NickName).ToList();
                     var winnerString = string.Join(", ", winners);
                     var plural = winners.Count > 1 ? "s" : "";
                     GameUtils.ShowTip($"Winner{plural}: {winnerString}"); // TODO: Ties
@@ -238,11 +225,11 @@ namespace WukongApi
                         {
                             if (!state.IsDead)
                             {
-                                var data = (BUC_AttrContainer)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Pawn);
-                                if (data != null)
+                                var attrContainer = (BUC_AttrContainer)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Pawn);
+                                if (attrContainer != null)
                                 {
-                                    var hpMax = data.GetFloatValue(EBGUAttrFloat.HpMax);
-                                    data.SetFloatValue(EBGUAttrFloat.Hp, hpMax);
+                                    var hpMax = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
+                                    attrContainer.SetFloatValue(EBGUAttrFloat.Hp, hpMax);
                                     state.Hp = hpMax;
                                     SetRemotePlayerProperty(key, nameof(PlayerState.Hp), state.Hp);
                                 }
@@ -457,7 +444,7 @@ namespace WukongApi
             }, SendOptions.SendReliable);
         }
 
-        public void SendPvPEvent(PvPEvent ev)
+        public void SendPvPEvent(PvPEvent ev, int data = 0)
         {
             if (!IsMasterClient)
             {
@@ -468,7 +455,8 @@ namespace WukongApi
             Logging.LogDebug($"Sending PvP event: {ev}");
 
             const byte eventCode = 8;
-            PhotonClient.OpRaiseEvent(eventCode, ev, new RaiseEventArgs
+            var evData = new[] { (int)ev, data };
+            PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
