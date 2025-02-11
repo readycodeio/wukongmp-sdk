@@ -39,7 +39,7 @@ namespace WukongApi.Patches
 
             // Read archive with our world state.
             SavePatchesData.CustomSaveEnabled = true;
-            ReadArchiveResult readArchiveResult = __instance.ReadArchiveData(0, out ArchiveFileUnpacked GameArchiveData, out EArchiveRepairStatus ArchiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(0, out var GameArchiveData, out var ArchiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");

@@ -96,7 +96,7 @@ namespace WukongApi
 
         public static string GetUnitPath(string unitName)
         {
-            if (Configurations.TryGetValue(unitName, out string value))
+            if (Configurations.TryGetValue(unitName, out var value))
             {
                 return value;
             }

@@ -39,12 +39,12 @@ namespace WukongApi
 
             var teamsIds = playerStates.Select(playerState => playerState.TeamId).Distinct().ToList();
             var teamsCount = teamsIds.Count;
-            float teamAngleStep = 2 * MathF.PI / teamsCount;
+            var teamAngleStep = 2 * MathF.PI / teamsCount;
 
-            float entityOffsetAngle = 0.15f;
-            Dictionary<int, int> teamMemberIndex = new Dictionary<int, int>();
-            Dictionary<int, int> teamIndex = new Dictionary<int, int>();
-            for (int i = 0; i < teamsIds.Count; i++)
+            var entityOffsetAngle = 0.15f;
+            var teamMemberIndex = new Dictionary<int, int>();
+            var teamIndex = new Dictionary<int, int>();
+            for (var i = 0; i < teamsIds.Count; i++)
             {
                 teamMemberIndex[teamsIds[i]] = 0;
                 teamIndex[teamsIds[i]] = i;
@@ -52,12 +52,12 @@ namespace WukongApi
 
             foreach (var playerState in playerStates)
             {
-                float teamBaseAngle = teamIndex[playerState.TeamId] * teamAngleStep;
-                int memberIndex = teamMemberIndex[playerState.TeamId];
+                var teamBaseAngle = teamIndex[playerState.TeamId] * teamAngleStep;
+                var memberIndex = teamMemberIndex[playerState.TeamId];
 
-                float angle = teamBaseAngle + (memberIndex + 1) * entityOffsetAngle;
-                float x = center.X + radius * MathF.Cos(angle);
-                float y = center.Y + radius * MathF.Sin(angle);
+                var angle = teamBaseAngle + (memberIndex + 1) * entityOffsetAngle;
+                var x = center.X + radius * MathF.Cos(angle);
+                var y = center.Y + radius * MathF.Sin(angle);
 
                 teamMemberIndex[playerState.TeamId]++;
                 var newPlayerLocation = new FVector(x, y, center.Z);

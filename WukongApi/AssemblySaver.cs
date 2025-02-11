@@ -37,13 +37,13 @@ namespace WukongApi
             var hProcess = process.Handle;
 
             // Retrieve module information
-            if (!GetModuleInformation(hProcess, hModule, out ModuleInfo moduleInfo, (uint)Marshal.SizeOf(typeof(ModuleInfo))))
+            if (!GetModuleInformation(hProcess, hModule, out var moduleInfo, (uint)Marshal.SizeOf(typeof(ModuleInfo))))
             {
                 throw new InvalidOperationException("Could not retrieve module information.");
             }
 
             // Create a byte array to hold the assembly bytes
-            byte[] assemblyBytes = new byte[moduleInfo.SizeOfImage];
+            var assemblyBytes = new byte[moduleInfo.SizeOfImage];
 
             // Copy the assembly bytes from memory
             Marshal.Copy(moduleInfo.lpBaseOfDll, assemblyBytes, 0, (int)moduleInfo.SizeOfImage);

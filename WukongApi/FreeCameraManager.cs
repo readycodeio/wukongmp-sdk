@@ -10,9 +10,9 @@ namespace WukongApi
         private bool _isInFreeCameraMode;
         private BGUCharacterCS _cachePlayerPawn;
         private AActor _freeCameraActor;
-        private float _gameFOV;
+        private float _gameFov;
         private AActor _cacheCameraViewTarget;
-        private const string _freeCameraActorPath = "/Game/Mods/CustomLuaMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
+        private const string FreeCameraActorPath = "/Game/Mods/CustomLuaMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
 
         public void EnterFreeCameraMode()
         {
@@ -27,7 +27,7 @@ namespace WukongApi
                 return;
             }
 
-            ABGPPlayerController aBGPPlayerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world) as ABGPPlayerController;
+            var aBGPPlayerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world) as ABGPPlayerController;
             if (aBGPPlayerController.IsNullOrDestroyed())
             {
                 Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerController IsNull");
@@ -41,18 +41,18 @@ namespace WukongApi
                 return;
             }
 
-            APlayerCameraManager localPlayerCameraManager = UGSE_EngineFuncLib.GetLocalPlayerCameraManager(world);
+            var localPlayerCameraManager = UGSE_EngineFuncLib.GetLocalPlayerCameraManager(world);
             if (localPlayerCameraManager.IsNullOrDestroyed())
             {
                 Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerCameraManager IsNull");
                 return;
             }
 
-            FVector cameraLocation = localPlayerCameraManager.GetCameraLocation();
-            FRotator cameraRotation = localPlayerCameraManager.GetCameraRotation();
+            var cameraLocation = localPlayerCameraManager.GetCameraLocation();
+            var cameraRotation = localPlayerCameraManager.GetCameraRotation();
             if (_freeCameraActor.IsNullOrDestroyed())
             {
-                var freeCameraActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(_freeCameraActorPath, ELoadResourceType.SyncLoadAndCache);
+                var freeCameraActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(FreeCameraActorPath, ELoadResourceType.SyncLoadAndCache);
                 _freeCameraActor = world.SpawnActor(freeCameraActorClass, ref cameraLocation, ref cameraRotation);
             }
 
@@ -65,9 +65,9 @@ namespace WukongApi
             _freeCameraActor.SetActorHiddenInGame(bNewHidden: false);
             _freeCameraActor.SetActorEnableCollision(bNewActorEnableCollision: true);
             _cacheCameraViewTarget = aBGPPlayerController.GetViewTarget();
-            _gameFOV = localPlayerCameraManager.GetFOVAngle();
+            _gameFov = localPlayerCameraManager.GetFOVAngle();
             _freeCameraActor.SetActorLocationAndRotation(cameraLocation, cameraRotation, bSweep: false, out var _, bTeleport: true);
-            _freeCameraActor.CallFunctionByNameWithArguments($"SetCameraFOV {_gameFOV}", true);
+            _freeCameraActor.CallFunctionByNameWithArguments($"SetCameraFOV {_gameFov}", true);
             aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
             _cachePlayerPawn.DisableInput(aBGPPlayerController);
             BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.Replay, EGSInputModeChangeReason.Replay);
@@ -87,7 +87,7 @@ namespace WukongApi
                 return;
             }
 
-            ABGPPlayerController aBGPPlayerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world) as ABGPPlayerController;
+            var aBGPPlayerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world) as ABGPPlayerController;
             if (aBGPPlayerController.IsNullOrDestroyed())
             {
                 Logging.LogError("[FreeCameraManager] LeaveFreeCameraMode PlayerController IsNull");
@@ -96,7 +96,7 @@ namespace WukongApi
 
             if (_cacheCameraViewTarget.IsNullOrDestroyed())
             {
-                BGUCharacterCS bGUCharacterCS = aBGPPlayerController.GetControlledPawn() as BGUCharacterCS;
+                var bGUCharacterCS = aBGPPlayerController.GetControlledPawn() as BGUCharacterCS;
                 if (bGUCharacterCS.IsNullOrDestroyed())
                 {
                     Logging.LogError("[FreeCameraManager] LeaveFreeCameraMode PlayerCharacter IsNull");

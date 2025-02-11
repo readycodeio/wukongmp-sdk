@@ -195,7 +195,7 @@ namespace WukongApi
 
         private bool TryHandleCommand(string message)
         {
-            string[] commandParts = message.Split(Separator);
+            var commandParts = message.Split(Separator);
             if (commandParts.Length > 0)
             {
                 if (_commands.ContainsKey(commandParts[0]))
