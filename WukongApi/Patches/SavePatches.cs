@@ -12,7 +12,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
-    [HarmonyPatchCategory(Constants.GamePatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchWindowsSaveGame
     {
         public static bool Prefix(ref string __result, string SlotName, string UserId)
@@ -26,7 +26,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LoadArchive))]
-    [HarmonyPatchCategory(Constants.GamePatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchGameArchive
     {
         public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData OutArchiveData)
@@ -39,7 +39,7 @@ namespace WukongApi.Patches
 
             // Read archive with our world state.
             SavePatchesData.CustomSaveEnabled = true;
-            ReadArchiveResult readArchiveResult = __instance.ReadArchiveData(0, out ArchiveFileUnpacked GameArchiveData, out EArchiveRepairStatus ArchiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(0, out var GameArchiveData, out var ArchiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");
@@ -53,14 +53,12 @@ namespace WukongApi.Patches
             OutArchiveData.PersistentECSData = GameArchiveData.GameArchiveData.PersistentECSData;
             OutArchiveData.StateMachineArchiveData = GameArchiveData.GameArchiveData.StateMachineArchiveData;
             OutArchiveData.TaskArchiveData = GameArchiveData.GameArchiveData.TaskArchiveData;
-
-            WukongMP.Instance.SetMultiplayerEnabled();
         }
     }
 
     // Disable game saves while multiplayer is enabled
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), "CheckSaveTask")]
-    [HarmonyPatchCategory(Constants.GamePatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriter
     {
         public static bool Prefix()
@@ -71,7 +69,7 @@ namespace WukongApi.Patches
 
     // Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), new[] { typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>) })]
-    [HarmonyPatchCategory(Constants.GamePatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriterAppendArchive1
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
@@ -81,7 +79,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.MarkSaveSetting))]
-    [HarmonyPatchCategory(Constants.GamePatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriterAppendArchive2
     {
         public static bool Prefix(UISettingArchiveData UISettingArchiveData)

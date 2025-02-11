@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Photon.Chat;
 using Photon.Client;
+using WukongApi.State;
 using AuthenticationValues = Photon.Chat.AuthenticationValues;
 
 namespace WukongApi
@@ -19,9 +20,9 @@ namespace WukongApi
         private ChatClient _chatClient;
         private readonly WukongClient _wukongClient;
 
-        internal const string GeneralChannelName = "General";
+        private const string GeneralChannelName = "General";
         internal const string ServerChannelName = "Server";
-        private string NickName => _wukongClient.NickName;
+        private string NickName => _wukongClient.LocalPlayerState.NickName;
 
         private bool _isExit;
 
@@ -137,33 +138,11 @@ namespace WukongApi
                     Handler = _ => { RequestGiveUp(); }
                 });
             _commands.Add(
-                "/message",
-                new Command
-                {
-                    Name = "Message",
-                    Handler = args =>
-                    {
-                        var id = args.Length > 0 ? int.Parse(args[0]) : 0;
-                        switch (id)
-                        {
-                            case 0:
-                                GameUtils.ShowTip("test tip\nmultiline");
-                                break;
-                            case 1:
-                                GameUtils.ShowPvPCountDown();
-                                break;
-                            case 2:
-                                GameUtils.PlayBossDefeatedSound();
-                                break;
-                        }
-                    }
-                });
-            _commands.Add(
                 "/ready",
                 new Command
                 {
                     Name = "Ready",
-                    Handler = _ => { _wukongClient.SignalReadiness(true); }
+                    Handler = _ => { _wukongClient.CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), true); }
                 });
             _commands.Add(
                 "/start",
@@ -216,7 +195,7 @@ namespace WukongApi
 
         private bool TryHandleCommand(string message)
         {
-            string[] commandParts = message.Split(Separator);
+            var commandParts = message.Split(Separator);
             if (commandParts.Length > 0)
             {
                 if (_commands.ContainsKey(commandParts[0]))

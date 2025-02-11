@@ -47,17 +47,12 @@ namespace WukongApi.Patches
                     {
                         __instance.SetFloatValue(attr, value);
                     }
-
-                    if (photon.LocalPlayerState.Hp > 0)
-                    {
-                        photon.LocalPlayerState.IsDead = false;
-                    }
                 }
 
                 return;
             }
 
-            // for clients, their own attributes are already set by them, and they do not care about attributes of other clients / mosnters
+            // for clients, their own attributes are already set by them, and they do not care about attributes of other clients / monsters
             // because it's the master client that ultimately calculates damage in combat
 
             if (__instance.Owner == photon.LocalPlayerState.Pawn)
@@ -69,18 +64,26 @@ namespace WukongApi.Patches
                     return;
                 }
 
-                __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
+                var currentHp = __instance.GetFloatValue(EBGUAttrFloat.Hp);
 
-                if (photon.LocalPlayerState.Hp <= 0 && !photon.LocalPlayerState.IsDead)
+                if (photon.LocalPlayerState.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
                 {
-                    var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                    Logging.LogWarning($"Sending unit dead for player {photon.LocalPlayerState.PhotonId}");
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    return; // do not reapply the same value
                 }
 
-                if (photon.LocalPlayerState.Hp > 0)
+                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, photon.LocalPlayerState.Hp);
+
+                if (!set.Equals(photon.LocalPlayerState.Hp, Constants.FloatComparisonTolerance))
                 {
-                    photon.LocalPlayerState.IsDead = false;
+                    Logging.LogWarning($"Attempted to set player {photon.LocalPlayerState.NickName} HP to {photon.LocalPlayerState.Hp}, instead set to {set}");
+                    photon.CachePlayerProperty(nameof(PlayerState.Hp), set);
+                }
+
+                if (photon.LocalPlayerState.IsDead)
+                {
+                    var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                    Logging.LogWarning($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
+                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
             else
@@ -90,24 +93,36 @@ namespace WukongApi.Patches
                 // remote player
                 if (playerState != null)
                 {
+                    // set their attributes
+                    foreach (var (attr, value) in playerState.Attributes)
+                    {
+                        __instance.SetFloatValue(attr, value);
+                    }
+
                     if (playerState.Hp <= -80000)
                     {
                         Logging.LogWarning($"Would set hp to {playerState.Hp} but will not");
                         return;
                     }
 
-                    __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
-
-                    if (playerState.Hp > 0)
+                    if (playerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                     {
-                        playerState.IsDead = false;
+                        return; // do not reapply the same value
                     }
 
-                    if (playerState.Hp <= 0 && !playerState.IsDead)
+                    Logging.LogDebug($"(remote) Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {playerState.Hp}");
+                    var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
+
+                    if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
+                    {
+                        Logging.LogWarning($"Attempted to set player {playerState.NickName} HP to {playerState.Hp}, instead set to {set}");
+                    }
+
+                    if (playerState.IsDead)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
-                        Logging.LogWarning($"Sending unit dead for player {playerState.PhotonId}");
+                        Logging.LogWarning($"Applying unit dead for player {playerState.PhotonId}");
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                     else
@@ -117,6 +132,11 @@ namespace WukongApi.Patches
                         // monster
                         if (monster?.Hp != null && monster.IsSynced)
                         {
+                            if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                            {
+                                return; // do not reapply the same value
+                            }
+
                             __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
 
                             if (monster.Hp.Value <= 0)
@@ -142,10 +162,17 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchHp
     {
-        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue)
+        public static bool Prefix(EBGUAttrFloat AttrID)
+        {
+            return AttrID != EBGUAttrFloat.Hp || WukongMP.Instance.Photon.IsMasterClient;
+        }
+
+        public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
         {
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
+
+            var result = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(AttrID);
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
@@ -155,69 +182,78 @@ namespace WukongApi.Patches
                     // I was damaged, set my Hp
                     if (owner == photon.LocalPlayerState.Pawn)
                     {
-                        if (!photon.LocalPlayerState.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!photon.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            photon.LocalPlayerState.Hp = NewValue;
-                            photon.CachePlayerProperty(AttrID.ToString(), NewValue);
+                            photon.LocalPlayerState.Hp = result;
+                            photon.CachePlayerProperty(nameof(PlayerState.Hp), result);
                         }
 
-                        return true;
+                        return;
                     }
 
                     // remote player was damaged, set his properties
                     var remotePlayer = WukongMP.Instance.Photon.GetByActor(owner);
                     if (remotePlayer != null)
                     {
-                        if (!remotePlayer.Hp.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            remotePlayer.Hp = NewValue;
-                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, AttrID.ToString(), NewValue);
+                            remotePlayer.Hp = result;
+                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, nameof(PlayerState.Hp), result);
                         }
 
-                        return true;
+                        return;
                     }
 
                     // monster was damaged
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (monster != null && monster.IsSynced)
                     {
-                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(NewValue, Constants.FloatComparisonTolerance))
+                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            monster.Hp = NewValue;
-                            photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), NewValue);
+                            monster.Hp = result;
+                            photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), result);
 
-                            if (NewValue <= 0)
+                            if (result <= 0)
                             {
                                 // remove dead monster from sync
                                 photon.RemoveMonster(monster.Guid);
                             }
                         }
 
-                        return true;
+                        return;
                     }
 
                     // unsynced monster or sth else
-                    return true;
+                    return;
                 }
 
                 // I am a client
-                return false;
+                return;
             }
 
             // only sync attributes that influence combat and are client-authoritative
             if (Constants.SyncedAttributes.Contains(AttrID) && owner == photon.LocalPlayerState.Pawn)
             {
                 if (photon.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
-                    && existing.Equals(NewValue, Constants.FloatComparisonTolerance))
+                    && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
-                    return true;
+                    return;
                 }
 
-                photon.LocalPlayerState.Attributes[AttrID] = NewValue;
-                photon.CachePlayerAttribute(AttrID, NewValue);
-            }
+                photon.LocalPlayerState.Attributes[AttrID] = result;
+                photon.CachePlayerAttribute(AttrID, result);
 
-            return true;
+                // some attributes may influence other attributes
+                var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
+                if (valid)
+                {
+                    Logging.LogWarning($"Also updating {calc.finalVal} because of {AttrID}");
+
+                    var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
+                    photon.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
+                    photon.CachePlayerAttribute(calc.finalVal, finalVal);
+                }
+            }
         }
     }
 

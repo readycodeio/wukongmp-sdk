@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
 using CSharpModBase;
@@ -113,9 +114,19 @@ namespace WukongApi
             });
         }
 
-        public static void ShowPvPCountDown()
+        public static async Task ShowPvPCountDown()
         {
             Utils.TryRunOnGameThread(() => { GenAGPage.ShowPage(95, nameof(ShowPvPCountDown)); });
+
+            await Task.Delay(4000);
+
+            Utils.TryRunOnGameThread(() =>
+            {
+                var photon = WukongMP.Instance.Photon;
+                var current = photon.CurrentRoomState.CurrentRound;
+                var total = photon.CurrentRoomState.RoundsTotal;
+                ShowTip($"Round {current} of {total}");
+            });
         }
 
         public static void PlayBossDefeatedSound()
@@ -125,12 +136,6 @@ namespace WukongApi
                 var playUiSound = AccessTools.Method("B1UI.Script.GSUI.Util.GSUIAudioUtil:PlayUISound");
                 playUiSound.Invoke(null, new object[] { "EVT_ui_kill_jisha_manjingtou" });
             });
-        }
-
-        public static void ShowDefeatedUI()
-        {
-            PlayBossDefeatedSound();
-            ShowTip("Opponent defeated");
         }
     }
 }
