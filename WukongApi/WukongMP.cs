@@ -120,6 +120,7 @@ namespace WukongApi
             }
 
             SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
+            ExtendLockTargetDistance();
         }
 
         public void DumpPlayerState()
@@ -323,6 +324,18 @@ namespace WukongApi
         {
             GameUtils.GetBguPlayerCharacterCs()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
             GameUtils.GetPlayerController()?.SetControlRotation(rotation);
+        }
+
+        private void ExtendLockTargetDistance()
+        {
+            IBUC_PlayerInputConfigData unPersistentReadOnlyData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_PlayerInputConfigData, BUC_PlayerInputConfigData>(GameUtils.GetBguPlayerCharacterCs());
+            if (unPersistentReadOnlyData == null)
+            {
+                return;
+            }
+            var autoLockSetting = unPersistentReadOnlyData.GSCameraAutoLockSetting;
+            autoLockSetting.MaxCamLockTargetDistance = autoLockSetting.MaxCamLockTargetDistance * 3;
+            unPersistentReadOnlyData.GSCameraAutoLockSetting = autoLockSetting;
         }
 
         private void Reconnect()
