@@ -345,4 +345,15 @@ namespace WukongApi.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "ApplyCameraControlData")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchApplyCameraControlData
+    {
+        public static bool Prefix(GSCameraControlData InControlData)
+        {
+            InControlData.ArmLength = Constants.CameraArmLength;
+            return true;
+        }
+    }
 }
