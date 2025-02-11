@@ -68,7 +68,7 @@ namespace WukongApi
         public async Task EndRoundAsync(int winner)
         {
             // disable pvp until next round
-            _wukongClient.SendPvPEvent(PvPEvent.RoundEnd);
+            _wukongClient.SendPvPEvent(PvPEvent.RoundEnd, winner);
 
             // increment round number
             _wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
