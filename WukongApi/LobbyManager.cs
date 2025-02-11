@@ -28,8 +28,9 @@ namespace WukongApi
             }
 
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
+            await Task.Delay(500);
 
-            await Task.Delay(4000);
+            await ResetHpAndRespawnAllPlayers();
 
             _wukongClient.SendPvPEvent(PvPEvent.CountDown);
             _wukongClient.SendPvPEvent(PvPEvent.PvPEnable);
@@ -79,19 +80,6 @@ namespace WukongApi
             // wait until all players death animations are finished
             await Task.Delay(5000);
 
-            // resurrect dead players and restore health to living ones
-            _wukongClient.SendPvPEvent(PvPEvent.ResetStats);
-            foreach (var player in _wukongClient.AllConnectedPlayers)
-            {
-                if (player.IsDead)
-                {
-                    _wukongClient.BroadcastPlayerRebirth(player.PhotonId);
-                }
-            }
-
-            // wait for that to finish
-            await Task.Delay(6000);
-
             // resolve tournament
             var winnersSoFar = _wukongClient.CurrentRoomState.RoundWinners.ToList();
             var winnersByTeam = winnersSoFar.GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
@@ -115,6 +103,23 @@ namespace WukongApi
                 // start next round
                 await StartRoundAsync();
             }
+        }
+
+        private async Task ResetHpAndRespawnAllPlayers()
+        {
+            // resurrect dead players and restore health to living ones
+            _wukongClient.SendPvPEvent(PvPEvent.ResetStats);
+            foreach (var player in _wukongClient.AllConnectedPlayers)
+            {
+                if (player.IsDead)
+                {
+                    _wukongClient.BroadcastPlayerRebirth(player.PhotonId);
+                }
+            }
+
+
+            // wait for that to finish
+            await Task.Delay(6000);
         }
     }
 }

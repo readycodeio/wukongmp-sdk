@@ -224,8 +224,14 @@ namespace WukongApi
                         {
                             if (!state.IsDead)
                             {
-                                state.Hp = state.Attributes[EBGUAttrFloat.HpMax];
-                                SetRemotePlayerProperty(key, nameof(PlayerState.Hp), state.Hp);
+                                var data = (BUC_AttrContainer)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Pawn);
+                                if (data != null)
+                                {
+                                    var hpMax = data.GetFloatValue(EBGUAttrFloat.HpMax);
+                                    data.SetFloatValue(EBGUAttrFloat.Hp, hpMax);
+                                    state.Hp = hpMax;
+                                    SetRemotePlayerProperty(key, nameof(PlayerState.Hp), state.Hp);
+                                }
                             }
                         }
                     }
