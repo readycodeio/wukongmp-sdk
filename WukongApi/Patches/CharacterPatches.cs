@@ -109,7 +109,7 @@ namespace WukongApi.Patches
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogDebug($"Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {playerState.Hp}");
+                    Logging.LogDebug($"(remote) Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {playerState.Hp}");
                     var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
                     if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
@@ -241,6 +241,17 @@ namespace WukongApi.Patches
 
                 photon.LocalPlayerState.Attributes[AttrID] = result;
                 photon.CachePlayerAttribute(AttrID, result);
+
+                // some attributes may influence other attributes
+                var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
+                if (valid)
+                {
+                    Logging.LogWarning($"Also updating {calc.finalVal} because of {AttrID}");
+
+                    var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
+                    photon.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
+                    photon.CachePlayerAttribute(calc.finalVal, finalVal);
+                }
             }
         }
     }

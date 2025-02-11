@@ -13,12 +13,10 @@ using BtlShare;
 using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
-using ResB1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.Patches;
 using WukongApi.State;
-using static ResUpdator.GSEFileDownloader;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -191,9 +189,11 @@ namespace WukongApi
                     break;
                 case PvPEvent.RoundEnd:
                     var winner = AllConnectedPlayers.First(p => !p.IsDead);
+                    Logging.LogWarning($"Round ended, winner: {winner.NickName} {winner.TeamId}");
 
                     if (winner.TeamId == LocalPlayerState.TeamId)
                     {
+                        Logging.LogWarning("You won the round!");
                         GameUtils.PlayBossDefeatedSound();
                     }
 

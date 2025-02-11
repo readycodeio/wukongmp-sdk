@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
@@ -287,7 +286,6 @@ namespace WukongApi.Patches
             // check if all players but one are dead
             var players = photon.AllConnectedPlayers.ToList();
             var deadPlayers = players.Count(p => p.IsDead);
-
 
             if (photon.IsMasterClient && deadPlayers == players.Count - 1)
             {
