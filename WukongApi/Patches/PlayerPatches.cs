@@ -334,4 +334,15 @@ namespace WukongApi.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(BUC_TargetInfoData), "IsSupportMultiLockTarget")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchIsSupportMultiLockTarget
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
+        }
+    }
 }
