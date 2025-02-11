@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Text;
 using b1;
 using BtlShare;
@@ -29,7 +29,7 @@ namespace WukongApi.State
 
         public float Hp { get; set; }
         public bool IsDead => Hp <= 0;
-        public Dictionary<EBGUAttrFloat, float> Attributes { get; }
+        public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
         public string NickName { get; set; }
@@ -52,7 +52,7 @@ namespace WukongApi.State
             }
 
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
-            Attributes = new Dictionary<EBGUAttrFloat, float>();
+            Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
             Logging.LogDebug($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
