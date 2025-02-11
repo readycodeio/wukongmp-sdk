@@ -188,12 +188,26 @@ namespace WukongApi
                     WukongMP.Instance.DisablePvP();
                     break;
                 case PvPEvent.RoundEnd:
-                    var winner = AllConnectedPlayers.First(p => !p.IsDead);
+                    var alivePlayers = AllConnectedPlayers.Where(p => !p.IsDead).ToList();
+
+                    if (alivePlayers.Count != 1)
+                    {
+                        Logging.LogWarning($"Round ended, but there are {alivePlayers.Count} alive players.");
+
+                        foreach (var p in AllConnectedPlayers)
+                        {
+                            Logging.LogWarning($"{p.NickName} ({p.TeamId}) has {p.Hp} health");
+                        }
+
+                        break;
+                    }
+
+                    var winner = alivePlayers.Single();
+
                     Logging.LogWarning($"Round ended, winner: {winner.NickName} {winner.TeamId}");
 
                     if (winner.TeamId == LocalPlayerState.TeamId)
                     {
-                        Logging.LogWarning("You won the round!");
                         GameUtils.PlayBossDefeatedSound();
                     }
 
