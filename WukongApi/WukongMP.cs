@@ -120,7 +120,6 @@ namespace WukongApi
             }
 
             SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
-            ExtendLockTargetDistance();
         }
 
         public void DumpPlayerState()
@@ -324,18 +323,6 @@ namespace WukongApi
         {
             GameUtils.GetBguPlayerCharacterCs()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
             GameUtils.GetPlayerController()?.SetControlRotation(rotation);
-        }
-
-        private void ExtendLockTargetDistance()
-        {
-            var unPersistentReadOnlyData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_PlayerInputConfigData, BUC_PlayerInputConfigData>(GameUtils.GetBguPlayerCharacterCs());
-            if (unPersistentReadOnlyData == null)
-            {
-                return;
-            }
-            var autoLockSetting = unPersistentReadOnlyData.GSCameraAutoLockSetting;
-            autoLockSetting.MaxCamLockTargetDistance = autoLockSetting.MaxCamLockTargetDistance * 3;
-            unPersistentReadOnlyData.GSCameraAutoLockSetting = autoLockSetting;
         }
 
         private void Reconnect()
@@ -741,6 +728,14 @@ namespace WukongApi
             {
                 playerState.Equipment = (EquipmentState)eq;
                 EquipmentHelpers.SetRemoteActorEquipment((BGUCharacterCS)newPawn, playerState.Equipment);
+            }
+
+            // set lock distance
+            var character = newPawn as BGUCharacterCS;
+            FUStUnitCommDesc unitCommDesc = BGW_GameDB.GetUnitCommDesc(character.GetResID());
+            if (unitCommDesc != null)
+            {
+                unitCommDesc.CameraLockDist = 10000;
             }
 
             Photon.RegisterPlayer(playerState);
