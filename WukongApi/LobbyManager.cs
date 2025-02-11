@@ -30,8 +30,6 @@ namespace WukongApi
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
             await Task.Delay(500);
 
-            await ResetHpAndRespawnAllPlayers();
-
             _wukongClient.SendPvPEvent(PvPEvent.CountDown);
             _wukongClient.SendPvPEvent(PvPEvent.PvPEnable);
         }
@@ -80,6 +78,8 @@ namespace WukongApi
             // wait until all players death animations are finished
             await Task.Delay(5000);
 
+            await ResetHpAndRespawnAllPlayers();
+
             // resolve tournament
             var winnersSoFar = _wukongClient.CurrentRoomState.RoundWinners.ToList();
             var winnersByTeam = winnersSoFar.GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
@@ -117,9 +117,8 @@ namespace WukongApi
                 }
             }
 
-
             // wait for that to finish
-            await Task.Delay(6000);
+            await Task.Delay(6500);
         }
     }
 }
