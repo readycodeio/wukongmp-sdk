@@ -713,6 +713,12 @@ namespace WukongApi
                 Rotation = rot
             };
 
+            // set nickname
+            if (player.CustomProperties.TryGetValue(ActorProperties.NickName, out var nickName))
+            {
+                playerState.NickName = (string)nickName;
+            }
+
             // set attributes
             foreach (var attr in Constants.SyncedAttributes)
             {

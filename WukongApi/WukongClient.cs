@@ -179,9 +179,6 @@ namespace WukongApi
             switch (ev)
             {
                 case PvPEvent.RoundStart:
-                    // re-sync photon nickname because sometimes it's not set
-                    PhotonClient.LocalPlayer.NickName = _userName;
-
                     Task.Run(GameUtils.ShowPvPCountDown);
                     WukongMP.Instance.EnablePvP();
                     break;
@@ -717,12 +714,13 @@ namespace WukongApi
                 Logging.LogDebug("Patched with Harmony");
             });
 
-            PhotonClient.NickName = _userName;
 
             _joinedRoomCallback?.Invoke();
             WukongChat.InitializeChat(_userName);
 
             GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
+
+            PhotonClient.NickName = _userName;
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
