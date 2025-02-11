@@ -179,6 +179,9 @@ namespace WukongApi
             switch (ev)
             {
                 case PvPEvent.RoundStart:
+                    // re-sync photon nickname because sometimes it's not set
+                    PhotonClient.LocalPlayer.NickName = _userName;
+
                     Task.Run(GameUtils.ShowPvPCountDown);
                     WukongMP.Instance.EnablePvP();
                     break;
