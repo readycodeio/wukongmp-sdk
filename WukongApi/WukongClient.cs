@@ -217,6 +217,19 @@ namespace WukongApi
                         });
                     }
 
+                    if (IsMasterClient)
+                    {
+                        // reset other players' Hp to HpMax if they are not dead
+                        foreach (var (key, state) in ConnectedPlayers)
+                        {
+                            if (!state.IsDead)
+                            {
+                                state.Hp = state.Attributes[EBGUAttrFloat.HpMax];
+                                SetRemotePlayerProperty(key, nameof(PlayerState.Hp), state.Hp);
+                            }
+                        }
+                    }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ev), ev, null);
