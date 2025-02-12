@@ -7,7 +7,6 @@ using BtlShare;
 using CSharpModBase;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongApi.Patches;
 
 namespace WukongApi.API
 {
@@ -17,7 +16,7 @@ namespace WukongApi.API
         {
             public CharacterId Id;
             public bool IsProgramControl;
-            public AActor Actor;
+            public AActor Controller;
             public APawn Pawn;
             public bool Destroyed;
         }
@@ -75,7 +74,7 @@ namespace WukongApi.API
                 entry.Id = localWukongCharacter;
                 var world = GameUtils.GetWorld();
                 var controller = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world);
-                entry.Actor = controller;
+                entry.Controller = controller;
                 entry.Pawn = controller.GetControlledPawn();
                 characterEntries[localWukongCharacter.index] = entry;
             }
@@ -83,10 +82,10 @@ namespace WukongApi.API
             return localWukongCharacter;
         }
 
-        public CharacterId GetByActor(AActor actor)
+        public CharacterId GetByPawn(APawn pawn)
         {
             EnsureInit();
-            return characterEntries.FirstOrDefault(entry => entry.Actor == actor).Id;
+            return characterEntries.FirstOrDefault(entry => entry.Pawn.GetName() == pawn.GetName()).Id;
         }
 
         private void EnsureValidCharacter(CharacterId character, out CharacterEntry entry)
@@ -181,7 +180,7 @@ namespace WukongApi.API
             var characterId = CreateCharacterEntry();
             var entry = characterEntries[characterId.index];
 
-            entry.Actor = buTamerActor;
+            entry.Controller = buTamerActor;
             entry.Pawn = null; // Not yet ready
             characterEntries[characterId.index] = entry;
 
@@ -233,7 +232,7 @@ namespace WukongApi.API
             var characterId = CreateCharacterEntry();
             var entry = characterEntries[characterId.index];
 
-            entry.Actor = newPawn;
+            entry.Controller = newControllerActor;
             entry.Pawn = newPawn;
             characterEntries[characterId.index] = entry;
 
@@ -249,7 +248,7 @@ namespace WukongApi.API
             }
 
             var changed = false;
-            if (entry.Actor is BUTamerActor buTamerActor)
+            if (entry.Controller is BUTamerActor buTamerActor)
             {
                 entry.Pawn = buTamerActor.GetMonster();
                 changed = true;
@@ -293,11 +292,11 @@ namespace WukongApi.API
                 return;
 
             entry.IsProgramControl = true;
-            var events = BUS_EventCollectionCS.Get(entry.Actor);
+            var events = BUS_EventCollectionCS.Get(entry.Controller);
 
             if (events is null)
             {
-                Logging.LogError("Events is null");
+                Logging.LogError("Events is null in ControlCharacter");
             }
             else
             {
@@ -315,23 +314,23 @@ namespace WukongApi.API
         {
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
-            if (entry.Actor == null)
+            if (entry.Controller == null)
                 throw new InvalidOperationException($"Character {character} is not spawned");
 
-            entry.Actor.DestroyActor();
-            entry.Actor = null;
+            entry.Controller.DestroyActor();
+            entry.Controller = null;
             entry.Pawn = null;
             entry.Destroyed = true;
             characterEntries[character.index] = entry;
         }
 
-        public void UpdateActor(CharacterId character, AActor actor)
+        public void UpdatePawn(CharacterId character, APawn pawn)
         {
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
 
-            entry.Actor = actor;
-            entry.Pawn = actor as APawn;
+            entry.Controller = pawn.GetController();
+            entry.Pawn = pawn;
             characterEntries[character.index] = entry;
         }
 
@@ -349,6 +348,22 @@ namespace WukongApi.API
         {
             SendSkill(character, EInputActionType.Dodge);
         }
+        
+        public void SendTransform(CharacterId character, TransformKind kind)
+        {
+            // EnsureControlled(entry);
+
+            // var events = BPS_GSEventCollection.Get(entry.Pawn.PlayerState);
+            // events.Evt_TriggerPlayerTransBegin.Invoke(EPlayerTransBeginType.AddBuff, new PlayerTransParam
+            // {
+            //     NeedBlend = true,
+            //     SpawnSkillId = 0,
+            //     TransSkillId = 0,
+            //     TargetResId = (int)kind
+            // });
+            
+            SendSkill(character, EInputActionType.UseSkillByType, (int)kind, 260);
+        }
 
         public void SendMoveTo(CharacterId character, FVector targetPos)
         {
@@ -356,7 +371,14 @@ namespace WukongApi.API
             EnsureValidCharacter(character, out var entry);
             EnsureControlled(entry);
 
-            var events = BUS_EventCollectionCS.Get(entry.Actor);
+            var events = BUS_EventCollectionCS.Get(entry.Controller);
+
+            if (events is null)
+            {
+                Logging.LogError("Events is null in SendMoveTo");
+                return;
+            }
+
             events.Evt_AIMoveTo.Invoke(targetPos, null, EAIMoveSpeedType.SPRINT, 2f, EBGUMoveAIType.KeepFacingTarget, false, false, "", "");
         }
 
@@ -412,13 +434,21 @@ namespace WukongApi.API
             EnsureValidCharacter(character, out var entry);
             EnsureControlled(entry);
 
-            var events = BUS_EventCollectionCS.Get(entry.Actor);
+            var events = BUS_EventCollectionCS.Get(entry.Controller);
+
+            if (events is null)
+            {
+                Logging.LogError("Events is null in SendSkill");
+                return;
+            }
+
             events.Evt_InputCastSkill.Invoke(actionType, false, skillID, descID, itemID);
 
             if (resetCooldown)
             {
                 ResetCooldown(character);
             }
+
             if (resetMana)
             {
                 ResetManaPoints(character);
@@ -430,7 +460,7 @@ namespace WukongApi.API
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
 
-            var events = BUS_EventCollectionCS.Get(entry.Actor);
+            var events = BUS_EventCollectionCS.Get(entry.Controller);
             events.Evt_ResetSkillCD.Invoke();
         }
 
@@ -439,9 +469,9 @@ namespace WukongApi.API
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
 
-            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(entry.Actor);
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(entry.Controller);
             float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
-            BUS_EventCollectionCS.Get(entry.Actor)?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
+            BUS_EventCollectionCS.Get(entry.Controller)?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
     }
 }
