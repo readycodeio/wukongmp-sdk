@@ -292,7 +292,7 @@ namespace WukongApi.API
                 return;
 
             entry.IsProgramControl = true;
-            var events = BUS_EventCollectionCS.Get(entry.Controller);
+            var events = BUS_EventCollectionCS.Get(entry.Pawn);
 
             if (events is null)
             {
@@ -371,7 +371,7 @@ namespace WukongApi.API
             EnsureValidCharacter(character, out var entry);
             EnsureControlled(entry);
 
-            var events = BUS_EventCollectionCS.Get(entry.Controller);
+            var events = BUS_EventCollectionCS.Get(entry.Pawn);
 
             if (events is null)
             {
@@ -434,7 +434,7 @@ namespace WukongApi.API
             EnsureValidCharacter(character, out var entry);
             EnsureControlled(entry);
 
-            var events = BUS_EventCollectionCS.Get(entry.Controller);
+            var events = BUS_EventCollectionCS.Get(entry.Pawn);
 
             if (events is null)
             {
@@ -460,7 +460,7 @@ namespace WukongApi.API
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
 
-            var events = BUS_EventCollectionCS.Get(entry.Controller);
+            var events = BUS_EventCollectionCS.Get(entry.Pawn);
             events.Evt_ResetSkillCD.Invoke();
         }
 
@@ -469,9 +469,9 @@ namespace WukongApi.API
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
 
-            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(entry.Controller);
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(entry.Pawn);
             float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
-            BUS_EventCollectionCS.Get(entry.Controller)?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
+            BUS_EventCollectionCS.Get(entry.Pawn)?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
     }
 }
