@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using b1;
 using b1.BGW;
+using BtlShare;
 using CSharpModBase;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -355,10 +356,88 @@ namespace WukongApi.API
             events.Evt_AIMoveTo.Invoke(targetPos, null, EAIMoveSpeedType.SPRINT, 2f, EBGUMoveAIType.KeepFacingTarget, false, false, "", "");
         }
 
+        public void SendSkillRingOfFire(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.UseSkillByType, 10520, 250, -1);
+        }
+
+        public void SendSkillSpellBinder(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.UseSkillByType, 10521, 250, -1);
+        }
+
+        public void SendSkillRockSolid(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.UseSkillByType, 10505, 230, -1);
+        }
+
+        public void SendSkillPluckOfMany(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.UseSkillByType, 10516, 240, -1);
+        }
+
+        public void SendGourdPotion(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1);
+        }
+
+        public void SendOnHandsEvilRepellingMedicament(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2247);
+        }
+
+        public void SendOnHandsLongevityDecoction(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2230);
+        }
+
+        public void SendOnHandsTigerSubduingPellets(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1);
+        }
+
         public void RunOnGameThread(Action callback)
         {
             EnsureInit();
             Utils.TryRunOnGameThread(callback);
+        }
+
+        private void SendSkill(CharacterId character, EInputActionType actionType, int skillID = 0, int descID = -1, int itemID = -1, bool resetCooldown = true, bool resetMana = true)
+        {
+            EnsureInit();
+            EnsureValidCharacter(character, out var entry);
+            EnsureControlled(entry);
+
+            var events = BUS_EventCollectionCS.Get(entry.Actor);
+            events.Evt_InputCastSkill.Invoke(actionType, false, skillID, descID, itemID);
+
+            if (resetCooldown)
+            {
+                ResetCooldown(character);
+            }
+            if (resetMana)
+            {
+                ResetManaPoints(character);
+            }
+        }
+
+        private void ResetCooldown(CharacterId character)
+        {
+            EnsureInit();
+            EnsureValidCharacter(character, out var entry);
+
+            var events = BUS_EventCollectionCS.Get(entry.Actor);
+            events.Evt_ResetSkillCD.Invoke();
+        }
+
+        private void ResetManaPoints(CharacterId character)
+        {
+            EnsureInit();
+            EnsureValidCharacter(character, out var entry);
+
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(entry.Actor);
+            float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
+            BUS_EventCollectionCS.Get(entry.Actor)?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
     }
 }
