@@ -2,7 +2,7 @@
 {
     public enum TransformKind
     {
-        WolfGuai = 10412,
+        WolfGuai = 12,
         RockGuai = 13,
         YinTiger = 14,
         RatGuai = 15,

@@ -209,15 +209,14 @@ namespace WukongApi.API
             var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
             var oldPawn = GameUtils.GetControlledPawn();
 
-            var @class = UClass.GetClass("BGUAIPlayerController");
-
             var oldController = GameUtils.GetPlayerController();
             var newPawn = WukongMP.SpawnWukong(oldController, playerPawnClass, new FTransform(rotation, actualPos), oldPawn);
 
             WukongMP.BackToOldPawn(oldController, oldPawn, newPawn);
 
+            var @class = UClass.GetClass("BGPPlayerController");
             var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref actualPos, ref rotation);
-            if (newControllerActor != null && newControllerActor is ABGUAIPlayerController newController)
+            if (newControllerActor != null && newControllerActor is ABGPPlayerController newController)
             {
                 Logging.LogDebug("Spawned new controller");
                 newController.Possess(newPawn);
@@ -334,6 +333,15 @@ namespace WukongApi.API
             characterEntries[character.index] = entry;
         }
 
+        public void UpdateController(CharacterId id, AController newController)
+        {
+            EnsureInit();
+            EnsureValidCharacter(id, out var entry);
+
+            entry.Controller = newController;
+            characterEntries[id.index] = entry;
+        }
+
         public void SendLightAttack(CharacterId character)
         {
             SendSkill(character, EInputActionType.LightAttack);
@@ -348,21 +356,33 @@ namespace WukongApi.API
         {
             SendSkill(character, EInputActionType.Dodge);
         }
-        
+
         public void SendTransform(CharacterId character, TransformKind kind)
         {
-            // EnsureControlled(entry);
-
-            // var events = BPS_GSEventCollection.Get(entry.Pawn.PlayerState);
-            // events.Evt_TriggerPlayerTransBegin.Invoke(EPlayerTransBeginType.AddBuff, new PlayerTransParam
+            EnsureValidCharacter(character, out var entry);
+            // BPS_GSEventCollection.Get(entry.Pawn.PlayerState).Evt_TriggerPlayerTransBegin.Invoke(EPlayerTransBeginType.AddBuff, new PlayerTransParam
             // {
-            //     NeedBlend = true,
             //     SpawnSkillId = 0,
-            //     TransSkillId = 0,
-            //     TargetResId = (int)kind
+            //     NeedBlend = true,
+            //     TargetResId = (int)kind,
+            //     TransSkillId = 0
             // });
-            
-            SendSkill(character, EInputActionType.UseSkillByType, (int)kind, 260);
+
+            BUS_EventCollectionCS.Get(entry.Pawn).Evt_TransBeginSpawnNewOne.Invoke((int)kind, 0, false, EPlayerTransBeginType.AddBuff);
+
+            // var self = GetLocalWukongCharacter();
+            // var entrySelf = characterEntries[self.index];
+
+            // var oldController = entry.Pawn.GetController();
+            // var myController = (AController)entrySelf.Controller;
+
+            // oldController.UnPossess();
+            // myController.Possess(entry.Pawn);
+
+            // BUS_EventCollectionCS.Get(entry.Pawn).Evt_RequestSmartCastSkill.Invoke(10412, null, EMontageBindReason.NormalSkill, false);
+
+            // oldController.Possess(entry.Pawn);
+            // myController.Possess(entrySelf.Pawn);
         }
 
         public void SendMoveTo(CharacterId character, FVector targetPos)
