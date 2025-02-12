@@ -335,16 +335,20 @@ namespace WukongApi.API
             characterEntries[character.index] = entry;
         }
 
-        public void SendAttack(CharacterId character)
+        public void SendLightAttack(CharacterId character)
         {
-            EnsureInit();
-            EnsureValidCharacter(character, out var entry);
-            EnsureControlled(entry);
-
-            var events = BUS_EventCollectionCS.Get(entry.Actor);
-            // events.Evt_AICastSkillWithSkillID.Invoke(0, ECastSkillSourceType.DodgeSkill);
+            SendSkill(character, EInputActionType.LightAttack);
         }
 
+        public void SendHeavyAttack(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.HeavyAttack);
+        }
+
+        public void SendDodge(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.Dodge);
+        }
 
         public void SendMoveTo(CharacterId character, FVector targetPos)
         {
@@ -358,42 +362,42 @@ namespace WukongApi.API
 
         public void SendSkillRingOfFire(CharacterId character)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10520, 250, -1);
+            SendSkill(character, EInputActionType.UseSkillByType, 10520, 250, -1, true, true);
         }
 
         public void SendSkillSpellBinder(CharacterId character)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10521, 250, -1);
+            SendSkill(character, EInputActionType.UseSkillByType, 10521, 250, -1, true, true);
         }
 
         public void SendSkillRockSolid(CharacterId character)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10505, 230, -1);
+            SendSkill(character, EInputActionType.UseSkillByType, 10505, 230, -1, true, true);
         }
 
         public void SendSkillPluckOfMany(CharacterId character)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10516, 240, -1);
+            SendSkill(character, EInputActionType.UseSkillByType, 10516, 240, -1, true, true);
         }
 
         public void SendGourdPotion(CharacterId character)
         {
-            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1);
+            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1, true, true);
         }
 
         public void SendOnHandsEvilRepellingMedicament(CharacterId character)
         {
-            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2247);
+            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2247, true, true);
         }
 
         public void SendOnHandsLongevityDecoction(CharacterId character)
         {
-            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2230);
+            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2230, true, true);
         }
 
         public void SendOnHandsTigerSubduingPellets(CharacterId character)
         {
-            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1);
+            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1, true, true);
         }
 
         public void RunOnGameThread(Action callback)
@@ -402,7 +406,7 @@ namespace WukongApi.API
             Utils.TryRunOnGameThread(callback);
         }
 
-        private void SendSkill(CharacterId character, EInputActionType actionType, int skillID = 0, int descID = -1, int itemID = -1, bool resetCooldown = true, bool resetMana = true)
+        private void SendSkill(CharacterId character, EInputActionType actionType, int skillID = 0, int descID = -1, int itemID = -1, bool resetCooldown = false, bool resetMana = false)
         {
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
