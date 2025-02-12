@@ -626,7 +626,7 @@ namespace WukongApi
             }
         }
 
-        private APawn SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
+        public static APawn SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
         {
             var newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(oldController.World, pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
             oldController.Possess(newPawn);
@@ -642,7 +642,7 @@ namespace WukongApi
             return newPawn;
         }
 
-        private static void BackToOldPawn(ABGPPlayerController oldController, APawn oldPawn, APawn newPawn)
+        public static void BackToOldPawn(ABGPPlayerController oldController, APawn oldPawn, APawn newPawn)
         {
             oldController.UnPossess();
             oldController.Possess(oldPawn);
