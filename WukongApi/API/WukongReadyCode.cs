@@ -352,7 +352,7 @@ namespace WukongApi.API
             SendSkillImpl(character, EInputActionType.HeavyAttack, false);
         }
 
-        public void SendCompleteHeavyAttack(CharacterId character)
+        public void SendReleaseHeavyAttack(CharacterId character)
         {
             SendSkillImpl(character, EInputActionType.HeavyAttack, true);
         }
