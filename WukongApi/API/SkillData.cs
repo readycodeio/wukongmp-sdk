@@ -11,10 +11,10 @@ namespace WukongApi.API
 
         public SkillData(EInputActionType actionType, int skillId, int descId, int itemId)
         {
-            ActionType=actionType;
-            SkillId=skillId;
-            DescId=descId;
-            ItemId=itemId;
+            ActionType = actionType;
+            SkillId = skillId;
+            DescId = descId;
+            ItemId = itemId;
         }
     }
 }

@@ -12,9 +12,9 @@ namespace WukongApi
 
         public PlayerTransformData(int playerId, FVector location, FRotator rotation)
         {
-            PlayerId=playerId;
-            Location=location;
-            Rotation=rotation;
+            PlayerId = playerId;
+            Location = location;
+            Rotation = rotation;
         }
 
         public static short Serialize(StreamBuffer outStream, object customObject)
@@ -39,6 +39,5 @@ namespace WukongApi
 
             return new PlayerTransformData(playerId, location, rotation);
         }
-
     }
 }

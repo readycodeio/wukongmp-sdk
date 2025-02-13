@@ -214,9 +214,9 @@ namespace WukongApi.API
 
             WukongMP.BackToOldPawn(oldController, oldPawn, newPawn);
 
-            var @class = UClass.GetClass("BGPPlayerController");
+            var @class = UClass.GetClass("BGP_AIPlayerControllerB1");
             var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref actualPos, ref rotation);
-            if (newControllerActor != null && newControllerActor is ABGPPlayerController newController)
+            if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerB1 newController)
             {
                 Logging.LogDebug("Spawned new controller");
                 newController.Possess(newPawn);
@@ -365,29 +365,7 @@ namespace WukongApi.API
         public void SendTransform(CharacterId character, TransformKind kind)
         {
             EnsureValidCharacter(character, out var entry);
-            // BPS_GSEventCollection.Get(entry.Pawn.PlayerState).Evt_TriggerPlayerTransBegin.Invoke(EPlayerTransBeginType.AddBuff, new PlayerTransParam
-            // {
-            //     SpawnSkillId = 0,
-            //     NeedBlend = true,
-            //     TargetResId = (int)kind,
-            //     TransSkillId = 0
-            // });
-
             BUS_EventCollectionCS.Get(entry.Pawn).Evt_TransBeginSpawnNewOne.Invoke((int)kind, 0, false, EPlayerTransBeginType.AddBuff);
-
-            // var self = GetLocalWukongCharacter();
-            // var entrySelf = characterEntries[self.index];
-
-            // var oldController = entry.Pawn.GetController();
-            // var myController = (AController)entrySelf.Controller;
-
-            // oldController.UnPossess();
-            // myController.Possess(entry.Pawn);
-
-            // BUS_EventCollectionCS.Get(entry.Pawn).Evt_RequestSmartCastSkill.Invoke(10412, null, EMontageBindReason.NormalSkill, false);
-
-            // oldController.Possess(entry.Pawn);
-            // myController.Possess(entrySelf.Pawn);
         }
 
         public void SendMoveTo(CharacterId character, FVector targetPos)
