@@ -347,9 +347,14 @@ namespace WukongApi.API
             SendSkill(character, EInputActionType.LightAttack);
         }
 
-        public void SendHeavyAttack(CharacterId character)
+        public void SendStartHeavyAttack(CharacterId character)
         {
-            SendSkill(character, EInputActionType.HeavyAttack);
+            SendSkill(character, EInputActionType.HeavyAttack, false);
+        }
+
+        public void SendCompleteHeavyAttack(CharacterId character)
+        {
+            SendSkill(character, EInputActionType.HeavyAttack, true);
         }
 
         public void SendDodge(CharacterId character)
@@ -402,44 +407,33 @@ namespace WukongApi.API
             events.Evt_AIMoveTo.Invoke(targetPos, null, EAIMoveSpeedType.SPRINT, 2f, EBGUMoveAIType.KeepFacingTarget, false, false, "", "");
         }
 
-        public void SendSkillRingOfFire(CharacterId character)
+        public void SendPhantomDash(CharacterId character, ESkillDirection phantomRushDir = ESkillDirection.Forward)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10520, 250, -1, true, true);
+            EnsureInit();
+            EnsureValidCharacter(character, out var entry);
+            EnsureControlled(entry);
+
+            BUS_EventCollectionCS.Get(entry.Pawn).Evt_TriggerPhantomRush.Invoke(phantomRushDir);
         }
 
-        public void SendSkillSpellBinder(CharacterId character)
+        public void SendSkillRingOfFire(CharacterId character)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10521, 250, -1, true, true);
+            SendSkill(character, EInputActionType.UseSkillByType, false, 10520, 250, -1, true, true);
         }
 
         public void SendSkillRockSolid(CharacterId character)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10505, 230, -1, true, true);
+            SendSkill(character, EInputActionType.UseSkillByType, false, 10505, 230, -1, true, true);
         }
 
         public void SendSkillPluckOfMany(CharacterId character)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, 10516, 240, -1, true, true);
+            SendSkill(character, EInputActionType.UseSkillByType, false, 10516, 240, -1, true, true);
         }
 
-        public void SendGourdPotion(CharacterId character)
+        public void SendDrinkSupremeGourd(CharacterId character)
         {
-            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1, true, true);
-        }
-
-        public void SendOnHandsEvilRepellingMedicament(CharacterId character)
-        {
-            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2247, true, true);
-        }
-
-        public void SendOnHandsLongevityDecoction(CharacterId character)
-        {
-            SendSkill(character, EInputActionType.CastItemSkill, 10913, -1, 2230, true, true);
-        }
-
-        public void SendOnHandsTigerSubduingPellets(CharacterId character)
-        {
-            SendSkill(character, EInputActionType.CastItemSkill, 10530, -1, -1, true, true);
+            SendSkill(character, EInputActionType.CastItemSkill, false, 10530, -1, -1, true, true);
         }
 
         public void RunOnGameThread(Action callback)
@@ -448,7 +442,7 @@ namespace WukongApi.API
             Utils.TryRunOnGameThread(callback);
         }
 
-        private void SendSkill(CharacterId character, EInputActionType actionType, int skillID = 0, int descID = -1, int itemID = -1, bool resetCooldown = false, bool resetMana = false)
+        private void SendSkill(CharacterId character, EInputActionType actionType, bool isRelease = false, int skillID = 0, int descID = -1, int itemID = -1, bool resetCooldown = false, bool resetMana = false)
         {
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
@@ -462,7 +456,7 @@ namespace WukongApi.API
                 return;
             }
 
-            events.Evt_InputCastSkill.Invoke(actionType, false, skillID, descID, itemID);
+            events.Evt_InputCastSkill.Invoke(actionType, isRelease, skillID, descID, itemID);
 
             if (resetCooldown)
             {
