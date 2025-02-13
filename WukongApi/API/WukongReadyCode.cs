@@ -344,22 +344,22 @@ namespace WukongApi.API
 
         public void SendLightAttack(CharacterId character)
         {
-            SendSkill(character, EInputActionType.LightAttack);
+            SendSkillImpl(character, EInputActionType.LightAttack);
         }
 
         public void SendStartHeavyAttack(CharacterId character)
         {
-            SendSkill(character, EInputActionType.HeavyAttack, false);
+            SendSkillImpl(character, EInputActionType.HeavyAttack, false);
         }
 
         public void SendCompleteHeavyAttack(CharacterId character)
         {
-            SendSkill(character, EInputActionType.HeavyAttack, true);
+            SendSkillImpl(character, EInputActionType.HeavyAttack, true);
         }
 
         public void SendDodge(CharacterId character)
         {
-            SendSkill(character, EInputActionType.Dodge);
+            SendSkillImpl(character, EInputActionType.Dodge);
         }
 
         public void SendTransform(CharacterId character, TransformKind kind)
@@ -416,24 +416,13 @@ namespace WukongApi.API
             BUS_EventCollectionCS.Get(entry.Pawn).Evt_TriggerPhantomRush.Invoke(phantomRushDir);
         }
 
-        public void SendSkillRingOfFire(CharacterId character)
+        public void SendSkill(CharacterId character, SkillKind skillKind, bool resetCooldown = true, bool resetMana = true)
         {
-            SendSkill(character, EInputActionType.UseSkillByType, false, 10520, 250, -1, true, true);
-        }
-
-        public void SendSkillRockSolid(CharacterId character)
-        {
-            SendSkill(character, EInputActionType.UseSkillByType, false, 10505, 230, -1, true, true);
-        }
-
-        public void SendSkillPluckOfMany(CharacterId character)
-        {
-            SendSkill(character, EInputActionType.UseSkillByType, false, 10516, 240, -1, true, true);
-        }
-
-        public void SendDrinkSupremeGourd(CharacterId character)
-        {
-            SendSkill(character, EInputActionType.CastItemSkill, false, 10530, -1, -1, true, true);
+            var skillData = SkillsConfig.GetSkillData(skillKind);
+            if (skillData.ActionType != EInputActionType.None)
+            {
+                SendSkillImpl(character, skillData.ActionType, false, skillData.SkillId, skillData.DescId, skillData.DescId, resetCooldown, resetMana);
+            }
         }
 
         public void RunOnGameThread(Action callback)
@@ -442,7 +431,7 @@ namespace WukongApi.API
             Utils.TryRunOnGameThread(callback);
         }
 
-        private void SendSkill(CharacterId character, EInputActionType actionType, bool isRelease = false, int skillID = 0, int descID = -1, int itemID = -1, bool resetCooldown = false, bool resetMana = false)
+        private void SendSkillImpl(CharacterId character, EInputActionType actionType, bool isRelease = false, int skillID = 0, int descID = -1, int itemID = -1, bool resetCooldown = false, bool resetMana = false)
         {
             EnsureInit();
             EnsureValidCharacter(character, out var entry);
