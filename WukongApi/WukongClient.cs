@@ -337,12 +337,26 @@ namespace WukongApi
 
             OnBeforeJoinRoom?.Invoke();
 
+            // TODO: Get these from the user
+            const string userId = "JakuJ";
+            const string pass = "example";
+
+            AuthenticationValues authValues = new AuthenticationValues
+            {
+                AuthType = CustomAuthenticationType.Custom,
+                UserId = userId // this is required when you set UserId directly from client and not from web service
+            };
+            authValues.AddAuthParameter("user", userId);
+            authValues.AddAuthParameter("pass", pass);
+            PhotonClient.AuthValues = authValues;
+
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
                 AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
+                AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.WebSocket,
                 EnableProtocolFallback = false,
-                AuthMode = AuthModeOption.AuthOnce
+                UseNameServer = true
             });
 
             new Thread(LoopGame).Start();
