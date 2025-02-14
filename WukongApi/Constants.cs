@@ -12,14 +12,13 @@ namespace WukongApi
         public const string ConnectedPatches = "Connected";
         public const string GlobalPatches = "Global";
         public const string CompanionPatches = "Companion";
-        public const string DefaultPhotonUserName = "ReadyM_noname";
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 100f;
         public const int MonsterSpawnDelayMs = 500;
         public const int BaseTeamId = -9999;
-        public const string AttributePrefix = "attr_";
+        public static readonly string AttributePrefix = "attr_";
         public static readonly FVector PvpStartingLocation = new FVector(-11146.926, -3229.771, 6497.035);
         public const float PvpRadius = 4000;
         public const float CameraArmLength = 720;

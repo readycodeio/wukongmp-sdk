@@ -24,7 +24,6 @@ namespace WukongApi
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         internal readonly RealtimeClient PhotonClient = new RealtimeClient();
-        private readonly string _userName;
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isExit;
@@ -125,11 +124,10 @@ namespace WukongApi
             SyncedMonsters.Remove(monsterGuid);
         }
 
-        public WukongClient(string userName, Action onJoinedRoom, Action<Player> playerJoinedCallback)
+        public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
-            _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
         }
@@ -338,15 +336,14 @@ namespace WukongApi
             OnBeforeJoinRoom?.Invoke();
 
             // TODO: Get these from the user
-            const string userId = "JakuJ";
+            const string user = "JakuJ";
             const string pass = "example";
 
-            AuthenticationValues authValues = new AuthenticationValues
+            var authValues = new AuthenticationValues
             {
-                AuthType = CustomAuthenticationType.Custom,
-                UserId = userId // this is required when you set UserId directly from client and not from web service
+                AuthType = CustomAuthenticationType.Custom
             };
-            authValues.AddAuthParameter("user", userId);
+            authValues.AddAuthParameter("user", user);
             authValues.AddAuthParameter("pass", pass);
             PhotonClient.AuthValues = authValues;
 
@@ -356,7 +353,7 @@ namespace WukongApi
                 AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.WebSocket,
                 EnableProtocolFallback = false,
-                UseNameServer = true
+                UseNameServer = true,
             });
 
             new Thread(LoopGame).Start();
@@ -765,9 +762,8 @@ namespace WukongApi
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
             _joinedRoomCallback?.Invoke();
-            WukongChat.InitializeChat(_userName);
+            WukongChat.InitializeChat(PhotonClient.NickName);
 
-            PhotonClient.NickName = _userName;
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
@@ -830,6 +826,7 @@ namespace WukongApi
                     if (kvp.Key is byte numId && numId == ActorProperties.NickName)
                     {
                         playerState.NickName = (string)kvp.Value;
+                        Logging.LogDebug($"Assigning NickName = {playerState.NickName} for player {id}");
                     }
                     else
                     {
