@@ -24,6 +24,8 @@ namespace WukongApi
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         internal readonly RealtimeClient PhotonClient = new RealtimeClient();
+        private readonly TypedLobby _lobby = new TypedLobby("pvpLobby", LobbyType.Default);
+
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isExit;
@@ -422,11 +424,13 @@ namespace WukongApi
             }
         }
 
-        private void MyJoinRandomOrCreateRoom()
+        private async Task MyJoinRandomOrCreateRoom()
         {
+            await PhotonClient.JoinLobbyAsync(_lobby);
+
             var propertiesForRoomCreation = new RoomOptions
             {
-                PublishUserId = false,
+                PublishUserId = true,
                 CustomRoomProperties = new PhotonHashtable
                 {
                     [nameof(RoomState.RoundsTotal)] = 3,
@@ -436,10 +440,10 @@ namespace WukongApi
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation,
-                RoomName = "WukongMP"
+                RoomName = "WukongMP mod room"
             };
 
-            PhotonClient.OpJoinOrCreateRoom(enterRoomParams);
+            await PhotonClient.JoinOrCreateRoomAsync(enterRoomParams);
         }
 
         private static void OnStateChange(ClientState arg1, ClientState arg2)
@@ -689,10 +693,17 @@ namespace WukongApi
             Logging.LogDebug("Connected");
         }
 
-        public void OnConnectedToMaster()
+        public async void OnConnectedToMaster()
         {
-            Logging.LogDebug("Connected to master server: " + PhotonClient.RealtimePeer.ServerIpAddress);
-            MyJoinRandomOrCreateRoom();
+            try
+            {
+                Logging.LogDebug("Connected to master server: " + PhotonClient.RealtimePeer.ServerIpAddress);
+                await MyJoinRandomOrCreateRoom();
+            }
+            catch (Exception e)
+            {
+                Logging.LogException(e);
+            }
         }
 
         public void OnDisconnected(DisconnectCause cause)
