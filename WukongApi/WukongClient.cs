@@ -339,8 +339,7 @@ namespace WukongApi
 
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
-                AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
-                FixedRegion = "eu",
+                AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
                 Protocol = ConnectionProtocol.WebSocket,
                 EnableProtocolFallback = false,
                 AuthMode = AuthModeOption.AuthOnce
