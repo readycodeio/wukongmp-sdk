@@ -1,14 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using ArchiveB1;
 using b1;
+using B1UI.GSUI;
 using CommB1;
 using HarmonyLib;
+using UnrealEngine.Runtime;
 
 namespace WukongApi.Patches
 {
     static class SavePatchesData
     {
-        public static bool CustomSaveEnabled;
+        public static bool CustomSaveEnabled = false;
+        public static bool ShouldCacheSave = false;
     }
 
     [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
@@ -25,21 +30,56 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    public class PatchUIArchives
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("B1UI.GSUI.UIArchives:LoadArchive");
+        }
+
+        public static void Postfix()
+        {
+            SavePatchesData.ShouldCacheSave = true;
+        }
+    }
+
+
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LoadArchive))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchGameArchive
     {
         public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData OutArchiveData)
         {
+            Logging.LogWarning(new System.Diagnostics.StackTrace(true).ToString());
+
             if (__result != ReadArchiveResult.Success)
             {
                 Logging.LogError($"Original readArchiveData Failed, Result:{__result}");
                 return;
             }
 
+            if (SavePatchesData.ShouldCacheSave)
+            {
+                SavePatchesData.ShouldCacheSave = false;
+                var characterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, ArchiveId);
+                var characterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(characterArchiveSlotName, __instance.ArchiveWorker.UserId);
+
+                SavePatchesData.CustomSaveEnabled = true;
+                var newCharacterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId);
+                var newCharacterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(newCharacterArchiveSlotName, __instance.ArchiveWorker.UserId);
+                File.Copy(characterArchiveFullName, newCharacterArchiveFullName, true);
+            }
+            else
+            {
+                SavePatchesData.CustomSaveEnabled = true;
+                var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var CharacterGameArchiveData, out var CharacterArchiveCanBeRepaired);
+                OutArchiveData = CharacterGameArchiveData.GameArchiveData;
+            }
+
             // Read archive with our world state.
-            SavePatchesData.CustomSaveEnabled = true;
-            var readArchiveResult = __instance.ReadArchiveData(0, out var GameArchiveData, out var ArchiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(Constants.LevelArchiveId, out var GameArchiveData, out var ArchiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");

@@ -22,6 +22,8 @@ namespace WukongApi
         public static readonly FVector PvpStartingLocation = new FVector(-11146.926, -3229.771, 6497.035);
         public const float PvpRadius = 4000;
         public const float CameraArmLength = 720;
+        public const int CharacterArchiveId = 10;
+        public const int LevelArchiveId = 0;
 
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
