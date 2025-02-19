@@ -13,6 +13,7 @@ using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongApi.Patches;
 using WukongApi.State;
+using WukongApi.UI;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -22,7 +23,6 @@ namespace WukongApi
     // ReSharper disable once InconsistentNaming
     public class WukongMP
     {
-        private UUserWidget _chatWidget;
         public FreeCameraManager FreeCameraManager { get; } = new FreeCameraManager();
 
         public readonly Harmony Harmony = new Harmony("WukongMP");
@@ -31,6 +31,8 @@ namespace WukongApi
 
         private FVector _savedPosition;
         private string _userName;
+
+        private ChatWidget _chatWidget = new ChatWidget();
 
         public static WukongMP Instance { get; } = new WukongMP();
 
@@ -114,12 +116,16 @@ namespace WukongApi
             if (!Photon.Ready)
             {
                 BlueprintUIUtils.SpawnModActor();
-                InitializeChatWidget();
-                ToggleChatWidget();
+                _chatWidget.Initialize();
                 Connect();
             }
 
             SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
+        }
+
+        private void OnLoadingScreenClose()
+        {
+            _chatWidget.ToggleVisibility();
         }
 
         public void DumpPlayerState()
@@ -244,7 +250,7 @@ namespace WukongApi
         private void InitPhotonAndConnectToChat()
         {
             Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
-            Photon.WukongChat.OnGetMessage += GetMessageFromWidget;
+            Photon.WukongChat.OnGetMessage += _chatWidget.GetMessage;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => Photon.BroadcastPlayerRebirth(Photon.LocalPlayerState.PhotonId), "HandleRebirth"); };
@@ -298,7 +304,7 @@ namespace WukongApi
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
-            Photon.WukongChat.OnSendMessage += AddMessageToWidget;
+            Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
@@ -745,57 +751,6 @@ namespace WukongApi
             }
 
             Photon.RegisterPlayer(playerState);
-        }
-
-        private void AddMessageToWidget(bool isServerMesssage, string sender, string message)
-        {
-            if (_chatWidget != null)
-            {
-                Logging.LogDebug($"Calling AddMessage function with message {message} from {sender}");
-                _chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
-            }
-            else
-            {
-                Logging.LogError("Chat widget not initialized");
-            }
-        }
-
-        private string GetMessageFromWidget()
-        {
-            if (_chatWidget != null)
-            {
-                _chatWidget.CallFunctionByNameWithArguments("GetSentMessage", true);
-                var message = _chatWidget.ToolTipText.ToString();
-                if (message.Length > 0)
-                {
-                    Logging.LogDebug($"Got message: {message} in GetSentMessage function");
-                }
-
-                return message;
-            }
-
-            return "";
-        }
-
-        private void InitializeChatWidget()
-        {
-            _chatWidget = BlueprintUIUtils.GetChatWidget();
-            if (_chatWidget != null)
-            {
-                Logging.LogDebug("Chat widget initialized!.");
-            }
-            else
-            {
-                Logging.LogError("Cannot initialize chat widget");
-            }
-        }
-
-        private void ToggleChatWidget()
-        {
-            if (_chatWidget != null)
-            {
-                _chatWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
-            }
         }
     }
 }
