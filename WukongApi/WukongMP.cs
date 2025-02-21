@@ -10,7 +10,6 @@ using HarmonyLib;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using UnrealEngine.UMG;
 using WukongApi.Patches;
 using WukongApi.State;
 using WukongApi.UI;
@@ -32,9 +31,14 @@ namespace WukongApi
         private FVector _savedPosition;
         private string _userName;
 
-        private ChatWidget _chatWidget = new ChatWidget();
+        private readonly ChatWidget _chatWidget = new ChatWidget();
+        private readonly TimerWidget _timerWidget = new TimerWidget();
+
+        public readonly CountdownTimer _countdownTimer = new CountdownTimer(1, 5);
 
         public static WukongMP Instance { get; } = new WukongMP();
+
+        public bool DisableArchiveSave {  get; set; }
 
         private WukongMP()
         {
@@ -43,7 +47,12 @@ namespace WukongApi
 
         public void Patch()
         {
-            // empty
+            Utils.TryRunOnGameThread(() =>
+            {
+                Harmony.PatchCategory(Constants.GlobalPatches);
+                Harmony.PatchCategory(Constants.ConnectedPatches);
+                Logging.LogDebug("Patched with Harmony");
+            });
         }
 
         public void Unpatch()
@@ -51,16 +60,15 @@ namespace WukongApi
             Utils.TryRunOnGameThread(() => { Harmony.UnpatchAll(); });
         }
 
-        private void Init()
+        public void Init()
         {
             InitUserName();
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
-            InitWorldCallbacks();
-            Harmony.PatchCategory(Constants.GlobalPatches);
+            AsyncInitGameInstance();
         }
 
-        public void InitAsync()
+        private void AsyncInitGameInstance()
         {
             Logging.LogDebug("Waiting for the game instance to be initialized.");
             Task.Run(async () =>
@@ -72,7 +80,7 @@ namespace WukongApi
                         if (GameUtils.IsGameInstanceValid())
                         {
                             Logging.LogDebug("Found valid GameInstance");
-                            Init();
+                            Utils.TryRunOnGameThread(() => InitWorldCallbacks());
                             break; // Exit the task
                         }
 
@@ -117,11 +125,18 @@ namespace WukongApi
             if (!Photon.Ready)
             {
                 BlueprintUIUtils.SpawnModActor();
-                _chatWidget.Initialize();
+                InitializeWidgets();
                 Connect();
             }
 
             SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
+        }
+
+        private void InitializeWidgets()
+        {
+            _chatWidget.Initialize();
+            _timerWidget.Initialize();
+            _countdownTimer.OnTick += (int minutes, int seconds) => _timerWidget.SetText(minutes, seconds);
         }
 
         private void OnLoadingScreenClose()
@@ -138,6 +153,16 @@ namespace WukongApi
             {
                 Logging.LogDebug($"Player {id} state: {state}");
             }
+        }
+
+        public bool ShouldRunConnectedPatches()
+        {
+            return Photon != null && Photon.Ready;
+        }
+
+        public void StartCountDown(int minutes, int seconds)
+        {
+
         }
 
         public void InitUserName()

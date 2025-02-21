@@ -16,9 +16,10 @@ namespace WukongMPMod
         {
             Logging.LogDebug("Init WukongMP mod");
 
-            _wukongMp = WukongMP.Instance;
 
-            _wukongMp.InitAsync();
+            _wukongMp = WukongMP.Instance;
+            _wukongMp.Init();
+            _wukongMp.Patch();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {

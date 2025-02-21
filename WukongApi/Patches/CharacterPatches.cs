@@ -13,6 +13,9 @@ namespace WukongApi.Patches
     {
         public static void Postfix(float DeltaTime, bool IsThreadTick)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             if (IsThreadTick)
             {
                 var photon = WukongMP.Instance.Photon;
@@ -32,6 +35,9 @@ namespace WukongApi.Patches
     {
         public static void Postfix(BUC_AttrContainer __instance)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             var photon = WukongMP.Instance.Photon;
 
             if (photon.IsMasterClient)
@@ -164,11 +170,17 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(EBGUAttrFloat AttrID)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             return AttrID != EBGUAttrFloat.Hp || WukongMP.Instance.Photon.IsMasterClient;
         }
 
         public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
@@ -263,6 +275,9 @@ namespace WukongApi.Patches
     {
         public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             if (__instance == null)
             {
                 Logging.LogError("__instance is null in BUC_ABPCharacterData.Update_GameThread");

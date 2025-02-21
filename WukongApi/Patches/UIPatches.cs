@@ -17,6 +17,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(ref bool __result)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             __result = true;
             return false;
         }
@@ -33,6 +36,9 @@ namespace WukongApi.Patches
 
         public static bool Prefix(DamageNumParam Param)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             var photon = WukongMP.Instance.Photon;
 
             if (!photon.IsMasterClient)
@@ -92,6 +98,9 @@ namespace WukongApi.Patches
 
         public static bool Prefix(ref string __result)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             __result = "00:00";
             return false;
         }

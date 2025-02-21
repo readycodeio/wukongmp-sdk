@@ -3,10 +3,8 @@ using System.IO;
 using System.Reflection;
 using ArchiveB1;
 using b1;
-using B1UI.GSUI;
 using CommB1;
 using HarmonyLib;
-using UnrealEngine.Runtime;
 
 namespace WukongApi.Patches
 {
@@ -52,8 +50,6 @@ namespace WukongApi.Patches
     {
         public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData OutArchiveData)
         {
-            Logging.LogWarning(new System.Diagnostics.StackTrace(true).ToString());
-
             if (__result != ReadArchiveResult.Success)
             {
                 Logging.LogError($"Original readArchiveData Failed, Result:{__result}");
@@ -96,18 +92,29 @@ namespace WukongApi.Patches
         }
     }
 
-    // Disable game saves while multiplayer is enabled
+    //// Disable game saves while multiplayer is enabled
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), "CheckSaveTask")]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriter
     {
-        public static bool Prefix()
+        public static bool Prefix(Dictionary<string, ArchiveAsyncRequest> ___PendingRequests)
         {
-            return false;
+            if (WukongMP.Instance.DisableArchiveSave)
+            {
+                return false;
+            }
+
+            if (___PendingRequests.Count == 0)
+            {
+                WukongMP.Instance.DisableArchiveSave = true;
+                return false;
+            }
+
+            return true;
         }
     }
 
-    // Disable adding save game requests
+    //// Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), new[] { typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>) })]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriterAppendArchive1

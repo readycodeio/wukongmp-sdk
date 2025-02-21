@@ -708,13 +708,6 @@ namespace WukongApi
                 LobbyManager = new LobbyManager(this);
             }
 
-            Utils.TryRunOnGameThread(() =>
-            {
-                WukongMP.Instance.Harmony.PatchCategory(Constants.ConnectedPatches);
-                Logging.LogDebug("Patched with Harmony");
-            });
-
-
             _joinedRoomCallback?.Invoke();
             WukongChat.InitializeChat(_userName);
 

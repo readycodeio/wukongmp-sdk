@@ -18,6 +18,9 @@ namespace WukongApi.Patches
 
         private static void Postfix(float DeltaTime, int TickGroup)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             // send updates for each monster
             var photon = WukongMP.Instance.Photon;
 
@@ -77,6 +80,9 @@ namespace WukongApi.Patches
     {
         public static void Postfix(FTamerRef __instance)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             try
             {
                 if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
@@ -104,6 +110,9 @@ namespace WukongApi.Patches
     {
         static bool Prefix(ref bool __result)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             __result = false;
             return false;
         }
@@ -115,6 +124,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(bool bEnable)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
@@ -128,6 +140,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(bool IsPause)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
@@ -142,6 +157,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(bool bEnable)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
@@ -155,6 +173,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(bool IsPause)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 
@@ -173,6 +194,9 @@ namespace WukongApi.Patches
 
         public static bool Prefix(bool bEnable)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             if (WukongMP.Instance.Photon.IsMasterClient)
                 return true;
 

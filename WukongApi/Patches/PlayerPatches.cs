@@ -20,6 +20,9 @@ namespace WukongApi.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             if (__instance == null)
             {
                 Logging.LogError("__instance is null in BUC_ABPBGUCharacterData.Update_GameThread");
@@ -99,6 +102,9 @@ namespace WukongApi.Patches
             IBUC_ABPHelperData HelperData,
             float DeltaTime)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             if (!(Owner is BGUCharacterCS))
                 return;
 
@@ -141,6 +147,9 @@ namespace WukongApi.Patches
             IBUC_ABPSpecialMoveData SpecialMoveData,
             float DeltaTime)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             if (!(Owner is BGUCharacterCS))
                 return;
 
@@ -182,6 +191,9 @@ namespace WukongApi.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             if (!(Owner is BGUCharacterCS character))
                 return;
 
@@ -251,6 +263,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(BUS_EquipComp __instance, EquipPosition EquipPosition, int EquipID)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
@@ -269,6 +284,9 @@ namespace WukongApi.Patches
     {
         public static void Postfix(BUS_DeadComp __instance)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
@@ -302,6 +320,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix()
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             return false;
         }
     }
@@ -312,6 +333,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(BUS_PlayerCameraCompImpl __instance)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             var photon = WukongMP.Instance.Photon;
 
             var localPawn = photon.LocalPlayerState.Pawn;
@@ -331,6 +355,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix()
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             return false;
         }
     }
@@ -341,6 +368,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(ref bool __result)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             __result = false;
             return false;
         }
@@ -352,6 +382,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(GSCameraControlData InControlData)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             InControlData.ArmLength = Constants.CameraArmLength;
             return true;
         }
