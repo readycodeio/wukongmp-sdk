@@ -1,17 +1,15 @@
-﻿using UnrealEngine.UMG;
-
-namespace WukongApi.UI
+﻿namespace WukongApi.UI
 {
-    public class ChatWidget
+    public class ChatWidget : GameWidgetBase
     {
-        private UUserWidget _chatWidget;
+        public ChatWidget() : base(Constants.ChatWidgetName) { }
 
         public void AddMessage(bool isServerMesssage, string sender, string message)
         {
-            if (_chatWidget != null)
+            if (_gameWidget != null)
             {
                 Logging.LogDebug($"Calling AddMessage function with message {message} from {sender}");
-                _chatWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
+                _gameWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
             }
             else
             {
@@ -21,10 +19,10 @@ namespace WukongApi.UI
 
         public string GetMessage()
         {
-            if (_chatWidget != null)
+            if (_gameWidget != null)
             {
-                _chatWidget.CallFunctionByNameWithArguments("GetSentMessage", true);
-                var message = _chatWidget.ToolTipText.ToString();
+                _gameWidget.CallFunctionByNameWithArguments("GetSentMessage", true);
+                var message = _gameWidget.ToolTipText.ToString();
                 if (message.Length > 0)
                 {
                     Logging.LogDebug($"Got message: {message} in GetSentMessage function");
@@ -36,24 +34,11 @@ namespace WukongApi.UI
             return "";
         }
 
-        public void Initialize()
-        {
-            _chatWidget = BlueprintUIUtils.GetWidget(Constants.ChatWidgetName);
-            if (_chatWidget != null)
-            {
-                Logging.LogDebug("Chat widget initialized!.");
-            }
-            else
-            {
-                Logging.LogError("Cannot initialize chat widget");
-            }
-        }
-
         public void ToggleVisibility()
         {
-            if (_chatWidget != null)
+            if (_gameWidget != null)
             {
-                _chatWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
+                _gameWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
             }
         }
     }

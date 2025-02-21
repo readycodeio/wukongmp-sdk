@@ -33,6 +33,8 @@ namespace WukongApi
 
         private readonly ChatWidget _chatWidget = new ChatWidget();
         private readonly TimerWidget _timerWidget = new TimerWidget();
+        private readonly LobbyStatusWidget _lobbyStatusWidget = new LobbyStatusWidget();
+        private readonly GameMessageWidget _gameMessageWidget = new GameMessageWidget();
 
         public readonly CountdownTimer _countdownTimer = new CountdownTimer(1, 5);
 
@@ -136,12 +138,19 @@ namespace WukongApi
         {
             _chatWidget.Initialize();
             _timerWidget.Initialize();
+            _lobbyStatusWidget.Initialize();
+            _gameMessageWidget.Initialize();
             _countdownTimer.OnTick += (int minutes, int seconds) => _timerWidget.SetText(minutes, seconds);
         }
 
         private void OnLoadingScreenClose()
         {
-            _chatWidget.ToggleVisibility();
+            _chatWidget.SetVisibility(true);
+            _gameMessageWidget.SetVisibility(true);
+            _gameMessageWidget.SetMainText("In Multiplayer Lobby");
+            _gameMessageWidget.SetSecondText("Press J to be ready");
+            _gameMessageWidget.SetThirdText("Press L to switch team");
+            _lobbyStatusWidget.SetVisibility(true);
         }
 
         public void DumpPlayerState()
@@ -162,7 +171,9 @@ namespace WukongApi
 
         public void StartCountDown(int minutes, int seconds)
         {
-
+            _timerWidget.SetVisibility(true);
+            _countdownTimer.SetTime(minutes, seconds);
+            _countdownTimer.Start();
         }
 
         public void InitUserName()

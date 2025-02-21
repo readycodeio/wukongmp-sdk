@@ -41,8 +41,6 @@ namespace WukongApi
             UWidgetLibrary.GetAllWidgetsOfClass(world, out list, wiClass, true);
             foreach (var widget in list)
             {
-                Console.WriteLine(widget.GetType());
-                Console.WriteLine(widget.GetFullName());
                 if (widget.GetFullName().Contains(widgetName))
                 {
                     userWidgets.Add(widget);
