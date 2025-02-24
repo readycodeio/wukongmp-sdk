@@ -698,9 +698,9 @@ namespace WukongApi
 
         public int GetTeamIdForPlayer()
         {
-
-            int teamId = Constants.AvailableTeamIds[0];
-            return teamId;
+            var r = new Random();
+            var index = r.Next(0, Constants.AvailableTeamIds.Count);
+            return Constants.AvailableTeamIds[index];
         }
 
         public virtual void OnJoinedRoom()
