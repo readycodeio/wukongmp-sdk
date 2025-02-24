@@ -32,6 +32,12 @@ namespace WukongMPMod
                 Logging.LogDebug("Alt + V");
                 _wukongMp.Photon.SpawnClone();
             });
+
+            Utils.RegisterKeyBind(Key.J, () =>
+            {
+                Logging.LogDebug("Alt + J");
+                _wukongMp.Photon.SwitchReadyState();
+            });
         }
 
         public void DeInit()

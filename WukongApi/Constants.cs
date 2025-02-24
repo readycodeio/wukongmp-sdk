@@ -24,6 +24,7 @@ namespace WukongApi
         public const float CameraArmLength = 720;
         public const int CharacterArchiveId = 10;
         public const int LevelArchiveId = 0;
+        public const int MaxPlayers = 20;
 
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";

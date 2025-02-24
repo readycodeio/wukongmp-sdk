@@ -40,6 +40,9 @@ namespace WukongApi
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
+        public event Action<string, bool, int> OnReadinessChange;
+        public event Action<int, int> OnTeamChange;
+        public event Action<APawn> OnPlayerLeft;
         public event Action<int> OnPlayerRebirth;
         public event Action<int> OnKillPlayer;
         public event Action<FVector, FRotator> OnSetPlayerTransform;
@@ -85,6 +88,17 @@ namespace WukongApi
         {
             var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn == owner);
             return kvp.Value;
+        }
+
+        public void SetReadyState(bool isReady)
+        {
+            CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
+        }
+
+        public void SwitchReadyState()
+        {
+            var isReady = LocalPlayerState.IsReadyForPvP;
+            SetReadyState(!isReady);
         }
 
         public MonsterState GetMonsterByCharacter(BGUCharacterCS owner)
@@ -246,32 +260,7 @@ namespace WukongApi
         private void OnPlayerReadinessChanged(Player player, bool isReady)
         {
             var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (LocalPlayerState.IsReadyForPvP ? 1 : 0);
-            var allPlayers = ConnectedPlayers.Count + 1;
-
-            if (playersReady != allPlayers)
-            {
-                GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
-            }
-            else
-            {
-                switch (playersReady)
-                {
-                    case 1:
-                        GameUtils.ShowTip("You are ready");
-                        break;
-                    case 2:
-                        GameUtils.ShowTip("Both players are ready");
-                        break;
-                    default:
-                        GameUtils.ShowTip($"All {playersReady} players are ready");
-                        break;
-                }
-            }
-
-            if (IsMasterClient) // send this only once
-            {
-                WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{player.NickName} is {(isReady ? "ready" : "not ready")}");
-            }
+            OnReadinessChange.Invoke(player.NickName, isReady, playersReady);
         }
 
         public void StartClient()
@@ -708,10 +697,10 @@ namespace WukongApi
                 LobbyManager = new LobbyManager(this);
             }
 
+            Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
+
             _joinedRoomCallback?.Invoke();
             WukongChat.InitializeChat(_userName);
-
-            GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
 
             PhotonClient.NickName = _userName;
         }
@@ -729,12 +718,6 @@ namespace WukongApi
         public void OnLeftRoom()
         {
             Logging.LogDebug("Left room");
-
-            Utils.TryRunOnGameThread(() =>
-            {
-                WukongMP.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
-                Logging.LogDebug("Unpatched Harmony");
-            });
         }
 
         #endregion
@@ -749,8 +732,9 @@ namespace WukongApi
         {
             Logging.LogDebug($"Player {otherPlayer.ActorNumber} left the room");
 
-            BGU_UnrealWorldUtil.DestroyActor(ConnectedPlayers[otherPlayer.ActorNumber].Pawn);
+            var playerPawn = ConnectedPlayers[otherPlayer.ActorNumber].Pawn;
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
+            OnPlayerLeft.Invoke(playerPawn);
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
@@ -825,6 +809,9 @@ namespace WukongApi
                         break;
                     case nameof(PlayerState.IsReadyForPvP):
                         OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
+                        continue;
+                    case nameof(PlayerState.TeamId):
+                        //OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
                         continue;
                 }
             }

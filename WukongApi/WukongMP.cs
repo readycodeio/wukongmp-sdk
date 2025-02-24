@@ -137,8 +137,10 @@ namespace WukongApi
         private void InitializeWidgets()
         {
             _chatWidget.Initialize();
+            _chatWidget.SetVisibility(false);
             _timerWidget.Initialize();
             _lobbyStatusWidget.Initialize();
+            _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers); // TODO: Set it from launcher value
             _gameMessageWidget.Initialize();
             _countdownTimer.OnTick += (int minutes, int seconds) => _timerWidget.SetText(minutes, seconds);
         }
@@ -147,9 +149,9 @@ namespace WukongApi
         {
             _chatWidget.SetVisibility(true);
             _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText("In Multiplayer Lobby");
-            _gameMessageWidget.SetSecondText("Press J to be ready");
-            _gameMessageWidget.SetThirdText("Press L to switch team");
+            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Texts.PressToBeReady);
+            _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
             _lobbyStatusWidget.SetVisibility(true);
         }
 
@@ -337,6 +339,8 @@ namespace WukongApi
             Photon.OnMonsterMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyMonsterMontageCallback(id, data), "ApplyMonsterMontageCallback");
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
+            Photon.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
+            Photon.OnPlayerLeft += (pawn) => Utils.TryRunOnGameThread(() => RemovePlayer(pawn));
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
@@ -422,6 +426,37 @@ namespace WukongApi
 
             var clone = (BGUCharacterCS)player.Pawn;
             EquipmentHelpers.SetRemoteActorEquipment(clone, eq);
+        }
+
+        private void UpdateReadiness(string playerNickName, bool isReady, int readyCount)
+        {
+            if (Photon.IsMasterClient) // send this only once
+            {
+                Photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{playerNickName} is {(isReady ? "ready" : "not ready")}");
+            }
+            if (isReady)
+            {
+                _gameMessageWidget.SetThirdText(Texts.YouAreReady);
+                _gameMessageWidget.SetSecondText(Texts.PressToBeNotReady);
+                _lobbyStatusWidget.SetReadyCount(readyCount);
+            }
+            else
+            {
+                _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
+                _gameMessageWidget.SetSecondText(Texts.PressToBeReady);
+                _lobbyStatusWidget.SetReadyCount(readyCount);
+            }
+        }
+
+        private void RemovePlayer(APawn playerPawn)
+        {
+            BGU_UnrealWorldUtil.DestroyActor(playerPawn);
+            UpdateConnectedCount();
+        }
+
+        private void UpdateConnectedCount()
+        {
+            _lobbyStatusWidget.SetConnectedCount(Photon.ConnectedPlayers.Count + 1);
         }
 
         private static void OnDamageNum(DamageNumParam damageNum)
@@ -658,6 +693,7 @@ namespace WukongApi
         {
             SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
+            UpdateConnectedCount();
         }
 
         private void SpawnPlayersAlreadyInRoom()
@@ -788,6 +824,7 @@ namespace WukongApi
             }
 
             Photon.RegisterPlayer(playerState);
+            UpdateConnectedCount();
         }
     }
 }
