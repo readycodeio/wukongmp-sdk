@@ -490,11 +490,11 @@ namespace WukongApi
 
         public void StartPvP()
         {
-            if (!IsMasterClient)
-            {
-                GameUtils.ShowTip("Only room owner can start PvP.");
-                return;
-            }
+            //if (!IsMasterClient)
+            //{
+            //    GameUtils.ShowTip("Only room owner can start PvP.");
+            //    return;
+            //}
 
             // clear previous round winners
             CurrentRoomState.RoundWinners = Enumerable.Empty<int>();

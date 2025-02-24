@@ -8,9 +8,10 @@ namespace WukongApi
         private int _remainingSeconds;
         private int _totalSeconds;
         private readonly Timer _timer;
+        private Action _callback;
 
         public event Action<int, int> OnTick;
-        public event Action OnFinished;
+        //public event Action OnFinished;
 
         public CountdownTimer(int minutes, int seconds)
         {
@@ -36,13 +37,15 @@ namespace WukongApi
             else
             {
                 Stop();
-                OnFinished?.Invoke();
+                //OnFinished?.Invoke();
+                _callback?.Invoke();
             }
         }
 
-        public void Start()
+        public void Start(Action onFinishedCallback)
         {
             _timer.Start();
+            _callback = onFinishedCallback;
         }
 
         public void Stop()
@@ -53,6 +56,7 @@ namespace WukongApi
         public void Reset()
         {
             Stop();
+            _callback = null;
             _remainingSeconds = _totalSeconds;
         }
     }

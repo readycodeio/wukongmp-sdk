@@ -7,5 +7,6 @@
         public const string PressToBeNotReady = "Press J to be not ready";
         public const string PressToSwitchTeam = "Press L to switch team";
         public const string YouAreReady = "You are ready";
+        public const string StartingGame = "Starting PvP match";
     }
 }

@@ -171,11 +171,25 @@ namespace WukongApi
             return Photon != null && Photon.Ready && Photon.PhotonClient.InRoom;
         }
 
-        public void StartCountDown(int minutes, int seconds)
+        public void StartCountdown(int minutes, int seconds, Action callback)
         {
+            _timerWidget.SetText(minutes, seconds);
             _timerWidget.SetVisibility(true);
             _countdownTimer.SetTime(minutes, seconds);
-            _countdownTimer.Start();
+            _countdownTimer.Start(callback);
+        }
+
+        public void StopCountdown()
+        {
+            _timerWidget.SetVisibility(false);
+            _countdownTimer.Reset();
+        }
+
+        public void StartPvP()
+        {
+            _timerWidget.SetVisibility(false);
+            _gameMessageWidget.SetVisibility(false);
+            Photon.StartPvP();
         }
 
         public void InitUserName()
@@ -437,12 +451,20 @@ namespace WukongApi
             }
             if (isReady)
             {
+                if (readyCount == (Photon.ConnectedPlayers.Count + 1))
+                {
+                    // all players are ready
+                    StartCountdown(0, 5, StartPvP);
+                    _gameMessageWidget.SetMainText(Texts.StartingGame);
+                }
                 _gameMessageWidget.SetThirdText(Texts.YouAreReady);
                 _gameMessageWidget.SetSecondText(Texts.PressToBeNotReady);
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
             else
             {
+                StopCountdown();
+                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
                 _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
                 _gameMessageWidget.SetSecondText(Texts.PressToBeReady);
                 _lobbyStatusWidget.SetReadyCount(readyCount);
