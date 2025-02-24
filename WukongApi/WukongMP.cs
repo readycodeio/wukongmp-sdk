@@ -38,7 +38,7 @@ namespace WukongApi
 
         public static WukongMP Instance { get; } = new WukongMP();
 
-        public bool DisableArchiveSave {  get; set; }
+        public bool DisableArchiveSave { get; set; }
 
         private WukongMP()
         {
