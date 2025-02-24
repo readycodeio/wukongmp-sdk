@@ -166,7 +166,7 @@ namespace WukongApi
 
         public bool ShouldRunConnectedPatches()
         {
-            return Photon != null && Photon.Ready;
+            return Photon != null && Photon.Ready && Photon.PhotonClient.InRoom;
         }
 
         public void StartCountDown(int minutes, int seconds)
