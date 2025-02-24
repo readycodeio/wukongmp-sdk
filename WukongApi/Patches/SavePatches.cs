@@ -37,7 +37,7 @@ namespace WukongApi.Patches
             return AccessTools.Method("B1UI.GSUI.UIArchives:LoadArchive");
         }
 
-        public static void Postfix()
+        public static void Prefix()
         {
             SavePatchesData.ShouldCacheSave = true;
         }
