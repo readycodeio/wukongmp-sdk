@@ -35,8 +35,14 @@ namespace WukongMPMod
 
             Utils.RegisterKeyBind(Key.J, () =>
             {
-                Logging.LogDebug("Alt + J");
+                Logging.LogDebug("J");
                 _wukongMp.Photon.SwitchReadyState();
+            });
+
+            Utils.RegisterKeyBind(Key.L, () =>
+            {
+                Logging.LogDebug("L");
+                _wukongMp.Photon.SwitchTeam();
             });
         }
 

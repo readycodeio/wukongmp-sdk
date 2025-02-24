@@ -340,6 +340,7 @@ namespace WukongApi
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
+            Photon.OnTeamChange += (name, teamId) => Utils.TryRunOnGameThread(() => _lobbyStatusWidget.UpdatePlayerTeam(name, teamId));
             Photon.OnPlayerLeft += (pawn) => Utils.TryRunOnGameThread(() => RemovePlayer(pawn));
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
@@ -783,8 +784,12 @@ namespace WukongApi
             events = BUS_EventCollectionCS.Get(oldPawn);
             events.Evt_OnLeaveFalling.Invoke();
 
-            // assign in dictionary
-            var teamId = PhotonUtils.GetTeamIdForPlayer(id);
+            // get teamId
+            int teamId = Constants.AvailableTeamIds.First();
+            if (player.CustomProperties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
+            {
+                teamId = (int)assignedTeamId;
+            }
 
             var playerState = new PlayerState(id, newPawn, teamId)
             {

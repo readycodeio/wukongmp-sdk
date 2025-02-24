@@ -41,7 +41,7 @@ namespace WukongApi
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action<string, bool, int> OnReadinessChange;
-        public event Action<int, int> OnTeamChange;
+        public event Action<string, int> OnTeamChange;
         public event Action<APawn> OnPlayerLeft;
         public event Action<int> OnPlayerRebirth;
         public event Action<int> OnKillPlayer;
@@ -97,8 +97,20 @@ namespace WukongApi
 
         public void SwitchReadyState()
         {
-            var isReady = LocalPlayerState.IsReadyForPvP;
-            SetReadyState(!isReady);
+            if (PhotonClient.InRoom)
+            {
+                var isReady = LocalPlayerState.IsReadyForPvP;
+                SetReadyState(!isReady);
+            }
+        }
+
+        public void SwitchTeam()
+        {
+            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP)
+            {
+                var teamId = (LocalPlayerState.TeamId == Constants.AvailableTeamIds[0]) ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
+                CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
+            }
         }
 
         public MonsterState GetMonsterByCharacter(BGUCharacterCS owner)
@@ -260,7 +272,7 @@ namespace WukongApi
         private void OnPlayerReadinessChanged(Player player, bool isReady)
         {
             var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (LocalPlayerState.IsReadyForPvP ? 1 : 0);
-            OnReadinessChange.Invoke(player.NickName, isReady, playersReady);
+            OnReadinessChange?.Invoke(player.NickName, isReady, playersReady);
         }
 
         public void StartClient()
@@ -684,13 +696,20 @@ namespace WukongApi
             Logging.LogDebug("Create room failed: " + message);
         }
 
+        public int GetTeamIdForPlayer()
+        {
+
+            int teamId = Constants.AvailableTeamIds[0];
+            return teamId;
+        }
+
         public virtual void OnJoinedRoom()
         {
             Logging.LogDebug("Joined room");
 
-            var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
-
+            var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
+            CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
 
             if (IsMasterClient)
             {
@@ -811,7 +830,8 @@ namespace WukongApi
                         OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
                         continue;
                     case nameof(PlayerState.TeamId):
-                        //OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
+                        Logging.LogWarning("Calling team id change");
+                        OnTeamChange?.Invoke(targetPlayer.NickName, (int)kvp.Value);
                         continue;
                 }
             }

@@ -19,22 +19,37 @@
             _gameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
         }
 
-        public void AddToTeam1(string playerName)
+        public void UpdatePlayerTeam(string nickName, int teamId)
+        {
+            Logging.LogWarning($"Updating player {nickName} to team {teamId}");
+            if (teamId == Constants.AvailableTeamIds[0])
+            {
+                RemoveFromTeam2(nickName);
+                AddToTeam1(nickName);
+            }
+            else if (teamId == Constants.AvailableTeamIds[1])
+            {
+                RemoveFromTeam1(nickName);
+                AddToTeam2(nickName);
+            }
+        }
+
+        private void AddToTeam1(string playerName)
         {
             _gameWidget?.CallFunctionByNameWithArguments($"AddToTeam1 {playerName}", true);
         }
 
-        public void RemoveFromTeam1(string playerName)
+        private void RemoveFromTeam1(string playerName)
         {
             _gameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam1 {playerName}", true);
         }
 
-        public void AddToTeam2(string playerName)
+        private void AddToTeam2(string playerName)
         {
             _gameWidget?.CallFunctionByNameWithArguments($"AddToTeam2 {playerName}", true);
         }
 
-        public void RemoveFromTeam2(string playerName)
+        private void RemoveFromTeam2(string playerName)
         {
             _gameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam2 {playerName}", true);
         }
