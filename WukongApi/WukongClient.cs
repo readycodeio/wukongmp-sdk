@@ -28,6 +28,7 @@ namespace WukongApi
 
         private const char MonsterHashtableKeySeparator = ';';
 
+        private string _roomName;
         private bool _isExit;
         private bool _inPvP;
 
@@ -337,16 +338,40 @@ namespace WukongApi
 
             OnBeforeJoinRoom?.Invoke();
 
-            // TODO: Get these from the user
-            const string user = "JakuJ";
-            const string pass = "example";
+            string accessToken = null;
+            var args = USystemLibrary.GetCommandLine().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            // find args '-access_token' and '-room_name'
+
+            for (var i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-access_token" && i + 1 < args.Length)
+                {
+                    accessToken = args[i + 1];
+                }
+                else if (args[i] == "-room_name" && i + 1 < args.Length)
+                {
+                    _roomName = args[i + 1];
+                }
+            }
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                Logging.LogError("Access token not found.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_roomName))
+            {
+                Logging.LogError("Room name not found.");
+                return;
+            }
 
             var authValues = new AuthenticationValues
             {
                 AuthType = CustomAuthenticationType.Custom
             };
-            authValues.AddAuthParameter("user", user);
-            authValues.AddAuthParameter("pass", pass);
+            authValues.AddAuthParameter("access_token", accessToken);
             PhotonClient.AuthValues = authValues;
 
             PhotonClient.ConnectUsingSettings(new AppSettings
@@ -435,12 +460,15 @@ namespace WukongApi
                 {
                     [nameof(RoomState.RoundsTotal)] = 3,
                     [nameof(RoomState.RoundWinners)] = ""
-                }
+                },
+                MaxPlayers = 8,
+                IsOpen = true,
+                IsVisible = true
             };
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation,
-                RoomName = "WukongMP mod room"
+                RoomName = _roomName
             };
 
             await PhotonClient.JoinOrCreateRoomAsync(enterRoomParams);
@@ -774,7 +802,6 @@ namespace WukongApi
 
             _joinedRoomCallback?.Invoke();
             WukongChat.InitializeChat(PhotonClient.NickName);
-
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
