@@ -913,6 +913,7 @@ namespace WukongApi
                         continue;
                     case nameof(PlayerState.TeamId):
                         Logging.LogWarning("Calling team id change");
+                        PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)playerState.Pawn, (int)kvp.Value);
                         OnTeamChange?.Invoke(targetPlayer.NickName, (int)kvp.Value);
                         continue;
                 }
