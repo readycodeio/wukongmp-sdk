@@ -114,12 +114,8 @@ namespace WukongApi
             });
         }
 
-        public static async Task ShowPvPCountDown()
+        public static void ShowPvPCountDown()
         {
-            Utils.TryRunOnGameThread(() => { GenAGPage.ShowPage(95, nameof(ShowPvPCountDown)); });
-
-            await Task.Delay(4000);
-
             Utils.TryRunOnGameThread(() =>
             {
                 var photon = WukongMP.Instance.Photon;

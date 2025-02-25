@@ -18,17 +18,8 @@ namespace WukongApi
 
         public async Task StartRoundAsync()
         {
-            foreach (var player in _wukongClient.ConnectedPlayers.Values)
-            {
-                if (!player.IsReadyForPvP)
-                {
-                    GameUtils.ShowTip($"Player {player.NickName} is not ready"); // TODO: Nickname
-                    return;
-                }
-            }
-
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
-            await Task.Delay(500);
+            await Task.Delay(100);
 
             _wukongClient.SendPvPEvent(PvPEvent.RoundStart);
         }

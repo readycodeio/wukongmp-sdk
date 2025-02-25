@@ -35,8 +35,8 @@ namespace WukongApi
         private readonly TimerWidget _timerWidget = new TimerWidget();
         private readonly LobbyStatusWidget _lobbyStatusWidget = new LobbyStatusWidget();
         private readonly GameMessageWidget _gameMessageWidget = new GameMessageWidget();
-
-        public readonly CountdownTimer _countdownTimer = new CountdownTimer(1, 5);
+        private readonly InfoMessageWidget _infoMessageWidget = new InfoMessageWidget();
+        private readonly CountdownWidget _countdownWidget = new CountdownWidget();
 
         public static WukongMP Instance { get; } = new WukongMP();
 
@@ -142,7 +142,8 @@ namespace WukongApi
             _lobbyStatusWidget.Initialize();
             _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers); // TODO: Set it from launcher value
             _gameMessageWidget.Initialize();
-            _countdownTimer.OnTick += (int minutes, int seconds) => _timerWidget.SetText(minutes, seconds);
+            _countdownWidget.Initialize();
+            _infoMessageWidget.Initialize();
         }
 
         private void OnLoadingScreenClose()
@@ -174,20 +175,6 @@ namespace WukongApi
         public bool ShouldRunConnectedPatches()
         {
             return Photon != null && Photon.Ready && Photon.PhotonClient.InRoom;
-        }
-
-        public void StartCountdown(int minutes, int seconds, Action callback)
-        {
-            _timerWidget.SetText(minutes, seconds);
-            _timerWidget.SetVisibility(true);
-            _countdownTimer.SetTime(minutes, seconds);
-            _countdownTimer.Start(callback);
-        }
-
-        public void StopCountdown()
-        {
-            _timerWidget.SetVisibility(false);
-            _countdownTimer.Reset();
         }
 
         public void StartPvP()
@@ -465,7 +452,7 @@ namespace WukongApi
                 if (readyCount == (Photon.ConnectedPlayers.Count + 1))
                 {
                     // all players are ready
-                    StartCountdown(0, 5, StartPvP);
+                    _countdownWidget.StartLobbyCountdown(5, StartPvP);
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
                 }
                 _gameMessageWidget.SetThirdText(Texts.YouAreReady);
@@ -474,7 +461,7 @@ namespace WukongApi
             }
             else
             {
-                StopCountdown();
+                _countdownWidget.StopCountdown();
                 _gameMessageWidget.SetMainText(Texts.InMultiplayer);
                 _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
                 _gameMessageWidget.SetSecondText(Texts.PressToBeReady);

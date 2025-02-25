@@ -31,7 +31,9 @@ namespace WukongApi
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
         public const string TimerWidgetName = "WBP_Timer_C";
+        public const string CountdownWidgetName = "WBP_Countdown_C";
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
+        public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new EnumSet<EBGUAttrFloat>(new[]
