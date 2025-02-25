@@ -917,9 +917,15 @@ namespace WukongApi
             }
         }
 
-        public void OnMasterClientSwitched(Player newMasterClient) { }
+        public void OnMasterClientSwitched(Player newMasterClient)
+        {
+            if (newMasterClient.ActorNumber == PhotonId)
+            {
+                // assume control of lobby manager
+                LobbyManager = new LobbyManager(this);
+            }
+        }
 
-        private static readonly Dictionary<string, Action<RoomState, object>> RoomSetters = new Dictionary<string, Action<RoomState, object>>();
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new Dictionary<string, Action<PlayerState, object>>();
         private static readonly Dictionary<string, Action<MonsterState, object>> MonsterSetters = new Dictionary<string, Action<MonsterState, object>>();
 
