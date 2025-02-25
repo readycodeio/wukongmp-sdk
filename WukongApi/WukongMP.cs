@@ -123,7 +123,7 @@ namespace WukongApi
             DestroyAllMonsters();
             if (!Photon.Ready)
             {
-                BlueprintUIUtils.SpawnModActor();
+                BlueprintUIUtils.SpawnUIManagerActor();
                 InitializeWidgets();
                 Connect();
             }

@@ -28,7 +28,7 @@ namespace WukongApi
         public static readonly List<int> AvailableTeamIds = new List<int> { -9999, -9998 };
         public const int DrawTeamId = 9999;
 
-        public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
+        public const string UIManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
         public const string TimerWidgetName = "WBP_Timer_C";
         public const string CountdownWidgetName = "WBP_Countdown_C";
