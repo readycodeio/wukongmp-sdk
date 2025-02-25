@@ -178,6 +178,7 @@ namespace WukongApi
         {
             _timerWidget.SetVisibility(false);
             _gameMessageWidget.SetVisibility(false);
+            _countdownWidget.StopCountdown();
             Photon.StartPvP();
         }
 
