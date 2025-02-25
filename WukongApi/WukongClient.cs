@@ -104,6 +104,7 @@ namespace WukongApi
             {
                 var isReady = LocalPlayerState.IsReadyForPvP;
                 SetReadyState(!isReady);
+                WukongMP.Instance.SwitchReadyState(!isReady);
             }
         }
 

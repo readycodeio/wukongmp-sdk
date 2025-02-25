@@ -453,17 +453,27 @@ namespace WukongApi
                     _countdownWidget.StartLobbyCountdown(5, StartPvP);
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
                 }
-                _gameMessageWidget.SetThirdText(Texts.YouAreReady);
-                _gameMessageWidget.SetSecondText(Texts.PressToBeNotReady);
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
             else
             {
                 _countdownWidget.StopCountdown();
                 _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+                _lobbyStatusWidget.SetReadyCount(readyCount);
+            }
+        }
+
+        public void SwitchReadyState(bool isReady)
+        {
+            if (isReady)
+            {
+                _gameMessageWidget.SetThirdText(Texts.YouAreReady);
+                _gameMessageWidget.SetSecondText(Texts.PressToBeNotReady);
+            }
+            else
+            {
                 _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
                 _gameMessageWidget.SetSecondText(Texts.PressToBeReady);
-                _lobbyStatusWidget.SetReadyCount(readyCount);
             }
         }
 
