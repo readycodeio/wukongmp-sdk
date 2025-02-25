@@ -223,7 +223,7 @@ namespace WukongApi
                     }
                     else
                     {
-                        GameUtils.ShowTip($"Round ended. Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                        GameUtils.ShowTip($"Round ended. Team {GameUtils.GetTeamName(winnerTeamId)} won");
                     }
 
                     if (winnerTeamId == Constants.DrawTeamId)
@@ -235,8 +235,6 @@ namespace WukongApi
                         Logging.LogError("No winner found.");
                         return;
                     }
-
-                    Logging.LogWarning($"Round ended, winner: {winner.NickName} {winner.TeamId}");
 
                     if (winner.TeamId == LocalPlayerState.TeamId)
                     {
@@ -252,7 +250,7 @@ namespace WukongApi
                     }
                     else
                     {
-                        GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                        GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamName(winnerTeamId)}");
                     }
 
                     Task.Run(async () =>
