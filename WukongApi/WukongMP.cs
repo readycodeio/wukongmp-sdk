@@ -177,11 +177,22 @@ namespace WukongApi
             return Photon != null && Photon.Ready && Photon.PhotonClient.InRoom;
         }
 
-        public void StartPvP()
+        private void StartPvP()
         {
             _timerWidget.SetVisibility(false);
             _gameMessageWidget.SetVisibility(false);
             Photon.StartPvP();
+        }
+
+        public void StartRound()
+        {
+            _timerWidget.StartRoundCountdown(0, 30, OnRoundEnded);
+        }
+
+        private void OnRoundEnded()
+        {
+            Logging.LogWarning($"Round time ended, ending round");
+            Task.Run(async () => await Photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
         }
 
         public void InitUserName()

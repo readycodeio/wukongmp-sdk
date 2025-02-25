@@ -207,6 +207,7 @@ namespace WukongApi
             {
                 case PvPEvent.RoundStart:
                     Task.Run(GameUtils.ShowPvPCountDown);
+                    WukongMP.Instance.StartRound();
                     WukongMP.Instance.EnablePvP();
                     EnterPvP();
                     break;
@@ -512,12 +513,6 @@ namespace WukongApi
 
         public void StartPvP()
         {
-            //if (!IsMasterClient)
-            //{
-            //    GameUtils.ShowTip("Only room owner can start PvP.");
-            //    return;
-            //}
-
             // clear previous round winners
             CurrentRoomState.RoundWinners = Enumerable.Empty<int>();
 
