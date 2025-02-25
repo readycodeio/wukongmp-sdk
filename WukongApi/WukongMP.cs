@@ -137,7 +137,7 @@ namespace WukongApi
             _chatWidget.SetVisibility(false);
             _timerWidget.Initialize();
             _lobbyStatusWidget.Initialize();
-            _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers); // TODO: Set it from launcher value
+            _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
             _gameMessageWidget.Initialize();
             _countdownWidget.Initialize();
             _infoMessageWidget.Initialize();
@@ -724,6 +724,7 @@ namespace WukongApi
             SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
+            _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
         }
 
         private void SpawnPlayersAlreadyInRoom()
