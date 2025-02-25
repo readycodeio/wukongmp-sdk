@@ -248,7 +248,7 @@ namespace WukongApi
                 {
                     if (winnerTeamId == Constants.DrawTeamId)
                     {
-                        GameUtils.ShowTip($"Draw");
+                        GameUtils.ShowTip("Draw");
                     }
                     else
                     {
@@ -472,6 +472,7 @@ namespace WukongApi
                 RoomName = _roomName
             };
 
+            Logging.LogDebug($"Joining room {_roomName}");
             await PhotonClient.JoinOrCreateRoomAsync(enterRoomParams);
         }
 
@@ -834,7 +835,7 @@ namespace WukongApi
 
             var playerPawn = ConnectedPlayers[otherPlayer.ActorNumber].Pawn;
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
-            OnPlayerLeft.Invoke(playerPawn);
+            OnPlayerLeft?.Invoke(playerPawn);
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
