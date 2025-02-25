@@ -852,6 +852,7 @@ namespace WukongApi
 
             Photon.RegisterPlayer(playerState);
             UpdateConnectedCount();
+            _lobbyStatusWidget.UpdatePlayerTeam((string)nickName, teamId);
         }
     }
 }

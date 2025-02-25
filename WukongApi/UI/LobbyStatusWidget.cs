@@ -24,12 +24,14 @@
             Logging.LogWarning($"Updating player {nickName} to team {teamId}");
             if (teamId == Constants.AvailableTeamIds[0])
             {
+                RemoveFromTeam1(nickName);
                 RemoveFromTeam2(nickName);
                 AddToTeam1(nickName);
             }
             else if (teamId == Constants.AvailableTeamIds[1])
             {
                 RemoveFromTeam1(nickName);
+                RemoveFromTeam2(nickName);
                 AddToTeam2(nickName);
             }
         }
