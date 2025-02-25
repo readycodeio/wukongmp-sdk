@@ -373,6 +373,8 @@ namespace WukongApi.Patches
                     {
                         events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
+
+                    playerState.UpdateMarkerPosition();
                 }
                 else
                 {

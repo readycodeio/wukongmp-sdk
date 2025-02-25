@@ -134,13 +134,13 @@ namespace WukongApi
             });
         }
 
-        public static int GetTeamNumber(int teamId)
+        public static string GetTeamName(int teamId)
         {
             if (teamId == Constants.AvailableTeamIds[0])
-                return 1;
+                return "Red";
             if (teamId == Constants.AvailableTeamIds[1])
-                return 2;
-            return 0;
+                return "Blue";
+            return "";
         }
     }
 }

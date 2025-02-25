@@ -351,7 +351,7 @@ namespace WukongApi
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
-            Photon.OnTeamChange += (playerState, teamId) => Utils.TryRunOnGameThread(() => _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId));
+            Photon.OnTeamChange += (playerState, teamId) => Utils.TryRunOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
             Photon.OnPlayerLeft += (pawn) => Utils.TryRunOnGameThread(() => RemovePlayer(pawn));
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
@@ -362,6 +362,18 @@ namespace WukongApi
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
             Photon.StartClient();
+        }
+
+        private void UpdatePlayerTeam(PlayerState playerState, int teamId)
+        {
+            Logging.LogDebug($"Updating player {playerState.NickName} to team {teamId}");
+            PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)playerState.Pawn, teamId);
+            if (playerState.MarkerActor != null)
+            {
+                var teamName = GameUtils.GetTeamName(playerState.TeamId);
+                playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
+            }
+            _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId);
         }
 
         private void KillPlayer(int playerId)
@@ -857,6 +869,23 @@ namespace WukongApi
             {
                 unitCommDesc.CameraLockDist = 10000;
             }
+
+            // create 3D marker
+            var world = GameUtils.GetWorld();
+            var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
+            var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
+            if (playerMarkerActor != null)
+            {
+                Logging.LogDebug("Player marker actor spawned successfully");
+            }
+            else
+            {
+                Logging.LogDebug("Cannot spawn player marker actor");
+            }
+
+            var teamName = GameUtils.GetTeamName(playerState.TeamId);
+            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
+            playerState.MarkerActor = playerMarkerActor;
 
             Photon.RegisterPlayer(playerState);
             UpdateConnectedCount();

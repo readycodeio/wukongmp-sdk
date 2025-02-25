@@ -24,8 +24,6 @@ namespace WukongApi.UI
 
         public void UpdatePlayerTeam(PlayerState playerState, int teamId)
         {
-            Logging.LogDebug($"Updating player {playerState.NickName} to team {teamId}");
-            PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)playerState.Pawn, teamId);
             if (teamId == Constants.AvailableTeamIds[0])
             {
                 RemoveFromTeam1(playerState.NickName);
