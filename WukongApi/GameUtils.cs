@@ -75,7 +75,7 @@ namespace WukongApi
 
         public static string GetSaveDirectory()
         {
-            return FPaths.Combine(FPaths.ProjectDir, "Saved", "Readycode");
+            return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", "WukongMPMod");
         }
 
         public static string GetSaveFileFullName(string SlotName)
