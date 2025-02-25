@@ -184,7 +184,7 @@ namespace WukongApi
 
         public void StartRound()
         {
-            _timerWidget.StartRoundCountdown(0, 30, OnRoundEnded);
+            _timerWidget.StartRoundCountdown(1, 30, OnRoundEnded);
         }
 
         private void OnRoundEnded()
