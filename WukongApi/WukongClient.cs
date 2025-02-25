@@ -380,6 +380,7 @@ namespace WukongApi
                 Protocol = ConnectionProtocol.WebSocket,
                 EnableProtocolFallback = false,
                 UseNameServer = true,
+                FixedRegion = "usw",
             });
 
             new Thread(LoopGame).Start();

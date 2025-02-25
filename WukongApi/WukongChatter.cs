@@ -49,8 +49,17 @@ namespace WukongApi
 
         public void InitializeChat(string userName)
         {
-            _chatClient = new ChatClient(this);
-            _chatClient.Connect("d4af67fe-a776-499e-8f56-f169d3db616e", "1.0", new AuthenticationValues(userName));
+            _chatClient = new ChatClient(this)
+            {
+                AuthValues = new AuthenticationValues(userName)
+            };
+
+            _chatClient.ConnectUsingSettings(new ChatAppSettings
+            {
+                AppIdChat = "d4af67fe-a776-499e-8f56-f169d3db616e",
+                AppVersion = "1.0",
+                FixedRegion = "us",
+            });
 
             Console.WriteLine("\n\nYou are: " + userName);
         }
