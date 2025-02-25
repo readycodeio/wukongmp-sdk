@@ -27,6 +27,7 @@ namespace WukongApi
         public const int LevelArchiveId = 0;
         public const int MaxPlayers = 20;
         public static readonly List<int> AvailableTeamIds = new List<int> { -9999, -9998 };
+        public const int DrawTeamId = 9999;
 
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";

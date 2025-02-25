@@ -133,5 +133,14 @@ namespace WukongApi
                 playUiSound.Invoke(null, new object[] { "EVT_ui_kill_jisha_manjingtou" });
             });
         }
+
+        public static int GetTeamNumber(int teamId)
+        {
+            if (teamId == Constants.AvailableTeamIds[0])
+                return 1;
+            if (teamId == Constants.AvailableTeamIds[1])
+                return 2;
+            return 0;
+        }
     }
 }

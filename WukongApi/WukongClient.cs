@@ -199,7 +199,7 @@ namespace WukongApi
             }
         }
 
-        private void HandlePvPEvent(PvPEvent ev, int data)
+        private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
         {
             Logging.LogWarning($"Received PvP event: {ev}");
 
@@ -212,8 +212,11 @@ namespace WukongApi
                     break;
                 case PvPEvent.RoundEnd:
                     WukongMP.Instance.DisablePvP();
-                    var winner = AllConnectedPlayers.FirstOrDefault(x => x.TeamId == data);
 
+                    if (winnerTeamId == Constants.DrawTeamId)
+                        return;
+
+                    var winner = AllConnectedPlayers.FirstOrDefault(x => x.TeamId == winnerTeamId);
                     if (winner is null)
                     {
                         Logging.LogError("No winner found.");
@@ -230,11 +233,15 @@ namespace WukongApi
                     break;
                 case PvPEvent.TournamentEnd:
                 {
-                    var winners = AllConnectedPlayers.Where(x => x.TeamId == data).Select(x => x.NickName).ToList();
-                    var winnerString = string.Join(", ", winners);
-                    var plural = winners.Count > 1 ? "s" : "";
-                    GameUtils.ShowTip($"Winner{plural}: {winnerString}"); // TODO: Ties
-                    WukongMP.Instance.EndTurnament(data);
+                    if (winnerTeamId == Constants.DrawTeamId)
+                    {
+                        GameUtils.ShowTip($"Draw");
+                    }
+                    else
+                    {
+                        GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                    }
+                    WukongMP.Instance.EndTurnament(winnerTeamId);
                     ExitPvP();
                     SetReadyState(false);
                     break;

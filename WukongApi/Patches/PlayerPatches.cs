@@ -305,11 +305,19 @@ namespace WukongApi.Patches
             var players = photon.AllConnectedPlayers.ToList();
             var deadPlayers = players.Count(p => p.IsDead);
 
-            if (photon.IsMasterClient && deadPlayers == players.Count - 1)
+            if (photon.IsMasterClient)
             {
-                Logging.LogWarning($"Dead players: {deadPlayers}, ending round");
-                var winner = players.First(p => !p.IsDead);
-                Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
+                if (deadPlayers == players.Count - 1)
+                {
+                    Logging.LogWarning($"Dead players: {deadPlayers}, ending round");
+                    var winner = players.First(p => !p.IsDead);
+                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
+                }
+                else if (deadPlayers == players.Count)
+                {
+                    Logging.LogWarning($"All players are dead, ending round");
+                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
+                }
             }
         }
     }
