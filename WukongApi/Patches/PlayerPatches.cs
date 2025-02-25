@@ -282,7 +282,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
-        public static void Postfix(BUS_DeadComp __instance)
+        public static void Postfix(BUS_DeadComp __instance, AActor Attacker)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -290,8 +290,8 @@ namespace WukongApi.Patches
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
-            var playerState = photon.GetByActor(owner);
-            if (playerState == null)
+            var killedPlayerState = photon.GetByActor(owner);
+            if (killedPlayerState == null)
             {
                 return;
             }
@@ -307,6 +307,15 @@ namespace WukongApi.Patches
 
             if (photon.IsMasterClient)
             {
+                if (Attacker != owner)
+                {
+                    var attackerPlayerState = photon.GetByActor(owner);
+                    if (attackerPlayerState != null)
+                    {
+                        photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
+                    }
+                }
+
                 if (deadPlayers == players.Count - 1)
                 {
                     Logging.LogWarning($"Dead players: {deadPlayers}, ending round");
