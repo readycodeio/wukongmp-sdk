@@ -192,7 +192,15 @@ namespace WukongApi
         private void OnRoundEnded()
         {
             Logging.LogWarning($"Round time ended, ending round");
-            Task.Run(async () => await Photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
+            if (Photon.IsMasterClient)
+            {
+                Task.Run(async () => await Photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
+            }
+        }
+
+        public void EndRound()
+        {
+            _timerWidget.StopCountdown();
         }
 
         public void InitUserName()

@@ -213,6 +213,16 @@ namespace WukongApi
                     break;
                 case PvPEvent.RoundEnd:
                     WukongMP.Instance.DisablePvP();
+                    WukongMP.Instance.EndRound();
+
+                    if (winnerTeamId == Constants.DrawTeamId)
+                    {
+                        GameUtils.ShowTip($"Round ended: Draw");
+                    }
+                    else
+                    {
+                        GameUtils.ShowTip($"Round ended. Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                    }
 
                     if (winnerTeamId == Constants.DrawTeamId)
                         return;
@@ -242,9 +252,15 @@ namespace WukongApi
                     {
                         GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
                     }
-                    WukongMP.Instance.EndTurnament(winnerTeamId);
-                    ExitPvP();
-                    SetReadyState(false);
+
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(2000);
+                        WukongMP.Instance.EndTurnament(winnerTeamId);
+                        ExitPvP();
+                        SetReadyState(false);
+                    });
+
                     break;
                 }
                 case PvPEvent.ResetStats:
