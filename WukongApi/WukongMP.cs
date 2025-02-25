@@ -350,7 +350,7 @@ namespace WukongApi
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
-            Photon.OnTeamChange += (name, teamId) => Utils.TryRunOnGameThread(() => _lobbyStatusWidget.UpdatePlayerTeam(name, teamId));
+            Photon.OnTeamChange += (playerState, teamId) => Utils.TryRunOnGameThread(() => _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId));
             Photon.OnPlayerLeft += (pawn) => Utils.TryRunOnGameThread(() => RemovePlayer(pawn));
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
@@ -858,7 +858,7 @@ namespace WukongApi
 
             Photon.RegisterPlayer(playerState);
             UpdateConnectedCount();
-            _lobbyStatusWidget.UpdatePlayerTeam((string)nickName, teamId);
+            _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId);
         }
     }
 }

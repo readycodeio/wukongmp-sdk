@@ -44,7 +44,7 @@ namespace WukongApi
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action<string, bool, int> OnReadinessChange;
-        public event Action<string, int> OnTeamChange;
+        public event Action<PlayerState, int> OnTeamChange;
         public event Action<APawn> OnPlayerLeft;
         public event Action<int> OnPlayerRebirth;
         public event Action<int> OnKillPlayer;
@@ -912,9 +912,7 @@ namespace WukongApi
                         OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
                         continue;
                     case nameof(PlayerState.TeamId):
-                        Logging.LogWarning("Calling team id change");
-                        PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)playerState.Pawn, (int)kvp.Value);
-                        OnTeamChange?.Invoke(targetPlayer.NickName, (int)kvp.Value);
+                        OnTeamChange?.Invoke(playerState, (int)kvp.Value);
                         continue;
                 }
             }

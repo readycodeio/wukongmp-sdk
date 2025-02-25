@@ -1,4 +1,7 @@
-﻿namespace WukongApi.UI
+﻿using b1;
+using WukongApi.State;
+
+namespace WukongApi.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
     {
@@ -19,20 +22,21 @@
             _gameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
         }
 
-        public void UpdatePlayerTeam(string nickName, int teamId)
+        public void UpdatePlayerTeam(PlayerState playerState, int teamId)
         {
-            Logging.LogWarning($"Updating player {nickName} to team {teamId}");
+            Logging.LogDebug($"Updating player {playerState.NickName} to team {teamId}");
+            PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)playerState.Pawn, teamId);
             if (teamId == Constants.AvailableTeamIds[0])
             {
-                RemoveFromTeam1(nickName);
-                RemoveFromTeam2(nickName);
-                AddToTeam1(nickName);
+                RemoveFromTeam1(playerState.NickName);
+                RemoveFromTeam2(playerState.NickName);
+                AddToTeam1(playerState.NickName);
             }
             else if (teamId == Constants.AvailableTeamIds[1])
             {
-                RemoveFromTeam1(nickName);
-                RemoveFromTeam2(nickName);
-                AddToTeam2(nickName);
+                RemoveFromTeam1(playerState.NickName);
+                RemoveFromTeam2(playerState.NickName);
+                AddToTeam2(playerState.NickName);
             }
         }
 
