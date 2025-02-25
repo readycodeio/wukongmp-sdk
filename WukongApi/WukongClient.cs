@@ -28,6 +28,7 @@ namespace WukongApi
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isExit;
+        private bool _inPvP;
 
         protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
@@ -97,7 +98,7 @@ namespace WukongApi
 
         public void SwitchReadyState()
         {
-            if (PhotonClient.InRoom)
+            if (PhotonClient.InRoom && !_inPvP)
             {
                 var isReady = LocalPlayerState.IsReadyForPvP;
                 SetReadyState(!isReady);
@@ -106,7 +107,7 @@ namespace WukongApi
 
         public void SwitchTeam()
         {
-            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP)
+            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !_inPvP)
             {
                 var teamId = (LocalPlayerState.TeamId == Constants.AvailableTeamIds[0]) ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
@@ -207,6 +208,7 @@ namespace WukongApi
                 case PvPEvent.RoundStart:
                     Task.Run(GameUtils.ShowPvPCountDown);
                     WukongMP.Instance.EnablePvP();
+                    EnterPvP();
                     break;
                 case PvPEvent.RoundEnd:
                     WukongMP.Instance.DisablePvP();
@@ -232,6 +234,9 @@ namespace WukongApi
                     var winnerString = string.Join(", ", winners);
                     var plural = winners.Count > 1 ? "s" : "";
                     GameUtils.ShowTip($"Winner{plural}: {winnerString}"); // TODO: Ties
+                    WukongMP.Instance.EndTurnament(data);
+                    ExitPvP();
+                    SetReadyState(false);
                     break;
                 }
                 case PvPEvent.ResetStats:
@@ -267,6 +272,16 @@ namespace WukongApi
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ev), ev, null);
             }
+        }
+
+        private void EnterPvP()
+        {
+            _inPvP = true;
+        }
+
+        private void ExitPvP()
+        {
+            _inPvP = false;
         }
 
         private void OnPlayerReadinessChanged(Player player, bool isReady)

@@ -148,6 +148,11 @@ namespace WukongApi
         private void OnLoadingScreenClose()
         {
             _chatWidget.SetVisibility(true);
+            SetupLobbyUI();
+        }
+
+        private void SetupLobbyUI()
+        {
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(Texts.PressToBeReady);
@@ -253,6 +258,12 @@ namespace WukongApi
                     PhotonUtils.UnregisterTeamHostility(myTeam, team);
                 }
             }, "Register team hostility");
+        }
+
+        public void EndTurnament(int winnerTeamId)
+        {
+            Logging.LogDebug("End turnament");
+            SetupLobbyUI();
         }
 
         private void WakeUpMonster(string guid)
