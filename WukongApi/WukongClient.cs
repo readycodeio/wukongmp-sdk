@@ -385,7 +385,7 @@ namespace WukongApi
             {
                 AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
                 AuthMode = AuthModeOption.AuthOnce,
-                Protocol = ConnectionProtocol.WebSocket,
+                Protocol = ConnectionProtocol.Udp,
                 EnableProtocolFallback = false,
                 UseNameServer = true,
                 FixedRegion = "usw",
