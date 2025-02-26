@@ -165,7 +165,7 @@ namespace WukongApi
                 return null;
             }
 
-            var roomNameMatch = Regex.Match(cmd, @"-room_name ""([a-zA-Z0-9_\- ]+)""");
+            var roomNameMatch = Regex.Match(cmd, @"-room_name ""?([a-zA-Z0-9_\- ]+)""?");
             if (roomNameMatch.Success)
             {
                 _roomName = roomNameMatch.Groups[1].Value;
