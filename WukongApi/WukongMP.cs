@@ -461,7 +461,7 @@ namespace WukongApi
             }
             if (isReady)
             {
-                if (readyCount == (Photon.ConnectedPlayers.Count + 1))
+                if (Photon.ConnectedPlayers.Count > 0 && readyCount == (Photon.ConnectedPlayers.Count + 1))
                 {
                     // all players are ready
                     _countdownWidget.StartLobbyCountdown(5, StartPvP);
