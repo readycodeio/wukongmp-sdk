@@ -283,7 +283,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
-        public static void Postfix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker)
+        public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -294,15 +294,16 @@ namespace WukongApi.Patches
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
-            var killedPlayerState = photon.GetByActor(owner);
-            if (killedPlayerState == null)
+            BGUCharacterCS bGUCharacterCS = owner as BGUCharacterCS;
+            if (bGUCharacterCS == null || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 return;
             }
 
-            if (owner == photon.LocalPlayerState.Pawn)
+            var killedPlayerState = photon.GetByActor(owner);
+            if (killedPlayerState == null)
             {
-                WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
+                return;
             }
 
             if (photon.IsMasterClient)
@@ -334,6 +335,23 @@ namespace WukongApi.Patches
                     Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
                 }
             }
+        }
+
+        public static void Postfix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
+                return; // TODO: Camera is broken after transformation, stuck in one direction
+
+            var photon = WukongMP.Instance.Photon;
+            var owner = __instance.GetOwner();
+
+            if (owner == photon.LocalPlayerState.Pawn)
+            {
+                WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
+            }    
         }
     }
 
