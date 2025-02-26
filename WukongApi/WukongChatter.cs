@@ -158,7 +158,7 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Start",
-                    Handler = _ => { _wukongClient.StartPvP(); }
+                    Handler = _ => { _wukongClient.RequestStartPvP(); }
                 });
         }
 

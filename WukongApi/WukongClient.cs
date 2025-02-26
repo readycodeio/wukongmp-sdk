@@ -578,11 +578,20 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.Equipment), LocalPlayerState.Equipment);
         }
 
-        public void StartPvP()
+        public void RequestStartPvP()
         {
             if (!IsMasterClient)
             {
                 GameUtils.ShowTip("Only room owner can start PvP.");
+                return;
+            }
+            StartPvP();
+        }
+
+        public void StartPvP()
+        {
+            if (!IsMasterClient)
+            {
                 return;
             }
 
