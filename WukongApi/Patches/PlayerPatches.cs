@@ -288,6 +288,8 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
+            if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
+                return; // TODO: Camera is broken after transformation, stuck in one direction
 
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
@@ -295,13 +297,8 @@ namespace WukongApi.Patches
             var killedPlayerState = photon.GetByActor(owner);
             if (killedPlayerState == null)
             {
-                Logging.LogError($"On unit dead triggered with reason {DeadReason} for unkonwn player");
                 return;
             }
-            Logging.LogError($"On unit dead triggered with reason {DeadReason} for player {killedPlayerState.NickName}");
-
-            if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
-                return; // TODO: Camera is broken after transformation, stuck in one direction
 
             if (owner == photon.LocalPlayerState.Pawn)
             {
