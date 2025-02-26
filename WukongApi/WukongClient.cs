@@ -45,7 +45,7 @@ namespace WukongApi
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action<string, bool, int> OnReadinessChange;
         public event Action<PlayerState, int> OnTeamChange;
-        public event Action<APawn> OnPlayerLeft;
+        public event Action<PlayerState> OnPlayerLeft;
         public event Action<int> OnPlayerRebirth;
         public event Action<int> OnKillPlayer;
         public event Action<FVector, FRotator> OnSetPlayerTransform;
@@ -838,9 +838,9 @@ namespace WukongApi
         {
             Logging.LogDebug($"Player {otherPlayer.ActorNumber} left the room");
 
-            var playerPawn = ConnectedPlayers[otherPlayer.ActorNumber].Pawn;
+            var playerState = ConnectedPlayers[otherPlayer.ActorNumber];
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
-            OnPlayerLeft?.Invoke(playerPawn);
+            OnPlayerLeft?.Invoke(playerState);
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)

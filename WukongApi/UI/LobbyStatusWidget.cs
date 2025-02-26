@@ -24,18 +24,21 @@ namespace WukongApi.UI
 
         public void UpdatePlayerTeam(PlayerState playerState, int teamId)
         {
+            RemovePlayerFromTeams(playerState);
             if (teamId == Constants.AvailableTeamIds[0])
             {
-                RemoveFromTeam1(playerState.NickName);
-                RemoveFromTeam2(playerState.NickName);
                 AddToTeam1(playerState.NickName);
             }
             else if (teamId == Constants.AvailableTeamIds[1])
             {
-                RemoveFromTeam1(playerState.NickName);
-                RemoveFromTeam2(playerState.NickName);
                 AddToTeam2(playerState.NickName);
             }
+        }
+
+        public void RemovePlayerFromTeams(PlayerState playerState)
+        {
+            RemoveFromTeam1(playerState.NickName);
+            RemoveFromTeam2(playerState.NickName);
         }
 
         private void AddToTeam1(string playerName)

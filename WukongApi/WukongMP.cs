@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using BtlShare;
+using CommB1;
 using CSharpModBase;
 using HarmonyLib;
 using Photon.Realtime;
@@ -352,7 +353,7 @@ namespace WukongApi
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
             Photon.OnTeamChange += (playerState, teamId) => Utils.TryRunOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
-            Photon.OnPlayerLeft += (pawn) => Utils.TryRunOnGameThread(() => RemovePlayer(pawn));
+            Photon.OnPlayerLeft += (playerState) => Utils.TryRunOnGameThread(() => RemovePlayer(playerState));
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
@@ -490,9 +491,14 @@ namespace WukongApi
             }
         }
 
-        private void RemovePlayer(APawn playerPawn)
+        private void RemovePlayer(PlayerState playerState)
         {
-            BGU_UnrealWorldUtil.DestroyActor(playerPawn);
+            if (playerState.MarkerActor != null)
+            { 
+                BGU_UnrealWorldUtil.DestroyActor(playerState.MarkerActor);
+            }
+            BGU_UnrealWorldUtil.DestroyActor(playerState.Pawn);
+            _lobbyStatusWidget.RemovePlayerFromTeams(playerState);
             UpdateConnectedCount();
         }
 
@@ -871,6 +877,15 @@ namespace WukongApi
             }
 
             // create 3D marker
+            CreateMarkerForPlayer(playerState);
+
+            Photon.RegisterPlayer(playerState);
+            UpdateConnectedCount();
+            _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId);
+        }
+
+        private void CreateMarkerForPlayer(PlayerState playerState)
+        {
             var world = GameUtils.GetWorld();
             var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
             var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
@@ -886,10 +901,6 @@ namespace WukongApi
             var teamName = GameUtils.GetTeamName(playerState.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             playerState.MarkerActor = playerMarkerActor;
-
-            Photon.RegisterPlayer(playerState);
-            UpdateConnectedCount();
-            _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId);
         }
     }
 }
