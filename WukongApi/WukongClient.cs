@@ -301,11 +301,19 @@ namespace WukongApi
         private void EnterPvP()
         {
             _inPvP = true;
+            if (IsMasterClient)
+            {
+                PhotonClient.CurrentRoom.IsOpen = false;
+            }
         }
 
         private void ExitPvP()
         {
             _inPvP = false;
+            if (IsMasterClient)
+            {
+                PhotonClient.CurrentRoom.IsOpen = true;
+            }
         }
 
         private void OnPlayerReadinessChanged(Player player, bool isReady)
