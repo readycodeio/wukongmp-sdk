@@ -304,6 +304,36 @@ namespace WukongApi.Patches
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
             }
+
+            if (photon.IsMasterClient)
+            {
+                if (Attacker != owner)
+                {
+                    var attackerPlayerState = photon.GetByActor(Attacker);
+                    if (attackerPlayerState != null)
+                    {
+                        photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
+                    }
+                }
+
+                // check if all players but one are dead
+                var players = photon.AllConnectedPlayers.ToList();
+                var alivePlayers = players.Where(p => !p.IsDead).ToList();
+                if (alivePlayers.Count == 0)
+                {
+                    Logging.LogWarning($"All players are dead, ending round");
+                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
+                    return;
+                }
+
+                var alivePlayersTeams = alivePlayers.Select(p => p.TeamId).Distinct().Count();
+                if (alivePlayersTeams == 1)
+                {
+                    Logging.LogWarning($"One team with alive players, ending round");
+                    var winner = players.First(p => !p.IsDead);
+                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
+                }
+            }
         }
     }
 
@@ -398,36 +428,12 @@ namespace WukongApi.Patches
                 var owner = __instance.GetOwner();
                 var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(owner);
                 var hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                var killedPlayerState = photon.GetByActor(owner);
 
-                if (hp <= 0 && killedPlayerState != null)
+                // Manually trigger UnitDead
+                if (hp <= 0)
                 {
-                    if (Attacker != owner)
-                    {
-                        var attackerPlayerState = photon.GetByActor(Attacker);
-                        if (attackerPlayerState != null)
-                        {
-                            photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
-                        }
-                    }
-
-                    // check if all players but one are dead
-                    var players = photon.AllConnectedPlayers.ToList();
-                    var alivePlayers = players.Where(p => !p.IsDead).ToList();
-                    if (alivePlayers.Count == 0)
-                    {
-                        Logging.LogWarning($"All players are dead, ending round");
-                        Task.Run(async () => await photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
-                        return;
-                    }
-
-                    var alivePlayersTeams = alivePlayers.Select(p => p.TeamId).Distinct().Count();
-                    if (alivePlayersTeams == 1)
-                    {
-                        Logging.LogWarning($"One team with alive players, ending round");
-                        var winner = players.First(p => !p.IsDead);
-                        Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
-                    }
+                    var events = BUS_EventCollectionCS.Get(owner);
+                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(Attacker, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
         }
