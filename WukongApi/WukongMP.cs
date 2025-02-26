@@ -500,6 +500,7 @@ namespace WukongApi
             BGU_UnrealWorldUtil.DestroyActor(playerState.Pawn);
             _lobbyStatusWidget.RemovePlayerFromTeams(playerState);
             UpdateConnectedCount();
+            _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
         }
 
         private void UpdateConnectedCount()
