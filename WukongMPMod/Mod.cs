@@ -27,11 +27,11 @@ namespace WukongMPMod
                 _wukongMp.DumpPlayerState();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
-            {
-                Logging.LogDebug("Alt + V");
-                _wukongMp.Photon.SpawnClone();
-            });
+            //Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
+            //{
+            //    Logging.LogDebug("Alt + V");
+            //    _wukongMp.Photon.SpawnClone();
+            //});
 
             Utils.RegisterKeyBind(Key.J, () =>
             {
