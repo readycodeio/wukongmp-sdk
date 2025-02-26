@@ -14,6 +14,16 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerVigorSkill")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchTriggerVigorSkill
+    {
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
+
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchFaBaoSkill
