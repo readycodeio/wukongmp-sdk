@@ -148,12 +148,15 @@ namespace WukongApi
             PhotonClient.Disconnect();
             PhotonClient.RemoveCallbackTarget(this);
         }
-        
+
         private AuthenticationValues ParseCmdLineArgs()
         {
             var cmd = USystemLibrary.GetCommandLine();
+
+            Logging.LogDebug($"Command line: {cmd}");
+
             var tokenMatch = Regex.Match(cmd, $@"-access_token ""?({Constants.JsonCompactSerializationRegex})""?");
-            
+
             string accessToken;
             if (tokenMatch.Success)
             {
@@ -165,10 +168,10 @@ namespace WukongApi
                 return null;
             }
 
-            var roomNameMatch = Regex.Match(cmd, @"-room_name ""?([a-zA-Z0-9_\- ]+)""?");
+            var roomNameMatch = Regex.Match(cmd, @"-room_name ""([a-zA-Z0-9_\- ]+)""|-room_name ([a-zA-Z0-9_\-]+)");
             if (roomNameMatch.Success)
             {
-                _roomName = roomNameMatch.Groups[1].Value;
+                _roomName = roomNameMatch.Groups[1].Success ? roomNameMatch.Groups[1].Value : roomNameMatch.Groups[2].Value;
             }
             else
             {
