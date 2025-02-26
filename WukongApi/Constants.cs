@@ -11,14 +11,12 @@ namespace WukongApi
         public const float FloatComparisonTolerance = 0.1f;
         public const string ConnectedPatches = "Connected";
         public const string GlobalPatches = "Global";
-        public const string CompanionPatches = "Companion";
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 100f;
         public const int MonsterSpawnDelayMs = 500;
-        public const int BaseTeamId = -9999;
-        public static readonly string AttributePrefix = "attr_";
+        public const string AttributePrefix = "attr_";
         public static readonly FVector PvpStartingLocation = new FVector(-11146.926, -3229.771, 6497.035);
         public const float PvpRadius = 4000;
         public const float CameraArmLength = 720;
@@ -28,7 +26,7 @@ namespace WukongApi
         public static readonly List<int> AvailableTeamIds = new List<int> { -9999, -9998 };
         public const int DrawTeamId = 9999;
 
-        public const string UIManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
+        public const string UiManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
         public const string TimerWidgetName = "WBP_Timer_C";
@@ -36,6 +34,7 @@ namespace WukongApi
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
+        public const string JsonCompactSerializationRegex = @"[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_\.+\/=]*";
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new EnumSet<EBGUAttrFloat>(new[]
         {

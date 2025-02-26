@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using b1;
@@ -24,6 +25,7 @@ namespace WukongApi
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         internal readonly RealtimeClient PhotonClient = new RealtimeClient();
+        private readonly AuthenticationValues _authValues;
         private readonly TypedLobby _lobby = new TypedLobby("pvpLobby", LobbyType.Default);
 
         private const char MonsterHashtableKeySeparator = ';';
@@ -32,6 +34,7 @@ namespace WukongApi
         private bool _isExit;
         private bool _inPvP;
 
+        public bool ShouldEnableMultiplayer => _authValues != null;
         protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
         public bool Ready => PhotonClient.IsConnectedAndReady;
@@ -130,6 +133,10 @@ namespace WukongApi
 
         public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
+            _authValues = ParseCmdLineArgs();
+            if (!ShouldEnableMultiplayer)
+                return;
+
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
             _joinedRoomCallback = onJoinedRoom;
@@ -140,6 +147,41 @@ namespace WukongApi
         {
             PhotonClient.Disconnect();
             PhotonClient.RemoveCallbackTarget(this);
+        }
+        
+        private AuthenticationValues ParseCmdLineArgs()
+        {
+            var cmd = USystemLibrary.GetCommandLine();
+            var tokenMatch = Regex.Match(cmd, $@"-access_token ""?({Constants.JsonCompactSerializationRegex})""?");
+            
+            string accessToken;
+            if (tokenMatch.Success)
+            {
+                accessToken = tokenMatch.Groups[1].Value;
+            }
+            else
+            {
+                Logging.LogError("Access token not provided. Launch the game from the ReadyM Launcher.");
+                return null;
+            }
+
+            var roomNameMatch = Regex.Match(cmd, @"-room_name ""([a-zA-Z0-9_\- ]+)""");
+            if (roomNameMatch.Success)
+            {
+                _roomName = roomNameMatch.Groups[1].Value;
+            }
+            else
+            {
+                Logging.LogError("Room name not provided. Launch the game from the ReadyM Launcher.");
+                return null;
+            }
+
+            var authValues = new AuthenticationValues
+            {
+                AuthType = CustomAuthenticationType.Custom
+            };
+            authValues.AddAuthParameter("access_token", accessToken);
+            return authValues;
         }
 
         public void OnEvent(EventData photonEvent)
@@ -203,7 +245,7 @@ namespace WukongApi
 
         private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
         {
-            Logging.LogWarning($"Received PvP event: {ev}");
+            Logging.LogDebug($"Received PvP event: {ev}");
 
             switch (ev)
             {
@@ -345,42 +387,7 @@ namespace WukongApi
 
             OnBeforeJoinRoom?.Invoke();
 
-            string accessToken = null;
-            var args = USystemLibrary.GetCommandLine().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            // find args '-access_token' and '-room_name'
-
-            for (var i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "-access_token" && i + 1 < args.Length)
-                {
-                    accessToken = args[i + 1];
-                }
-                else if (args[i] == "-room_name" && i + 1 < args.Length)
-                {
-                    _roomName = args[i + 1];
-                }
-            }
-
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                Logging.LogError("Access token not found.");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(_roomName))
-            {
-                Logging.LogError("Room name not found.");
-                return;
-            }
-
-            var authValues = new AuthenticationValues
-            {
-                AuthType = CustomAuthenticationType.Custom
-            };
-            authValues.AddAuthParameter("access_token", accessToken);
-            PhotonClient.AuthValues = authValues;
-
+            PhotonClient.AuthValues = _authValues;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
                 AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
@@ -445,7 +452,7 @@ namespace WukongApi
         {
             if (PhotonClient.CurrentRoom is null)
             {
-                Logging.LogWarning("No room joined.");
+                Logging.LogError("No room joined.");
                 yield break;
             }
 
@@ -585,6 +592,7 @@ namespace WukongApi
                 GameUtils.ShowTip("Only room owner can start PvP.");
                 return;
             }
+
             StartPvP();
         }
 

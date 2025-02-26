@@ -16,9 +16,15 @@ namespace WukongMPMod
         {
             Logging.LogDebug("Init WukongMP mod");
 
-
             _wukongMp = WukongMP.Instance;
             _wukongMp.Init();
+
+            if (!_wukongMp.Photon.ShouldEnableMultiplayer)
+            {
+                Logging.LogDebug("Multiplayer is disabled");
+                return;
+            }
+
             _wukongMp.Patch();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>

@@ -6,7 +6,9 @@ namespace WukongApi
     {
         public static void LogDebug(string message)
         {
+#if DEBUG
             Console.WriteLine(message);
+#endif
         }
 
         public static void LogWarning(string message)

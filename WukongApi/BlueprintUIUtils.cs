@@ -14,7 +14,7 @@ namespace WukongApi
             var world = GameUtils.GetWorld();
             if (world != null)
             {
-                var UIManagerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.UIManagerActorPath, ELoadResourceType.SyncLoadAndCache);
+                var UIManagerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.UiManagerActorPath, ELoadResourceType.SyncLoadAndCache);
                 var UIManagerActor = BGU_UnrealWorldUtil.SpawnActor(world, UIManagerActorClass);
                 if (UIManagerActor != null)
                 {

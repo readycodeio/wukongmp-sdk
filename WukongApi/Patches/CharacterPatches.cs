@@ -88,7 +88,7 @@ namespace WukongApi.Patches
                 if (photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                    Logging.LogWarning($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
+                    Logging.LogDebug($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
@@ -128,7 +128,7 @@ namespace WukongApi.Patches
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
-                        Logging.LogWarning($"Applying unit dead for player {playerState.PhotonId}");
+                        Logging.LogDebug($"Applying unit dead for player {playerState.PhotonId}");
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
@@ -259,7 +259,7 @@ namespace WukongApi.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogWarning($"Also updating {calc.finalVal} because of {AttrID}");
+                    Logging.LogDebug($"Also updating {calc.finalVal} because of {AttrID}");
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     photon.LocalPlayerState.Attributes[calc.finalVal] = finalVal;

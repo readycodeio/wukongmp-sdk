@@ -58,14 +58,21 @@ namespace WukongApi
 
         public void Unpatch()
         {
-            Utils.TryRunOnGameThread(() => { Harmony.UnpatchAll(); });
+            Utils.TryRunOnGameThread(() =>
+            {
+                Harmony.UnpatchCategory(Constants.ConnectedPatches);
+                Harmony.UnpatchCategory(Constants.GlobalPatches);
+                Logging.LogDebug("Unpatched with Harmony");
+            });
         }
 
         public void Init()
         {
             DisconnectIfConnected();
-            InitPhotonAndConnectToChat();
-            AsyncInitGameInstance();
+            if (InitPhotonAndConnectToChat())
+            {
+                AsyncInitGameInstance();
+            }
         }
 
         private void AsyncInitGameInstance()
@@ -80,7 +87,7 @@ namespace WukongApi
                         if (GameUtils.IsGameInstanceValid())
                         {
                             Logging.LogDebug("Found valid GameInstance");
-                            Utils.TryRunOnGameThread(() => InitWorldCallbacks());
+                            Utils.TryRunOnGameThread(InitWorldCallbacks);
                             break; // Exit the task
                         }
 
@@ -89,7 +96,7 @@ namespace WukongApi
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError(e.ToString());
+                    Logging.LogException(e);
                 }
             });
         }
@@ -190,7 +197,7 @@ namespace WukongApi
 
         private void OnRoundEnded()
         {
-            Logging.LogWarning($"Round time ended, ending round");
+            Logging.LogDebug("Round time ended, ending round");
             if (Photon.IsMasterClient)
             {
                 Task.Run(async () => await Photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
@@ -201,6 +208,7 @@ namespace WukongApi
         {
             _timerWidget.StopCountdown();
         }
+
         public void EnablePvP()
         {
             Logging.LogDebug("Enabled PvP");
@@ -298,13 +306,19 @@ namespace WukongApi
             // TODO: Spawn if not found
         }
 
-        private void InitPhotonAndConnectToChat()
+        private bool InitPhotonAndConnectToChat()
         {
             Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
+
+            if (!Photon.ShouldEnableMultiplayer)
+                return false;
+
             Photon.WukongChat.OnGetMessage += _chatWidget.GetMessage;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => Photon.BroadcastPlayerRebirth(Photon.LocalPlayerState.PhotonId), "HandleRebirth"); };
+
+            return true;
         }
 
         private void RebirthPlayer(int playerId)
@@ -374,6 +388,7 @@ namespace WukongApi
                 var teamName = GameUtils.GetTeamName(playerState.TeamId);
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             }
+
             _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId);
         }
 
@@ -400,8 +415,10 @@ namespace WukongApi
         private void Reconnect()
         {
             DisconnectIfConnected();
-            InitPhotonAndConnectToChat();
-            Connect();
+            if (InitPhotonAndConnectToChat())
+            {
+                Connect();
+            }
         }
 
         private void DisconnectIfConnected()
@@ -459,6 +476,7 @@ namespace WukongApi
             {
                 Photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{playerNickName} is {(isReady ? "ready" : "not ready")}");
             }
+
             if (isReady)
             {
                 if (Photon.ConnectedPlayers.Count > 0 && readyCount == (Photon.ConnectedPlayers.Count + 1))
@@ -467,6 +485,7 @@ namespace WukongApi
                     _countdownWidget.StartLobbyCountdown(5, StartPvP);
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
                 }
+
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
             else
@@ -494,9 +513,10 @@ namespace WukongApi
         private void RemovePlayer(PlayerState playerState)
         {
             if (playerState.MarkerActor != null)
-            { 
+            {
                 BGU_UnrealWorldUtil.DestroyActor(playerState.MarkerActor);
             }
+
             BGU_UnrealWorldUtil.DestroyActor(playerState.Pawn);
             _lobbyStatusWidget.RemovePlayerFromTeams(playerState);
             UpdateConnectedCount();
