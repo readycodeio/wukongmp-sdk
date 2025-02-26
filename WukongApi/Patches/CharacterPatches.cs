@@ -131,31 +131,31 @@ namespace WukongApi.Patches
                         Logging.LogWarning($"Applying unit dead for player {playerState.PhotonId}");
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
-                    else
+                }
+                else
+                {
+                    var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+
+                    // monster
+                    if (monster?.Hp != null && monster.IsSynced)
                     {
-                        var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
-
-                        // monster
-                        if (monster?.Hp != null && monster.IsSynced)
+                        if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                         {
-                            if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                            return; // do not reapply the same value
+                        }
+
+                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
+
+                        if (monster.Hp.Value <= 0)
+                        {
+                            var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                            GameLoopPatch.QueueOnGameThread(() =>
                             {
-                                return; // do not reapply the same value
-                            }
+                                events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
 
-                            __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
-
-                            if (monster.Hp.Value <= 0)
-                            {
-                                var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                                GameLoopPatch.QueueOnGameThread(() =>
-                                {
-                                    events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-
-                                    // remove from collection
-                                    photon.RemoveMonster(monster.Guid);
-                                }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
-                            }
+                                // remove from collection
+                                photon.RemoveMonster(monster.Guid);
+                            }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                         }
                     }
                 }
