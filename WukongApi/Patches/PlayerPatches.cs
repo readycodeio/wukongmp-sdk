@@ -340,6 +340,16 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_DeadComp), "SetDelayDestroyTime")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchSetDelayDestroyTime
+    {
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(UIDeath), "DoShowIn")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchUIDeath
