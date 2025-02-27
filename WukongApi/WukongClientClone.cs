@@ -10,7 +10,7 @@ namespace WukongApi
         private static int _counter;
         private readonly FVector _locationOffset;
 
-        public WukongClientClone() : base($"Clone_{_counter++}", () => { }, _ => { })
+        public WukongClientClone() : base(() => { }, _ => { })
         {
             // spawn each clone at 6 positions (hexagon) starting from R = 400 with 6 clones on 1st circle, then the same at R = 600, R = 800 etc.
             var r = 400 + 200 * (_counter / 6);
@@ -20,6 +20,7 @@ namespace WukongApi
             var x = r * FMath.Cos(FMath.DegreesToRadians(angle));
             var y = r * FMath.Sin(FMath.DegreesToRadians(angle));
             _locationOffset = new FVector(x, y, 0);
+            _counter++;
         }
 
         public override void CachePlayerProperty(string key, object value)

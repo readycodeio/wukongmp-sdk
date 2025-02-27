@@ -4,16 +4,6 @@ namespace WukongApi
 {
     public static class Logging
     {
-#if UNITY_EDITOR
-        private static void Log(string message) {
-            UnityEngine.Debug.Log(message);
-        }
-
-        public static void LogError(string message)
-        {
-            UnityEngine.Debug.Log(message);
-        }
-#else
         public static void LogDebug(string message)
         {
             Console.WriteLine(message);
@@ -32,6 +22,13 @@ namespace WukongApi
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.White;
         }
-#endif
+
+        public static void LogException(Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.StackTrace);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
     }
 }

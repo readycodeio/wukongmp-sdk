@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using b1;
@@ -29,7 +28,6 @@ namespace WukongApi
         public WukongClient Photon { get; private set; }
 
         private FVector _savedPosition;
-        private string _userName;
 
         private readonly ChatWidget _chatWidget = new ChatWidget();
         private readonly TimerWidget _timerWidget = new TimerWidget();
@@ -40,7 +38,7 @@ namespace WukongApi
 
         public static WukongMP Instance { get; } = new WukongMP();
 
-        public bool DisableArchiveSave {  get; set; }
+        public bool DisableArchiveSave { get; set; }
 
         private WukongMP()
         {
@@ -64,7 +62,6 @@ namespace WukongApi
 
         public void Init()
         {
-            InitUserName();
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
             AsyncInitGameInstance();
@@ -202,24 +199,6 @@ namespace WukongApi
         {
             _timerWidget.StopCountdown();
         }
-
-        public void InitUserName()
-        {
-            try
-            {
-                Logging.LogDebug($"Loading player name from {Path.Join(Directory.GetCurrentDirectory(), "PhotonUserName.txt")}");
-                var allLines = File.ReadLines("PhotonUserName.txt").ToList();
-                _userName = allLines[0];
-                Logging.LogDebug($"Player name is = '{_userName}'");
-            }
-            catch (Exception ex)
-            {
-                Logging.LogError("Couldn't player name from file");
-                Logging.LogError(ex.ToString());
-                _userName = Constants.DefaultPhotonUserName;
-            }
-        }
-
         public void EnablePvP()
         {
             Logging.LogDebug("Enabled PvP");
@@ -319,7 +298,7 @@ namespace WukongApi
 
         private void InitPhotonAndConnectToChat()
         {
-            Photon = new WukongClient(_userName, OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
+            Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
             Photon.WukongChat.OnGetMessage += _chatWidget.GetMessage;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;

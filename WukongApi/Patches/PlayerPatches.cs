@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
 using BtlB1;
+using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using WukongApi.State;
@@ -282,10 +283,13 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
-        public static void Postfix(BUS_DeadComp __instance, AActor Attacker)
+        public static void Postfix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
+
+            if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
+                return; // TODO: Camera is broken after transformation, stuck in one direction
 
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();

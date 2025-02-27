@@ -24,9 +24,11 @@ namespace WukongApi
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         internal readonly RealtimeClient PhotonClient = new RealtimeClient();
-        private readonly string _userName;
+        private readonly TypedLobby _lobby = new TypedLobby("pvpLobby", LobbyType.Default);
+
         private const char MonsterHashtableKeySeparator = ';';
 
+        private string _roomName;
         private bool _isExit;
         private bool _inPvP;
 
@@ -125,11 +127,10 @@ namespace WukongApi
             SyncedMonsters.Remove(monsterGuid);
         }
 
-        public WukongClient(string userName, Action onJoinedRoom, Action<Player> playerJoinedCallback)
+        public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
-            _userName = userName;
             _joinedRoomCallback = onJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
         }
@@ -337,13 +338,49 @@ namespace WukongApi
 
             OnBeforeJoinRoom?.Invoke();
 
+            string accessToken = null;
+            var args = USystemLibrary.GetCommandLine().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            // find args '-access_token' and '-room_name'
+
+            for (var i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-access_token" && i + 1 < args.Length)
+                {
+                    accessToken = args[i + 1];
+                }
+                else if (args[i] == "-room_name" && i + 1 < args.Length)
+                {
+                    _roomName = args[i + 1];
+                }
+            }
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                Logging.LogError("Access token not found.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_roomName))
+            {
+                Logging.LogError("Room name not found.");
+                return;
+            }
+
+            var authValues = new AuthenticationValues
+            {
+                AuthType = CustomAuthenticationType.Custom
+            };
+            authValues.AddAuthParameter("access_token", accessToken);
+            PhotonClient.AuthValues = authValues;
+
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
-                AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
-                FixedRegion = "eu",
+                AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
+                AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.WebSocket,
                 EnableProtocolFallback = false,
-                AuthMode = AuthModeOption.AuthOnce
+                UseNameServer = true,
             });
 
             new Thread(LoopGame).Start();
@@ -412,24 +449,29 @@ namespace WukongApi
             }
         }
 
-        private void MyJoinRandomOrCreateRoom()
+        private async Task MyJoinRandomOrCreateRoom()
         {
+            await PhotonClient.JoinLobbyAsync(_lobby);
+
             var propertiesForRoomCreation = new RoomOptions
             {
-                PublishUserId = false,
+                PublishUserId = true,
                 CustomRoomProperties = new PhotonHashtable
                 {
                     [nameof(RoomState.RoundsTotal)] = 3,
                     [nameof(RoomState.RoundWinners)] = ""
-                }
+                },
+                MaxPlayers = 8,
+                IsOpen = true,
+                IsVisible = true
             };
             var enterRoomParams = new EnterRoomArgs
             {
                 RoomOptions = propertiesForRoomCreation,
-                RoomName = "WukongMP"
+                RoomName = _roomName
             };
 
-            PhotonClient.OpJoinOrCreateRoom(enterRoomParams);
+            await PhotonClient.JoinOrCreateRoomAsync(enterRoomParams);
         }
 
         private static void OnStateChange(ClientState arg1, ClientState arg2)
@@ -679,10 +721,17 @@ namespace WukongApi
             Logging.LogDebug("Connected");
         }
 
-        public void OnConnectedToMaster()
+        public async void OnConnectedToMaster()
         {
-            Logging.LogDebug("Connected to master server: " + PhotonClient.RealtimePeer.ServerIpAddress);
-            MyJoinRandomOrCreateRoom();
+            try
+            {
+                Logging.LogDebug("Connected to master server: " + PhotonClient.RealtimePeer.ServerIpAddress);
+                await MyJoinRandomOrCreateRoom();
+            }
+            catch (Exception e)
+            {
+                Logging.LogException(e);
+            }
         }
 
         public void OnDisconnected(DisconnectCause cause)
@@ -752,9 +801,7 @@ namespace WukongApi
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
             _joinedRoomCallback?.Invoke();
-            WukongChat.InitializeChat(_userName);
-
-            PhotonClient.NickName = _userName;
+            WukongChat.InitializeChat(PhotonClient.NickName);
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
@@ -817,6 +864,7 @@ namespace WukongApi
                     if (kvp.Key is byte numId && numId == ActorProperties.NickName)
                     {
                         playerState.NickName = (string)kvp.Value;
+                        Logging.LogDebug($"Assigning NickName = {playerState.NickName} for player {id}");
                     }
                     else
                     {
