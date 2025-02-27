@@ -373,6 +373,7 @@ namespace WukongApi
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
             Photon.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
+            Photon.OnInputAction += (id, inputActionType, isRelease, skillID, descID, itemID) => GameLoopPatch.QueueOnGameThread(() => PerformInputAction(id, inputActionType, isRelease, skillID, descID, itemID), "PerformInputAction");
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -415,9 +416,28 @@ namespace WukongApi
 
         private void PerformPhantomRush(int playerId, ESkillDirection direction)
         {
-            var playerState = Photon.ConnectedPlayers[playerId];
+            if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+            {
+                Logging.LogDebug($"Player not found: {playerId}");
+                return;
+            }
+
+            Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
+        }
+        
+        private void PerformInputAction(int playerId, EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
+        {
+            if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+            {
+                Logging.LogDebug($"Player not found: {playerId}");
+                return;
+            }
+
+            Logging.LogDebug($"Recieved input action for player {playerState.NickName} with input action type: {inputActionType}, isRelease: {isRelease}, skillID: {skillID}, descID: {descID}, itemID {itemID}\"");
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            events?.Evt_InputCastSkill.Invoke(inputActionType, isRelease, skillID, descID, itemID);
         }
 
         private void Reconnect()
@@ -671,6 +691,7 @@ namespace WukongApi
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_TriggerPhantomRush += OnTriggerPhantomRush;
+            events.Evt_InputCastSkill += OnTriggerSkill;
         }
 
         private void UnsubscribeFromSkillEvents()
@@ -680,13 +701,24 @@ namespace WukongApi
             if (events != null)
             {
                 events.Evt_TriggerPhantomRush -= OnTriggerPhantomRush;
+                events.Evt_InputCastSkill -= OnTriggerSkill;
             }
         }
 
         private void OnTriggerPhantomRush(ESkillDirection phantomRushDir)
         {
-            Logging.LogDebug($"Phantom rush trigerred: {phantomRushDir}");
+            Logging.LogDebug($"Sending phantom rush with direction: {phantomRushDir}");
             Photon.SendPhantomRush(phantomRushDir);
+        }
+
+        private void OnTriggerSkill(EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
+        {
+            Logging.LogDebug($"Sending skill event with input action type: {inputActionType}, isRelease: {isRelease}, skillID: {skillID}, descID: {descID}, itemID {itemID}");
+            // TODO: Check if skill is on the white list
+            if (inputActionType == EInputActionType.UseSkillByType)
+            {
+                Photon.SendInputAction(inputActionType, isRelease, skillID, descID, itemID);
+            }
         }
 
         private void SpawnEnemiesMaster(string enemyName, int count, int teamId)

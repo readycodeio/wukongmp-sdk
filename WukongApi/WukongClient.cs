@@ -16,7 +16,6 @@ using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongApi.Patches;
 using WukongApi.State;
 using PlayerState = WukongApi.State.PlayerState;
 
@@ -55,6 +54,7 @@ namespace WukongApi
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
         public event Action<int, ESkillDirection> OnPhantomRush;
+        public event Action<int, EInputActionType, bool, int, int, int> OnInputAction;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; private set; }
@@ -249,6 +249,11 @@ namespace WukongApi
                     var direction = (ESkillDirection)photonEvent.CustomData;
                     OnPhantomRush?.Invoke(photonEvent.Sender, direction);
                     break;
+                case 12:
+                    // input action (skill)
+                    var skillData = (InputActionData)photonEvent.CustomData;
+                    OnInputAction?.Invoke(photonEvent.Sender, skillData.InputActionType, skillData.IsRelease, skillData.SkillID, skillData.DescID, skillData.ItemID);
+                    break;
             }
         }
 
@@ -390,6 +395,7 @@ namespace WukongApi
             PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
+            PhotonPeer.RegisterType(typeof(InputActionData), 246, InputActionData.Serialize, InputActionData.Deserialize);
 
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
@@ -531,6 +537,18 @@ namespace WukongApi
             foreach (var clone in _photonClones)
             {
                 clone.SendPhantomRush(phantomRushDir);
+            }
+        }
+
+        public void SendInputAction(EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
+        {
+            const byte eventCode = 12;
+            var evData = new InputActionData(inputActionType, isRelease, skillID, descID, itemID);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+
+            foreach (var clone in _photonClones)
+            {
+                clone.SendInputAction(inputActionType, isRelease, skillID, descID, itemID);
             }
         }
 
