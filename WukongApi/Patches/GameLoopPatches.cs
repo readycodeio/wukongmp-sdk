@@ -50,7 +50,8 @@ namespace WukongApi.Patches
                 case 151:
                     return BGW_TickGroupMask.TG_BeforePostUpdateWork;
                 default:
-                    throw new NotImplementedException("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
+                    Logging.LogError("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
+                    return BGW_TickGroupMask.TG_None;
             }
         }
     }

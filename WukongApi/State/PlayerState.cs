@@ -11,6 +11,7 @@ namespace WukongApi.State
     {
         public int PhotonId { get; }
         public APawn Pawn { get; set; }
+        public AActor MarkerActor { get; set; }
 
         #region Animation
 
@@ -56,6 +57,16 @@ namespace WukongApi.State
 
             Logging.LogDebug($"Assigning team ID {teamId} to player");
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
+        }
+
+        public void UpdateMarkerPosition()
+        {
+            if (MarkerActor != null)
+            {
+                var bguCharacterCS = Pawn as BGUCharacterCS;
+                var markerHeight = bguCharacterCS.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
+                MarkerActor.SetActorLocation(Pawn.GetActorLocation() + new FVector(0,0, markerHeight), false, out _, true);
+            }
         }
 
         public override string ToString()

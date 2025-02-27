@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using b1;
@@ -24,6 +25,7 @@ namespace WukongApi
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         internal readonly RealtimeClient PhotonClient = new RealtimeClient();
+        private readonly AuthenticationValues _authValues;
         private readonly TypedLobby _lobby = new TypedLobby("pvpLobby", LobbyType.Default);
 
         private const char MonsterHashtableKeySeparator = ';';
@@ -32,6 +34,7 @@ namespace WukongApi
         private bool _isExit;
         private bool _inPvP;
 
+        public bool ShouldEnableMultiplayer => _authValues != null;
         protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
         public bool Ready => PhotonClient.IsConnectedAndReady;
@@ -44,8 +47,8 @@ namespace WukongApi
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
         public event Action<string, bool, int> OnReadinessChange;
-        public event Action<string, int> OnTeamChange;
-        public event Action<APawn> OnPlayerLeft;
+        public event Action<PlayerState, int> OnTeamChange;
+        public event Action<PlayerState> OnPlayerLeft;
         public event Action<int> OnPlayerRebirth;
         public event Action<int> OnKillPlayer;
         public event Action<FVector, FRotator> OnSetPlayerTransform;
@@ -104,6 +107,7 @@ namespace WukongApi
             {
                 var isReady = LocalPlayerState.IsReadyForPvP;
                 SetReadyState(!isReady);
+                WukongMP.Instance.SwitchReadyState(!isReady);
             }
         }
 
@@ -129,6 +133,10 @@ namespace WukongApi
 
         public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
+            _authValues = ParseCmdLineArgs();
+            if (!ShouldEnableMultiplayer)
+                return;
+
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
             _joinedRoomCallback = onJoinedRoom;
@@ -139,6 +147,44 @@ namespace WukongApi
         {
             PhotonClient.Disconnect();
             PhotonClient.RemoveCallbackTarget(this);
+        }
+
+        private AuthenticationValues ParseCmdLineArgs()
+        {
+            var cmd = USystemLibrary.GetCommandLine();
+
+            Logging.LogDebug($"Command line: {cmd}");
+
+            var tokenMatch = Regex.Match(cmd, $@"-access_token ""?({Constants.JsonCompactSerializationRegex})""?");
+
+            string accessToken;
+            if (tokenMatch.Success)
+            {
+                accessToken = tokenMatch.Groups[1].Value;
+            }
+            else
+            {
+                Logging.LogError("Access token not provided. Launch the game from the ReadyM Launcher.");
+                return null;
+            }
+
+            var roomNameMatch = Regex.Match(cmd, @"-room_name ""([a-zA-Z0-9_\- ]+)""|-room_name ([a-zA-Z0-9_\-]+)");
+            if (roomNameMatch.Success)
+            {
+                _roomName = roomNameMatch.Groups[1].Success ? roomNameMatch.Groups[1].Value : roomNameMatch.Groups[2].Value;
+            }
+            else
+            {
+                Logging.LogError("Room name not provided. Launch the game from the ReadyM Launcher.");
+                return null;
+            }
+
+            var authValues = new AuthenticationValues
+            {
+                AuthType = CustomAuthenticationType.Custom
+            };
+            authValues.AddAuthParameter("access_token", accessToken);
+            return authValues;
         }
 
         public void OnEvent(EventData photonEvent)
@@ -202,7 +248,7 @@ namespace WukongApi
 
         private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
         {
-            Logging.LogWarning($"Received PvP event: {ev}");
+            Logging.LogDebug($"Received PvP event: {ev}");
 
             switch (ev)
             {
@@ -222,7 +268,7 @@ namespace WukongApi
                     }
                     else
                     {
-                        GameUtils.ShowTip($"Round ended. Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                        GameUtils.ShowTip($"Round ended. Team {GameUtils.GetTeamName(winnerTeamId)} won");
                     }
 
                     if (winnerTeamId == Constants.DrawTeamId)
@@ -235,8 +281,6 @@ namespace WukongApi
                         return;
                     }
 
-                    Logging.LogWarning($"Round ended, winner: {winner.NickName} {winner.TeamId}");
-
                     if (winner.TeamId == LocalPlayerState.TeamId)
                     {
                         GameUtils.PlayBossDefeatedSound();
@@ -247,11 +291,11 @@ namespace WukongApi
                 {
                     if (winnerTeamId == Constants.DrawTeamId)
                     {
-                        GameUtils.ShowTip($"Draw");
+                        GameUtils.ShowTip("Draw");
                     }
                     else
                     {
-                        GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                        GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamName(winnerTeamId)}");
                     }
 
                     Task.Run(async () =>
@@ -302,11 +346,19 @@ namespace WukongApi
         private void EnterPvP()
         {
             _inPvP = true;
+            if (IsMasterClient)
+            {
+                PhotonClient.CurrentRoom.IsOpen = false;
+            }
         }
 
         private void ExitPvP()
         {
             _inPvP = false;
+            if (IsMasterClient)
+            {
+                PhotonClient.CurrentRoom.IsOpen = true;
+            }
         }
 
         private void OnPlayerReadinessChanged(Player player, bool isReady)
@@ -338,49 +390,15 @@ namespace WukongApi
 
             OnBeforeJoinRoom?.Invoke();
 
-            string accessToken = null;
-            var args = USystemLibrary.GetCommandLine().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            // find args '-access_token' and '-room_name'
-
-            for (var i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "-access_token" && i + 1 < args.Length)
-                {
-                    accessToken = args[i + 1];
-                }
-                else if (args[i] == "-room_name" && i + 1 < args.Length)
-                {
-                    _roomName = args[i + 1];
-                }
-            }
-
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                Logging.LogError("Access token not found.");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(_roomName))
-            {
-                Logging.LogError("Room name not found.");
-                return;
-            }
-
-            var authValues = new AuthenticationValues
-            {
-                AuthType = CustomAuthenticationType.Custom
-            };
-            authValues.AddAuthParameter("access_token", accessToken);
-            PhotonClient.AuthValues = authValues;
-
+            PhotonClient.AuthValues = _authValues;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
                 AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
                 AuthMode = AuthModeOption.AuthOnce,
-                Protocol = ConnectionProtocol.WebSocket,
+                Protocol = ConnectionProtocol.Udp,
                 EnableProtocolFallback = false,
                 UseNameServer = true,
+                FixedRegion = "usw",
             });
 
             new Thread(LoopGame).Start();
@@ -437,7 +455,7 @@ namespace WukongApi
         {
             if (PhotonClient.CurrentRoom is null)
             {
-                Logging.LogWarning("No room joined.");
+                Logging.LogError("No room joined.");
                 yield break;
             }
 
@@ -471,6 +489,7 @@ namespace WukongApi
                 RoomName = _roomName
             };
 
+            Logging.LogDebug($"Joining room {_roomName}");
             await PhotonClient.JoinOrCreateRoomAsync(enterRoomParams);
         }
 
@@ -569,8 +588,24 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.Equipment), LocalPlayerState.Equipment);
         }
 
+        public void RequestStartPvP()
+        {
+            if (!IsMasterClient)
+            {
+                GameUtils.ShowTip("Only room owner can start PvP.");
+                return;
+            }
+
+            StartPvP();
+        }
+
         public void StartPvP()
         {
+            if (!IsMasterClient)
+            {
+                return;
+            }
+
             // clear previous round winners
             CurrentRoomState.RoundWinners = Enumerable.Empty<int>();
 
@@ -831,9 +866,9 @@ namespace WukongApi
         {
             Logging.LogDebug($"Player {otherPlayer.ActorNumber} left the room");
 
-            var playerPawn = ConnectedPlayers[otherPlayer.ActorNumber].Pawn;
+            var playerState = ConnectedPlayers[otherPlayer.ActorNumber];
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
-            OnPlayerLeft.Invoke(playerPawn);
+            OnPlayerLeft?.Invoke(playerState);
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
@@ -911,16 +946,21 @@ namespace WukongApi
                         OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
                         continue;
                     case nameof(PlayerState.TeamId):
-                        Logging.LogWarning("Calling team id change");
-                        OnTeamChange?.Invoke(targetPlayer.NickName, (int)kvp.Value);
+                        OnTeamChange?.Invoke(playerState, (int)kvp.Value);
                         continue;
                 }
             }
         }
 
-        public void OnMasterClientSwitched(Player newMasterClient) { }
+        public void OnMasterClientSwitched(Player newMasterClient)
+        {
+            if (newMasterClient.ActorNumber == PhotonId)
+            {
+                // assume control of lobby manager
+                LobbyManager = new LobbyManager(this);
+            }
+        }
 
-        private static readonly Dictionary<string, Action<RoomState, object>> RoomSetters = new Dictionary<string, Action<RoomState, object>>();
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new Dictionary<string, Action<PlayerState, object>>();
         private static readonly Dictionary<string, Action<MonsterState, object>> MonsterSetters = new Dictionary<string, Action<MonsterState, object>>();
 

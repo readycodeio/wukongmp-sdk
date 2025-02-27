@@ -9,20 +9,20 @@ namespace WukongApi
 {
     public static class BlueprintUIUtils
     {
-        public static void SpawnModActor()
+        public static void SpawnUIManagerActor()
         {
             var world = GameUtils.GetWorld();
             if (world != null)
             {
-                var modActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.ModActorPath, ELoadResourceType.SyncLoadAndCache);
-                var modActor = BGU_UnrealWorldUtil.SpawnActor(world, modActorClass);
-                if (modActor != null)
+                var UIManagerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.UiManagerActorPath, ELoadResourceType.SyncLoadAndCache);
+                var UIManagerActor = BGU_UnrealWorldUtil.SpawnActor(world, UIManagerActorClass);
+                if (UIManagerActor != null)
                 {
-                    Logging.LogDebug("ModActor spawned successfully");
+                    Logging.LogDebug("UI Manager actor spawned successfully");
                 }
                 else
                 {
-                    Logging.LogDebug("Cannot spawn ModActor");
+                    Logging.LogDebug("Cannot spawn UI Manager actor");
                 }
             }
         }

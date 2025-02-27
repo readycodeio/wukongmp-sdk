@@ -9,7 +9,7 @@ if (!(Test-Path -Path $destDir)) {
 }
 
 # Define the files to copy
-$files = @("WukongApi.dll", "WukongApi.pdb", "WukongApi.deps.json", "WukongMpMod.dll", "WukongMpMod.pdb", "WukongMpMod.deps.json")
+$files = @("WukongApi.dll", "WukongApi.pdb", "WukongMpMod.dll", "WukongMpMod.pdb")
 
 # Copy each file to the destination directory
 foreach ($file in $files) {

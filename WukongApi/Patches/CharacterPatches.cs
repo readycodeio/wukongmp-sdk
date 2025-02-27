@@ -88,7 +88,7 @@ namespace WukongApi.Patches
                 if (photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                    Logging.LogWarning($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
+                    Logging.LogDebug($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
@@ -128,34 +128,34 @@ namespace WukongApi.Patches
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
-                        Logging.LogWarning($"Applying unit dead for player {playerState.PhotonId}");
+                        Logging.LogDebug($"Applying unit dead for player {playerState.PhotonId}");
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
-                    else
+                }
+                else
+                {
+                    var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+
+                    // monster
+                    if (monster?.Hp != null && monster.IsSynced)
                     {
-                        var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
-
-                        // monster
-                        if (monster?.Hp != null && monster.IsSynced)
+                        if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                         {
-                            if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                            return; // do not reapply the same value
+                        }
+
+                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
+
+                        if (monster.Hp.Value <= 0)
+                        {
+                            var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                            GameLoopPatch.QueueOnGameThread(() =>
                             {
-                                return; // do not reapply the same value
-                            }
+                                events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
 
-                            __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
-
-                            if (monster.Hp.Value <= 0)
-                            {
-                                var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                                GameLoopPatch.QueueOnGameThread(() =>
-                                {
-                                    events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-
-                                    // remove from collection
-                                    photon.RemoveMonster(monster.Guid);
-                                }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
-                            }
+                                // remove from collection
+                                photon.RemoveMonster(monster.Guid);
+                            }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                         }
                     }
                 }
@@ -259,7 +259,7 @@ namespace WukongApi.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogWarning($"Also updating {calc.finalVal} because of {AttrID}");
+                    Logging.LogDebug($"Also updating {calc.finalVal} because of {AttrID}");
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     photon.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
@@ -373,6 +373,8 @@ namespace WukongApi.Patches
                     {
                         events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
+
+                    playerState.UpdateMarkerPosition();
                 }
                 else
                 {

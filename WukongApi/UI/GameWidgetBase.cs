@@ -21,7 +21,7 @@ namespace WukongApi.UI
             }
             else
             {
-                Logging.LogError("Cannot initialize {_name} widget");
+                Logging.LogError($"Cannot initialize {_name} widget");
             }
         }
 

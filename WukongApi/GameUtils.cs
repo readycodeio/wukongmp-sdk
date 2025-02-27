@@ -75,7 +75,7 @@ namespace WukongApi
 
         public static string GetSaveDirectory()
         {
-            return FPaths.Combine(FPaths.ProjectDir, "Saved", "Readycode");
+            return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", "WukongMPMod");
         }
 
         public static string GetSaveFileFullName(string SlotName)
@@ -134,13 +134,13 @@ namespace WukongApi
             });
         }
 
-        public static int GetTeamNumber(int teamId)
+        public static string GetTeamName(int teamId)
         {
             if (teamId == Constants.AvailableTeamIds[0])
-                return 1;
+                return "Red";
             if (teamId == Constants.AvailableTeamIds[1])
-                return 2;
-            return 0;
+                return "Blue";
+            return "";
         }
     }
 }
