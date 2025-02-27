@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using b1;
 using b1.UI.Comm;
@@ -16,6 +17,9 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(ref bool __result)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             __result = true;
             return false;
         }
@@ -32,6 +36,9 @@ namespace WukongApi.Patches
 
         public static bool Prefix(DamageNumParam Param)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             var photon = WukongMP.Instance.Photon;
 
             if (!photon.IsMasterClient)
@@ -53,7 +60,16 @@ namespace WukongApi.Patches
 
         public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName)
         {
-            ___StartGameBtnList[0].SetTxtName(FText.FromString("Join Multiplayer"));
+            if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+            {
+                ___StartGameBtnList[0].SetTxtName(FText.FromString("Quick Join"));
+            }
+            else
+            {
+                ___StartGameBtnList[0].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+            }
+            ___StartGameBtnList[1].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+            ___StartGameBtnList[2].SetTxtName(FText.FromString("Select Character"));
 
             // Clear OnGSButtonUnFocused event form the first button.
             var type = ___StartGameBtnList[0].GetBUIButton().GetType();
@@ -82,6 +98,9 @@ namespace WukongApi.Patches
 
         public static bool Prefix(ref string __result)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
             __result = "00:00";
             return false;
         }

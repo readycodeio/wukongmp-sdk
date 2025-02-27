@@ -40,8 +40,9 @@ namespace WukongApi
         {
             Logging.LogDebug("Clone joined room");
 
-            var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
+            var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
+            CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
         }
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)

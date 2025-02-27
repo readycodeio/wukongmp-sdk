@@ -142,7 +142,7 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Ready",
-                    Handler = _ => { _wukongClient.CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), true); }
+                    Handler = _ => { _wukongClient.SetReadyState(true); }
                 });
             _commands.Add(
                 "/start",

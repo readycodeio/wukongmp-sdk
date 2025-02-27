@@ -28,6 +28,7 @@ namespace WukongApi
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isExit;
+        private bool _inPvP;
 
         protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
@@ -40,6 +41,9 @@ namespace WukongApi
         public event Action<int, string, string, int, float, float, float> OnUnitSpawn;
         public event Action<string> OnMonsterWakeUp;
         public event Action<int, EquipmentState> OnEquipmentChange;
+        public event Action<string, bool, int> OnReadinessChange;
+        public event Action<string, int> OnTeamChange;
+        public event Action<APawn> OnPlayerLeft;
         public event Action<int> OnPlayerRebirth;
         public event Action<int> OnKillPlayer;
         public event Action<FVector, FRotator> OnSetPlayerTransform;
@@ -85,6 +89,29 @@ namespace WukongApi
         {
             var kvp = SyncedMonsters.FirstOrDefault(x => x.Value.Pawn == owner);
             return kvp.Value;
+        }
+
+        public void SetReadyState(bool isReady)
+        {
+            CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
+        }
+
+        public void SwitchReadyState()
+        {
+            if (PhotonClient.InRoom && !_inPvP)
+            {
+                var isReady = LocalPlayerState.IsReadyForPvP;
+                SetReadyState(!isReady);
+            }
+        }
+
+        public void SwitchTeam()
+        {
+            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !_inPvP)
+            {
+                var teamId = (LocalPlayerState.TeamId == Constants.AvailableTeamIds[0]) ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
+                CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
+            }
         }
 
         public MonsterState GetMonsterByCharacter(BGUCharacterCS owner)
@@ -172,7 +199,7 @@ namespace WukongApi
             }
         }
 
-        private void HandlePvPEvent(PvPEvent ev, int data)
+        private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
         {
             Logging.LogWarning($"Received PvP event: {ev}");
 
@@ -180,12 +207,27 @@ namespace WukongApi
             {
                 case PvPEvent.RoundStart:
                     Task.Run(GameUtils.ShowPvPCountDown);
+                    WukongMP.Instance.StartRound();
                     WukongMP.Instance.EnablePvP();
+                    EnterPvP();
                     break;
                 case PvPEvent.RoundEnd:
                     WukongMP.Instance.DisablePvP();
-                    var winner = AllConnectedPlayers.FirstOrDefault(x => x.TeamId == data);
+                    WukongMP.Instance.EndRound();
 
+                    if (winnerTeamId == Constants.DrawTeamId)
+                    {
+                        GameUtils.ShowTip($"Round ended: Draw");
+                    }
+                    else
+                    {
+                        GameUtils.ShowTip($"Round ended. Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                    }
+
+                    if (winnerTeamId == Constants.DrawTeamId)
+                        return;
+
+                    var winner = AllConnectedPlayers.FirstOrDefault(x => x.TeamId == winnerTeamId);
                     if (winner is null)
                     {
                         Logging.LogError("No winner found.");
@@ -202,10 +244,23 @@ namespace WukongApi
                     break;
                 case PvPEvent.TournamentEnd:
                 {
-                    var winners = AllConnectedPlayers.Where(x => x.TeamId == data).Select(x => x.NickName).ToList();
-                    var winnerString = string.Join(", ", winners);
-                    var plural = winners.Count > 1 ? "s" : "";
-                    GameUtils.ShowTip($"Winner{plural}: {winnerString}"); // TODO: Ties
+                    if (winnerTeamId == Constants.DrawTeamId)
+                    {
+                        GameUtils.ShowTip($"Draw");
+                    }
+                    else
+                    {
+                        GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamNumber(winnerTeamId)}");
+                    }
+
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(2000);
+                        WukongMP.Instance.EndTurnament(winnerTeamId);
+                        ExitPvP();
+                        SetReadyState(false);
+                    });
+
                     break;
                 }
                 case PvPEvent.ResetStats:
@@ -243,35 +298,20 @@ namespace WukongApi
             }
         }
 
+        private void EnterPvP()
+        {
+            _inPvP = true;
+        }
+
+        private void ExitPvP()
+        {
+            _inPvP = false;
+        }
+
         private void OnPlayerReadinessChanged(Player player, bool isReady)
         {
             var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (LocalPlayerState.IsReadyForPvP ? 1 : 0);
-            var allPlayers = ConnectedPlayers.Count + 1;
-
-            if (playersReady != allPlayers)
-            {
-                GameUtils.ShowTip($"{playersReady}/{allPlayers} players are ready");
-            }
-            else
-            {
-                switch (playersReady)
-                {
-                    case 1:
-                        GameUtils.ShowTip("You are ready");
-                        break;
-                    case 2:
-                        GameUtils.ShowTip("Both players are ready");
-                        break;
-                    default:
-                        GameUtils.ShowTip($"All {playersReady} players are ready");
-                        break;
-                }
-            }
-
-            if (IsMasterClient) // send this only once
-            {
-                WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{player.NickName} is {(isReady ? "ready" : "not ready")}");
-            }
+            OnReadinessChange?.Invoke(player.NickName, isReady, playersReady);
         }
 
         public void StartClient()
@@ -489,12 +529,6 @@ namespace WukongApi
 
         public void StartPvP()
         {
-            if (!IsMasterClient)
-            {
-                GameUtils.ShowTip("Only room owner can start PvP.");
-                return;
-            }
-
             // clear previous round winners
             CurrentRoomState.RoundWinners = Enumerable.Empty<int>();
 
@@ -695,30 +729,30 @@ namespace WukongApi
             Logging.LogDebug("Create room failed: " + message);
         }
 
+        public int GetTeamIdForPlayer()
+        {
+            var r = new Random();
+            var index = r.Next(0, Constants.AvailableTeamIds.Count);
+            return Constants.AvailableTeamIds[index];
+        }
+
         public virtual void OnJoinedRoom()
         {
             Logging.LogDebug("Joined room");
 
-            var teamId = PhotonUtils.GetTeamIdForPlayer(PhotonId);
-
+            var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
+            CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
 
             if (IsMasterClient)
             {
                 LobbyManager = new LobbyManager(this);
             }
 
-            Utils.TryRunOnGameThread(() =>
-            {
-                WukongMP.Instance.Harmony.PatchCategory(Constants.ConnectedPatches);
-                Logging.LogDebug("Patched with Harmony");
-            });
-
+            Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
             _joinedRoomCallback?.Invoke();
             WukongChat.InitializeChat(_userName);
-
-            GameLoopPatch.QueueOnGameThread(PhotonUtils.DiscoverMonsters, "DiscoverMonsters");
 
             PhotonClient.NickName = _userName;
         }
@@ -736,12 +770,6 @@ namespace WukongApi
         public void OnLeftRoom()
         {
             Logging.LogDebug("Left room");
-
-            Utils.TryRunOnGameThread(() =>
-            {
-                WukongMP.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
-                Logging.LogDebug("Unpatched Harmony");
-            });
         }
 
         #endregion
@@ -756,8 +784,9 @@ namespace WukongApi
         {
             Logging.LogDebug($"Player {otherPlayer.ActorNumber} left the room");
 
-            BGU_UnrealWorldUtil.DestroyActor(ConnectedPlayers[otherPlayer.ActorNumber].Pawn);
+            var playerPawn = ConnectedPlayers[otherPlayer.ActorNumber].Pawn;
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
+            OnPlayerLeft.Invoke(playerPawn);
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
@@ -832,6 +861,10 @@ namespace WukongApi
                         break;
                     case nameof(PlayerState.IsReadyForPvP):
                         OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
+                        continue;
+                    case nameof(PlayerState.TeamId):
+                        Logging.LogWarning("Calling team id change");
+                        OnTeamChange?.Invoke(targetPlayer.NickName, (int)kvp.Value);
                         continue;
                 }
             }

@@ -8,11 +8,6 @@ namespace WukongApi
 {
     public static class PhotonUtils
     {
-        public static int GetTeamIdForPlayer(int playerId)
-        {
-            return Constants.BaseTeamId + playerId;
-        }
-
         public static void RegisterTeamHostility(int team1, int team2)
         {
             var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());

@@ -18,17 +18,8 @@ namespace WukongApi
 
         public async Task StartRoundAsync()
         {
-            foreach (var player in _wukongClient.ConnectedPlayers.Values)
-            {
-                if (!player.IsReadyForPvP)
-                {
-                    GameUtils.ShowTip($"Player {player.NickName} is not ready"); // TODO: Nickname
-                    return;
-                }
-            }
-
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
-            await Task.Delay(500);
+            await Task.Delay(100);
 
             _wukongClient.SendPvPEvent(PvPEvent.RoundStart);
         }
@@ -80,7 +71,7 @@ namespace WukongApi
 
             // resolve tournament
             var winnersSoFar = _wukongClient.CurrentRoomState.RoundWinners.ToList();
-            var winnersByTeam = winnersSoFar.GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
+            var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
             // check if any team won more than half of the rounds
             var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _wukongClient.CurrentRoomState.RoundsTotal / 2);
@@ -93,8 +84,25 @@ namespace WukongApi
             // otherwise, check if we have a tie
             if (_wukongClient.CurrentRoomState.CurrentRound > _wukongClient.CurrentRoomState.RoundsTotal)
             {
-                // that was the final round
-                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd);
+                if (winnersByTeam.Count > 0)
+                {
+                    // if any team have won more than others
+                    int maxWins = winnersByTeam.Values.Max();
+                    var winningTeams = winnersByTeam.Where(t => t.Value == maxWins).Select(t => t.Key).ToList();
+                    if (winningTeams.Count == 1)
+                    {
+                        _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winningTeams[0]);
+                    }
+                    else
+                    {
+                        _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
+                    }
+                }
+                else
+                {
+                    // that was the final round
+                    _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
+                }
             }
             else
             {

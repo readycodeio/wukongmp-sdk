@@ -16,9 +16,10 @@ namespace WukongMPMod
         {
             Logging.LogDebug("Init WukongMP mod");
 
-            _wukongMp = WukongMP.Instance;
 
-            _wukongMp.InitAsync();
+            _wukongMp = WukongMP.Instance;
+            _wukongMp.Init();
+            _wukongMp.Patch();
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
@@ -30,6 +31,18 @@ namespace WukongMPMod
             {
                 Logging.LogDebug("Alt + V");
                 _wukongMp.Photon.SpawnClone();
+            });
+
+            Utils.RegisterKeyBind(Key.J, () =>
+            {
+                Logging.LogDebug("J");
+                _wukongMp.Photon.SwitchReadyState();
+            });
+
+            Utils.RegisterKeyBind(Key.L, () =>
+            {
+                Logging.LogDebug("L");
+                _wukongMp.Photon.SwitchTeam();
             });
         }
 

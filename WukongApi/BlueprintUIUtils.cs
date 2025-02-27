@@ -27,7 +27,7 @@ namespace WukongApi
             }
         }
 
-        private static List<UUserWidget> GetChatWidgets()
+        private static List<UUserWidget> GetWidgetsByName(string widgetName)
         {
             var world = GameUtils.GetWorld();
             if (world == null)
@@ -41,9 +41,7 @@ namespace WukongApi
             UWidgetLibrary.GetAllWidgetsOfClass(world, out list, wiClass, true);
             foreach (var widget in list)
             {
-                Console.WriteLine(widget.GetType());
-                Console.WriteLine(widget.GetFullName());
-                if (widget.GetFullName().Contains(Constants.ChatWidgetName))
+                if (widget.GetFullName().Contains(widgetName))
                 {
                     userWidgets.Add(widget);
                 }
@@ -52,9 +50,9 @@ namespace WukongApi
             return userWidgets;
         }
 
-        public static UUserWidget GetChatWidget()
+        public static UUserWidget GetWidget(string widgetName)
         {
-            var widgets = GetChatWidgets();
+            var widgets = GetWidgetsByName(widgetName);
             if (widgets != null && widgets.Count == 1)
             {
                 return widgets[0];

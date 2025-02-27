@@ -1,4 +1,5 @@
 ﻿using BtlShare;
+using System.Collections.Generic;
 using UnrealEngine.Runtime;
 using WukongApi.Helpers;
 
@@ -22,9 +23,19 @@ namespace WukongApi
         public static readonly FVector PvpStartingLocation = new FVector(-11146.926, -3229.771, 6497.035);
         public const float PvpRadius = 4000;
         public const float CameraArmLength = 720;
+        public const int CharacterArchiveId = 10;
+        public const int LevelArchiveId = 0;
+        public const int MaxPlayers = 20;
+        public static readonly List<int> AvailableTeamIds = new List<int> { -9999, -9998 };
+        public const int DrawTeamId = 9999;
 
         public const string ModActorPath = "/Game/Mods/CustomLuaMod/ModActor.ModActor_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
+        public const string TimerWidgetName = "WBP_Timer_C";
+        public const string CountdownWidgetName = "WBP_Countdown_C";
+        public const string GameMessageWidgetName = "WBP_GameMessage_C";
+        public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
+        public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new EnumSet<EBGUAttrFloat>(new[]
         {

@@ -114,12 +114,8 @@ namespace WukongApi
             });
         }
 
-        public static async Task ShowPvPCountDown()
+        public static void ShowPvPCountDown()
         {
-            Utils.TryRunOnGameThread(() => { GenAGPage.ShowPage(95, nameof(ShowPvPCountDown)); });
-
-            await Task.Delay(4000);
-
             Utils.TryRunOnGameThread(() =>
             {
                 var photon = WukongMP.Instance.Photon;
@@ -136,6 +132,15 @@ namespace WukongApi
                 var playUiSound = AccessTools.Method("B1UI.Script.GSUI.Util.GSUIAudioUtil:PlayUISound");
                 playUiSound.Invoke(null, new object[] { "EVT_ui_kill_jisha_manjingtou" });
             });
+        }
+
+        public static int GetTeamNumber(int teamId)
+        {
+            if (teamId == Constants.AvailableTeamIds[0])
+                return 1;
+            if (teamId == Constants.AvailableTeamIds[1])
+                return 2;
+            return 0;
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using ArchiveB1;
 using b1;
 using CommB1;
@@ -8,7 +10,8 @@ namespace WukongApi.Patches
 {
     static class SavePatchesData
     {
-        public static bool CustomSaveEnabled;
+        public static bool CustomSaveEnabled = false;
+        public static bool ShouldCacheSave = false;
     }
 
     [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
@@ -25,6 +28,22 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    public class PatchUIArchives
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("B1UI.GSUI.UIArchives:LoadArchive");
+        }
+
+        public static void Prefix()
+        {
+            SavePatchesData.ShouldCacheSave = true;
+        }
+    }
+
+
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LoadArchive))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchGameArchive
@@ -37,9 +56,26 @@ namespace WukongApi.Patches
                 return;
             }
 
+            if (SavePatchesData.ShouldCacheSave)
+            {
+                SavePatchesData.ShouldCacheSave = false;
+                var characterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, ArchiveId);
+                var characterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(characterArchiveSlotName, __instance.ArchiveWorker.UserId);
+
+                SavePatchesData.CustomSaveEnabled = true;
+                var newCharacterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId);
+                var newCharacterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(newCharacterArchiveSlotName, __instance.ArchiveWorker.UserId);
+                File.Copy(characterArchiveFullName, newCharacterArchiveFullName, true);
+            }
+            else
+            {
+                SavePatchesData.CustomSaveEnabled = true;
+                var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var CharacterGameArchiveData, out var CharacterArchiveCanBeRepaired);
+                OutArchiveData = CharacterGameArchiveData.GameArchiveData;
+            }
+
             // Read archive with our world state.
-            SavePatchesData.CustomSaveEnabled = true;
-            var readArchiveResult = __instance.ReadArchiveData(0, out var GameArchiveData, out var ArchiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(Constants.LevelArchiveId, out var GameArchiveData, out var ArchiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");
@@ -56,18 +92,29 @@ namespace WukongApi.Patches
         }
     }
 
-    // Disable game saves while multiplayer is enabled
+    //// Disable game saves while multiplayer is enabled
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), "CheckSaveTask")]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriter
     {
-        public static bool Prefix()
+        public static bool Prefix(Dictionary<string, ArchiveAsyncRequest> ___PendingRequests)
         {
-            return false;
+            if (WukongMP.Instance.DisableArchiveSave)
+            {
+                return false;
+            }
+
+            if (___PendingRequests.Count == 0)
+            {
+                WukongMP.Instance.DisableArchiveSave = true;
+                return false;
+            }
+
+            return true;
         }
     }
 
-    // Disable adding save game requests
+    //// Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), new[] { typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>) })]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriterAppendArchive1

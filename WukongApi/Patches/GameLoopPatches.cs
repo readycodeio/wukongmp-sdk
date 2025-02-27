@@ -56,7 +56,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public static class ReceiveTickPatch
     {
         public static void Postfix(int TickGroup)
@@ -91,7 +91,7 @@ namespace WukongApi.Patches
     }
 
     [HarmonyPatch(typeof(EntityManager), nameof(EntityManager.TickAllComponentsWithGroup), typeof(float), typeof(int), typeof(int), typeof(int))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public static class PatchEntityManagerTick
     {
         public static void Postfix(
