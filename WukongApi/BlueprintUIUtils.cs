@@ -15,6 +15,11 @@ namespace WukongApi
             if (world != null)
             {
                 var UIManagerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.UiManagerActorPath, ELoadResourceType.SyncLoadAndCache);
+                if (UIManagerActorClass == null)
+                {
+                    Logging.LogError($"Cannot find class of {Constants.UiManagerActorPath} to spawn");
+                    return;
+                }
                 var UIManagerActor = BGU_UnrealWorldUtil.SpawnActor(world, UIManagerActorClass);
                 if (UIManagerActor != null)
                 {
