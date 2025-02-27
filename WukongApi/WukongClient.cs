@@ -54,6 +54,7 @@ namespace WukongApi
         public event Action<FVector, FRotator> OnSetPlayerTransform;
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
+        public event Action<int, ESkillDirection> OnPhantomRush;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; private set; }
@@ -242,6 +243,11 @@ namespace WukongApi
                     var playerData = (PlayerTransformData)photonEvent.CustomData;
                     if (playerData.PlayerId == LocalPlayerState.PhotonId)
                         OnSetPlayerTransform?.Invoke(playerData.Location, playerData.Rotation);
+                    break;
+                case 11:
+                    // phantom rush
+                    var direction = (ESkillDirection)photonEvent.CustomData;
+                    OnPhantomRush?.Invoke(photonEvent.Sender, direction);
                     break;
             }
         }
@@ -514,6 +520,17 @@ namespace WukongApi
             foreach (var clone in _photonClones)
             {
                 clone.SendMontageCallback(reason, montagePath, state);
+            }
+        }
+
+        public void SendPhantomRush(ESkillDirection phantomRushDir)
+        {
+            const byte eventCode = 11;
+            PhotonClient.OpRaiseEvent(eventCode, phantomRushDir, RaiseEventArgs.Default, SendOptions.SendReliable);
+
+            foreach (var clone in _photonClones)
+            {
+                clone.SendPhantomRush(phantomRushDir);
             }
         }
 

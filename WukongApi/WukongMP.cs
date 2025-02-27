@@ -372,6 +372,7 @@ namespace WukongApi
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
+            Photon.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -412,6 +413,13 @@ namespace WukongApi
             GameUtils.GetPlayerController()?.SetControlRotation(rotation);
         }
 
+        private void PerformPhantomRush(int playerId, ESkillDirection direction)
+        {
+            var playerState = Photon.ConnectedPlayers[playerId];
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            events?.Evt_TriggerPhantomRush.Invoke(direction);
+        }
+
         private void Reconnect()
         {
             DisconnectIfConnected();
@@ -426,6 +434,7 @@ namespace WukongApi
             if (GameUtils.IsWorldValid())
             {
                 UnsubscribeFromPlayerMontageCallbacks();
+                UnsubscribeFromSkillEvents();
             }
 
             Photon?.StopClient();
@@ -657,6 +666,29 @@ namespace WukongApi
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
+        private void SubscribeToSkillEvents()
+        {
+            var myPawn = GameUtils.GetControlledPawn();
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            events.Evt_TriggerPhantomRush += OnTriggerPhantomRush;
+        }
+
+        private void UnsubscribeFromSkillEvents()
+        {
+            var myPawn = GameUtils.GetControlledPawn();
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            if (events != null)
+            {
+                events.Evt_TriggerPhantomRush -= OnTriggerPhantomRush;
+            }
+        }
+
+        private void OnTriggerPhantomRush(ESkillDirection phantomRushDir)
+        {
+            Logging.LogDebug($"Phantom rush trigerred: {phantomRushDir}");
+            Photon.SendPhantomRush(phantomRushDir);
+        }
+
         private void SpawnEnemiesMaster(string enemyName, int count, int teamId)
         {
             var player = GameUtils.GetControlledPawn();
@@ -761,6 +793,7 @@ namespace WukongApi
         private void OnJoinedRoomCallback()
         {
             SubscribeToPlayerMontageCallbacks();
+            SubscribeToSkillEvents();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
