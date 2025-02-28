@@ -101,7 +101,7 @@ namespace WukongApi
                 return value;
             }
 
-            Console.WriteLine($"Unit path for '{unitName}' not found. Spawning {Configurations.First().Key} instead");
+            Logging.LogWarning($"Unit path for '{unitName}' not found. Spawning {Configurations.First().Key} instead");
             return Configurations.First().Value;
         }
     }

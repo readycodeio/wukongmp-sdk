@@ -46,12 +46,12 @@ namespace WukongApi
             var actors = world.GetAllActorsOfClass<BUTamerActor>();
             foreach (var actor in actors)
             {
-                Console.WriteLine($"Found actor: {actor.GetName()}");
+                Logging.LogDebug($"Found actor: {actor.GetName()}");
 
                 var monster = actor.GetMonster();
                 if (monster != null)
                 {
-                    Console.WriteLine("Actor is a monster");
+                    Logging.LogDebug("Actor is a monster");
                     yield return monster;
                 }
             }

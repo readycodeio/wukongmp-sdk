@@ -61,7 +61,7 @@ namespace WukongApi
                 FixedRegion = "us",
             });
 
-            Console.WriteLine("\n\nYou are: " + userName);
+            Logging.LogDebug("\n\nYou are: " + userName);
         }
 
         public void Disconnect()
@@ -230,7 +230,7 @@ namespace WukongApi
 
         public void SendChatMessage(string channel, string message)
         {
-            Console.WriteLine($"Sending message {message}");
+            Logging.LogDebug($"Sending message {message}");
             _chatClient.PublishMessage(channel, message);
         }
 
@@ -238,12 +238,12 @@ namespace WukongApi
 
         public void OnChatStateChange(ChatState state)
         {
-            Console.WriteLine($"Chat state changed to: {state}");
+            Logging.LogDebug($"Chat state changed to: {state}");
         }
 
         public void OnConnected()
         {
-            Console.WriteLine("Chat connected");
+            Logging.LogDebug("Chat connected");
             _chatClient.Subscribe(GeneralChannelName);
             _chatClient.Subscribe(ServerChannelName);
             SendChatMessage(ServerChannelName, $"{NickName} has joined!");
@@ -255,14 +255,14 @@ namespace WukongApi
 
         public void OnDisconnected()
         {
-            Console.WriteLine("Chat disconnected");
+            Logging.LogDebug("Chat disconnected");
         }
 
         public void OnGetMessages(string channelName, string[] senders, object[] messages)
         {
             for (var i = 0; i < senders.Length; i++)
             {
-                Console.WriteLine($"Message {messages[i]} recieved");
+                Logging.LogDebug($"Message {messages[i]} received");
                 if (channelName == ServerChannelName)
                 {
                     OnSendMessage?.Invoke(true, "Server", messages[i].ToString());
@@ -282,7 +282,7 @@ namespace WukongApi
         {
             for (var i = 0; i < channels.Length; i++)
             {
-                Console.WriteLine($"Subscribed to the channel: {channels[i]}: {results[i]}");
+                Logging.LogDebug($"Subscribed to the channel: {channels[i]}: {results[i]}");
             }
         }
 
