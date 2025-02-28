@@ -425,8 +425,25 @@ namespace WukongApi
             Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
+
+            ResetCooldown(playerState.Pawn);
+            ResetMana(playerState.Pawn);
         }
-        
+
+        private void ResetCooldown(APawn playerPawn)
+        {
+            var events = BUS_EventCollectionCS.Get(playerPawn);
+            events?.Evt_ResetSkillCD.Invoke();
+        }
+
+        private void ResetMana(APawn playerPawn)
+        {
+            var events = BUS_EventCollectionCS.Get(playerPawn);
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(playerPawn);
+            float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
+        }
+
         private void PerformInputAction(int playerId, EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
         {
             if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
@@ -438,6 +455,9 @@ namespace WukongApi
             Logging.LogDebug($"Recieved input action for player {playerState.NickName} with input action type: {inputActionType}, isRelease: {isRelease}, skillID: {skillID}, descID: {descID}, itemID {itemID}\"");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_InputCastSkill.Invoke(inputActionType, isRelease, skillID, descID, itemID);
+
+            ResetCooldown(playerState.Pawn);
+            ResetMana(playerState.Pawn);
         }
 
         private void Reconnect()
@@ -709,6 +729,10 @@ namespace WukongApi
         {
             Logging.LogDebug($"Sending phantom rush with direction: {phantomRushDir}");
             Photon.SendPhantomRush(phantomRushDir);
+
+            var player = GameUtils.GetBguPlayerCharacterCs();
+            ResetCooldown(player);
+            ResetMana(player);
         }
 
         private void OnTriggerSkill(EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
@@ -718,6 +742,10 @@ namespace WukongApi
             if (inputActionType == EInputActionType.UseSkillByType)
             {
                 Photon.SendInputAction(inputActionType, isRelease, skillID, descID, itemID);
+
+                var player = GameUtils.GetBguPlayerCharacterCs();
+                ResetCooldown(player);
+                ResetMana(player);
             }
         }
 
