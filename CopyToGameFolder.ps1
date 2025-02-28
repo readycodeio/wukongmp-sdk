@@ -1,5 +1,14 @@
+param (
+    [string]$Configuration
+)
+
+# Debug by default
+if (-not $Configuration) {
+    $Configuration = "Debug"
+}
+
 # Define the source and destination directories
-$sourceDir = "WukongMpMod/bin/Debug/netstandard2.1"
+$sourceDir = "WukongMpMod/bin/$Configuration/netstandard2.1"
 $steamDir = Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam" -Name "InstallPath" | Select-Object -ExpandProperty InstallPath
 $destDir = "$steamDir\steamapps\common\BlackMythWukong\b1\Binaries\Win64\CSharpLoader\Mods\WukongMpMod"
 
@@ -9,7 +18,7 @@ if (!(Test-Path -Path $destDir)) {
 }
 
 # Define the files to copy
-$files = @("WukongApi.dll", "WukongApi.pdb", "WukongMpMod.dll", "WukongMpMod.pdb")
+$files = @("WukongApi.dll", "WukongMpMod.dll", "PhotonClient.dll", "PhotonChat.dll", "PhotonRealtime.dll")
 
 # Copy each file to the destination directory
 foreach ($file in $files) {
@@ -20,5 +29,6 @@ foreach ($file in $files) {
         Write-Output "Copied $file to $destDir"
     } else {
         Write-Output "$file does not exist in $sourceDir"
+        exit 1
     }
 }
