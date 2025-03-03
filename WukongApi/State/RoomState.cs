@@ -17,6 +17,12 @@ namespace WukongApi.State
             _client = client;
         }
 
+        public GameMode GameMode
+        {
+            get => (GameMode)GetProperty<int>(nameof(GameMode));
+            set => SetProperty(nameof(GameMode), (int)value);
+        }
+
         public int RoundsTotal
         {
             get => GetProperty<int>(nameof(RoundsTotal));
