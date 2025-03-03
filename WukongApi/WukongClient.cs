@@ -17,6 +17,7 @@ using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
+using WukongApiQ;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -54,7 +55,7 @@ namespace WukongApi
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
         public event Action<int, ESkillDirection> OnPhantomRush;
-        public event Action<int, EInputActionType, bool, int, int, int> OnInputAction;
+        public event Action<int, int , ImmobilizeActionType, bool> OnHandleImmobilize;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; private set; }
@@ -250,9 +251,9 @@ namespace WukongApi
                     OnPhantomRush?.Invoke(photonEvent.Sender, direction);
                     break;
                 case 12:
-                    // input action (skill)
-                    var skillData = (InputActionData)photonEvent.CustomData;
-                    OnInputAction?.Invoke(photonEvent.Sender, skillData.InputActionType, skillData.IsRelease, skillData.SkillID, skillData.DescID, skillData.ItemID);
+                    // immobilize
+                    var immobilizeData = (ImmobilizeData)photonEvent.CustomData;
+                    OnHandleImmobilize?.Invoke(immobilizeData.PlayerId, immobilizeData.OtherPlayerId, immobilizeData.ImmobilizeActionType, immobilizeData.GreatSageTalentActiveBuff);
                     break;
             }
         }
@@ -529,29 +530,6 @@ namespace WukongApi
             }
         }
 
-        public void SendPhantomRush(ESkillDirection phantomRushDir)
-        {
-            const byte eventCode = 11;
-            PhotonClient.OpRaiseEvent(eventCode, phantomRushDir, RaiseEventArgs.Default, SendOptions.SendReliable);
-
-            foreach (var clone in _photonClones)
-            {
-                clone.SendPhantomRush(phantomRushDir);
-            }
-        }
-
-        public void SendInputAction(EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
-        {
-            const byte eventCode = 12;
-            var evData = new InputActionData(inputActionType, isRelease, skillID, descID, itemID);
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
-
-            foreach (var clone in _photonClones)
-            {
-                clone.SendInputAction(inputActionType, isRelease, skillID, descID, itemID);
-            }
-        }
-
         public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 4;
@@ -615,6 +593,24 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
+        }
+
+        public void SendPhantomRush(ESkillDirection phantomRushDir)
+        {
+            const byte eventCode = 11;
+            PhotonClient.OpRaiseEvent(eventCode, phantomRushDir, RaiseEventArgs.Default, SendOptions.SendReliable);
+
+            foreach (var clone in _photonClones)
+            {
+                clone.SendPhantomRush(phantomRushDir);
+            }
+        }
+
+        public void BroadcastImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
+        {
+            const byte eventCode = 12;
+            var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType , hasBuff);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)

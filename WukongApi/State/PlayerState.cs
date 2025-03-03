@@ -34,6 +34,7 @@ namespace WukongApi.State
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
         public string NickName { get; set; }
+        public bool RunImmobilizePatches { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {

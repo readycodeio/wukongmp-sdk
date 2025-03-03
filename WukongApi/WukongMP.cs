@@ -3,8 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
+using b1.ECS;
+using BtlB1;
 using BtlShare;
-using CommB1;
 using CSharpModBase;
 using HarmonyLib;
 using Photon.Realtime;
@@ -373,7 +374,7 @@ namespace WukongApi
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
             Photon.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
-            Photon.OnInputAction += (id, inputActionType, isRelease, skillID, descID, itemID) => GameLoopPatch.QueueOnGameThread(() => PerformInputAction(id, inputActionType, isRelease, skillID, descID, itemID), "PerformInputAction");
+            Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -444,7 +445,8 @@ namespace WukongApi
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
 
-        private void PerformInputAction(int playerId, EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
+
+        private void HandleImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
             if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
             {
@@ -452,12 +454,66 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug($"Recieved input action for player {playerState.NickName} with input action type: {inputActionType}, isRelease: {isRelease}, skillID: {skillID}, descID: {descID}, itemID {itemID}\"");
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            events?.Evt_InputCastSkill.Invoke(inputActionType, isRelease, skillID, descID, itemID);
+            PlayerState otherPlayerState = null;
+            if (otherPlayerId != -1 && !Photon.ConnectedPlayers.TryGetValue(otherPlayerId, out otherPlayerState))
+            {
+                Logging.LogDebug($"Player not found: {otherPlayerId}");
+                return;
+            }
 
-            ResetCooldown(playerState.Pawn);
-            ResetMana(playerState.Pawn);
+            switch (immobilizeAction)
+            {
+                case ImmobilizeActionType.Cast:
+                    CastImmobilize(playerState);
+                    break;
+                case ImmobilizeActionType.Trigger:
+                    TriggerImmobilize(playerState, otherPlayerState, hasBuff);
+                    break;
+                case ImmobilizeActionType.Relieve:
+                    RelieveImmobilize(playerState);
+                    break;
+                case ImmobilizeActionType.Break:
+                    // Currently not supported
+                    break;
+                default:
+                    Logging.LogError($"Unknown ImmobilizeActionType: {immobilizeAction}");
+                    break;
+
+            }
+        }
+
+        private void CastImmobilize(PlayerState castingPlayerState)
+        {
+            if (Photon.IsMasterClient)
+            {
+                Logging.LogDebug($"Recieved cast immobilize for player {castingPlayerState.NickName}");
+                var playerEvents = BUS_EventCollectionCS.Get(castingPlayerState.Pawn);
+                playerEvents.Evt_CastImmobilize.Invoke(0);
+            }
+        }
+
+        private void TriggerImmobilize(PlayerState immobilizedPlayerState, PlayerState castingPlayerState, bool hasBuff)
+        {
+            Logging.LogDebug($"Recieved trigger immobilize for player {immobilizedPlayerState.NickName}");
+            var character = immobilizedPlayerState.Pawn as BGUCharacterCS;
+            var CastImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+
+            FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = CastImmobilizeData.GetCachedImmobilizeConfigDesc(CastImmobilizeData.ResId);
+            if (cachedImmobilizeConfigDesc == null)
+            {
+                return;
+            }
+
+            ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(character, castingPlayerState.Pawn, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
+            immobilizedPlayerState.RunImmobilizePatches = true;
+            BUS_EventCollectionCS.Get(character)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+        }
+
+        private void RelieveImmobilize(PlayerState immobilizedPlayerState)
+        {
+            Logging.LogDebug($"Recieved relieve immobilize for player {immobilizedPlayerState.NickName}");
+            var playerEvents = BUS_EventCollectionCS.Get(immobilizedPlayerState.Pawn);
+            playerEvents.Evt_RelieveImmobilized.Invoke();
         }
 
         private void Reconnect()
@@ -711,7 +767,6 @@ namespace WukongApi
             var myPawn = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(myPawn);
             events.Evt_TriggerPhantomRush += OnTriggerPhantomRush;
-            events.Evt_InputCastSkill += OnTriggerSkill;
         }
 
         private void UnsubscribeFromSkillEvents()
@@ -721,7 +776,6 @@ namespace WukongApi
             if (events != null)
             {
                 events.Evt_TriggerPhantomRush -= OnTriggerPhantomRush;
-                events.Evt_InputCastSkill -= OnTriggerSkill;
             }
         }
 
@@ -733,20 +787,6 @@ namespace WukongApi
             var player = GameUtils.GetBguPlayerCharacterCs();
             ResetCooldown(player);
             ResetMana(player);
-        }
-
-        private void OnTriggerSkill(EInputActionType inputActionType, bool isRelease, int skillID, int descID, int itemID)
-        {
-            Logging.LogDebug($"Sending skill event with input action type: {inputActionType}, isRelease: {isRelease}, skillID: {skillID}, descID: {descID}, itemID {itemID}");
-            // TODO: Check if skill is on the white list
-            if (inputActionType == EInputActionType.UseSkillByType)
-            {
-                Photon.SendInputAction(inputActionType, isRelease, skillID, descID, itemID);
-
-                var player = GameUtils.GetBguPlayerCharacterCs();
-                ResetCooldown(player);
-                ResetMana(player);
-            }
         }
 
         private void SpawnEnemiesMaster(string enemyName, int count, int teamId)
