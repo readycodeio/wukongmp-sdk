@@ -92,6 +92,7 @@ namespace WukongApi.Patches
             }
             if (BGW_LogUtil.LogIfNull(aBGUCharacter, "CurrentTarget As BGUCharacter is null") || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.AffiliationTypeFilter))
             {
+                Logging.LogError("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
                 return false;
             }
             int num = ((cachedImmobilizeConfigDesc.TargetCount <= 0) ? 1 : cachedImmobilizeConfigDesc.TargetCount);
@@ -144,14 +145,15 @@ namespace WukongApi.Patches
                     continue;
                 }
 
-                var hasBUff = BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
-                ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBUff);
+                var hasBuff = BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
+                ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
                 BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
                 // broadcast
-                var immbilizedPlayerState = photon.GetByActor(item);
-                if (immbilizedPlayerState != null && castingPlayerState != null)
+                var immobilizedPlayerState = photon.GetByActor(item);
+                if (immobilizedPlayerState != null && castingPlayerState != null)
                 {
-                    photon.BroadcastImmobilize(immbilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBUff);
+                    Logging.LogError($"Broadcasting trigger immobilize for player {immobilizedPlayerState.NickName}");
+                    photon.BroadcastImmobilize(immobilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
                 }
             }
 
@@ -164,6 +166,14 @@ namespace WukongApi.Patches
         {
             public static bool Prefix()
             {
+                if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                    return true;
+
+                var photon = WukongMP.Instance.Photon;
+                if (photon.IsMasterClient)
+                {
+                    return true;
+                }
                 return false;
             }
         }

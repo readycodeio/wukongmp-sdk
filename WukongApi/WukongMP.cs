@@ -449,17 +449,18 @@ namespace WukongApi
 
         private void HandleImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
+            Logging.LogError($"Handle immobilize with action: {immobilizeAction}");
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
             {
-                Logging.LogDebug($"Player not found: {playerId}");
+                Logging.LogError($"Player not found: {playerId}");
                 return;
             }
 
             var otherPlayerState = Photon.GetById(otherPlayerId);
             if (otherPlayerId != -1 && playerState == null)
             {
-                Logging.LogDebug($"Player not found: {otherPlayerId}");
+                Logging.LogError($"Player not found: {otherPlayerId}");
                 return;
             }
 
@@ -476,7 +477,6 @@ namespace WukongApi
                     break;
                 case ImmobilizeActionType.Break:
                     // Currently not supported
-                    break;
                 default:
                     Logging.LogError($"Unknown ImmobilizeActionType: {immobilizeAction}");
                     break;
@@ -488,7 +488,7 @@ namespace WukongApi
         {
             if (Photon.IsMasterClient)
             {
-                Logging.LogDebug($"Recieved cast immobilize for player {castingPlayerState.NickName}");
+                Logging.LogError($"Recieved cast immobilize for player {castingPlayerState.NickName}");
                 var playerEvents = BUS_EventCollectionCS.Get(castingPlayerState.Pawn);
                 playerEvents.Evt_CastImmobilize.Invoke(0);
             }
@@ -496,7 +496,7 @@ namespace WukongApi
 
         private void TriggerImmobilize(PlayerState immobilizedPlayerState, PlayerState castingPlayerState, bool hasBuff)
         {
-            Logging.LogDebug($"Recieved trigger immobilize for player {immobilizedPlayerState.NickName}");
+            Logging.LogError($"Recieved trigger immobilize for player {immobilizedPlayerState.NickName}");
             var character = immobilizedPlayerState.Pawn as BGUCharacterCS;
             var CastImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
@@ -507,15 +507,15 @@ namespace WukongApi
             }
 
             ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(character, castingPlayerState.Pawn, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
-            immobilizedPlayerState.RunImmobilizePatches = true;
             BUS_EventCollectionCS.Get(character)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
         }
 
         private void RelieveImmobilize(PlayerState immobilizedPlayerState)
         {
-            Logging.LogDebug($"Recieved relieve immobilize for player {immobilizedPlayerState.NickName}");
+            Logging.LogError($"Recieved relieve immobilize for player {immobilizedPlayerState.NickName}");
             var playerEvents = BUS_EventCollectionCS.Get(immobilizedPlayerState.Pawn);
-            playerEvents.Evt_RelieveImmobilized.Invoke();
+            immobilizedPlayerState.RunImmobilizePatches = true;
+            playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
         private void Reconnect()
