@@ -67,7 +67,8 @@ namespace WukongApi.Patches
 
             if (!photon.IsMasterClient)
             {
-                if (castingPlayerState != null)
+                // Broadcast that you have cast a spell
+                if (castingPlayerState != null && castingPlayerState.PhotonId == photon.LocalPlayerState.PhotonId)
                 {
                     photon.BroadcastImmobilize(castingPlayerState.PhotonId, -1, ImmobilizeActionType.Cast, false);
                 }
