@@ -33,6 +33,12 @@ namespace WukongMPMod
                 _wukongMp.DumpPlayerState();
             });
 
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            {
+                Logging.LogDebug("Alt + X");
+                _wukongMp.ResetLocalPlayerCooldown();
+            });
+
             //Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             //{
             //    Logging.LogDebug("Alt + V");

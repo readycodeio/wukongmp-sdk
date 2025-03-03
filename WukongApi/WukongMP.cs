@@ -449,9 +449,13 @@ namespace WukongApi
             Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
+        }
 
-            ResetCooldown(playerState.Pawn);
-            ResetMana(playerState.Pawn);
+        public void ResetLocalPlayerCooldown()
+        {
+            var player = GameUtils.GetBguPlayerCharacterCs();
+            ResetCooldown(player);
+            ResetMana(player);
         }
 
         private void ResetCooldown(APawn playerPawn)
@@ -809,8 +813,6 @@ namespace WukongApi
             Photon.SendPhantomRush(phantomRushDir);
 
             var player = GameUtils.GetBguPlayerCharacterCs();
-            ResetCooldown(player);
-            ResetMana(player);
         }
 
         private void SpawnEnemiesMaster(string enemyName, int count, int teamId)
