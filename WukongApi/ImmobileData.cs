@@ -1,8 +1,7 @@
 ﻿using Photon.Client;
 using System;
-using WukongApi;
 
-namespace WukongApiQ
+namespace WukongApi
 {
     public class ImmobilizeData
     {

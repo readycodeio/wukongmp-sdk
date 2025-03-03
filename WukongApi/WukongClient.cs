@@ -17,7 +17,6 @@ using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
-using WukongApiQ;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -396,7 +395,7 @@ namespace WukongApi
             PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
-            PhotonPeer.RegisterType(typeof(InputActionData), 246, InputActionData.Serialize, InputActionData.Deserialize);
+            PhotonPeer.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
 
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
