@@ -202,5 +202,10 @@ namespace WukongApi
             }
             return immobilizeConfigInstance;
         }
+
+        public static bool IsSkillWhitelisted(int skillId)
+        {
+            return Constants.SkillsWhitelist.Contains(skillId);
+        }
     }
 }

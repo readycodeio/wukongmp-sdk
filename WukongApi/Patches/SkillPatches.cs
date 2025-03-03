@@ -9,15 +9,17 @@ using UnrealEngine.Runtime;
 
 namespace WukongApi.Patches
 {
-    //[HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerMagicSkill")]
-    //[HarmonyPatchCategory(Constants.ConnectedPatches)]
-    //public static class PatchTriggerMagicSkill
-    //{
-    //    public static bool Prefix()
-    //    {
-    //        return false;
-    //    }
-    //}
+    [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerMagicSkill")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchTriggerMagicSkill
+    {
+        public static bool Prefix(int SkillID)
+        {
+            if (GameUtils.IsSkillWhitelisted(SkillID))
+                return true;
+            return false;
+        }
+    }
 
     [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerVigorSkill")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
