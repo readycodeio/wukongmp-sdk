@@ -417,7 +417,8 @@ namespace WukongApi
 
         private void PerformPhantomRush(int playerId, ESkillDirection direction)
         {
-            if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
             {
                 Logging.LogDebug($"Player not found: {playerId}");
                 return;
@@ -448,14 +449,15 @@ namespace WukongApi
 
         private void HandleImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
             {
                 Logging.LogDebug($"Player not found: {playerId}");
                 return;
             }
 
-            PlayerState otherPlayerState = null;
-            if (otherPlayerId != -1 && !Photon.ConnectedPlayers.TryGetValue(otherPlayerId, out otherPlayerState))
+            var otherPlayerState = Photon.GetById(otherPlayerId);
+            if (otherPlayerId != -1 && playerState == null)
             {
                 Logging.LogDebug($"Player not found: {otherPlayerId}");
                 return;
