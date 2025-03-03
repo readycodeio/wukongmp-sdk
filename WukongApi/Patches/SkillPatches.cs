@@ -48,10 +48,18 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchOnCastImmobilize
     {
-        public static bool Prefix(int ConfigID, BUS_CastImmobilizeComp __instance, BUC_CastImmobilizeData ___CastImmobilizeData, IBUC_TargetInfoData ___TargetInfoData, IBUC_BuffData ___BuffData)
+        public static bool Prefix(int ConfigID, BUS_CastImmobilizeComp __instance)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
+
+            // get properties
+            MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
+            BUC_CastImmobilizeData CastImmobilizeData = (BUC_CastImmobilizeData)getter.Invoke(__instance, null);
+            getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "TargetInfoData");
+            IBUC_TargetInfoData TargetInfoData = (IBUC_TargetInfoData)getter.Invoke(__instance, null);
+            getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "BuffData");
+            IBUC_BuffData BuffData = (IBUC_BuffData)getter.Invoke(__instance, null);
 
             var photon = WukongMP.Instance.Photon;
             AActor castingCharacter = __instance.GetOwner();
@@ -69,18 +77,18 @@ namespace WukongApi.Patches
 
             if (ConfigID == 0)
             {
-                ConfigID = ___CastImmobilizeData.ResId;
+                ConfigID = CastImmobilizeData.ResId;
             }
-            FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = ___CastImmobilizeData.GetCachedImmobilizeConfigDesc(ConfigID);
+            FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = CastImmobilizeData.GetCachedImmobilizeConfigDesc(ConfigID);
             if (cachedImmobilizeConfigDesc == null || BGW_LogUtil.LogIfNull(__instance.GetOwner() as ABGUCharacter, "CurCharacter is null"))
             {
                 return false;
             }
             ABGUCharacter aBGUCharacter = null;
-            aBGUCharacter = ___TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
+            aBGUCharacter = TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
             if (aBGUCharacter == null)
             {
-                aBGUCharacter = ___TargetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
+                aBGUCharacter = TargetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
             }
             if (BGW_LogUtil.LogIfNull(aBGUCharacter, "CurrentTarget As BGUCharacter is null") || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.AffiliationTypeFilter))
             {
@@ -122,7 +130,7 @@ namespace WukongApi.Patches
                 if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.ImmueImmobilizing))
                 {
                     int actorResID = BGU_DataUtil.GetActorResID(item);
-                    UBGWDataAsset fXAssetByResID = GameUtils.GetFXAssetByResID(castingCharacter, cachedImmobilizeConfigDesc.FailedFXs, actorResID, ___CastImmobilizeData.ResId);
+                    UBGWDataAsset fXAssetByResID = GameUtils.GetFXAssetByResID(castingCharacter, cachedImmobilizeConfigDesc.FailedFXs, actorResID, CastImmobilizeData.ResId);
                     if (fXAssetByResID != null)
                     {
                         BUS_EventCollectionCS.Get(item)?.Evt_RequestSpawnFXByDispConfigDA.Invoke(fXAssetByResID, out var _);
@@ -136,9 +144,8 @@ namespace WukongApi.Patches
                     continue;
                 }
 
-                var hasBUff = ___BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
-                ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, ___CastImmobilizeData.ResId, hasBUff);
-                immobilizeConfigInstance.bEnableGreatSageTalent = cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff > 0 && ___BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
+                var hasBUff = BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
+                ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBUff);
                 BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
                 // broadcast
                 var immbilizedPlayerState = photon.GetByActor(item);
