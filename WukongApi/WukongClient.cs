@@ -58,7 +58,7 @@ namespace WukongApi
         public event Action<DamageNumParam> OnDamageNum;
         public event Action<int, ESkillDirection> OnPhantomRush;
         public event Action<int> OnExitPhantomRush;
-        public event Action<int, int , ImmobilizeActionType, bool> OnHandleImmobilize;
+        public event Action<int, int, ImmobilizeActionType, bool> OnHandleImmobilize;
         public event Action<int, int> OnTargetSet;
 
         public WukongChatter WukongChat { get; }
@@ -435,8 +435,10 @@ namespace WukongApi
             PhotonClient.AuthValues = _authValues;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
-                AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
-                // AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
+                // DEVELOPMENT (Jakub's machine)
+                // AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
+                // PRODUCTION
+                AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
                 AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.Udp,
                 EnableProtocolFallback = false,
@@ -536,7 +538,6 @@ namespace WukongApi
                     {
                         RoomOptions = propertiesForRoomCreation,
                         RoomName = _roomName,
-                        Lobby = _lobby
                     };
 
                     Logging.LogDebug($"Joining or creating private room {_roomName}");
@@ -561,12 +562,10 @@ namespace WukongApi
                     var createArgs = new EnterRoomArgs
                     {
                         RoomOptions = propertiesForRoomCreation,
-                        Lobby = _lobby
                     };
 
                     var joinArgs = new JoinRandomRoomArgs
                     {
-                        Lobby = _lobby,
                         ExpectedMaxPlayers = _gameMode == GameMode.XvX ? 2 * _playersPerTeam : 10,
                         MatchingType = MatchmakingMode.FillRoom,
                         ExpectedCustomRoomProperties = new PhotonHashtable
@@ -575,7 +574,7 @@ namespace WukongApi
                         }
                     };
 
-                    Logging.LogDebug($"Joining or creating {_playersPerTeam}v{_playersPerTeam} room {_roomName}");
+                    Logging.LogDebug($"Joining or creating {_playersPerTeam}v{_playersPerTeam} room");
                     await PhotonClient.JoinRandomOrCreateRoomAsync(joinArgs, createArgs);
                     break;
                 }
@@ -939,7 +938,7 @@ namespace WukongApi
 
         public virtual void OnJoinedRoom()
         {
-            Logging.LogDebug("Joined room");
+            Logging.LogDebug($"Joined room {PhotonClient.CurrentRoom.Name}");
 
             var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
