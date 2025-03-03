@@ -228,5 +228,60 @@ namespace WukongApi.Patches
                 return false;
             }
         }
+
+        [HarmonyPatch(typeof(BUS_PhantomRushComp), "OnTriggerPhantomRush")]
+        [HarmonyPatchCategory(Constants.ConnectedPatches)]
+        public static class PatchOnTriggerPhantomRush
+        {
+            public static void Postfix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData, ESkillDirection PhantomRushDir)
+            {
+                if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                    return;
+
+                // PhantomRush not triggered - skip
+                if (!___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
+                {
+                    return;
+                }
+
+                var photon = WukongMP.Instance.Photon;
+                if (__instance.GetOwner() == photon.LocalPlayerState.Pawn)
+                {
+                    Logging.LogDebug($"Sending phantom rush with direction: {PhantomRushDir}");
+                    photon.SendPhantomRush(PhantomRushDir);
+                }
+            }
+        }
+        
+        [HarmonyPatch(typeof(BUS_PhantomRushComp), "ExitPhantomRush")]
+        [HarmonyPatchCategory(Constants.ConnectedPatches)]
+        public static class PatchExitPhantomRush
+        {
+            public static bool Prefix(BUS_PhantomRushComp __instance)
+            {
+                if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                    return true;
+
+                var photon = WukongMP.Instance.Photon;
+                var playerState = photon.GetByActor(__instance.GetOwner());
+
+                if (playerState == null)
+                    return true;
+
+                if (photon.IsMasterClient)
+                {
+                    photon.ExitPhantomRush(playerState.PhotonId);
+                    return true;
+                }
+
+                if (playerState.RunPhantomRushPatch)
+                {
+                    playerState.RunPhantomRushPatch = false;
+                    return true;
+                }
+
+                return false;
+            }
+        }
     }
 }

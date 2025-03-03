@@ -374,6 +374,7 @@ namespace WukongApi
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
             Photon.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
+            Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet"); ;
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
@@ -381,6 +382,21 @@ namespace WukongApi
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
             Photon.StartClient();
+        }
+
+        private void ExitPhantomRush(int playerId)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError($"Player not found: {playerId}");
+                return;
+            }
+
+            Logging.LogDebug($"Recieved exit phantom rush for player {playerState.NickName}");
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            playerState.RunPhantomRushPatch = true;
+            events?.Evt_RelievePhantomRush.Invoke();
         }
 
         private void OnTargetSet(int playerId, int targetId)
@@ -449,6 +465,9 @@ namespace WukongApi
             Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
+
+            ResetCooldown(playerState.Pawn);
+            ResetMana(playerState.Pawn);
         }
 
         public void ResetLocalPlayerCooldown()
@@ -558,7 +577,6 @@ namespace WukongApi
             if (GameUtils.IsWorldValid())
             {
                 UnsubscribeFromPlayerMontageCallbacks();
-                UnsubscribeFromSkillEvents();
             }
 
             Photon?.StopClient();
@@ -790,31 +808,6 @@ namespace WukongApi
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
-        private void SubscribeToSkillEvents()
-        {
-            var myPawn = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_TriggerPhantomRush += OnTriggerPhantomRush;
-        }
-
-        private void UnsubscribeFromSkillEvents()
-        {
-            var myPawn = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(myPawn);
-            if (events != null)
-            {
-                events.Evt_TriggerPhantomRush -= OnTriggerPhantomRush;
-            }
-        }
-
-        private void OnTriggerPhantomRush(ESkillDirection phantomRushDir)
-        {
-            Logging.LogDebug($"Sending phantom rush with direction: {phantomRushDir}");
-            Photon.SendPhantomRush(phantomRushDir);
-
-            var player = GameUtils.GetBguPlayerCharacterCs();
-        }
-
         private void SpawnEnemiesMaster(string enemyName, int count, int teamId)
         {
             var player = GameUtils.GetControlledPawn();
@@ -919,7 +912,6 @@ namespace WukongApi
         private void OnJoinedRoomCallback()
         {
             SubscribeToPlayerMontageCallbacks();
-            SubscribeToSkillEvents();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);

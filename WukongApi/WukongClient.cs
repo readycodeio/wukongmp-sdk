@@ -54,6 +54,7 @@ namespace WukongApi
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
         public event Action<int, ESkillDirection> OnPhantomRush;
+        public event Action<int> OnExitPhantomRush;
         public event Action<int, int , ImmobilizeActionType, bool> OnHandleImmobilize;
         public event Action<int, int> OnTargetSet;
 
@@ -246,7 +247,7 @@ namespace WukongApi
                         OnSetPlayerTransform?.Invoke(playerData.Location, playerData.Rotation);
                     break;
                 case 11:
-                    // phantom rush
+                    // start phantom rush
                     var direction = (ESkillDirection)photonEvent.CustomData;
                     OnPhantomRush?.Invoke(photonEvent.Sender, direction);
                     break;
@@ -259,6 +260,11 @@ namespace WukongApi
                     // target
                     var targetId = (int)photonEvent.CustomData;
                     OnTargetSet?.Invoke(photonEvent.Sender, targetId);
+                    break;
+                case 14:
+                    // exit phantom rush
+                    var phantomRushPlayerId = (int)photonEvent.CustomData;
+                    OnExitPhantomRush?.Invoke(phantomRushPlayerId);
                     break;
             }
         }
@@ -604,11 +610,6 @@ namespace WukongApi
         {
             const byte eventCode = 11;
             PhotonClient.OpRaiseEvent(eventCode, phantomRushDir, RaiseEventArgs.Default, SendOptions.SendReliable);
-
-            foreach (var clone in _photonClones)
-            {
-                clone.SendPhantomRush(phantomRushDir);
-            }
         }
 
         public void BroadcastImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
@@ -622,6 +623,12 @@ namespace WukongApi
         public void SendTarget(int playerId)
         {
             const byte eventCode = 13;
+            PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void ExitPhantomRush(int playerId)
+        {
+            const byte eventCode = 14;
             PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
