@@ -427,7 +427,7 @@ namespace WukongApi.Patches
             return AccessTools.Method("b1.BUS_BattleStateComp:SetTargetToData");
         }
 
-        public static void Postfix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
+        public static void Prefix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -438,9 +438,13 @@ namespace WukongApi.Patches
             if (__instance.GetOwner() != photon.LocalPlayerState.Pawn)
                 return;
 
+            if (___TargetInfoData.GetTargetInfo().LockTargetActor == NewTargetInfo.LockTargetActor)
+                return;
+
             var newTargetPlayerState = photon.GetByActor(NewTargetInfo.LockTargetActor);
-            if (___TargetInfoData.GetTargetInfo().LockTargetActor != NewTargetInfo.LockTargetActor && newTargetPlayerState != null)
+            if (newTargetPlayerState != null)
             {
+                Logging.LogError($"New target sent for {photon.LocalPlayerState.NickName} as: {newTargetPlayerState.NickName}");
                 photon.SendTarget(newTargetPlayerState.PhotonId);
             }
         }

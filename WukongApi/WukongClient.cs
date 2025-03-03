@@ -621,7 +621,6 @@ namespace WukongApi
 
         public void SendTarget(int playerId)
         {
-            Logging.LogError($"New target sent: {playerId}");
             const byte eventCode = 13;
             PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
