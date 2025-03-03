@@ -55,6 +55,7 @@ namespace WukongApi
         public event Action<DamageNumParam> OnDamageNum;
         public event Action<int, ESkillDirection> OnPhantomRush;
         public event Action<int, int , ImmobilizeActionType, bool> OnHandleImmobilize;
+        public event Action<int, int> OnTargetSet;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; private set; }
@@ -253,6 +254,11 @@ namespace WukongApi
                     // immobilize
                     var immobilizeData = (ImmobilizeData)photonEvent.CustomData;
                     OnHandleImmobilize?.Invoke(immobilizeData.PlayerId, immobilizeData.OtherPlayerId, immobilizeData.ImmobilizeActionType, immobilizeData.GreatSageTalentActiveBuff);
+                    break;
+                case 13:
+                    // target
+                    var targetId = (int)photonEvent.CustomData;
+                    OnTargetSet?.Invoke(photonEvent.Sender, targetId);
                     break;
             }
         }
@@ -611,6 +617,13 @@ namespace WukongApi
             const byte eventCode = 12;
             var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType , hasBuff);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendTarget(int playerId)
+        {
+            Logging.LogError($"New target sent: {playerId}");
+            const byte eventCode = 13;
+            PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)
