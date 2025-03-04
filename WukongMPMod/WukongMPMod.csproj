@@ -7,21 +7,24 @@
         <OutputType>Library</OutputType>
         <AssemblyName>WukongMpMod</AssemblyName>
         <RootNamespace>WukongMpMod</RootNamespace>
-        <!-- Ensure proper versioning -->
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <FileVersion>1.0.0.0</FileVersion>
-        <InformationalVersion>1.0.0</InformationalVersion>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <BuildTimestamp>$([System.DateTime]::UtcNow.ToString("yyyyMMdd.HHmm"))</BuildTimestamp>
+        <FileVersion>1.0.0.$(BuildTimestamp)</FileVersion>
+        <InformationalVersion>1.0.0.$(BuildTimestamp)</InformationalVersion>
+    </PropertyGroup>
+
+
     <ItemGroup>
-        <ProjectReference Include="..\WukongApi\WukongApi.csproj" />
+        <ProjectReference Include="..\WukongApi\WukongApi.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="CSharpModBase">
-        <HintPath>..\WukongApi\Core\CSharpModBase.dll</HintPath>
-      </Reference>
+        <Reference Include="CSharpModBase">
+            <HintPath>..\WukongApi\Core\CSharpModBase.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 </Project>
