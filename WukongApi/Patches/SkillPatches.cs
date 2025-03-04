@@ -31,6 +31,16 @@ namespace WukongApi.Patches
             return false;
         }
     }
+    
+    [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerItemSkill")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchTriggerItemSkill
+    {
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
 
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
