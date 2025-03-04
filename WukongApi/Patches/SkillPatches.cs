@@ -249,7 +249,7 @@ namespace WukongApi.Patches
                 var photon = WukongMP.Instance.Photon;
                 if (__instance.GetOwner() == photon.LocalPlayerState.Pawn)
                 {
-                    Logging.LogDebug($"Sending phantom rush with direction: {PhantomRushDir}");
+                    Logging.LogError($"Sending phantom rush with direction: {PhantomRushDir}");
                     photon.SendPhantomRush(PhantomRushDir);
                 }
             }
@@ -272,6 +272,7 @@ namespace WukongApi.Patches
 
                 if (photon.IsMasterClient)
                 {
+                    Logging.LogError($"Broadcasting phantom rush exit for player {playerState.NickName}");
                     photon.ExitPhantomRush(playerState.PhotonId);
                     return true;
                 }
@@ -279,6 +280,7 @@ namespace WukongApi.Patches
                 if (playerState.RunPhantomRushPatch)
                 {
                     playerState.RunPhantomRushPatch = false;
+                    Logging.LogError($"Exiting phantom rush for player {playerState.NickName}");
                     return true;
                 }
 
