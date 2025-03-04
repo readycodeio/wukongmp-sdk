@@ -1,4 +1,5 @@
 ﻿using b1;
+using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
