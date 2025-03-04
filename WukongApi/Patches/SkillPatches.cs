@@ -153,7 +153,7 @@ namespace WukongApi.Patches
                 BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
                 // broadcast
                 var immobilizedPlayerState = photon.GetByActor(item);
-                if (immobilizedPlayerState != null && castingPlayerState != null)
+                if (immobilizedPlayerState != null && castingPlayerState != null && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.Immobilizing))
                 {
                     Logging.LogError($"Broadcasting trigger immobilize for player {immobilizedPlayerState.NickName}");
                     photon.BroadcastImmobilize(immobilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
