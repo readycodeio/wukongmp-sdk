@@ -153,7 +153,7 @@ namespace WukongApi.Patches
                 BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
                 // broadcast
                 var immobilizedPlayerState = photon.GetByActor(item);
-                if (immobilizedPlayerState != null && castingPlayerState != null && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.Immobilizing))
+                if (immobilizedPlayerState != null && castingPlayerState != null)
                 {
                     Logging.LogError($"Broadcasting trigger immobilize for player {immobilizedPlayerState.NickName}");
                     photon.BroadcastImmobilize(immobilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
@@ -259,32 +259,23 @@ namespace WukongApi.Patches
         [HarmonyPatchCategory(Constants.ConnectedPatches)]
         public static class PatchExitPhantomRush
         {
-            public static bool Prefix(BUS_PhantomRushComp __instance)
+            public static void Prefix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData)
             {
                 if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                    return true;
+                    return;
 
                 var photon = WukongMP.Instance.Photon;
                 var playerState = photon.GetByActor(__instance.GetOwner());
 
                 if (playerState == null)
-                    return true;
+                    return;
 
-                if (photon.IsMasterClient)
+                if ((photon.IsMasterClient || __instance.GetOwner() == photon.LocalPlayerState.Pawn) && !playerState.RecivedPhantomRushExit)
                 {
                     Logging.LogError($"Broadcasting phantom rush exit for player {playerState.NickName}");
                     photon.ExitPhantomRush(playerState.PhotonId);
-                    return true;
+                    playerState.RecivedPhantomRushExit = false;
                 }
-
-                if (playerState.RunPhantomRushPatch)
-                {
-                    playerState.RunPhantomRushPatch = false;
-                    Logging.LogError($"Exiting phantom rush for player {playerState.NickName}");
-                    return true;
-                }
-
-                return false;
             }
         }
     }

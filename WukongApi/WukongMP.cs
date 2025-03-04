@@ -395,7 +395,7 @@ namespace WukongApi
 
             Logging.LogError($"Recieved exit phantom rush for player {playerState.NickName}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            playerState.RunPhantomRushPatch = true;
+            playerState.RecivedPhantomRushExit = true;
             events?.Evt_RelievePhantomRush.Invoke();
         }
 
