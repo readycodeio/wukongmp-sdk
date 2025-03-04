@@ -522,7 +522,6 @@ namespace WukongApi
                 {
                     var propertiesForRoomCreation = new RoomOptions
                     {
-                        PublishUserId = true,
                         CustomRoomProperties = new PhotonHashtable
                         {
                             [nameof(RoomState.RoundsTotal)] = 3,
@@ -531,7 +530,8 @@ namespace WukongApi
                         },
                         MaxPlayers = 10,
                         IsOpen = true,
-                        IsVisible = false
+                        IsVisible = false,
+                        PublishUserId = true,
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -557,6 +557,8 @@ namespace WukongApi
                         MaxPlayers = 2 * _playersPerTeam,
                         IsOpen = true,
                         IsVisible = true,
+                        PublishUserId = false,
+                        CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)]
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -571,7 +573,7 @@ namespace WukongApi
                         ExpectedCustomRoomProperties = new PhotonHashtable
                         {
                             [nameof(RoomState.GameMode)] = _gameMode
-                        }
+                        },
                     };
 
                     Logging.LogDebug($"Joining or creating {_playersPerTeam}v{_playersPerTeam} room");
