@@ -462,7 +462,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
+            Logging.LogError($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
 

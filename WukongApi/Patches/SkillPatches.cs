@@ -235,6 +235,111 @@ namespace WukongApi.Patches
         [HarmonyPatchCategory(Constants.ConnectedPatches)]
         public static class PatchOnTriggerPhantomRush
         {
+            public static bool Prefix(
+                BUS_PhantomRushComp __instance,
+                IBUC_SimpleStateData ___SimpleStateData,
+                IBUC_UnitStateData ___UnitStateData,
+                BUC_PhantomRushData ___PhantomRushData,
+                IBUC_SkillInstsData ___SkillInstsData,
+                ESkillDirection PhantomRushDir)
+            {
+                if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                    return true;
+
+                var photon = WukongMP.Instance.Photon;
+                if (__instance.GetOwner() == photon.LocalPlayerState.Pawn)
+                    return true;
+
+                // Modified original impelmentation
+                AActor owner = __instance.GetOwner();
+                if (owner == null)
+                {
+                    Logging.LogError($"Owner is null");
+                    return false;
+                }
+                MethodInfo GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
+                if (GetActualUseConfigIDMethod == null)
+                {
+                    Logging.LogError($"GetActualUseConfigID method info is null");
+                    return false;
+                }
+                BUS_GSEventCollection BUSEventCollection = BUS_EventCollectionCS.Get(owner);
+                BGS_GSEventCollection BGSEventCollection = BGS_GSEventCollection.Get(owner);
+                ACharacter aCharacter = owner as ACharacter;
+                if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
+                {
+                    Logging.LogError($"aCharacter is null or PhantomRush is already active");
+                    return false;
+                }
+                FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
+                if (phantomRushSkillConfigDesc == null)
+                {
+                    Logging.LogError($"phantomRushSkillConfigDesc is null");
+                    return false;
+                }
+                __instance.PreloadAssetMgr.TryGetCachedResourceObj<BGWDataAsset_PhantomRushRelatedeSkillConfig>(phantomRushSkillConfigDesc.PhantomRushRelatedSkillConfigPath, ELoadResourceType.AsyncLoadAndCache, EAssetPriority.Medium);
+                FPoseSnapshot Snapshot = default(FPoseSnapshot);
+                aCharacter.Mesh.SnapshotPose(ref Snapshot);
+                ___PhantomRushData.PoseSnapshot = Snapshot;
+                UAnimInstance animInstance = aCharacter.Mesh.GetAnimInstance();
+                FContinueBehaviorInfo cBI = default(FContinueBehaviorInfo);
+                if (animInstance != null)
+                {
+                    UAnimMontage currentActiveMontage = animInstance.GetCurrentActiveMontage();
+                    if (currentActiveMontage != null)
+                    {
+                        if (___SimpleStateData.HasSimpleState(EBGUSimpleState.InAnimationSyncing))
+                        {
+                            cBI.CBT = EContinueBehaviorType.AnimationSyncing;
+                            cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
+                            cBI.BeatbackMontage = currentActiveMontage;
+                        }
+                        else if (___UnitStateData.HasState(EBGUUnitState.Attacking))
+                        {
+                            cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
+                            cBI.CBT = EContinueBehaviorType.Skill;
+                            cBI.SkillID = ___SkillInstsData.CurrentCastingSkillID;
+                        }
+                        else if (___UnitStateData.HasState(EBGUUnitState.Beatback))
+                        {
+                            cBI.CBT = EContinueBehaviorType.Beatback;
+                            cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
+                            cBI.BeatbackMontage = currentActiveMontage;
+                        }
+                    }
+                }
+                BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill);
+                BUSEventCollection.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(phantomRushSkillConfigDesc.PhantomRushSkillID, ECastSkillSourceType.PhantomRush, _HasSetSkillBaseTarget: false, PhantomRushDir)
+                {
+                    NeedCheckSkillCanCast = true
+                });
+                BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill, IsRemove: true);
+                if (___SkillInstsData.GetLastSkillCastResult() != 0)
+                {
+                    Logging.LogError($"GetLastSkillCastResult was not success");
+                    return false;
+                }
+                BUSEventCollection.Evt_ClearAbnormalState.Invoke(new HashSet<EAbnormalStateType>
+                {
+                    EAbnormalStateType.Abnormal_Burn,
+                    EAbnormalStateType.Abnormal_Freeze,
+                    EAbnormalStateType.Abnormal_Poison,
+                    EAbnormalStateType.Abnormal_Thunder
+                });
+                int phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
+                BUSEventCollection.Evt_SummonSkillCastByPhantomRush.Invoke(phantomRushSummonID, cBI);
+                BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PhantomRush);
+                foreach (int phantomRushBeginAddBuffID in phantomRushSkillConfigDesc.PhantomRushBeginAddBuffIDList)
+                {
+                    BUSEventCollection.Evt_BuffAdd.Invoke(phantomRushBeginAddBuffID, owner, owner, -1f, EBuffSourceType.PhantomRush);
+                }
+                ___PhantomRushData.PhantomRushTimer = phantomRushSkillConfigDesc.PhantomRushDuration;
+                ___PhantomRushData.PhantomRushNoMagicProtectTimer = 1f;
+                BGSEventCollection?.Evt_BGS_ClearAttachedProjectiles_OnUnit.Invoke(owner);
+
+                return false;
+            }
+
             public static void Postfix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData, ESkillDirection PhantomRushDir)
             {
                 if (!WukongMP.Instance.ShouldRunConnectedPatches())
