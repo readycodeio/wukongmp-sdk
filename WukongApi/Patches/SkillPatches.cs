@@ -194,13 +194,18 @@ namespace WukongApi.Patches
 
                 var playerState = photon.GetByActor(__instance.GetOwner());
 
+                if (playerState == null)
+                {
+                    return true;
+                }
+
                 if (photon.IsMasterClient)
                 {
                     photon.BroadcastImmobilize(playerState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
                     return true;
                 }
 
-                if (playerState != null && !playerState.RunImmobilizePatches)
+                if (!playerState.RunImmobilizePatches)
                 {
                     return false;
                 }
