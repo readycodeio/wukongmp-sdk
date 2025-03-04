@@ -914,7 +914,21 @@ namespace WukongApi
             SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
+            DisablePlayerSkills();
+            _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
+
+        }
+
+        private void DisablePlayerSkills()
+        {
+            var player = GameUtils.GetBguPlayerCharacterCs();
+            var events = BUS_EventCollectionCS.Get(player);
+            if (events != null)
+            {
+                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInVigorSkill);
+                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantCastFaBao);
+            }
         }
 
         private void SpawnPlayersAlreadyInRoom()
