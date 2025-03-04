@@ -682,7 +682,6 @@ namespace WukongApi
 
         public void BroadcastImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
         {
-            Logging.LogError($"BroadcastImmobilize callled with action type: {immobilizeActionType}");
             const byte eventCode = 12;
             var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType, hasBuff);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);

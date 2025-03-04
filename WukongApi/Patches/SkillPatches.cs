@@ -166,7 +166,7 @@ namespace WukongApi.Patches
                 var immobilizedPlayerState = photon.GetByActor(item);
                 if (immobilizedPlayerState != null && castingPlayerState != null)
                 {
-                    Logging.LogError($"Broadcasting trigger immobilize for player {immobilizedPlayerState.NickName}");
+                    Logging.LogDebug($"Broadcasting trigger immobilize for player {immobilizedPlayerState.NickName}");
                     photon.BroadcastImmobilize(immobilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
                 }
             }
@@ -370,7 +370,7 @@ namespace WukongApi.Patches
                 var photon = WukongMP.Instance.Photon;
                 if (__instance.GetOwner() == photon.LocalPlayerState.Pawn)
                 {
-                    Logging.LogError($"Sending phantom rush with direction: {PhantomRushDir}");
+                    Logging.LogDebug($"Sending phantom rush with direction: {PhantomRushDir}");
                     photon.SendPhantomRush(PhantomRushDir);
                 }
             }
@@ -393,7 +393,7 @@ namespace WukongApi.Patches
 
                 if ((photon.IsMasterClient || __instance.GetOwner() == photon.LocalPlayerState.Pawn) && !playerState.RecivedPhantomRushExit)
                 {
-                    Logging.LogError($"Broadcasting phantom rush exit for player {playerState.NickName}");
+                    Logging.LogDebug($"Broadcasting phantom rush exit for player {playerState.NickName}");
                     photon.ExitPhantomRush(playerState.PhotonId);
                     playerState.RecivedPhantomRushExit = false;
                 }

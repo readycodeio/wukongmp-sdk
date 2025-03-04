@@ -393,7 +393,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogError($"Recieved exit phantom rush for player {playerState.NickName}");
+            Logging.LogDebug($"Recieved exit phantom rush for player {playerState.NickName}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             playerState.RecivedPhantomRushExit = true;
             events?.Evt_RelievePhantomRush.Invoke();
@@ -414,7 +414,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogError($"Updating player target for player{playerState.NickName} to player {targetPlayerState.NickName}");
+            Logging.LogDebug($"Updating player target for player{playerState.NickName} to player {targetPlayerState.NickName}");
 
             var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(playerState.Pawn);
             targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPlayerState.Pawn, ETargetSourceType.SkillBase_NormalUse));
@@ -462,7 +462,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogError($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
+            Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
 
@@ -494,7 +494,6 @@ namespace WukongApi
 
         private void HandleImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            Logging.LogError($"Handle immobilize with action: {immobilizeAction}");
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
             {
@@ -533,7 +532,7 @@ namespace WukongApi
         {
             if (Photon.IsMasterClient)
             {
-                Logging.LogError($"Recieved cast immobilize for player {castingPlayerState.NickName}");
+                Logging.LogDebug($"Recieved cast immobilize for player {castingPlayerState.NickName}");
                 var playerEvents = BUS_EventCollectionCS.Get(castingPlayerState.Pawn);
                 playerEvents.Evt_CastImmobilize.Invoke(0);
             }
@@ -541,7 +540,7 @@ namespace WukongApi
 
         private void TriggerImmobilize(PlayerState immobilizedPlayerState, PlayerState castingPlayerState, bool hasBuff)
         {
-            Logging.LogError($"Recieved trigger immobilize for player {immobilizedPlayerState.NickName}");
+            Logging.LogDebug($"Recieved trigger immobilize for player {immobilizedPlayerState.NickName}");
             var character = immobilizedPlayerState.Pawn as BGUCharacterCS;
             var CastImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
@@ -557,7 +556,7 @@ namespace WukongApi
 
         private void RelieveImmobilize(PlayerState immobilizedPlayerState)
         {
-            Logging.LogError($"Recieved relieve immobilize for player {immobilizedPlayerState.NickName}");
+            Logging.LogDebug($"Recieved relieve immobilize for player {immobilizedPlayerState.NickName}");
             var playerEvents = BUS_EventCollectionCS.Get(immobilizedPlayerState.Pawn);
             immobilizedPlayerState.RunImmobilizePatches = true;
             playerEvents?.Evt_RelieveImmobilized.Invoke();
