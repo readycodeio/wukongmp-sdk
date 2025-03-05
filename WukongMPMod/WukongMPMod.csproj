@@ -16,6 +16,9 @@
         <InformationalVersion>1.0.0.$(BuildTimestamp)</InformationalVersion>
     </PropertyGroup>
 
+    <Target Name="PrintBuildVersion" AfterTargets="AfterBuild">
+        <Message Importance="High" Text="Build Version: $(InformationalVersion)"/>
+    </Target>
 
     <ItemGroup>
         <ProjectReference Include="..\WukongApi\WukongApi.csproj"/>
