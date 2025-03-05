@@ -58,25 +58,45 @@ namespace WukongApi.Patches
             return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
         }
 
-        public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName)
+        public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
         {
-            if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+            for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
             {
-                ___StartGameBtnList[0].SetTxtName(FText.FromString("Quick Join"));
-            }
-            else
-            {
-                ___StartGameBtnList[0].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-            }
-            ___StartGameBtnList[1].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-            ___StartGameBtnList[2].SetTxtName(FText.FromString("Select Character"));
+                DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
 
-            // Clear OnGSButtonUnFocused event form the first button.
-            var type = ___StartGameBtnList[0].GetBUIButton().GetType();
-            var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
-            if (field != null)
-            {
-                field.SetValue(___StartGameBtnList[0].GetBUIButton(), null);
+                Logging.LogError($"Button name: {BtnBase2.Name.Value}, id: {BtnBase2.Id.Value}");
+
+                if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
+                {
+                    Logging.LogError($"UI name desc continue: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME)}");
+                    if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+                    {
+                        ___StartGameBtnList[j].SetTxtName(FText.FromString("Quick Join"));
+                    }
+                    else
+                    {
+                        ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    }
+                    // Clear OnGSButtonUnFocused event form the continue game button.
+                    var type = ___StartGameBtnList[j].GetBUIButton().GetType();
+                    var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
+                    field?.SetValue(___StartGameBtnList[j].GetBUIButton(), null);
+                }
+                else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
+                {
+                    Logging.LogError($"UI name desc new game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME)}");
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString("New character"));
+                }
+                else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
+                {
+                    Logging.LogError($"UI name desc load game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME)}");
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString("Select Character"));
+                }
+                else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
+                {
+                    Logging.LogError($"UI name desc exit game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME)}");
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
             }
 
             __instance.GSAnimKeyToState("GSAKBContinueBtn", "CBtnFocus");
