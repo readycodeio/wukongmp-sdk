@@ -3,8 +3,11 @@ using System.IO;
 using System.Reflection;
 using ArchiveB1;
 using b1;
+using B1UI.GSSvc;
+using B1UI.GSUI;
 using CommB1;
 using HarmonyLib;
+using UnrealEngine.Runtime;
 
 namespace WukongApi.Patches
 {
@@ -21,6 +24,9 @@ namespace WukongApi.Patches
         public static bool Prefix(ref string __result, string SlotName, string UserId)
         {
             if (!SavePatchesData.CustomSaveEnabled)
+                return true;
+
+            if (!SlotName.StartsWith("ArchiveSaveFile"))
                 return true;
 
             __result = GameUtils.GetSaveFileFullName(SlotName);
@@ -43,6 +49,26 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch(typeof(GSB1UIUtil), nameof(GSB1UIUtil.StartNewGame))]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    public class PatchStartNewGame
+    {
+        public static bool Prefix(UObject WorldContext)
+        {
+            SavePatchesData.CustomSaveEnabled = true;
+            GSGMSvc.ClearAllAutoRunTag();
+            if (BGW_GameLifeTimeMgr.Get(WorldContext).IsInFSMState(SGI_Global.MainMenu))
+            {
+                BGW_EventCollection.Get(WorldContext).Evt_ResetGameInstanceData(EGameInstanceResetType.StartNewGame);
+            }
+
+            BGW_EventCollection.Get(WorldContext).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
+            {
+                ArchiveId = 9
+            });
+            return false;
+        }
+    }
 
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LoadArchive))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
@@ -56,22 +82,25 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (SavePatchesData.ShouldCacheSave)
+            if (!SavePatchesData.CustomSaveEnabled)
             {
-                SavePatchesData.ShouldCacheSave = false;
-                var characterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, ArchiveId);
-                var characterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(characterArchiveSlotName, __instance.ArchiveWorker.UserId);
+                if (SavePatchesData.ShouldCacheSave)
+                {
+                    SavePatchesData.ShouldCacheSave = false;
+                    var characterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, ArchiveId);
+                    var characterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(characterArchiveSlotName, __instance.ArchiveWorker.UserId);
 
-                SavePatchesData.CustomSaveEnabled = true;
-                var newCharacterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId);
-                var newCharacterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(newCharacterArchiveSlotName, __instance.ArchiveWorker.UserId);
-                File.Copy(characterArchiveFullName, newCharacterArchiveFullName, true);
-            }
-            else
-            {
-                SavePatchesData.CustomSaveEnabled = true;
-                var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var CharacterGameArchiveData, out var CharacterArchiveCanBeRepaired);
-                OutArchiveData = CharacterGameArchiveData.GameArchiveData;
+                    SavePatchesData.CustomSaveEnabled = true;
+                    var newCharacterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId);
+                    var newCharacterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(newCharacterArchiveSlotName, __instance.ArchiveWorker.UserId);
+                    File.Copy(characterArchiveFullName, newCharacterArchiveFullName, true);
+                }
+                else
+                {
+                    SavePatchesData.CustomSaveEnabled = true;
+                    var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var CharacterGameArchiveData, out var CharacterArchiveCanBeRepaired);
+                    OutArchiveData = CharacterGameArchiveData.GameArchiveData;
+                }
             }
 
             // Read archive with our world state.
