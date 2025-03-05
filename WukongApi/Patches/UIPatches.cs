@@ -64,11 +64,11 @@ namespace WukongApi.Patches
             {
                 DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
 
-                Logging.LogError($"Button name: {BtnBase2.Name.Value}, id: {BtnBase2.Id.Value}");
+                Logging.LogDebug($"Button name: {BtnBase2.Name.Value}, id: {BtnBase2.Id.Value}");
 
                 if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
                 {
-                    Logging.LogError($"UI name desc continue: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME)}");
+                    Logging.LogDebug($"UI name desc continue: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME)}");
                     if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                     {
                         ___StartGameBtnList[j].SetTxtName(FText.FromString("Quick Join"));
@@ -84,17 +84,17 @@ namespace WukongApi.Patches
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
-                    Logging.LogError($"UI name desc new game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME)}");
+                    Logging.LogDebug($"UI name desc new game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME)}");
                     ___StartGameBtnList[j].SetTxtName(FText.FromString("New character"));
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
                 {
-                    Logging.LogError($"UI name desc load game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME)}");
+                    Logging.LogDebug($"UI name desc load game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME)}");
                     ___StartGameBtnList[j].SetTxtName(FText.FromString("Select Character"));
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
                 {
-                    Logging.LogError($"UI name desc exit game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME)}");
+                    Logging.LogDebug($"UI name desc exit game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME)}");
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                 }
             }
