@@ -89,6 +89,17 @@ namespace WukongApi.Patches
             OutArchiveData.PersistentECSData = GameArchiveData.GameArchiveData.PersistentECSData;
             OutArchiveData.StateMachineArchiveData = GameArchiveData.GameArchiveData.StateMachineArchiveData;
             OutArchiveData.TaskArchiveData = GameArchiveData.GameArchiveData.TaskArchiveData;
+
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId=5101, Type=BtlB1.SpellType.QiShu }); // Immobilize
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId=5201, Type=BtlB1.SpellType.ShenFa }); // Phantom dash
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.WearSoulSkill = null;
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.ShortcutsList.Clear();
+
+            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Clear();
+            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(5101); // Immobilize
+            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(5201); // Phantom dash
         }
     }
 

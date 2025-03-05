@@ -8,7 +8,7 @@ namespace WukongMPMod
     public class Mod : ICSharpMod
     {
         public string Name => "WukongMP";
-        public string Version => "0.0.1";
+        public string Version => "1.0.0";
 
         private WukongMP _wukongMp;
 
@@ -31,6 +31,12 @@ namespace WukongMPMod
             {
                 Logging.LogDebug("Alt + C");
                 _wukongMp.DumpPlayerState();
+            });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            {
+                Logging.LogDebug("Alt + X");
+                _wukongMp.ResetLocalPlayerCooldown();
             });
 
             //Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>

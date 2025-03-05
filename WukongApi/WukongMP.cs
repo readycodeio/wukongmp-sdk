@@ -3,8 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
+using b1.ECS;
+using BtlB1;
 using BtlShare;
-using CommB1;
 using CSharpModBase;
 using HarmonyLib;
 using Photon.Realtime;
@@ -372,11 +373,51 @@ namespace WukongApi
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Photon.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
+            Photon.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
+            Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
+            Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
+            Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet"); ;
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
             Photon.StartClient();
+        }
+
+        private void ExitPhantomRush(int playerId)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError($"Player not found: {playerId}");
+                return;
+            }
+
+            Logging.LogDebug($"Recieved exit phantom rush for player {playerState.NickName}");
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            playerState.RecivedPhantomRushExit = true;
+            events?.Evt_RelievePhantomRush.Invoke();
+        }
+
+        private void OnTargetSet(int playerId, int targetId)
+        {
+            if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
+            {
+                Logging.LogError($"Player not found: {playerId}");
+                return;
+            }
+
+            var targetPlayerState = Photon.GetById(targetId);
+            if (targetPlayerState == null)
+            {
+                Logging.LogError($"Player not found: {targetId}");
+                return;
+            }
+
+            Logging.LogDebug($"Updating player target for player{playerState.NickName} to player {targetPlayerState.NickName}");
+
+            var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(playerState.Pawn);
+            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPlayerState.Pawn, ETargetSourceType.SkillBase_NormalUse));
         }
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)
@@ -410,6 +451,115 @@ namespace WukongApi
         {
             GameUtils.GetBguPlayerCharacterCs()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
             GameUtils.GetPlayerController()?.SetControlRotation(rotation);
+        }
+
+        private void PerformPhantomRush(int playerId, ESkillDirection direction)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogDebug($"Player not found: {playerId}");
+                return;
+            }
+
+            Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            events?.Evt_TriggerPhantomRush.Invoke(direction);
+
+            ResetCooldown(playerState.Pawn);
+            ResetMana(playerState.Pawn);
+        }
+
+        public void ResetLocalPlayerCooldown()
+        {
+            var player = GameUtils.GetBguPlayerCharacterCs();
+            ResetCooldown(player);
+            ResetMana(player);
+        }
+
+        private void ResetCooldown(APawn playerPawn)
+        {
+            var events = BUS_EventCollectionCS.Get(playerPawn);
+            events?.Evt_ResetSkillCD.Invoke();
+        }
+
+        private void ResetMana(APawn playerPawn)
+        {
+            var events = BUS_EventCollectionCS.Get(playerPawn);
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(playerPawn);
+            float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
+        }
+
+
+        private void HandleImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeAction, bool hasBuff)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError($"Player not found: {playerId}");
+                return;
+            }
+
+            var otherPlayerState = Photon.GetById(otherPlayerId);
+            if (otherPlayerId != -1 && playerState == null)
+            {
+                Logging.LogError($"Player not found: {otherPlayerId}");
+                return;
+            }
+
+            switch (immobilizeAction)
+            {
+                case ImmobilizeActionType.Cast:
+                    CastImmobilize(playerState);
+                    break;
+                case ImmobilizeActionType.Trigger:
+                    TriggerImmobilize(playerState, otherPlayerState, hasBuff);
+                    break;
+                case ImmobilizeActionType.Relieve:
+                    RelieveImmobilize(playerState);
+                    break;
+                case ImmobilizeActionType.Break:
+                    // Currently not supported
+                default:
+                    Logging.LogError($"Unknown ImmobilizeActionType: {immobilizeAction}");
+                    break;
+
+            }
+        }
+
+        private void CastImmobilize(PlayerState castingPlayerState)
+        {
+            if (Photon.IsMasterClient)
+            {
+                Logging.LogDebug($"Recieved cast immobilize for player {castingPlayerState.NickName}");
+                var playerEvents = BUS_EventCollectionCS.Get(castingPlayerState.Pawn);
+                playerEvents.Evt_CastImmobilize.Invoke(0);
+            }
+        }
+
+        private void TriggerImmobilize(PlayerState immobilizedPlayerState, PlayerState castingPlayerState, bool hasBuff)
+        {
+            Logging.LogDebug($"Recieved trigger immobilize for player {immobilizedPlayerState.NickName}");
+            var character = immobilizedPlayerState.Pawn as BGUCharacterCS;
+            var CastImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+
+            FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = CastImmobilizeData.GetCachedImmobilizeConfigDesc(CastImmobilizeData.ResId);
+            if (cachedImmobilizeConfigDesc == null)
+            {
+                return;
+            }
+
+            ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(character, castingPlayerState.Pawn, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
+            BUS_EventCollectionCS.Get(character)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+        }
+
+        private void RelieveImmobilize(PlayerState immobilizedPlayerState)
+        {
+            Logging.LogDebug($"Recieved relieve immobilize for player {immobilizedPlayerState.NickName}");
+            var playerEvents = BUS_EventCollectionCS.Get(immobilizedPlayerState.Pawn);
+            immobilizedPlayerState.RunImmobilizePatches = true;
+            playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
         private void Reconnect()
@@ -763,7 +913,21 @@ namespace WukongApi
             SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
+            DisablePlayerSkills();
+            _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
+
+        }
+
+        private void DisablePlayerSkills()
+        {
+            var player = GameUtils.GetBguPlayerCharacterCs();
+            var events = BUS_EventCollectionCS.Get(player);
+            if (events != null)
+            {
+                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInVigorSkill);
+                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantCastFaBao);
+            }
         }
 
         private void SpawnPlayersAlreadyInRoom()

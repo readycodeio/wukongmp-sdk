@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
@@ -414,6 +415,38 @@ namespace WukongApi.Patches
 
             __result = false;
             return false;
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchSetTargetToData
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BattleStateComp:SetTargetToData");
+        }
+
+        public static void Prefix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+
+            // send only own updates
+            if (__instance.GetOwner() != photon.LocalPlayerState.Pawn)
+                return;
+
+            if (___TargetInfoData.GetTargetInfo().LockTargetActor == NewTargetInfo.LockTargetActor)
+                return;
+
+            var newTargetPlayerState = photon.GetByActor(NewTargetInfo.LockTargetActor);
+            if (newTargetPlayerState != null)
+            {
+                Logging.LogError($"New target sent for {photon.LocalPlayerState.NickName} as: {newTargetPlayerState.NickName}");
+                photon.SendTarget(newTargetPlayerState.PhotonId);
+            }
         }
     }
 

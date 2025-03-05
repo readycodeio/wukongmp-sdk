@@ -16,7 +16,6 @@ using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongApi.Patches;
 using WukongApi.State;
 using PlayerState = WukongApi.State.PlayerState;
 
@@ -30,7 +29,10 @@ namespace WukongApi
 
         private const char MonsterHashtableKeySeparator = ';';
 
+        private GameMode _gameMode;
         private string _roomName;
+        private int _playersPerTeam;
+
         private bool _isExit;
         private bool _inPvP;
 
@@ -54,6 +56,10 @@ namespace WukongApi
         public event Action<FVector, FRotator> OnSetPlayerTransform;
         public event Action OnBeforeJoinRoom;
         public event Action<DamageNumParam> OnDamageNum;
+        public event Action<int, ESkillDirection> OnPhantomRush;
+        public event Action<int> OnExitPhantomRush;
+        public event Action<int, int, ImmobilizeActionType, bool> OnHandleImmobilize;
+        public event Action<int, int> OnTargetSet;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; private set; }
@@ -168,15 +174,30 @@ namespace WukongApi
                 return null;
             }
 
+            // this can be either a private match (-room_name "name") or a quick match (-quick_match 1/3/5)
+
             var roomNameMatch = Regex.Match(cmd, @"-room_name ""([a-zA-Z0-9_\- ]+)""|-room_name ([a-zA-Z0-9_\-]+)");
             if (roomNameMatch.Success)
             {
+                // private match
                 _roomName = roomNameMatch.Groups[1].Success ? roomNameMatch.Groups[1].Value : roomNameMatch.Groups[2].Value;
+                _gameMode = GameMode.Private;
             }
             else
             {
-                Logging.LogError("Room name not provided. Launch the game from the ReadyM Launcher.");
-                return null;
+                var quickMatchMatch = Regex.Match(cmd, @"-quick_match (\d)");
+                if (quickMatchMatch.Success)
+                {
+                    // quick match
+                    var rounds = int.Parse(quickMatchMatch.Groups[1].Value);
+                    _gameMode = GameMode.XvX;
+                    _playersPerTeam = rounds;
+                }
+                else
+                {
+                    Logging.LogError("Room name not provided. Launch the game from the ReadyM Launcher.");
+                    return null;
+                }
             }
 
             var authValues = new AuthenticationValues
@@ -242,6 +263,26 @@ namespace WukongApi
                     var playerData = (PlayerTransformData)photonEvent.CustomData;
                     if (playerData.PlayerId == LocalPlayerState.PhotonId)
                         OnSetPlayerTransform?.Invoke(playerData.Location, playerData.Rotation);
+                    break;
+                case 11:
+                    // start phantom rush
+                    var direction = (ESkillDirection)photonEvent.CustomData;
+                    OnPhantomRush?.Invoke(photonEvent.Sender, direction);
+                    break;
+                case 12:
+                    // immobilize
+                    var immobilizeData = (ImmobilizeData)photonEvent.CustomData;
+                    OnHandleImmobilize?.Invoke(immobilizeData.PlayerId, immobilizeData.OtherPlayerId, immobilizeData.ImmobilizeActionType, immobilizeData.GreatSageTalentActiveBuff);
+                    break;
+                case 13:
+                    // target
+                    var targetId = (int)photonEvent.CustomData;
+                    OnTargetSet?.Invoke(photonEvent.Sender, targetId);
+                    break;
+                case 14:
+                    // exit phantom rush
+                    var phantomRushPlayerId = (int)photonEvent.CustomData;
+                    OnExitPhantomRush?.Invoke(phantomRushPlayerId);
                     break;
             }
         }
@@ -384,6 +425,7 @@ namespace WukongApi
             PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
+            PhotonPeer.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
 
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
@@ -393,6 +435,9 @@ namespace WukongApi
             PhotonClient.AuthValues = _authValues;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
+                // DEVELOPMENT (Jakub's machine)
+                // AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
+                // PRODUCTION
                 AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
                 AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.Udp,
@@ -467,30 +512,77 @@ namespace WukongApi
             }
         }
 
-        private async Task MyJoinRandomOrCreateRoom()
+        private async Task JoinRandomOrCreateRoom()
         {
             await PhotonClient.JoinLobbyAsync(_lobby);
 
-            var propertiesForRoomCreation = new RoomOptions
+            switch (_gameMode)
             {
-                PublishUserId = true,
-                CustomRoomProperties = new PhotonHashtable
+                case GameMode.Private:
                 {
-                    [nameof(RoomState.RoundsTotal)] = 3,
-                    [nameof(RoomState.RoundWinners)] = ""
-                },
-                MaxPlayers = 8,
-                IsOpen = true,
-                IsVisible = true
-            };
-            var enterRoomParams = new EnterRoomArgs
-            {
-                RoomOptions = propertiesForRoomCreation,
-                RoomName = _roomName
-            };
+                    var propertiesForRoomCreation = new RoomOptions
+                    {
+                        CustomRoomProperties = new PhotonHashtable
+                        {
+                            [nameof(RoomState.RoundsTotal)] = 3,
+                            [nameof(RoomState.RoundWinners)] = "",
+                            [nameof(RoomState.GameMode)] = _gameMode
+                        },
+                        MaxPlayers = 10,
+                        IsOpen = true,
+                        IsVisible = false,
+                        PublishUserId = true,
+                    };
 
-            Logging.LogDebug($"Joining room {_roomName}");
-            await PhotonClient.JoinOrCreateRoomAsync(enterRoomParams);
+                    var createArgs = new EnterRoomArgs
+                    {
+                        RoomOptions = propertiesForRoomCreation,
+                        RoomName = _roomName,
+                    };
+
+                    Logging.LogDebug($"Joining or creating private room {_roomName}");
+                    await PhotonClient.JoinOrCreateRoomAsync(createArgs);
+                    break;
+                }
+                case GameMode.XvX:
+                {
+                    var propertiesForRoomCreation = new RoomOptions
+                    {
+                        CustomRoomProperties = new PhotonHashtable
+                        {
+                            [nameof(RoomState.RoundsTotal)] = 3,
+                            [nameof(RoomState.RoundWinners)] = "",
+                            [nameof(RoomState.GameMode)] = _gameMode
+                        },
+                        MaxPlayers = 2 * _playersPerTeam,
+                        IsOpen = true,
+                        IsVisible = true,
+                        PublishUserId = false,
+                        CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)]
+                    };
+
+                    var createArgs = new EnterRoomArgs
+                    {
+                        RoomOptions = propertiesForRoomCreation,
+                    };
+
+                    var joinArgs = new JoinRandomRoomArgs
+                    {
+                        ExpectedMaxPlayers = _gameMode == GameMode.XvX ? 2 * _playersPerTeam : 10,
+                        MatchingType = MatchmakingMode.FillRoom,
+                        ExpectedCustomRoomProperties = new PhotonHashtable
+                        {
+                            [nameof(RoomState.GameMode)] = _gameMode
+                        },
+                    };
+
+                    Logging.LogDebug($"Joining or creating {_playersPerTeam}v{_playersPerTeam} room");
+                    await PhotonClient.JoinRandomOrCreateRoomAsync(joinArgs, createArgs);
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private static void OnStateChange(ClientState arg1, ClientState arg2)
@@ -580,6 +672,31 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
+        }
+
+        public void SendPhantomRush(ESkillDirection phantomRushDir)
+        {
+            const byte eventCode = 11;
+            PhotonClient.OpRaiseEvent(eventCode, phantomRushDir, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void BroadcastImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
+        {
+            const byte eventCode = 12;
+            var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType, hasBuff);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendTarget(int playerId)
+        {
+            const byte eventCode = 13;
+            PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void ExitPhantomRush(int playerId)
+        {
+            const byte eventCode = 14;
+            PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)
@@ -761,7 +878,7 @@ namespace WukongApi
             try
             {
                 Logging.LogDebug("Connected to master server: " + PhotonClient.RealtimePeer.ServerIpAddress);
-                await MyJoinRandomOrCreateRoom();
+                await JoinRandomOrCreateRoom();
             }
             catch (Exception e)
             {
@@ -822,7 +939,7 @@ namespace WukongApi
 
         public virtual void OnJoinedRoom()
         {
-            Logging.LogDebug("Joined room");
+            Logging.LogDebug($"Joined room {PhotonClient.CurrentRoom.Name}");
 
             var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);

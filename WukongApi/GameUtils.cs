@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using b1;
+using b1.BGW;
 using B1UI.GSUI;
+using BtlB1;
 using CSharpModBase;
 using GSE.GSUI;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.API;
 
 namespace WukongApi
 {
@@ -46,12 +49,12 @@ namespace WukongApi
             var actors = world.GetAllActorsOfClass<BUTamerActor>();
             foreach (var actor in actors)
             {
-                Console.WriteLine($"Found actor: {actor.GetName()}");
+                Logging.LogDebug($"Found actor: {actor.GetName()}");
 
                 var monster = actor.GetMonster();
                 if (monster != null)
                 {
-                    Console.WriteLine("Actor is a monster");
+                    Logging.LogDebug("Actor is a monster");
                     yield return monster;
                 }
             }
@@ -141,6 +144,68 @@ namespace WukongApi
             if (teamId == Constants.AvailableTeamIds[1])
                 return "Blue";
             return "";
+        }
+
+        public static UBGWDataAsset GetFXAssetByResID(UObject context, IList<FPlayFXByResID> FXs, int targetResID, int ownerResID)
+        {
+            string text = "";
+            foreach (FPlayFXByResID FX in FXs)
+            {
+                if (FX.ResID == targetResID)
+                {
+                    text = FX.FXPathByDBC;
+                    break;
+                }
+                if (FX.ResID == ownerResID)
+                {
+                    text = FX.FXPathByDBC;
+                }
+            }
+            if (string.IsNullOrEmpty(text))
+            {
+                return null;
+            }
+            return BGW_PreloadAssetMgr.Get(context).TryGetCachedResourceObj<UBGWDataAsset>(text, ELoadResourceType.AsyncLoadAndCache);
+        }
+
+        public static ImmobilizeConfigInstance CreateImmobilizeConfig(AActor character, AActor casterActor, FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc, int CastImmobilizeDataResId, bool hasBuff)
+        {
+            ImmobilizeConfigInstance immobilizeConfigInstance = new ImmobilizeConfigInstance();
+            int actorResID3 = BGU_DataUtil.GetActorResID(character);
+            immobilizeConfigInstance.DurationSecond = cachedImmobilizeConfigDesc.DurationMs * 0.001f;
+            immobilizeConfigInstance.AlmostEndAheadTimeSecond = (float)cachedImmobilizeConfigDesc.AlmostEndAheadTimeMs * 0.001f;
+            immobilizeConfigInstance.MinDurationSecond = (float)cachedImmobilizeConfigDesc.MinimalDurationMs * 0.001f;
+            immobilizeConfigInstance.RepeatedImmobilizedDef = (float)cachedImmobilizeConfigDesc.RepeatedImmobilizedDef * 0.0001f;
+            immobilizeConfigInstance.CasterActor = casterActor;
+            immobilizeConfigInstance.bEnableGreatSageTalent = cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff > 0 && hasBuff;
+            immobilizeConfigInstance.BeginFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.AlmostEndFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.EndFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.QuickFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.BreakingFXsTriggerRatio = (float)cachedImmobilizeConfigDesc.BreakingFXsTriggerRatio * 0.0001f;
+            immobilizeConfigInstance.BreakingFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, CastImmobilizeDataResId);
+            foreach (FSpellEffect beginEffect in cachedImmobilizeConfigDesc.BeginEffects)
+            {
+                immobilizeConfigInstance.BeginEffects.Add(new FSpellEffectForData(beginEffect));
+            }
+            foreach (FSpellEffect endEffect in cachedImmobilizeConfigDesc.EndEffects)
+            {
+                immobilizeConfigInstance.EndEffects.Add(new FSpellEffectForData(endEffect));
+            }
+            foreach (FSpellEffect breakEffect in cachedImmobilizeConfigDesc.BreakEffects)
+            {
+                immobilizeConfigInstance.BreakEffects.Add(new FSpellEffectForData(breakEffect));
+            }
+            foreach (FSpellEffect deadEffect in cachedImmobilizeConfigDesc.DeadEffects)
+            {
+                immobilizeConfigInstance.DeadEffects.Add(new FSpellEffectForData(deadEffect));
+            }
+            return immobilizeConfigInstance;
+        }
+
+        public static bool IsSkillWhitelisted(int skillId)
+        {
+            return Constants.SkillsWhitelist.Contains(skillId);
         }
     }
 }

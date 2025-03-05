@@ -25,6 +25,7 @@ namespace WukongApi
         public const int MaxPlayers = 20;
         public static readonly List<int> AvailableTeamIds = new List<int> { -9999, -9998 };
         public const int DrawTeamId = 9999;
+        public static readonly List<int> SkillsWhitelist = new List<int> { 10518 };
 
         public const string UiManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";

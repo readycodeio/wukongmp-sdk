@@ -3,21 +3,31 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-        <LangVersion>7.3</LangVersion>
+        <LangVersion>preview</LangVersion>
         <OutputType>Library</OutputType>
         <AssemblyName>WukongMpMod</AssemblyName>
         <RootNamespace>WukongMpMod</RootNamespace>
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <BuildTimestamp>$([System.DateTime]::UtcNow.ToString("yyyyMMdd.HHmm"))</BuildTimestamp>
+        <FileVersion>1.0.0.$(BuildTimestamp)</FileVersion>
+        <InformationalVersion>1.0.0.$(BuildTimestamp)</InformationalVersion>
+    </PropertyGroup>
+
+    <Target Name="PrintBuildVersion" AfterTargets="AfterBuild">
+        <Message Importance="High" Text="Build Version: $(InformationalVersion)"/>
+    </Target>
+
     <ItemGroup>
-        <ProjectReference Include="..\WukongApi\WukongApi.csproj" />
+        <ProjectReference Include="..\WukongApi\WukongApi.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="CSharpModBase">
-        <HintPath>..\WukongApi\Core\CSharpModBase.dll</HintPath>
-      </Reference>
+        <Reference Include="CSharpModBase">
+            <HintPath>..\WukongApi\Core\CSharpModBase.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 </Project>

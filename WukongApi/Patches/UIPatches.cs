@@ -115,4 +115,15 @@ namespace WukongApi.Patches
             Logging.LogDebug($"ShowPage: {NewPageID}, {Source}, {Reason}, {exParam}");
         }
     }
+     
+    [HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnChangeSaveTipsStat
+    {
+        public static bool Prefix(UWidget ___RootCon)
+        {
+            ___RootCon.SetVisibility(ESlateVisibility.Collapsed);
+            return false;
+        }
+    }
 }
