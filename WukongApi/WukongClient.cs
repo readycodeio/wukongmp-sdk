@@ -438,7 +438,7 @@ namespace WukongApi
                 // DEVELOPMENT (Jakub's machine)
                 // AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
                 // PRODUCTION
-                AppIdRealtime = "3e9651d6-7fe4-45f8-837a-a0d0bcc7aee5",
+                AppIdRealtime = "882e235d-5fa3-457a-babb-a08c96da7238",
                 AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.Udp,
                 EnableProtocolFallback = false,
