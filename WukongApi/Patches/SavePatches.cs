@@ -174,4 +174,15 @@ namespace WukongApi.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.IsArchiveNewGameplusReady))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchIsArchiveNewGameplusReady
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
+        }
+    }
 }
