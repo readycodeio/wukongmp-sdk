@@ -70,10 +70,9 @@ namespace WukongApi
         public void Init()
         {
             DisconnectIfConnected();
-            if (InitPhotonAndConnectToChat())
-            {
+            InitPhotonAndConnectToChat();
+            if (Photon.ShouldEnableMultiplayer)
                 AsyncInitGameInstance();
-            }
         }
 
         private void AsyncInitGameInstance()
@@ -109,6 +108,7 @@ namespace WukongApi
             {
                 BGW_EventCollection.Get(gameInstance).Evt_PostLoadMapWithWorld += OnMapLoaded;
                 BGW_EventCollection.Get(gameInstance).Evt_PlayerDelayBeginPlayFinished += OnDelayBeginPlay;
+                BGW_EventCollection.Get(gameInstance).Evt_PostPlayerControllerEndPlay += OnEndPlay;
                 BGW_EventCollection.Get(gameInstance).Evt_PostLoadingScreenClose += OnLoadingScreenClose;
             }
             else
@@ -130,14 +130,23 @@ namespace WukongApi
         {
             Logging.LogDebug("Delay begin play for player.");
             DestroyAllMonsters();
-            if (!Photon.Ready)
+            BlueprintUIUtils.SpawnUIManagerActor();
+            InitializeWidgets();
+
+            if (Photon == null)
             {
-                BlueprintUIUtils.SpawnUIManagerActor();
-                InitializeWidgets();
-                Connect();
+                InitPhotonAndConnectToChat();
             }
+            Connect();
 
             SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
+        }
+
+        public void OnEndPlay()
+        {
+            Logging.LogDebug("End play for player.");
+            DeinitializeWidgets();
+            DisconnectIfConnected();
         }
 
         private void InitializeWidgets()

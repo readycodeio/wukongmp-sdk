@@ -61,7 +61,7 @@ namespace WukongApi
         public event Action<int, int, ImmobilizeActionType, bool> OnHandleImmobilize;
         public event Action<int, int> OnTargetSet;
 
-        public WukongChatter WukongChat { get; }
+        public WukongChatter WukongChat { get; private set; }
         public LobbyManager LobbyManager { get; private set; }
 
         public PlayerState LocalPlayerState { get; protected set; }
@@ -458,18 +458,13 @@ namespace WukongApi
             _isExit = true;
 
             WukongChat.Disconnect();
+            WukongChat = null;
+
             PhotonClient.Disconnect();
 
             Logging.LogDebug("Stopped client.");
 
             PhotonClient.RemoveCallbackTarget(this);
-
-            // unpatch harmony
-            Utils.TryRunOnGameThread(() =>
-            {
-                WukongMP.Instance.Harmony.UnpatchCategory(Constants.ConnectedPatches);
-                Logging.LogDebug("Unpatched Harmony");
-            });
 
             // destroy all connected players
             foreach (var player in ConnectedPlayers.Values)
