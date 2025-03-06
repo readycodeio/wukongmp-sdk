@@ -13,7 +13,7 @@
             }
             else
             {
-                Logging.LogError("Chat widget not initialized");
+                Logging.LogError("Could not add message. Chat widget not initialized");
             }
         }
 
