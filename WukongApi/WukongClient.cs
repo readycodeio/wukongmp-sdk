@@ -981,6 +981,11 @@ namespace WukongApi
             var playerState = ConnectedPlayers[otherPlayer.ActorNumber];
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
             OnPlayerLeft?.Invoke(playerState);
+
+            if (IsMasterClient)
+            {
+                WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{playerState.NickName} has left!");
+            }
         }
 
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
