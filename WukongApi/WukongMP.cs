@@ -152,6 +152,16 @@ namespace WukongApi
             _infoMessageWidget.Initialize();
         }
 
+        private void DeinitializeWidgets()
+        {
+            _chatWidget.Deinitialize();
+            _timerWidget.Deinitialize();
+            _lobbyStatusWidget.Deinitialize();
+            _gameMessageWidget.Deinitialize();
+            _countdownWidget.Deinitialize();
+            _infoMessageWidget.Deinitialize();
+        }
+
         private void OnLoadingScreenClose()
         {
             _chatWidget.SetVisibility(true);

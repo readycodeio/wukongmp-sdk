@@ -29,5 +29,10 @@ namespace WukongApi.UI
         {
             _gameWidget?.CallFunctionByNameWithArguments($"SetWidgetVisibility {visible}", true);
         }
+
+        public void Deinitialize()
+        {
+            _gameWidget = null;
+        }
     }
 }
