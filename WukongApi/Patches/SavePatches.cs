@@ -126,9 +126,9 @@ namespace WukongApi.Patches
             OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
             OutArchiveData.RoleData.RoleCs.Actor.Wear.ShortcutsList.Clear();
 
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Clear();
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(5101); // Immobilize
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(5201); // Phantom dash
+            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5102); // Ring of fire
+            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5103); // Spell binder
+            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5202); // Rock solid
         }
     }
 
