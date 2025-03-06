@@ -85,7 +85,7 @@ namespace WukongApi.Patches
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
                     Logging.LogDebug($"UI name desc new game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME)}");
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString("New character"));
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString("New Character"));
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
                 {
