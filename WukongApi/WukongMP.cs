@@ -129,17 +129,22 @@ namespace WukongApi
         private void OnDelayBeginPlay()
         {
             Logging.LogDebug("Delay begin play for player.");
-            DestroyAllMonsters();
-            BlueprintUIUtils.SpawnUIManagerActor();
-            InitializeWidgets();
-
             if (Photon == null)
             {
                 InitPhotonAndConnectToChat();
             }
-            Connect();
 
-            SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
+            if (!Photon.Ready)
+            {
+                DestroyAllMonsters();
+
+                BlueprintUIUtils.SpawnUIManagerActor();
+                InitializeWidgets();
+
+                Connect();
+
+                SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
+            }
         }
 
         public void OnEndPlay()
