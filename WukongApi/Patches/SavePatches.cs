@@ -185,4 +185,16 @@ namespace WukongApi.Patches
             return false;
         }
     }
+
+
+    [HarmonyPatch(typeof(GSB1UIUtil), nameof(GSB1UIUtil.CheckArchiveFull))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchCheckArchiveFull
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
+        }
+    }
 }
