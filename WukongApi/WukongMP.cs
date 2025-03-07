@@ -242,6 +242,16 @@ namespace WukongApi
         public void EndRound()
         {
             _timerWidget.StopCountdown();
+
+            if (Photon.IsMasterClient)
+            {
+                foreach (var playerState in Photon.AllConnectedPlayers)
+                {
+                    var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+                    events?.Evt_RelieveImmobilized.Invoke();
+                    events?.Evt_RelievePhantomRush.Invoke();
+                }
+            }
         }
 
         public void EnablePvP()
