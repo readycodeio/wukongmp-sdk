@@ -39,7 +39,7 @@ namespace WukongApi
         public event Action<string, int, int> OnSpawnEnemy;
 
         private const char Separator = ' ';
-        private readonly Dictionary<string, Command> _commands = new Dictionary<string, Command>();
+        private readonly Dictionary<string, Command> _commands = new();
 
         public WukongChatter(WukongClient owner)
         {
@@ -270,8 +270,9 @@ namespace WukongApi
         {
             for (var i = 0; i < senders.Length; i++)
             {
-                var message = messages[i].ToString();
-                var isServer = message.AsSpan()[..3] is ServerPrefix;
+                var content = messages[i].ToString();
+                var isServer = content.AsSpan()[..3] is ServerPrefix;
+                var message = content[3..];
 
                 Logging.LogDebug($"Message \"{message}\" received from \"{senders[i]}\"");
                 OnSendMessage?.Invoke(isServer, isServer ? "Server" : senders[i], message);
