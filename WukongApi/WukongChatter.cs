@@ -20,9 +20,10 @@ namespace WukongApi
         private ChatClient _chatClient;
         private readonly WukongClient _wukongClient;
 
-        private string RoomName => _wukongClient.PhotonClient.CurrentRoom?.Name ?? "__global_room";
-        private string GeneralChannelName => $"General-${RoomName}";
-        private string ServerChannelName => $"Server-${RoomName}";
+        private const string ServerPrefix = "<S>";
+        private const string ClientPrefix = "<C>";
+        private string RoomName => _wukongClient.PhotonClient.CurrentRoom?.Name ?? Guid.NewGuid().ToString(); // do not collide with anybody if sth goes wrong
+        private string GeneralChannelName => $"chat-${RoomName}";
         private string NickName => _wukongClient.LocalPlayerState.NickName;
 
         private bool _isExit;
@@ -71,7 +72,7 @@ namespace WukongApi
             StopMessageService();
         }
 
-        public void StopMessageService()
+        private void StopMessageService()
         {
             _isExit = true;
         }
@@ -233,13 +234,13 @@ namespace WukongApi
         private void SendChatMessage(string message)
         {
             Logging.LogDebug($"Sending message {message}");
-            _chatClient.PublishMessage(GeneralChannelName, message);
+            _chatClient.PublishMessage(GeneralChannelName, $"{ClientPrefix}{message}");
         }
 
         public void SendServerMessage(string message)
         {
             Logging.LogDebug($"Sending server message {message}");
-            _chatClient.PublishMessage(ServerChannelName, message);
+            _chatClient.PublishMessage(GeneralChannelName, $"{ServerPrefix}{message}");
         }
 
         public void DebugReturn(LogLevel level, string message) { }
@@ -253,7 +254,6 @@ namespace WukongApi
         {
             Logging.LogDebug("Chat connected");
             _chatClient.Subscribe(GeneralChannelName);
-            _chatClient.Subscribe(ServerChannelName);
             SendServerMessage($"{NickName} has joined!");
         }
 
@@ -270,15 +270,11 @@ namespace WukongApi
         {
             for (var i = 0; i < senders.Length; i++)
             {
-                Logging.LogDebug($"Message {messages[i]} received");
-                if (channelName == ServerChannelName)
-                {
-                    OnSendMessage?.Invoke(true, "Server", messages[i].ToString());
-                }
-                else
-                {
-                    OnSendMessage?.Invoke(false, senders[i], messages[i].ToString());
-                }
+                var message = messages[i].ToString();
+                var isServer = message.AsSpan()[..3] is ServerPrefix;
+
+                Logging.LogDebug($"Message \"{message}\" received from \"{senders[i]}\"");
+                OnSendMessage?.Invoke(isServer, isServer ? "Server" : senders[i], message);
             }
         }
 
