@@ -960,6 +960,19 @@ namespace WukongApi
             DisablePlayerSkills();
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
+            SetPlayerTeam();
+        }
+
+        private void SetPlayerTeam()
+        {
+            var allPlayers = Photon.AllConnectedPlayers;
+            int team1Count = allPlayers.Count(p => p.TeamId == Constants.AvailableTeamIds[0]);
+            int team2Count = allPlayers.Count(p => p.TeamId == Constants.AvailableTeamIds[1]);
+
+            if (team1Count - team2Count > 1)
+            {
+                Photon.SwitchTeam();
+            }
         }
 
         private void DisablePlayerSkills()
