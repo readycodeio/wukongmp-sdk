@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using b1;
@@ -688,7 +687,7 @@ namespace WukongApi
             }
 
             // clear previous round winners
-            CurrentRoomState.RoundWinners = Enumerable.Empty<int>();
+            CurrentRoomState.RoundWinners = [];
 
             Task.Run(LobbyManager.StartRoundAsync);
         }
@@ -953,7 +952,7 @@ namespace WukongApi
 
             if (IsMasterClient)
             {
-                WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{playerState.NickName} has left!");
+                WukongChat.SendServerMessage($"{playerState.NickName} has left!");
                 CheckRoundEndCondition();
             }
         }

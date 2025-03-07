@@ -668,7 +668,7 @@ namespace WukongApi
         {
             if (Photon.IsMasterClient) // send this only once
             {
-                Photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{playerNickName} is {(isReady ? "ready" : "not ready")}");
+                Photon.WukongChat.SendServerMessage($"{playerNickName} is {(isReady ? "ready" : "not ready")}");
             }
 
             if (isReady)

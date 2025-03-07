@@ -314,7 +314,7 @@ namespace WukongApi.Patches
                     var attackerPlayerState = photon.GetByActor(Attacker);
                     if (attackerPlayerState != null)
                     {
-                        photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
+                        photon.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
                     }
                 }
 

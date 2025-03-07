@@ -70,8 +70,8 @@ namespace WukongMPMod
         public void DeInit()
         {
             Logging.LogDebug("DeInit");
-            _wukongMp.DeInit();
             _wukongMp.Unpatch();
+            _wukongMp.DeInit();
         }
     }
 }

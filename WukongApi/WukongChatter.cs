@@ -20,8 +20,9 @@ namespace WukongApi
         private ChatClient _chatClient;
         private readonly WukongClient _wukongClient;
 
-        private const string GeneralChannelName = "General";
-        internal const string ServerChannelName = "Server";
+        private string RoomName => _wukongClient.PhotonClient.CurrentRoom?.Name ?? "__global_room";
+        private string GeneralChannelName => $"General-${RoomName}";
+        private string ServerChannelName => $"Server-${RoomName}";
         private string NickName => _wukongClient.LocalPlayerState.NickName;
 
         private bool _isExit;
@@ -104,14 +105,14 @@ namespace WukongApi
                         {
                             case 1:
                                 OnSpawnEnemy?.Invoke(args[0], 1, _wukongClient.LocalPlayerState.TeamId);
-                                SendChatMessage(ServerChannelName, "Spawned monster");
+                                SendServerMessage("Spawned monster");
                                 break;
                             case 2:
                             {
                                 if (int.TryParse(args[1], out var count))
                                 {
                                     OnSpawnEnemy?.Invoke(args[0], count, _wukongClient.LocalPlayerState.TeamId);
-                                    SendChatMessage(ServerChannelName, $"Spawned {count} monsters");
+                                    SendServerMessage($"Spawned {count} monsters");
                                 }
 
                                 break;
@@ -166,12 +167,12 @@ namespace WukongApi
         private void RequestRebirth()
         {
             OnRebirthRequested?.Invoke();
-            SendChatMessage(ServerChannelName, $"Player {NickName} requested rebirth");
+            SendServerMessage($"Player {NickName} requested rebirth");
         }
 
         private void RequestGiveUp()
         {
-            SendChatMessage(ServerChannelName, $"Player {NickName} gave up");
+            SendServerMessage($"Player {NickName} gave up");
             _wukongClient.KillCurrentPlayer();
         }
 
@@ -182,7 +183,7 @@ namespace WukongApi
 
         private void RequestDisconnect()
         {
-            SendChatMessage(ServerChannelName, $"{NickName} has left!");
+            SendServerMessage($"{NickName} has left!");
             OnDisconnectRequest?.Invoke();
         }
 
@@ -197,7 +198,7 @@ namespace WukongApi
                 {
                     if (_chatClient != null)
                     {
-                        SendChatMessage(GeneralChannelName, message);
+                        SendChatMessage(message);
                     }
                 }
             }
@@ -229,10 +230,16 @@ namespace WukongApi
             }
         }
 
-        public void SendChatMessage(string channel, string message)
+        private void SendChatMessage(string message)
         {
             Logging.LogDebug($"Sending message {message}");
-            _chatClient.PublishMessage(channel, message);
+            _chatClient.PublishMessage(GeneralChannelName, message);
+        }
+
+        public void SendServerMessage(string message)
+        {
+            Logging.LogDebug($"Sending server message {message}");
+            _chatClient.PublishMessage(ServerChannelName, message);
         }
 
         public void DebugReturn(LogLevel level, string message) { }
@@ -247,7 +254,7 @@ namespace WukongApi
             Logging.LogDebug("Chat connected");
             _chatClient.Subscribe(GeneralChannelName);
             _chatClient.Subscribe(ServerChannelName);
-            SendChatMessage(ServerChannelName, $"{NickName} has joined!");
+            SendServerMessage($"{NickName} has joined!");
         }
 
         public void OnCustomAuthenticationFailed(string debugMessage) { }
