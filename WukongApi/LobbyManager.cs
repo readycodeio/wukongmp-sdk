@@ -73,6 +73,13 @@ namespace WukongApi
             var winnersSoFar = _wukongClient.CurrentRoomState.RoundWinners.ToList();
             var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
+            // check if only one team is present
+            if (_wukongClient.AllConnectedPlayers.Select(p => p.TeamId).Distinct().Count() == 1)
+            {
+                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, _wukongClient.LocalPlayerState.TeamId);
+                return;
+            }
+
             // check if any team won more than half of the rounds
             var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _wukongClient.CurrentRoomState.RoundsTotal / 2);
             if (winnerTeam.Key != 0)
