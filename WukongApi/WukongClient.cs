@@ -29,7 +29,7 @@ namespace WukongApi
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isExit;
-        private bool _inPvP;
+        public bool InPvP { get; private set; }
 
         protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
@@ -103,7 +103,7 @@ namespace WukongApi
 
         public void SwitchReadyState()
         {
-            if (PhotonClient.InRoom && !_inPvP)
+            if (PhotonClient.InRoom && !InPvP)
             {
                 var isReady = LocalPlayerState.IsReadyForPvP;
                 SetReadyState(!isReady);
@@ -113,7 +113,7 @@ namespace WukongApi
 
         public void SwitchTeam()
         {
-            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !_inPvP)
+            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !InPvP)
             {
                 var teamId = (LocalPlayerState.TeamId == Constants.AvailableTeamIds[0]) ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
@@ -326,7 +326,7 @@ namespace WukongApi
 
         private void EnterPvP()
         {
-            _inPvP = true;
+            InPvP = true;
             if (IsMasterClient)
             {
                 PhotonClient.CurrentRoom.IsOpen = false;
@@ -335,7 +335,7 @@ namespace WukongApi
 
         private void ExitPvP()
         {
-            _inPvP = false;
+            InPvP = false;
             if (IsMasterClient)
             {
                 PhotonClient.CurrentRoom.IsOpen = true;

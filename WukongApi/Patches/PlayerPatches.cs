@@ -307,7 +307,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (photon.IsMasterClient)
+            if (photon.IsMasterClient && photon.InPvP)
             {
                 if (Attacker != owner)
                 {
