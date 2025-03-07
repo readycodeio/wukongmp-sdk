@@ -78,6 +78,11 @@ namespace WukongApi
 
         public static string GetSaveDirectory()
         {
+            if (CmdLineParams.Instance.ModFolderOverride is not null)
+            {
+                return FPaths.Combine(CmdLineParams.Instance.ModFolderOverride, "WukongMPMod");
+            }
+
             return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", "WukongMPMod");
         }
 
@@ -156,15 +161,18 @@ namespace WukongApi
                     text = FX.FXPathByDBC;
                     break;
                 }
+
                 if (FX.ResID == ownerResID)
                 {
                     text = FX.FXPathByDBC;
                 }
             }
+
             if (string.IsNullOrEmpty(text))
             {
                 return null;
             }
+
             return BGW_PreloadAssetMgr.Get(context).TryGetCachedResourceObj<UBGWDataAsset>(text, ELoadResourceType.AsyncLoadAndCache);
         }
 
@@ -188,18 +196,22 @@ namespace WukongApi
             {
                 immobilizeConfigInstance.BeginEffects.Add(new FSpellEffectForData(beginEffect));
             }
+
             foreach (FSpellEffect endEffect in cachedImmobilizeConfigDesc.EndEffects)
             {
                 immobilizeConfigInstance.EndEffects.Add(new FSpellEffectForData(endEffect));
             }
+
             foreach (FSpellEffect breakEffect in cachedImmobilizeConfigDesc.BreakEffects)
             {
                 immobilizeConfigInstance.BreakEffects.Add(new FSpellEffectForData(breakEffect));
             }
+
             foreach (FSpellEffect deadEffect in cachedImmobilizeConfigDesc.DeadEffects)
             {
                 immobilizeConfigInstance.DeadEffects.Add(new FSpellEffectForData(deadEffect));
             }
+
             return immobilizeConfigInstance;
         }
 

@@ -24,19 +24,13 @@ namespace WukongApi
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         internal readonly RealtimeClient PhotonClient = new RealtimeClient();
-        private readonly AuthenticationValues _authValues;
         private readonly TypedLobby _lobby = new TypedLobby("pvpLobby", LobbyType.Default);
 
         private const char MonsterHashtableKeySeparator = ';';
 
-        private GameMode _gameMode;
-        private string _roomName;
-        private int _playersPerTeam;
-
         private bool _isExit;
         private bool _inPvP;
 
-        public bool ShouldEnableMultiplayer => _authValues != null;
         protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
         public bool Ready => PhotonClient.IsConnectedAndReady;
@@ -139,8 +133,7 @@ namespace WukongApi
 
         public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
-            _authValues = ParseCmdLineArgs();
-            if (!ShouldEnableMultiplayer)
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
                 return;
 
             WukongChat = new WukongChatter(this);
@@ -153,59 +146,6 @@ namespace WukongApi
         {
             PhotonClient.Disconnect();
             PhotonClient.RemoveCallbackTarget(this);
-        }
-
-        private AuthenticationValues ParseCmdLineArgs()
-        {
-            var cmd = USystemLibrary.GetCommandLine();
-
-            Logging.LogDebug($"Command line: {cmd}");
-
-            var tokenMatch = Regex.Match(cmd, $@"-access_token ""?({Constants.JsonCompactSerializationRegex})""?");
-
-            string accessToken;
-            if (tokenMatch.Success)
-            {
-                accessToken = tokenMatch.Groups[1].Value;
-            }
-            else
-            {
-                Logging.LogError("Access token not provided. Launch the game from the ReadyM Launcher.");
-                return null;
-            }
-
-            // this can be either a private match (-room_name "name") or a quick match (-quick_match 1/3/5)
-
-            var roomNameMatch = Regex.Match(cmd, @"-room_name ""([a-zA-Z0-9_\- ]+)""|-room_name ([a-zA-Z0-9_\-]+)");
-            if (roomNameMatch.Success)
-            {
-                // private match
-                _roomName = roomNameMatch.Groups[1].Success ? roomNameMatch.Groups[1].Value : roomNameMatch.Groups[2].Value;
-                _gameMode = GameMode.Private;
-            }
-            else
-            {
-                var quickMatchMatch = Regex.Match(cmd, @"-quick_match (\d)");
-                if (quickMatchMatch.Success)
-                {
-                    // quick match
-                    var rounds = int.Parse(quickMatchMatch.Groups[1].Value);
-                    _gameMode = GameMode.XvX;
-                    _playersPerTeam = rounds;
-                }
-                else
-                {
-                    Logging.LogError("Room name not provided. Launch the game from the ReadyM Launcher.");
-                    return null;
-                }
-            }
-
-            var authValues = new AuthenticationValues
-            {
-                AuthType = CustomAuthenticationType.Custom
-            };
-            authValues.AddAuthParameter("access_token", accessToken);
-            return authValues;
         }
 
         public void OnEvent(EventData photonEvent)
@@ -432,7 +372,7 @@ namespace WukongApi
 
             OnBeforeJoinRoom?.Invoke();
 
-            PhotonClient.AuthValues = _authValues;
+            PhotonClient.AuthValues = CmdLineParams.Instance.Authentication!;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
                 // DEVELOPMENT (Jakub's machine)
@@ -511,17 +451,19 @@ namespace WukongApi
         {
             await PhotonClient.JoinLobbyAsync(_lobby);
 
-            switch (_gameMode)
+            var gameMode = CmdLineParams.Instance.GameMode;
+            switch (gameMode)
             {
                 case GameMode.Private:
                 {
+                    var roomName = CmdLineParams.Instance.RoomName;
                     var propertiesForRoomCreation = new RoomOptions
                     {
                         CustomRoomProperties = new PhotonHashtable
                         {
                             [nameof(RoomState.RoundsTotal)] = 3,
                             [nameof(RoomState.RoundWinners)] = "",
-                            [nameof(RoomState.GameMode)] = _gameMode
+                            [nameof(RoomState.GameMode)] = gameMode
                         },
                         MaxPlayers = 10,
                         IsOpen = true,
@@ -532,24 +474,25 @@ namespace WukongApi
                     var createArgs = new EnterRoomArgs
                     {
                         RoomOptions = propertiesForRoomCreation,
-                        RoomName = _roomName,
+                        RoomName = roomName,
                     };
 
-                    Logging.LogDebug($"Joining or creating private room {_roomName}");
+                    Logging.LogDebug($"Joining or creating private room {roomName}");
                     await PhotonClient.JoinOrCreateRoomAsync(createArgs);
                     break;
                 }
                 case GameMode.XvX:
                 {
+                    var playersPerTeam = CmdLineParams.Instance.PlayersPerTeam;
                     var propertiesForRoomCreation = new RoomOptions
                     {
                         CustomRoomProperties = new PhotonHashtable
                         {
                             [nameof(RoomState.RoundsTotal)] = 3,
                             [nameof(RoomState.RoundWinners)] = "",
-                            [nameof(RoomState.GameMode)] = _gameMode
+                            [nameof(RoomState.GameMode)] = gameMode
                         },
-                        MaxPlayers = 2 * _playersPerTeam,
+                        MaxPlayers = 2 * playersPerTeam,
                         IsOpen = true,
                         IsVisible = true,
                         PublishUserId = false,
@@ -563,15 +506,15 @@ namespace WukongApi
 
                     var joinArgs = new JoinRandomRoomArgs
                     {
-                        ExpectedMaxPlayers = _gameMode == GameMode.XvX ? 2 * _playersPerTeam : 10,
+                        ExpectedMaxPlayers = gameMode == GameMode.XvX ? 2 * playersPerTeam : 10,
                         MatchingType = MatchmakingMode.FillRoom,
                         ExpectedCustomRoomProperties = new PhotonHashtable
                         {
-                            [nameof(RoomState.GameMode)] = _gameMode
+                            [nameof(RoomState.GameMode)] = gameMode
                         },
                     };
 
-                    Logging.LogDebug($"Joining or creating {_playersPerTeam}v{_playersPerTeam} room");
+                    Logging.LogDebug($"Joining or creating {playersPerTeam}v{playersPerTeam} room");
                     await PhotonClient.JoinRandomOrCreateRoomAsync(joinArgs, createArgs);
                     break;
                 }

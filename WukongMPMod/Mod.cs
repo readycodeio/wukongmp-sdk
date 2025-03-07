@@ -19,7 +19,7 @@ namespace WukongMPMod
             _wukongMp = WukongMP.Instance;
             _wukongMp.Init();
 
-            if (!_wukongMp.Photon.ShouldEnableMultiplayer)
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
             {
                 Logging.LogDebug("Multiplayer is disabled");
                 return;

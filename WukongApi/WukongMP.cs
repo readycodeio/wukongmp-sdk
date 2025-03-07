@@ -71,7 +71,7 @@ namespace WukongApi
         {
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
-            if (Photon.ShouldEnableMultiplayer)
+            if (CmdLineParams.Instance.ShouldEnableMultiplayer)
                 AsyncInitGameInstance();
         }
 
@@ -335,7 +335,7 @@ namespace WukongApi
         {
             Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
 
-            if (!Photon.ShouldEnableMultiplayer)
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
                 return false;
 
             Photon.WukongChat.OnGetMessage += _chatWidget.GetMessage;
@@ -400,7 +400,8 @@ namespace WukongApi
             Photon.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
             Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
-            Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet"); ;
+            Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
+            ;
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -544,11 +545,10 @@ namespace WukongApi
                     RelieveImmobilize(playerState);
                     break;
                 case ImmobilizeActionType.Break:
-                    // Currently not supported
+                // Currently not supported
                 default:
                     Logging.LogError($"Unknown ImmobilizeActionType: {immobilizeAction}");
                     break;
-
             }
         }
 
@@ -940,7 +940,6 @@ namespace WukongApi
             DisablePlayerSkills();
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
-
         }
 
         private void DisablePlayerSkills()
