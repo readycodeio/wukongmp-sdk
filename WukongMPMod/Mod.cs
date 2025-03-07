@@ -1,5 +1,6 @@
 ﻿using CSharpModBase;
 using CSharpModBase.Input;
+using System.Diagnostics;
 using WukongApi;
 
 namespace WukongMPMod
@@ -15,8 +16,16 @@ namespace WukongMPMod
         public void Init()
         {
             Logging.LogDebug("Init WukongMP mod");
+            Logging.LogDebug($"Process name: {Process.GetCurrentProcess().ProcessName}");
 
             _wukongMp = WukongMP.Instance;
+
+            if (_wukongMp.IsInitialized)
+            {
+                Logging.LogDebug("WukongMP is already initialized");
+                return;
+            }
+
             _wukongMp.Init();
 
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
@@ -61,6 +70,7 @@ namespace WukongMPMod
         public void DeInit()
         {
             Logging.LogDebug("DeInit");
+            _wukongMp.DeInit();
             _wukongMp.Unpatch();
         }
     }

@@ -41,6 +41,7 @@ namespace WukongApi
         public static WukongMP Instance { get; } = new WukongMP();
 
         public bool DisableArchiveSave { get; set; }
+        public bool IsInitialized { get; private set; }
 
         private WukongMP()
         {
@@ -69,10 +70,19 @@ namespace WukongApi
 
         public void Init()
         {
+            if (IsInitialized)
+                return;
+
+            IsInitialized = true;
             DisconnectIfConnected();
             InitPhotonAndConnectToChat();
             if (CmdLineParams.Instance.ShouldEnableMultiplayer)
                 AsyncInitGameInstance();
+        }
+
+        public void DeInit()
+        {
+            IsInitialized = false;
         }
 
         private void AsyncInitGameInstance()
