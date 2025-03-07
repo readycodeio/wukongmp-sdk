@@ -7,7 +7,7 @@ namespace WukongApi
 {
     internal static class UnitPathsConfig
     {
-        private static readonly Dictionary<string, string> Configurations = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> Configurations = new()
         {
             { CharacterKind.WolfSentinel, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_01.TAMER_gycy_lang_01_C" },
             { CharacterKind.WolfSoldier, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_07a.TAMER_gycy_lang_07a_C" },

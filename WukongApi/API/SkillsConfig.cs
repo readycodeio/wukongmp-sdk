@@ -6,7 +6,7 @@ namespace WukongApi.API
 {
     internal class SkillsConfig
     {
-        private static readonly Dictionary<SkillKind, SkillData> Configurations = new Dictionary<SkillKind, SkillData>
+        private static readonly Dictionary<SkillKind, SkillData> Configurations = new()
         {
             { SkillKind.None, new SkillData(EInputActionType.None, 0, -1, -1) },
             { SkillKind.RingOfFire, new SkillData(EInputActionType.UseSkillByType, 10520, 250, -1) },

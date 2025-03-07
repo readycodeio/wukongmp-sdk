@@ -23,22 +23,22 @@ namespace WukongApi
     // ReSharper disable once InconsistentNaming
     public class WukongMP
     {
-        public FreeCameraManager FreeCameraManager { get; } = new FreeCameraManager();
+        public FreeCameraManager FreeCameraManager { get; } = new();
 
-        public readonly Harmony Harmony = new Harmony("WukongMP");
+        public readonly Harmony Harmony = new("WukongMP");
 
         public WukongClient Photon { get; private set; }
 
         private FVector _savedPosition;
 
-        private readonly ChatWidget _chatWidget = new ChatWidget();
-        private readonly TimerWidget _timerWidget = new TimerWidget();
-        private readonly LobbyStatusWidget _lobbyStatusWidget = new LobbyStatusWidget();
-        private readonly GameMessageWidget _gameMessageWidget = new GameMessageWidget();
-        private readonly InfoMessageWidget _infoMessageWidget = new InfoMessageWidget();
-        private readonly CountdownWidget _countdownWidget = new CountdownWidget();
+        private readonly ChatWidget _chatWidget = new();
+        private readonly TimerWidget _timerWidget = new();
+        private readonly LobbyStatusWidget _lobbyStatusWidget = new();
+        private readonly GameMessageWidget _gameMessageWidget = new();
+        private readonly InfoMessageWidget _infoMessageWidget = new();
+        private readonly CountdownWidget _countdownWidget = new();
 
-        public static WukongMP Instance { get; } = new WukongMP();
+        public static WukongMP Instance { get; } = new();
 
         public bool DisableArchiveSave { get; set; }
         public bool IsInitialized { get; private set; }

@@ -23,9 +23,9 @@ namespace WukongApi.API
 
         private bool alreadyInit;
 
-        private readonly CharacterId localWukongCharacter = new CharacterId(0);
+        private readonly CharacterId localWukongCharacter = new(0);
 
-        private readonly List<CharacterEntry> characterEntries = new List<CharacterEntry>
+        private readonly List<CharacterEntry> characterEntries = new()
         {
             new CharacterEntry(),
         };

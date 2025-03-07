@@ -22,8 +22,8 @@ namespace WukongApi
 {
     public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
-        internal readonly RealtimeClient PhotonClient = new RealtimeClient();
-        private readonly TypedLobby _lobby = new TypedLobby("pvpLobby", LobbyType.Default);
+        internal readonly RealtimeClient PhotonClient = new();
+        private readonly TypedLobby _lobby = new("pvpLobby", LobbyType.Default);
 
         private const char MonsterHashtableKeySeparator = ';';
 
@@ -60,13 +60,13 @@ namespace WukongApi
         public PlayerState LocalPlayerState { get; protected set; }
         public RoomState CurrentRoomState { get; }
 
-        public readonly Dictionary<int, PlayerState> ConnectedPlayers = new Dictionary<int, PlayerState>();
-        public readonly Dictionary<string, MonsterState> SyncedMonsters = new Dictionary<string, MonsterState>();
+        public readonly Dictionary<int, PlayerState> ConnectedPlayers = new();
+        public readonly Dictionary<string, MonsterState> SyncedMonsters = new();
 
         public IEnumerable<PlayerState> AllConnectedPlayers
             => ConnectedPlayers.Values.Append(LocalPlayerState);
 
-        private readonly List<WukongClientClone> _photonClones = new List<WukongClientClone>();
+        private readonly List<WukongClientClone> _photonClones = new();
 
         public void RegisterPlayer(PlayerState state)
         {
@@ -723,11 +723,11 @@ namespace WukongApi
             }
         }
 
-        private ConcurrentDictionary<string, object> _playerProperties = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<string, object> _playerProperties = new();
 
-        private ConcurrentDictionary<string, object> _playerPropertiesRo = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<string, object> _playerPropertiesRo = new();
 
-        private readonly object _playerPropertiesLock = new object();
+        private readonly object _playerPropertiesLock = new();
 
         public void SetCachedPlayerProperties()
         {
@@ -791,11 +791,11 @@ namespace WukongApi
             PhotonClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
-        private ConcurrentDictionary<string, object> _monsterProperties = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<string, object> _monsterProperties = new();
 
-        private ConcurrentDictionary<string, object> _monsterPropertiesRo = new ConcurrentDictionary<string, object>();
+        private ConcurrentDictionary<string, object> _monsterPropertiesRo = new();
 
-        private readonly object _monsterPropertiesLock = new object();
+        private readonly object _monsterPropertiesLock = new();
 
         public void SendUpdatedMonsterProperties()
         {
@@ -1047,8 +1047,8 @@ namespace WukongApi
             }
         }
 
-        private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new Dictionary<string, Action<PlayerState, object>>();
-        private static readonly Dictionary<string, Action<MonsterState, object>> MonsterSetters = new Dictionary<string, Action<MonsterState, object>>();
+        private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new();
+        private static readonly Dictionary<string, Action<MonsterState, object>> MonsterSetters = new();
 
         private static Action<T, object> CreateSetter<T>(string propertyName)
         {

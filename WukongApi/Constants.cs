@@ -17,16 +17,16 @@ namespace WukongApi
         public const float MonsterSpawnSpread = 100f;
         public const int MonsterSpawnDelayMs = 500;
         public const string AttributePrefix = "attr_";
-        public static readonly FVector PvpStartingLocation = new FVector(-11146.926, -3229.771, 6497.035);
+        public static readonly FVector PvpStartingLocation = new(-11146.926, -3229.771, 6497.035);
         public const float PvpRadius = 4000;
         public const float CameraArmLength = 720;
         public const int CharacterArchiveId = 10;
         public const int NewCharacterArchiveId = 9;
         public const int LevelArchiveId = 0;
         public const int MaxPlayers = 20;
-        public static readonly List<int> AvailableTeamIds = new List<int> { -9999, -9998 };
+        public static readonly List<int> AvailableTeamIds = new() { -9999, -9998 };
         public const int DrawTeamId = 9999;
-        public static readonly List<int> SkillsWhitelist = new List<int> { 10518 };
+        public static readonly List<int> SkillsWhitelist = new() { 10518 };
 
         public const string UiManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
@@ -38,7 +38,7 @@ namespace WukongApi
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
         public const string JsonCompactSerializationRegex = @"[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_\.+\/=]*";
 
-        public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new EnumSet<EBGUAttrFloat>(new[]
+        public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new(new[]
         {
             EBGUAttrFloat.HpMax,
             EBGUAttrFloat.MpMax,

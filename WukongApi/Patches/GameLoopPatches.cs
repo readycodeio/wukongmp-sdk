@@ -8,8 +8,7 @@ namespace WukongApi.Patches
 {
     public static class GameLoopPatch
     {
-        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string Name)>> CustomTickGroupActionQueues
-            = new ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action, string)>>();
+        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string Name)>> CustomTickGroupActionQueues = new();
 
         public static void QueueOnGameThread(Action action, string name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
         {

@@ -9,7 +9,7 @@ namespace WukongApi.UI
             _countdownTimer.OnTick += (int _, int seconds) => SetText(seconds);
         }
 
-        private readonly CountdownTimer _countdownTimer = new CountdownTimer(1, 5);
+        private readonly CountdownTimer _countdownTimer = new(1, 5);
 
         public void SetText(int seconds)
         {
