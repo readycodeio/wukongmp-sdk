@@ -64,7 +64,7 @@ namespace WukongApi.Patches
 
             BGW_EventCollection.Get(WorldContext).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
             {
-                ArchiveId = 9
+                ArchiveId = Constants.NewCharacterArchiveId
             });
             return false;
         }
