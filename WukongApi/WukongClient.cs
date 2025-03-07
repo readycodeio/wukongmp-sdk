@@ -325,7 +325,7 @@ namespace WukongApi
 
         public void CheckRoundEndCondition()
         {
-            if (!IsMasterClient && !InPvP)
+            if (!IsMasterClient || !InPvP)
             {
                 return;
             }
