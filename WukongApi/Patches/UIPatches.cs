@@ -8,6 +8,7 @@ using GSE.GSUI;
 using HarmonyLib;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
+using WukongApi.UI;
 
 namespace WukongApi.Patches
 {
@@ -68,10 +69,10 @@ namespace WukongApi.Patches
 
                 if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
                 {
-                    Logging.LogDebug($"UI name desc continue: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME)}");
+                    Logging.LogDebug($"Continue UI name desc: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME)}");
                     if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                     {
-                        ___StartGameBtnList[j].SetTxtName(FText.FromString("Quick Join"));
+                        ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
                     }
                     else
                     {
@@ -84,17 +85,17 @@ namespace WukongApi.Patches
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
-                    Logging.LogDebug($"UI name desc new game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME)}");
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString("New Character"));
+                    Logging.LogDebug($"New game UI name desc: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME)}");
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
                 {
-                    Logging.LogDebug($"UI name desc load game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME)}");
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString("Select Character"));
+                    Logging.LogDebug($"Load game UI name desc : {GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME)}");
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
                 {
-                    Logging.LogDebug($"UI name desc exit game: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME)}");
+                    Logging.LogDebug($"UI name desc to hide: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME)}");
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                 }
             }
