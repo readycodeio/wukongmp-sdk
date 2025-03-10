@@ -41,5 +41,13 @@
                 _gameWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
             }
         }
+
+        public void ClearMessages()
+        {
+            if (_gameWidget != null)
+            {
+                _gameWidget.CallFunctionByNameWithArguments("ClearMessages", true);
+            }
+        }
     }
 }
