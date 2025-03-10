@@ -34,7 +34,7 @@ public class CmdLineParams
     {
         var cmd = USystemLibrary.GetCommandLine();
 
-        Logging.LogDebug($"Command line: {cmd}");
+        Logging.LogDebug("Command line: {Args}", cmd);
 
         var tokenMatch = Regex.Match(cmd, $"""-access_token "?({Constants.JsonCompactSerializationRegex})"?""");
 
@@ -56,7 +56,7 @@ public class CmdLineParams
         if (pathMatch.Success)
         {
             ModFolderOverride = pathMatch.Groups[1].Value;
-            Logging.LogDebug($"Mod folder: {ModFolderOverride}");
+            Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
         }
 
 

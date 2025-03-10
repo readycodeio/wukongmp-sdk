@@ -78,7 +78,7 @@ namespace WukongApi.Patches
         {
             if (__result != ReadArchiveResult.Success)
             {
-                Logging.LogError($"Original readArchiveData Failed, Result:{__result}");
+                Logging.LogError("Original readArchiveData Failed, Result: {Result}", __result);
                 return;
             }
 
@@ -107,7 +107,7 @@ namespace WukongApi.Patches
             var readArchiveResult = __instance.ReadArchiveData(Constants.LevelArchiveId, out var GameArchiveData, out var ArchiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
-                Logging.LogError($"ReadArchiveData Failed, Result:{readArchiveResult}");
+                Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
                 return;
             }
 

@@ -49,7 +49,7 @@ namespace WukongApi
             var actors = world.GetAllActorsOfClass<BUTamerActor>();
             foreach (var actor in actors)
             {
-                Logging.LogDebug($"Found actor: {actor.GetName()}");
+                Logging.LogDebug("Found actor: {ActorName}", actor.GetName());
 
                 var monster = actor.GetMonster();
                 if (monster != null)

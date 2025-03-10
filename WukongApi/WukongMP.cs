@@ -134,7 +134,7 @@ namespace WukongApi
             var world = GameUtils.GetWorld();
             if (world != null)
             {
-                Logging.LogDebug($"New level loaded: {world.GetCurrentLevelName()}");
+                Logging.LogDebug("New level loaded: {LevelName}", world.GetCurrentLevelName());
             }
         }
 
@@ -224,11 +224,11 @@ namespace WukongApi
         public void DumpPlayerState()
         {
             // dump player state to console for me
-            Logging.LogDebug($"Local player state: {Photon.LocalPlayerState}");
+            Logging.LogDebug("Local player state: {State}", Photon.LocalPlayerState);
             // dump player state to console for each connected player
             foreach (var (id, state) in Photon.ConnectedPlayers)
             {
-                Logging.LogDebug($"Player {id} state: {state}");
+                Logging.LogDebug("Player {PlayerId} state: {State}", id, state);
             }
         }
 
@@ -285,8 +285,8 @@ namespace WukongApi
                 .Distinct()
                 .ToList();
 
-            Logging.LogDebug($"My team: {myTeam}");
-            Logging.LogDebug($"Other teams: {string.Join(", ", otherTeams)}");
+            Logging.LogDebug("My team: {Team}", myTeam);
+            Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
             GameLoopPatch.QueueOnGameThread(() =>
             {
@@ -308,8 +308,8 @@ namespace WukongApi
                 .Distinct()
                 .ToList();
 
-            Logging.LogDebug($"My team: {myTeam}");
-            Logging.LogDebug($"Other teams: {string.Join(", ", otherTeams)}");
+            Logging.LogDebug("My team: {Team}", myTeam);
+            Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
             GameLoopPatch.QueueOnGameThread(() =>
             {
@@ -339,7 +339,7 @@ namespace WukongApi
                 {
                     if (actor.GetMonster() == null)
                     {
-                        Logging.LogDebug($"Spawning monster for tamer with guid: {guid}.");
+                        Logging.LogDebug("Spawning monster for tamer with guid: {Guid}.", guid);
 
                         if (!Photon.SyncedMonsters.ContainsKey(guid))
                         {
@@ -352,7 +352,7 @@ namespace WukongApi
                     }
                     else if (!Photon.SyncedMonsters.ContainsKey(guid))
                     {
-                        Logging.LogDebug($"Monster already spawned but not synced: {guid}.");
+                        Logging.LogDebug("Monster already spawned but not synced: {Guid}.", guid);
 
                         var state = new MonsterState(guid, actor);
                         Photon.SyncedMonsters.Add(guid, state);
@@ -388,7 +388,7 @@ namespace WukongApi
 
         private void RebirthPlayer(int playerId)
         {
-            Logging.LogDebug($"RebirthPlayer for player {playerId} called");
+            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
 
             var player = Photon.GetById(playerId);
             if (player == null)
@@ -470,11 +470,11 @@ namespace WukongApi
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
             {
-                Logging.LogError($"Player not found: {playerId}");
+                Logging.LogError("Player not found: {Id}", playerId);
                 return;
             }
 
-            Logging.LogDebug($"Recieved exit phantom rush for player {playerState.NickName}");
+            Logging.LogDebug("Received exit phantom rush for player {Nickname}", playerState.NickName);
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             playerState.RecivedPhantomRushExit = true;
             events?.Evt_RelievePhantomRush.Invoke();
@@ -484,18 +484,18 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(playerId, out var playerState))
             {
-                Logging.LogError($"Player not found: {playerId}");
+                Logging.LogError("Player not found: {Id}", playerId);
                 return;
             }
 
             var targetPlayerState = Photon.GetById(targetId);
             if (targetPlayerState == null)
             {
-                Logging.LogError($"Player not found: {targetId}");
+                Logging.LogError("Player not found: {Id}", targetId);
                 return;
             }
 
-            Logging.LogDebug($"Updating player target for player{playerState.NickName} to player {targetPlayerState.NickName}");
+            Logging.LogDebug("Updating player target for player {PlayerNickname} to player {TargetNickname}", playerState.NickName, targetPlayerState.NickName);
 
             var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(playerState.Pawn);
             targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPlayerState.Pawn, ETargetSourceType.SkillBase_NormalUse));
@@ -503,7 +503,7 @@ namespace WukongApi
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)
         {
-            Logging.LogDebug($"Updating player {playerState.NickName} to team {teamId}");
+            Logging.LogDebug("Updating player {Nickname} to team {Team}", playerState.NickName, teamId);
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)playerState.Pawn, teamId);
             if (playerState.MarkerActor != null)
             {
@@ -539,11 +539,11 @@ namespace WukongApi
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
             {
-                Logging.LogDebug($"Player not found: {playerId}");
+                Logging.LogDebug("Player not found: {PlayerId}", playerId);
                 return;
             }
 
-            Logging.LogDebug($"Recieved phantom rush for player {playerState.NickName} in direction {direction}");
+            Logging.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", playerState.NickName, direction);
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
 
@@ -578,16 +578,11 @@ namespace WukongApi
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
             {
-                Logging.LogError($"Player not found: {playerId}");
+                Logging.LogError("Player not found: {Id}", playerId);
                 return;
             }
 
             var otherPlayerState = Photon.GetById(otherPlayerId);
-            if (otherPlayerId != -1 && playerState == null)
-            {
-                Logging.LogError($"Player not found: {otherPlayerId}");
-                return;
-            }
 
             switch (immobilizeAction)
             {
@@ -603,7 +598,7 @@ namespace WukongApi
                 case ImmobilizeActionType.Break:
                 // Currently not supported
                 default:
-                    Logging.LogError($"Unknown ImmobilizeActionType: {immobilizeAction}");
+                    Logging.LogError("Unknown ImmobilizeActionType: {Action}", immobilizeAction);
                     break;
             }
         }
@@ -612,7 +607,7 @@ namespace WukongApi
         {
             if (Photon.IsMasterClient)
             {
-                Logging.LogDebug($"Recieved cast immobilize for player {castingPlayerState.NickName}");
+                Logging.LogDebug("Received cast immobilize for player {Nickname}", castingPlayerState.NickName);
                 var playerEvents = BUS_EventCollectionCS.Get(castingPlayerState.Pawn);
                 playerEvents.Evt_CastImmobilize.Invoke(0);
             }
@@ -620,7 +615,7 @@ namespace WukongApi
 
         private void TriggerImmobilize(PlayerState immobilizedPlayerState, PlayerState castingPlayerState, bool hasBuff)
         {
-            Logging.LogDebug($"Recieved trigger immobilize for player {immobilizedPlayerState.NickName}");
+            Logging.LogDebug("Received trigger immobilize for player {Nickname}", immobilizedPlayerState.NickName);
             var character = immobilizedPlayerState.Pawn as BGUCharacterCS;
             var CastImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
@@ -636,7 +631,7 @@ namespace WukongApi
 
         private void RelieveImmobilize(PlayerState immobilizedPlayerState)
         {
-            Logging.LogDebug($"Recieved relieve immobilize for player {immobilizedPlayerState.NickName}");
+            Logging.LogDebug("Received relieve immobilize for player {Nickname}", immobilizedPlayerState.NickName);
             var playerEvents = BUS_EventCollectionCS.Get(immobilizedPlayerState.Pawn);
             immobilizedPlayerState.RunImmobilizePatches = true;
             playerEvents?.Evt_RelieveImmobilized.Invoke();
@@ -692,7 +687,7 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogDebug($"Player not found: {id}");
+                Logging.LogDebug("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -787,7 +782,7 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogDebug($"Player not found: {id}");
+                Logging.LogDebug("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -797,11 +792,11 @@ namespace WukongApi
 
             if (montage is null)
             {
-                Logging.LogDebug($"Montage not found: {data.MontagePath}");
+                Logging.LogDebug("Montage not found: {Montage}", data.MontagePath);
                 return;
             }
 
-            Logging.LogDebug($"Applying montage callback for player {id} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, data.MontagePath, data.Reason, data.State);
             var animInstance = ((ACharacter)clone).Mesh.GetAnimInstance();
 
             if (animInstance is null)
@@ -830,7 +825,7 @@ namespace WukongApi
         {
             if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
             {
-                Logging.LogDebug($"Monster not found: {data.MonsterGuid}");
+                Logging.LogDebug("Monster not found: {Guid}", data.MonsterGuid);
                 return;
             }
 
@@ -843,14 +838,14 @@ namespace WukongApi
 
             if (montage is null)
             {
-                Logging.LogDebug($"Montage not found: {data.MontagePath}");
+                Logging.LogDebug("Montage not found: {Montage}", data.MontagePath);
                 return;
             }
 
-            Logging.LogDebug($"Applying montage callback for monster {data.MonsterGuid} with montage {data.MontagePath} ({data.Reason}, {data.State})");
+            Logging.LogDebug("Applying montage callback for monster {Guid} with montage {Montage} ({Reason}, {State})", data.MonsterGuid, data.MontagePath, data.Reason, data.State);
             if (tamerActor.GetMonster() == null)
             {
-                Logging.LogError($"Monster is null in {nameof(ApplyMonsterMontageCallback)}");
+                Logging.LogError("Monster is null in {Method}", nameof(ApplyMonsterMontageCallback));
                 return;
             }
 
@@ -875,7 +870,7 @@ namespace WukongApi
             }
             else
             {
-                Logging.LogError($"events is null in {nameof(ApplyMonsterMontageCallback)}");
+                Logging.LogError("events is null in {Method}", nameof(ApplyMonsterMontageCallback));
             }
         }
 
@@ -902,7 +897,7 @@ namespace WukongApi
         private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
         {
             var montagePath = montage.GetPathName();
-            Logging.LogDebug($"Montage callback: {reason} {montagePath} {state}");
+            Logging.LogDebug("Montage callback: {Reason} {Montage} {State}", reason, montagePath, state);
             Photon.SendMontageCallback(reason, montagePath, state);
         }
 
@@ -950,7 +945,7 @@ namespace WukongApi
             var id = Guid.NewGuid().ToString(); // TODO: use ActorGuid
             SpawnUnitLocally(id, unitName, teamId, loc.X, loc.Y, loc.Z);
 
-            Logging.LogDebug($"Sending spawn enemy {enemyName} at {loc}");
+            Logging.LogDebug("Sending spawn enemy {Name} at {Location}", enemyName, loc);
             Photon.SpawnUnit(id, unitName, teamId, loc.X, loc.Y, loc.Z);
         }
 
@@ -961,7 +956,7 @@ namespace WukongApi
 
         private void SpawnUnitLocally(string guid, string unitName, int teamId, float x, float y, float z)
         {
-            Logging.LogDebug($"Spawn unit called for {unitName}");
+            Logging.LogDebug("Spawn unit called for {UnitName}", unitName);
 
             if (string.IsNullOrEmpty(unitName))
                 return;
@@ -976,7 +971,7 @@ namespace WukongApi
             var buTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)cachedResourceObj, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
             if (buTamerActor == null)
             {
-                Logging.LogError("Could not spawn enemy: " + unitName);
+                Logging.LogError("Could not spawn enemy: {UnitName}", unitName);
                 return;
             }
 
@@ -985,7 +980,7 @@ namespace WukongApi
             buTamerActor.GetFinalGuid();
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
-            Logging.LogDebug($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
+            Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamId));
         }
 
@@ -1121,7 +1116,7 @@ namespace WukongApi
 
             if (Photon.ConnectedPlayers.ContainsKey(id))
             {
-                Logging.LogError($"Player already exists: {id}");
+                Logging.LogError("Player already exists: {Id}", id);
                 return null;
             }
 
@@ -1154,7 +1149,7 @@ namespace WukongApi
 
             BackToOldPawn(oldController, oldPawn, newPawn);
 
-            Logging.LogDebug($"Assigned player {id} clone {newPawn.GetEntityHash()}");
+            Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", id, newPawn.GetEntityHash());
 
             var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref loc, ref rot);
             if (newControllerActor != null && newControllerActor is ABGUAIPlayerController newController)
@@ -1193,7 +1188,7 @@ namespace WukongApi
             {
                 if (player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
                 {
-                    Logging.LogDebug($"Setting remote player initial attribute {attr} = {value}");
+                    Logging.LogDebug("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
                     playerState.Attributes[attr] = (float)value;
                 }
             }

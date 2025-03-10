@@ -61,7 +61,7 @@ namespace WukongApi.Patches
 
                     if (events == null)
                     {
-                        // Logging.LogWarning($"BUS_EventCollectionCS is null for monster {state.Pawn.GetName()}");
+                        // Logging.LogWarning($"BUS_EventCollectionCS is null for monster {}", state.Pawn.GetName());
                         continue;
                     }
 
@@ -91,7 +91,7 @@ namespace WukongApi.Patches
                 var photon = WukongMP.Instance.Photon;
                 var tamer = __instance.InstancePtr.Get();
 
-                Logging.LogDebug($"Monster {BGU_DataUtil.GetActorGuid(tamer.GetMonster())} waking up locally");
+                Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
                 PhotonUtils.SyncMonsterAndNotify(photon, tamer);
             }
             catch (Exception e)

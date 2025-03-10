@@ -63,7 +63,7 @@ namespace WukongApi
                 FixedRegion = "us",
             });
 
-            Logging.LogDebug("\n\nYou are: " + userName);
+            Logging.LogDebug("You are: {UserName}", userName);
         }
 
         public void Disconnect()
@@ -233,13 +233,13 @@ namespace WukongApi
 
         private void SendChatMessage(string message)
         {
-            Logging.LogDebug($"Sending message {message}");
+            Logging.LogDebug("Sending message {Message}", message);
             _chatClient.PublishMessage(GeneralChannelName, $"{ClientPrefix}{message}");
         }
 
         public void SendServerMessage(string message)
         {
-            Logging.LogDebug($"Sending server message {message}");
+            Logging.LogDebug("Sending server message {Message}", message);
             _chatClient.PublishMessage(GeneralChannelName, $"{ServerPrefix}{message}");
         }
 
@@ -247,7 +247,7 @@ namespace WukongApi
 
         public void OnChatStateChange(ChatState state)
         {
-            Logging.LogDebug($"Chat state changed to: {state}");
+            Logging.LogDebug("Chat state changed to: {State}", state);
         }
 
         public void OnConnected()
@@ -274,7 +274,7 @@ namespace WukongApi
                 var isServer = content.AsSpan()[..3] is ServerPrefix;
                 var message = content[3..];
 
-                Logging.LogDebug($"Message \"{message}\" received from \"{senders[i]}\"");
+                Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senders[i]);
                 OnSendMessage?.Invoke(isServer, isServer ? "Server" : senders[i], message);
             }
         }
@@ -287,7 +287,7 @@ namespace WukongApi
         {
             for (var i = 0; i < channels.Length; i++)
             {
-                Logging.LogDebug($"Subscribed to the channel: {channels[i]}: {results[i]}");
+                Logging.LogDebug("Subscribed to the channel: {Channel}: {Result}", channels[i], results[i]);
             }
         }
 

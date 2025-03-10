@@ -16,7 +16,7 @@ namespace WukongMPMod
         public void Init()
         {
             Logging.LogDebug("Init WukongMP mod");
-            Logging.LogDebug($"Process name: {Process.GetCurrentProcess().ProcessName}");
+            Logging.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             _wukongMp = WukongMP.Instance;
 
@@ -72,6 +72,7 @@ namespace WukongMPMod
             Logging.LogDebug("DeInit");
             _wukongMp.Unpatch();
             _wukongMp.DeInit();
+            Logger.Instance.Dispose();
         }
     }
 }

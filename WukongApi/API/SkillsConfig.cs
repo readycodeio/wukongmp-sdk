@@ -22,7 +22,7 @@ namespace WukongApi.API
                 return value;
             }
 
-            Logging.LogError($"Skill data for '{skillKind}' not found.");
+            Logging.LogError("Skill data for '{Kind}' not found.", skillKind);
             return Configurations.First().Value;
         }
     }

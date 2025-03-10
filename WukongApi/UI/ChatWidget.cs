@@ -8,7 +8,7 @@
         {
             if (_gameWidget != null)
             {
-                Logging.LogDebug($"Calling AddMessage function with message {message} from {sender}");
+                Logging.LogDebug("Calling AddMessage function with message {Message} from {Sender}", message, sender);
                 _gameWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
             }
             else
@@ -25,7 +25,7 @@
                 var message = _gameWidget.ToolTipText.ToString();
                 if (message.Length > 0)
                 {
-                    Logging.LogDebug($"Got message: {message} in GetSentMessage function");
+                    Logging.LogDebug("Got message: {Message} in GetSentMessage function", message);
                 }
 
                 return message;

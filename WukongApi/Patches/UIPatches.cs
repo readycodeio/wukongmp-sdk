@@ -65,11 +65,11 @@ namespace WukongApi.Patches
             {
                 DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
 
-                Logging.LogDebug($"Button name: {BtnBase2.Name.Value}, id: {BtnBase2.Id.Value}");
+                Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
 
                 if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
                 {
-                    Logging.LogDebug($"Continue UI name desc: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME)}");
+                    Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
                     if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                     {
                         ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
@@ -78,6 +78,7 @@ namespace WukongApi.Patches
                     {
                         ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     }
+
                     // Clear OnGSButtonUnFocused event form the continue game button.
                     var type = ___StartGameBtnList[j].GetBUIButton().GetType();
                     var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
@@ -85,17 +86,17 @@ namespace WukongApi.Patches
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
-                    Logging.LogDebug($"New game UI name desc: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME)}");
+                    Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
                 {
-                    Logging.LogDebug($"Load game UI name desc : {GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME)}");
+                    Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
                 {
-                    Logging.LogDebug($"UI name desc to hide: {GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME)}");
+                    Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                 }
             }
@@ -133,10 +134,10 @@ namespace WukongApi.Patches
     {
         public static void Prefix(int NewPageID, string Source, ChangeReason Reason = null, object exParam = null)
         {
-            Logging.LogDebug($"ShowPage: {NewPageID}, {Source}, {Reason}, {exParam}");
+            Logging.LogDebug("ShowPage: {NewPageID}, {Source}, {Reason}, {ExParam}", NewPageID, Source, Reason, exParam);
         }
     }
-     
+
     [HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnChangeSaveTipsStat

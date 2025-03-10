@@ -14,7 +14,7 @@ namespace WukongApi.Patches
         {
             if (name != null)
             {
-                Logging.LogDebug($"Enqueueing action: {name}");
+                Logging.LogDebug("Enqueueing action: {Action}", name);
             }
 
             CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>(new[] { (action, name) }), (_, queue) =>
@@ -76,12 +76,12 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug($"Processing {item.Name} action for tick group {mask}");
+                    Logging.LogDebug("Processing {Action} action for tick group {Mask}", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError($"-------------- EXCEPTION IN {mask} patch -------------");
+                    Logging.LogError("-------------- EXCEPTION IN {Mask} patch -------------", mask);
                     Logging.LogError(e.Message);
                     Logging.LogError(e.StackTrace);
                     Logging.LogError("----------------------------------------------------------------");
@@ -117,12 +117,12 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug($"Processing {item.Name} action for tick group {mask} (EntityManager)");
+                    Logging.LogDebug("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError($"-------------- EXCEPTION IN {mask} patch (EntityManager) -------------");
+                    Logging.LogError("-------------- EXCEPTION IN {Mask} patch (EntityManager) -------------", mask);
                     Logging.LogError(e.Message);
                     Logging.LogError(e.StackTrace);
                     Logging.LogError("-----------------------------------------------------------------------");

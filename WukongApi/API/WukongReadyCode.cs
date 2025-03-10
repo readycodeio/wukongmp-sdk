@@ -143,7 +143,7 @@ namespace WukongApi.API
             }
 
             // spawn in a spiral around center point, separated by 100 units
-            Logging.LogDebug($"Spawn unit called for '{unitName}'");
+            Logging.LogDebug("Spawn unit called for '{UnitName}'", unitName);
 
             if (string.IsNullOrEmpty(unitName))
                 return default;
@@ -151,7 +151,7 @@ namespace WukongApi.API
             var world = GameUtils.GetWorld();
 
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
-            Logging.LogDebug($"Spawn unit path is '{unitPath}'");
+            Logging.LogDebug("Spawn unit path is '{UnitPath}'", unitPath);
 
             var cachedResourceObj = BGW_PreloadAssetMgr.Get(world)
                 .TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
@@ -164,7 +164,7 @@ namespace WukongApi.API
             ) as BUTamerActor;
             if (buTamerActor == null)
             {
-                Logging.LogError($"Could not spawn enemy: '{unitName}'");
+                Logging.LogError("Could not spawn enemy: '{Name}'", unitName);
                 return default;
             }
 
@@ -175,7 +175,7 @@ namespace WukongApi.API
             buTamerActor.GetFinalGuid();
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
-            Logging.LogDebug($"Spawned enemy: {buTamerActor.GetName()}, with guid {guid}");
+            Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
 
             var characterId = CreateCharacterEntry();
             var entry = characterEntries[characterId.index];

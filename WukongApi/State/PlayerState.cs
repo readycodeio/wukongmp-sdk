@@ -57,7 +57,7 @@ namespace WukongApi.State
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
-            Logging.LogDebug($"Assigning team ID {teamId} to player");
+            Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
         }
 
