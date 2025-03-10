@@ -29,7 +29,7 @@ namespace WukongApi
         public static readonly List<int> SkillsWhitelist = new() { 10518 };
 
         public const int CountdownSeconds = 5;
-        public const int MatchmakingSeconds = 30;
+        public const int MatchmakingSeconds = 45;
         public const int RoundSeconds = 30;
         public const int RoundMinutes = 1;
 

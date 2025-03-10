@@ -191,7 +191,16 @@ namespace WukongApi
         private void OnLoadingScreenClose()
         {
             _chatWidget.SetVisibility(true);
-            SetupLobbyUI();
+            if (Photon != null && Photon.PhotonClient.InRoom && Photon.CurrentRoomState.InMatchmaking)
+            {
+                var timeDifference = new DateTime(Photon.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
+                _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
+                SetupMatchmakingUI();
+            }
+            else
+            {
+                SetupLobbyUI();
+            }
         }
 
         private void SetupLobbyUI()
@@ -1019,14 +1028,6 @@ namespace WukongApi
             {
                 Photon.CurrentRoomState.InMatchmaking = true;
                 Photon.CurrentRoomState.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
-                _timerWidget.StartCountdown(0, Constants.MatchmakingSeconds, EndMatchmaking);
-                SetupMatchmakingUI();
-            }
-            else if (Photon.CurrentRoomState.InMatchmaking)
-            {
-                var timeDifference = new DateTime(Photon.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
-                _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
-                SetupMatchmakingUI();
             }
         }
 
@@ -1036,6 +1037,7 @@ namespace WukongApi
             {
                 Photon.CurrentRoomState.InMatchmaking = false;
             }
+            _timerWidget.StopCountdown();
             SetupLobbyUI();
         }
 
