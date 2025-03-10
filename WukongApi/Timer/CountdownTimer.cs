@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Timers;
 
-namespace WukongApi
+namespace WukongApi.Timer
 {
     public class CountdownTimer
     {
         private int _remainingSeconds;
         private int _totalSeconds;
-        private readonly Timer _timer;
+        private readonly System.Timers.Timer _timer;
         private Action _callback;
 
         public event Action<int, int> OnTick;
-        //public event Action OnFinished;
 
         public CountdownTimer(int minutes, int seconds)
         {
             _totalSeconds = minutes * 60 + seconds;
             _remainingSeconds = _totalSeconds;
-            _timer = new Timer(1000);
+            _timer = new System.Timers.Timer(1000);
             _timer.Elapsed += TimerElapsed;
         }
 
@@ -37,7 +36,6 @@ namespace WukongApi
             else
             {
                 Stop();
-                //OnFinished?.Invoke();
                 _callback?.Invoke();
             }
         }
