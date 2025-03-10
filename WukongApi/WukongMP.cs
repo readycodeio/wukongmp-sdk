@@ -220,7 +220,7 @@ namespace WukongApi
 
         private void StartPvP()
         {
-            _timerWidget.SetVisibility(false);
+            _timerWidget.StopCountdown();
             _gameMessageWidget.SetVisibility(false);
             _countdownWidget.StopCountdown();
             Photon.StartPvP();
@@ -228,7 +228,7 @@ namespace WukongApi
 
         public void StartRound()
         {
-            _timerWidget.StartRoundCountdown(1, 30, OnRoundEnded);
+            StartRoundCountdown();
         }
 
         private void OnRoundEnded()
@@ -422,12 +422,28 @@ namespace WukongApi
             Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
-            ;
+            Photon.OnStartTimer += (timerKind, endTicks) => Utils.TryRunOnGameThread(() => OnStartTimer(timerKind, endTicks));
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
             Photon.StartClient();
+        }
+
+        private void OnStartTimer(TimerKind timerKind, long endTicks)
+        {
+            var timeDifference = new DateTime(endTicks, DateTimeKind.Utc) - DateTime.UtcNow;
+            switch (timerKind)
+            {
+                case TimerKind.Countdown:
+                    _countdownWidget.StartLobbyCountdown(timeDifference.Seconds, StartPvP);
+                    break;
+                case TimerKind.Round:
+                    _timerWidget.StartCountdown(timeDifference.Minutes, timeDifference.Seconds, OnRoundEnded);
+                    break;
+                case TimerKind.Matchmaking:
+                    break;
+            }
         }
 
         private void ExitPhantomRush(int playerId)
@@ -677,10 +693,9 @@ namespace WukongApi
                 if (Photon.ConnectedPlayers.Count > 0 && readyCount == (Photon.ConnectedPlayers.Count + 1))
                 {
                     // all players are ready
-                    _countdownWidget.StartLobbyCountdown(5, StartPvP);
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
+                    StartLobbyCountdown();
                 }
-
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
             else
@@ -688,6 +703,26 @@ namespace WukongApi
                 _countdownWidget.StopCountdown();
                 _gameMessageWidget.SetMainText(Texts.InMultiplayer);
                 _lobbyStatusWidget.SetReadyCount(readyCount);
+            }
+        }
+
+        private void StartLobbyCountdown()
+        {
+            if (Photon.IsMasterClient)
+            {
+                _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, StartPvP);
+                var endTicks = DateTime.UtcNow.AddSeconds(Constants.CountdownSeconds).Ticks;
+                Photon.SendStartTimer(TimerKind.Countdown, endTicks);
+            }
+        }
+
+        private void StartRoundCountdown()
+        {
+            if (Photon.IsMasterClient)
+            {
+                _timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
+                var endTicks = DateTime.UtcNow.AddMinutes(Constants.RoundMinutes).AddSeconds(Constants.RoundSeconds).Ticks;
+                Photon.SendStartTimer(TimerKind.Round, endTicks);
             }
         }
 

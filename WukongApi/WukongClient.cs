@@ -16,6 +16,7 @@ using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
+using WukongApi.Timer;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -53,6 +54,7 @@ namespace WukongApi
         public event Action<int> OnExitPhantomRush;
         public event Action<int, int, ImmobilizeActionType, bool> OnHandleImmobilize;
         public event Action<int, int> OnTargetSet;
+        public event Action<TimerKind, long> OnStartTimer;
 
         public WukongChatter WukongChat { get; private set; }
         public LobbyManager LobbyManager { get; private set; }
@@ -223,6 +225,11 @@ namespace WukongApi
                     var phantomRushPlayerId = (int)photonEvent.CustomData;
                     OnExitPhantomRush?.Invoke(phantomRushPlayerId);
                     break;
+                case 15:
+                    // timer changed
+                    var timerData = (TimerData)photonEvent.CustomData;
+                    OnStartTimer?.Invoke(timerData.TimerKind, timerData.TimerEndTicks);
+                    break;
             }
         }
 
@@ -391,6 +398,7 @@ namespace WukongApi
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
             PhotonPeer.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
+            PhotonPeer.RegisterType(typeof(TimerData), 245, TimerData.Serialize, TimerData.Deserialize);
 
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
@@ -660,6 +668,13 @@ namespace WukongApi
         {
             const byte eventCode = 14;
             PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendStartTimer(TimerKind timerKind, long endTicks)
+        {
+            const byte eventCode = 15;
+            var evData = new TimerData(timerKind, endTicks);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)

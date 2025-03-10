@@ -28,6 +28,11 @@ namespace WukongApi
         public const int DrawTeamId = 9999;
         public static readonly List<int> SkillsWhitelist = new() { 10518 };
 
+        public const int CountdownSeconds = 5;
+        public const int MatchmakingSeconds = 30;
+        public const int RoundSeconds = 30;
+        public const int RoundMinutes = 1;
+
         public const string UiManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";

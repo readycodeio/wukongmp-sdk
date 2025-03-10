@@ -17,12 +17,12 @@ namespace WukongApi.UI
             _gameWidget?.CallFunctionByNameWithArguments($"SetText {minutes} {seconds}", true);
         }
 
-        public void StartRoundCountdown(int minutes, int seconds, Action onFinishedCallback)
+        public void StartCountdown(int minutes, int seconds, Action onFinishedCallback)
         {
             SetText(minutes, seconds);
             SetVisibility(true);
             _countdownTimer.SetTime(minutes, seconds);
-            _countdownTimer.Start(() => { onFinishedCallback(); StopCountdown(); });
+            _countdownTimer.Start(() => { StopCountdown(); onFinishedCallback(); });
         }
 
         public void StopCountdown()
