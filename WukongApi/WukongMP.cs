@@ -1047,7 +1047,7 @@ namespace WukongApi
 
             if (team1Count - team2Count > 1)
             {
-                Photon.SwitchTeam();
+                Photon.SwitchTeam(true);
             }
         }
 
