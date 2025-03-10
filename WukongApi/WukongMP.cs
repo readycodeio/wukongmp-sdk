@@ -6,6 +6,7 @@ using b1.BGW;
 using b1.ECS;
 using BtlB1;
 using BtlShare;
+using CommB1;
 using CSharpModBase;
 using HarmonyLib;
 using Photon.Realtime;
@@ -202,6 +203,15 @@ namespace WukongApi
             _lobbyStatusWidget.SetVisibility(true);
         }
 
+        private void SetupMatchmakingUI()
+        {
+            _gameMessageWidget.SetVisibility(true);
+            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Texts.MatchmakingInProgress);
+            _gameMessageWidget.SetThirdText("");
+            _lobbyStatusWidget.SetVisibility(true);
+        }
+
         public void DumpPlayerState()
         {
             // dump player state to console for me
@@ -354,7 +364,7 @@ namespace WukongApi
 
         private bool InitPhotonAndConnectToChat()
         {
-            Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(p), "SpawnCloneForPlayer"); });
+            Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
 
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
                 return false;
@@ -997,6 +1007,36 @@ namespace WukongApi
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
             SetPlayerTeam();
+            SetupMatchmaking();
+        }
+
+        private void SetupMatchmaking()
+        {
+            if (Photon.CurrentRoomState.GameMode == GameMode.Private)
+                return;
+
+            if (Photon.IsMasterClient)
+            {
+                Photon.CurrentRoomState.InMatchmaking = true;
+                Photon.CurrentRoomState.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
+                _timerWidget.StartCountdown(0, Constants.MatchmakingSeconds, EndMatchmaking);
+                SetupMatchmakingUI();
+            }
+            else if (Photon.CurrentRoomState.InMatchmaking)
+            {
+                var timeDifference = new DateTime(Photon.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
+                _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
+                SetupMatchmakingUI();
+            }
+        }
+
+        private void EndMatchmaking()
+        {
+            if (Photon.IsMasterClient)
+            {
+                Photon.CurrentRoomState.InMatchmaking = false;
+            }
+            SetupLobbyUI();
         }
 
         private void SetPlayerTeam()
@@ -1027,7 +1067,7 @@ namespace WukongApi
             // when joining game, spawn all players already in room
             foreach (var player in Photon.GetOtherPlayersInRoom())
             {
-                GameLoopPatch.QueueOnGameThread(() => SpawnCloneForPlayer(player), "SpawnCloneForPlayer");
+                GameLoopPatch.QueueOnGameThread(() => AddPlayer(player), "AddPlayer");
             }
         }
 
@@ -1055,14 +1095,32 @@ namespace WukongApi
             BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), oldPawn.ToEntity());
         }
 
-        private void SpawnCloneForPlayer(Player player)
+        private void AddPlayer(Player player)
+        {
+            var playerState = SpawnCloneForPlayer(player);
+
+            if (playerState != null)
+            {
+                CreateMarkerForPlayer(playerState); // 3D marker above player
+                Photon.RegisterPlayer(playerState);
+                UpdateConnectedCount();
+                _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
+
+                if (Photon.AllConnectedPlayers.Count() == Photon.PhotonClient.CurrentRoom.MaxPlayers)
+                {
+                    EndMatchmaking();
+                }
+            }
+        }
+
+        private PlayerState SpawnCloneForPlayer(Player player)
         {
             var id = player.ActorNumber;
 
             if (Photon.ConnectedPlayers.ContainsKey(id))
             {
                 Logging.LogError($"Player already exists: {id}");
-                return;
+                return null;
             }
 
             var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
@@ -1086,7 +1144,7 @@ namespace WukongApi
             if (@class is null)
             {
                 Logging.LogDebug("Class is null");
-                return;
+                return null;
             }
 
             var oldController = GameUtils.GetPlayerController();
@@ -1153,12 +1211,7 @@ namespace WukongApi
                 unitCommDesc.CameraLockDist = 10000;
             }
 
-            // create 3D marker
-            CreateMarkerForPlayer(playerState);
-
-            Photon.RegisterPlayer(playerState);
-            UpdateConnectedCount();
-            _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId);
+            return playerState;
         }
 
         private void CreateMarkerForPlayer(PlayerState playerState)

@@ -29,6 +29,18 @@ namespace WukongApi.State
             set => SetProperty(nameof(RoundsTotal), value);
         }
 
+        public bool InMatchmaking
+        {
+            get => GetProperty<bool>(nameof(InMatchmaking));
+            set => SetProperty(nameof(InMatchmaking), value);
+        }
+
+        public long MatchmakingEndTime
+        {
+            get => GetProperty<long>(nameof(MatchmakingEndTime));
+            set => SetProperty(nameof(MatchmakingEndTime), value);
+        }
+
         public IEnumerable<int> RoundWinners
         {
             get

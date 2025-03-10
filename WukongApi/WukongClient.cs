@@ -104,7 +104,7 @@ namespace WukongApi
 
         public void SwitchReadyState()
         {
-            if (PhotonClient.InRoom && !InPvP)
+            if (PhotonClient.InRoom && !InPvP && !CurrentRoomState.InMatchmaking)
             {
                 var isReady = LocalPlayerState.IsReadyForPvP;
                 SetReadyState(!isReady);
@@ -114,7 +114,7 @@ namespace WukongApi
 
         public void SwitchTeam()
         {
-            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !InPvP)
+            if (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !InPvP && !CurrentRoomState.InMatchmaking)
             {
                 var teamId = (LocalPlayerState.TeamId == Constants.AvailableTeamIds[0]) ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
