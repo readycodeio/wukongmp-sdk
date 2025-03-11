@@ -1038,9 +1038,13 @@ namespace WukongApi
             }
             else if (Photon.CurrentRoomState.InPvP)
             {
+                Logging.LogDebug("Setting IsSpectator to true");
                 Photon.CachePlayerProperty(nameof(PlayerState.IsSpectator), true);
+                Logging.LogDebug("Setting cached properties");
                 Photon.SetCachedPlayerProperties();
+                Logging.LogDebug("Entering free camera");
                 FreeCameraManager.EnterFreeCameraMode();
+                Logging.LogDebug("Disabling visiblity");
                 SetPlayerVisibility(Photon.LocalPlayerState, false);
             }
         }
@@ -1158,6 +1162,7 @@ namespace WukongApi
 
         private void SetPlayerVisibility(PlayerState playerState, bool visible)
         {
+            Logging.LogDebug("Setting player {PlayerName} visibility to: {Visiblity}", playerState.NickName, visible);
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.Pawn.SetActorEnableCollision(visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
