@@ -200,6 +200,11 @@ namespace WukongApi
                     _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
                     SetupMatchmakingUI();
                 }
+                else if (Photon.LocalPlayerState.IsSpectator)
+                {
+                    Logging.LogDebug("Entering free camera");
+                    FreeCameraManager.EnterFreeCameraMode();
+                }
                 else
                 {
                     SetupLobbyUI();
@@ -1042,8 +1047,6 @@ namespace WukongApi
                 Photon.CachePlayerProperty(nameof(PlayerState.IsSpectator), true);
                 Logging.LogDebug("Setting cached properties");
                 Photon.SetCachedPlayerProperties();
-                Logging.LogDebug("Entering free camera");
-                FreeCameraManager.EnterFreeCameraMode();
                 Logging.LogDebug("Disabling visiblity");
                 SetPlayerVisibility(Photon.LocalPlayerState, false);
             }
