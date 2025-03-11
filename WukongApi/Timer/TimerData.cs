@@ -29,7 +29,7 @@ namespace WukongApi.Timer
 
             var longBytes = new byte[8];
             inStream.Read(longBytes, 0, 8);
-            var timerEndTicks = BitConverter.ToInt32(longBytes, 0);
+            var timerEndTicks = BitConverter.ToInt64(longBytes, 0);
 
             return new TimerData(timerKind, timerEndTicks);
         }
