@@ -33,7 +33,7 @@ public class Logger : IDisposable
     {
         var logEntry = new
         {
-            Timestamp = DateTime.UtcNow.ToString("o"),
+            TimeGenerated = DateTime.UtcNow.ToString("o"),
             Level = level,
             MessageTemplate = messageTemplate,
             Properties = properties,
