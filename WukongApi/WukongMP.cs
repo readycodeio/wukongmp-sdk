@@ -31,6 +31,7 @@ namespace WukongApi
         public WukongClient Photon { get; private set; }
 
         private FVector _savedPosition;
+        private bool _isAfterLoadingScreen;
 
         private readonly ChatWidget _chatWidget = new();
         private readonly TimerWidget _timerWidget = new();
@@ -190,15 +191,19 @@ namespace WukongApi
         private void OnLoadingScreenClose()
         {
             _chatWidget.SetVisibility(true);
-            if (Photon != null && Photon.PhotonClient.InRoom && Photon.CurrentRoomState.InMatchmaking)
+            if (Photon != null && Photon.PhotonClient.InRoom)
             {
-                var timeDifference = new DateTime(Photon.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
-                _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
-                SetupMatchmakingUI();
-            }
-            else
-            {
-                SetupLobbyUI();
+                _isAfterLoadingScreen = true;
+                if (Photon.CurrentRoomState.InMatchmaking)
+                {
+                    var timeDifference = new DateTime(Photon.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
+                    _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
+                    SetupMatchmakingUI();
+                }
+                else
+                {
+                    SetupLobbyUI();
+                }
             }
         }
 
@@ -236,16 +241,11 @@ namespace WukongApi
             return Photon != null && Photon.Ready && Photon.PhotonClient.InRoom;
         }
 
-        private void StartPvP()
+        public void StartRound()
         {
             _timerWidget.StopCountdown();
             _gameMessageWidget.SetVisibility(false);
             _countdownWidget.StopCountdown();
-            Photon.StartPvP();
-        }
-
-        public void StartRound()
-        {
             StartRoundCountdown();
         }
 
@@ -465,7 +465,7 @@ namespace WukongApi
             switch (timerKind)
             {
                 case TimerKind.Countdown:
-                    _countdownWidget.StartLobbyCountdown(timeDifference.Seconds, StartPvP);
+                    _countdownWidget.StartLobbyCountdown(timeDifference.Seconds, Photon.StartPvP);
                     break;
                 case TimerKind.Round:
                     _timerWidget.StartCountdown(timeDifference.Minutes, timeDifference.Seconds, OnRoundEnded);
@@ -739,7 +739,7 @@ namespace WukongApi
         {
             if (Photon.IsMasterClient)
             {
-                _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, StartPvP);
+                _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Photon.StartPvP);
                 var endTicks = DateTime.UtcNow.AddSeconds(Constants.CountdownSeconds).Ticks;
                 Photon.SendStartTimer(TimerKind.Countdown, endTicks);
             }
@@ -1064,7 +1064,10 @@ namespace WukongApi
                 Photon.CurrentRoomState.InMatchmaking = false;
             }
             _timerWidget.StopCountdown();
-            SetupLobbyUI();
+            if (_isAfterLoadingScreen)
+            {
+                SetupLobbyUI();
+            }
         }
 
         private void SetPlayerTeam()
