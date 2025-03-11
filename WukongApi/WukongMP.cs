@@ -1024,6 +1024,7 @@ namespace WukongApi
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
             DisablePlayerSkills();
+            DisablePlayerInteraction();
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
             SetPlayerTeam();
@@ -1087,6 +1088,17 @@ namespace WukongApi
             {
                 events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInVigorSkill);
                 events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantCastFaBao);
+                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract);
+            }
+        }
+
+        private void DisablePlayerInteraction()
+        {
+            var player = GameUtils.GetBguPlayerCharacterCs();
+            var events = BUS_EventCollectionCS.Get(player);
+            if (events != null)
+            {
+                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract);
             }
         }
 
