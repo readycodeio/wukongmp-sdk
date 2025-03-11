@@ -681,7 +681,9 @@ namespace WukongApi
         {
             const byte eventCode = 15;
             var evData = new TimerData(timerKind, endTicks);
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs{
+                Receivers = ReceiverGroup.All
+            }, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)

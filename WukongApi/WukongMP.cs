@@ -466,6 +466,7 @@ namespace WukongApi
 
         private void OnStartTimer(TimerKind timerKind, long endTicks)
         {
+            Logging.LogDebug("OnTimerStart: current time {CurrentTime}, end time: {EndTime} = {Ticks} ticks", DateTime.UtcNow, new DateTime(endTicks, DateTimeKind.Utc), endTicks);
             var timeDifference = new DateTime(endTicks, DateTimeKind.Utc) - DateTime.UtcNow;
             switch (timerKind)
             {
@@ -744,8 +745,9 @@ namespace WukongApi
         {
             if (Photon.IsMasterClient)
             {
-                _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Photon.StartPvP);
+                //_countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Photon.StartPvP);
                 var endTicks = DateTime.UtcNow.AddSeconds(Constants.CountdownSeconds).Ticks;
+                Logging.LogDebug("Sending timer start: current time {CurrentTime}, end time: {EndTime} = {Ticks} ticks", DateTime.UtcNow, DateTime.UtcNow.AddSeconds(Constants.CountdownSeconds), endTicks);
                 Photon.SendStartTimer(TimerKind.Countdown, endTicks);
             }
         }
@@ -754,8 +756,10 @@ namespace WukongApi
         {
             if (Photon.IsMasterClient)
             {
-                _timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
-                var endTicks = DateTime.UtcNow.AddMinutes(Constants.RoundMinutes).AddSeconds(Constants.RoundSeconds).Ticks;
+                //_timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
+                var endTime = DateTime.UtcNow.AddMinutes(Constants.RoundMinutes).AddSeconds(Constants.RoundSeconds);
+                var endTicks = endTime.Ticks;
+                Logging.LogDebug("Sending timer start: current time {CurrentTime}, end time: {EndTime} = {Ticks} ticks", DateTime.UtcNow, endTime, endTicks);
                 Photon.SendStartTimer(TimerKind.Round, endTicks);
             }
         }
