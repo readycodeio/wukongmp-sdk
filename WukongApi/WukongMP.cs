@@ -1160,7 +1160,6 @@ namespace WukongApi
         {
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.Pawn.SetActorEnableCollision(visible);
-            playerState.Pawn.SetActorTickEnabled(visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
         }
 
