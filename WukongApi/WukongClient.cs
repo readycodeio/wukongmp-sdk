@@ -29,7 +29,6 @@ namespace WukongApi
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isExit;
-        public bool InPvP { get; private set; }
 
         protected int PhotonId => PhotonClient.LocalPlayer.ActorNumber;
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
@@ -68,6 +67,9 @@ namespace WukongApi
         public IEnumerable<PlayerState> AllConnectedPlayers
             => ConnectedPlayers.Values.Append(LocalPlayerState);
 
+        public IEnumerable<PlayerState> AllPvPPlayers
+            => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [LocalPlayerState] : []);
+
         private readonly List<WukongClientClone> _photonClones = new();
 
         public void RegisterPlayer(PlayerState state)
@@ -102,9 +104,14 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
         }
 
+        public void SetIsSpectatorState(bool isSpectator)
+        {
+            CachePlayerProperty(nameof(PlayerState.IsSpectator), isSpectator);
+        }
+
         public void SwitchReadyState()
         {
-            if (PhotonClient.InRoom && !InPvP && !CurrentRoomState.InMatchmaking)
+            if (PhotonClient.InRoom && !CurrentRoomState.InPvP && !CurrentRoomState.InMatchmaking)
             {
                 var isReady = LocalPlayerState.IsReadyForPvP;
                 SetReadyState(!isReady);
@@ -114,7 +121,7 @@ namespace WukongApi
 
         public void SwitchTeam(bool force = false)
         {
-            if (force || (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !InPvP && !CurrentRoomState.InMatchmaking))
+            if (force || (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !CurrentRoomState.InPvP && !CurrentRoomState.InMatchmaking))
             {
                 var teamId = (LocalPlayerState.TeamId == Constants.AvailableTeamIds[0]) ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
@@ -261,14 +268,7 @@ namespace WukongApi
                     if (winnerTeamId == Constants.DrawTeamId)
                         return;
 
-                    var winner = AllConnectedPlayers.FirstOrDefault(x => x.TeamId == winnerTeamId);
-                    if (winner is null)
-                    {
-                        Logging.LogError("No winner found.");
-                        return;
-                    }
-
-                    if (winner.TeamId == LocalPlayerState.TeamId)
+                    if (winnerTeamId == LocalPlayerState.TeamId)
                     {
                         GameUtils.PlayBossDefeatedSound();
                     }
@@ -291,6 +291,7 @@ namespace WukongApi
                         WukongMP.Instance.EndTurnament(winnerTeamId);
                         ExitPvP();
                         SetReadyState(false);
+                        SetIsSpectatorState(false);
                     });
 
                     break;
@@ -332,13 +333,13 @@ namespace WukongApi
 
         public void CheckRoundEndCondition()
         {
-            if (!IsMasterClient || !InPvP)
+            if (!IsMasterClient || !CurrentRoomState.InPvP)
             {
                 return;
             }
 
             // check if all players but one are dead
-            var players = AllConnectedPlayers.ToList();
+            var players = AllPvPPlayers.ToList();
             var alivePlayers = players.Where(p => !p.IsDead).ToList();
             if (alivePlayers.Count == 0)
             {
@@ -358,19 +359,25 @@ namespace WukongApi
 
         private void EnterPvP()
         {
-            InPvP = true;
             if (IsMasterClient)
             {
-                PhotonClient.CurrentRoom.IsOpen = false;
+                CurrentRoomState.InPvP = true;
+                if (CurrentRoomState.GameMode == GameMode.XvX)
+                {
+                    PhotonClient.CurrentRoom.IsOpen = false;
+                }
             }
         }
 
         private void ExitPvP()
         {
-            InPvP = false;
             if (IsMasterClient)
             {
-                PhotonClient.CurrentRoom.IsOpen = true;
+                CurrentRoomState.InPvP = false;
+                if (CurrentRoomState.GameMode == GameMode.XvX)
+                {
+                    PhotonClient.CurrentRoom.IsOpen = true;
+                }
             }
         }
 

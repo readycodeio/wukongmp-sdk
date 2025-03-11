@@ -6,7 +6,6 @@ using b1.BGW;
 using b1.ECS;
 using BtlB1;
 using BtlShare;
-using CommB1;
 using CSharpModBase;
 using HarmonyLib;
 using Photon.Realtime;
@@ -324,6 +323,17 @@ namespace WukongApi
         {
             Logging.LogDebug("End turnament");
             SetupLobbyUI();
+            ShowAllPlayers();
+            FreeCameraManager.LeaveFreeCameraMode();
+        }
+
+        private void ShowAllPlayers()
+        {
+            foreach (var playerState in Photon.AllConnectedPlayers)
+            {
+                SetPlayerVisibility(playerState, true);
+                _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
+            }
         }
 
         private void WakeUpMonster(string guid)
@@ -510,8 +520,13 @@ namespace WukongApi
                 var teamName = GameUtils.GetTeamName(playerState.TeamId);
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             }
+            UpdatePlayerTeamUI(playerState);
+        }
 
-            _lobbyStatusWidget.UpdatePlayerTeam(playerState, teamId);
+        private void UpdatePlayerTeamUI(PlayerState playerState)
+        {
+            if (!playerState.IsSpectator)
+                _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
         }
 
         private void KillPlayer(int playerId)
@@ -1004,6 +1019,7 @@ namespace WukongApi
 
         private void OnJoinedRoomCallback()
         {
+            SetupSpectator();
             SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
@@ -1012,6 +1028,21 @@ namespace WukongApi
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
             SetPlayerTeam();
             SetupMatchmaking();
+        }
+
+        private void SetupSpectator()
+        {
+            if (Photon.IsMasterClient)
+            {
+                Photon.CurrentRoomState.InPvP = false;
+            }
+            else if (Photon.CurrentRoomState.InPvP)
+            {
+                Photon.CachePlayerProperty(nameof(PlayerState.IsSpectator), true);
+                Photon.SetCachedPlayerProperties();
+                FreeCameraManager.EnterFreeCameraMode();
+                SetPlayerVisibility(Photon.LocalPlayerState, false);
+            }
         }
 
         private void SetupMatchmaking()
@@ -1101,13 +1132,22 @@ namespace WukongApi
                 CreateMarkerForPlayer(playerState); // 3D marker above player
                 Photon.RegisterPlayer(playerState);
                 UpdateConnectedCount();
-                _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
+                SetPlayerVisibility(playerState, !playerState.IsSpectator);
+                UpdatePlayerTeamUI(playerState);
 
                 if (Photon.AllConnectedPlayers.Count() == Photon.PhotonClient.CurrentRoom.MaxPlayers)
                 {
                     EndMatchmaking();
                 }
             }
+        }
+
+        private void SetPlayerVisibility(PlayerState playerState, bool visible)
+        {
+            playerState.Pawn.SetActorHiddenInGame(!visible);
+            playerState.Pawn.SetActorEnableCollision(visible);
+            playerState.Pawn.SetActorTickEnabled(visible);
+            playerState.MarkerActor?.SetActorHiddenInGame(!visible);
         }
 
         private PlayerState SpawnCloneForPlayer(Player player)

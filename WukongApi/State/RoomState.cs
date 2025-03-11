@@ -41,6 +41,12 @@ namespace WukongApi.State
             set => SetProperty(nameof(MatchmakingEndTime), value);
         }
 
+        public bool InPvP
+        {
+            get => GetProperty<bool>(nameof(InPvP));
+            set => SetProperty(nameof(InPvP), value);
+        }
+
         public IEnumerable<int> RoundWinners
         {
             get

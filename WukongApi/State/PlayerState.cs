@@ -36,6 +36,7 @@ namespace WukongApi.State
         public string NickName { get; set; }
         public bool RunImmobilizePatches { get; set; }
         public bool RecivedPhantomRushExit { get; set; }
+        public bool IsSpectator { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {
