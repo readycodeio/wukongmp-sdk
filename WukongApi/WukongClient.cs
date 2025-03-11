@@ -68,7 +68,7 @@ namespace WukongApi
             => ConnectedPlayers.Values.Append(LocalPlayerState);
 
         public IEnumerable<PlayerState> AllPvPPlayers
-            => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [LocalPlayerState] : []);
+            => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
         private readonly List<WukongClientClone> _photonClones = new();
 
