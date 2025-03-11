@@ -719,7 +719,7 @@ namespace WukongApi
 
             if (isReady)
             {
-                if (Photon.ConnectedPlayers.Count > 0 && readyCount == (Photon.ConnectedPlayers.Count + 1))
+                if (readyCount == (Photon.ConnectedPlayers.Count + 1))
                 {
                     // all players are ready
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
