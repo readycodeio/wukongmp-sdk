@@ -915,9 +915,23 @@ namespace WukongApi
             Logging.LogError("Create room failed: {Message}", message);
         }
 
-        protected static int GetTeamIdForPlayer()
+        protected int GetTeamIdForPlayer()
         {
-            return Constants.AvailableTeamIds[0];
+            Dictionary<int, int> teamsCount = [];
+            var team1Id = Constants.AvailableTeamIds[0];
+            var team2Id = Constants.AvailableTeamIds[1];
+            teamsCount[team1Id] = 0;
+            teamsCount[team2Id] = 0;
+
+            foreach (var player in GetOtherPlayersInRoom())
+            {
+                if (player.CustomProperties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
+                {
+                    teamsCount[(int)assignedTeamId]++;
+                }
+            }
+
+            return teamsCount[team1Id] > teamsCount[team2Id] ? team2Id : team1Id;
         }
 
         public virtual void OnJoinedRoom()

@@ -1027,7 +1027,6 @@ namespace WukongApi
             DisablePlayerInteraction();
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
-            SetPlayerTeam();
             SetupMatchmaking();
         }
 
