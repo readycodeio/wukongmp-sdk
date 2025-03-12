@@ -567,7 +567,7 @@ namespace WukongApi
 
         public void SetHudVisibility(bool visible)
         {
-            GenABattleMain.SetBattleMainTempHide(visible, "TickUpdateUIShowState");
+            GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
         }
 
         private void ResetCooldown(APawn playerPawn)
