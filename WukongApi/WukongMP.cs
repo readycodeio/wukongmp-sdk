@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using b1.ECS;
+using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
@@ -203,6 +204,7 @@ namespace WukongApi
                 else if (Photon.LocalPlayerState.IsSpectator)
                 {
                     Logging.LogDebug("Entering free camera");
+                    SetHudVisibility(false);
                     FreeCameraManager.EnterFreeCameraMode();
                 }
                 else
@@ -330,6 +332,7 @@ namespace WukongApi
             SetupLobbyUI();
             ShowAllPlayers();
             FreeCameraManager.LeaveFreeCameraMode();
+            SetHudVisibility(true);
         }
 
         private void ShowAllPlayers()
@@ -577,6 +580,11 @@ namespace WukongApi
             var player = GameUtils.GetBguPlayerCharacterCs();
             ResetCooldown(player);
             ResetMana(player);
+        }
+
+        public void SetHudVisibility(bool visible)
+        {
+            GenABattleMain.SetBattleMainTempHide(visible, "TickUpdateUIShowState");
         }
 
         private void ResetCooldown(APawn playerPawn)
