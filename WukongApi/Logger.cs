@@ -16,6 +16,8 @@ public class Logger : IDisposable
     private string _currentLogFile;
     private const long MaxLogFileSize = 5 * 1024 * 1024; // 5 MB
     private volatile bool _isRunning = true;
+    
+    private static Guid SessionId { get; } = Guid.NewGuid();
 
     public static Logger Instance { get; } = new Logger("wukong-mp-logs");
 
@@ -37,10 +39,10 @@ public class Logger : IDisposable
             Level = level,
             MessageTemplate = messageTemplate,
             Properties = properties,
-            ThreadId = Thread.CurrentThread.ManagedThreadId
+            Session = SessionId,
         };
 
-        string logJson = JsonSerializer.Serialize(logEntry);
+        var logJson = JsonSerializer.Serialize(logEntry);
         _logQueue.Enqueue(logJson);
         _logSignal.Set();
     }
