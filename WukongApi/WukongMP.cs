@@ -1131,7 +1131,7 @@ namespace WukongApi
                 CreateMarkerForPlayer(playerState); // 3D marker above player
                 Photon.RegisterPlayer(playerState);
                 UpdateConnectedCount();
-                if (Photon.CurrentRoomState.InPvP)
+                if (Photon.CurrentRoomState.InPvP && !playerState.IsReadyForPvP)
                 {
                     SetPlayerVisibility(playerState, false);
                 }
