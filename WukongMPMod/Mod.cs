@@ -35,7 +35,7 @@ namespace WukongMPMod
             }
 
             _wukongMp.Patch();
-
+#if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
@@ -47,7 +47,7 @@ namespace WukongMPMod
                 Logging.LogDebug("Alt + X");
                 _wukongMp.ResetLocalPlayerCooldown();
             });
-
+#endif
             //Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             //{
             //    Logging.LogDebug("Alt + V");
