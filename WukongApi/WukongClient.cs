@@ -53,6 +53,7 @@ namespace WukongApi
         public event Action<int> OnExitPhantomRush;
         public event Action<int, int, ImmobilizeActionType, bool> OnHandleImmobilize;
         public event Action<int, int> OnTargetSet;
+        public event Action OnMatchmakingEnded;
 
         public WukongChatter WukongChat { get; private set; }
         public LobbyManager LobbyManager { get; private set; }
@@ -230,6 +231,10 @@ namespace WukongApi
                     // exit phantom rush
                     var phantomRushPlayerId = (int)photonEvent.CustomData;
                     OnExitPhantomRush?.Invoke(phantomRushPlayerId);
+                    break;
+                case 15:
+                    // end matchmaking phase
+                    OnMatchmakingEnded?.Invoke();
                     break;
             }
         }
@@ -668,6 +673,15 @@ namespace WukongApi
         {
             const byte eventCode = 14;
             PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendEndMatchmaking()
+        {
+            const byte eventCode = 15;
+            PhotonClient.OpRaiseEvent(eventCode, null, new RaiseEventArgs
+            {
+                Receivers = ReceiverGroup.All
+            }, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)

@@ -459,6 +459,7 @@ namespace WukongApi
             Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
+            Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(() => OnMatchmakingEnded(), "OnMatchmakingEnded");
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -1040,7 +1041,13 @@ namespace WukongApi
             if (Photon.IsMasterClient)
             {
                 Photon.CurrentRoomState.InMatchmaking = false;
+                Photon.SendEndMatchmaking();
             }
+            _timerWidget.StopCountdown();
+        }
+
+        private void OnMatchmakingEnded()
+        {
             _timerWidget.StopCountdown();
             if (_isAfterLoadingScreen)
             {
