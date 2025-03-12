@@ -253,7 +253,7 @@ namespace WukongApi
             _timerWidget.StopCountdown();
             _gameMessageWidget.SetVisibility(false);
             _countdownWidget.StopCountdown();
-            StartRoundCountdown();
+            _timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
         }
 
         private void OnRoundEnded()
@@ -459,29 +459,11 @@ namespace WukongApi
             Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
-            Photon.OnStartTimer += (timerKind, endTicks) => Utils.TryRunOnGameThread(() => OnStartTimer(timerKind, endTicks));
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
             Photon.StartClient();
-        }
-
-        private void OnStartTimer(TimerKind timerKind, long endTicks)
-        {
-            Logging.LogDebug("OnTimerStart: current time {CurrentTime}, end time: {EndTime} = {Ticks} ticks", DateTime.UtcNow, new DateTime(endTicks, DateTimeKind.Utc), endTicks);
-            var timeDifference = new DateTime(endTicks, DateTimeKind.Utc) - DateTime.UtcNow;
-            switch (timerKind)
-            {
-                case TimerKind.Countdown:
-                    _countdownWidget.StartLobbyCountdown(timeDifference.Seconds, Photon.StartPvP);
-                    break;
-                case TimerKind.Round:
-                    _timerWidget.StartCountdown(timeDifference.Minutes, timeDifference.Seconds, OnRoundEnded);
-                    break;
-                case TimerKind.Matchmaking:
-                    break;
-            }
         }
 
         private void ExitPhantomRush(int playerId)
@@ -737,7 +719,7 @@ namespace WukongApi
                 {
                     // all players are ready
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
-                    StartLobbyCountdown();
+                    _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Photon.StartPvP);
                 }
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
@@ -746,29 +728,6 @@ namespace WukongApi
                 _countdownWidget.StopCountdown();
                 _gameMessageWidget.SetMainText(Texts.InMultiplayer);
                 _lobbyStatusWidget.SetReadyCount(readyCount);
-            }
-        }
-
-        private void StartLobbyCountdown()
-        {
-            if (Photon.IsMasterClient)
-            {
-                //_countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Photon.StartPvP);
-                var endTicks = DateTime.UtcNow.AddSeconds(Constants.CountdownSeconds).Ticks;
-                Logging.LogDebug("Sending timer start: current time {CurrentTime}, end time: {EndTime} = {Ticks} ticks", DateTime.UtcNow, DateTime.UtcNow.AddSeconds(Constants.CountdownSeconds), endTicks);
-                Photon.SendStartTimer(TimerKind.Countdown, endTicks);
-            }
-        }
-
-        private void StartRoundCountdown()
-        {
-            if (Photon.IsMasterClient)
-            {
-                //_timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
-                var endTime = DateTime.UtcNow.AddMinutes(Constants.RoundMinutes).AddSeconds(Constants.RoundSeconds);
-                var endTicks = endTime.Ticks;
-                Logging.LogDebug("Sending timer start: current time {CurrentTime}, end time: {EndTime} = {Ticks} ticks", DateTime.UtcNow, endTime, endTicks);
-                Photon.SendStartTimer(TimerKind.Round, endTicks);
             }
         }
 
