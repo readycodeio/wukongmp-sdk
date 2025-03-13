@@ -391,11 +391,11 @@ namespace WukongApi.Patches
                 if (playerState == null)
                     return;
 
-                if ((photon.IsMasterClient || __instance.GetOwner() == photon.LocalPlayerState.Pawn) && !playerState.RecivedPhantomRushExit)
+                if ((photon.IsMasterClient || __instance.GetOwner() == photon.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
                 {
                     Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
                     photon.ExitPhantomRush(playerState.PhotonId);
-                    playerState.RecivedPhantomRushExit = false;
+                    playerState.ReceivedPhantomRushExit = false;
                 }
             }
         }

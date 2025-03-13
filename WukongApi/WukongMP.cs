@@ -478,7 +478,7 @@ namespace WukongApi
 
             Logging.LogDebug("Received exit phantom rush for player {Nickname}", playerState.NickName);
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            playerState.RecivedPhantomRushExit = true;
+            playerState.ReceivedPhantomRushExit = true;
             events?.Evt_RelievePhantomRush.Invoke();
         }
 
@@ -512,6 +512,7 @@ namespace WukongApi
                 var teamName = GameUtils.GetTeamName(playerState.TeamId);
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             }
+
             UpdatePlayerTeamUI(playerState);
         }
 
@@ -722,6 +723,7 @@ namespace WukongApi
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
                     _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Photon.StartPvP);
                 }
+
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
             else
@@ -1043,6 +1045,7 @@ namespace WukongApi
                 Photon.CurrentRoomState.InMatchmaking = false;
                 Photon.SendEndMatchmaking();
             }
+
             _timerWidget.StopCountdown();
         }
 

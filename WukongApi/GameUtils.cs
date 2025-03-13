@@ -31,7 +31,10 @@ namespace WukongApi
 
         public static APawn GetControlledPawn()
         {
-            return UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn();
+            var pawn = UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn();
+            if (pawn == null || pawn.IsDestroyed)
+                return null;
+            return pawn;
         }
 
         public static BGUPlayerCharacterCS GetBguPlayerCharacterCs()
