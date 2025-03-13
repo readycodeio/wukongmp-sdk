@@ -413,10 +413,7 @@ namespace WukongApi
             PhotonClient.AuthValues = CmdLineParams.Instance.Authentication!;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
-                // DEVELOPMENT (Jakub's machine)
-                // AppIdRealtime = "4fefdae2-db02-446c-bd5b-382a8ff41c08",
-                // PRODUCTION
-                AppIdRealtime = "882e235d-5fa3-457a-babb-a08c96da7238",
+                AppIdRealtime = "7aa130eb-9912-4845-b2de-8496a6f0fea7",
                 AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.Udp,
                 EnableProtocolFallback = false,
