@@ -428,7 +428,7 @@ namespace WukongApi.Patches
             var newTargetPlayerState = photon.GetByActor(NewTargetInfo.LockTargetActor);
             if (newTargetPlayerState != null)
             {
-                Logging.LogError("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetPlayerState.NickName);
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetPlayerState.NickName);
                 photon.SendTarget(newTargetPlayerState.PhotonId);
             }
         }
