@@ -284,7 +284,7 @@ namespace WukongApi.Patches
                 ACharacter aCharacter = owner as ACharacter;
                 if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
                 {
-                    Logging.LogError("aCharacter is null or PhantomRush is already active");
+                    Logging.LogDebug("aCharacter is null or PhantomRush is already active");
                     return false;
                 }
                 FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
