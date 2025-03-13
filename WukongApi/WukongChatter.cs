@@ -58,7 +58,7 @@ namespace WukongApi
 
             _chatClient.ConnectUsingSettings(new ChatAppSettings
             {
-                AppIdChat = "d4af67fe-a776-499e-8f56-f169d3db616e",
+                AppIdChat = "7fdefcca-ff84-4499-8f27-7d59bbd9c163",
                 AppVersion = "1.0",
                 FixedRegion = "us",
             });
