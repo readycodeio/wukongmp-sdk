@@ -49,23 +49,25 @@ namespace WukongApi
             new Thread(LoopChat).Start();
         }
 
-        public void InitializeChat(string userName)
+        public void InitializeChat(string userId)
         {
-            CmdLineParams.Instance.ChatAuthentication.UserId = userName;
+            var authValues = new AuthenticationValues(userId)
+            {
+                AuthType = CustomAuthenticationType.Custom,
+            };
+            authValues.AddAuthParameter("access_token", CmdLineParams.Instance.AccessToken);
 
             _chatClient = new ChatClient(this)
             {
-                AuthValues = CmdLineParams.Instance.ChatAuthentication
+                AuthValues = authValues
             };
 
             _chatClient.ConnectUsingSettings(new ChatAppSettings
             {
-                AppIdChat = "7fdefcca-ff84-4499-8f27-7d59bbd9c163",
+                AppIdChat = Constants.ChatAppId,
                 AppVersion = "1.0",
                 FixedRegion = "us",
             });
-
-            Logging.LogDebug("You are: {UserName}", userName);
         }
 
         public void Disconnect()
@@ -259,7 +261,10 @@ namespace WukongApi
             SendServerMessage($"{NickName} has joined!");
         }
 
-        public void OnCustomAuthenticationFailed(string debugMessage) { }
+        public void OnCustomAuthenticationFailed(string debugMessage)
+        {
+            Logging.LogError("Chat authentication failed: {Message}", debugMessage);
+        }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data) { }
 
@@ -281,7 +286,10 @@ namespace WukongApi
             }
         }
 
-        public void OnPrivateMessage(string sender, object message, string channelName) { }
+        public void OnPrivateMessage(string sender, object message, string channelName)
+        {
+            Logging.LogDebug("Private message \"{Message}\" received from \"{Sender}\" on channel \"{Channel}\"", message, sender, channelName);
+        }
 
         public void OnStatusUpdate(string user, int status, bool gotMessage, object message) { }
 

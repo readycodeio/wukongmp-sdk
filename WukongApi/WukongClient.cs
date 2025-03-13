@@ -413,7 +413,7 @@ namespace WukongApi
             PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
-                AppIdRealtime = "7aa130eb-9912-4845-b2de-8496a6f0fea7",
+                AppIdRealtime = Constants.RealtimeAppId,
                 AuthMode = AuthModeOption.AuthOnce,
                 Protocol = ConnectionProtocol.Udp,
                 EnableProtocolFallback = false,
@@ -476,7 +476,7 @@ namespace WukongApi
 
             foreach (var player in PhotonClient.CurrentRoom.Players)
             {
-                Logging.LogDebug("Other player: {ActorNumber} {UserId} local: {IsLocal}", player.Value.ActorNumber, player.Value.UserId, player.Value.IsLocal);
+                Logging.LogDebug("Other player: {ActorNumber} {Nickname} local: {IsLocal}", player.Value.ActorNumber, player.Value.NickName, player.Value.IsLocal);
                 if (!player.Value.IsLocal)
                     yield return player.Value;
             }
@@ -947,7 +947,7 @@ namespace WukongApi
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
             _joinedRoomCallback?.Invoke();
-            WukongChat.InitializeChat(PhotonClient.NickName);
+            WukongChat.InitializeChat(PhotonClient.UserId);
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)

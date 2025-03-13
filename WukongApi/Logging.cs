@@ -27,23 +27,32 @@ namespace WukongApi
                 properties[propertyNames[i]] = values[i];
             }
 
-#if DEBUG
-            var interpolatedMessage = messageTemplate;
-            foreach (var (prop, val) in properties)
+#if !DEBUG
+            if (level == LogLevel.Error)
             {
-                interpolatedMessage = interpolatedMessage.Replace("{" + prop + "}", val?.ToString() ?? "null");
-            }
+#endif
+                var interpolatedMessage = messageTemplate;
+                foreach (var (prop, val) in properties)
+                {
+                    interpolatedMessage = interpolatedMessage.Replace("{" + prop + "}", val?.ToString() ?? "null");
+                }
 
-            Console.ForegroundColor = level switch
-            {
-                LogLevel.Debug => ConsoleColor.Gray,
-                LogLevel.Info => ConsoleColor.White,
-                LogLevel.Warning => ConsoleColor.Yellow,
-                LogLevel.Error => ConsoleColor.Red,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            Console.WriteLine($"[{level}] {interpolatedMessage}");
-            Console.ForegroundColor = ConsoleColor.White;
+#if !DEBUG
+                Console.ForegroundColor = ConsoleColor.Red;
+#else
+                Console.ForegroundColor = level switch
+                {
+                    LogLevel.Debug => ConsoleColor.Gray,
+                    LogLevel.Info => ConsoleColor.White,
+                    LogLevel.Warning => ConsoleColor.Yellow,
+                    LogLevel.Error => ConsoleColor.Red,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+#endif
+                Console.WriteLine($"[{level}] {interpolatedMessage}");
+                Console.ForegroundColor = ConsoleColor.White;
+#if !DEBUG
+            }
 #endif
 
             Logger.Instance.Log(messageTemplate, properties, level.ToString());

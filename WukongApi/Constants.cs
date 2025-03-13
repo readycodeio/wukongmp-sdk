@@ -43,8 +43,10 @@ namespace WukongApi
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
         public const string JsonCompactSerializationRegex = @"[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_\.+\/=]*";
 
-        public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new(new[]
-        {
+        public const string RealtimeAppId = "7aa130eb-9912-4845-b2de-8496a6f0fea7";
+        public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
+
+        public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             EBGUAttrFloat.HpMax,
             EBGUAttrFloat.MpMax,
             EBGUAttrFloat.B1StunMax,
@@ -186,9 +188,9 @@ namespace WukongApi
             EBGUAttrFloat.StaminaCostMultiper,
             // EBGUAttrFloat.FabaoEnergy,
             // EBGUAttrFloat.VigorEnergy,
-            EBGUAttrFloat.CommDropAddition,
+            EBGUAttrFloat.CommDropAddition
             // EBGUAttrFloat.AttrFloatMax,
             // EBGUAttrFloat.EnumMax,
-        });
+        ]);
     }
 }

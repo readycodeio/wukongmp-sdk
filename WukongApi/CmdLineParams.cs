@@ -18,7 +18,7 @@ public class CmdLineParams
     public string RoomName { get; private set; }
     public int PlayersPerTeam { get; private set; }
     public AuthenticationValues RealtimeAuthentication { get; }
-    public Photon.Chat.AuthenticationValues ChatAuthentication { get; }
+    public string AccessToken { get; }
 
     public bool ShouldEnableMultiplayer => RealtimeAuthentication is not null;
 
@@ -30,10 +30,9 @@ public class CmdLineParams
 
         var tokenMatch = Regex.Match(cmd, $"""-access_token "?({Constants.JsonCompactSerializationRegex})"?""");
 
-        string accessToken;
         if (tokenMatch.Success)
         {
-            accessToken = tokenMatch.Groups[1].Value;
+            AccessToken = tokenMatch.Groups[1].Value;
         }
         else
         {
@@ -81,15 +80,9 @@ public class CmdLineParams
         {
             AuthType = CustomAuthenticationType.Custom
         };
-        RealtimeAuthentication.AddAuthParameter("access_token", accessToken);
+        RealtimeAuthentication.AddAuthParameter("access_token", AccessToken);
 
-        ChatAuthentication = new Photon.Chat.AuthenticationValues
-        {
-            AuthType = Photon.Chat.CustomAuthenticationType.Custom
-        };
-        ChatAuthentication.AddAuthParameter("access_token", accessToken);
-
-        if (RealtimeAuthentication == null || ChatAuthentication == null)
+        if (RealtimeAuthentication == null)
         {
             Logging.LogError("Failed to parse command line arguments.");
         }
