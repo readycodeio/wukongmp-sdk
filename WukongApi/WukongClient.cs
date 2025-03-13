@@ -410,7 +410,7 @@ namespace WukongApi
 
             OnBeforeJoinRoom?.Invoke();
 
-            PhotonClient.AuthValues = CmdLineParams.Instance.Authentication!;
+            PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
                 AppIdRealtime = "7aa130eb-9912-4845-b2de-8496a6f0fea7",

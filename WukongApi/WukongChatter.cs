@@ -51,9 +51,11 @@ namespace WukongApi
 
         public void InitializeChat(string userName)
         {
+            CmdLineParams.Instance.ChatAuthentication.UserId = userName;
+
             _chatClient = new ChatClient(this)
             {
-                AuthValues = new AuthenticationValues(userName)
+                AuthValues = CmdLineParams.Instance.ChatAuthentication
             };
 
             _chatClient.ConnectUsingSettings(new ChatAppSettings
