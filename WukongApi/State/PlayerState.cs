@@ -10,8 +10,34 @@ namespace WukongApi.State
     public class PlayerState : CharacterState
     {
         public int PhotonId { get; }
-        public APawn Pawn { get; set; }
-        public AActor MarkerActor { get; set; }
+
+        private APawn _pawn;
+
+        public APawn Pawn
+        {
+            get
+            {
+                if (_pawn is null || _pawn.IsDestroyed)
+                    return null;
+
+                return _pawn;
+            }
+            set => _pawn = value;
+        }
+
+        private AActor _markerActor;
+
+        public AActor MarkerActor
+        {
+            get
+            {
+                if (_markerActor is null || _markerActor.IsDestroyed)
+                    return null;
+
+                return _markerActor;
+            }
+            set => _markerActor = value;
+        }
 
         #region Animation
 
@@ -35,7 +61,8 @@ namespace WukongApi.State
         public bool IsReadyForPvP { get; set; }
         public string NickName { get; set; }
         public bool RunImmobilizePatches { get; set; }
-        public bool RecivedPhantomRushExit { get; set; }
+        public bool ReceivedPhantomRushExit { get; set; }
+        public bool IsSpectator { get; set; }
 
         public PlayerState(int photonId, APawn pawn, int teamId)
         {
@@ -57,7 +84,7 @@ namespace WukongApi.State
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
-            Logging.LogDebug($"Assigning team ID {teamId} to player");
+            Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
         }
 
@@ -65,9 +92,16 @@ namespace WukongApi.State
         {
             if (MarkerActor != null)
             {
-                var bguCharacterCS = Pawn as BGUCharacterCS;
-                var markerHeight = bguCharacterCS.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
-                MarkerActor.SetActorLocation(Pawn.GetActorLocation() + new FVector(0,0, markerHeight), false, out _, true);
+                var bguCharacterCs = Pawn as BGUCharacterCS;
+
+                if (bguCharacterCs == null)
+                {
+                    Logging.LogError("Failed to cast pawn to BGUCharacterCS");
+                    return;
+                }
+
+                var markerHeight = bguCharacterCs.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
+                MarkerActor.SetActorLocation(Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
             }
         }
 

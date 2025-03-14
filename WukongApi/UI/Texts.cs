@@ -8,5 +8,11 @@
         public const string PressToSwitchTeam = "Press L to switch team";
         public const string YouAreReady = "You are ready";
         public const string StartingGame = "Starting PvP match";
+        public const string MatchmakingInProgress = "Matchmaking in progress...";
+
+
+        public const string QuickJoin = "Quick Join";
+        public const string NewCharacter = "New Character";
+        public const string SelectCharacter = "Select Character";
     }
 }

@@ -68,7 +68,7 @@ namespace WukongApi
             {
                 if (actor.GetMonster() != null)
                 {
-                    Logging.LogDebug($"Discovered monster: {BGU_DataUtil.GetActorGuid(actor.GetMonster())}");
+                    Logging.LogDebug("Discovered monster: {Guid}", BGU_DataUtil.GetActorGuid(actor.GetMonster()));
                     SyncMonsterAndNotify(WukongMP.Instance.Photon, actor); // Neutral monsters
                 }
             }
@@ -89,13 +89,13 @@ namespace WukongApi
             if (monsterState == null)
             {
                 monsterState = new MonsterState(guid, tamer);
-                Logging.LogDebug($"Registering local monster in Photon: {guid}");
+                Logging.LogDebug("Registering local monster in Photon: {MonsterGuid}", guid);
                 photon.SyncedMonsters.Add(guid, monsterState);
             }
             // sanity check guid
             else if (monsterState.Guid != guid)
             {
-                Logging.LogError($"Guid mismatch: {monsterState.Guid} {guid}");
+                Logging.LogError("Guid mismatch: {Guid1} != {Guid2}", monsterState.Guid, guid);
                 return;
             }
 
@@ -134,7 +134,7 @@ namespace WukongApi
                 events.Evt_PlayMontageCallback += (reason, montage, state) =>
                 {
                     var montagePath = montage.GetPathName();
-                    Logging.LogDebug($"Monster montage callback: {monsterState.Guid} {reason} {montagePath} {state}");
+                    Logging.LogDebug("Monster montage callback: {Guid} {Reason} {Montage} {State}", monsterState.Guid, reason, montagePath, state);
                     photon.SendMonsterMontageCallback(monsterState.Guid, reason, montagePath, state);
                 };
 

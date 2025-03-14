@@ -17,17 +17,22 @@ namespace WukongApi.UI
             _gameWidget = BlueprintUIUtils.GetWidget(_name);
             if (_gameWidget != null)
             {
-                Logging.LogDebug($"{_name} widget initialized!");
+                Logging.LogDebug("{Name} widget initialized!", _name);
             }
             else
             {
-                Logging.LogError($"Cannot initialize {_name} widget");
+                Logging.LogError("Cannot initialize {Name} widget", _name);
             }
         }
 
         public void SetVisibility(bool visible)
         {
             _gameWidget?.CallFunctionByNameWithArguments($"SetWidgetVisibility {visible}", true);
+        }
+
+        public void Deinitialize()
+        {
+            _gameWidget = null;
         }
     }
 }

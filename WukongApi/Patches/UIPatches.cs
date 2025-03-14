@@ -8,6 +8,7 @@ using GSE.GSUI;
 using HarmonyLib;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
+using WukongApi.UI;
 
 namespace WukongApi.Patches
 {
@@ -58,25 +59,46 @@ namespace WukongApi.Patches
             return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
         }
 
-        public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName)
+        public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
         {
-            if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+            for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
             {
-                ___StartGameBtnList[0].SetTxtName(FText.FromString("Quick Join"));
-            }
-            else
-            {
-                ___StartGameBtnList[0].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-            }
-            ___StartGameBtnList[1].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-            ___StartGameBtnList[2].SetTxtName(FText.FromString("Select Character"));
+                DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
 
-            // Clear OnGSButtonUnFocused event form the first button.
-            var type = ___StartGameBtnList[0].GetBUIButton().GetType();
-            var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
-            if (field != null)
-            {
-                field.SetValue(___StartGameBtnList[0].GetBUIButton(), null);
+                Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
+
+                if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
+                {
+                    Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
+                    if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+                    {
+                        ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
+                    }
+                    else
+                    {
+                        ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    }
+
+                    // Clear OnGSButtonUnFocused event form the continue game button.
+                    var type = ___StartGameBtnList[j].GetBUIButton().GetType();
+                    var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
+                    field?.SetValue(___StartGameBtnList[j].GetBUIButton(), null);
+                }
+                else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
+                {
+                    Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
+                }
+                else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
+                {
+                    Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
+                }
+                else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
+                {
+                    Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
             }
 
             __instance.GSAnimKeyToState("GSAKBContinueBtn", "CBtnFocus");
@@ -112,10 +134,10 @@ namespace WukongApi.Patches
     {
         public static void Prefix(int NewPageID, string Source, ChangeReason Reason = null, object exParam = null)
         {
-            Logging.LogDebug($"ShowPage: {NewPageID}, {Source}, {Reason}, {exParam}");
+            Logging.LogDebug("ShowPage: {NewPageID}, {Source}, {Reason}, {ExParam}", NewPageID, Source, Reason, exParam);
         }
     }
-     
+
     [HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnChangeSaveTipsStat

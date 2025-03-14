@@ -8,12 +8,12 @@
         {
             if (_gameWidget != null)
             {
-                Logging.LogDebug($"Calling AddMessage function with message {message} from {sender}");
+                Logging.LogDebug("Calling AddMessage function with message {Message} from {Sender}", message, sender);
                 _gameWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
             }
             else
             {
-                Logging.LogError("Chat widget not initialized");
+                Logging.LogError("Could not add message. Chat widget not initialized");
             }
         }
 
@@ -25,7 +25,7 @@
                 var message = _gameWidget.ToolTipText.ToString();
                 if (message.Length > 0)
                 {
-                    Logging.LogDebug($"Got message: {message} in GetSentMessage function");
+                    Logging.LogDebug("Got message: {Message} in GetSentMessage function", message);
                 }
 
                 return message;
@@ -39,6 +39,14 @@
             if (_gameWidget != null)
             {
                 _gameWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
+            }
+        }
+
+        public void ClearMessages()
+        {
+            if (_gameWidget != null)
+            {
+                _gameWidget.CallFunctionByNameWithArguments("ClearMessages", true);
             }
         }
     }

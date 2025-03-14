@@ -6,7 +6,7 @@ namespace WukongApi.API
 {
     internal class SkillsConfig
     {
-        private static readonly Dictionary<SkillKind, SkillData> Configurations = new Dictionary<SkillKind, SkillData>
+        private static readonly Dictionary<SkillKind, SkillData> Configurations = new()
         {
             { SkillKind.None, new SkillData(EInputActionType.None, 0, -1, -1) },
             { SkillKind.RingOfFire, new SkillData(EInputActionType.UseSkillByType, 10520, 250, -1) },
@@ -22,7 +22,7 @@ namespace WukongApi.API
                 return value;
             }
 
-            Logging.LogError($"Skill data for '{skillKind}' not found.");
+            Logging.LogError("Skill data for '{Kind}' not found.", skillKind);
             return Configurations.First().Value;
         }
     }

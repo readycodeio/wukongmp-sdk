@@ -66,7 +66,7 @@ namespace WukongApi.Patches
                 // local player (client)
                 if (photon.LocalPlayerState.Hp <= -80000)
                 {
-                    Logging.LogWarning($"Would set hp to {photon.LocalPlayerState.Hp}  but will not");
+                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", photon.LocalPlayerState.Hp);
                     return;
                 }
 
@@ -81,14 +81,14 @@ namespace WukongApi.Patches
 
                 if (!set.Equals(photon.LocalPlayerState.Hp, Constants.FloatComparisonTolerance))
                 {
-                    Logging.LogWarning($"Attempted to set player {photon.LocalPlayerState.NickName} HP to {photon.LocalPlayerState.Hp}, instead set to {set}");
+                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", photon.LocalPlayerState.NickName, photon.LocalPlayerState.Hp, set);
                     photon.CachePlayerProperty(nameof(PlayerState.Hp), set);
                 }
 
                 if (photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                    Logging.LogDebug($"Applying unit dead for player {photon.LocalPlayerState.PhotonId}");
+                    Logging.LogDebug("Applying unit dead for player {PlayerId}", photon.LocalPlayerState.PhotonId);
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
@@ -107,7 +107,7 @@ namespace WukongApi.Patches
 
                     if (playerState.Hp <= -80000)
                     {
-                        Logging.LogWarning($"Would set hp to {playerState.Hp} but will not");
+                        Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", playerState.Hp);
                         return;
                     }
 
@@ -116,19 +116,19 @@ namespace WukongApi.Patches
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogDebug($"(remote) Hp change from {__instance.GetFloatValue(EBGUAttrFloat.Hp)} to {playerState.Hp}");
+                    Logging.LogDebug("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
                     var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
                     if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
                     {
-                        Logging.LogWarning($"Attempted to set player {playerState.NickName} HP to {playerState.Hp}, instead set to {set}");
+                        Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", playerState.NickName, playerState.Hp, set);
                     }
 
                     if (playerState.IsDead)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
-                        Logging.LogDebug($"Applying unit dead for player {playerState.PhotonId}");
+                        Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PhotonId);
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
@@ -259,7 +259,7 @@ namespace WukongApi.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogDebug($"Also updating {calc.finalVal} because of {AttrID}");
+                    Logging.LogDebug("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     photon.LocalPlayerState.Attributes[calc.finalVal] = finalVal;

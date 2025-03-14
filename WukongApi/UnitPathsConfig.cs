@@ -7,7 +7,7 @@ namespace WukongApi
 {
     internal static class UnitPathsConfig
     {
-        private static readonly Dictionary<string, string> Configurations = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> Configurations = new()
         {
             { CharacterKind.WolfSentinel, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_01.TAMER_gycy_lang_01_C" },
             { CharacterKind.WolfSoldier, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_lang_07a.TAMER_gycy_lang_07a_C" },
@@ -101,7 +101,7 @@ namespace WukongApi
                 return value;
             }
 
-            Logging.LogWarning($"Unit path for '{unitName}' not found. Spawning {Configurations.First().Key} instead");
+            Logging.LogWarning("Unit path for '{UnitName}' not found. Spawning '{SpawnedUnitName}' instead", unitName, Configurations.First().Key);
             return Configurations.First().Value;
         }
     }

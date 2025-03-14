@@ -26,7 +26,7 @@ namespace WukongApi
 
         private void PlacePlayers(FVector center, float radius)
         {
-            var playerStates = _wukongClient.AllConnectedPlayers.ToList();
+            var playerStates = _wukongClient.AllPvPPlayers.ToList();
 
             var teamsIds = playerStates.Select(playerState => playerState.TeamId).Distinct().ToList();
             var teamsCount = teamsIds.Count;
@@ -72,6 +72,13 @@ namespace WukongApi
             // resolve tournament
             var winnersSoFar = _wukongClient.CurrentRoomState.RoundWinners.ToList();
             var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
+
+            // check if only one team is present
+            if (_wukongClient.AllPvPPlayers.Select(p => p.TeamId).Distinct().Count() == 1)
+            {
+                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, _wukongClient.LocalPlayerState.TeamId);
+                return;
+            }
 
             // check if any team won more than half of the rounds
             var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _wukongClient.CurrentRoomState.RoundsTotal / 2);

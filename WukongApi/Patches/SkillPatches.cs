@@ -166,7 +166,7 @@ namespace WukongApi.Patches
                 var immobilizedPlayerState = photon.GetByActor(item);
                 if (immobilizedPlayerState != null && castingPlayerState != null)
                 {
-                    Logging.LogDebug($"Broadcasting trigger immobilize for player {immobilizedPlayerState.NickName}");
+                    Logging.LogDebug("Broadcasting trigger immobilize for player {Nickname}", immobilizedPlayerState.NickName);
                     photon.BroadcastImmobilize(immobilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
                 }
             }
@@ -270,13 +270,13 @@ namespace WukongApi.Patches
                 AActor owner = __instance.GetOwner();
                 if (owner == null)
                 {
-                    Logging.LogError($"Owner is null");
+                    Logging.LogError("Owner is null");
                     return false;
                 }
                 MethodInfo GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
                 if (GetActualUseConfigIDMethod == null)
                 {
-                    Logging.LogError($"GetActualUseConfigID method info is null");
+                    Logging.LogError("GetActualUseConfigID method info is null");
                     return false;
                 }
                 BUS_GSEventCollection BUSEventCollection = BUS_EventCollectionCS.Get(owner);
@@ -284,13 +284,13 @@ namespace WukongApi.Patches
                 ACharacter aCharacter = owner as ACharacter;
                 if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
                 {
-                    Logging.LogError($"aCharacter is null or PhantomRush is already active");
+                    Logging.LogDebug("aCharacter is null or PhantomRush is already active");
                     return false;
                 }
                 FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
                 if (phantomRushSkillConfigDesc == null)
                 {
-                    Logging.LogError($"phantomRushSkillConfigDesc is null");
+                    Logging.LogError("phantomRushSkillConfigDesc is null");
                     return false;
                 }
                 __instance.PreloadAssetMgr.TryGetCachedResourceObj<BGWDataAsset_PhantomRushRelatedeSkillConfig>(phantomRushSkillConfigDesc.PhantomRushRelatedSkillConfigPath, ELoadResourceType.AsyncLoadAndCache, EAssetPriority.Medium);
@@ -332,7 +332,7 @@ namespace WukongApi.Patches
                 BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill, IsRemove: true);
                 if (___SkillInstsData.GetLastSkillCastResult() != 0)
                 {
-                    Logging.LogError($"GetLastSkillCastResult was not success");
+                    Logging.LogError("GetLastSkillCastResult was not success");
                     return false;
                 }
                 BUSEventCollection.Evt_ClearAbnormalState.Invoke(new HashSet<EAbnormalStateType>
@@ -370,7 +370,7 @@ namespace WukongApi.Patches
                 var photon = WukongMP.Instance.Photon;
                 if (__instance.GetOwner() == photon.LocalPlayerState.Pawn)
                 {
-                    Logging.LogDebug($"Sending phantom rush with direction: {PhantomRushDir}");
+                    Logging.LogDebug("Sending phantom rush with direction: {Direction}", PhantomRushDir);
                     photon.SendPhantomRush(PhantomRushDir);
                 }
             }
@@ -391,11 +391,11 @@ namespace WukongApi.Patches
                 if (playerState == null)
                     return;
 
-                if ((photon.IsMasterClient || __instance.GetOwner() == photon.LocalPlayerState.Pawn) && !playerState.RecivedPhantomRushExit)
+                if ((photon.IsMasterClient || __instance.GetOwner() == photon.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
                 {
-                    Logging.LogDebug($"Broadcasting phantom rush exit for player {playerState.NickName}");
+                    Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
                     photon.ExitPhantomRush(playerState.PhotonId);
-                    playerState.RecivedPhantomRushExit = false;
+                    playerState.ReceivedPhantomRushExit = false;
                 }
             }
         }

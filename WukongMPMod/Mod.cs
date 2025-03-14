@@ -1,5 +1,6 @@
 ﻿using CSharpModBase;
 using CSharpModBase.Input;
+using System.Diagnostics;
 using WukongApi;
 
 namespace WukongMPMod
@@ -15,18 +16,26 @@ namespace WukongMPMod
         public void Init()
         {
             Logging.LogDebug("Init WukongMP mod");
+            Logging.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             _wukongMp = WukongMP.Instance;
+
+            if (_wukongMp.IsInitialized)
+            {
+                Logging.LogDebug("WukongMP is already initialized");
+                return;
+            }
+
             _wukongMp.Init();
 
-            if (!_wukongMp.Photon.ShouldEnableMultiplayer)
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
             {
                 Logging.LogDebug("Multiplayer is disabled");
                 return;
             }
 
             _wukongMp.Patch();
-
+#if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
@@ -38,7 +47,7 @@ namespace WukongMPMod
                 Logging.LogDebug("Alt + X");
                 _wukongMp.ResetLocalPlayerCooldown();
             });
-
+#endif
             //Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
             //{
             //    Logging.LogDebug("Alt + V");
@@ -62,6 +71,8 @@ namespace WukongMPMod
         {
             Logging.LogDebug("DeInit");
             _wukongMp.Unpatch();
+            _wukongMp.DeInit();
+            Logger.Instance.Dispose();
         }
     }
 }

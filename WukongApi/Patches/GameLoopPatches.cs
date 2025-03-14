@@ -8,14 +8,13 @@ namespace WukongApi.Patches
 {
     public static class GameLoopPatch
     {
-        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string Name)>> CustomTickGroupActionQueues
-            = new ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action, string)>>();
+        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string Name)>> CustomTickGroupActionQueues = new();
 
         public static void QueueOnGameThread(Action action, string name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
         {
             if (name != null)
             {
-                Logging.LogDebug($"Enqueueing action: {name}");
+                Logging.LogDebug("Enqueueing action: {Action}", name);
             }
 
             CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>(new[] { (action, name) }), (_, queue) =>
@@ -77,15 +76,12 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug($"Processing {item.Name} action for tick group {mask}");
+                    Logging.LogDebug("Processing {Action} action for tick group {Mask}", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError($"-------------- EXCEPTION IN {mask} patch -------------");
-                    Logging.LogError(e.Message);
-                    Logging.LogError(e.StackTrace);
-                    Logging.LogError("----------------------------------------------------------------");
+                    Logging.LogError("EXCEPTION IN {Mask} patch: {Message} {StackTrace}", mask, e.Message, e.StackTrace);
                 }
             }
         }
@@ -118,15 +114,12 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug($"Processing {item.Name} action for tick group {mask} (EntityManager)");
+                    Logging.LogDebug("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError($"-------------- EXCEPTION IN {mask} patch (EntityManager) -------------");
-                    Logging.LogError(e.Message);
-                    Logging.LogError(e.StackTrace);
-                    Logging.LogError("-----------------------------------------------------------------------");
+                    Logging.LogError("EXCEPTION IN {Mask} patch (EntityManager): {Message} {StackTrace}", mask, e.Message, e.StackTrace);
                 }
             }
         }

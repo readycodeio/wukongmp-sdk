@@ -31,7 +31,10 @@ namespace WukongApi
 
         public static APawn GetControlledPawn()
         {
-            return UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld()).GetControlledPawn();
+            var pawn = UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn();
+            if (pawn == null || pawn.IsDestroyed)
+                return null;
+            return pawn;
         }
 
         public static BGUPlayerCharacterCS GetBguPlayerCharacterCs()
@@ -49,7 +52,7 @@ namespace WukongApi
             var actors = world.GetAllActorsOfClass<BUTamerActor>();
             foreach (var actor in actors)
             {
-                Logging.LogDebug($"Found actor: {actor.GetName()}");
+                Logging.LogDebug("Found actor: {ActorName}", actor.GetName());
 
                 var monster = actor.GetMonster();
                 if (monster != null)
@@ -78,6 +81,11 @@ namespace WukongApi
 
         public static string GetSaveDirectory()
         {
+            if (CmdLineParams.Instance.ModFolderOverride is not null)
+            {
+                return FPaths.Combine(CmdLineParams.Instance.ModFolderOverride, "WukongMPMod");
+            }
+
             return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", "WukongMPMod");
         }
 
@@ -156,15 +164,18 @@ namespace WukongApi
                     text = FX.FXPathByDBC;
                     break;
                 }
+
                 if (FX.ResID == ownerResID)
                 {
                     text = FX.FXPathByDBC;
                 }
             }
+
             if (string.IsNullOrEmpty(text))
             {
                 return null;
             }
+
             return BGW_PreloadAssetMgr.Get(context).TryGetCachedResourceObj<UBGWDataAsset>(text, ELoadResourceType.AsyncLoadAndCache);
         }
 
@@ -188,18 +199,22 @@ namespace WukongApi
             {
                 immobilizeConfigInstance.BeginEffects.Add(new FSpellEffectForData(beginEffect));
             }
+
             foreach (FSpellEffect endEffect in cachedImmobilizeConfigDesc.EndEffects)
             {
                 immobilizeConfigInstance.EndEffects.Add(new FSpellEffectForData(endEffect));
             }
+
             foreach (FSpellEffect breakEffect in cachedImmobilizeConfigDesc.BreakEffects)
             {
                 immobilizeConfigInstance.BreakEffects.Add(new FSpellEffectForData(breakEffect));
             }
+
             foreach (FSpellEffect deadEffect in cachedImmobilizeConfigDesc.DeadEffects)
             {
                 immobilizeConfigInstance.DeadEffects.Add(new FSpellEffectForData(deadEffect));
             }
+
             return immobilizeConfigInstance;
         }
 

@@ -7,7 +7,7 @@ namespace WukongApi.State
 {
     public class EquipmentState
     {
-        private readonly Dictionary<EquipPosition, int> _equipments = new Dictionary<EquipPosition, int>();
+        private readonly Dictionary<EquipPosition, int> _equipments = new();
 
         public EquipmentState() { }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using WukongApi.Timer;
 
 namespace WukongApi.UI
 {
@@ -9,7 +10,7 @@ namespace WukongApi.UI
             _countdownTimer.OnTick += (int _, int seconds) => SetText(seconds);
         }
 
-        private readonly CountdownTimer _countdownTimer = new CountdownTimer(1, 5);
+        private readonly CountdownTimer _countdownTimer = new(1, 5);
 
         public void SetText(int seconds)
         {
@@ -21,7 +22,7 @@ namespace WukongApi.UI
             SetText(seconds);
             SetVisibility(true);
             _countdownTimer.SetTime(0, seconds);
-            _countdownTimer.Start(() => { callback(); StopCountdown(); });
+            _countdownTimer.Start(() => { StopCountdown(); callback(); });
         }
 
         public void StopCountdown()

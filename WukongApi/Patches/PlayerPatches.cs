@@ -307,34 +307,18 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (photon.IsMasterClient)
+            if (photon.IsMasterClient && photon.CurrentRoomState.InPvP)
             {
                 if (Attacker != owner)
                 {
                     var attackerPlayerState = photon.GetByActor(Attacker);
                     if (attackerPlayerState != null)
                     {
-                        photon.WukongChat.SendChatMessage(WukongChatter.ServerChannelName, $"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
+                        photon.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
                     }
                 }
 
-                // check if all players but one are dead
-                var players = photon.AllConnectedPlayers.ToList();
-                var alivePlayers = players.Where(p => !p.IsDead).ToList();
-                if (alivePlayers.Count == 0)
-                {
-                    Logging.LogWarning($"All players are dead, ending round");
-                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
-                    return;
-                }
-
-                var alivePlayersTeams = alivePlayers.Select(p => p.TeamId).Distinct().Count();
-                if (alivePlayersTeams == 1)
-                {
-                    Logging.LogWarning($"One team with alive players, ending round");
-                    var winner = players.First(p => !p.IsDead);
-                    Task.Run(async () => await photon.LobbyManager.EndRoundAsync(winner.TeamId));
-                }
+                photon.CheckRoundEndCondition();               
             }
         }
 
@@ -444,7 +428,7 @@ namespace WukongApi.Patches
             var newTargetPlayerState = photon.GetByActor(NewTargetInfo.LockTargetActor);
             if (newTargetPlayerState != null)
             {
-                Logging.LogError($"New target sent for {photon.LocalPlayerState.NickName} as: {newTargetPlayerState.NickName}");
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetPlayerState.NickName);
                 photon.SendTarget(newTargetPlayerState.PhotonId);
             }
         }
