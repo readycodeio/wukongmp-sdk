@@ -11,7 +11,7 @@ namespace WukongApi.Patches
     {
         public static void Postfix(Exception e)
         {
-            Logging.LogError("EXCEPTION: {Message} {StackTrace}", e.Message, e.StackTrace);
+            Logging.LogException(e);
         }
     }
 }

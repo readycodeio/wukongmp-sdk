@@ -245,7 +245,7 @@ namespace WukongApi
 
         public bool ShouldRunConnectedPatches()
         {
-            return Photon != null && Photon.Ready && Photon.PhotonClient.InRoom;
+            return Photon is { Ready: true } && Photon.PhotonClient.InRoom;
         }
 
         public void StartRound()

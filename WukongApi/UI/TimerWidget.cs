@@ -5,9 +5,9 @@ namespace WukongApi.UI
 {
     public class TimerWidget : GameWidgetBase
     {
-        public TimerWidget() : base(Constants.TimerWidgetName) 
+        public TimerWidget() : base(Constants.TimerWidgetName)
         {
-            _countdownTimer.OnTick += (int minutes, int seconds) => SetText(minutes, seconds);
+            _countdownTimer.OnTick += SetText;
         }
 
         private readonly CountdownTimer _countdownTimer = new(1, 5);
@@ -22,7 +22,11 @@ namespace WukongApi.UI
             SetText(minutes, seconds);
             SetVisibility(true);
             _countdownTimer.SetTime(minutes, seconds);
-            _countdownTimer.Start(() => { StopCountdown(); onFinishedCallback(); });
+            _countdownTimer.Start(() =>
+            {
+                StopCountdown();
+                onFinishedCallback();
+            });
         }
 
         public void StopCountdown()

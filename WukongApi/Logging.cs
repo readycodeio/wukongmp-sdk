@@ -87,7 +87,11 @@ namespace WukongApi
 
         public static void LogException(Exception ex)
         {
-            Log(LogLevel.Error, "Exception: {Message}.\nStack trace:\n{Trace}", ex.Message, ex.StackTrace);
+            while (ex != null)
+            {
+                Log(LogLevel.Error, "Exception: {Message}.\nStack trace:\n{Trace}", ex.Message, ex.StackTrace);
+                ex = ex.InnerException;
+            }
         }
     }
 }

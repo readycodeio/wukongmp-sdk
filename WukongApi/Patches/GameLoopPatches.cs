@@ -81,7 +81,7 @@ namespace WukongApi.Patches
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError("EXCEPTION IN {Mask} patch: {Message} {StackTrace}", mask, e.Message, e.StackTrace);
+                    Logging.LogException(e);
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace WukongApi.Patches
                 }
                 catch (Exception e)
                 {
-                    Logging.LogError("EXCEPTION IN {Mask} patch (EntityManager): {Message} {StackTrace}", mask, e.Message, e.StackTrace);
+                    Logging.LogException(e);
                 }
             }
         }

@@ -96,10 +96,7 @@ namespace WukongApi.Patches
             }
             catch (Exception e)
             {
-                // print and ignore
-                Logging.LogError("Error in PatchTamerLoad.Postfix");
-                Logging.LogError(e.Message);
-                Logging.LogError(e.StackTrace);
+                Logging.LogException(e);
             }
         }
     }
