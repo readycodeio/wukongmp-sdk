@@ -14,5 +14,7 @@
         {
             SetText("");
         }
+
+        protected override void PostInitialize() { }
     }
 }

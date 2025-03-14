@@ -30,5 +30,7 @@ namespace WukongApi.UI
             SetVisibility(false);
             _countdownTimer.Reset();
         }
+
+        protected override void PostInitialize() { }
     }
 }

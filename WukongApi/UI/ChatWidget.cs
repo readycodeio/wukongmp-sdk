@@ -2,18 +2,35 @@
 {
     public class ChatWidget : GameWidgetBase
     {
+        private int _messageId;
+
         public ChatWidget() : base(Constants.ChatWidgetName) { }
 
-        public void AddMessage(bool isServerMesssage, string sender, string message)
+        protected override void PostInitialize()
+        {
+            ClearMessages();
+        }
+
+        public int AddMessage(bool isServerMesssage, string sender, string message)
         {
             if (_gameWidget != null)
             {
                 Logging.LogDebug("Calling AddMessage function with message {Message} from {Sender}", message, sender);
-                _gameWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {sender} {message}", true);
+                _gameWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMesssage} {++_messageId} {sender} {message}", true);
+                return _messageId;
             }
             else
             {
                 Logging.LogError("Could not add message. Chat widget not initialized");
+                return -1;
+            }
+        }
+
+        public void RemoveMessage(int messageId)
+        {
+            if (_gameWidget != null)
+            {
+                _gameWidget.CallFunctionByNameWithArguments($"RemoveMessage {messageId}", true);
             }
         }
 
@@ -47,6 +64,7 @@
             if (_gameWidget != null)
             {
                 _gameWidget.CallFunctionByNameWithArguments("ClearMessages", true);
+                _messageId = 0;
             }
         }
     }

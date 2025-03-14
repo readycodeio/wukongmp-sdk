@@ -26,5 +26,7 @@
             SetSecondText("");
             SetThirdText("");
         }
+
+        protected override void PostInitialize() { }
     }
 }

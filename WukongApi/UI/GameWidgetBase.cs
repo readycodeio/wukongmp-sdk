@@ -18,12 +18,15 @@ namespace WukongApi.UI
             if (_gameWidget != null)
             {
                 Logging.LogDebug("{Name} widget initialized!", _name);
+                PostInitialize();
             }
             else
             {
                 Logging.LogError("Cannot initialize {Name} widget", _name);
             }
         }
+
+        protected abstract void PostInitialize();
 
         public void SetVisibility(bool visible)
         {
