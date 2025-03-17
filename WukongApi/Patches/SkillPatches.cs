@@ -42,6 +42,21 @@ namespace WukongApi.Patches
 
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchDoPoleDrink
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_PoleDrinkComp:DoPoleDrink");
+        }
+
+        public static bool Prefix()
+        {
+            return false;
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchFaBaoSkill
     {
         private static MethodBase TargetMethod()
