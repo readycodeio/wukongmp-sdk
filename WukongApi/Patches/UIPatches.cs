@@ -148,4 +148,25 @@ namespace WukongApi.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchIsShowSettingUiOnly
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var photon = WukongMP.Instance.Photon;
+
+            if (photon.CurrentRoomState.InPvP)
+            {
+                __result = true;
+                return false;
+            }
+
+            return true;
+        }
+    }
 }
