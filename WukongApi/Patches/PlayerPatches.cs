@@ -473,4 +473,17 @@ namespace WukongApi.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(BUS_ParkourMoveCompImpl), "CheckStrideDown")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchCheckStrideDown
+    {
+        public static bool Prefix()
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return false;
+        }
+    }
 }
