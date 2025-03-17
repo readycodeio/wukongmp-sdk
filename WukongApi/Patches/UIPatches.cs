@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using b1;
 using b1.UI.Comm;
+using B1UI.GSSvc;
 using B1UI.GSUI;
 using GSE.GSUI;
 using HarmonyLib;
@@ -167,6 +168,19 @@ namespace WukongApi.Patches
             }
 
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(B1BattleLogicSvc), "UISetGamePaused")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchUISetGamePaused
+    {
+        public static bool Prefix()
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return false;
         }
     }
 }
