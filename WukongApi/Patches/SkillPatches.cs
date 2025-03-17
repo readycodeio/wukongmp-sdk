@@ -16,9 +16,7 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(int SkillID)
         {
-            if (GameUtils.IsSkillWhitelisted(SkillID))
-                return true;
-            return false;
+            return GameUtils.IsSkillWhitelisted(SkillID);
         }
     }
 

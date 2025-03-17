@@ -541,7 +541,7 @@ namespace WukongApi
 
                     var joinArgs = new JoinRandomRoomArgs
                     {
-                        ExpectedMaxPlayers = gameMode == GameMode.XvX ? 2 * playersPerTeam : 10,
+                        ExpectedMaxPlayers = 2 * playersPerTeam,
                         MatchingType = MatchmakingMode.FillRoom,
                         ExpectedCustomRoomProperties = new PhotonHashtable
                         {
@@ -554,7 +554,7 @@ namespace WukongApi
                     break;
                 }
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(gameMode));
             }
         }
 
