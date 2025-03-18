@@ -342,7 +342,7 @@ namespace WukongApi
             var alivePlayers = players.Where(p => !p.IsDead).ToList();
             if (alivePlayers.Count == 0)
             {
-                Logging.LogWarning("All players are dead, ending round");
+                Logging.LogDebug("All players are dead, ending round");
                 Task.Run(async () => await LobbyManager.EndRoundAsync(Constants.DrawTeamId));
                 return;
             }
@@ -350,7 +350,7 @@ namespace WukongApi
             var alivePlayersTeams = alivePlayers.Select(p => p.TeamId).Distinct().Count();
             if (alivePlayersTeams == 1)
             {
-                Logging.LogWarning("One team with alive players, ending round");
+                Logging.LogDebug("One team with alive players, ending round");
                 var winner = players.First(p => !p.IsDead);
                 Task.Run(async () => await LobbyManager.EndRoundAsync(winner.TeamId));
             }
@@ -870,6 +870,11 @@ namespace WukongApi
 
         public void OnDisconnected(DisconnectCause cause)
         {
+            if (cause == DisconnectCause.DisconnectByClientLogic)
+            {
+                Logging.LogDebug("Disconnected: {Cause}", cause);
+            }
+
             Logging.LogWarning("Disconnected: {Cause}", cause);
         }
 
@@ -880,11 +885,9 @@ namespace WukongApi
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
         {
-            Logging.LogDebug("Custom authentication response");
-
             foreach (var kvp in data)
             {
-                Logging.LogDebug("{Key}: {Value}", kvp.Key, kvp.Value);
+                Logging.LogDebug("Custom authentication response {Key}: {Value}", kvp.Key, kvp.Value);
             }
         }
 

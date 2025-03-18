@@ -126,7 +126,7 @@ namespace WukongApi.Patches
             }
             if (BGW_LogUtil.LogIfNull(aBGUCharacter, "CurrentTarget As BGUCharacter is null") || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.AffiliationTypeFilter))
             {
-                Logging.LogError("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
+                Logging.LogDebug("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
                 return false;
             }
             int num = ((cachedImmobilizeConfigDesc.TargetCount <= 0) ? 1 : cachedImmobilizeConfigDesc.TargetCount);
@@ -375,16 +375,15 @@ namespace WukongApi.Patches
                 BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill, IsRemove: true);
                 if (___SkillInstsData.GetLastSkillCastResult() != 0)
                 {
-                    Logging.LogError("GetLastSkillCastResult was not success");
+                    Logging.LogDebug("GetLastSkillCastResult was not success");
                     return false;
                 }
-                BUSEventCollection.Evt_ClearAbnormalState.Invoke(new HashSet<EAbnormalStateType>
-                {
+                BUSEventCollection.Evt_ClearAbnormalState.Invoke([
                     EAbnormalStateType.Abnormal_Burn,
                     EAbnormalStateType.Abnormal_Freeze,
                     EAbnormalStateType.Abnormal_Poison,
                     EAbnormalStateType.Abnormal_Thunder
-                });
+                ]);
                 int phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
                 BUSEventCollection.Evt_SummonSkillCastByPhantomRush.Invoke(phantomRushSummonID, cBI);
                 BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PhantomRush);
