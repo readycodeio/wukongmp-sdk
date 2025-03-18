@@ -48,6 +48,13 @@ namespace WukongApi
                 return;
             }
 
+            BGW_EnhancedInputMgrV2 bGW_EnhancedInputMgrV = BGW_EnhancedInputMgrV2.Get(world);
+            if (bGW_EnhancedInputMgrV.InputModeTracker.InputMode != EGSInputMode.GameOnly)
+            {
+                Logging.LogDebug("[FreeCameraManager] Game is currently not in GameOnly mode");
+                return;
+            }
+
             var cameraLocation = localPlayerCameraManager.GetCameraLocation();
             var cameraRotation = localPlayerCameraManager.GetCameraRotation();
             if (_freeCameraActor.IsNullOrDestroyed())
@@ -62,6 +69,7 @@ namespace WukongApi
                 return;
             }
 
+            Logging.LogDebug("[FreeCameraManager] Entering free camera");
             _freeCameraActor.SetActorHiddenInGame(bNewHidden: false);
             _freeCameraActor.SetActorEnableCollision(bNewActorEnableCollision: true);
             _cacheCameraViewTarget = aBGPPlayerController.GetViewTarget();
@@ -69,8 +77,7 @@ namespace WukongApi
             _freeCameraActor.SetActorLocationAndRotation(cameraLocation, cameraRotation, bSweep: false, out var _, bTeleport: true);
             _freeCameraActor.CallFunctionByNameWithArguments($"SetCameraFOV {_gameFov}", true);
             aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
-            _cachePlayerPawn.DisableInput(aBGPPlayerController);
-            BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.Replay, EGSInputModeChangeReason.Replay);
+            BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.UIAndGame, EGSInputModeChangeReason.Replay);
             _isInFreeCameraMode = true;
         }
 
@@ -110,14 +117,18 @@ namespace WukongApi
                 aBGPPlayerController.SetViewTargetWithBlend(_cacheCameraViewTarget);
             }
 
-            _cachePlayerPawn.EnableInput(aBGPPlayerController);
-            BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.GameOnly, EGSInputModeChangeReason.Reset);
+            BGW_EnhancedInputMgrV2 bGW_EnhancedInputMgrV = BGW_EnhancedInputMgrV2.Get(world);
+            if (bGW_EnhancedInputMgrV.InputModeTracker.InputMode == EGSInputMode.UIAndGame)
+            {
+                BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.GameOnly, EGSInputModeChangeReason.Reset);
+            }
 
             if (!_freeCameraActor.IsNullOrDestroyed())
             {
                 BGU_UnrealWorldUtil.DestroyActor(_freeCameraActor);
             }
 
+            Logging.LogDebug("[FreeCameraManager] Leaving free camera");
             _freeCameraActor = null;
             _cachePlayerPawn = null;
             _isInFreeCameraMode = false;
