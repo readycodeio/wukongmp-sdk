@@ -259,7 +259,7 @@ namespace WukongApi.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogDebug("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
+                    Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     photon.LocalPlayerState.Attributes[calc.finalVal] = finalVal;

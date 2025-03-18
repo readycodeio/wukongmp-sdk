@@ -1243,7 +1243,7 @@ namespace WukongApi
             {
                 if (player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
                 {
-                    Logging.LogDebug("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
+                    Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
                     playerState.Attributes[attr] = (float)value;
                 }
             }

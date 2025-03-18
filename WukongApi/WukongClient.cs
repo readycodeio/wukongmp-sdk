@@ -778,7 +778,7 @@ namespace WukongApi
             _playerProperties[key] = value;
             if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
             {
-                Logging.LogDebug("Set player property: {Property} = {Value}", key, value);
+                Logging.LogTrace("Set player property: {Property} = {Value}", key, value);
             }
 
             foreach (var clone in _photonClones)
@@ -1029,7 +1029,7 @@ namespace WukongApi
                 // attributes have special treatment
                 if (propertyName.StartsWith(Constants.AttributePrefix))
                 {
-                    Logging.LogDebug("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, id);
+                    Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, id);
 
                     var key = propertyName[Constants.AttributePrefix.Length..];
 
@@ -1048,7 +1048,7 @@ namespace WukongApi
 
                 if (kvp.Value is not (FVector or FRotator or float))
                 {
-                    Logging.LogDebug("Assigning {Property} = {Value} to player {PlayerId}", propertyName, kvp.Value, id);
+                    Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, id);
                 }
 
                 setter(playerState, kvp.Value);
