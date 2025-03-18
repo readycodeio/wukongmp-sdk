@@ -183,4 +183,22 @@ namespace WukongApi.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(BGW_PauseGameMgr), "SetGamePause")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchSetGamePause
+    {
+        public static bool Prefix(EPauseEvent PauseEvent)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            if (PauseEvent == EPauseEvent.OpenUI || PauseEvent == EPauseEvent.TakePhoto)
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
 }
