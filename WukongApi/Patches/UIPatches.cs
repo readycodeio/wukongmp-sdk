@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using b1;
 using b1.UI.Comm;
+using B1UI.GSSvc;
 using B1UI.GSUI;
 using GSE.GSUI;
 using HarmonyLib;
@@ -146,6 +147,58 @@ namespace WukongApi.Patches
         {
             ___RootCon.SetVisibility(ESlateVisibility.Collapsed);
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchIsShowSettingUiOnly
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var photon = WukongMP.Instance.Photon;
+
+            if (photon.CurrentRoomState.InPvP)
+            {
+                __result = true;
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(B1BattleLogicSvc), "UISetGamePaused")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchUISetGamePaused
+    {
+        public static bool Prefix()
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BGW_PauseGameMgr), "SetGamePause")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchSetGamePause
+    {
+        public static bool Prefix(EPauseEvent PauseEvent)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            if (PauseEvent == EPauseEvent.OpenUI || PauseEvent == EPauseEvent.TakePhoto)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

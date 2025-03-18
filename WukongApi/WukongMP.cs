@@ -155,8 +155,6 @@ namespace WukongApi
                 InitializeWidgets();
 
                 Connect();
-
-                SetPlayerTransform(Constants.PvpStartingLocation, FRotator.ZeroRotator);
             }
         }
 
@@ -998,6 +996,7 @@ namespace WukongApi
 
         private void OnJoinedRoomCallback()
         {
+            TeleportPlayerOnStart(Photon.LocalPlayerState.PhotonId);
             SetupSpectator();
             SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
@@ -1007,6 +1006,18 @@ namespace WukongApi
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
             SetupMatchmaking();
+        }
+
+        private void TeleportPlayerOnStart(int playerId)
+        {
+            int maxPlayersCount = Photon.PhotonClient.CurrentRoom.MaxPlayers;
+
+            float angle = (playerId / (float)maxPlayersCount) * 2f * FMath.PI;
+            float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
+            float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
+
+            FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
+            SetPlayerTransform(spawnPosition, FRotator.ZeroRotator);
         }
 
         private void SetupSpectator()
@@ -1243,7 +1254,7 @@ namespace WukongApi
             {
                 if (player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
                 {
-                    Logging.LogDebug("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
+                    Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
                     playerState.Attributes[attr] = (float)value;
                 }
             }

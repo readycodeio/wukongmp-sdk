@@ -40,6 +40,12 @@ namespace WukongApi.Patches
 
             var photon = WukongMP.Instance.Photon;
 
+            if (__instance.Owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchAttrs));
+                return;
+            }
+
             if (photon.IsMasterClient)
             {
                 // master client always has the latest data for himself, but may need to apply it for others
@@ -183,6 +189,12 @@ namespace WukongApi.Patches
 
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
+            
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchHp));
+                return;
+            }
 
             var result = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(AttrID);
 
@@ -259,7 +271,7 @@ namespace WukongApi.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogDebug("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
+                    Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     photon.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
@@ -284,8 +296,14 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (!(Owner is BGUCharacterCS character))
+            if (Owner is not BGUCharacterCS character)
                 return;
+            
+            if (Owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchCharacterAnimation));
+                return;
+            }
 
             var photon = WukongMP.Instance.Photon;
 

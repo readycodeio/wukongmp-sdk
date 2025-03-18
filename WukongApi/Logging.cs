@@ -9,8 +9,8 @@ namespace WukongApi
     {
         private enum LogLevel
         {
+            Trace,
             Debug,
-            Info,
             Warning,
             Error
         }
@@ -31,31 +31,34 @@ namespace WukongApi
             if (level == LogLevel.Error)
             {
 #endif
-                var interpolatedMessage = messageTemplate;
-                foreach (var (prop, val) in properties)
-                {
-                    interpolatedMessage = interpolatedMessage.Replace("{" + prop + "}", val?.ToString() ?? "null");
-                }
+            var interpolatedMessage = messageTemplate;
+            foreach (var (prop, val) in properties)
+            {
+                interpolatedMessage = interpolatedMessage.Replace("{" + prop + "}", val?.ToString() ?? "null");
+            }
 
 #if !DEBUG
                 Console.ForegroundColor = ConsoleColor.Red;
 #else
-                Console.ForegroundColor = level switch
-                {
-                    LogLevel.Debug => ConsoleColor.Gray,
-                    LogLevel.Info => ConsoleColor.White,
-                    LogLevel.Warning => ConsoleColor.Yellow,
-                    LogLevel.Error => ConsoleColor.Red,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+            Console.ForegroundColor = level switch
+            {
+                LogLevel.Trace => ConsoleColor.Gray,
+                LogLevel.Debug => ConsoleColor.White,
+                LogLevel.Warning => ConsoleColor.Yellow,
+                LogLevel.Error => ConsoleColor.Red,
+                _ => throw new ArgumentOutOfRangeException()
+            };
 #endif
-                Console.WriteLine($"[{level}] {interpolatedMessage}");
-                Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine($"[{level}] {interpolatedMessage}");
+            Console.ForegroundColor = ConsoleColor.White;
 #if !DEBUG
             }
 #endif
 
-            Logger.Instance.Log(messageTemplate, properties, level.ToString());
+            if (level != LogLevel.Trace)
+            {
+                Logger.Instance.Log(messageTemplate, properties, level.ToString());
+            }
         }
 
         private static List<string> ExtractPropertyNames(string template)
@@ -68,6 +71,11 @@ namespace WukongApi
             }
 
             return names;
+        }
+
+        public static void LogTrace([StructuredMessageTemplate] string template, params object[] args)
+        {
+            Log(LogLevel.Trace, template, args);
         }
 
         public static void LogDebug([StructuredMessageTemplate] string template, params object[] args)
