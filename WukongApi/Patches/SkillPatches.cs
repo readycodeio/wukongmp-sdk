@@ -89,6 +89,13 @@ namespace WukongApi.Patches
 
             var photon = WukongMP.Instance.Photon;
             AActor castingCharacter = __instance.GetOwner();
+            
+            if (castingCharacter.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnCastImmobilize));
+                return false;
+            }
+            
             var castingPlayerState = photon.GetByActor(castingCharacter);
 
             if (!photon.IsMasterClient)
@@ -128,7 +135,14 @@ namespace WukongApi.Patches
             {
                 List<int> list = new List<int> { cachedImmobilizeConfigDesc.RangeRadius };
                 AActor owner2 = __instance.GetOwner();
-                FVector baseLoc = BGUFuncLibActorTransformCS.BGUGetActorLocation(aBGUCharacter);
+                
+                if (owner2.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnCastImmobilize));
+                    return false;
+                }
+                
+                FVector baseLoc = aBGUCharacter.BGUGetActorLocation();
                 int targetFilter = cachedImmobilizeConfigDesc.TargetFilter;
                 int targetTypeFilter = cachedImmobilizeConfigDesc.TargetTypeFilter;
                 int affiliationTypeFilter = cachedImmobilizeConfigDesc.AffiliationTypeFilter;
@@ -138,14 +152,12 @@ namespace WukongApi.Patches
             if (OutActors.Contains(aBGUCharacter))
             {
                 OutActors.Remove(aBGUCharacter);
-                OutActors.Insert(0, aBGUCharacter);
             }
-            else
-            {
-                OutActors.Insert(0, aBGUCharacter);
-            }
+
+            OutActors.Insert(0, aBGUCharacter);
+            
             int num2 = 0;
-            foreach (AActor item in OutActors)
+            foreach (var item in OutActors)
             {
                 if (num2 >= num)
                 {
@@ -215,8 +227,16 @@ namespace WukongApi.Patches
                     return true;
 
                 var photon = WukongMP.Instance.Photon;
+                
+                var owner = __instance.GetOwner();
 
-                var playerState = photon.GetByActor(__instance.GetOwner());
+                if (owner.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchRelieveImmobilized));
+                    return false;
+                }
+                
+                var playerState = photon.GetByActor(owner);
 
                 if (playerState == null)
                 {
@@ -249,7 +269,15 @@ namespace WukongApi.Patches
                     return true;
 
                 var photon = WukongMP.Instance.Photon;
-                var playerState = photon.GetByActor(__instance.GetOwner());
+                var owner = __instance.GetOwner();
+                
+                if (owner.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerImmobilizedBreak));
+                    return false;
+                }
+                
+                var playerState = photon.GetByActor(owner);
 
                 if (photon.IsMasterClient)
                 {
@@ -276,16 +304,18 @@ namespace WukongApi.Patches
                     return true;
 
                 var photon = WukongMP.Instance.Photon;
-                if (__instance.GetOwner() == photon.LocalPlayerState.Pawn)
-                    return true;
-
-                // Modified original impelmentation
                 AActor owner = __instance.GetOwner();
-                if (owner == null)
+                
+                if (owner.IsNullOrDestroyed())
                 {
-                    Logging.LogError("Owner is null");
+                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerPhantomRush));
                     return false;
                 }
+                
+                if (owner == photon.LocalPlayerState.Pawn)
+                    return true;
+
+                // Modified original implementation
                 MethodInfo GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
                 if (GetActualUseConfigIDMethod == null)
                 {
@@ -381,7 +411,15 @@ namespace WukongApi.Patches
                 }
 
                 var photon = WukongMP.Instance.Photon;
-                if (__instance.GetOwner() == photon.LocalPlayerState.Pawn)
+                var owner = __instance.GetOwner();
+                
+                if (owner.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerPhantomRush));
+                    return;
+                }
+                
+                if (owner == photon.LocalPlayerState.Pawn)
                 {
                     Logging.LogDebug("Sending phantom rush with direction: {Direction}", PhantomRushDir);
                     photon.SendPhantomRush(PhantomRushDir);
@@ -399,12 +437,20 @@ namespace WukongApi.Patches
                     return;
 
                 var photon = WukongMP.Instance.Photon;
-                var playerState = photon.GetByActor(__instance.GetOwner());
+                var owner = __instance.GetOwner();
+                
+                if (owner.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchExitPhantomRush));
+                    return;
+                }
+                
+                var playerState = photon.GetByActor(owner);
 
                 if (playerState == null)
                     return;
 
-                if ((photon.IsMasterClient || __instance.GetOwner() == photon.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
+                if ((photon.IsMasterClient || owner == photon.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
                 {
                     Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
                     photon.ExitPhantomRush(playerState.PhotonId);

@@ -63,10 +63,10 @@ namespace WukongApi.Patches
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
 
-            if (mask == BGW_TickGroupMask.TG_PreTick
-                || mask == BGW_TickGroupMask.TG_OnTick
-                || mask == BGW_TickGroupMask.TG_LateTick
-                || mask == BGW_TickGroupMask.TG_ThreadTick)
+            if (mask is BGW_TickGroupMask.TG_PreTick
+                or BGW_TickGroupMask.TG_OnTick
+                or BGW_TickGroupMask.TG_LateTick
+                or BGW_TickGroupMask.TG_ThreadTick)
                 return;
 
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))

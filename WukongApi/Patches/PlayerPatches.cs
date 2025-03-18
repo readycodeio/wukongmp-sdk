@@ -1,12 +1,11 @@
-﻿using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using b1;
 using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongApi.State;
 
 namespace WukongApi.Patches
@@ -31,8 +30,14 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (!(Owner is BGUCharacterCS))
+            if (Owner is not BGUCharacterCS)
                 return;
+
+            if (Owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchBGUPlayerAnimation));
+                return;
+            }
 
             var photon = WukongMP.Instance.Photon;
 
@@ -107,8 +112,14 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (!(Owner is BGUCharacterCS))
+            if (Owner is not BGUCharacterCS)
                 return;
+
+            if (Owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchPlayerLocomotion));
+                return;
+            }
 
             var photon = WukongMP.Instance.Photon;
 
@@ -152,8 +163,14 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (!(Owner is BGUCharacterCS))
+            if (Owner is not BGUCharacterCS)
                 return;
+
+            if (Owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchJumpData));
+                return;
+            }
 
             var photon = WukongMP.Instance.Photon;
 
@@ -196,8 +213,14 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (!(Owner is BGUCharacterCS character))
+            if (Owner is not BGUCharacterCS character)
                 return;
+
+            if (Owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchBasicData));
+                return;
+            }
 
             var photon = WukongMP.Instance.Photon;
 
@@ -271,6 +294,12 @@ namespace WukongApi.Patches
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchEqCompUpdate));
+                return false;
+            }
+
             if (owner == photon.LocalPlayerState.Pawn)
             {
                 photon.CacheEquipmentChange(EquipPosition, EquipID);
@@ -295,6 +324,12 @@ namespace WukongApi.Patches
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", $"{nameof(PatchOnUnitDead)}.Prefix");
+                return;
+            }
+
             BGUCharacterCS bGUCharacterCS = owner as BGUCharacterCS;
             if (bGUCharacterCS == null || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
@@ -318,7 +353,7 @@ namespace WukongApi.Patches
                     }
                 }
 
-                photon.CheckRoundEndCondition();               
+                photon.CheckRoundEndCondition();
             }
         }
 
@@ -333,10 +368,16 @@ namespace WukongApi.Patches
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
 
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", $"{nameof(PatchOnUnitDead)}.Postfix");
+                return;
+            }
+
             if (owner == photon.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
-            }    
+            }
         }
     }
 
@@ -366,6 +407,13 @@ namespace WukongApi.Patches
 
             var localPawn = photon.LocalPlayerState.Pawn;
             var owner = __instance.GetOwner();
+            
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchCameraCompTick));
+                return false;
+            }
+
             if (owner == localPawn)
             {
                 return true;
@@ -417,9 +465,16 @@ namespace WukongApi.Patches
                 return;
 
             var photon = WukongMP.Instance.Photon;
+            
+            var owner = __instance.GetOwner();
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchSetTargetToData));
+                return;
+            }
 
             // send only own updates
-            if (__instance.GetOwner() != photon.LocalPlayerState.Pawn)
+            if (owner != photon.LocalPlayerState.Pawn)
                 return;
 
             if (___TargetInfoData.GetTargetInfo().LockTargetActor == NewTargetInfo.LockTargetActor)
@@ -447,7 +502,7 @@ namespace WukongApi.Patches
             return true;
         }
     }
-    
+
     [HarmonyPatch(typeof(BUS_BeAttackedComp), "DoDamageLogic")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchDoDamageLogic
@@ -461,6 +516,13 @@ namespace WukongApi.Patches
             if (photon.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
+                
+                if (owner.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchDoDamageLogic));
+                    return;
+                }
+                
                 var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(owner);
                 var hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
 

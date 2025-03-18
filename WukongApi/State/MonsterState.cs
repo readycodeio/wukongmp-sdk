@@ -1,4 +1,5 @@
 ﻿using b1;
+using UnrealEngine.Runtime;
 
 namespace WukongApi.State
 {
@@ -8,7 +9,7 @@ namespace WukongApi.State
         public BUTamerActor Pawn { get; }
         public float? Hp { get; set; }
         public bool IsSynced { get; set; }
-        public bool IsTamerValid => Pawn != null && !Pawn.IsDestroyed;
+        public bool IsTamerValid => !Pawn.IsNullOrDestroyed();
 
         public MonsterState(string guid, BUTamerActor pawn)
         {

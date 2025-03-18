@@ -17,8 +17,11 @@ namespace WukongApi.State
         {
             get
             {
-                if (_pawn is null || _pawn.IsDestroyed)
+                if (_pawn.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Player pawn is null or destroyed");
                     return null;
+                }
 
                 return _pawn;
             }
@@ -31,8 +34,11 @@ namespace WukongApi.State
         {
             get
             {
-                if (_markerActor is null || _markerActor.IsDestroyed)
+                if (_markerActor.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Marker actor is null or destroyed");
                     return null;
+                }
 
                 return _markerActor;
             }
