@@ -874,8 +874,10 @@ namespace WukongApi
             {
                 Logging.LogDebug("Disconnected: {Cause}", cause);
             }
-
-            Logging.LogWarning("Disconnected: {Cause}", cause);
+            else
+            {
+                Logging.LogWarning("Disconnected: {Cause}", cause);
+            }
         }
 
         public void OnRegionListReceived(RegionHandler regionHandler)
