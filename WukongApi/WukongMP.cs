@@ -34,7 +34,7 @@ namespace WukongApi
         private FVector _savedPosition;
         private bool _isAfterLoadingScreen;
 
-        private readonly ChatWidget _chatWidget = new();
+        public ChatWidget ChatWidget { get; private set; } = new();
         private readonly TimerWidget _timerWidget = new();
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
@@ -170,8 +170,8 @@ namespace WukongApi
 
         private void InitializeWidgets()
         {
-            _chatWidget.Initialize();
-            _chatWidget.SetVisibility(false);
+            ChatWidget.Initialize();
+            ChatWidget.SetVisibility(false);
             _timerWidget.Initialize();
             _lobbyStatusWidget.Initialize();
             _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
@@ -182,7 +182,7 @@ namespace WukongApi
 
         private void DeinitializeWidgets()
         {
-            _chatWidget.Deinitialize();
+            ChatWidget.Deinitialize();
             _timerWidget.Deinitialize();
             _lobbyStatusWidget.Deinitialize();
             _gameMessageWidget.Deinitialize();
@@ -192,7 +192,7 @@ namespace WukongApi
 
         private void OnLoadingScreenClose()
         {
-            _chatWidget.SetVisibility(true);
+            ChatWidget.SetVisibility(true);
             if (Photon != null && Photon.PhotonClient.InRoom)
             {
                 _isAfterLoadingScreen = true;
@@ -396,7 +396,7 @@ namespace WukongApi
                 return false;
 
             Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
-            Photon.WukongChat.OnGetMessage += _chatWidget.GetMessage;
+            Photon.WukongChat.OnGetMessage += ChatWidget.GetMessage;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => Photon.BroadcastPlayerRebirth(Photon.LocalPlayerState.PhotonId), "HandleRebirth"); };
@@ -458,7 +458,7 @@ namespace WukongApi
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
             Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
-            Photon.WukongChat.OnSendMessage += (isServer, sender, message) => Utils.TryRunOnGameThread(() => _chatWidget.AddMessage(isServer, sender, message));
+            Photon.WukongChat.OnSendMessage += (isServer, sender, message) => Utils.TryRunOnGameThread(() => ChatWidget.AddMessage(isServer, sender, message));
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");

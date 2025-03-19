@@ -11,6 +11,15 @@
             ClearMessages();
         }
 
+        public bool HasFocus()
+        {
+            if (_gameWidget == null)
+            {
+                return false;
+            }
+            return _gameWidget.StopAction;
+        }
+
         public int AddMessage(bool isServerMesssage, string sender, string message)
         {
             if (_gameWidget != null)
@@ -28,10 +37,7 @@
 
         public void RemoveMessage(int messageId)
         {
-            if (_gameWidget != null)
-            {
-                _gameWidget.CallFunctionByNameWithArguments($"RemoveMessage {messageId}", true);
-            }
+            _gameWidget?.CallFunctionByNameWithArguments($"RemoveMessage {messageId}", true);
         }
 
         public string GetMessage()
@@ -53,10 +59,7 @@
 
         public void ToggleVisibility()
         {
-            if (_gameWidget != null)
-            {
-                _gameWidget.CallFunctionByNameWithArguments("ChangeVisibility", true);
-            }
+            _gameWidget?.CallFunctionByNameWithArguments("ChangeVisibility", true);
         }
 
         public void ClearMessages()
@@ -65,6 +68,22 @@
             {
                 _gameWidget.CallFunctionByNameWithArguments("ClearMessages", true);
                 _messageId = 0;
+            }
+        }
+
+        public void SetHistoryNext()
+        {
+            if (HasFocus())
+            {
+                _gameWidget?.CallFunctionByNameWithArguments("SetHistoryNext", true);
+            }
+        }
+
+        public void SetHistoryPrev()
+        {
+            if (HasFocus())
+            {
+                _gameWidget?.CallFunctionByNameWithArguments("SetHistoryPrev", true);
             }
         }
     }

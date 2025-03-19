@@ -51,13 +51,34 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(Key.J, () =>
             {
                 Logging.LogDebug("J");
-                _wukongMp.Photon.SwitchReadyState();
+                if (!_wukongMp.ChatWidget.HasFocus())
+                    _wukongMp.Photon.SwitchReadyState();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
             {
                 Logging.LogDebug("L");
-                _wukongMp.Photon.SwitchTeam();
+                if (!_wukongMp.ChatWidget.HasFocus())
+                    _wukongMp.Photon.SwitchTeam();
+            });
+
+            Utils.RegisterKeyBind(Key.K, () =>
+            {
+                Logging.LogDebug("K");
+                if (!_wukongMp.ChatWidget.HasFocus())
+                    _wukongMp.ChatWidget.ToggleVisibility();
+            });
+
+            Utils.RegisterKeyBind(Key.UP, () =>
+            {
+                Logging.LogDebug("UP");
+                _wukongMp.ChatWidget.SetHistoryNext();
+            });
+
+            Utils.RegisterKeyBind(Key.DOWN, () =>
+            {
+                Logging.LogDebug("DOWN");
+                _wukongMp.ChatWidget.SetHistoryPrev();
             });
         }
 
