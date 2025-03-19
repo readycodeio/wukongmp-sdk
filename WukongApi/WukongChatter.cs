@@ -88,7 +88,7 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Save checkpoint",
-                    Handler = args => { OnSavePosition?.Invoke(); }
+                    Handler = _ => { OnSavePosition?.Invoke(); }
                 });
 
             _commands.Add(
@@ -96,7 +96,7 @@ namespace WukongApi
                 new Command
                 {
                     Name = "Load checkpoint",
-                    Handler = args => { OnLoadPosition?.Invoke(); }
+                    Handler = _ => { OnLoadPosition?.Invoke(); }
                 });
 
             _commands.Add(

@@ -77,10 +77,12 @@ namespace WukongApi
                 return;
 
             IsInitialized = true;
+
             DisconnectIfConnected();
-            InitPhotonAndConnectToChat();
-            if (CmdLineParams.Instance.ShouldEnableMultiplayer)
+            if (InitPhotonAndConnectToChat())
+            {
                 AsyncInitGameInstance();
+            }
         }
 
         public void DeInit()
@@ -130,7 +132,7 @@ namespace WukongApi
             }
         }
 
-        private void OnMapLoaded()
+        private static void OnMapLoaded()
         {
             var world = GameUtils.GetWorld();
             if (world != null)
@@ -142,12 +144,13 @@ namespace WukongApi
         private void OnDelayBeginPlay()
         {
             Logging.LogDebug("Delay begin play for player.");
+
             if (Photon == null)
             {
                 InitPhotonAndConnectToChat();
             }
 
-            if (!Photon.Ready)
+            if (Photon?.Ready is not true)
             {
                 DestroyAllMonsters();
 
@@ -158,7 +161,7 @@ namespace WukongApi
             }
         }
 
-        public void OnEndPlay()
+        private void OnEndPlay()
         {
             Logging.LogDebug("End play for player.");
             DeinitializeWidgets();
@@ -324,9 +327,9 @@ namespace WukongApi
             }, "Register team hostility");
         }
 
-        public void EndTurnament(int winnerTeamId)
+        public void EndTournament(int winnerTeamId)
         {
-            Logging.LogDebug("End turnament");
+            Logging.LogDebug("End tournament");
             SetupLobbyUI();
             ShowAllPlayers();
             FreeCameraManager.LeaveFreeCameraMode();
@@ -389,11 +392,10 @@ namespace WukongApi
 
         private bool InitPhotonAndConnectToChat()
         {
-            Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
-
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
                 return false;
 
+            Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
             Photon.WukongChat.OnGetMessage += _chatWidget.GetMessage;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
@@ -424,9 +426,9 @@ namespace WukongApi
             }
         }
 
-        public void DestroyAllMonsters()
+        private static void DestroyAllMonsters()
         {
-            AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
                 BGU_UnrealWorldUtil.DestroyActor(actor);
@@ -436,9 +438,7 @@ namespace WukongApi
         private void Connect()
         {
             if (Photon.Ready)
-            {
                 return;
-            }
 
             Photon.OnBeforeJoinRoom += SetPlayerProperties;
             Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z), "SpawnRemoteUnit");
@@ -457,7 +457,7 @@ namespace WukongApi
             Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
-            Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(() => OnMatchmakingEnded(), "OnMatchmakingEnded");
+            Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
             Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
@@ -648,7 +648,7 @@ namespace WukongApi
             playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
-        private void Reconnect()
+        internal void Reconnect()
         {
             DisconnectIfConnected();
             if (InitPhotonAndConnectToChat())

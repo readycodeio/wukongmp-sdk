@@ -11,6 +11,7 @@ using b1;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
+using HarmonyLib;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -141,9 +142,6 @@ namespace WukongApi
 
         public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
-                return;
-
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
             _joinedRoomCallback = onJoinedRoom;
@@ -287,7 +285,7 @@ namespace WukongApi
                     Task.Run(async () =>
                     {
                         await Task.Delay(2000);
-                        WukongMP.Instance.EndTurnament(winnerTeamId);
+                        WukongMP.Instance.EndTournament(winnerTeamId);
                         ExitPvP();
                         SetReadyState(false);
                         SetIsSpectatorState(false);
@@ -396,7 +394,7 @@ namespace WukongApi
             {
                 stream.WriteByte((byte)obj);
                 return 1;
-            }, (stream, length) => (EMoveSpeedLevel)stream.ReadByte());
+            }, (stream, _) => (EMoveSpeedLevel)stream.ReadByte());
 
             PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
             PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
@@ -504,6 +502,8 @@ namespace WukongApi
                         IsOpen = true,
                         IsVisible = false,
                         PublishUserId = true,
+                        PlayerTtl = Constants.PhotonTtlMs,
+                        EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -531,7 +531,9 @@ namespace WukongApi
                         IsOpen = true,
                         IsVisible = true,
                         PublishUserId = false,
-                        CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)]
+                        CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)],
+                        PlayerTtl = Constants.PhotonTtlMs,
+                        EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -842,7 +844,7 @@ namespace WukongApi
         {
             _monsterProperties[$"{guid}{MonsterHashtableKeySeparator}{prop}"] = value;
 
-            if (!(value is FVector || value is FRotator))
+            if (value is not (FVector or FRotator))
             {
                 Logging.LogDebug("Set monster property [{Guid}]: {Property} = {Value}", guid, prop, value);
             }
@@ -877,6 +879,17 @@ namespace WukongApi
             else
             {
                 Logging.LogWarning("Disconnected: {Cause}", cause);
+            }
+
+            if (cause is DisconnectCause.ClientTimeout or DisconnectCause.ServerTimeout)
+            {
+                // something must've gone wrong, let's try to reconnect
+                Logging.LogDebug("Attempting to reconnect...");
+                if (!PhotonClient.ReconnectAndRejoin())
+                {
+                    Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
+                    WukongMP.Instance.Reconnect();
+                }
             }
         }
 
@@ -957,12 +970,19 @@ namespace WukongApi
 
         public void OnJoinRoomFailed(short returnCode, string message)
         {
-            Logging.LogError("Join room failed: {Message}", message);
+            Logging.LogError("Join room failed [{Code}]: {Message}", returnCode, message);
+
+            if (message == "Game does not exist")
+            {
+                // quick reconnect via PhotonClient.ReconnectAndRejoin failed, try normal reconnect
+                Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
+                WukongMP.Instance.Reconnect();
+            }
         }
 
         public void OnJoinRandomFailed(short returnCode, string message)
         {
-            Logging.LogError("Join random failed: {Message}", message);
+            Logging.LogError("Join random failed [{Code}]: {Message}", returnCode, message);
         }
 
         public void OnLeftRoom()
@@ -1104,6 +1124,13 @@ namespace WukongApi
 
             // Compile the lambda expression
             return Expression.Lambda<Action<T, object>>(body, stateParam, valueParam).Compile();
+        }
+
+        public void FakeTimeout()
+        {
+            Traverse.Create(PhotonClient)
+                .Method("Disconnect", [typeof(DisconnectCause)], [DisconnectCause.ClientTimeout])
+                .GetValue();
         }
     }
 }
