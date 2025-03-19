@@ -1170,7 +1170,7 @@ namespace WukongApi
 
         private void SetPlayerVisibility(PlayerState playerState, bool visible)
         {
-            Logging.LogDebug("Setting player {PlayerName} visibility to: {Visiblity}", playerState.NickName, visible);
+            Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerState.NickName, visible);
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.Pawn.SetActorEnableCollision(visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
@@ -1182,7 +1182,7 @@ namespace WukongApi
 
             if (Photon.ConnectedPlayers.ContainsKey(id))
             {
-                Logging.LogError("Player already exists: {Id}", id);
+                Logging.LogDebug("Player already exists: {Id}", id); // reconnection
                 return null;
             }
 

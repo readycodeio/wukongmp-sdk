@@ -1008,13 +1008,18 @@ namespace WukongApi
         {
             Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", otherPlayer.NickName, otherPlayer.ActorNumber);
 
-            var playerState = ConnectedPlayers[otherPlayer.ActorNumber];
-            ConnectedPlayers.Remove(otherPlayer.ActorNumber);
-            OnPlayerLeft?.Invoke(playerState);
+            if (ConnectedPlayers.Remove(otherPlayer.ActorNumber, out var playerState))
+            {
+                OnPlayerLeft?.Invoke(playerState);
+            }
+            else
+            {
+                Logging.LogWarning("Player {Id} not in ConnectedPlayers.", otherPlayer.ActorNumber);
+            }
 
             if (IsMasterClient)
             {
-                WukongChat.SendServerMessage($"{playerState.NickName} has left!");
+                WukongChat.SendServerMessage($"{otherPlayer.NickName} has left!");
                 CheckRoundEndCondition();
             }
         }
@@ -1036,15 +1041,15 @@ namespace WukongApi
             }
             else if (!ConnectedPlayers.TryGetValue(id, out playerState))
             {
-                Logging.LogWarning("Player {Id} not found.", id);
+                Logging.LogDebug("Player {Id} not found.", id); // TODO: Investigate why this is spammed
                 return;
             }
 
             foreach (var kvp in changedProps)
             {
-                if (!(kvp.Key is string propertyName))
+                if (kvp.Key is not string propertyName)
                 {
-                    if (kvp.Key is byte numId && numId == ActorProperties.NickName)
+                    if (kvp.Key is ActorProperties.NickName)
                     {
                         playerState.NickName = (string)kvp.Value;
                         Logging.LogDebug("Assigning NickName = {Nickname} for player {PlayerId}", playerState.NickName, id);
