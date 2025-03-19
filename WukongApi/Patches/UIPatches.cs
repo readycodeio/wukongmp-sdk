@@ -7,6 +7,7 @@ using B1UI.GSSvc;
 using B1UI.GSUI;
 using GSE.GSUI;
 using HarmonyLib;
+using ResB1;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongApi.UI;
@@ -211,6 +212,42 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
+            return false;
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchShrineRegisterFunc
+    {
+        public static MethodBase TargetMethod()
+        {
+            var specializedType = typeof(FMenuHelper<EShrineMenuTag>); 
+            return specializedType.GetMethod("RegisterFunc");
+        }
+
+        public static bool Prefix(int FuncId)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            InteractionFuncDesc interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
+            return (interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.Teleport
+                && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossIterations
+                && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge);
+        }
+    }
+    
+    [HarmonyPatch(typeof(GSEUtil), "GetCanTeleportGroupMapList")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchGetCanTeleportGroupMapList
+    {
+        public static bool Prefix(ref List<int> __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            __result = new List<int>();
             return false;
         }
     }
