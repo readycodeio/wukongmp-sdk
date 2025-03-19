@@ -1,6 +1,8 @@
-﻿using CSharpModBase;
+﻿using System;
+using CSharpModBase;
 using CSharpModBase.Input;
 using System.Diagnostics;
+using Photon.Realtime;
 using WukongApi;
 
 namespace WukongMPMod
@@ -33,6 +35,9 @@ namespace WukongMPMod
                 Logging.LogInformation("Multiplayer is disabled");
                 return;
             }
+
+            // register global unhandled exception handler
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 
             _wukongMp.Patch();
 #if DEBUG
@@ -87,7 +92,13 @@ namespace WukongMPMod
             Logging.LogInformation("DeInit");
             _wukongMp.Unpatch();
             _wukongMp.DeInit();
+            AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
             Logger.Instance.Dispose();
+        }
+
+        private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)
+        {
+            Logging.LogCriticalException((Exception)args.ExceptionObject);
         }
     }
 }

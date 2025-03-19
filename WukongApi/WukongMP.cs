@@ -200,7 +200,7 @@ namespace WukongApi
                 {
                     var timeDifference = new DateTime(Photon.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
                     _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
-                    SetupMatchmakingUI();
+                    SetupMatchmakingUi();
                 }
                 else if (Photon.LocalPlayerState.IsSpectator)
                 {
@@ -224,7 +224,7 @@ namespace WukongApi
             _lobbyStatusWidget.SetVisibility(true);
         }
 
-        private void SetupMatchmakingUI()
+        private void SetupMatchmakingUi()
         {
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
