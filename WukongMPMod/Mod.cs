@@ -45,15 +45,9 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 Logging.LogDebug("Alt + X");
-                _wukongMp.Photon.FakeTimeout();
+                _wukongMp.ResetLocalPlayerCooldown();
             });
 #endif
-            //Utils.RegisterKeyBind(ModifierKeys.Alt, Key.V, () =>
-            //{
-            //    Logging.LogDebug("Alt + V");
-            //    _wukongMp.Photon.SpawnClone();
-            //});
-
             Utils.RegisterKeyBind(Key.J, () =>
             {
                 Logging.LogDebug("J");

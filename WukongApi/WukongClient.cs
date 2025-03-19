@@ -1125,12 +1125,5 @@ namespace WukongApi
             // Compile the lambda expression
             return Expression.Lambda<Action<T, object>>(body, stateParam, valueParam).Compile();
         }
-
-        public void FakeTimeout()
-        {
-            Traverse.Create(PhotonClient)
-                .Method("Disconnect", [typeof(DisconnectCause)], [DisconnectCause.ClientTimeout])
-                .GetValue();
-        }
     }
 }
