@@ -502,7 +502,6 @@ namespace WukongApi
                         IsOpen = true,
                         IsVisible = false,
                         PublishUserId = true,
-                        PlayerTtl = Constants.PhotonTtlMs,
                         EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
@@ -532,7 +531,6 @@ namespace WukongApi
                         IsVisible = true,
                         PublishUserId = false,
                         CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)],
-                        PlayerTtl = Constants.PhotonTtlMs,
                         EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
