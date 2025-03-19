@@ -201,4 +201,17 @@ namespace WukongApi.Patches
             return true;
         }
     }
+
+    [HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenMapUI")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnClickOpenMapUI
+    {
+        public static bool Prefix()
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return false;
+        }
+    }
 }
