@@ -340,7 +340,7 @@ namespace WukongApi
             var alivePlayers = players.Where(p => !p.IsDead).ToList();
             if (alivePlayers.Count == 0)
             {
-                Logging.LogDebug("All players are dead, ending round");
+                Logging.LogInformation("All players are dead, ending round");
                 Task.Run(async () => await LobbyManager.EndRoundAsync(Constants.DrawTeamId));
                 return;
             }
@@ -348,7 +348,7 @@ namespace WukongApi
             var alivePlayersTeams = alivePlayers.Select(p => p.TeamId).Distinct().Count();
             if (alivePlayersTeams == 1)
             {
-                Logging.LogDebug("One team with alive players, ending round");
+                Logging.LogInformation("One team with alive players, ending round");
                 var winner = players.First(p => !p.IsDead);
                 Task.Run(async () => await LobbyManager.EndRoundAsync(winner.TeamId));
             }
@@ -421,12 +421,12 @@ namespace WukongApi
 
             new Thread(LoopGame).Start();
 
-            Logging.LogDebug("Running forever.");
+            Logging.LogInformation("Running forever.");
         }
 
         public void StopClient()
         {
-            Logging.LogDebug("Stopping client...");
+            Logging.LogInformation("Stopping client...");
 
             _isExit = true;
 
@@ -435,7 +435,7 @@ namespace WukongApi
 
             PhotonClient.Disconnect();
 
-            Logging.LogDebug("Stopped client.");
+            Logging.LogInformation("Stopped client.");
 
             PhotonClient.RemoveCallbackTarget(this);
 
@@ -512,7 +512,7 @@ namespace WukongApi
                         RoomName = roomName,
                     };
 
-                    Logging.LogDebug("Joining or creating private room {RoomName}", roomName);
+                    Logging.LogInformation("Joining or creating private room {RoomName}", roomName);
                     await PhotonClient.JoinOrCreateRoomAsync(createArgs);
                     break;
                 }
@@ -551,7 +551,7 @@ namespace WukongApi
                         },
                     };
 
-                    Logging.LogDebug("Joining or creating {Players}v{Players} room", playersPerTeam, playersPerTeam);
+                    Logging.LogInformation("Joining or creating {Players}v{Players} room", playersPerTeam, playersPerTeam);
                     await PhotonClient.JoinRandomOrCreateRoomAsync(joinArgs, createArgs);
                     break;
                 }
@@ -620,7 +620,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Sending PvP event: {Event}", ev);
+            Logging.LogInformation("Sending PvP event: {Event}", ev);
 
             const byte eventCode = 8;
             var evData = new[] { (int)ev, data };
@@ -798,7 +798,7 @@ namespace WukongApi
         {
             if (!IsMasterClient)
             {
-                Logging.LogDebug("Only room owner can send remote player properties.");
+                Logging.LogWarning("Only room owner can send remote player properties.");
                 return;
             }
 
@@ -854,14 +854,14 @@ namespace WukongApi
 
         public void OnConnected()
         {
-            Logging.LogDebug("Connected");
+            Logging.LogInformation("Connected");
         }
 
         public async void OnConnectedToMaster()
         {
             try
             {
-                Logging.LogDebug("Connected to master server: {ServerIp}", PhotonClient.RealtimePeer.ServerIpAddress);
+                Logging.LogInformation("Connected to master server: {ServerIp}", PhotonClient.RealtimePeer.ServerIpAddress);
                 await JoinRandomOrCreateRoom();
             }
             catch (Exception e)
@@ -874,7 +874,7 @@ namespace WukongApi
         {
             if (cause == DisconnectCause.DisconnectByClientLogic)
             {
-                Logging.LogDebug("Disconnected: {Cause}", cause);
+                Logging.LogInformation("Disconnected: {Cause}", cause);
             }
             else
             {
@@ -884,7 +884,7 @@ namespace WukongApi
             if (cause is DisconnectCause.ClientTimeout or DisconnectCause.ServerTimeout)
             {
                 // something must've gone wrong, let's try to reconnect
-                Logging.LogDebug("Attempting to reconnect...");
+                Logging.LogInformation("Attempting to reconnect...");
                 if (!PhotonClient.ReconnectAndRejoin())
                 {
                     Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
@@ -895,7 +895,13 @@ namespace WukongApi
 
         public void OnRegionListReceived(RegionHandler regionHandler)
         {
-            Logging.LogDebug("Region list received");
+            Logging.LogDebug("Region list received: {Regions}", regionHandler.AvailableRegionCodes);
+            regionHandler.PingAvailableRegions(OnPingComplete);
+        }
+
+        private static void OnPingComplete(RegionHandler regionHandler)
+        {
+            Logging.LogDebug("Region ping complete: {PingResults}", regionHandler.GetResults());
         }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
@@ -922,12 +928,12 @@ namespace WukongApi
 
         public void OnCreatedRoom()
         {
-            Logging.LogDebug("Created room");
+            Logging.LogInformation("Created room");
         }
 
         public void OnCreateRoomFailed(short returnCode, string message)
         {
-            Logging.LogError("Create room failed: {Message}", message);
+            Logging.LogError("Create room failed [{Code}]: {Message}", returnCode, message);
         }
 
         protected int GetTeamIdForPlayer()
@@ -951,7 +957,7 @@ namespace WukongApi
 
         public virtual void OnJoinedRoom()
         {
-            Logging.LogDebug("Joined room {Name}", PhotonClient.CurrentRoom.Name);
+            Logging.LogInformation("Joined room {Name}", PhotonClient.CurrentRoom.Name);
 
             var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
@@ -987,20 +993,20 @@ namespace WukongApi
 
         public void OnLeftRoom()
         {
-            Logging.LogDebug("Left room");
+            Logging.LogInformation("Left room");
         }
 
         #endregion
 
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
-            Logging.LogDebug("Player {PlayerId} entered the room", newPlayer.ActorNumber);
+            Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", newPlayer.NickName, newPlayer.ActorNumber);
             _playerJoinedCallback?.Invoke(newPlayer);
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)
         {
-            Logging.LogDebug("Player {PlayerId} left the room", otherPlayer.ActorNumber);
+            Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", otherPlayer.NickName, otherPlayer.ActorNumber);
 
             var playerState = ConnectedPlayers[otherPlayer.ActorNumber];
             ConnectedPlayers.Remove(otherPlayer.ActorNumber);
@@ -1030,7 +1036,7 @@ namespace WukongApi
             }
             else if (!ConnectedPlayers.TryGetValue(id, out playerState))
             {
-                Logging.LogDebug("Player {Id} not found.", id);
+                Logging.LogWarning("Player {Id} not found.", id);
                 return;
             }
 

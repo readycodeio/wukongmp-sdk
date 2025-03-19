@@ -11,7 +11,7 @@ namespace WukongApi.Patches
     {
         public static void Postfix(Exception e)
         {
-            Logging.LogException(e);
+            Logging.LogCriticalException(e);
         }
     }
 }

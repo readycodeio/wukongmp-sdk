@@ -57,7 +57,7 @@ namespace WukongApi
             {
                 Harmony.PatchCategory(Constants.GlobalPatches);
                 Harmony.PatchCategory(Constants.ConnectedPatches);
-                Logging.LogDebug("Patched with Harmony");
+                Logging.LogInformation("Patched with Harmony");
             });
         }
 
@@ -67,7 +67,7 @@ namespace WukongApi
             {
                 Harmony.UnpatchCategory(Constants.ConnectedPatches);
                 Harmony.UnpatchCategory(Constants.GlobalPatches);
-                Logging.LogDebug("Unpatched with Harmony");
+                Logging.LogInformation("Unpatched with Harmony");
             });
         }
 
@@ -92,7 +92,7 @@ namespace WukongApi
 
         private void AsyncInitGameInstance()
         {
-            Logging.LogDebug("Waiting for the game instance to be initialized.");
+            Logging.LogInformation("Waiting for the game instance to be initialized.");
             Task.Run(async () =>
             {
                 try
@@ -101,7 +101,7 @@ namespace WukongApi
                     {
                         if (GameUtils.IsGameInstanceValid())
                         {
-                            Logging.LogDebug("Found valid GameInstance");
+                            Logging.LogInformation("Found valid GameInstance");
                             Utils.TryRunOnGameThread(InitWorldCallbacks);
                             break; // Exit the task
                         }
@@ -137,13 +137,13 @@ namespace WukongApi
             var world = GameUtils.GetWorld();
             if (world != null)
             {
-                Logging.LogDebug("New level loaded: {LevelName}", world.GetCurrentLevelName());
+                Logging.LogInformation("New level loaded: {LevelName}", world.GetCurrentLevelName());
             }
         }
 
         private void OnDelayBeginPlay()
         {
-            Logging.LogDebug("Delay begin play for player.");
+            Logging.LogInformation("Delay begin play for player.");
 
             if (Photon == null)
             {
@@ -154,7 +154,7 @@ namespace WukongApi
             {
                 DestroyAllMonsters();
 
-                BlueprintUIUtils.SpawnUIManagerActor();
+                BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
 
                 Connect();
@@ -163,7 +163,7 @@ namespace WukongApi
 
         private void OnEndPlay()
         {
-            Logging.LogDebug("End play for player.");
+            Logging.LogInformation("End play for player.");
             DeinitializeWidgets();
             DisconnectIfConnected();
         }
@@ -204,7 +204,7 @@ namespace WukongApi
                 }
                 else if (Photon.LocalPlayerState.IsSpectator)
                 {
-                    Logging.LogDebug("Entering free camera");
+                    Logging.LogInformation("Entering free camera");
                     SetHudVisibility(false);
                     FreeCameraManager.EnterFreeCameraMode();
                 }
@@ -259,7 +259,7 @@ namespace WukongApi
 
         private void OnRoundEnded()
         {
-            Logging.LogDebug("Round time ended, ending round");
+            Logging.LogInformation("Round time ended, ending round");
             if (Photon.IsMasterClient)
             {
                 Task.Run(async () => await Photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
@@ -283,7 +283,7 @@ namespace WukongApi
 
         public void EnablePvP()
         {
-            Logging.LogDebug("Enabled PvP");
+            Logging.LogInformation("Enabled PvP");
 
             var myTeam = Photon.LocalPlayerState.TeamId;
             var otherTeams = Photon.ConnectedPlayers.Values
@@ -306,7 +306,7 @@ namespace WukongApi
 
         public void DisablePvP()
         {
-            Logging.LogDebug("Disabled PvP");
+            Logging.LogInformation("Disabled PvP");
 
             var myTeam = Photon.LocalPlayerState.TeamId;
             var otherTeams = Photon.ConnectedPlayers.Values
@@ -329,7 +329,7 @@ namespace WukongApi
 
         public void EndTournament(int winnerTeamId)
         {
-            Logging.LogDebug("End tournament");
+            Logging.LogInformation("End tournament");
             SetupLobbyUI();
             ShowAllPlayers();
             FreeCameraManager.LeaveFreeCameraMode();
@@ -545,7 +545,7 @@ namespace WukongApi
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
             {
-                Logging.LogDebug("Player not found: {PlayerId}", playerId);
+                Logging.LogWarning("Player not found: {PlayerId}", playerId);
                 return;
             }
 
@@ -698,7 +698,7 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogDebug("Player not found: {PlayerId}", id);
+                Logging.LogWarning("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -774,7 +774,7 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogDebug("Player not found: {PlayerId}", id);
+                Logging.LogWarning("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -784,7 +784,7 @@ namespace WukongApi
 
             if (montage is null)
             {
-                Logging.LogDebug("Montage not found: {Montage}", data.MontagePath);
+                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
                 return;
             }
 
@@ -793,7 +793,7 @@ namespace WukongApi
 
             if (animInstance is null)
             {
-                Logging.LogDebug("AnimInstance is null");
+                Logging.LogWarning("AnimInstance is null");
                 return;
             }
 
@@ -817,7 +817,7 @@ namespace WukongApi
         {
             if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
             {
-                Logging.LogDebug("Monster not found: {Guid}", data.MonsterGuid);
+                Logging.LogWarning("Monster not found: {Guid}", data.MonsterGuid);
                 return;
             }
 
@@ -830,7 +830,7 @@ namespace WukongApi
 
             if (montage is null)
             {
-                Logging.LogDebug("Montage not found: {Montage}", data.MontagePath);
+                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
                 return;
             }
 
@@ -1206,7 +1206,7 @@ namespace WukongApi
 
             if (@class is null)
             {
-                Logging.LogDebug("Class is null");
+                Logging.LogError("Class is null");
                 return null;
             }
 
@@ -1288,7 +1288,7 @@ namespace WukongApi
             }
             else
             {
-                Logging.LogDebug("Cannot spawn player marker actor");
+                Logging.LogError("Cannot spawn player marker actor");
             }
 
             var teamName = GameUtils.GetTeamName(playerState.TeamId);

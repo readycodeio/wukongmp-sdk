@@ -15,14 +15,14 @@ namespace WukongMPMod
 
         public void Init()
         {
-            Logging.LogDebug("Init WukongMP mod");
+            Logging.LogInformation("Init WukongMP mod");
             Logging.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             _wukongMp = WukongMP.Instance;
 
             if (_wukongMp.IsInitialized)
             {
-                Logging.LogDebug("WukongMP is already initialized");
+                Logging.LogInformation("WukongMP is already initialized");
                 return;
             }
 
@@ -30,7 +30,7 @@ namespace WukongMPMod
 
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
             {
-                Logging.LogDebug("Multiplayer is disabled");
+                Logging.LogInformation("Multiplayer is disabled");
                 return;
             }
 
@@ -63,7 +63,7 @@ namespace WukongMPMod
 
         public void DeInit()
         {
-            Logging.LogDebug("DeInit");
+            Logging.LogInformation("DeInit");
             _wukongMp.Unpatch();
             _wukongMp.DeInit();
             Logger.Instance.Dispose();

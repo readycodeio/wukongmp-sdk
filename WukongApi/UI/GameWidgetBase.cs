@@ -14,7 +14,7 @@ namespace WukongApi.UI
 
         public void Initialize()
         {
-            _gameWidget = BlueprintUIUtils.GetWidget(_name);
+            _gameWidget = BlueprintUiUtils.GetWidget(_name);
             if (_gameWidget != null)
             {
                 Logging.LogDebug("{Name} widget initialized!", _name);

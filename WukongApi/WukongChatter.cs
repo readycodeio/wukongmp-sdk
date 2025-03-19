@@ -181,7 +181,7 @@ namespace WukongApi
             _wukongClient.KillCurrentPlayer();
         }
 
-        public void RequestReconnect()
+        private void RequestReconnect()
         {
             OnReconnectRequest?.Invoke();
         }
@@ -247,7 +247,17 @@ namespace WukongApi
             _chatClient.PublishMessage(GeneralChannelName, $"{ServerPrefix}{message}");
         }
 
-        public void DebugReturn(LogLevel level, string message) { }
+        public void DebugReturn(LogLevel level, string message)
+        {
+            switch (level)
+            {
+                case LogLevel.Debug: Logging.LogDebug("[Photon Chat] {Log}", message); break;
+                case LogLevel.Info: Logging.LogInformation("[Photon Chat] {Log}", message); break;
+                case LogLevel.Warning: Logging.LogWarning("[Photon Chat] {Log}", message); break;
+                case LogLevel.Error: Logging.LogError("[Photon Chat] {Log}", message); break;
+                case LogLevel.Off: break;
+            }
+        }
 
         public void OnChatStateChange(ChatState state)
         {

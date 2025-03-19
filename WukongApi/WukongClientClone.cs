@@ -39,7 +39,7 @@ namespace WukongApi
 
         public override void OnJoinedRoom()
         {
-            Logging.LogDebug("Clone joined room");
+            Logging.LogInformation("Clone joined room");
 
             var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);

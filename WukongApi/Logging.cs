@@ -11,8 +11,10 @@ namespace WukongApi
         {
             Trace,
             Debug,
+            Information,
             Warning,
-            Error
+            Error,
+            Critical
         }
 
         private static readonly Regex PlaceholderRegex = new(@"\{(\w+)\}", RegexOptions.Compiled);
@@ -35,7 +37,7 @@ namespace WukongApi
             }
 
 #if !DEBUG
-            if (level == LogLevel.Error)
+            if (level is LogLevel.Error or LogLevel.Critical)
             {
 #endif
             var interpolatedMessage = messageTemplate;
@@ -51,8 +53,10 @@ namespace WukongApi
             {
                 LogLevel.Trace => ConsoleColor.Gray,
                 LogLevel.Debug => ConsoleColor.White,
+                LogLevel.Information => ConsoleColor.White,
                 LogLevel.Warning => ConsoleColor.Yellow,
                 LogLevel.Error => ConsoleColor.Red,
+                LogLevel.Critical => ConsoleColor.Red,
                 _ => throw new ArgumentOutOfRangeException()
             };
 #endif
@@ -89,6 +93,11 @@ namespace WukongApi
         {
             Log(LogLevel.Debug, template, args);
         }
+        
+        public static void LogInformation([StructuredMessageTemplate] string template, params object[] args)
+        {
+            Log(LogLevel.Information, template, args);
+        }
 
         public static void LogWarning([StructuredMessageTemplate] string template, params object[] args)
         {
@@ -99,12 +108,26 @@ namespace WukongApi
         {
             Log(LogLevel.Error, template, args);
         }
+        
+        public static void LogCritical([StructuredMessageTemplate] string template, params object[] args)
+        {
+            Log(LogLevel.Critical, template, args);
+        }
 
         public static void LogException(Exception ex)
         {
             while (ex != null)
             {
                 Log(LogLevel.Error, "Exception: {Message}.\nStack trace:\n{Trace}", ex.Message, ex.StackTrace);
+                ex = ex.InnerException;
+            }
+        }
+        
+        public static void LogCriticalException(Exception ex)
+        {
+            while (ex != null)
+            {
+                Log(LogLevel.Critical, "Exception: {Message}.\nStack trace:\n{Trace}", ex.Message, ex.StackTrace);
                 ex = ex.InnerException;
             }
         }
