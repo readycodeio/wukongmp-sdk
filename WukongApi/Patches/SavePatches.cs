@@ -11,7 +11,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongApi.Patches
 {
-    static class SavePatchesData
+    internal static class SavePatchesData
     {
         public static bool CustomSaveEnabled = false;
         public static bool ShouldCacheSave = false;

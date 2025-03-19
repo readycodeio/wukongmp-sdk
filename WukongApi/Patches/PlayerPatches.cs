@@ -477,10 +477,10 @@ namespace WukongApi.Patches
             if (owner != photon.LocalPlayerState.Pawn)
                 return;
 
-            if (___TargetInfoData.GetTargetInfo().LockTargetActor == NewTargetInfo.LockTargetActor)
+            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo?.LockTargetActor)
                 return;
 
-            var newTargetPlayerState = photon.GetByActor(NewTargetInfo.LockTargetActor);
+            var newTargetPlayerState = photon.GetByActor(NewTargetInfo?.LockTargetActor);
             if (newTargetPlayerState != null)
             {
                 Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetPlayerState.NickName);

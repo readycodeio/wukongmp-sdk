@@ -11,6 +11,7 @@ using b1;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
+using HarmonyLib;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
@@ -141,9 +142,6 @@ namespace WukongApi
 
         public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
-                return;
-
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
             _joinedRoomCallback = onJoinedRoom;
@@ -287,7 +285,7 @@ namespace WukongApi
                     Task.Run(async () =>
                     {
                         await Task.Delay(2000);
-                        WukongMP.Instance.EndTurnament(winnerTeamId);
+                        WukongMP.Instance.EndTournament(winnerTeamId);
                         ExitPvP();
                         SetReadyState(false);
                         SetIsSpectatorState(false);
@@ -342,7 +340,7 @@ namespace WukongApi
             var alivePlayers = players.Where(p => !p.IsDead).ToList();
             if (alivePlayers.Count == 0)
             {
-                Logging.LogDebug("All players are dead, ending round");
+                Logging.LogInformation("All players are dead, ending round");
                 Task.Run(async () => await LobbyManager.EndRoundAsync(Constants.DrawTeamId));
                 return;
             }
@@ -350,7 +348,7 @@ namespace WukongApi
             var alivePlayersTeams = alivePlayers.Select(p => p.TeamId).Distinct().Count();
             if (alivePlayersTeams == 1)
             {
-                Logging.LogDebug("One team with alive players, ending round");
+                Logging.LogInformation("One team with alive players, ending round");
                 var winner = players.First(p => !p.IsDead);
                 Task.Run(async () => await LobbyManager.EndRoundAsync(winner.TeamId));
             }
@@ -396,7 +394,7 @@ namespace WukongApi
             {
                 stream.WriteByte((byte)obj);
                 return 1;
-            }, (stream, length) => (EMoveSpeedLevel)stream.ReadByte());
+            }, (stream, _) => (EMoveSpeedLevel)stream.ReadByte());
 
             PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
             PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
@@ -423,12 +421,12 @@ namespace WukongApi
 
             new Thread(LoopGame).Start();
 
-            Logging.LogDebug("Running forever.");
+            Logging.LogInformation("Running forever.");
         }
 
         public void StopClient()
         {
-            Logging.LogDebug("Stopping client...");
+            Logging.LogInformation("Stopping client...");
 
             _isExit = true;
 
@@ -437,7 +435,7 @@ namespace WukongApi
 
             PhotonClient.Disconnect();
 
-            Logging.LogDebug("Stopped client.");
+            Logging.LogInformation("Stopped client.");
 
             PhotonClient.RemoveCallbackTarget(this);
 
@@ -504,6 +502,7 @@ namespace WukongApi
                         IsOpen = true,
                         IsVisible = false,
                         PublishUserId = true,
+                        EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -512,7 +511,7 @@ namespace WukongApi
                         RoomName = roomName,
                     };
 
-                    Logging.LogDebug("Joining or creating private room {RoomName}", roomName);
+                    Logging.LogInformation("Joining or creating private room {RoomName}", roomName);
                     await PhotonClient.JoinOrCreateRoomAsync(createArgs);
                     break;
                 }
@@ -531,7 +530,8 @@ namespace WukongApi
                         IsOpen = true,
                         IsVisible = true,
                         PublishUserId = false,
-                        CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)]
+                        CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)],
+                        EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -549,7 +549,7 @@ namespace WukongApi
                         },
                     };
 
-                    Logging.LogDebug("Joining or creating {Players}v{Players} room", playersPerTeam, playersPerTeam);
+                    Logging.LogInformation("Joining or creating {Players}v{Players} room", playersPerTeam, playersPerTeam);
                     await PhotonClient.JoinRandomOrCreateRoomAsync(joinArgs, createArgs);
                     break;
                 }
@@ -618,7 +618,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Sending PvP event: {Event}", ev);
+            Logging.LogInformation("Sending PvP event: {Event}", ev);
 
             const byte eventCode = 8;
             var evData = new[] { (int)ev, data };
@@ -796,7 +796,7 @@ namespace WukongApi
         {
             if (!IsMasterClient)
             {
-                Logging.LogDebug("Only room owner can send remote player properties.");
+                Logging.LogWarning("Only room owner can send remote player properties.");
                 return;
             }
 
@@ -842,7 +842,7 @@ namespace WukongApi
         {
             _monsterProperties[$"{guid}{MonsterHashtableKeySeparator}{prop}"] = value;
 
-            if (!(value is FVector || value is FRotator))
+            if (value is not (FVector or FRotator))
             {
                 Logging.LogDebug("Set monster property [{Guid}]: {Property} = {Value}", guid, prop, value);
             }
@@ -852,14 +852,14 @@ namespace WukongApi
 
         public void OnConnected()
         {
-            Logging.LogDebug("Connected");
+            Logging.LogInformation("Connected");
         }
 
         public async void OnConnectedToMaster()
         {
             try
             {
-                Logging.LogDebug("Connected to master server: {ServerIp}", PhotonClient.RealtimePeer.ServerIpAddress);
+                Logging.LogInformation("Connected to master server: {ServerIp}", PhotonClient.RealtimePeer.ServerIpAddress);
                 await JoinRandomOrCreateRoom();
             }
             catch (Exception e)
@@ -872,17 +872,34 @@ namespace WukongApi
         {
             if (cause == DisconnectCause.DisconnectByClientLogic)
             {
-                Logging.LogDebug("Disconnected: {Cause}", cause);
+                Logging.LogInformation("Disconnected: {Cause}", cause);
             }
             else
             {
                 Logging.LogWarning("Disconnected: {Cause}", cause);
             }
+
+            if (cause is DisconnectCause.ClientTimeout or DisconnectCause.ServerTimeout)
+            {
+                // something must've gone wrong, let's try to reconnect
+                Logging.LogInformation("Attempting to reconnect...");
+                if (!PhotonClient.ReconnectAndRejoin())
+                {
+                    Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
+                    WukongMP.Instance.Reconnect();
+                }
+            }
         }
 
         public void OnRegionListReceived(RegionHandler regionHandler)
         {
-            Logging.LogDebug("Region list received");
+            Logging.LogDebug("Region list received: {Regions}", regionHandler.AvailableRegionCodes);
+            regionHandler.PingAvailableRegions(OnPingComplete);
+        }
+
+        private static void OnPingComplete(RegionHandler regionHandler)
+        {
+            Logging.LogDebug("Region ping complete: {PingResults}", regionHandler.GetResults());
         }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
@@ -909,12 +926,12 @@ namespace WukongApi
 
         public void OnCreatedRoom()
         {
-            Logging.LogDebug("Created room");
+            Logging.LogInformation("Created room");
         }
 
         public void OnCreateRoomFailed(short returnCode, string message)
         {
-            Logging.LogError("Create room failed: {Message}", message);
+            Logging.LogError("Create room failed [{Code}]: {Message}", returnCode, message);
         }
 
         protected int GetTeamIdForPlayer()
@@ -938,7 +955,7 @@ namespace WukongApi
 
         public virtual void OnJoinedRoom()
         {
-            Logging.LogDebug("Joined room {Name}", PhotonClient.CurrentRoom.Name);
+            Logging.LogInformation("Joined room {Name}", PhotonClient.CurrentRoom.Name);
 
             var teamId = GetTeamIdForPlayer();
             LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
@@ -957,38 +974,50 @@ namespace WukongApi
 
         public void OnJoinRoomFailed(short returnCode, string message)
         {
-            Logging.LogError("Join room failed: {Message}", message);
+            Logging.LogError("Join room failed [{Code}]: {Message}", returnCode, message);
+
+            if (message == "Game does not exist")
+            {
+                // quick reconnect via PhotonClient.ReconnectAndRejoin failed, try normal reconnect
+                Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
+                WukongMP.Instance.Reconnect();
+            }
         }
 
         public void OnJoinRandomFailed(short returnCode, string message)
         {
-            Logging.LogError("Join random failed: {Message}", message);
+            Logging.LogError("Join random failed [{Code}]: {Message}", returnCode, message);
         }
 
         public void OnLeftRoom()
         {
-            Logging.LogDebug("Left room");
+            Logging.LogInformation("Left room");
         }
 
         #endregion
 
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
-            Logging.LogDebug("Player {PlayerId} entered the room", newPlayer.ActorNumber);
+            Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", newPlayer.NickName, newPlayer.ActorNumber);
             _playerJoinedCallback?.Invoke(newPlayer);
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)
         {
-            Logging.LogDebug("Player {PlayerId} left the room", otherPlayer.ActorNumber);
+            Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", otherPlayer.NickName, otherPlayer.ActorNumber);
 
-            var playerState = ConnectedPlayers[otherPlayer.ActorNumber];
-            ConnectedPlayers.Remove(otherPlayer.ActorNumber);
-            OnPlayerLeft?.Invoke(playerState);
+            if (ConnectedPlayers.Remove(otherPlayer.ActorNumber, out var playerState))
+            {
+                OnPlayerLeft?.Invoke(playerState);
+            }
+            else
+            {
+                Logging.LogWarning("Player {Id} not in ConnectedPlayers.", otherPlayer.ActorNumber);
+            }
 
             if (IsMasterClient)
             {
-                WukongChat.SendServerMessage($"{playerState.NickName} has left!");
+                WukongChat.SendServerMessage($"{otherPlayer.NickName} has left!");
                 CheckRoundEndCondition();
             }
         }
@@ -1010,15 +1039,15 @@ namespace WukongApi
             }
             else if (!ConnectedPlayers.TryGetValue(id, out playerState))
             {
-                Logging.LogDebug("Player {Id} not found.", id);
+                Logging.LogDebug("Player {Id} not found.", id); // TODO: Investigate why this is spammed
                 return;
             }
 
             foreach (var kvp in changedProps)
             {
-                if (!(kvp.Key is string propertyName))
+                if (kvp.Key is not string propertyName)
                 {
-                    if (kvp.Key is byte numId && numId == ActorProperties.NickName)
+                    if (kvp.Key is ActorProperties.NickName)
                     {
                         playerState.NickName = (string)kvp.Value;
                         Logging.LogDebug("Assigning NickName = {Nickname} for player {PlayerId}", playerState.NickName, id);

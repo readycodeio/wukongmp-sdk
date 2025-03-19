@@ -34,7 +34,7 @@ namespace WukongApi
         private FVector _savedPosition;
         private bool _isAfterLoadingScreen;
 
-        private readonly ChatWidget _chatWidget = new();
+        public ChatWidget ChatWidget { get; private set; } = new();
         private readonly TimerWidget _timerWidget = new();
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
@@ -57,7 +57,7 @@ namespace WukongApi
             {
                 Harmony.PatchCategory(Constants.GlobalPatches);
                 Harmony.PatchCategory(Constants.ConnectedPatches);
-                Logging.LogDebug("Patched with Harmony");
+                Logging.LogInformation("Patched with Harmony");
             });
         }
 
@@ -67,7 +67,7 @@ namespace WukongApi
             {
                 Harmony.UnpatchCategory(Constants.ConnectedPatches);
                 Harmony.UnpatchCategory(Constants.GlobalPatches);
-                Logging.LogDebug("Unpatched with Harmony");
+                Logging.LogInformation("Unpatched with Harmony");
             });
         }
 
@@ -77,10 +77,12 @@ namespace WukongApi
                 return;
 
             IsInitialized = true;
+
             DisconnectIfConnected();
-            InitPhotonAndConnectToChat();
-            if (CmdLineParams.Instance.ShouldEnableMultiplayer)
+            if (InitPhotonAndConnectToChat())
+            {
                 AsyncInitGameInstance();
+            }
         }
 
         public void DeInit()
@@ -90,7 +92,7 @@ namespace WukongApi
 
         private void AsyncInitGameInstance()
         {
-            Logging.LogDebug("Waiting for the game instance to be initialized.");
+            Logging.LogInformation("Waiting for the game instance to be initialized.");
             Task.Run(async () =>
             {
                 try
@@ -99,7 +101,7 @@ namespace WukongApi
                     {
                         if (GameUtils.IsGameInstanceValid())
                         {
-                            Logging.LogDebug("Found valid GameInstance");
+                            Logging.LogInformation("Found valid GameInstance");
                             Utils.TryRunOnGameThread(InitWorldCallbacks);
                             break; // Exit the task
                         }
@@ -130,45 +132,46 @@ namespace WukongApi
             }
         }
 
-        private void OnMapLoaded()
+        private static void OnMapLoaded()
         {
             var world = GameUtils.GetWorld();
             if (world != null)
             {
-                Logging.LogDebug("New level loaded: {LevelName}", world.GetCurrentLevelName());
+                Logging.LogInformation("New level loaded: {LevelName}", world.GetCurrentLevelName());
             }
         }
 
         private void OnDelayBeginPlay()
         {
-            Logging.LogDebug("Delay begin play for player.");
+            Logging.LogInformation("Delay begin play for player.");
+
             if (Photon == null)
             {
                 InitPhotonAndConnectToChat();
             }
 
-            if (!Photon.Ready)
+            if (Photon?.Ready is not true)
             {
                 DestroyAllMonsters();
 
-                BlueprintUIUtils.SpawnUIManagerActor();
+                BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
 
                 Connect();
             }
         }
 
-        public void OnEndPlay()
+        private void OnEndPlay()
         {
-            Logging.LogDebug("End play for player.");
+            Logging.LogInformation("End play for player.");
             DeinitializeWidgets();
             DisconnectIfConnected();
         }
 
         private void InitializeWidgets()
         {
-            _chatWidget.Initialize();
-            _chatWidget.SetVisibility(false);
+            ChatWidget.Initialize();
+            ChatWidget.SetVisibility(false);
             _timerWidget.Initialize();
             _lobbyStatusWidget.Initialize();
             _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
@@ -179,7 +182,7 @@ namespace WukongApi
 
         private void DeinitializeWidgets()
         {
-            _chatWidget.Deinitialize();
+            ChatWidget.Deinitialize();
             _timerWidget.Deinitialize();
             _lobbyStatusWidget.Deinitialize();
             _gameMessageWidget.Deinitialize();
@@ -189,7 +192,7 @@ namespace WukongApi
 
         private void OnLoadingScreenClose()
         {
-            _chatWidget.SetVisibility(true);
+            ChatWidget.SetVisibility(true);
             if (Photon != null && Photon.PhotonClient.InRoom)
             {
                 _isAfterLoadingScreen = true;
@@ -197,11 +200,11 @@ namespace WukongApi
                 {
                     var timeDifference = new DateTime(Photon.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
                     _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
-                    SetupMatchmakingUI();
+                    SetupMatchmakingUi();
                 }
                 else if (Photon.LocalPlayerState.IsSpectator)
                 {
-                    Logging.LogDebug("Entering free camera");
+                    Logging.LogInformation("Entering free camera");
                     SetHudVisibility(false);
                     FreeCameraManager.EnterFreeCameraMode();
                 }
@@ -221,7 +224,7 @@ namespace WukongApi
             _lobbyStatusWidget.SetVisibility(true);
         }
 
-        private void SetupMatchmakingUI()
+        private void SetupMatchmakingUi()
         {
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
@@ -256,7 +259,7 @@ namespace WukongApi
 
         private void OnRoundEnded()
         {
-            Logging.LogDebug("Round time ended, ending round");
+            Logging.LogInformation("Round time ended, ending round");
             if (Photon.IsMasterClient)
             {
                 Task.Run(async () => await Photon.LobbyManager.EndRoundAsync(Constants.DrawTeamId));
@@ -280,7 +283,7 @@ namespace WukongApi
 
         public void EnablePvP()
         {
-            Logging.LogDebug("Enabled PvP");
+            Logging.LogInformation("Enabled PvP");
 
             var myTeam = Photon.LocalPlayerState.TeamId;
             var otherTeams = Photon.ConnectedPlayers.Values
@@ -303,7 +306,7 @@ namespace WukongApi
 
         public void DisablePvP()
         {
-            Logging.LogDebug("Disabled PvP");
+            Logging.LogInformation("Disabled PvP");
 
             var myTeam = Photon.LocalPlayerState.TeamId;
             var otherTeams = Photon.ConnectedPlayers.Values
@@ -324,9 +327,9 @@ namespace WukongApi
             }, "Register team hostility");
         }
 
-        public void EndTurnament(int winnerTeamId)
+        public void EndTournament(int winnerTeamId)
         {
-            Logging.LogDebug("End turnament");
+            Logging.LogInformation("End tournament");
             SetupLobbyUI();
             ShowAllPlayers();
             FreeCameraManager.LeaveFreeCameraMode();
@@ -389,12 +392,11 @@ namespace WukongApi
 
         private bool InitPhotonAndConnectToChat()
         {
-            Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
-
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
                 return false;
 
-            Photon.WukongChat.OnGetMessage += _chatWidget.GetMessage;
+            Photon = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
+            Photon.WukongChat.OnGetMessage += ChatWidget.GetMessage;
             Photon.WukongChat.OnReconnectRequest += Reconnect;
             Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
             Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => Photon.BroadcastPlayerRebirth(Photon.LocalPlayerState.PhotonId), "HandleRebirth"); };
@@ -424,9 +426,9 @@ namespace WukongApi
             }
         }
 
-        public void DestroyAllMonsters()
+        private static void DestroyAllMonsters()
         {
-            AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
                 BGU_UnrealWorldUtil.DestroyActor(actor);
@@ -436,9 +438,7 @@ namespace WukongApi
         private void Connect()
         {
             if (Photon.Ready)
-            {
                 return;
-            }
 
             Photon.OnBeforeJoinRoom += SetPlayerProperties;
             Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z), "SpawnRemoteUnit");
@@ -457,8 +457,8 @@ namespace WukongApi
             Photon.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
-            Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(() => OnMatchmakingEnded(), "OnMatchmakingEnded");
-            Photon.WukongChat.OnSendMessage += _chatWidget.AddMessage;
+            Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
+            Photon.WukongChat.OnSendMessage += (isServer, sender, message) => Utils.TryRunOnGameThread(() => ChatWidget.AddMessage(isServer, sender, message));
             Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
             Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
             Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
@@ -545,7 +545,7 @@ namespace WukongApi
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
             {
-                Logging.LogDebug("Player not found: {PlayerId}", playerId);
+                Logging.LogWarning("Player not found: {PlayerId}", playerId);
                 return;
             }
 
@@ -648,7 +648,7 @@ namespace WukongApi
             playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
-        private void Reconnect()
+        internal void Reconnect()
         {
             DisconnectIfConnected();
             if (InitPhotonAndConnectToChat())
@@ -698,7 +698,7 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogDebug("Player not found: {PlayerId}", id);
+                Logging.LogWarning("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -774,7 +774,7 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogDebug("Player not found: {PlayerId}", id);
+                Logging.LogWarning("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -784,7 +784,7 @@ namespace WukongApi
 
             if (montage is null)
             {
-                Logging.LogDebug("Montage not found: {Montage}", data.MontagePath);
+                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
                 return;
             }
 
@@ -793,7 +793,7 @@ namespace WukongApi
 
             if (animInstance is null)
             {
-                Logging.LogDebug("AnimInstance is null");
+                Logging.LogWarning("AnimInstance is null");
                 return;
             }
 
@@ -817,7 +817,7 @@ namespace WukongApi
         {
             if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
             {
-                Logging.LogDebug("Monster not found: {Guid}", data.MonsterGuid);
+                Logging.LogWarning("Monster not found: {Guid}", data.MonsterGuid);
                 return;
             }
 
@@ -830,7 +830,7 @@ namespace WukongApi
 
             if (montage is null)
             {
-                Logging.LogDebug("Montage not found: {Montage}", data.MontagePath);
+                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
                 return;
             }
 
@@ -1002,7 +1002,6 @@ namespace WukongApi
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
             DisablePlayerSkills();
-            DisablePlayerInteraction();
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             _lobbyStatusWidget.SetMaxConnectedCount(Photon.PhotonClient.CurrentRoom.MaxPlayers);
             SetupMatchmaking();
@@ -1089,7 +1088,6 @@ namespace WukongApi
             {
                 events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInVigorSkill);
                 events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantCastFaBao);
-                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract);
             }
         }
 
@@ -1170,7 +1168,7 @@ namespace WukongApi
 
         private void SetPlayerVisibility(PlayerState playerState, bool visible)
         {
-            Logging.LogDebug("Setting player {PlayerName} visibility to: {Visiblity}", playerState.NickName, visible);
+            Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerState.NickName, visible);
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.Pawn.SetActorEnableCollision(visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
@@ -1182,7 +1180,7 @@ namespace WukongApi
 
             if (Photon.ConnectedPlayers.ContainsKey(id))
             {
-                Logging.LogError("Player already exists: {Id}", id);
+                Logging.LogDebug("Player already exists: {Id}", id); // reconnection
                 return null;
             }
 
@@ -1206,7 +1204,7 @@ namespace WukongApi
 
             if (@class is null)
             {
-                Logging.LogDebug("Class is null");
+                Logging.LogError("Class is null");
                 return null;
             }
 
@@ -1288,7 +1286,7 @@ namespace WukongApi
             }
             else
             {
-                Logging.LogDebug("Cannot spawn player marker actor");
+                Logging.LogError("Cannot spawn player marker actor");
             }
 
             var teamName = GameUtils.GetTeamName(playerState.TeamId);

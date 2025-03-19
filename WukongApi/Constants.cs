@@ -25,9 +25,9 @@ namespace WukongApi
         public const int NewCharacterArchiveId = 9;
         public const int LevelArchiveId = 0;
         public const int MaxPlayers = 20;
-        public static readonly List<int> AvailableTeamIds = new() { -9999, -9998 };
+        public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;
-        public static readonly List<int> SkillsWhitelist = new() { 10518 };
+        public static readonly List<int> SkillsWhitelist = [10518];
 
         public const int CountdownSeconds = 5;
         public const int MatchmakingSeconds = 45;
@@ -46,6 +46,7 @@ namespace WukongApi
 
         public const string RealtimeAppId = "7aa130eb-9912-4845-b2de-8496a6f0fea7";
         public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
+        public const int PhotonTtlMs = 60_000;
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             EBGUAttrFloat.HpMax,

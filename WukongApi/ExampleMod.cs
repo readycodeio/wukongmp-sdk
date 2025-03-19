@@ -10,12 +10,12 @@ namespace WukongApi
 
         public void Init()
         {
-            Logging.LogDebug("Example mod Init");
+            Logging.LogInformation("Example mod Init");
         }
 
         public void DeInit()
         {
-            Logging.LogDebug("Example mod DeInit");
+            Logging.LogInformation("Example mod DeInit");
         }
     }
 }

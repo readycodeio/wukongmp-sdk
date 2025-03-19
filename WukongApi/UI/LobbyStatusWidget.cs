@@ -60,5 +60,7 @@ namespace WukongApi.UI
         {
             _gameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam2 {playerName}", true);
         }
+
+        protected override void PostInitialize() { }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using b1;
 using b1.BGW;
 using UnrealEngine.Runtime;
@@ -7,27 +6,27 @@ using UnrealEngine.UMG;
 
 namespace WukongApi
 {
-    public static class BlueprintUIUtils
+    public static class BlueprintUiUtils
     {
-        public static void SpawnUIManagerActor()
+        public static void SpawnUiManagerActor()
         {
             var world = GameUtils.GetWorld();
             if (world != null)
             {
-                var UIManagerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.UiManagerActorPath, ELoadResourceType.SyncLoadAndCache);
-                if (UIManagerActorClass == null)
+                var uiManagerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.UiManagerActorPath, ELoadResourceType.SyncLoadAndCache);
+                if (uiManagerActorClass == null)
                 {
                     Logging.LogError("Cannot find class of {Class} to spawn", Constants.UiManagerActorPath);
                     return;
                 }
-                var UIManagerActor = BGU_UnrealWorldUtil.SpawnActor(world, UIManagerActorClass);
-                if (UIManagerActor != null)
+                var uiManagerActor = BGU_UnrealWorldUtil.SpawnActor(world, uiManagerActorClass);
+                if (uiManagerActor != null)
                 {
-                    Logging.LogDebug("UI Manager actor spawned successfully");
+                    Logging.LogInformation("UI Manager actor spawned successfully");
                 }
                 else
                 {
-                    Logging.LogDebug("Cannot spawn UI Manager actor");
+                    Logging.LogError("Cannot spawn UI Manager actor");
                 }
             }
         }
@@ -38,12 +37,11 @@ namespace WukongApi
             if (world == null)
                 return null;
 
-            var list = new List<UUserWidget>();
             var userWidgets = new List<UUserWidget>();
 
             var wiClass = new TSubclassOf<UUserWidget>();
             wiClass.SetClass<UUserWidget>();
-            UWidgetLibrary.GetAllWidgetsOfClass(world, out list, wiClass, true);
+            UWidgetLibrary.GetAllWidgetsOfClass(world, out var list, wiClass);
             foreach (var widget in list)
             {
                 if (widget.GetFullName().Contains(widgetName))

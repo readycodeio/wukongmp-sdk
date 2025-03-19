@@ -14,16 +14,19 @@ namespace WukongApi.UI
 
         public void Initialize()
         {
-            _gameWidget = BlueprintUIUtils.GetWidget(_name);
+            _gameWidget = BlueprintUiUtils.GetWidget(_name);
             if (_gameWidget != null)
             {
                 Logging.LogDebug("{Name} widget initialized!", _name);
+                PostInitialize();
             }
             else
             {
                 Logging.LogError("Cannot initialize {Name} widget", _name);
             }
         }
+
+        protected abstract void PostInitialize();
 
         public void SetVisibility(bool visible)
         {
