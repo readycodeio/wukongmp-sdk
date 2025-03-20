@@ -141,7 +141,7 @@ namespace WukongApi
         {
             _chatClient?.Service();
 
-            if (_onGetMessage is null)
+            if (_onGetMessage == null)
             {
                 Logging.LogWarning("Get message callback is null");
                 return;

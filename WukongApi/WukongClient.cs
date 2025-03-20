@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using b1;
@@ -434,7 +432,7 @@ namespace WukongApi
                 Logging.LogError("Client is already running.");
                 return;
             }
-            
+
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             PhotonPeer.RegisterType(typeof(UnitSpawnData), 255, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
             PhotonPeer.RegisterType(typeof(FVector), 254, SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
@@ -481,13 +479,12 @@ namespace WukongApi
                 Logging.LogDebug("Client is already stopped.");
                 return;
             }
-            
+
             Logging.LogInformation("Stopping client...");
 
             _isStopped = true;
 
             WukongChat.Disconnect();
-
             PhotonClient.Disconnect();
 
             Logging.LogInformation("Stopped client.");
@@ -503,6 +500,12 @@ namespace WukongApi
                     BGU_UnrealWorldUtil.DestroyActor(player.Pawn);
                 }
             }
+
+            ConnectedPlayers.Clear();
+            SyncedMonsters.Clear();
+            _photonClones.Clear();
+            
+            _localPlayerState = null;
         }
 
         // ReSharper disable once FunctionNeverReturns
