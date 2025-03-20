@@ -4,24 +4,14 @@ using Photon.Client;
 
 namespace WukongApi
 {
-    public readonly struct UnitSpawnData
+    public readonly struct UnitSpawnData(string guid, string name, int teamId, float x, float y, float z)
     {
-        public readonly string Guid;
-        public readonly string Name;
-        public readonly int TeamId;
-        public readonly float X;
-        public readonly float Y;
-        public readonly float Z;
-
-        public UnitSpawnData(string guid, string name, int teamId, float x, float y, float z)
-        {
-            Guid = guid;
-            Name = name;
-            TeamId = teamId;
-            X = x;
-            Y = y;
-            Z = z;
-        }
+        public readonly string Guid = guid;
+        public readonly string Name = name;
+        public readonly int TeamId = teamId;
+        public readonly float X = x;
+        public readonly float Y = y;
+        public readonly float Z = z;
 
         public static short Serialize(StreamBuffer outStream, object unitSpawnData)
         {

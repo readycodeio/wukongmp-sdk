@@ -12,9 +12,9 @@ namespace WukongApi.UI
 
         private readonly CountdownTimer _countdownTimer = new(1, 5);
 
-        public void SetText(int seconds)
+        private void SetText(int seconds)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"SetText {seconds}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetText {seconds}", true);
         }
 
         public void StartLobbyCountdown(int seconds, Action callback)

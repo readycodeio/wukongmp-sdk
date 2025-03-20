@@ -8,10 +8,10 @@ namespace WukongApi
     public class FreeCameraManager
     {
         private bool _isInFreeCameraMode;
-        private BGUCharacterCS _cachePlayerPawn;
-        private AActor _freeCameraActor;
+        private BGUCharacterCS? _cachePlayerPawn;
+        private AActor? _freeCameraActor;
         private float _gameFov;
-        private AActor _cacheCameraViewTarget;
+        private AActor? _cacheCameraViewTarget;
         private const string FreeCameraActorPath = "/Game/Mods/CustomLuaMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
 
         public void EnterFreeCameraMode()

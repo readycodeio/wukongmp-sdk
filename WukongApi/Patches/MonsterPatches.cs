@@ -35,6 +35,12 @@ namespace WukongApi.Patches
                     if (!state.IsTamerValid)
                         continue;
 
+                    if (state.Pawn == null)
+                    {
+                        Logging.LogError("Monster pawn is null");
+                        continue;
+                    }
+
                     var location = state.Pawn.GetActorLocation();
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
@@ -60,8 +66,11 @@ namespace WukongApi.Patches
                     var events = BUS_EventCollectionCS.Get(state.Pawn);
 
                     if (events == null)
+                        continue;
+
+                    if (state.Pawn == null)
                     {
-                        // Logging.LogWarning($"BUS_EventCollectionCS is null for monster {}", state.Pawn.GetName());
+                        Logging.LogError("Monster pawn is null");
                         continue;
                     }
 

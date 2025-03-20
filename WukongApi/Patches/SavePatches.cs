@@ -5,6 +5,7 @@ using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
 using B1UI.GSUI;
+using BtlB1;
 using CommB1;
 using HarmonyLib;
 using UnrealEngine.Runtime;
@@ -13,8 +14,8 @@ namespace WukongApi.Patches
 {
     internal static class SavePatchesData
     {
-        public static bool CustomSaveEnabled = false;
-        public static bool ShouldCacheSave = false;
+        public static bool CustomSaveEnabled;
+        public static bool ShouldCacheSave;
     }
 
     [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
@@ -74,11 +75,17 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchGameArchive
     {
-        public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData OutArchiveData)
+        public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData? OutArchiveData)
         {
             if (__result != ReadArchiveResult.Success)
             {
                 Logging.LogError("Original readArchiveData Failed, Result: {Result}", __result);
+                return;
+            }
+
+            if (OutArchiveData == null)
+            {
+                Logging.LogError("Original OutArchiveData is null");
                 return;
             }
 
@@ -98,13 +105,16 @@ namespace WukongApi.Patches
                 else
                 {
                     SavePatchesData.CustomSaveEnabled = true;
-                    var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var CharacterGameArchiveData, out var CharacterArchiveCanBeRepaired);
-                    OutArchiveData = CharacterGameArchiveData.GameArchiveData;
+                    var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var characterGameArchiveData, out var characterArchiveCanBeRepaired);
+                    if (characterReadArchiveResult == ReadArchiveResult.Success)
+                    {
+                        OutArchiveData = characterGameArchiveData.GameArchiveData;
+                    }
                 }
             }
 
             // Read archive with our world state.
-            var readArchiveResult = __instance.ReadArchiveData(Constants.LevelArchiveId, out var GameArchiveData, out var ArchiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(Constants.LevelArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
@@ -114,14 +124,14 @@ namespace WukongApi.Patches
             SavePatchesData.CustomSaveEnabled = false;
 
             // Keep only RoleData with player state
-            OutArchiveData.LevelArchiveData = GameArchiveData.GameArchiveData.LevelArchiveData;
-            OutArchiveData.PersistentECSData = GameArchiveData.GameArchiveData.PersistentECSData;
-            OutArchiveData.StateMachineArchiveData = GameArchiveData.GameArchiveData.StateMachineArchiveData;
-            OutArchiveData.TaskArchiveData = GameArchiveData.GameArchiveData.TaskArchiveData;
+            OutArchiveData.LevelArchiveData = gameArchiveData.GameArchiveData.LevelArchiveData;
+            OutArchiveData.PersistentECSData = gameArchiveData.GameArchiveData.PersistentECSData;
+            OutArchiveData.StateMachineArchiveData = gameArchiveData.GameArchiveData.StateMachineArchiveData;
+            OutArchiveData.TaskArchiveData = gameArchiveData.GameArchiveData.TaskArchiveData;
 
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId=5101, Type=BtlB1.SpellType.QiShu }); // Immobilize
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId=5201, Type=BtlB1.SpellType.ShenFa }); // Phantom dash
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5201, Type = SpellType.ShenFa }); // Phantom dash
             OutArchiveData.RoleData.RoleCs.Actor.Wear.WearSoulSkill = null;
             OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
             OutArchiveData.RoleData.RoleCs.Actor.Wear.ShortcutsList.Clear();

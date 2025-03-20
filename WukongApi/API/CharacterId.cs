@@ -2,22 +2,17 @@ using System;
 
 namespace WukongApi.API
 {
-    public readonly struct CharacterId : IEquatable<CharacterId>
+    public readonly struct CharacterId(int index) : IEquatable<CharacterId>
     {
-        private readonly int _index;
+        private readonly int _index = index + 1;
 
-        public int index
+        public int Index
             => _index - 1;
-
-        public CharacterId(int index)
-        {
-            _index = index + 1;
-        }
 
         public bool Equals(CharacterId other)
             => _index == other._index;
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is CharacterId other && Equals(other);
 
         public override int GetHashCode()
@@ -32,6 +27,6 @@ namespace WukongApi.API
         public override string ToString()
             => _index == default
                 ? "CharacterId.Null"
-                : $"CharacterId({index})";
+                : $"CharacterId({Index})";
     }
 }

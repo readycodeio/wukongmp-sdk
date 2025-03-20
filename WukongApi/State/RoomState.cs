@@ -6,16 +6,9 @@ using Photon.Realtime;
 
 namespace WukongApi.State
 {
-    public class RoomState
+    public class RoomState(WukongClient client)
     {
-        private readonly WukongClient _client;
-
-        private Room Room => _client.PhotonClient.CurrentRoom;
-
-        public RoomState(WukongClient client)
-        {
-            _client = client;
-        }
+        private Room Room => client.PhotonClient.CurrentRoom;
 
         public GameMode GameMode
         {
@@ -52,7 +45,7 @@ namespace WukongApi.State
             get
             {
                 var str = GetProperty<string>(nameof(RoundWinners));
-                return str == null ? Enumerable.Empty<int>() : str.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse);
+                return str == null ? [] : str.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse);
             }
             set => SetProperty(nameof(RoundWinners), string.Join(";", value));
         }
@@ -66,7 +59,7 @@ namespace WukongApi.State
             RoundWinners = winners;
         }
 
-        private T GetProperty<T>(string name)
+        private T? GetProperty<T>(string name)
         {
             if (Room.CustomProperties.TryGetValue(name, out var obj))
                 return (T)obj;

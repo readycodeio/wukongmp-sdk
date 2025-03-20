@@ -1,5 +1,4 @@
-﻿using b1;
-using WukongApi.State;
+﻿using WukongApi.State;
 
 namespace WukongApi.UI
 {
@@ -9,17 +8,17 @@ namespace WukongApi.UI
 
         public void SetConnectedCount(int count)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"SetConnectedCount {count}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetConnectedCount {count}", true);
         }
 
         public void SetMaxConnectedCount(int count)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"SetMaxConnectedCount {count}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetMaxConnectedCount {count}", true);
         }
 
         public void SetReadyCount(int count)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
         }
 
         public void UpdatePlayerTeam(PlayerState playerState, int teamId)
@@ -43,22 +42,22 @@ namespace WukongApi.UI
 
         private void AddToTeam1(string playerName)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"AddToTeam1 {playerName}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"AddToTeam1 {playerName}", true);
         }
 
         private void RemoveFromTeam1(string playerName)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam1 {playerName}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam1 {playerName}", true);
         }
 
         private void AddToTeam2(string playerName)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"AddToTeam2 {playerName}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"AddToTeam2 {playerName}", true);
         }
 
         private void RemoveFromTeam2(string playerName)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam2 {playerName}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam2 {playerName}", true);
         }
 
         protected override void PostInitialize() { }

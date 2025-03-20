@@ -14,7 +14,7 @@ namespace WukongApi.UI
 
         private void SetText(int minutes, int seconds)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"SetText {minutes} {seconds}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetText {minutes} {seconds}", true);
         }
 
         public void StartCountdown(int minutes, int seconds, Action onFinishedCallback)

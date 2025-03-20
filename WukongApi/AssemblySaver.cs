@@ -17,7 +17,7 @@ namespace WukongApi
         );
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct ModuleInfo
+        private struct ModuleInfo
         {
             public IntPtr lpBaseOfDll;
             public uint SizeOfImage;

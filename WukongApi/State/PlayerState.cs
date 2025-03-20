@@ -11,9 +11,9 @@ namespace WukongApi.State
     {
         public int PhotonId { get; }
 
-        private APawn _pawn;
+        private APawn? _pawn;
 
-        public APawn Pawn
+        public APawn? Pawn
         {
             get
             {
@@ -28,9 +28,9 @@ namespace WukongApi.State
             set => _pawn = value;
         }
 
-        private AActor _markerActor;
+        private AActor? _markerActor;
 
-        public AActor MarkerActor
+        public AActor? MarkerActor
         {
             get
             {
@@ -65,7 +65,7 @@ namespace WukongApi.State
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
-        public string NickName { get; set; }
+        public string NickName { get; set; } = "Unknown";
         public bool RunImmobilizePatches { get; set; }
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
@@ -107,7 +107,7 @@ namespace WukongApi.State
                 }
 
                 var markerHeight = bguCharacterCs.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
-                MarkerActor.SetActorLocation(Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
+                MarkerActor.SetActorLocation(bguCharacterCs.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
             }
         }
 

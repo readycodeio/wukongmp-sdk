@@ -4,7 +4,7 @@ using BtlShare;
 
 namespace WukongApi.API
 {
-    internal class SkillsConfig
+    internal static class SkillsConfig
     {
         private static readonly Dictionary<SkillKind, SkillData> Configurations = new()
         {

@@ -52,7 +52,7 @@ namespace WukongApi
 
                 var newRelationInfo = new TeamRelationInfo
                 {
-                    HostileTeamIDs = new List<int>(oldRelationInfo.HostileTeamIDs),
+                    HostileTeamIDs = [..oldRelationInfo.HostileTeamIDs],
                     TeamDamageReductionRatios = new Dictionary<int, int>(oldRelationInfo.TeamDamageReductionRatios)
                 };
                 teamRelationData.TeamHostileInfos.Add(newTeamId, newRelationInfo);
@@ -118,10 +118,10 @@ namespace WukongApi
                 return;
             }
 
-            var monster = monsterState.Pawn.GetMonster();
+            var monster = monsterState.Pawn?.GetMonster();
 
             // sanity check
-            if (monster is null)
+            if (monster == null)
             {
                 Logging.LogError("Monster is null");
                 return;
@@ -147,7 +147,7 @@ namespace WukongApi
                 // disable AI on clients
                 var events = BUS_EventCollectionCS.Get(monster);
 
-                if (events is null)
+                if (events == null)
                 {
                     Logging.LogError("Events is null");
                     return;

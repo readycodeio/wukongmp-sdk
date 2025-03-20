@@ -1,10 +1,11 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
+using b1;
 using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
-using System.Collections.Generic;
-using System.Reflection;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -29,7 +30,7 @@ namespace WukongApi.Patches
             return false;
         }
     }
-    
+
     [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerItemSkill")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchTriggerItemSkill
@@ -89,13 +90,13 @@ namespace WukongApi.Patches
 
             var photon = WukongMP.Instance.Photon;
             AActor castingCharacter = __instance.GetOwner();
-            
+
             if (castingCharacter.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnCastImmobilize));
                 return false;
             }
-            
+
             var castingPlayerState = photon.GetByActor(castingCharacter);
 
             if (!photon.IsMasterClient)
@@ -113,70 +114,79 @@ namespace WukongApi.Patches
             {
                 ConfigID = CastImmobilizeData.ResId;
             }
+
             FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = CastImmobilizeData.GetCachedImmobilizeConfigDesc(ConfigID);
             if (cachedImmobilizeConfigDesc == null || BGW_LogUtil.LogIfNull(__instance.GetOwner() as ABGUCharacter, "CurCharacter is null"))
             {
                 return false;
             }
-            ABGUCharacter aBGUCharacter = null;
-            aBGUCharacter = TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
+
+            var aBGUCharacter = TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
             if (aBGUCharacter == null)
             {
                 aBGUCharacter = TargetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
             }
+
             if (BGW_LogUtil.LogIfNull(aBGUCharacter, "CurrentTarget As BGUCharacter is null") || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.AffiliationTypeFilter))
             {
                 Logging.LogDebug("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
                 return false;
             }
-            int num = ((cachedImmobilizeConfigDesc.TargetCount <= 0) ? 1 : cachedImmobilizeConfigDesc.TargetCount);
-            List<AActor> OutActors = new List<AActor>();
+
+            Debug.Assert(aBGUCharacter != null, "CurrentTarget As BGUCharacter is null");
+            int num = cachedImmobilizeConfigDesc.TargetCount <= 0 ? 1 : cachedImmobilizeConfigDesc.TargetCount;
+            List<AActor> outActors = [];
             if (num > 1)
             {
-                List<int> list = new List<int> { cachedImmobilizeConfigDesc.RangeRadius };
+                List<int> list = [cachedImmobilizeConfigDesc.RangeRadius];
                 AActor owner2 = __instance.GetOwner();
-                
+
                 if (owner2.IsNullOrDestroyed())
                 {
                     Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnCastImmobilize));
                     return false;
                 }
-                
+
                 FVector baseLoc = aBGUCharacter.BGUGetActorLocation();
                 int targetFilter = cachedImmobilizeConfigDesc.TargetFilter;
                 int targetTypeFilter = cachedImmobilizeConfigDesc.TargetTypeFilter;
                 int affiliationTypeFilter = cachedImmobilizeConfigDesc.AffiliationTypeFilter;
                 IList<int> Prams = list;
-                BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out OutActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in Prams);
-            }
-            if (OutActors.Contains(aBGUCharacter))
-            {
-                OutActors.Remove(aBGUCharacter);
+                BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out outActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in Prams);
             }
 
-            OutActors.Insert(0, aBGUCharacter);
-            
+            if (outActors.Contains(aBGUCharacter))
+            {
+                outActors.Remove(aBGUCharacter);
+            }
+
+            outActors.Insert(0, aBGUCharacter);
+
             int num2 = 0;
-            foreach (var item in OutActors)
+            foreach (var item in outActors)
             {
                 if (num2 >= num)
                 {
                     break;
                 }
+
                 if (BGUFunctionLibraryCS.BGUHasUnitState(item, EBGUUnitState.Dead))
                 {
                     continue;
                 }
+
                 if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.ImmueImmobilizing))
                 {
                     int actorResID = BGU_DataUtil.GetActorResID(item);
-                    UBGWDataAsset fXAssetByResID = GameUtils.GetFXAssetByResID(castingCharacter, cachedImmobilizeConfigDesc.FailedFXs, actorResID, CastImmobilizeData.ResId);
+                    UBGWDataAsset? fXAssetByResID = GameUtils.GetFxAssetByResId(castingCharacter, cachedImmobilizeConfigDesc.FailedFXs, actorResID, CastImmobilizeData.ResId);
                     if (fXAssetByResID != null)
                     {
                         BUS_EventCollectionCS.Get(item)?.Evt_RequestSpawnFXByDispConfigDA.Invoke(fXAssetByResID, out var _);
                     }
+
                     continue;
                 }
+
                 num2++;
                 int actorResID2 = BGU_DataUtil.GetActorResID(item);
                 if (BGW_LogUtil.LogIfNull(BGW_GameDB.GetUnitCommDesc(actorResID2), "BGW_GameDB.GetUnitCommDesc is null, ResID:%d", actorResID2))
@@ -213,6 +223,7 @@ namespace WukongApi.Patches
                 {
                     return true;
                 }
+
                 return false;
             }
         }
@@ -227,7 +238,7 @@ namespace WukongApi.Patches
                     return true;
 
                 var photon = WukongMP.Instance.Photon;
-                
+
                 var owner = __instance.GetOwner();
 
                 if (owner.IsNullOrDestroyed())
@@ -235,7 +246,7 @@ namespace WukongApi.Patches
                     Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchRelieveImmobilized));
                     return false;
                 }
-                
+
                 var playerState = photon.GetByActor(owner);
 
                 if (playerState == null)
@@ -270,20 +281,27 @@ namespace WukongApi.Patches
 
                 var photon = WukongMP.Instance.Photon;
                 var owner = __instance.GetOwner();
-                
+
                 if (owner.IsNullOrDestroyed())
                 {
                     Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerImmobilizedBreak));
                     return false;
                 }
-                
-                var playerState = photon.GetByActor(owner);
 
                 if (photon.IsMasterClient)
                 {
+                    var playerState = photon.GetByActor(owner);
+
+                    if (playerState == null)
+                    {
+                        Logging.LogError("Player state is null");
+                        return false;
+                    }
+
                     photon.BroadcastImmobilize(playerState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
                     BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 }
+
                 return false;
             }
         }
@@ -305,13 +323,13 @@ namespace WukongApi.Patches
 
                 var photon = WukongMP.Instance.Photon;
                 AActor owner = __instance.GetOwner();
-                
+
                 if (owner.IsNullOrDestroyed())
                 {
                     Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerPhantomRush));
                     return false;
                 }
-                
+
                 if (owner == photon.LocalPlayerState.Pawn)
                     return true;
 
@@ -322,20 +340,23 @@ namespace WukongApi.Patches
                     Logging.LogError("GetActualUseConfigID method info is null");
                     return false;
                 }
+
                 BUS_GSEventCollection BUSEventCollection = BUS_EventCollectionCS.Get(owner);
                 BGS_GSEventCollection BGSEventCollection = BGS_GSEventCollection.Get(owner);
-                ACharacter aCharacter = owner as ACharacter;
+                var aCharacter = owner as ACharacter;
                 if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
                 {
                     Logging.LogDebug("aCharacter is null or PhantomRush is already active");
                     return false;
                 }
+
                 FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
                 if (phantomRushSkillConfigDesc == null)
                 {
                     Logging.LogError("phantomRushSkillConfigDesc is null");
                     return false;
                 }
+
                 __instance.PreloadAssetMgr.TryGetCachedResourceObj<BGWDataAsset_PhantomRushRelatedeSkillConfig>(phantomRushSkillConfigDesc.PhantomRushRelatedSkillConfigPath, ELoadResourceType.AsyncLoadAndCache, EAssetPriority.Medium);
                 FPoseSnapshot Snapshot = default(FPoseSnapshot);
                 aCharacter.Mesh.SnapshotPose(ref Snapshot);
@@ -367,6 +388,7 @@ namespace WukongApi.Patches
                         }
                     }
                 }
+
                 BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill);
                 BUSEventCollection.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(phantomRushSkillConfigDesc.PhantomRushSkillID, ECastSkillSourceType.PhantomRush, _HasSetSkillBaseTarget: false, PhantomRushDir)
                 {
@@ -378,6 +400,7 @@ namespace WukongApi.Patches
                     Logging.LogDebug("GetLastSkillCastResult was not success");
                     return false;
                 }
+
                 BUSEventCollection.Evt_ClearAbnormalState.Invoke([
                     EAbnormalStateType.Abnormal_Burn,
                     EAbnormalStateType.Abnormal_Freeze,
@@ -391,6 +414,7 @@ namespace WukongApi.Patches
                 {
                     BUSEventCollection.Evt_BuffAdd.Invoke(phantomRushBeginAddBuffID, owner, owner, -1f, EBuffSourceType.PhantomRush);
                 }
+
                 ___PhantomRushData.PhantomRushTimer = phantomRushSkillConfigDesc.PhantomRushDuration;
                 ___PhantomRushData.PhantomRushNoMagicProtectTimer = 1f;
                 BGSEventCollection?.Evt_BGS_ClearAttachedProjectiles_OnUnit.Invoke(owner);
@@ -411,13 +435,13 @@ namespace WukongApi.Patches
 
                 var photon = WukongMP.Instance.Photon;
                 var owner = __instance.GetOwner();
-                
+
                 if (owner.IsNullOrDestroyed())
                 {
                     Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerPhantomRush));
                     return;
                 }
-                
+
                 if (owner == photon.LocalPlayerState.Pawn)
                 {
                     Logging.LogDebug("Sending phantom rush with direction: {Direction}", PhantomRushDir);
@@ -425,7 +449,7 @@ namespace WukongApi.Patches
                 }
             }
         }
-        
+
         [HarmonyPatch(typeof(BUS_PhantomRushComp), "ExitPhantomRush")]
         [HarmonyPatchCategory(Constants.ConnectedPatches)]
         public static class PatchExitPhantomRush
@@ -437,13 +461,13 @@ namespace WukongApi.Patches
 
                 var photon = WukongMP.Instance.Photon;
                 var owner = __instance.GetOwner();
-                
+
                 if (owner.IsNullOrDestroyed())
                 {
                     Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchExitPhantomRush));
                     return;
                 }
-                
+
                 var playerState = photon.GetByActor(owner);
 
                 if (playerState == null)

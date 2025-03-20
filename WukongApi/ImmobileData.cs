@@ -1,22 +1,14 @@
-﻿using Photon.Client;
-using System;
+﻿using System;
+using Photon.Client;
 
 namespace WukongApi
 {
-    public class ImmobilizeData
+    public class ImmobilizeData(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool greatSageTalentActiveBuff)
     {
-        public int PlayerId { get; }
-        public int OtherPlayerId { get; }
-        public ImmobilizeActionType ImmobilizeActionType { get; }
-        public bool GreatSageTalentActiveBuff { get; }
-
-        public ImmobilizeData(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool greatSageTalentActiveBuff)
-        {
-            PlayerId = playerId;
-            OtherPlayerId = otherPlayerId;
-            ImmobilizeActionType = immobilizeActionType;
-            GreatSageTalentActiveBuff = greatSageTalentActiveBuff;
-        }
+        public int PlayerId { get; } = playerId;
+        public int OtherPlayerId { get; } = otherPlayerId;
+        public ImmobilizeActionType ImmobilizeActionType { get; } = immobilizeActionType;
+        public bool GreatSageTalentActiveBuff { get; } = greatSageTalentActiveBuff;
 
         public static short Serialize(StreamBuffer outStream, object customObject)
         {
@@ -26,7 +18,7 @@ namespace WukongApi
             outStream.WriteByte((byte)data.ImmobilizeActionType);
             outStream.Write(BitConverter.GetBytes(data.GreatSageTalentActiveBuff), 0, 1);
 
-            return (short)(12);
+            return 12;
         }
 
         public static object Deserialize(StreamBuffer inStream, short length)
@@ -47,6 +39,5 @@ namespace WukongApi
 
             return new ImmobilizeData(playerId, otherPlayerId, inputActionType, greatSageTalentActiveBuff);
         }
-
     }
 }

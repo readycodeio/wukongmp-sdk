@@ -7,26 +7,31 @@ using UnrealEngine.Runtime;
 
 namespace WukongApi
 {
-    public class LobbyManager
+    public class LobbyManager(WukongClient wukongClient)
     {
-        private readonly WukongClient _wukongClient;
-
-        public LobbyManager(WukongClient wukongClient)
-        {
-            _wukongClient = wukongClient;
-        }
-
         public async Task StartRoundAsync()
         {
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
             await Task.Delay(100);
 
-            _wukongClient.SendPvPEvent(PvPEvent.RoundStart);
+            wukongClient.SendPvPEvent(PvPEvent.RoundStart);
         }
 
         private void PlacePlayers(FVector center, float radius)
         {
-            var playerStates = _wukongClient.AllPvPPlayers.ToList();
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
+            var playerStates = wukongClient.AllPvPPlayers.ToList();
 
             var teamsIds = playerStates.Select(playerState => playerState.TeamId).Distinct().ToList();
             var teamsCount = teamsIds.Count;
@@ -52,17 +57,23 @@ namespace WukongApi
 
                 teamMemberIndex[playerState.TeamId]++;
                 var newPlayerLocation = new FVector(x, y, center.Z);
-                _wukongClient.BroadcastPlayerTransform(playerState.PhotonId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
+                wukongClient.BroadcastPlayerTransform(playerState.PhotonId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
             }
         }
 
         public async Task EndRoundAsync(int winner)
         {
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
             // disable pvp until next round
-            _wukongClient.SendPvPEvent(PvPEvent.RoundEnd, winner);
+            wukongClient.SendPvPEvent(PvPEvent.RoundEnd, winner);
 
             // increment round number
-            _wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
+            wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
 
             // wait until all players death animations are finished
             await Task.Delay(5000);
@@ -70,26 +81,26 @@ namespace WukongApi
             await ResetHpAndRespawnAllPlayers();
 
             // resolve tournament
-            var winnersSoFar = _wukongClient.CurrentRoomState.RoundWinners.ToList();
+            var winnersSoFar = wukongClient.CurrentRoomState.RoundWinners.ToList();
             var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
             // check if only one team is present
-            if (_wukongClient.AllPvPPlayers.Select(p => p.TeamId).Distinct().Count() == 1)
+            if (wukongClient.AllPvPPlayers.Select(p => p.TeamId).Distinct().Count() == 1)
             {
-                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, _wukongClient.LocalPlayerState.TeamId);
+                wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, wukongClient.LocalPlayerState.TeamId);
                 return;
             }
 
             // check if any team won more than half of the rounds
-            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _wukongClient.CurrentRoomState.RoundsTotal / 2);
+            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > wukongClient.CurrentRoomState.RoundsTotal / 2);
             if (winnerTeam.Key != 0)
             {
-                _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
+                wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
                 return;
             }
 
             // otherwise, check if we have a tie
-            if (_wukongClient.CurrentRoomState.CurrentRound > _wukongClient.CurrentRoomState.RoundsTotal)
+            if (wukongClient.CurrentRoomState.CurrentRound > wukongClient.CurrentRoomState.RoundsTotal)
             {
                 if (winnersByTeam.Count > 0)
                 {
@@ -98,17 +109,17 @@ namespace WukongApi
                     var winningTeams = winnersByTeam.Where(t => t.Value == maxWins).Select(t => t.Key).ToList();
                     if (winningTeams.Count == 1)
                     {
-                        _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winningTeams[0]);
+                        wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winningTeams[0]);
                     }
                     else
                     {
-                        _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
+                        wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
                     }
                 }
                 else
                 {
                     // that was the final round
-                    _wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
+                    wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
                 }
             }
             else
@@ -120,13 +131,19 @@ namespace WukongApi
 
         private async Task ResetHpAndRespawnAllPlayers()
         {
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
             // resurrect dead players and restore health to living ones
-            _wukongClient.SendPvPEvent(PvPEvent.ResetStats);
-            foreach (var player in _wukongClient.AllConnectedPlayers)
+            wukongClient.SendPvPEvent(PvPEvent.ResetStats);
+            foreach (var player in wukongClient.AllConnectedPlayers)
             {
                 if (player.IsDead)
                 {
-                    _wukongClient.BroadcastPlayerRebirth(player.PhotonId);
+                    wukongClient.BroadcastPlayerRebirth(player.PhotonId);
                 }
             }
 

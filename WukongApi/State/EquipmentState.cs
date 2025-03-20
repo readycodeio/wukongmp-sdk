@@ -9,7 +9,7 @@ namespace WukongApi.State
     {
         private readonly Dictionary<EquipPosition, int> _equipments = new();
 
-        public EquipmentState() { }
+        private EquipmentState() { }
 
         public EquipmentState(IEnumerable<(EquipPosition, int)> equipments)
         {

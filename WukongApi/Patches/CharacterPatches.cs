@@ -52,7 +52,7 @@ namespace WukongApi.Patches
                 if (__instance.Owner == photon.LocalPlayerState.Pawn)
                     return;
 
-                var playerState = photon.GetByActor(__instance.Owner as BGUCharacterCS);
+                var playerState = photon.GetByActor(__instance.Owner);
                 if (playerState != null)
                 {
                     foreach (var (attr, value) in playerState.Attributes)
@@ -94,13 +94,21 @@ namespace WukongApi.Patches
                 if (photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
+
+                    if (events == null)
+                    {
+                        Logging.LogError("events is null in {Patch}", nameof(PatchAttrs));
+                        return;
+                    }
+
                     Logging.LogDebug("Applying unit dead for player {PlayerId}", photon.LocalPlayerState.PhotonId);
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+
+                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
             else
             {
-                var playerState = photon.GetByActor(__instance.Owner as BGUCharacterCS);
+                var playerState = photon.GetByActor(__instance.Owner);
 
                 // remote player
                 if (playerState != null)
@@ -134,8 +142,14 @@ namespace WukongApi.Patches
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
+                        if (events == null)
+                        {
+                            Logging.LogError("events is null in {Patch}", nameof(PatchAttrs));
+                            return;
+                        }
+
                         Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PhotonId);
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
                 else
@@ -143,7 +157,7 @@ namespace WukongApi.Patches
                     var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
 
                     // monster
-                    if (monster?.Hp != null && monster.IsSynced)
+                    if (monster is { Hp: not null, IsSynced: true })
                     {
                         if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                         {
@@ -189,7 +203,7 @@ namespace WukongApi.Patches
 
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
-            
+
             if (owner.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchHp));
@@ -230,7 +244,7 @@ namespace WukongApi.Patches
 
                     // monster was damaged
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
-                    if (monster != null && monster.IsSynced)
+                    if (monster is { IsSynced: true })
                     {
                         if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(result, Constants.FloatComparisonTolerance))
                         {
@@ -298,7 +312,7 @@ namespace WukongApi.Patches
 
             if (Owner is not BGUCharacterCS character)
                 return;
-            
+
             if (Owner.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchCharacterAnimation));
@@ -399,7 +413,7 @@ namespace WukongApi.Patches
                     // maybe it's a monster
                     var monsterState = photon.GetMonsterByCharacter(character);
 
-                    if (monsterState != null && monsterState.IsSynced)
+                    if (monsterState is { IsSynced: true })
                     {
                         if (photon.IsMasterClient)
                         {

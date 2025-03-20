@@ -4,20 +4,18 @@ using System.Linq;
 using System.Threading;
 using Photon.Chat;
 using Photon.Client;
-using WukongApi.State;
 using AuthenticationValues = Photon.Chat.AuthenticationValues;
 
 namespace WukongApi
 {
-    internal class Command
+    internal class Command(Action<string[]> handler)
     {
-        public string Name { get; set; }
-        public Action<string[]> Handler { get; set; }
+        public Action<string[]> Handler { get; set; } = handler;
     }
 
     public class WukongChatter : IChatClientListener
     {
-        private ChatClient _chatClient;
+        private ChatClient? _chatClient;
         private readonly WukongClient _wukongClient;
 
         private const string ServerPrefix = "<S>";
@@ -26,17 +24,16 @@ namespace WukongApi
         private string GeneralChannelName => $"chat-${RoomName}";
         private string NickName => _wukongClient.LocalPlayerState.NickName;
 
-        private bool _isExit;
+        private bool _isStopped = true;
+        private Func<string>? _onGetMessage;
 
-        public event Func<string> OnGetMessage;
-        public event Action<bool, string, string> OnSendMessage;
-
-        public event Action OnSavePosition;
-        public event Action OnLoadPosition;
-        public event Action OnReconnectRequest;
-        public event Action OnDisconnectRequest;
-        public event Action OnRebirthRequested;
-        public event Action<string, int, int> OnSpawnEnemy;
+        public event Action<bool, string, string>? OnSendMessage;
+        public event Action? OnSavePosition;
+        public event Action? OnLoadPosition;
+        public event Action? OnReconnectRequest;
+        public event Action? OnDisconnectRequest;
+        public event Action? OnRebirthRequested;
+        public event Action<string, int, int>? OnSpawnEnemy;
 
         private const char Separator = ' ';
         private readonly Dictionary<string, Command> _commands = new();
@@ -45,12 +42,18 @@ namespace WukongApi
         {
             _wukongClient = owner;
             SetupCommands();
+        }
 
-            new Thread(LoopChat).Start();
+        public void SetMessageCallback(Func<string> getMessage)
+        {
+            _onGetMessage = getMessage;
         }
 
         public void InitializeChat(string userId)
         {
+            _isStopped = false;
+            new Thread(LoopChat).Start();
+
             var authValues = new AuthenticationValues(userId)
             {
                 AuthType = CustomAuthenticationType.Custom,
@@ -73,120 +76,62 @@ namespace WukongApi
         public void Disconnect()
         {
             _chatClient?.Disconnect();
-            StopMessageService();
-        }
-
-        private void StopMessageService()
-        {
-            _isExit = true;
+            _chatClient = null;
+            _isStopped = true;
         }
 
         private void SetupCommands()
         {
-            _commands.Add(
-                "/savePos",
-                new Command
-                {
-                    Name = "Save checkpoint",
-                    Handler = _ => { OnSavePosition?.Invoke(); }
-                });
-
-            _commands.Add(
-                "/loadPos",
-                new Command
-                {
-                    Name = "Load checkpoint",
-                    Handler = _ => { OnLoadPosition?.Invoke(); }
-                });
-
-            _commands.Add(
-                "/spawn",
-                new Command
-                {
-                    Name = "Spawn enemy NPC",
-                    Handler = args =>
-                    {
-                        switch (args.Length)
-                        {
-                            case 1:
-                                OnSpawnEnemy?.Invoke(args[0], 1, _wukongClient.LocalPlayerState.TeamId);
-                                SendServerMessage("Spawned monster");
-                                break;
-                            case 2:
-                            {
-                                if (int.TryParse(args[1], out var count))
-                                {
-                                    OnSpawnEnemy?.Invoke(args[0], count, _wukongClient.LocalPlayerState.TeamId);
-                                    SendServerMessage($"Spawned {count} monsters");
-                                }
-
-                                break;
-                            }
-                        }
-                    }
-                });
-            _commands.Add(
-                "/reconnect",
-                new Command
-                {
-                    Name = "Reconnect",
-                    Handler = _ => { RequestReconnect(); }
-                });
-            _commands.Add(
-                "/disconnect",
-                new Command
-                {
-                    Name = "Disconnect",
-                    Handler = _ => { RequestDisconnect(); }
-                });
-            _commands.Add(
-                "/rebirth",
-                new Command
-                {
-                    Name = "Rebirth",
-                    Handler = _ => { RequestRebirth(); }
-                });
-            _commands.Add(
-                "/giveup",
-                new Command
-                {
-                    Name = "GiveUp",
-                    Handler = _ => { RequestGiveUp(); }
-                });
-            _commands.Add(
-                "/ready",
-                new Command
-                {
-                    Name = "Ready",
-                    Handler = _ => { _wukongClient.SetReadyState(true); }
-                });
-            _commands.Add(
-                "/start",
-                new Command
-                {
-                    Name = "Start",
-                    Handler = _ => { _wukongClient.RequestStartPvP(); }
-                });
+            _commands.Add("/savePos", new Command(_ => OnSavePosition?.Invoke()));
+            _commands.Add("/loadPos", new Command(_ => { OnLoadPosition?.Invoke(); }));
+            _commands.Add("/spawn", new Command(RequestSpawn));
+            _commands.Add("/reconnect", new Command(RequestReconnect));
+            _commands.Add("/disconnect", new Command(RequestDisconnect));
+            _commands.Add("/rebirth", new Command(RequestRebirth));
+            _commands.Add("/giveup", new Command(RequestGiveUp));
+            _commands.Add("/ready", new Command(_ => { _wukongClient.SetReadyState(true); }));
+            _commands.Add("/start", new Command(_ => { _wukongClient.RequestStartPvP(); }));
         }
 
-        private void RequestRebirth()
+        private void RequestSpawn(string[] args)
+        {
+            switch (args.Length)
+            {
+                case 1:
+                    OnSpawnEnemy?.Invoke(args[0], 1, _wukongClient.LocalPlayerState.TeamId);
+                    SendServerMessage("Spawned monster");
+                    break;
+                case 2:
+                {
+                    if (int.TryParse(args[1], out var count))
+                    {
+                        OnSpawnEnemy?.Invoke(args[0], count, _wukongClient.LocalPlayerState.TeamId);
+                        SendServerMessage($"Spawned {count} monsters");
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        private void RequestRebirth(params object[] _)
         {
             OnRebirthRequested?.Invoke();
             SendServerMessage($"Player {NickName} requested rebirth");
         }
 
-        private void RequestGiveUp()
+        private void RequestGiveUp(params object[] _)
         {
             SendServerMessage($"Player {NickName} gave up");
             _wukongClient.KillCurrentPlayer();
         }
 
-        private void RequestReconnect()
+        private void RequestReconnect(params object[] _)
         {
             OnReconnectRequest?.Invoke();
         }
 
-        private void RequestDisconnect()
+        private void RequestDisconnect(params object[] _)
         {
             SendServerMessage($"{NickName} has left!");
             OnDisconnectRequest?.Invoke();
@@ -196,15 +141,18 @@ namespace WukongApi
         {
             _chatClient?.Service();
 
-            var message = OnGetMessage?.Invoke();
+            if (_onGetMessage == null)
+            {
+                Logging.LogWarning("Get message callback is null");
+                return;
+            }
+
+            var message = _onGetMessage.Invoke();
             if (!string.IsNullOrEmpty(message))
             {
                 if (!TryHandleCommand(message))
                 {
-                    if (_chatClient != null)
-                    {
-                        SendChatMessage(message);
-                    }
+                    SendChatMessage(message);
                 }
             }
         }
@@ -228,21 +176,37 @@ namespace WukongApi
 
         private void LoopChat()
         {
-            while (!_isExit)
+            Logging.LogDebug("Chat loop started");
+
+            while (!_isStopped)
             {
                 ServiceChat();
                 Thread.Sleep(33);
             }
+
+            Logging.LogDebug("Chat loop stopped");
         }
 
         private void SendChatMessage(string message)
         {
+            if (_chatClient == null)
+            {
+                Logging.LogError("Chat client is null");
+                return;
+            }
+
             Logging.LogDebug("Sending message {Message}", message);
             _chatClient.PublishMessage(GeneralChannelName, $"{ClientPrefix}{message}");
         }
 
         public void SendServerMessage(string message)
         {
+            if (_chatClient == null)
+            {
+                Logging.LogError("Chat client is null");
+                return;
+            }
+
             Logging.LogDebug("Sending server message {Message}", message);
             _chatClient.PublishMessage(GeneralChannelName, $"{ServerPrefix}{message}");
         }
@@ -267,7 +231,7 @@ namespace WukongApi
         public void OnConnected()
         {
             Logging.LogDebug("Chat connected");
-            _chatClient.Subscribe(GeneralChannelName);
+            _chatClient!.Subscribe(GeneralChannelName);
             SendServerMessage($"{NickName} has joined!");
         }
 

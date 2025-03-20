@@ -2,6 +2,7 @@
 using CSharpModBase;
 using CSharpModBase.Input;
 using System.Diagnostics;
+using System.Reflection;
 using Photon.Realtime;
 using WukongApi;
 
@@ -18,6 +19,11 @@ namespace WukongMPMod
         public void Init()
         {
             Logging.LogInformation("Init WukongMP mod");
+
+            // InformationalVersion from assembly def
+            var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+            Logging.LogInformation("Mod version: {Version}", trueModVersion);
             Logging.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             _wukongMp = WukongMP.Instance;
@@ -50,7 +56,7 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 Logging.LogDebug("Alt + X");
-                _wukongMp.ResetLocalPlayerCooldown();
+                WukongMP.ResetLocalPlayerCooldown();
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>

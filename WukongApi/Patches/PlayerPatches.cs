@@ -330,7 +330,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            BGUCharacterCS bGUCharacterCS = owner as BGUCharacterCS;
+            var bGUCharacterCS = owner as BGUCharacterCS;
             if (bGUCharacterCS == null || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 return;
@@ -342,7 +342,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (photon.IsMasterClient && photon.CurrentRoomState.InPvP)
+            if (photon is { IsMasterClient: true, CurrentRoomState.InPvP: true })
             {
                 if (Attacker != owner)
                 {
@@ -477,7 +477,7 @@ namespace WukongApi.Patches
             if (owner != photon.LocalPlayerState.Pawn)
                 return;
 
-            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo?.LockTargetActor)
+            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return;
 
             var newTargetPlayerState = photon.GetByActor(NewTargetInfo?.LockTargetActor);
