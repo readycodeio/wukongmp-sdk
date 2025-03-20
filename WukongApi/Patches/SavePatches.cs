@@ -75,11 +75,17 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchGameArchive
     {
-        public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData OutArchiveData)
+        public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData? OutArchiveData)
         {
             if (__result != ReadArchiveResult.Success)
             {
                 Logging.LogError("Original readArchiveData Failed, Result: {Result}", __result);
+                return;
+            }
+
+            if (OutArchiveData == null)
+            {
+                Logging.LogError("Original OutArchiveData is null");
                 return;
             }
 
@@ -100,7 +106,10 @@ namespace WukongApi.Patches
                 {
                     SavePatchesData.CustomSaveEnabled = true;
                     var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var characterGameArchiveData, out var characterArchiveCanBeRepaired);
-                    OutArchiveData = characterGameArchiveData.GameArchiveData;
+                    if (characterReadArchiveResult == ReadArchiveResult.Success)
+                    {
+                        OutArchiveData = characterGameArchiveData.GameArchiveData;
+                    }
                 }
             }
 
@@ -109,12 +118,6 @@ namespace WukongApi.Patches
             if (readArchiveResult != 0)
             {
                 Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
-                return;
-            }
-
-            if (gameArchiveData?.GameArchiveData == null)
-            {
-                Logging.LogError("GameArchiveData is null");
                 return;
             }
 
@@ -127,8 +130,8 @@ namespace WukongApi.Patches
             OutArchiveData.TaskArchiveData = gameArchiveData.GameArchiveData.TaskArchiveData;
 
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId=5101, Type=SpellType.QiShu }); // Immobilize
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId=5201, Type=SpellType.ShenFa }); // Phantom dash
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
+            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5201, Type = SpellType.ShenFa }); // Phantom dash
             OutArchiveData.RoleData.RoleCs.Actor.Wear.WearSoulSkill = null;
             OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
             OutArchiveData.RoleData.RoleCs.Actor.Wear.ShortcutsList.Clear();
