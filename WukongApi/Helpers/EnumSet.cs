@@ -9,7 +9,7 @@ namespace WukongApi.Helpers
     {
         private readonly byte[] _flags = new byte[32];
 
-        public EnumSet()
+        private EnumSet()
         {
             // check if Enum's max value is beyond 255, if so throw
             if (Enum.GetValues(typeof(T)).Length > 256)

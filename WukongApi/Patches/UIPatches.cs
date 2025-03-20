@@ -30,7 +30,7 @@ namespace WukongApi.Patches
 
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class UIPatches
+    public static class UiPatches
     {
         private static MethodBase TargetMethod()
         {
@@ -54,7 +54,7 @@ namespace WukongApi.Patches
 
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public static class PatchStartGameUI
+    public static class PatchStartGameUi
     {
         private static MethodBase TargetMethod()
         {
@@ -232,9 +232,9 @@ namespace WukongApi.Patches
                 return true;
 
             InteractionFuncDesc interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
-            return (interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.Teleport
-                && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossIterations
-                && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge);
+            return interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.Teleport
+                   && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossIterations
+                   && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge;
         }
     }
     
@@ -247,7 +247,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            __result = new List<int>();
+            __result = [];
             return false;
         }
     }

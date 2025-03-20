@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using b1;
 using b1.BGW;
 using B1UI.GSUI;
@@ -10,7 +8,6 @@ using GSE.GSUI;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongApi.API;
 
 namespace WukongApi
 {
@@ -139,7 +136,7 @@ namespace WukongApi
             Utils.TryRunOnGameThread(() =>
             {
                 var playUiSound = AccessTools.Method("B1UI.Script.GSUI.Util.GSUIAudioUtil:PlayUISound");
-                playUiSound.Invoke(null, new object[] { "EVT_ui_kill_jisha_manjingtou" });
+                playUiSound.Invoke(null, ["EVT_ui_kill_jisha_manjingtou"]);
             });
         }
 
@@ -182,17 +179,17 @@ namespace WukongApi
             ImmobilizeConfigInstance immobilizeConfigInstance = new ImmobilizeConfigInstance();
             int actorResID3 = BGU_DataUtil.GetActorResID(character);
             immobilizeConfigInstance.DurationSecond = cachedImmobilizeConfigDesc.DurationMs * 0.001f;
-            immobilizeConfigInstance.AlmostEndAheadTimeSecond = (float)cachedImmobilizeConfigDesc.AlmostEndAheadTimeMs * 0.001f;
-            immobilizeConfigInstance.MinDurationSecond = (float)cachedImmobilizeConfigDesc.MinimalDurationMs * 0.001f;
-            immobilizeConfigInstance.RepeatedImmobilizedDef = (float)cachedImmobilizeConfigDesc.RepeatedImmobilizedDef * 0.0001f;
+            immobilizeConfigInstance.AlmostEndAheadTimeSecond = cachedImmobilizeConfigDesc.AlmostEndAheadTimeMs * 0.001f;
+            immobilizeConfigInstance.MinDurationSecond = cachedImmobilizeConfigDesc.MinimalDurationMs * 0.001f;
+            immobilizeConfigInstance.RepeatedImmobilizedDef = cachedImmobilizeConfigDesc.RepeatedImmobilizedDef * 0.0001f;
             immobilizeConfigInstance.CasterActor = casterActor;
             immobilizeConfigInstance.bEnableGreatSageTalent = cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff > 0 && hasBuff;
-            immobilizeConfigInstance.BeginFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, CastImmobilizeDataResId);
-            immobilizeConfigInstance.AlmostEndFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, CastImmobilizeDataResId);
-            immobilizeConfigInstance.EndFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, CastImmobilizeDataResId);
-            immobilizeConfigInstance.QuickFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, CastImmobilizeDataResId);
-            immobilizeConfigInstance.BreakingFXsTriggerRatio = (float)cachedImmobilizeConfigDesc.BreakingFXsTriggerRatio * 0.0001f;
-            immobilizeConfigInstance.BreakingFX = GameUtils.GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.BeginFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.AlmostEndFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.EndFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.QuickFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.BreakingFXsTriggerRatio = cachedImmobilizeConfigDesc.BreakingFXsTriggerRatio * 0.0001f;
+            immobilizeConfigInstance.BreakingFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, CastImmobilizeDataResId);
             foreach (FSpellEffect beginEffect in cachedImmobilizeConfigDesc.BeginEffects)
             {
                 immobilizeConfigInstance.BeginEffects.Add(new FSpellEffectForData(beginEffect));

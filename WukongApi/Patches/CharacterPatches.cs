@@ -143,7 +143,7 @@ namespace WukongApi.Patches
                     var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
 
                     // monster
-                    if (monster?.Hp != null && monster.IsSynced)
+                    if (monster is { Hp: not null, IsSynced: true })
                     {
                         if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                         {
@@ -230,7 +230,7 @@ namespace WukongApi.Patches
 
                     // monster was damaged
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
-                    if (monster != null && monster.IsSynced)
+                    if (monster is { IsSynced: true })
                     {
                         if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(result, Constants.FloatComparisonTolerance))
                         {
@@ -399,7 +399,7 @@ namespace WukongApi.Patches
                     // maybe it's a monster
                     var monsterState = photon.GetMonsterByCharacter(character);
 
-                    if (monsterState != null && monsterState.IsSynced)
+                    if (monsterState is { IsSynced: true })
                     {
                         if (photon.IsMasterClient)
                         {

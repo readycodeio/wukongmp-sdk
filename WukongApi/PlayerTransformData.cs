@@ -4,18 +4,11 @@ using UnrealEngine.Runtime;
 
 namespace WukongApi
 {
-    public readonly struct PlayerTransformData
+    public readonly struct PlayerTransformData(int playerId, FVector location, FRotator rotation)
     {
-        public readonly int PlayerId;
-        public readonly FVector Location;
-        public readonly FRotator Rotation;
-
-        public PlayerTransformData(int playerId, FVector location, FRotator rotation)
-        {
-            PlayerId = playerId;
-            Location = location;
-            Rotation = rotation;
-        }
+        public readonly int PlayerId = playerId;
+        public readonly FVector Location = location;
+        public readonly FRotator Rotation = rotation;
 
         public static short Serialize(StreamBuffer outStream, object customObject)
         {

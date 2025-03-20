@@ -2,27 +2,21 @@
 
 namespace WukongApi.UI
 {
-    public abstract class GameWidgetBase
+    public abstract class GameWidgetBase(string name)
     {
-        protected UUserWidget _gameWidget;
-        private readonly string _name;
-
-        protected GameWidgetBase(string name)
-        {
-            _name = name;
-        }
+        protected UUserWidget GameWidget;
 
         public void Initialize()
         {
-            _gameWidget = BlueprintUiUtils.GetWidget(_name);
-            if (_gameWidget != null)
+            GameWidget = BlueprintUiUtils.GetWidget(name);
+            if (GameWidget != null)
             {
-                Logging.LogDebug("{Name} widget initialized!", _name);
+                Logging.LogDebug("{Name} widget initialized!", name);
                 PostInitialize();
             }
             else
             {
-                Logging.LogError("Cannot initialize {Name} widget", _name);
+                Logging.LogError("Cannot initialize {Name} widget", name);
             }
         }
 
@@ -30,12 +24,12 @@ namespace WukongApi.UI
 
         public void SetVisibility(bool visible)
         {
-            _gameWidget?.CallFunctionByNameWithArguments($"SetWidgetVisibility {visible}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetWidgetVisibility {visible}", true);
         }
 
         public void Deinitialize()
         {
-            _gameWidget = null;
+            GameWidget = null;
         }
     }
 }

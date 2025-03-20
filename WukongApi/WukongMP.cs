@@ -14,7 +14,6 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.Patches;
 using WukongApi.State;
-using WukongApi.Timer;
 using WukongApi.UI;
 using PlayerState = WukongApi.State.PlayerState;
 
@@ -27,14 +26,14 @@ namespace WukongApi
     {
         public FreeCameraManager FreeCameraManager { get; } = new();
 
-        public readonly Harmony Harmony = new("WukongMP");
+        private readonly Harmony _harmony = new("WukongMP");
 
         public WukongClient Photon { get; private set; }
 
         private FVector _savedPosition;
         private bool _isAfterLoadingScreen;
 
-        public ChatWidget ChatWidget { get; private set; } = new();
+        public ChatWidget ChatWidget { get; } = new();
         private readonly TimerWidget _timerWidget = new();
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
@@ -55,8 +54,8 @@ namespace WukongApi
         {
             Utils.TryRunOnGameThread(() =>
             {
-                Harmony.PatchCategory(Constants.GlobalPatches);
-                Harmony.PatchCategory(Constants.ConnectedPatches);
+                _harmony.PatchCategory(Constants.GlobalPatches);
+                _harmony.PatchCategory(Constants.ConnectedPatches);
                 Logging.LogInformation("Patched with Harmony");
             });
         }
@@ -65,8 +64,8 @@ namespace WukongApi
         {
             Utils.TryRunOnGameThread(() =>
             {
-                Harmony.UnpatchCategory(Constants.ConnectedPatches);
-                Harmony.UnpatchCategory(Constants.GlobalPatches);
+                _harmony.UnpatchCategory(Constants.ConnectedPatches);
+                _harmony.UnpatchCategory(Constants.GlobalPatches);
                 Logging.LogInformation("Unpatched with Harmony");
             });
         }
@@ -210,12 +209,12 @@ namespace WukongApi
                 }
                 else
                 {
-                    SetupLobbyUI();
+                    SetupLobbyUi();
                 }
             }
         }
 
-        private void SetupLobbyUI()
+        private void SetupLobbyUi()
         {
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
@@ -330,7 +329,7 @@ namespace WukongApi
         public void EndTournament(int winnerTeamId)
         {
             Logging.LogInformation("End tournament");
-            SetupLobbyUI();
+            SetupLobbyUi();
             ShowAllPlayers();
             FreeCameraManager.LeaveFreeCameraMode();
             SetHudVisibility(true);
@@ -511,10 +510,10 @@ namespace WukongApi
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             }
 
-            UpdatePlayerTeamUI(playerState);
+            UpdatePlayerTeamUi(playerState);
         }
 
-        private void UpdatePlayerTeamUI(PlayerState playerState)
+        private void UpdatePlayerTeamUi(PlayerState playerState)
         {
             if (!playerState.IsSpectator)
                 _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
@@ -564,25 +563,24 @@ namespace WukongApi
             ResetMana(player);
         }
 
-        public void SetHudVisibility(bool visible)
+        private static void SetHudVisibility(bool visible)
         {
             GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
         }
 
-        private void ResetCooldown(APawn playerPawn)
+        private static void ResetCooldown(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_ResetSkillCD.Invoke();
         }
 
-        private void ResetMana(APawn playerPawn)
+        private static void ResetMana(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(playerPawn);
             float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
-
 
         private void HandleImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
@@ -628,15 +626,15 @@ namespace WukongApi
         {
             Logging.LogDebug("Received trigger immobilize for player {Nickname}", immobilizedPlayerState.NickName);
             var character = immobilizedPlayerState.Pawn as BGUCharacterCS;
-            var CastImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+            var castImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
-            FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = CastImmobilizeData.GetCachedImmobilizeConfigDesc(CastImmobilizeData.ResId);
+            FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
             if (cachedImmobilizeConfigDesc == null)
             {
                 return;
             }
 
-            ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(character, castingPlayerState.Pawn, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
+            ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(character, castingPlayerState.Pawn, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
             BUS_EventCollectionCS.Get(character)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
         }
 
@@ -715,7 +713,7 @@ namespace WukongApi
 
             if (isReady)
             {
-                if (Photon.ConnectedPlayers.Count > 0 && readyCount == (Photon.ConnectedPlayers.Count + 1))
+                if (Photon.ConnectedPlayers.Count > 0 && readyCount == Photon.ConnectedPlayers.Count + 1)
                 {
                     // all players are ready
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
@@ -1011,7 +1009,7 @@ namespace WukongApi
         {
             int maxPlayersCount = Photon.PhotonClient.CurrentRoom.MaxPlayers;
 
-            float angle = (playerId / (float)maxPlayersCount) * 2f * FMath.PI;
+            float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
             float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
@@ -1064,23 +1062,11 @@ namespace WukongApi
             _timerWidget.StopCountdown();
             if (_isAfterLoadingScreen)
             {
-                SetupLobbyUI();
+                SetupLobbyUi();
             }
         }
 
-        private void SetPlayerTeam()
-        {
-            var allPlayers = Photon.AllConnectedPlayers;
-            int team1Count = allPlayers.Count(p => p.TeamId == Constants.AvailableTeamIds[0]);
-            int team2Count = allPlayers.Count(p => p.TeamId == Constants.AvailableTeamIds[1]);
-
-            if (team1Count - team2Count > 1)
-            {
-                Photon.SwitchTeam(true);
-            }
-        }
-
-        private void DisablePlayerSkills()
+        private static void DisablePlayerSkills()
         {
             var player = GameUtils.GetBguPlayerCharacterCs();
             var events = BUS_EventCollectionCS.Get(player);
@@ -1156,7 +1142,7 @@ namespace WukongApi
                 }
                 else
                 {
-                    UpdatePlayerTeamUI(playerState);
+                    UpdatePlayerTeamUi(playerState);
                 }
 
                 if (Photon.AllConnectedPlayers.Count() == Photon.PhotonClient.CurrentRoom.MaxPlayers)
@@ -1166,7 +1152,7 @@ namespace WukongApi
             }
         }
 
-        private void SetPlayerVisibility(PlayerState playerState, bool visible)
+        private static void SetPlayerVisibility(PlayerState playerState, bool visible)
         {
             Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerState.NickName, visible);
             playerState.Pawn.SetActorHiddenInGame(!visible);

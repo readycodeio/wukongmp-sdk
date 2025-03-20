@@ -1,10 +1,10 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using b1;
 using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
-using System.Collections.Generic;
-using System.Reflection;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -118,8 +118,8 @@ namespace WukongApi.Patches
             {
                 return false;
             }
-            ABGUCharacter aBGUCharacter = null;
-            aBGUCharacter = TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
+
+            var aBGUCharacter = TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
             if (aBGUCharacter == null)
             {
                 aBGUCharacter = TargetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
@@ -129,11 +129,11 @@ namespace WukongApi.Patches
                 Logging.LogDebug("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
                 return false;
             }
-            int num = ((cachedImmobilizeConfigDesc.TargetCount <= 0) ? 1 : cachedImmobilizeConfigDesc.TargetCount);
-            List<AActor> OutActors = new List<AActor>();
+            int num = cachedImmobilizeConfigDesc.TargetCount <= 0 ? 1 : cachedImmobilizeConfigDesc.TargetCount;
+            List<AActor> outActors = [];
             if (num > 1)
             {
-                List<int> list = new List<int> { cachedImmobilizeConfigDesc.RangeRadius };
+                List<int> list = [cachedImmobilizeConfigDesc.RangeRadius];
                 AActor owner2 = __instance.GetOwner();
                 
                 if (owner2.IsNullOrDestroyed())
@@ -147,17 +147,17 @@ namespace WukongApi.Patches
                 int targetTypeFilter = cachedImmobilizeConfigDesc.TargetTypeFilter;
                 int affiliationTypeFilter = cachedImmobilizeConfigDesc.AffiliationTypeFilter;
                 IList<int> Prams = list;
-                BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out OutActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in Prams);
+                BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out outActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in Prams);
             }
-            if (OutActors.Contains(aBGUCharacter))
+            if (outActors.Contains(aBGUCharacter))
             {
-                OutActors.Remove(aBGUCharacter);
+                outActors.Remove(aBGUCharacter);
             }
 
-            OutActors.Insert(0, aBGUCharacter);
+            outActors.Insert(0, aBGUCharacter);
             
             int num2 = 0;
-            foreach (var item in OutActors)
+            foreach (var item in outActors)
             {
                 if (num2 >= num)
                 {

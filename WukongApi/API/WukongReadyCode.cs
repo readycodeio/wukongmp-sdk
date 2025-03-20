@@ -25,10 +25,10 @@ namespace WukongApi.API
 
         private readonly CharacterId localWukongCharacter = new(0);
 
-        private readonly List<CharacterEntry> characterEntries = new()
-        {
-            new CharacterEntry(),
-        };
+        private readonly List<CharacterEntry> characterEntries =
+        [
+            new()
+        ];
 
         public void Init()
         {

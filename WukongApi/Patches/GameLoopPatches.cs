@@ -17,7 +17,7 @@ namespace WukongApi.Patches
                 Logging.LogDebug("Enqueueing action: {Action}", name);
             }
 
-            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>(new[] { (action, name) }), (_, queue) =>
+            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string)>([(action, name)]), (_, queue) =>
             {
                 queue.Enqueue((action, name));
                 return queue;

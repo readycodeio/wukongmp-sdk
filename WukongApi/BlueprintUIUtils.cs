@@ -56,7 +56,7 @@ namespace WukongApi
         public static UUserWidget GetWidget(string widgetName)
         {
             var widgets = GetWidgetsByName(widgetName);
-            if (widgets != null && widgets.Count == 1)
+            if (widgets is { Count: 1 })
             {
                 return widgets[0];
             }

@@ -19,7 +19,7 @@ public class Logger : IDisposable
     
     private static Guid SessionId { get; } = Guid.NewGuid();
 
-    public static Logger Instance { get; } = new Logger("wukong-mp-logs");
+    public static Logger Instance { get; } = new("wukong-mp-logs");
 
     private Logger(string logDirectory)
     {
@@ -58,12 +58,13 @@ public class Logger : IDisposable
 
     private void WriteLogsToFile()
     {
-        while (_logQueue.TryDequeue(out string? logEntry))
+        while (_logQueue.TryDequeue(out var logEntry))
         {
             RotateLogFileIfNeeded();
 
             using var fileStream = new FileStream(_currentLogFile, FileMode.Append, FileAccess.Write, FileShare.Read);
-            using var writer = new StreamWriter(fileStream) { AutoFlush = true };
+            using var writer = new StreamWriter(fileStream);
+            writer.AutoFlush = true;
             writer.WriteLine(logEntry);
         }
     }

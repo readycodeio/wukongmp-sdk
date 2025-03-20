@@ -5,7 +5,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongApi
 {
-    public class SerializationHelpers
+    public static class SerializationHelpers
     {
         public static short SerializeFVector(StreamBuffer outStream, object obj)
         {

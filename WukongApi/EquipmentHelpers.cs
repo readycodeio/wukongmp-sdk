@@ -24,11 +24,11 @@ namespace WukongApi
 
             foreach (var (position, item) in equipment.GetEquipments())
             {
-                OnChangeEquipReal.Invoke(equipComp, new object[] { position, item });
+                OnChangeEquipReal.Invoke(equipComp, [position, item]);
             }
         }
 
-        public static BUS_EquipComp GetEquipComp(BGUCharacterCS actor)
+        private static BUS_EquipComp GetEquipComp(BGUCharacterCS actor)
         {
             return Traverse.Create(actor.ActorCompContainerCS).Field<List<UActorCompBaseCS>>("CompCSs").Value
                 .FirstOrDefault(x => x is BUS_EquipComp) as BUS_EquipComp;

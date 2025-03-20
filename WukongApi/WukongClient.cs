@@ -11,13 +11,12 @@ using b1;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
-using HarmonyLib;
+using JetBrains.Annotations;
 using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
-using WukongApi.Timer;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -71,7 +70,7 @@ namespace WukongApi
         public IEnumerable<PlayerState> AllPvPPlayers
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
-        private readonly List<WukongClientClone> _photonClones = new();
+        private readonly List<WukongClientClone> _photonClones = [];
 
         public void RegisterPlayer(PlayerState state)
         {
@@ -79,6 +78,7 @@ namespace WukongApi
             ConnectedPlayers.Add(state.PhotonId, state);
         }
 
+        [CanBeNull]
         public PlayerState GetByActor(AActor actor)
         {
             if (actor == LocalPlayerState.Pawn)
@@ -105,7 +105,7 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
         }
 
-        public void SetIsSpectatorState(bool isSpectator)
+        private void SetIsSpectatorState(bool isSpectator)
         {
             CachePlayerProperty(nameof(PlayerState.IsSpectator), isSpectator);
         }
@@ -124,7 +124,7 @@ namespace WukongApi
         {
             if (force || (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && !CurrentRoomState.InPvP && !CurrentRoomState.InMatchmaking))
             {
-                var teamId = (LocalPlayerState.TeamId == Constants.AvailableTeamIds[0]) ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
+                var teamId = LocalPlayerState.TeamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
             }
         }

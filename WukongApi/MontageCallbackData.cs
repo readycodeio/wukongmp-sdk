@@ -5,18 +5,11 @@ using Photon.Client;
 
 namespace WukongApi
 {
-    public class MontageCallbackData
+    public class MontageCallbackData(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
     {
-        public EMontageBindReason Reason { get; }
-        public string MontagePath { get; }
-        public EMontageCallbackState State { get; }
-
-        public MontageCallbackData(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
-        {
-            Reason = reason;
-            MontagePath = montagePath;
-            State = state;
-        }
+        public EMontageBindReason Reason { get; } = reason;
+        public string MontagePath { get; } = montagePath;
+        public EMontageCallbackState State { get; } = state;
 
         public static short Serialize(StreamBuffer outStream, object customObject)
         {

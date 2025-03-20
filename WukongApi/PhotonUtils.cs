@@ -52,7 +52,7 @@ namespace WukongApi
 
                 var newRelationInfo = new TeamRelationInfo
                 {
-                    HostileTeamIDs = new List<int>(oldRelationInfo.HostileTeamIDs),
+                    HostileTeamIDs = [..oldRelationInfo.HostileTeamIDs],
                     TeamDamageReductionRatios = new Dictionary<int, int>(oldRelationInfo.TeamDamageReductionRatios)
                 };
                 teamRelationData.TeamHostileInfos.Add(newTeamId, newRelationInfo);
