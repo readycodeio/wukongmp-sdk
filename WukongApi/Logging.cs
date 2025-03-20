@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
@@ -8,6 +8,8 @@ namespace WukongApi
 {
     public static class Logging
     {
+        private const string LocationPropertyName = "__Location";
+
         private enum LogLevel
         {
             Trace,
@@ -41,11 +43,18 @@ namespace WukongApi
             if (level is LogLevel.Error or LogLevel.Critical)
             {
 #endif
-            var interpolatedMessage = messageTemplate;
-            foreach (var (prop, val) in properties)
-            {
-                interpolatedMessage = interpolatedMessage.Replace("{" + prop + "}", val?.ToString() ?? "null");
-            }
+                var interpolatedMessage = messageTemplate;
+                foreach (var (prop, val) in properties)
+                {
+#if !DEBUG
+                    if (prop == LocationPropertyName)
+                    {
+                        interpolatedMessage = interpolatedMessage.Replace($"{{{prop}}}", "<REDACTED>");
+                        continue;
+                    }
+#endif
+                    interpolatedMessage = interpolatedMessage.Replace($"{{{prop}}}", val?.ToString() ?? "null");
+                }
 
 #if !DEBUG
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -61,8 +70,8 @@ namespace WukongApi
                 _ => throw new ArgumentOutOfRangeException()
             };
 #endif
-            Console.WriteLine($"[{level}] {interpolatedMessage}");
-            Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($"[{level}] {interpolatedMessage}");
+                Console.ForegroundColor = ConsoleColor.White;
 #if !DEBUG
             }
 #endif
@@ -85,38 +94,38 @@ namespace WukongApi
             return names;
         }
 
-        public static void LogTrace([StructuredMessageTemplate] string template, params object?[] args)
+        public static void LogTrace([StructuredMessageTemplate] string template, params Span<object?> args)
         {
             Log(LogLevel.Trace, template, args);
         }
 
-        public static void LogDebug([StructuredMessageTemplate] string template, params object?[] args)
+        public static void LogDebug([StructuredMessageTemplate] string template, params Span<object?> args)
         {
             Log(LogLevel.Debug, template, args);
         }
-        
-        public static void LogInformation([StructuredMessageTemplate] string template, params object?[] args)
+
+        public static void LogInformation([StructuredMessageTemplate] string template, params Span<object?> args)
         {
             Log(LogLevel.Information, template, args);
         }
 
-        public static void LogWarning([StructuredMessageTemplate] string template, params object?[] args)
+        public static void LogWarning([StructuredMessageTemplate] string template, params Span<object?> args)
         {
             Log(LogLevel.Warning, template, args);
         }
 
-        public static void LogError([StructuredMessageTemplate] string template, params object?[] args)
+        public static void LogError([StructuredMessageTemplate] string template, params List<object?> args)
         {
-            var caller = new System.Diagnostics.StackFrame(1).GetMethod();
-            var parameters = args.Append($"{caller.DeclaringType?.Name}.{caller.Name}").ToArray();
-            Log(LogLevel.Error, template + " [at {__Location}]", parameters);
+            var caller = new StackFrame(1).GetMethod();
+            args.Add($"{caller.DeclaringType?.FullName}.{caller.Name}");
+            Log(LogLevel.Error, template + $" [at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
         }
-        
-        public static void LogCritical([StructuredMessageTemplate] string template, params object?[] args)
+
+        public static void LogCritical([StructuredMessageTemplate] string template, params List<object?> args)
         {
-            var caller = new System.Diagnostics.StackFrame(1).GetMethod();
-            var parameters = args.Append($"{caller.DeclaringType?.Name}.{caller.Name}").ToArray();
-            Log(LogLevel.Critical, template + " [at {__Location}]", parameters);
+            var caller = new StackFrame(1).GetMethod();
+            args.Add($"{caller.DeclaringType?.FullName}.{caller.Name}");
+            Log(LogLevel.Critical, template + $" [at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
         }
 
         public static void LogException(Exception? ex)
@@ -127,7 +136,7 @@ namespace WukongApi
                 ex = ex.InnerException;
             }
         }
-        
+
         public static void LogCriticalException(Exception? ex)
         {
             while (ex != null)
