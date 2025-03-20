@@ -6,21 +6,17 @@ namespace WukongApi;
 
 public class CmdLineParams
 {
-    private static CmdLineParams _instance;
+    private static CmdLineParams? _instance;
 
-    public static CmdLineParams Instance
-    {
-        get { return _instance ??= new CmdLineParams(); }
-    }
-
-    public GameMode GameMode { get; private set; }
-    public string ModFolderOverride { get; }
-    public string RoomName { get; private set; }
-    public int PlayersPerTeam { get; private set; }
-    public AuthenticationValues RealtimeAuthentication { get; }
-    public string AccessToken { get; }
-
+    public static CmdLineParams Instance => _instance ??= new CmdLineParams();
     public bool ShouldEnableMultiplayer => RealtimeAuthentication is not null;
+
+    public GameMode? MatchmakingMode { get; }
+    public string? ModFolderOverride { get; }
+    public string? RoomName { get; private set; }
+    public int? PlayersPerTeam { get; private set; }
+    public AuthenticationValues? RealtimeAuthentication { get; }
+    public string? AccessToken { get; }
 
     private CmdLineParams()
     {
@@ -57,7 +53,7 @@ public class CmdLineParams
         {
             // private match
             RoomName = roomNameMatch.Groups[1].Success ? roomNameMatch.Groups[1].Value : roomNameMatch.Groups[2].Value;
-            GameMode = GameMode.Private;
+            MatchmakingMode = GameMode.Private;
         }
         else
         {
@@ -66,7 +62,7 @@ public class CmdLineParams
             {
                 // quick match
                 var rounds = int.Parse(quickMatchMatch.Groups[1].Value);
-                GameMode = GameMode.XvX;
+                MatchmakingMode = GameMode.XvX;
                 PlayersPerTeam = rounds;
             }
             else
@@ -81,10 +77,5 @@ public class CmdLineParams
             AuthType = CustomAuthenticationType.Custom
         };
         RealtimeAuthentication.AddAuthParameter("access_token", AccessToken);
-
-        if (RealtimeAuthentication == null)
-        {
-            Logging.LogError("Failed to parse command line arguments.");
-        }
     }
 }

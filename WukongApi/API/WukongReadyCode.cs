@@ -16,8 +16,8 @@ namespace WukongApi.API
         {
             public CharacterId Id;
             public bool IsProgramControl;
-            public AActor Controller;
-            public APawn Pawn;
+            public AActor? Controller;
+            public APawn? Pawn;
             public bool Destroyed;
         }
 
@@ -68,7 +68,7 @@ namespace WukongApi.API
 
         public CharacterId GetLocalWukongCharacter()
         {
-            var entry = characterEntries[localWukongCharacter.index];
+            var entry = characterEntries[localWukongCharacter.Index];
             if (entry.Id == default)
             {
                 entry.Id = localWukongCharacter;
@@ -76,7 +76,7 @@ namespace WukongApi.API
                 var controller = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world);
                 entry.Controller = controller;
                 entry.Pawn = controller.GetControlledPawn();
-                characterEntries[localWukongCharacter.index] = entry;
+                characterEntries[localWukongCharacter.Index] = entry;
             }
 
             return localWukongCharacter;
@@ -85,14 +85,14 @@ namespace WukongApi.API
         public CharacterId GetByPawn(APawn pawn)
         {
             EnsureInit();
-            return characterEntries.FirstOrDefault(entry => entry.Pawn.GetName() == pawn.GetName()).Id;
+            return characterEntries.FirstOrDefault(entry => entry.Pawn != null && entry.Pawn.GetName() == pawn.GetName()).Id;
         }
 
         private void EnsureValidCharacter(CharacterId character, out CharacterEntry entry)
         {
-            if (character.index < 0 || character.index >= characterEntries.Count)
+            if (character.Index < 0 || character.Index >= characterEntries.Count)
                 throw new ArgumentException($"Invalid character id: {character}");
-            entry = characterEntries[character.index];
+            entry = characterEntries[character.Index];
             if (entry.Destroyed)
                 throw new InvalidOperationException($"Character {character} is destroyed");
         }
@@ -178,11 +178,11 @@ namespace WukongApi.API
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
 
             var characterId = CreateCharacterEntry();
-            var entry = characterEntries[characterId.index];
+            var entry = characterEntries[characterId.Index];
 
             entry.Controller = buTamerActor;
             entry.Pawn = null; // Not yet ready
-            characterEntries[characterId.index] = entry;
+            characterEntries[characterId.Index] = entry;
 
             return characterId;
         }
@@ -206,16 +206,35 @@ namespace WukongApi.API
                 Logging.LogDebug("Spawning enemy by player forward vector");
             }
 
-            var playerPawnClass = GameUtils.GetControlledPawn().GetClass();
+            var playerPawnClass = GameUtils.GetControlledPawn()?.GetClass();
+
+            if (playerPawnClass == null)
+            {
+                Logging.LogError("Player pawn class is null");
+                return default;
+            }
+            
             var oldPawn = GameUtils.GetControlledPawn();
+            
+            if (oldPawn == null)
+            {
+                Logging.LogError("Old pawn is null");
+                return default;
+            }
 
             var oldController = GameUtils.GetPlayerController();
             var newPawn = WukongMP.SpawnWukong(oldController, playerPawnClass, new FTransform(rotation, actualPos), oldPawn);
+            
+            if (newPawn == null)
+            {
+                Logging.LogError("New pawn is null");
+                return default;
+            }
 
             WukongMP.BackToOldPawn(oldController, oldPawn, newPawn);
 
             var @class = UClass.GetClass("BGP_AIPlayerControllerB1");
-            var newControllerActor = GameUtils.GetWorld().SpawnActor(@class, ref actualPos, ref rotation);
+            var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref actualPos, ref rotation);
             if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerB1 newController)
             {
                 Logging.LogDebug("Spawned new controller");
@@ -229,11 +248,11 @@ namespace WukongApi.API
             events.Evt_OnLeaveFalling.Invoke();
 
             var characterId = CreateCharacterEntry();
-            var entry = characterEntries[characterId.index];
+            var entry = characterEntries[characterId.Index];
 
             entry.Controller = newControllerActor;
             entry.Pawn = newPawn;
-            characterEntries[characterId.index] = entry;
+            characterEntries[characterId.Index] = entry;
 
             return characterId;
         }
@@ -264,7 +283,7 @@ namespace WukongApi.API
 
             if (GetCharacterReady(ref entry, out var result))
             {
-                characterEntries[character.index] = entry;
+                characterEntries[character.Index] = entry;
             }
 
             return result;
@@ -274,7 +293,7 @@ namespace WukongApi.API
         {
             if (GetCharacterReady(ref entry, out var result))
             {
-                characterEntries[entry.Id.index] = entry;
+                characterEntries[entry.Id.Index] = entry;
             }
 
             if (!result)
@@ -293,7 +312,7 @@ namespace WukongApi.API
             entry.IsProgramControl = true;
             var events = BUS_EventCollectionCS.Get(entry.Pawn);
 
-            if (events is null)
+            if (events == null)
             {
                 Logging.LogError("Events is null in ControlCharacter");
             }
@@ -306,7 +325,7 @@ namespace WukongApi.API
                 events.Evt_EnableCanSetBT.Invoke(P1: false);
             }
 
-            characterEntries[character.index] = entry;
+            characterEntries[character.Index] = entry;
         }
 
         public void DestroyCharacter(CharacterId character)
@@ -320,7 +339,7 @@ namespace WukongApi.API
             entry.Controller = null;
             entry.Pawn = null;
             entry.Destroyed = true;
-            characterEntries[character.index] = entry;
+            characterEntries[character.Index] = entry;
         }
 
         public void UpdatePawn(CharacterId character, APawn pawn)
@@ -330,7 +349,7 @@ namespace WukongApi.API
 
             entry.Controller = pawn.GetController();
             entry.Pawn = pawn;
-            characterEntries[character.index] = entry;
+            characterEntries[character.Index] = entry;
         }
 
         public void UpdateController(CharacterId id, AController newController)
@@ -339,7 +358,7 @@ namespace WukongApi.API
             EnsureValidCharacter(id, out var entry);
 
             entry.Controller = newController;
-            characterEntries[id.index] = entry;
+            characterEntries[id.Index] = entry;
         }
 
         public void SendLightAttack(CharacterId character)
@@ -376,7 +395,7 @@ namespace WukongApi.API
 
             var events = BUS_EventCollectionCS.Get(entry.Pawn);
 
-            if (events is null)
+            if (events == null)
             {
                 Logging.LogError("Events is null in SendMoveTo");
                 return;
@@ -417,7 +436,7 @@ namespace WukongApi.API
 
             var events = BUS_EventCollectionCS.Get(entry.Pawn);
 
-            if (events is null)
+            if (events == null)
             {
                 Logging.LogError("Events is null in SendSkill");
                 return;

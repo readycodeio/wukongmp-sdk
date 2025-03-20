@@ -4,7 +4,7 @@ namespace WukongApi.UI
 {
     public abstract class GameWidgetBase(string name)
     {
-        protected UUserWidget GameWidget;
+        protected UUserWidget? GameWidget;
 
         public void Initialize()
         {

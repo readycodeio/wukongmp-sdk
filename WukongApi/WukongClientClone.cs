@@ -42,7 +42,15 @@ namespace WukongApi
             Logging.LogInformation("Clone joined room");
 
             var teamId = GetTeamIdForPlayer();
-            LocalPlayerState = new PlayerState(PhotonId, GameUtils.GetControlledPawn(), teamId);
+            var controlledPawn = GameUtils.GetControlledPawn();
+            
+            if (controlledPawn.IsNullOrDestroyed())
+            {
+                Logging.LogError("Controlled pawn is null or destroyed");
+                return;
+            }
+            
+            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
         }
 

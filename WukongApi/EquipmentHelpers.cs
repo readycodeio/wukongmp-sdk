@@ -10,7 +10,7 @@ namespace WukongApi
 {
     public static class EquipmentHelpers
     {
-        private static readonly MethodInfo OnChangeEquipReal = typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly MethodInfo OnChangeEquipReal = typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         public static EquipmentState GetCurrentEquipmentStateForActor(APawn player)
         {
@@ -28,9 +28,11 @@ namespace WukongApi
             }
         }
 
-        private static BUS_EquipComp GetEquipComp(BGUCharacterCS actor)
+        private static BUS_EquipComp? GetEquipComp(BGUCharacterCS actor)
         {
-            return Traverse.Create(actor.ActorCompContainerCS).Field<List<UActorCompBaseCS>>("CompCSs").Value
+            return Traverse
+                .Create(actor.ActorCompContainerCS)
+                .Field<List<UActorCompBaseCS>>("CompCSs").Value
                 .FirstOrDefault(x => x is BUS_EquipComp) as BUS_EquipComp;
         }
     }

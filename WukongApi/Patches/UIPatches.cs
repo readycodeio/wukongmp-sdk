@@ -134,7 +134,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchShowPage
     {
-        public static void Prefix(int NewPageID, string Source, ChangeReason Reason = null, object exParam = null)
+        public static void Prefix(int NewPageID, string Source, ChangeReason Reason, object exParam)
         {
             Logging.LogDebug("ShowPage: {NewPageID}, {Source}, {Reason}, {ExParam}", NewPageID, Source, Reason, exParam);
         }
@@ -223,7 +223,7 @@ namespace WukongApi.Patches
         public static MethodBase TargetMethod()
         {
             var specializedType = typeof(FMenuHelper<EShrineMenuTag>); 
-            return specializedType.GetMethod("RegisterFunc");
+            return specializedType.GetMethod("RegisterFunc")!;
         }
 
         public static bool Prefix(int FuncId)

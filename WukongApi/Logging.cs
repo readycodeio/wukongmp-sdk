@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
@@ -17,7 +18,7 @@ namespace WukongApi
             Critical
         }
 
-        private static readonly Regex PlaceholderRegex = new(@"\{(\w+)\}", RegexOptions.Compiled);
+        private static readonly Regex PlaceholderRegex = new(@"\{([_\w]+)\}", RegexOptions.Compiled);
 
         static Logging()
         {
@@ -26,10 +27,10 @@ namespace WukongApi
 
         private static Action<string> MakePhotonLogHandler(LogLevel level) => e => { Log(level, "[Photon] {Log}", e); };
 
-        private static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object> values)
+        private static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object?> values)
         {
             var propertyNames = ExtractPropertyNames(messageTemplate);
-            var properties = new Dictionary<string, object>();
+            var properties = new Dictionary<string, object?>();
 
             for (var i = 0; i < propertyNames.Count && i < values.Length; i++)
             {
@@ -84,37 +85,41 @@ namespace WukongApi
             return names;
         }
 
-        public static void LogTrace([StructuredMessageTemplate] string template, params object[] args)
+        public static void LogTrace([StructuredMessageTemplate] string template, params object?[] args)
         {
             Log(LogLevel.Trace, template, args);
         }
 
-        public static void LogDebug([StructuredMessageTemplate] string template, params object[] args)
+        public static void LogDebug([StructuredMessageTemplate] string template, params object?[] args)
         {
             Log(LogLevel.Debug, template, args);
         }
         
-        public static void LogInformation([StructuredMessageTemplate] string template, params object[] args)
+        public static void LogInformation([StructuredMessageTemplate] string template, params object?[] args)
         {
             Log(LogLevel.Information, template, args);
         }
 
-        public static void LogWarning([StructuredMessageTemplate] string template, params object[] args)
+        public static void LogWarning([StructuredMessageTemplate] string template, params object?[] args)
         {
             Log(LogLevel.Warning, template, args);
         }
 
-        public static void LogError([StructuredMessageTemplate] string template, params object[] args)
+        public static void LogError([StructuredMessageTemplate] string template, params object?[] args)
         {
-            Log(LogLevel.Error, template, args);
+            var caller = new System.Diagnostics.StackFrame(1).GetMethod();
+            var parameters = args.Append($"{caller.DeclaringType?.Name}.{caller.Name}").ToArray();
+            Log(LogLevel.Error, template + " [at {__Location}]", parameters);
         }
         
-        public static void LogCritical([StructuredMessageTemplate] string template, params object[] args)
+        public static void LogCritical([StructuredMessageTemplate] string template, params object?[] args)
         {
-            Log(LogLevel.Critical, template, args);
+            var caller = new System.Diagnostics.StackFrame(1).GetMethod();
+            var parameters = args.Append($"{caller.DeclaringType?.Name}.{caller.Name}").ToArray();
+            Log(LogLevel.Critical, template + " [at {__Location}]", parameters);
         }
 
-        public static void LogException(Exception ex)
+        public static void LogException(Exception? ex)
         {
             while (ex != null)
             {
@@ -123,7 +128,7 @@ namespace WukongApi
             }
         }
         
-        public static void LogCriticalException(Exception ex)
+        public static void LogCriticalException(Exception? ex)
         {
             while (ex != null)
             {

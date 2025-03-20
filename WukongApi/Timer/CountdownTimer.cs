@@ -8,9 +8,9 @@ namespace WukongApi.Timer
         private int _remainingSeconds;
         private int _totalSeconds;
         private readonly System.Timers.Timer _timer;
-        private Action _callback;
+        private Action? _callback;
 
-        public event Action<int, int> OnTick;
+        public event Action<int, int>? OnTick;
 
         public CountdownTimer(int minutes, int seconds)
         {

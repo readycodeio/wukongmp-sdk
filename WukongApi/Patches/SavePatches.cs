@@ -112,7 +112,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (gameArchiveData?.GameArchiveData is null)
+            if (gameArchiveData?.GameArchiveData == null)
             {
                 Logging.LogError("GameArchiveData is null");
                 return;

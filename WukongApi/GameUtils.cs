@@ -13,29 +13,29 @@ namespace WukongApi
 {
     public static class GameUtils
     {
-        private static UWorld _world;
+        private static UWorld? _world;
 
-        public static UWorld GetWorld()
+        public static UWorld? GetWorld()
         {
             if (_world == null)
             {
                 var obj = GCHelper.FindRef(FGlobals.GWorld)?.Managed;
-                _world = (UWorld)(obj is UWorld ? obj : null);
+                _world = (obj is UWorld ? obj : null) as UWorld;
             }
 
             return _world;
         }
 
-        public static APawn GetControlledPawn()
+        public static APawn? GetControlledPawn()
         {
             var pawn = UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn();
             return pawn.IsNullOrDestroyed() ? null : pawn;
         }
 
-        public static BGUPlayerCharacterCS GetBguPlayerCharacterCs()
+        public static BGUPlayerCharacterCS? GetBguPlayerCharacterCs()
         {
             var controlledPawn = GetControlledPawn();
-            return (BGUPlayerCharacterCS)(controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null);
+            return (controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null) as BGUPlayerCharacterCS;
         }
 
         public static IEnumerable<BGUCharacterCS> GetMonsters()
@@ -68,15 +68,15 @@ namespace WukongApi
             return BUS_EventCollectionCS.Get(GetControlledPawn());
         }
 
-        public static BGUPlayerCharacterCS GetThis()
+        public static BGUPlayerCharacterCS? GetThis()
         {
             var controlledPawn = GetControlledPawn();
-            return (BGUPlayerCharacterCS)(controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null);
+            return (controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null) as BGUPlayerCharacterCS;
         }
 
-        public static string GetSaveDirectory()
+        private static string GetSaveDirectory()
         {
-            if (CmdLineParams.Instance.ModFolderOverride is not null)
+            if (CmdLineParams.Instance.ModFolderOverride != null)
             {
                 return FPaths.Combine(CmdLineParams.Instance.ModFolderOverride, "WukongMPMod");
             }
@@ -84,31 +84,15 @@ namespace WukongApi
             return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", "WukongMPMod");
         }
 
-        public static string GetSaveFileFullName(string SlotName)
+        public static string GetSaveFileFullName(string slotName)
         {
-            SlotName += ".sav";
-            return FPaths.Combine(GetSaveDirectory(), SlotName);
+            slotName += ".sav";
+            return FPaths.Combine(GetSaveDirectory(), slotName);
         }
 
-        public static bool IsGameInstanceValid()
-        {
-            if (BGWGameInstanceCS.Get(null) != null)
-            {
-                return true;
-            }
+        public static bool IsGameInstanceValid() => BGWGameInstanceCS.Get(null) != null;
 
-            return false;
-        }
-
-        public static bool IsWorldValid()
-        {
-            if (GetWorld() != null)
-            {
-                return true;
-            }
-
-            return false;
-        }
+        public static bool IsWorldValid() => GetWorld() != null;
 
         public static void ShowTip(string tip)
         {
@@ -149,20 +133,20 @@ namespace WukongApi
             return "";
         }
 
-        public static UBGWDataAsset GetFXAssetByResID(UObject context, IList<FPlayFXByResID> FXs, int targetResID, int ownerResID)
+        public static UBGWDataAsset? GetFxAssetByResId(UObject context, IList<FPlayFXByResID> fXs, int targetResId, int ownerResId)
         {
-            string text = "";
-            foreach (FPlayFXByResID FX in FXs)
+            var text = "";
+            foreach (var fx in fXs)
             {
-                if (FX.ResID == targetResID)
+                if (fx.ResID == targetResId)
                 {
-                    text = FX.FXPathByDBC;
+                    text = fx.FXPathByDBC;
                     break;
                 }
 
-                if (FX.ResID == ownerResID)
+                if (fx.ResID == ownerResId)
                 {
-                    text = FX.FXPathByDBC;
+                    text = fx.FXPathByDBC;
                 }
             }
 
@@ -174,38 +158,38 @@ namespace WukongApi
             return BGW_PreloadAssetMgr.Get(context).TryGetCachedResourceObj<UBGWDataAsset>(text, ELoadResourceType.AsyncLoadAndCache);
         }
 
-        public static ImmobilizeConfigInstance CreateImmobilizeConfig(AActor character, AActor casterActor, FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc, int CastImmobilizeDataResId, bool hasBuff)
+        public static ImmobilizeConfigInstance CreateImmobilizeConfig(AActor character, AActor casterActor, FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc, int castImmobilizeDataResId, bool hasBuff)
         {
-            ImmobilizeConfigInstance immobilizeConfigInstance = new ImmobilizeConfigInstance();
-            int actorResID3 = BGU_DataUtil.GetActorResID(character);
+            var immobilizeConfigInstance = new ImmobilizeConfigInstance();
+            var actorResID3 = BGU_DataUtil.GetActorResID(character);
             immobilizeConfigInstance.DurationSecond = cachedImmobilizeConfigDesc.DurationMs * 0.001f;
             immobilizeConfigInstance.AlmostEndAheadTimeSecond = cachedImmobilizeConfigDesc.AlmostEndAheadTimeMs * 0.001f;
             immobilizeConfigInstance.MinDurationSecond = cachedImmobilizeConfigDesc.MinimalDurationMs * 0.001f;
             immobilizeConfigInstance.RepeatedImmobilizedDef = cachedImmobilizeConfigDesc.RepeatedImmobilizedDef * 0.0001f;
             immobilizeConfigInstance.CasterActor = casterActor;
             immobilizeConfigInstance.bEnableGreatSageTalent = cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff > 0 && hasBuff;
-            immobilizeConfigInstance.BeginFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, CastImmobilizeDataResId);
-            immobilizeConfigInstance.AlmostEndFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, CastImmobilizeDataResId);
-            immobilizeConfigInstance.EndFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, CastImmobilizeDataResId);
-            immobilizeConfigInstance.QuickFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, CastImmobilizeDataResId);
+            immobilizeConfigInstance.BeginFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, castImmobilizeDataResId);
+            immobilizeConfigInstance.AlmostEndFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, castImmobilizeDataResId);
+            immobilizeConfigInstance.EndFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, castImmobilizeDataResId);
+            immobilizeConfigInstance.QuickFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, castImmobilizeDataResId);
             immobilizeConfigInstance.BreakingFXsTriggerRatio = cachedImmobilizeConfigDesc.BreakingFXsTriggerRatio * 0.0001f;
-            immobilizeConfigInstance.BreakingFX = GetFXAssetByResID(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, CastImmobilizeDataResId);
-            foreach (FSpellEffect beginEffect in cachedImmobilizeConfigDesc.BeginEffects)
+            immobilizeConfigInstance.BreakingFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, castImmobilizeDataResId);
+            foreach (var beginEffect in cachedImmobilizeConfigDesc.BeginEffects)
             {
                 immobilizeConfigInstance.BeginEffects.Add(new FSpellEffectForData(beginEffect));
             }
 
-            foreach (FSpellEffect endEffect in cachedImmobilizeConfigDesc.EndEffects)
+            foreach (var endEffect in cachedImmobilizeConfigDesc.EndEffects)
             {
                 immobilizeConfigInstance.EndEffects.Add(new FSpellEffectForData(endEffect));
             }
 
-            foreach (FSpellEffect breakEffect in cachedImmobilizeConfigDesc.BreakEffects)
+            foreach (var breakEffect in cachedImmobilizeConfigDesc.BreakEffects)
             {
                 immobilizeConfigInstance.BreakEffects.Add(new FSpellEffectForData(breakEffect));
             }
 
-            foreach (FSpellEffect deadEffect in cachedImmobilizeConfigDesc.DeadEffects)
+            foreach (var deadEffect in cachedImmobilizeConfigDesc.DeadEffects)
             {
                 immobilizeConfigInstance.DeadEffects.Add(new FSpellEffectForData(deadEffect));
             }

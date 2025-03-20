@@ -11,6 +11,12 @@ namespace WukongApi
     {
         public async Task StartRoundAsync()
         {
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
             PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
             await Task.Delay(100);
 
@@ -19,6 +25,12 @@ namespace WukongApi
 
         private void PlacePlayers(FVector center, float radius)
         {
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
             var playerStates = wukongClient.AllPvPPlayers.ToList();
 
             var teamsIds = playerStates.Select(playerState => playerState.TeamId).Distinct().ToList();
@@ -51,6 +63,12 @@ namespace WukongApi
 
         public async Task EndRoundAsync(int winner)
         {
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
             // disable pvp until next round
             wukongClient.SendPvPEvent(PvPEvent.RoundEnd, winner);
 
@@ -113,6 +131,12 @@ namespace WukongApi
 
         private async Task ResetHpAndRespawnAllPlayers()
         {
+            if (!wukongClient.IsMasterClient)
+            {
+                Logging.LogError("Only master client can use the lobby manager");
+                return;
+            }
+            
             // resurrect dead players and restore health to living ones
             wukongClient.SendPvPEvent(PvPEvent.ResetStats);
             foreach (var player in wukongClient.AllConnectedPlayers)

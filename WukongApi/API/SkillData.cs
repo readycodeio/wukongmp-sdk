@@ -2,19 +2,11 @@
 
 namespace WukongApi.API
 {
-    internal struct SkillData
+    internal struct SkillData(EInputActionType actionType, int skillId, int descId, int itemId)
     {
-        public EInputActionType ActionType;
-        public int SkillId;
-        public int DescId;
-        public int ItemId;
-
-        public SkillData(EInputActionType actionType, int skillId, int descId, int itemId)
-        {
-            ActionType = actionType;
-            SkillId = skillId;
-            DescId = descId;
-            ItemId = itemId;
-        }
+        public readonly EInputActionType ActionType = actionType;
+        public readonly int SkillId = skillId;
+        public readonly int DescId = descId;
+        public int ItemId = itemId;
     }
 }

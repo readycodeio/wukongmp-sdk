@@ -26,11 +26,9 @@
                 GameWidget.CallFunctionByNameWithArguments($"AddMessage {isServerMessage} {++_messageId} {sender} {message}", true);
                 return _messageId;
             }
-            else
-            {
-                Logging.LogError("Could not add message. Chat widget not initialized");
-                return -1;
-            }
+
+            Logging.LogError("Could not add message. Chat widget not initialized");
+            return -1;
         }
 
         public void RemoveMessage(int messageId)

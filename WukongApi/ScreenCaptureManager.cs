@@ -9,9 +9,9 @@ namespace WukongApi
 {
     public class ScreenCaptureManager
     {
-        private UTextureRenderTarget2D _screenRenderTarget;
+        private UTextureRenderTarget2D? _screenRenderTarget;
 
-        private AActor _screenCaptureActor;
+        private AActor? _screenCaptureActor;
 
         private bool _initialized;
 
@@ -35,10 +35,17 @@ namespace WukongApi
             }
 
             var player = GameUtils.GetBguPlayerCharacterCs();
+            
+            if (player == null)
+            {
+                Logging.LogError("Cannot get player character");
+                return;
+            }
+            
             var camera = player.GetFollowCamera();
             var loc = camera.GetWorldLocation();
             var rot = camera.GetWorldRotation();
-            _screenCaptureActor = world.SpawnActor(screenActorClass, ref loc, ref rot);
+            _screenCaptureActor = world?.SpawnActor(screenActorClass, ref loc, ref rot);
 
             if (_screenCaptureActor == null)
             {
@@ -66,7 +73,7 @@ namespace WukongApi
             }
         }
 
-        public List<FColor> GetCapturedScreenData()
+        public List<FColor>? GetCapturedScreenData()
         {
             if (EnsureInit())
             {

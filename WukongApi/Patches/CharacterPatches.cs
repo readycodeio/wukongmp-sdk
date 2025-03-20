@@ -52,7 +52,7 @@ namespace WukongApi.Patches
                 if (__instance.Owner == photon.LocalPlayerState.Pawn)
                     return;
 
-                var playerState = photon.GetByActor(__instance.Owner as BGUCharacterCS);
+                var playerState = photon.GetByActor(__instance.Owner);
                 if (playerState != null)
                 {
                     foreach (var (attr, value) in playerState.Attributes)
@@ -94,13 +94,21 @@ namespace WukongApi.Patches
                 if (photon.LocalPlayerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
+
+                    if (events == null)
+                    {
+                        Logging.LogError("events is null in {Patch}", nameof(PatchAttrs));
+                        return;
+                    }
+
                     Logging.LogDebug("Applying unit dead for player {PlayerId}", photon.LocalPlayerState.PhotonId);
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+
+                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
             else
             {
-                var playerState = photon.GetByActor(__instance.Owner as BGUCharacterCS);
+                var playerState = photon.GetByActor(__instance.Owner);
 
                 // remote player
                 if (playerState != null)
@@ -134,8 +142,14 @@ namespace WukongApi.Patches
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
+                        if (events == null)
+                        {
+                            Logging.LogError("events is null in {Patch}", nameof(PatchAttrs));
+                            return;
+                        }
+
                         Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PhotonId);
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
                 else
@@ -189,7 +203,7 @@ namespace WukongApi.Patches
 
             var photon = WukongMP.Instance.Photon;
             var owner = __instance.GetOwner();
-            
+
             if (owner.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchHp));
@@ -298,7 +312,7 @@ namespace WukongApi.Patches
 
             if (Owner is not BGUCharacterCS character)
                 return;
-            
+
             if (Owner.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchCharacterAnimation));

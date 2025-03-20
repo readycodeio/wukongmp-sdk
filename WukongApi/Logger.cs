@@ -31,7 +31,7 @@ public class Logger : IDisposable
         _logThread.Start();
     }
 
-    public void Log(string messageTemplate, Dictionary<string, object> properties, string level = "INFO")
+    public void Log(string messageTemplate, Dictionary<string, object?> properties, string level = "INFO")
     {
         var logEntry = new
         {
@@ -72,7 +72,7 @@ public class Logger : IDisposable
     private void RotateLogFileIfNeeded()
     {
         FileInfo fileInfo = new(_currentLogFile);
-        if (fileInfo.Exists && fileInfo.Length >= MaxLogFileSize)
+        if (fileInfo is { Exists: true, Length: >= MaxLogFileSize })
         {
             _currentLogFile = GetNewLogFilePath();
         }

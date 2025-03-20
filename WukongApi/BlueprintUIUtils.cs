@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using b1;
 using b1.BGW;
 using UnrealEngine.Runtime;
@@ -35,7 +36,7 @@ namespace WukongApi
         {
             var world = GameUtils.GetWorld();
             if (world == null)
-                return null;
+                return [];
 
             var userWidgets = new List<UUserWidget>();
 
@@ -53,15 +54,9 @@ namespace WukongApi
             return userWidgets;
         }
 
-        public static UUserWidget GetWidget(string widgetName)
+        public static UUserWidget? GetWidget(string widgetName)
         {
-            var widgets = GetWidgetsByName(widgetName);
-            if (widgets is { Count: 1 })
-            {
-                return widgets[0];
-            }
-
-            return null;
+            return GetWidgetsByName(widgetName).SingleOrDefault();
         }
     }
 }

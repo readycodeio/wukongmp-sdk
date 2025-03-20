@@ -59,7 +59,7 @@ namespace WukongApi.State
             RoundWinners = winners;
         }
 
-        private T GetProperty<T>(string name)
+        private T? GetProperty<T>(string name)
         {
             if (Room.CustomProperties.TryGetValue(name, out var obj))
                 return (T)obj;
