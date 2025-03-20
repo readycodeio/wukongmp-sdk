@@ -28,6 +28,7 @@ namespace WukongApi
         private const char MonsterHashtableKeySeparator = ';';
 
         private bool _isStopped = true;
+        public bool JoinedRoomCallbacksDone { get; private set; } // prevent race condition where Photon sets InRoom = true before calling OnJoinedRoom
 
         protected int PhotonId => PhotonClient.LocalPlayer!.ActorNumber; // LocalPlayer is never null, but can be invalid
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
@@ -504,7 +505,7 @@ namespace WukongApi
             ConnectedPlayers.Clear();
             SyncedMonsters.Clear();
             _photonClones.Clear();
-            
+
             _localPlayerState = null;
         }
 
@@ -932,6 +933,7 @@ namespace WukongApi
 
         public void OnDisconnected(DisconnectCause cause)
         {
+            JoinedRoomCallbacksDone = false;
             if (cause == DisconnectCause.DisconnectByClientLogic)
             {
                 Logging.LogInformation("Disconnected: {Cause}", cause);
@@ -1035,6 +1037,8 @@ namespace WukongApi
 
             _joinedRoomCallback.Invoke();
             WukongChat.InitializeChat(PhotonClient.UserId);
+
+            JoinedRoomCallbacksDone = true;
         }
 
         public void OnJoinRoomFailed(short returnCode, string message)
@@ -1052,11 +1056,13 @@ namespace WukongApi
         public void OnJoinRandomFailed(short returnCode, string message)
         {
             Logging.LogError("Join random failed [{Code}]: {Message}", returnCode, message);
+            JoinedRoomCallbacksDone = false;
         }
 
         public void OnLeftRoom()
         {
             Logging.LogInformation("Left room");
+            JoinedRoomCallbacksDone = false;
         }
 
         #endregion
@@ -1064,7 +1070,7 @@ namespace WukongApi
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
             Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", newPlayer.NickName, newPlayer.ActorNumber);
-            _playerJoinedCallback?.Invoke(newPlayer);
+            _playerJoinedCallback.Invoke(newPlayer);
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)

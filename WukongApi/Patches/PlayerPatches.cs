@@ -477,7 +477,7 @@ namespace WukongApi.Patches
             if (owner != photon.LocalPlayerState.Pawn)
                 return;
 
-            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo?.LockTargetActor)
+            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return;
 
             var newTargetPlayerState = photon.GetByActor(NewTargetInfo?.LockTargetActor);

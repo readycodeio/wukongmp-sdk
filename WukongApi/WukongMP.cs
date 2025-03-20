@@ -253,7 +253,7 @@ namespace WukongApi
 
         public bool ShouldRunConnectedPatches()
         {
-            return Photon is { ConnectedAndReady: true, PhotonClient.InRoom: true };
+            return Photon is { ConnectedAndReady: true, PhotonClient.InRoom: true, JoinedRoomCallbacksDone: true };
         }
 
         public void StartRound()
