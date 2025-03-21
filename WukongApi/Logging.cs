@@ -36,16 +36,24 @@ namespace WukongApi
 
             for (var i = 0; i < propertyNames.Count && i < values.Length; i++)
             {
-                properties[propertyNames[i]] = values[i];
+                // if we are dealing with enums, we want to log the string representation of the enum
+                if (values[i] is Enum enumValue)
+                {
+                    properties[propertyNames[i]] = enumValue.ToString();
+                }
+                else
+                {
+                    properties[propertyNames[i]] = values[i];
+                }
             }
 
 #if !DEBUG
             if (level is LogLevel.Error or LogLevel.Critical)
             {
 #endif
-                var interpolatedMessage = messageTemplate;
-                foreach (var (prop, val) in properties)
-                {
+            var interpolatedMessage = messageTemplate;
+            foreach (var (prop, val) in properties)
+            {
 #if !DEBUG
                     if (prop == LocationPropertyName)
                     {
@@ -53,8 +61,8 @@ namespace WukongApi
                         continue;
                     }
 #endif
-                    interpolatedMessage = interpolatedMessage.Replace($"{{{prop}}}", val?.ToString() ?? "null");
-                }
+                interpolatedMessage = interpolatedMessage.Replace($"{{{prop}}}", val?.ToString() ?? "null");
+            }
 
 #if !DEBUG
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -70,8 +78,8 @@ namespace WukongApi
                 _ => throw new ArgumentOutOfRangeException()
             };
 #endif
-                Console.WriteLine($"[{level}] {interpolatedMessage}");
-                Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine($"[{level}] {interpolatedMessage}");
+            Console.ForegroundColor = ConsoleColor.White;
 #if !DEBUG
             }
 #endif

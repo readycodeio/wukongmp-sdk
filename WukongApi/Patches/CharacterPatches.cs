@@ -42,7 +42,7 @@ namespace WukongApi.Patches
 
             if (__instance.Owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchAttrs));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -206,7 +206,7 @@ namespace WukongApi.Patches
 
             if (owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchHp));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -315,7 +315,7 @@ namespace WukongApi.Patches
 
             if (Owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchCharacterAnimation));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 

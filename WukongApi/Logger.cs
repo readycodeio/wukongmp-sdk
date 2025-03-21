@@ -31,7 +31,7 @@ public class Logger : IDisposable
         _logThread.Start();
     }
 
-    public void Log(string messageTemplate, Dictionary<string, object?> properties, string level = "INFO")
+    public void Log(string messageTemplate, Dictionary<string, object?> properties, string level)
     {
         var logEntry = new
         {
