@@ -936,7 +936,7 @@ namespace WukongApi
             var id = Guid.NewGuid().ToString(); // TODO: use ActorGuid
             SpawnUnitLocally(id, unitName, teamId, loc.X, loc.Y, loc.Z);
 
-            Logging.LogDebug("Sending spawn enemy {Name} at {Location}", enemyName, loc);
+            Logging.LogDebug("Sending spawn enemy {Name} at {Location}", enemyName, loc.ToCompactString());
             Photon.SpawnUnit(id, unitName, teamId, loc.X, loc.Y, loc.Z);
         }
 
