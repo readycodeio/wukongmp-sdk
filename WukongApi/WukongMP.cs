@@ -534,7 +534,7 @@ namespace WukongApi
             var playerState = Photon.GetById(playerId);
             if (playerState?.Pawn == null)
             {
-                Logging.LogWarning("Player not found: {PlayerId}", playerId);
+                Logging.LogError("Player not found: {PlayerId}", playerId);
                 return;
             }
 
@@ -695,9 +695,12 @@ namespace WukongApi
 
         private void ChangeEquipment(int id, EquipmentState eq)
         {
+            if (id == Photon.LocalPlayerState.PhotonId)
+                return;
+
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogWarning("Player not found: {PlayerId}", id);
+                Logging.LogError("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -782,7 +785,7 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogWarning("Player not found: {PlayerId}", id);
+                Logging.LogError("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -1236,16 +1239,24 @@ namespace WukongApi
             events.Evt_OnLeaveFalling.Invoke();
 
             // get teamId
-            int teamId = Constants.AvailableTeamIds.First();
+            var teamId = Constants.AvailableTeamIds.First();
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
             {
                 teamId = (int)assignedTeamId;
             }
 
+            // get initialHp
+            if (!player.CustomProperties.TryGetValue(nameof(PlayerState.Hp), out var initialHpObj) || initialHpObj is not float initialHp)
+            {
+                Logging.LogWarning("Joining player did not set initial HP");
+                initialHp = 1000f;
+            }
+
             var playerState = new PlayerState(id, newPawn, teamId)
             {
                 Location = loc,
-                Rotation = rot
+                Rotation = rot,
+                Hp = initialHp
             };
 
             // set nickname

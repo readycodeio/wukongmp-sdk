@@ -75,18 +75,6 @@ namespace WukongApi.State
             PhotonId = photonId;
             Pawn = pawn;
             TeamId = teamId;
-
-            // get the BUC_AttrContainer
-            var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-            if (data != null)
-            {
-                Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
-            }
-            else
-            {
-                Logging.LogError("Failed to get BUC_AttrContainer from pawn");
-            }
-
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
