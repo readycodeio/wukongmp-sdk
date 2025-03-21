@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading.Tasks;
 using CSharpModBase;
 using CSharpModBase.Input;
 using WukongApi;
@@ -18,8 +19,9 @@ namespace WukongMPMod
 
         public void Init()
         {
-            // register global unhandled exception handler
+            // register global unhandled exception handlers
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
+            TaskScheduler.UnobservedTaskException += UnobservedTaskExceptionHandler;
 
             Logging.LogInformation("Init WukongMP mod");
 
@@ -116,12 +118,19 @@ namespace WukongMPMod
             _wukongMp.Unpatch();
             _wukongMp.DeInit();
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
+            TaskScheduler.UnobservedTaskException -= UnobservedTaskExceptionHandler;
             Logger.Instance.Dispose();
         }
 
         private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)
         {
             Logging.LogCriticalException((Exception)args.ExceptionObject);
+        }
+
+        private static void UnobservedTaskExceptionHandler(object sender, UnobservedTaskExceptionEventArgs args)
+        {
+            Logging.LogCriticalException(args.Exception);
+            args.SetObserved();
         }
     }
 }
