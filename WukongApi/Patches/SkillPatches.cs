@@ -93,7 +93,7 @@ namespace WukongApi.Patches
 
             if (castingCharacter.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnCastImmobilize));
+                Logging.LogError("Owner is null or destroyed");
                 return false;
             }
 
@@ -143,7 +143,7 @@ namespace WukongApi.Patches
 
                 if (owner2.IsNullOrDestroyed())
                 {
-                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnCastImmobilize));
+                    Logging.LogError("Owner is null or destroyed");
                     return false;
                 }
 
@@ -243,7 +243,7 @@ namespace WukongApi.Patches
 
                 if (owner.IsNullOrDestroyed())
                 {
-                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchRelieveImmobilized));
+                    Logging.LogError("Owner is null or destroyed");
                     return false;
                 }
 
@@ -284,7 +284,7 @@ namespace WukongApi.Patches
 
                 if (owner.IsNullOrDestroyed())
                 {
-                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerImmobilizedBreak));
+                    Logging.LogError("Owner is null or destroyed");
                     return false;
                 }
 
@@ -326,7 +326,7 @@ namespace WukongApi.Patches
 
                 if (owner.IsNullOrDestroyed())
                 {
-                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerPhantomRush));
+                    Logging.LogError("Owner is null or destroyed");
                     return false;
                 }
 
@@ -438,7 +438,7 @@ namespace WukongApi.Patches
 
                 if (owner.IsNullOrDestroyed())
                 {
-                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchOnTriggerPhantomRush));
+                    Logging.LogError("Owner is null or destroyed");
                     return;
                 }
 
@@ -464,7 +464,7 @@ namespace WukongApi.Patches
 
                 if (owner.IsNullOrDestroyed())
                 {
-                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchExitPhantomRush));
+                    Logging.LogError("Owner is null or destroyed");
                     return;
                 }
 

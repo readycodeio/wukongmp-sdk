@@ -35,7 +35,7 @@ namespace WukongApi.Patches
 
             if (Owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchBGUPlayerAnimation));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -117,7 +117,7 @@ namespace WukongApi.Patches
 
             if (Owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchPlayerLocomotion));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -168,7 +168,7 @@ namespace WukongApi.Patches
 
             if (Owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchJumpData));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -218,7 +218,7 @@ namespace WukongApi.Patches
 
             if (Owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchBasicData));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -296,7 +296,7 @@ namespace WukongApi.Patches
 
             if (owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchEqCompUpdate));
+                Logging.LogError("Owner is null or destroyed");
                 return false;
             }
 
@@ -326,7 +326,7 @@ namespace WukongApi.Patches
 
             if (owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", $"{nameof(PatchOnUnitDead)}.Prefix");
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -370,7 +370,7 @@ namespace WukongApi.Patches
 
             if (owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", $"{nameof(PatchOnUnitDead)}.Postfix");
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -410,7 +410,7 @@ namespace WukongApi.Patches
             
             if (owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchCameraCompTick));
+                Logging.LogError("Owner is null or destroyed");
                 return false;
             }
 
@@ -469,7 +469,7 @@ namespace WukongApi.Patches
             var owner = __instance.GetOwner();
             if (owner.IsNullOrDestroyed())
             {
-                Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchSetTargetToData));
+                Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
@@ -519,7 +519,7 @@ namespace WukongApi.Patches
                 
                 if (owner.IsNullOrDestroyed())
                 {
-                    Logging.LogWarning("Owner is null or destroyed in {Patch}", nameof(PatchDoDamageLogic));
+                    Logging.LogError("Owner is null or destroyed");
                     return;
                 }
                 
