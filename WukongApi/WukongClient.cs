@@ -533,7 +533,7 @@ namespace WukongApi
 
             WukongChat.StopClient();
             PhotonClient.Disconnect();
-            
+
             // clear the chat window
             ChatWidget.Instance.ClearMessages();
 
@@ -1043,7 +1043,10 @@ namespace WukongApi
                 return;
             }
 
-            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId);
+            var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(controlledPawn);
+            var initialHp = data.GetFloatValue(EBGUAttrFloat.Hp);
+
+            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId, initialHp);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);

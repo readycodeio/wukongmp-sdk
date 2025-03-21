@@ -70,11 +70,12 @@ namespace WukongApi.State
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
 
-        public PlayerState(int photonId, APawn pawn, int teamId)
+        public PlayerState(int photonId, APawn pawn, int teamId, float initialHp)
         {
             PhotonId = photonId;
             Pawn = pawn;
             TeamId = teamId;
+            Hp = initialHp;
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 

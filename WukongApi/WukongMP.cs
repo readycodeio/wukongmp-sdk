@@ -1251,12 +1251,15 @@ namespace WukongApi
                 Logging.LogWarning("Joining player did not set initial HP");
                 initialHp = 1000f;
             }
+            else
+            {
+                Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
+            }
 
-            var playerState = new PlayerState(id, newPawn, teamId)
+            var playerState = new PlayerState(id, newPawn, teamId, initialHp)
             {
                 Location = loc,
-                Rotation = rot,
-                Hp = initialHp
+                Rotation = rot
             };
 
             // set nickname
