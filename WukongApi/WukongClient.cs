@@ -24,7 +24,7 @@ namespace WukongApi
 {
     public sealed class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
-        internal readonly RealtimeClient PhotonClient = new();
+        public readonly RealtimeClient PhotonClient = new();
         private readonly TypedLobby _lobby = new("pvpLobby", LobbyType.Default);
 
         private const char MonsterHashtableKeySeparator = ';';
@@ -432,6 +432,7 @@ namespace WukongApi
 
         public void Reconnect()
         {
+            Logging.LogInformation("Attempting to reconnect...");
             StopClient();
             StartClient();
         }
@@ -536,16 +537,12 @@ namespace WukongApi
             // destroy all connected players
             foreach (var player in ConnectedPlayers.Values)
             {
-                if (player.Pawn != null)
-                {
-                    BGU_UnrealWorldUtil.DestroyActor(player.Pawn);
-                }
+                WukongMP.Instance.RemovePlayer(player);
             }
 
             // clear state
             ConnectedPlayers.Clear();
             SyncedMonsters.Clear();
-
             _localPlayerState = null;
 
             Logging.LogInformation("Stopped client.");
@@ -601,7 +598,6 @@ namespace WukongApi
                         IsOpen = true,
                         IsVisible = false,
                         PublishUserId = true,
-                        EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -630,7 +626,6 @@ namespace WukongApi
                         IsVisible = true,
                         PublishUserId = false,
                         CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)],
-                        EmptyRoomTtl = Constants.PhotonTtlMs
                     };
 
                     var createArgs = new EnterRoomArgs
@@ -966,13 +961,7 @@ namespace WukongApi
 
             if (cause is DisconnectCause.ClientTimeout or DisconnectCause.ServerTimeout)
             {
-                // something must've gone wrong, let's try to reconnect
-                Logging.LogInformation("Attempting to reconnect...");
-                if (!PhotonClient.ReconnectAndRejoin())
-                {
-                    Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
-                    Reconnect();
-                }
+                Reconnect();
             }
         }
 
@@ -1066,13 +1055,6 @@ namespace WukongApi
         public void OnJoinRoomFailed(short returnCode, string message)
         {
             Logging.LogError("Join room failed [{Code}]: {Message}", returnCode, message);
-
-            if (message == "Game does not exist")
-            {
-                // quick reconnect via PhotonClient.ReconnectAndRejoin failed, try normal reconnect
-                Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
-                Reconnect();
-            }
         }
 
         public void OnJoinRandomFailed(short returnCode, string message)

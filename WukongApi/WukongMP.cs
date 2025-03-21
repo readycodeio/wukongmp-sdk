@@ -755,14 +755,18 @@ namespace WukongApi
             }
         }
 
-        private void RemovePlayer(PlayerState playerState)
+        public void RemovePlayer(PlayerState playerState)
         {
             if (playerState.MarkerActor != null)
             {
                 BGU_UnrealWorldUtil.DestroyActor(playerState.MarkerActor);
             }
 
-            BGU_UnrealWorldUtil.DestroyActor(playerState.Pawn);
+            if (playerState.Pawn != null)
+            {
+                BGU_UnrealWorldUtil.DestroyActor(playerState.Pawn);
+            }
+
             _lobbyStatusWidget.RemovePlayerFromTeams(playerState);
             UpdateConnectedCount();
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));

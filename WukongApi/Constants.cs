@@ -46,7 +46,6 @@ namespace WukongApi
 
         public const string RealtimeAppId = "7aa130eb-9912-4845-b2de-8496a6f0fea7";
         public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
-        public const int PhotonTtlMs = 60_000;
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             EBGUAttrFloat.HpMax,
