@@ -144,6 +144,7 @@ namespace WukongApi
         {
             Logging.LogInformation("Delay begin play for player.");
 
+            // this is triggered for every player controller, but we want to apply the logic once
             if (!Photon.ConnectedAndReady)
             {
                 InitPhotonAndConnectToChat();
@@ -153,10 +154,6 @@ namespace WukongApi
                 InitializeWidgets();
 
                 Connect();
-            }
-            else
-            {
-                Logging.LogError("Photon is already connected.");
             }
         }
 
