@@ -533,6 +533,9 @@ namespace WukongApi
 
             WukongChat.StopClient();
             PhotonClient.Disconnect();
+            
+            // clear the chat window
+            ChatWidget.Instance.ClearMessages();
 
             // destroy all connected players
             foreach (var player in ConnectedPlayers.Values)
