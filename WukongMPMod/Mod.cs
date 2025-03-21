@@ -106,9 +106,15 @@ namespace WukongMPMod
             {
                 Logging.LogDebug("ENTER");
                 if (!ChatWidget.Instance.HasFocus())
+                {
                     ChatWidget.Instance.SetInputFocus();
+                }
                 else
-                    ChatWidget.Instance.CommitMessage();
+                {
+                    var message = ChatWidget.Instance.CommitMessage();
+                    _wukongMp.Photon.WukongChat.ProcessMessage(message);
+                }
+
             });
         }
 

@@ -27,16 +27,14 @@ namespace WukongApi
         private string NickName => _wukongClient.LocalPlayerState.NickName;
 
         private bool _isStopped = true;
-        private Func<string> _onGetMessage;
 
         private const char Separator = ' ';
         private readonly Dictionary<string, Command> _commands = new();
 
-        public WukongChatter(WukongClient owner, Func<string> messageCallback)
+        public WukongChatter(WukongClient owner)
         {
             _wukongClient = owner;
             _chatClient = new ChatClient(this);
-            _onGetMessage = messageCallback;
             SetupCommands();
         }
 
@@ -68,6 +66,17 @@ namespace WukongApi
             _chatClient.Disconnect();
             _isStopped = true;
             Logging.LogInformation("Chat client stopped");
+        }
+
+        public void ProcessMessage(string message)
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                if (!TryHandleCommand(message))
+                {
+                    SendChatMessage(message);
+                }
+            }
         }
 
         private void SetupCommands()
@@ -126,15 +135,6 @@ namespace WukongApi
         private void ServiceChat()
         {
             _chatClient.Service();
-
-            var message = _onGetMessage.Invoke();
-            if (!string.IsNullOrEmpty(message))
-            {
-                if (!TryHandleCommand(message))
-                {
-                    SendChatMessage(message);
-                }
-            }
         }
 
         private bool TryHandleCommand(string message)

@@ -93,9 +93,10 @@
             GameWidget?.CallFunctionByNameWithArguments("SetInputFocus", true);
         }
 
-        public void CommitMessage()
+        public string CommitMessage()
         {
             GameWidget?.CallFunctionByNameWithArguments("CommitMessage", true);
+            return GetMessage();
         }
     }
 }

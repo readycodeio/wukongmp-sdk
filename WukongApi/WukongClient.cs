@@ -89,7 +89,7 @@ namespace WukongApi
 
         public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
-            WukongChat = new WukongChatter(this, ChatWidget.Instance.GetMessage);
+            WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
             LobbyManager = new LobbyManager(this);
 
