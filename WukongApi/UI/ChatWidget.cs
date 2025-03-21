@@ -87,5 +87,15 @@
                 GameWidget?.CallFunctionByNameWithArguments("SetHistoryPrev", true);
             }
         }
+
+        public void SetInputFocus()
+        {
+            GameWidget?.CallFunctionByNameWithArguments("SetInputFocus", true);
+        }
+
+        public void CommitMessage()
+        {
+            GameWidget?.CallFunctionByNameWithArguments("CommitMessage", true);
+        }
     }
 }

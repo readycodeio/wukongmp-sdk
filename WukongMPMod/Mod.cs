@@ -99,6 +99,15 @@ namespace WukongMPMod
                 Logging.LogDebug("DOWN");
                 ChatWidget.Instance.SetHistoryPrev();
             });
+
+            Utils.RegisterKeyBind(Key.ENTER, () =>
+            {
+                Logging.LogDebug("ENTER");
+                if (!ChatWidget.Instance.HasFocus())
+                    ChatWidget.Instance.SetInputFocus();
+                else
+                    ChatWidget.Instance.CommitMessage();
+            });
         }
 
         public void DeInit()
