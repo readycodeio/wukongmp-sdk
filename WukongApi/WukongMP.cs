@@ -670,6 +670,8 @@ namespace WukongApi
                 Logging.LogError("Failed to get controlled pawn");
                 return;
             }
+            
+            Logging.LogDebug("Setting initial player properties");
 
             Photon.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
             Photon.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
@@ -691,6 +693,7 @@ namespace WukongApi
             Photon.CachePlayerProperty(nameof(PlayerState.Hp), hp);
 
             Photon.SetCachedPlayerProperties();
+            Logging.LogDebug("Finished setting initial player properties");
         }
 
         private void ChangeEquipment(int id, EquipmentState eq)
@@ -1149,6 +1152,7 @@ namespace WukongApi
                 Logging.LogError("Player pawn is null");
                 return;
             }
+
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
         }
@@ -1162,6 +1166,7 @@ namespace WukongApi
                 Logging.LogError("Player pawn is null");
                 return;
             }
+
             playerState.Pawn.SetActorEnableCollision(enabled);
         }
 

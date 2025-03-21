@@ -79,6 +79,17 @@ namespace WukongApi.State
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
+            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
+
+            if (attrContainer != null)
+            {
+                attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
+            }
+            else
+            {
+                Logging.LogError("Failed to get attribute container from player");
+            }
+
             Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
         }
