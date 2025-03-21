@@ -227,18 +227,12 @@ namespace WukongApi
 
         public void DumpPlayerState()
         {
-            if (Photon == null)
-            {
-                Logging.LogWarning("Cannot dump player state, Photon is null");
-                return;
-            }
-
             // dump player state to console for me
-            Logging.LogDebug("Local player state: {State}", Photon.LocalPlayerState);
+            Logging.LogDebug("Local player state: {State}", Photon.LocalPlayerState.ToString());
             // dump player state to console for each connected player
             foreach (var (id, state) in Photon.ConnectedPlayers)
             {
-                Logging.LogDebug("Player {PlayerId} state: {State}", id, state);
+                Logging.LogDebug("Player {PlayerId} state: {State}", id, state.ToString());
             }
         }
 
