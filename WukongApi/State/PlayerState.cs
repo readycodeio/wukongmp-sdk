@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 using b1;
 using BtlShare;
@@ -64,14 +66,12 @@ namespace WukongApi.State
 
         public float Hp
         {
-            get
-            {
-                Logging.LogDebug("Getting HP: {PlayerId} {Hp}", PhotonId, _hp);
-                return _hp;
-            }
+            get => _hp;
             set
             {
                 Logging.LogDebug("Setting HP: {PlayerId} {Hp}", PhotonId, value);
+                // log stack trace
+                Logging.LogDebug("StackTrace: {StackTrace}", Environment.StackTrace);
                 _hp = value;
             }
         }
@@ -98,7 +98,8 @@ namespace WukongApi.State
 
             if (attrContainer != null)
             {
-                attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
+                var set = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
+                Logging.LogDebug("Set actual HP: {Set}", set);
             }
             else
             {
