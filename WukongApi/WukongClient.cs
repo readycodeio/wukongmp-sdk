@@ -15,12 +15,14 @@ using Photon.Client;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.Patches;
 using WukongApi.State;
+using WukongApi.UI;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
-    public class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
+    public sealed class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
         internal readonly RealtimeClient PhotonClient = new();
         private readonly TypedLobby _lobby = new("pvpLobby", LobbyType.Default);
@@ -30,7 +32,7 @@ namespace WukongApi
         private bool _isStopped = true;
         public bool JoinedRoomCallbacksDone { get; private set; } // prevent race condition where Photon sets InRoom = true before calling OnJoinedRoom
 
-        protected int PhotonId => PhotonClient.LocalPlayer!.ActorNumber; // LocalPlayer is never null, but can be invalid
+        private int PhotonId => PhotonClient.LocalPlayer!.ActorNumber; // LocalPlayer is never null, but can be invalid
         public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
         public bool ConnectedAndReady => PhotonClient.IsConnectedAndReady;
 
@@ -71,7 +73,7 @@ namespace WukongApi
 
                 return _localPlayerState;
             }
-            protected set => _localPlayerState = value;
+            private set => _localPlayerState = value;
         }
 
         public RoomState CurrentRoomState { get; }
@@ -85,7 +87,24 @@ namespace WukongApi
         public IEnumerable<PlayerState> AllPvPPlayers
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
-        private readonly List<WukongClientClone> _photonClones = [];
+        public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
+        {
+            WukongChat = new WukongChatter(this, ChatWidget.Instance.GetMessage);
+            CurrentRoomState = new RoomState(this);
+            LobbyManager = new LobbyManager(this);
+
+            _joinedRoomCallback = onJoinedRoom;
+            _playerJoinedCallback = playerJoinedCallback;
+
+            ConfigurePhoton();
+        }
+
+        ~WukongClient()
+        {
+            Logging.LogInformation("WukongClient finalizer called");
+            StopClient();
+            PhotonClient.RemoveCallbackTarget(this);
+        }
 
         public void RegisterPlayer(PlayerState state)
         {
@@ -115,7 +134,7 @@ namespace WukongApi
             return SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn == owner).Value;
         }
 
-        public void SetReadyState(bool isReady)
+        private void SetReadyState(bool isReady)
         {
             CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
         }
@@ -156,21 +175,6 @@ namespace WukongApi
         public void RemoveMonster(string monsterGuid)
         {
             SyncedMonsters.Remove(monsterGuid);
-        }
-
-        public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
-        {
-            WukongChat = new WukongChatter(this);
-            CurrentRoomState = new RoomState(this);
-            LobbyManager = new LobbyManager(this);
-            _joinedRoomCallback = onJoinedRoom;
-            _playerJoinedCallback = playerJoinedCallback;
-        }
-
-        ~WukongClient()
-        {
-            PhotonClient.Disconnect();
-            PhotonClient.RemoveCallbackTarget(this);
         }
 
         public void OnEvent(EventData photonEvent)
@@ -426,14 +430,41 @@ namespace WukongApi
             OnReadinessChange?.Invoke(player.NickName, isReady, playersReady);
         }
 
-        public void StartClient()
+        public void Reconnect()
         {
-            if (!_isStopped)
-            {
-                Logging.LogError("Client is already running.");
-                return;
-            }
+            StopClient();
+            StartClient();
+        }
 
+        private void SubscribeToPlayerMontageCallbacks()
+        {
+            var myPawn = GameUtils.GetControlledPawn();
+            LocalPlayerState.Pawn = myPawn;
+
+            var events = BUS_EventCollectionCS.Get(myPawn);
+            events.Evt_PlayMontageCallback += OnPlayMontageCallback;
+        }
+
+        private void UnsubscribeFromPlayerMontageCallbacks()
+        {
+            var myPawn = GameUtils.GetControlledPawn();
+            var events = BUS_EventCollectionCS.Get(myPawn);
+
+            if (events != null)
+            {
+                events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
+            }
+        }
+
+        private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
+        {
+            var montagePath = montage.GetPathName();
+            Logging.LogDebug("Montage callback: {Reason} {Montage} {State}", reason, montagePath, state);
+            SendMontageCallback(reason, montagePath, state);
+        }
+
+        private void ConfigurePhoton()
+        {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             PhotonPeer.RegisterType(typeof(UnitSpawnData), 255, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
             PhotonPeer.RegisterType(typeof(FVector), 254, SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
@@ -453,10 +484,19 @@ namespace WukongApi
 
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
+            PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
+        }
+
+        public void StartClient()
+        {
+            if (!_isStopped)
+            {
+                Logging.LogError("Client is already running.");
+                return;
+            }
 
             OnBeforeJoinRoom?.Invoke();
 
-            PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
             PhotonClient.ConnectUsingSettings(new AppSettings
             {
                 AppIdRealtime = Constants.RealtimeAppId,
@@ -470,7 +510,7 @@ namespace WukongApi
             _isStopped = false;
             new Thread(LoopGame).Start();
 
-            Logging.LogInformation("Running forever.");
+            Logging.LogInformation("Client started");
         }
 
         public void StopClient()
@@ -483,15 +523,15 @@ namespace WukongApi
 
             Logging.LogInformation("Stopping client...");
 
+            if (GameUtils.IsWorldValid())
+            {
+                UnsubscribeFromPlayerMontageCallbacks();
+            }
+
             _isStopped = true;
 
-            WukongChat.Disconnect();
+            WukongChat.StopClient();
             PhotonClient.Disconnect();
-
-            Logging.LogInformation("Stopped client.");
-
-            PhotonClient.StateChanged -= OnStateChange;
-            PhotonClient.RemoveCallbackTarget(this);
 
             // destroy all connected players
             foreach (var player in ConnectedPlayers.Values)
@@ -502,29 +542,25 @@ namespace WukongApi
                 }
             }
 
+            // clear state
             ConnectedPlayers.Clear();
             SyncedMonsters.Clear();
-            _photonClones.Clear();
 
             _localPlayerState = null;
+
+            Logging.LogInformation("Stopped client.");
         }
 
-        // ReSharper disable once FunctionNeverReturns
         private void LoopGame()
         {
+            Logging.LogInformation("Photon Realtime service loop started");
             while (!_isStopped)
             {
                 PhotonClient.Service();
                 Thread.Sleep(33);
             }
-        }
 
-        public void SpawnClone()
-        {
-            var clone = new WukongClientClone();
-            _photonClones.Add(clone);
-
-            clone.StartClient();
+            Logging.LogInformation("Photon Realtime service loop finished");
         }
 
         public IEnumerable<Player> GetOtherPlayersInRoom()
@@ -638,11 +674,6 @@ namespace WukongApi
             const byte eventCode = 2;
             var evData = new MontageCallbackData(reason, montagePath, state);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
-
-            foreach (var clone in _photonClones)
-            {
-                clone.SendMontageCallback(reason, montagePath, state);
-            }
         }
 
         public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
@@ -774,7 +805,7 @@ namespace WukongApi
             Task.Run(LobbyManager.StartRoundAsync);
         }
 
-        protected virtual void ApplyMonsterMove(PhotonHashtable props)
+        private void ApplyMonsterMove(PhotonHashtable props)
         {
             foreach (var (key, value) in props)
             {
@@ -829,24 +860,14 @@ namespace WukongApi
                 _playerPropertiesRo.Clear();
                 PhotonClient.LocalPlayer.SetCustomProperties(hashtable);
             }
-
-            foreach (var clone in _photonClones)
-            {
-                clone.SetCachedPlayerProperties();
-            }
         }
 
-        public virtual void CachePlayerProperty(string key, object value)
+        public void CachePlayerProperty(string key, object value)
         {
             _playerProperties[key] = value;
             if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
             {
                 Logging.LogTrace("Set player property: {Property} = {Value}", key, value);
-            }
-
-            foreach (var clone in _photonClones)
-            {
-                clone.CachePlayerProperty(key, value);
             }
         }
 
@@ -950,7 +971,7 @@ namespace WukongApi
                 if (!PhotonClient.ReconnectAndRejoin())
                 {
                     Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
-                    WukongMP.Instance.Reconnect();
+                    Reconnect();
                 }
             }
         }
@@ -998,7 +1019,7 @@ namespace WukongApi
             Logging.LogError("Create room failed [{Code}]: {Message}", returnCode, message);
         }
 
-        protected int GetTeamIdForPlayer()
+        private int GetTeamIdForPlayer()
         {
             Dictionary<int, int> teamsCount = [];
             var team1Id = Constants.AvailableTeamIds[0];
@@ -1017,7 +1038,7 @@ namespace WukongApi
             return teamsCount[team1Id] > teamsCount[team2Id] ? team2Id : team1Id;
         }
 
-        public virtual void OnJoinedRoom()
+        public void OnJoinedRoom()
         {
             Logging.LogInformation("Joined room {Name}", PhotonClient.CurrentRoom.Name);
 
@@ -1035,8 +1056,9 @@ namespace WukongApi
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
+            SubscribeToPlayerMontageCallbacks();
             _joinedRoomCallback.Invoke();
-            WukongChat.InitializeChat(PhotonClient.UserId);
+            WukongChat.StartClient(PhotonClient.UserId);
 
             JoinedRoomCallbacksDone = true;
         }
@@ -1049,7 +1071,7 @@ namespace WukongApi
             {
                 // quick reconnect via PhotonClient.ReconnectAndRejoin failed, try normal reconnect
                 Logging.LogWarning("Quick reconnect failed, attempting full reconnect...");
-                WukongMP.Instance.Reconnect();
+                Reconnect();
             }
         }
 
@@ -1098,7 +1120,7 @@ namespace WukongApi
             // empty, RoomState is a proxy to this hashtable
         }
 
-        public virtual void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
+        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
         {
             var id = targetPlayer.ActorNumber;
 

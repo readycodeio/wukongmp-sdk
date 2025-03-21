@@ -1,10 +1,10 @@
 ﻿using System;
-using CSharpModBase;
-using CSharpModBase.Input;
 using System.Diagnostics;
 using System.Reflection;
-using Photon.Realtime;
+using CSharpModBase;
+using CSharpModBase.Input;
 using WukongApi;
+using WukongApi.UI;
 
 namespace WukongMPMod
 {
@@ -14,10 +14,13 @@ namespace WukongMPMod
         public string Name => "WukongMP";
         public string Version => "1.0.0";
 
-        private WukongMP _wukongMp;
+        private WukongMP _wukongMp = null!; // initialized in Init
 
         public void Init()
         {
+            // register global unhandled exception handler
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
+
             Logging.LogInformation("Init WukongMP mod");
 
             // InformationalVersion from assembly def
@@ -26,7 +29,15 @@ namespace WukongMPMod
             Logging.LogInformation("Mod version: {Version}", trueModVersion);
             Logging.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
-            _wukongMp = WukongMP.Instance;
+            try
+            {
+                _wukongMp = WukongMP.Instance;
+            }
+            catch (Exception e)
+            {
+                Logging.LogException(e);
+                return;
+            }
 
             if (_wukongMp.IsInitialized)
             {
@@ -41,9 +52,6 @@ namespace WukongMPMod
                 Logging.LogInformation("Multiplayer is disabled");
                 return;
             }
-
-            // register global unhandled exception handler
-            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 
             _wukongMp.Patch();
 #if DEBUG
@@ -62,34 +70,34 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(Key.J, () =>
             {
                 Logging.LogDebug("J");
-                if (!_wukongMp.ChatWidget.HasFocus())
+                if (!ChatWidget.Instance.HasFocus())
                     _wukongMp.Photon.SwitchReadyState();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
             {
                 Logging.LogDebug("L");
-                if (!_wukongMp.ChatWidget.HasFocus())
+                if (!ChatWidget.Instance.HasFocus())
                     _wukongMp.Photon.SwitchTeam();
             });
 
             Utils.RegisterKeyBind(Key.K, () =>
             {
                 Logging.LogDebug("K");
-                if (!_wukongMp.ChatWidget.HasFocus())
-                    _wukongMp.ChatWidget.ToggleVisibility();
+                if (!ChatWidget.Instance.HasFocus())
+                    ChatWidget.Instance.ToggleVisibility();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>
             {
                 Logging.LogDebug("UP");
-                _wukongMp.ChatWidget.SetHistoryNext();
+                ChatWidget.Instance.SetHistoryNext();
             });
 
             Utils.RegisterKeyBind(Key.DOWN, () =>
             {
                 Logging.LogDebug("DOWN");
-                _wukongMp.ChatWidget.SetHistoryPrev();
+                ChatWidget.Instance.SetHistoryPrev();
             });
         }
 

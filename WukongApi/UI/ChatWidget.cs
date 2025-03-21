@@ -1,7 +1,11 @@
 ﻿namespace WukongApi.UI
 {
-    public class ChatWidget() : GameWidgetBase(Constants.ChatWidgetName)
+    public class ChatWidget : GameWidgetBase
     {
+        public static ChatWidget Instance { get; } = new ChatWidget();
+
+        private ChatWidget() : base(Constants.ChatWidgetName) { }
+
         private int _messageId;
 
         protected override void PostInitialize()
@@ -15,6 +19,7 @@
             {
                 return false;
             }
+
             return GameWidget.StopAction;
         }
 

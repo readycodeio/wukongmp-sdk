@@ -28,12 +28,10 @@ namespace WukongApi
 
         private readonly Harmony _harmony = new("WukongMP");
 
-        public WukongClient Photon { get; private set; }
+        public WukongClient Photon { get; }
 
-        private FVector _savedPosition;
         private bool _isAfterLoadingScreen;
 
-        public ChatWidget ChatWidget { get; } = new();
         private readonly TimerWidget _timerWidget = new();
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
@@ -72,16 +70,17 @@ namespace WukongApi
 
         public void Init()
         {
+            // prevent double initialization bug in CSharpLoader
             if (IsInitialized)
                 return;
 
             IsInitialized = true;
 
-            DisconnectIfConnected();
-            if (InitPhotonAndConnectToChat())
-            {
-                AsyncInitGameInstance();
-            }
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+                return;
+
+            ConfigurePhotonCallbacks();
+            InitGameInstanceAsync();
         }
 
         public void DeInit()
@@ -89,7 +88,7 @@ namespace WukongApi
             IsInitialized = false;
         }
 
-        private void AsyncInitGameInstance()
+        private void InitGameInstanceAsync()
         {
             Logging.LogInformation("Waiting for the game instance to be initialized.");
             Task.Run(async () =>
@@ -147,13 +146,10 @@ namespace WukongApi
             // this is triggered for every player controller, but we want to apply the logic once
             if (!Photon.ConnectedAndReady)
             {
-                InitPhotonAndConnectToChat();
                 DestroyAllMonsters();
-
                 BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
-
-                Connect();
+                Photon.StartClient();
             }
         }
 
@@ -161,13 +157,13 @@ namespace WukongApi
         {
             Logging.LogInformation("End play for player.");
             DeinitializeWidgets();
-            DisconnectIfConnected();
+            Photon.StopClient();
         }
 
         private void InitializeWidgets()
         {
-            ChatWidget.Initialize();
-            ChatWidget.SetVisibility(false);
+            ChatWidget.Instance.Initialize();
+            ChatWidget.Instance.SetVisibility(false);
             _timerWidget.Initialize();
             _lobbyStatusWidget.Initialize();
             _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
@@ -178,7 +174,7 @@ namespace WukongApi
 
         private void DeinitializeWidgets()
         {
-            ChatWidget.Deinitialize();
+            ChatWidget.Instance.Deinitialize();
             _timerWidget.Deinitialize();
             _lobbyStatusWidget.Deinitialize();
             _gameMessageWidget.Deinitialize();
@@ -188,7 +184,7 @@ namespace WukongApi
 
         private void OnLoadingScreenClose()
         {
-            ChatWidget.SetVisibility(true);
+            ChatWidget.Instance.SetVisibility(true);
             if (Photon is { PhotonClient.InRoom: true })
             {
                 _isAfterLoadingScreen = true;
@@ -394,19 +390,6 @@ namespace WukongApi
             // TODO: Spawn if not found
         }
 
-        private bool InitPhotonAndConnectToChat()
-        {
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
-                return false;
-
-            Photon.WukongChat.SetMessageCallback(ChatWidget.GetMessage);
-            Photon.WukongChat.OnReconnectRequest += Reconnect;
-            Photon.WukongChat.OnDisconnectRequest += DisconnectIfConnected;
-            Photon.WukongChat.OnRebirthRequested += () => { GameLoopPatch.QueueOnGameThread(() => Photon.BroadcastPlayerRebirth(Photon.LocalPlayerState.PhotonId), "HandleRebirth"); };
-
-            return true;
-        }
-
         private void RebirthPlayer(int playerId)
         {
             Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
@@ -438,10 +421,13 @@ namespace WukongApi
             }
         }
 
-        private void Connect()
+        private void ConfigurePhotonCallbacks()
         {
             if (Photon.ConnectedAndReady)
+            {
+                Logging.LogError("Photon is already connected and ready");
                 return;
+            }
 
             Photon.OnBeforeJoinRoom += SetPlayerProperties;
             Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z), "SpawnRemoteUnit");
@@ -451,7 +437,7 @@ namespace WukongApi
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
             Photon.OnTeamChange += (playerState, teamId) => Utils.TryRunOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
-            Photon.OnPlayerLeft += (playerState) => Utils.TryRunOnGameThread(() => RemovePlayer(playerState));
+            Photon.OnPlayerLeft += playerState => Utils.TryRunOnGameThread(() => RemovePlayer(playerState));
             Photon.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Photon.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Photon.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
@@ -461,11 +447,6 @@ namespace WukongApi
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
             Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
-            Photon.WukongChat.OnSendMessage += (isServer, sender, message) => Utils.TryRunOnGameThread(() => ChatWidget.AddMessage(isServer, sender, message));
-            Photon.WukongChat.OnSavePosition += SaveCurrentPosition;
-            Photon.WukongChat.OnLoadPosition += LoadSavedPosition;
-            Photon.WukongChat.OnSpawnEnemy += (name, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnEnemiesMaster(name, count, teamId), "SpawnEnemiesMaster");
-            Photon.StartClient();
         }
 
         private void ExitPhantomRush(int playerId)
@@ -685,25 +666,6 @@ namespace WukongApi
             playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
-        internal void Reconnect()
-        {
-            DisconnectIfConnected();
-            if (InitPhotonAndConnectToChat())
-            {
-                Connect();
-            }
-        }
-
-        private void DisconnectIfConnected()
-        {
-            if (GameUtils.IsWorldValid())
-            {
-                UnsubscribeFromPlayerMontageCallbacks();
-            }
-
-            Photon.StopClient();
-        }
-
         private void SetPlayerProperties()
         {
             var player = GameUtils.GetControlledPawn();
@@ -919,34 +881,7 @@ namespace WukongApi
             }
         }
 
-        private void SubscribeToPlayerMontageCallbacks()
-        {
-            var myPawn = GameUtils.GetControlledPawn();
-            Photon.LocalPlayerState.Pawn = myPawn;
-
-            var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_PlayMontageCallback += OnPlayMontageCallback;
-        }
-
-        private void UnsubscribeFromPlayerMontageCallbacks()
-        {
-            var myPawn = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(myPawn);
-
-            if (events != null)
-            {
-                events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
-            }
-        }
-
-        private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
-        {
-            var montagePath = montage.GetPathName();
-            Logging.LogDebug("Montage callback: {Reason} {Montage} {State}", reason, montagePath, state);
-            Photon.SendMontageCallback(reason, montagePath, state);
-        }
-
-        private void SpawnEnemiesMaster(string enemyName, int count, int teamId)
+        public void SpawnEnemiesMaster(string enemyName, int count, int teamId)
         {
             var player = GameUtils.GetControlledPawn();
 
@@ -1036,29 +971,10 @@ namespace WukongApi
             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamId));
         }
 
-        private void LoadSavedPosition()
-        {
-            var pawn = GameUtils.GetControlledPawn();
-            if (pawn != null)
-            {
-                pawn.SetActorLocation(_savedPosition, false, out _, true);
-            }
-        }
-
-        private void SaveCurrentPosition()
-        {
-            var pawn = GameUtils.GetControlledPawn();
-            if (pawn != null)
-            {
-                _savedPosition = pawn.GetActorLocation();
-            }
-        }
-
         private void OnJoinedRoomCallback()
         {
             TeleportPlayerOnStart(Photon.LocalPlayerState.PhotonId);
             SetupSpectator();
-            SubscribeToPlayerMontageCallbacks();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
             DisablePlayerSkills();
