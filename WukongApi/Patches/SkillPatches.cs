@@ -447,6 +447,12 @@ namespace WukongApi.Patches
                     Logging.LogDebug("Sending phantom rush with direction: {Direction}", PhantomRushDir);
                     photon.SendPhantomRush(PhantomRushDir);
                 }
+
+                var playerState = photon.GetByActor(owner);
+                if (playerState != null && playerState != photon.LocalPlayerState)
+                {
+                    WukongMP.SetPlayerVisibility(playerState, false);
+                }
             }
         }
 
@@ -478,6 +484,11 @@ namespace WukongApi.Patches
                     Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
                     photon.ExitPhantomRush(playerState.PhotonId);
                     playerState.ReceivedPhantomRushExit = false;
+                }
+
+                if (playerState != photon.LocalPlayerState)
+                {
+                    WukongMP.SetPlayerVisibility(playerState, true);
                 }
             }
         }

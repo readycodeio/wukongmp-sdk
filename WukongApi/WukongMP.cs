@@ -335,6 +335,7 @@ namespace WukongApi
             foreach (var playerState in Photon.AllConnectedPlayers)
             {
                 SetPlayerVisibility(playerState, true);
+                SetPlayerCollision(playerState, true);
                 _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
             }
         }
@@ -1007,6 +1008,7 @@ namespace WukongApi
                 Photon.SetCachedPlayerProperties();
                 Logging.LogDebug("Disabling visiblity");
                 SetPlayerVisibility(Photon.LocalPlayerState, false);
+                SetPlayerCollision(Photon.LocalPlayerState, false);
             }
         }
 
@@ -1121,6 +1123,7 @@ namespace WukongApi
                 if (Photon.CurrentRoomState.InPvP && !readyForPvP)
                 {
                     SetPlayerVisibility(playerState, false);
+                    SetPlayerCollision(playerState, false);
                 }
                 else
                 {
@@ -1134,7 +1137,7 @@ namespace WukongApi
             }
         }
 
-        private static void SetPlayerVisibility(PlayerState playerState, bool visible)
+        public static void SetPlayerVisibility(PlayerState playerState, bool visible)
         {
             Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerState.NickName, visible);
 
@@ -1143,10 +1146,20 @@ namespace WukongApi
                 Logging.LogError("Player pawn is null");
                 return;
             }
-
             playerState.Pawn.SetActorHiddenInGame(!visible);
-            playerState.Pawn.SetActorEnableCollision(visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
+        }
+
+        private static void SetPlayerCollision(PlayerState playerState, bool enabled)
+        {
+            Logging.LogDebug("Setting player {PlayerName} collision to: {Enabled}", playerState.NickName, enabled);
+
+            if (playerState.Pawn == null)
+            {
+                Logging.LogError("Player pawn is null");
+                return;
+            }
+            playerState.Pawn.SetActorEnableCollision(enabled);
         }
 
         private PlayerState? SpawnCloneForPlayer(Player player)
