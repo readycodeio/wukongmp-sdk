@@ -6,7 +6,7 @@ public static class MontageHelpers
 {
     private const string CommonMontageFolder = "/Game/00Main/Animation";
     private static readonly Regex ShortMontageSplitRegex = new(@"([\w/]+)/(\w+)", RegexOptions.Compiled);
-    private static readonly Regex LongMontageSplitRegex = new(@"/Game/00Main/Animation/([\w/]+)/(\w+).(\w+)", RegexOptions.Compiled);
+    private static readonly Regex LongMontageSplitRegex = new(@"/Game/00Main/Animation/([\w/]+)/(\w+)\.(\w+)", RegexOptions.Compiled);
 
     public static string CompressMontageName(string fullName)
     {
