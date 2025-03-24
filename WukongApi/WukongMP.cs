@@ -806,6 +806,7 @@ namespace WukongApi
             if (string.IsNullOrEmpty(data.ShortMontagePath))
             {
                 clone.StopAnimMontage(null);
+                return;
             }
 
             var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
