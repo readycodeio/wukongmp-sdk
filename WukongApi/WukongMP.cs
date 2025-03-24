@@ -800,41 +800,17 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, data.MontagePath, data.Reason, data.State);
+            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, data.MontagePath, data.Position);
 
+            var events = BUS_EventCollectionCS.Get(clone);
 
-            if (data.State == EMontageCallbackState.OnStarted)
+            if (events == null)
             {
-                var events = BUS_EventCollectionCS.Get(clone);
-                // TODO: montage position
-                events.Evt_CastSkillWithAnimMontage.Invoke(montage, 1f, 0f, FName.None);
-
-                // [Debug] Montage callback: Default /Game/00Main/Animation/Player/Wukong/AM/Behit/Die/AM_Wukong_die_dep01_sl1_df_hf_nor.AM_Wukong_die_dep01_sl1_df_hf_nor OnStarted
-                // [Debug] Montage callback: Default /Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo OnStarted
-
-                // if (montage.PathName != "" || animInstance.GetCurrentActiveMontage()?.PathName != montage.PathName)
-                // {
-                // animInstance.Montage_Play(montage);
-                // }
-            }
-            else if (data.State == EMontageCallbackState.OnInterrupted)
-            {
-                // var animInstance = (clone as ACharacter)?.Mesh?.GetAnimInstance();
-                //
-                // if (animInstance == null)
-                // {
-                //     Logging.LogWarning("AnimInstance is null");
-                //     return;
-                // }
-                //
-                // if (animInstance.GetCurrentActiveMontage()?.PathName == montage.PathName)
-                // {
-                //     animInstance.Montage_Stop(1f, montage);
-                // }
+                Logging.LogError("events are null");
+                return;
             }
 
-            // var events = BUS_EventCollectionCS.Get(clone);
-            // events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
+            events.Evt_CastSkillWithAnimMontage.Invoke(montage, 1f, data.Position, FName.None);
         }
 
         private void ApplyMonsterMontageCallback(int _, MonsterMontageCallbackData data)
@@ -892,7 +868,7 @@ namespace WukongApi
             }
             else
             {
-                Logging.LogError("events is null in {Method}", nameof(ApplyMonsterMontageCallback));
+                Logging.LogError("events are null");
             }
         }
 

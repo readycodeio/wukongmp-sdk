@@ -97,7 +97,7 @@ namespace WukongApi.Patches
 
                     if (events == null)
                     {
-                        Logging.LogError("events is null in {Patch}", nameof(PatchAttrs));
+                        Logging.LogError("events are null");
                         return;
                     }
 
@@ -144,7 +144,7 @@ namespace WukongApi.Patches
 
                         if (events == null)
                         {
-                            Logging.LogError("events is null in {Patch}", nameof(PatchAttrs));
+                            Logging.LogError("events are null");
                             return;
                         }
 

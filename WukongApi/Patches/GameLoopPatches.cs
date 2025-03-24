@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using b1;
 using b1.ECS;
 using HarmonyLib;
+using UnrealEngine.Engine;
 
 namespace WukongApi.Patches
 {
@@ -84,6 +85,53 @@ namespace WukongApi.Patches
                     Logging.LogException(e);
                 }
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class MontageSyncPatch
+    {
+        private static UAnimMontage? _localPlayerMontage;
+        private static float _localPlayerMontagePosition;
+        private static UAnimInstance? _localPlayerAnimationInstance;
+
+        public static void Postfix()
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            // Get the currently playing montage
+            var localCharacter = GameUtils.GetControlledPawn() as ACharacter;
+
+            if (localCharacter == null)
+                return;
+
+            _localPlayerAnimationInstance ??= localCharacter.Mesh.GetAnimInstance();
+
+            var currentMontage = localCharacter.GetCurrentMontage();
+
+            if (currentMontage != null)
+            {
+                bool isNewMontage = _localPlayerMontage != currentMontage;
+                float currentPosition = _localPlayerAnimationInstance.Montage_GetPosition(currentMontage);
+
+                bool hasMontageRewound = currentPosition < _localPlayerMontagePosition;
+                bool hasSkippedFrames = currentPosition - _localPlayerMontagePosition > 0.5f;
+
+                if (isNewMontage || hasMontageRewound || hasSkippedFrames)
+                {
+                    WukongMP.Instance.Photon.SendMontageCallback(currentMontage.PathName, currentPosition);
+                }
+
+                _localPlayerMontagePosition = currentPosition;
+            }
+            // else if (_localPlayerMontage != null)
+            // {
+            //     WukongMP.Instance.Photon.SendMontageCallback(null, 0f);
+            // }
+
+            _localPlayerMontage = currentMontage;
         }
     }
 
