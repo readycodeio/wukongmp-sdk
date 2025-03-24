@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Text;
 using b1;
 using BtlShare;
@@ -61,6 +62,7 @@ namespace WukongApi.State
         #endregion
 
         public float Hp { get; set; }
+
         public bool IsDead => Hp <= 0;
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
@@ -70,25 +72,27 @@ namespace WukongApi.State
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
 
-        public PlayerState(int photonId, APawn pawn, int teamId)
+        public PlayerState(int photonId, APawn pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PhotonId = photonId;
             Pawn = pawn;
             TeamId = teamId;
+            Hp = initialHp;
+            Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
+            Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
-            // get the BUC_AttrContainer
-            var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-            if (data != null)
+            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
+
+            if (attrContainer != null)
             {
-                Hp = data.GetFloatValue(EBGUAttrFloat.Hp);
+                var setHpMaxBase = attrContainer.SetFloatValue(EBGUAttrFloat.HpMaxBase, initialHpMaxBase);
+                var setHp = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
+                Logging.LogDebug("Set actual Hp / HpMax: {Hp} {HpMax}", setHp, setHpMaxBase);
             }
             else
             {
-                Logging.LogError("Failed to get BUC_AttrContainer from pawn");
+                Logging.LogError("Failed to get attribute container from player");
             }
-
-            Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
-            Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
             Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
@@ -118,6 +122,7 @@ namespace WukongApi.State
             sb.AppendLine($"NickName: {NickName}");
             sb.AppendLine($"TeamID: {TeamId}");
             sb.AppendLine($"Hp: {Hp}");
+            sb.AppendLine($"Actual Hp: {BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(Pawn).GetFloatValue(EBGUAttrFloat.Hp)}");
             sb.AppendLine("------ ATTRIBUTES ------");
 
             foreach (var kvp in Attributes)

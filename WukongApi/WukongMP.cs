@@ -19,8 +19,6 @@ using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
-    using PlayerState = PlayerState;
-
     // ReSharper disable once InconsistentNaming
     public class WukongMP
     {
@@ -534,7 +532,7 @@ namespace WukongApi
             var playerState = Photon.GetById(playerId);
             if (playerState?.Pawn == null)
             {
-                Logging.LogWarning("Player not found: {PlayerId}", playerId);
+                Logging.LogError("Player not found: {PlayerId}", playerId);
                 return;
             }
 
@@ -671,6 +669,8 @@ namespace WukongApi
                 return;
             }
 
+            Logging.LogDebug("Setting initial player properties");
+
             Photon.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
             Photon.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
 
@@ -691,13 +691,17 @@ namespace WukongApi
             Photon.CachePlayerProperty(nameof(PlayerState.Hp), hp);
 
             Photon.SetCachedPlayerProperties();
+            Logging.LogDebug("Finished setting initial player properties");
         }
 
         private void ChangeEquipment(int id, EquipmentState eq)
         {
+            if (id == Photon.LocalPlayerState.PhotonId)
+                return;
+
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogWarning("Player not found: {PlayerId}", id);
+                Logging.LogError("Player not found: {PlayerId}", id);
                 return;
             }
 
@@ -782,21 +786,22 @@ namespace WukongApi
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
-                Logging.LogWarning("Player not found: {PlayerId}", id);
+                Logging.LogError("Player not found: {PlayerId}", id);
                 return;
             }
 
             var clone = player.Pawn;
 
-            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);
+            var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
+            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
             if (montage == null)
             {
-                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
+                Logging.LogWarning("Montage not found: {Montage}", fullMontagePath);
                 return;
             }
 
-            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, data.MontagePath, data.Reason, data.State);
+            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, fullMontagePath, data.Reason, data.State);
             var animInstance = (clone as ACharacter)?.Mesh?.GetAnimInstance();
 
             if (animInstance == null)
@@ -1146,6 +1151,7 @@ namespace WukongApi
                 Logging.LogError("Player pawn is null");
                 return;
             }
+
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
         }
@@ -1159,6 +1165,7 @@ namespace WukongApi
                 Logging.LogError("Player pawn is null");
                 return;
             }
+
             playerState.Pawn.SetActorEnableCollision(enabled);
         }
 
@@ -1236,13 +1243,34 @@ namespace WukongApi
             events.Evt_OnLeaveFalling.Invoke();
 
             // get teamId
-            int teamId = Constants.AvailableTeamIds.First();
+            var teamId = Constants.AvailableTeamIds.First();
             if (player.CustomProperties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
             {
                 teamId = (int)assignedTeamId;
             }
 
-            var playerState = new PlayerState(id, newPawn, teamId)
+            // get initial Hp and HpMax
+            if (!player.CustomProperties.TryGetValue(nameof(PlayerState.Hp), out var initialHpObj) || initialHpObj is not float initialHp)
+            {
+                Logging.LogWarning("Joining player did not set initial HP");
+                initialHp = 1000f;
+            }
+            else
+            {
+                Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
+            }
+
+            if (!player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMaxBase}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMaxBase)
+            {
+                Logging.LogWarning("Joining player did not set initial HPMax");
+                initialHpMaxBase = 1000f;
+            }
+            else
+            {
+                Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
+            }
+
+            var playerState = new PlayerState(id, newPawn, teamId, initialHp, initialHpMaxBase)
             {
                 Location = loc,
                 Rotation = rot

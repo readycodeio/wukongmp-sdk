@@ -533,7 +533,7 @@ namespace WukongApi
 
             WukongChat.StopClient();
             PhotonClient.Disconnect();
-            
+
             // clear the chat window
             ChatWidget.Instance.ClearMessages();
 
@@ -670,7 +670,8 @@ namespace WukongApi
         public void SendMontageCallback(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 2;
-            var evData = new MontageCallbackData(reason, montagePath, state);
+            var shortMontagePath = MontageHelpers.CompressMontageName(montagePath);
+            var evData = new MontageCallbackData(reason, shortMontagePath, state);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
@@ -871,6 +872,16 @@ namespace WukongApi
 
         public void CachePlayerAttribute(EBGUAttrFloat attr, float value)
         {
+            // if HpMax changed, update Hp too
+            if (IsMasterClient && _localPlayerState is not null && attr == EBGUAttrFloat.HpMaxBase)
+            {
+                var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(LocalPlayerState.Pawn);
+                var currentHp = data.GetFloatValue(EBGUAttrFloat.Hp);
+
+                LocalPlayerState.Hp = currentHp;
+                CachePlayerProperty(nameof(PlayerState.Hp), currentHp);
+            }
+
             CachePlayerProperty($"{Constants.AttributePrefix}{attr}", value);
         }
 
@@ -1043,7 +1054,11 @@ namespace WukongApi
                 return;
             }
 
-            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId);
+            var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(controlledPawn);
+            var initialHp = data.GetFloatValue(EBGUAttrFloat.Hp);
+            var initialHpMaxBase = data.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+
+            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId, initialHp, initialHpMaxBase);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
