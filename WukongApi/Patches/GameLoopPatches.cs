@@ -107,7 +107,10 @@ namespace WukongApi.Patches
             if (localCharacter == null)
                 return;
 
-            _localPlayerAnimationInstance ??= localCharacter.Mesh.GetAnimInstance();
+            if (_localPlayerAnimationInstance == null)
+            {
+                _localPlayerAnimationInstance = localCharacter.Mesh.GetAnimInstance();
+            }
 
             var currentMontage = localCharacter.GetCurrentMontage();
 
