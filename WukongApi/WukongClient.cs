@@ -646,6 +646,16 @@ namespace WukongApi
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
+        public void SendMontageCancel()
+        {
+            Logging.LogDebug("Sending montage cancel");
+            const byte eventCode = 2;
+
+            var evData = new MontageCallbackData("", 0f);
+
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
         public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 4;

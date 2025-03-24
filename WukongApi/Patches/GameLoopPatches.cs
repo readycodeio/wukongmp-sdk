@@ -129,6 +129,10 @@ namespace WukongApi.Patches
 
                 _localPlayerMontagePosition = currentPosition;
             }
+            else if (_localPlayerMontage != null)
+            {
+                WukongMP.Instance.Photon.SendMontageCancel();
+            }
 
             _localPlayerMontage = currentMontage;
         }

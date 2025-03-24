@@ -797,6 +797,17 @@ namespace WukongApi
 
             var clone = player.Pawn as ACharacter;
 
+            if (clone == null)
+            {
+                Logging.LogError("Failed to cast pawn to ACharacter");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(data.ShortMontagePath))
+            {
+                clone.StopAnimMontage(null);
+            }
+
             var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
             var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
@@ -816,7 +827,7 @@ namespace WukongApi
                 return;
             }
 
-            var animInstance = clone?.Mesh.GetAnimInstance();
+            var animInstance = clone.Mesh.GetAnimInstance();
 
             if (animInstance == null)
             {
@@ -826,7 +837,6 @@ namespace WukongApi
 
             animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
-            // TODO: Special spear thrust combo doesn't work
         }
 
         private void ApplyMonsterMontageCallback(int _, MonsterMontageCallbackData data)
