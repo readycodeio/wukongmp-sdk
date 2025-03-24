@@ -795,7 +795,7 @@ namespace WukongApi
             if (data.ShortMontagePath is "Player/Wukong/AM/Behit/AM_Wukong_FuHuo" or "Player/Wukong/AM/Behit/Die/AM_Wukong_die_dep01_sl1_df_hf_nor")
                 return;
 
-            var clone = player.Pawn;
+            var clone = player.Pawn as ACharacter;
 
             var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
             var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
@@ -816,7 +816,17 @@ namespace WukongApi
                 return;
             }
 
-            events.Evt_CastSkillWithAnimMontage.Invoke(montage, 1f, data.Position, FName.None);
+            var animInstance = clone?.Mesh.GetAnimInstance();
+
+            if (animInstance == null)
+            {
+                Logging.LogError("AnimInstance is null");
+                return;
+            }
+
+            animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
+            events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
+            // TODO: Special spear thrust combo doesn't work
         }
 
         private void ApplyMonsterMontageCallback(int _, MonsterMontageCallbackData data)
