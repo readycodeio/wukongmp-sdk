@@ -879,8 +879,6 @@ namespace WukongApi
 
                 LocalPlayerState.Hp = currentHp;
                 CachePlayerProperty(nameof(PlayerState.Hp), currentHp);
-
-                Logging.LogDebug("Player Hp updated because HpMax changed: {Hp}", currentHp);
             }
 
             CachePlayerProperty($"{Constants.AttributePrefix}{attr}", value);

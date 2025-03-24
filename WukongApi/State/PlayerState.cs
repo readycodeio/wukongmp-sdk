@@ -61,19 +61,7 @@ namespace WukongApi.State
 
         #endregion
 
-        private float _hp;
-
-        public float Hp
-        {
-            get => _hp;
-            set
-            {
-                Logging.LogDebug("Setting HP: {PlayerId} {Hp}", PhotonId, value);
-                // log stack trace
-                Logging.LogDebug("StackTrace: {StackTrace}", Environment.StackTrace);
-                _hp = value;
-            }
-        }
+        public float Hp { get; set; }
 
         public bool IsDead => Hp <= 0;
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
@@ -129,14 +117,12 @@ namespace WukongApi.State
 
         public override string ToString()
         {
-            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(Pawn);
-
             var sb = new StringBuilder("PlayerState");
             sb.AppendLine($"PhotonId: {PhotonId}");
             sb.AppendLine($"NickName: {NickName}");
             sb.AppendLine($"TeamID: {TeamId}");
             sb.AppendLine($"Hp: {Hp}");
-            sb.AppendLine($"Actual Hp: {attrContainer.GetFloatValue(EBGUAttrFloat.Hp)}");
+            sb.AppendLine($"Actual Hp: {BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(Pawn).GetFloatValue(EBGUAttrFloat.Hp)}");
             sb.AppendLine("------ ATTRIBUTES ------");
 
             foreach (var kvp in Attributes)
