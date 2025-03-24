@@ -85,7 +85,7 @@ namespace WukongApi.State
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
 
-        public PlayerState(int photonId, APawn pawn, int teamId, float initialHp, float initialHpMax)
+        public PlayerState(int photonId, APawn pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PhotonId = photonId;
             Pawn = pawn;
@@ -98,9 +98,9 @@ namespace WukongApi.State
 
             if (attrContainer != null)
             {
-                var setHpMax = attrContainer.SetFloatValue(EBGUAttrFloat.HpMax, initialHpMax);
+                var setHpMaxBase = attrContainer.SetFloatValue(EBGUAttrFloat.HpMaxBase, initialHpMaxBase);
                 var setHp = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
-                Logging.LogDebug("Set actual Hp / HpMax: {Hp} {HpMax}", setHp, setHpMax);
+                Logging.LogDebug("Set actual Hp / HpMax: {Hp} {HpMax}", setHp, setHpMaxBase);
             }
             else
             {

@@ -668,7 +668,7 @@ namespace WukongApi
                 Logging.LogError("Failed to get controlled pawn");
                 return;
             }
-            
+
             Logging.LogDebug("Setting initial player properties");
 
             Photon.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
@@ -1258,18 +1258,18 @@ namespace WukongApi
             {
                 Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
             }
-            
-            if (!player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMax}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMax)
+
+            if (!player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMaxBase}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMaxBase)
             {
                 Logging.LogWarning("Joining player did not set initial HPMax");
-                initialHpMax = 1000f;
+                initialHpMaxBase = 1000f;
             }
             else
             {
-                Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMax);
+                Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
             }
 
-            var playerState = new PlayerState(id, newPawn, teamId, initialHp, initialHpMax)
+            var playerState = new PlayerState(id, newPawn, teamId, initialHp, initialHpMaxBase)
             {
                 Location = loc,
                 Rotation = rot
