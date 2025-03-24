@@ -5,17 +5,18 @@ using Photon.Client;
 
 namespace WukongApi
 {
-    public class MontageCallbackData(string montagePath, float position)
+    public class MontageCallbackData(string fullMontagePath, float position)
     {
-        public string MontagePath { get; } = montagePath;
+        public string ShortMontagePath { get; } = MontageHelpers.CompressMontageName(fullMontagePath);
         public float Position { get; } = position;
+        public string FullMontagePath => MontageHelpers.DecompressMontageName(ShortMontagePath);
 
         public static short Serialize(StreamBuffer outStream, object customObject)
         {
             var data = (MontageCallbackData)customObject;
             outStream.Write(BitConverter.GetBytes(data.Position), 0, 4);
 
-            var nameBytes = Encoding.UTF8.GetBytes(data.MontagePath);
+            var nameBytes = Encoding.UTF8.GetBytes(data.ShortMontagePath);
             var nameLength = (short)nameBytes.Length;
 
             outStream.Write(BitConverter.GetBytes(nameLength), 0, 2);

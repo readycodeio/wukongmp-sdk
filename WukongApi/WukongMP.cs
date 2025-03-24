@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -790,22 +791,21 @@ namespace WukongApi
                 return;
             }
 
+            // death and rebirth animations are played locally because we sync death/rebirth events
+            if (data.ShortMontagePath is "Player/Wukong/AM/Behit/AM_Wukong_FuHuo" or "Player/Wukong/AM/Behit/Die/AM_Wukong_die_dep01_sl1_df_hf_nor")
+                return;
+
             var clone = player.Pawn;
 
-            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);
+            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.FullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
             if (montage == null)
             {
-                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
+                Logging.LogWarning("Montage not found: {Montage}", data.ShortMontagePath);
                 return;
             }
 
-            // death and rebirth animations are played locally because we sync death/rebirth events
-            if (montage.PathName is "/Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo"
-                or "/Game/00Main/Animation/Player/Wukong/AM/Behit/Die/AM_Wukong_die_dep01_sl1_df_hf_nor.AM_Wukong_die_dep01_sl1_df_hf_nor")
-                return;
-
-            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, data.MontagePath, data.Position);
+            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, montage.PathName, data.Position);
 
             var events = BUS_EventCollectionCS.Get(clone);
 
