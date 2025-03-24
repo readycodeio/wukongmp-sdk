@@ -800,6 +800,9 @@ namespace WukongApi
                 return;
             }
 
+            if (montage.PathName == "/Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo")
+                return;
+
             Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, data.MontagePath, data.Position);
 
             var events = BUS_EventCollectionCS.Get(clone);
