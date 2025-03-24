@@ -871,6 +871,14 @@ namespace WukongApi
 
         public void CachePlayerAttribute(EBGUAttrFloat attr, float value)
         {
+            // if HpMax changed, update Hp too
+            if (attr == EBGUAttrFloat.HpMaxBase)
+            {
+                var currentHp = LocalPlayerState.Hp;
+                CachePlayerProperty(nameof(PlayerState.Hp), currentHp);
+                Logging.LogDebug("Player Hp updated because HpMax changed: {Hp}", currentHp);
+            }
+
             CachePlayerProperty($"{Constants.AttributePrefix}{attr}", value);
         }
 
