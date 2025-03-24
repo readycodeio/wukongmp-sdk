@@ -19,8 +19,6 @@ using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
-    using PlayerState = PlayerState;
-
     // ReSharper disable once InconsistentNaming
     public class WukongMP
     {
@@ -1250,7 +1248,7 @@ namespace WukongApi
                 teamId = (int)assignedTeamId;
             }
 
-            // get initialHp
+            // get initial Hp and HpMax
             if (!player.CustomProperties.TryGetValue(nameof(PlayerState.Hp), out var initialHpObj) || initialHpObj is not float initialHp)
             {
                 Logging.LogWarning("Joining player did not set initial HP");
@@ -1260,8 +1258,18 @@ namespace WukongApi
             {
                 Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
             }
+            
+            if (!player.CustomProperties.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMax}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMax)
+            {
+                Logging.LogWarning("Joining player did not set initial HPMax");
+                initialHpMax = 1000f;
+            }
+            else
+            {
+                Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMax);
+            }
 
-            var playerState = new PlayerState(id, newPawn, teamId, initialHp)
+            var playerState = new PlayerState(id, newPawn, teamId, initialHp, initialHpMax)
             {
                 Location = loc,
                 Rotation = rot

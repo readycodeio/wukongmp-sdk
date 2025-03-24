@@ -1045,8 +1045,9 @@ namespace WukongApi
 
             var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(controlledPawn);
             var initialHp = data.GetFloatValue(EBGUAttrFloat.Hp);
+            var initialHpMax = data.GetFloatValue(EBGUAttrFloat.HpMax);
 
-            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId, initialHp);
+            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId, initialHp, initialHpMax);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
