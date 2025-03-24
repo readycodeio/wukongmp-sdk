@@ -8,7 +8,7 @@ namespace WukongApi
     public class MontageCallbackData(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
     {
         public EMontageBindReason Reason { get; } = reason;
-        public string MontagePath { get; } = montagePath;
+        public string ShortMontagePath { get; } = montagePath;
         public EMontageCallbackState State { get; } = state;
 
         public static short Serialize(StreamBuffer outStream, object customObject)
@@ -17,7 +17,7 @@ namespace WukongApi
             outStream.WriteByte((byte)data.Reason);
             outStream.WriteByte((byte)data.State);
 
-            var nameBytes = Encoding.UTF8.GetBytes(data.MontagePath);
+            var nameBytes = Encoding.UTF8.GetBytes(data.ShortMontagePath);
             var nameLength = (short)nameBytes.Length;
 
             outStream.Write(BitConverter.GetBytes(nameLength), 0, 2);

@@ -670,7 +670,8 @@ namespace WukongApi
         public void SendMontageCallback(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
         {
             const byte eventCode = 2;
-            var evData = new MontageCallbackData(reason, montagePath, state);
+            var shortMontagePath = MontageHelpers.CompressMontageName(montagePath);
+            var evData = new MontageCallbackData(reason, shortMontagePath, state);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 

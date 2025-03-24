@@ -792,15 +792,16 @@ namespace WukongApi
 
             var clone = player.Pawn;
 
-            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);
+            var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
+            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
             if (montage == null)
             {
-                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
+                Logging.LogWarning("Montage not found: {Montage}", fullMontagePath);
                 return;
             }
 
-            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, data.MontagePath, data.Reason, data.State);
+            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, fullMontagePath, data.Reason, data.State);
             var animInstance = (clone as ACharacter)?.Mesh?.GetAnimInstance();
 
             if (animInstance == null)
