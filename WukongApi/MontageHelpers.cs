@@ -13,7 +13,7 @@ public static class MontageHelpers
         var match = LongMontageSplitRegex.Match(fullName);
         if (match.Success)
         {
-            if (match.Groups[2] != match.Groups[3])
+            if (match.Groups[2].Value != match.Groups[3].Value)
             {
                 Logging.LogError("Found montage with mismatched package/asset name: {MontageName}", fullName);
                 return "";
