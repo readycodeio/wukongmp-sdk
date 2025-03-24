@@ -121,7 +121,7 @@ namespace WukongApi.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Photon.SendMontageCallback(currentMontage.PathName, currentPosition);
+                    WukongMP.Instance.Photon.SendMontageCallback(currentMontage, currentPosition);
                 }
 
                 _localPlayerMontagePosition = currentPosition;
