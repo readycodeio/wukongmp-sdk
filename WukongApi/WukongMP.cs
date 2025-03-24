@@ -801,28 +801,40 @@ namespace WukongApi
             }
 
             Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, data.MontagePath, data.Reason, data.State);
-            var animInstance = (clone as ACharacter)?.Mesh?.GetAnimInstance();
 
-            if (animInstance == null)
-            {
-                Logging.LogWarning("AnimInstance is null");
-                return;
-            }
 
-            if (data.State == EMontageCallbackState.OnStarted && animInstance.GetCurrentActiveMontage()?.PathName != montage.PathName)
+            if (data.State == EMontageCallbackState.OnStarted)
             {
-                animInstance.Montage_Play(montage);
+                var events = BUS_EventCollectionCS.Get(clone);
+                // TODO: montage position
+                events.Evt_CastSkillWithAnimMontage.Invoke(montage, 1f, 0f, FName.None);
+
+                // [Debug] Montage callback: Default /Game/00Main/Animation/Player/Wukong/AM/Behit/Die/AM_Wukong_die_dep01_sl1_df_hf_nor.AM_Wukong_die_dep01_sl1_df_hf_nor OnStarted
+                // [Debug] Montage callback: Default /Game/00Main/Animation/Player/Wukong/AM/Behit/AM_Wukong_FuHuo.AM_Wukong_FuHuo OnStarted
+
+                // if (montage.PathName != "" || animInstance.GetCurrentActiveMontage()?.PathName != montage.PathName)
+                // {
+                // animInstance.Montage_Play(montage);
+                // }
             }
             else if (data.State == EMontageCallbackState.OnInterrupted)
             {
-                if (animInstance.GetCurrentActiveMontage()?.PathName == montage.PathName)
-                {
-                    animInstance.Montage_Stop(1f, montage);
-                }
+                // var animInstance = (clone as ACharacter)?.Mesh?.GetAnimInstance();
+                //
+                // if (animInstance == null)
+                // {
+                //     Logging.LogWarning("AnimInstance is null");
+                //     return;
+                // }
+                //
+                // if (animInstance.GetCurrentActiveMontage()?.PathName == montage.PathName)
+                // {
+                //     animInstance.Montage_Stop(1f, montage);
+                // }
             }
 
-            var events = BUS_EventCollectionCS.Get(clone);
-            events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
+            // var events = BUS_EventCollectionCS.Get(clone);
+            // events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
         }
 
         private void ApplyMonsterMontageCallback(int _, MonsterMontageCallbackData data)
