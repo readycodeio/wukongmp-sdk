@@ -801,11 +801,13 @@ namespace WukongApi
 
             if (string.IsNullOrEmpty(data.ShortMontagePath))
             {
+                Logging.LogDebug("Stopping montage playback for player {PlayerId}", id);
                 clone.StopAnimMontage(null);
                 return;
             }
 
             var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
+            Logging.LogDebug("Received montage: {Montage}", fullMontagePath);
 
             var animInstance = clone.Mesh.GetAnimInstance();
             if (animInstance == null)
@@ -815,10 +817,12 @@ namespace WukongApi
             }
 
             var currentMontage = animInstance.GetCurrentActiveMontage();
+            Logging.LogDebug("Current montage: {Montage}", currentMontage?.PathName);
 
             // if the same montage is currently playing an no reset flag is given, do not play new montage
             if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data.Reset)
             {
+                Logging.LogDebug("Skipping montage playback: {Montage}, is reset: {Reset}", fullMontagePath, data.Reset);
                 return;
             }
 
@@ -830,8 +834,6 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
-
             var events = BUS_EventCollectionCS.Get(clone);
 
             if (events == null)
@@ -840,6 +842,7 @@ namespace WukongApi
                 return;
             }
 
+            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
             animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }
