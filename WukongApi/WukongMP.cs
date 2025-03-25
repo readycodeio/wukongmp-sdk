@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -790,9 +791,41 @@ namespace WukongApi
                 return;
             }
 
-            var clone = player.Pawn;
+            var clone = player.Pawn as ACharacter;
+
+            if (clone == null)
+            {
+                Logging.LogError("Failed to cast pawn to ACharacter");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(data.ShortMontagePath))
+            {
+                Logging.LogDebug("Stopping montage playback for player {PlayerId}", id);
+                clone.StopAnimMontage(null);
+                return;
+            }
 
             var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
+            Logging.LogDebug("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
+
+            var animInstance = clone.Mesh.GetAnimInstance();
+            if (animInstance == null)
+            {
+                Logging.LogError("AnimInstance is null");
+                return;
+            }
+
+            var currentMontage = animInstance.GetCurrentActiveMontage();
+            Logging.LogDebug("Current montage: {Montage}", currentMontage?.PathName);
+
+            // if the same montage is currently playing an no reset flag is given, do not play new montage
+            if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data.Reset)
+            {
+                Logging.LogDebug("Skipping montage playback: {Montage}, is reset: {Reset}", fullMontagePath, data.Reset);
+                return;
+            }
+
             var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
             if (montage == null)
@@ -801,29 +834,17 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} ({Reason}, {State})", id, fullMontagePath, data.Reason, data.State);
-            var animInstance = (clone as ACharacter)?.Mesh?.GetAnimInstance();
+            var events = BUS_EventCollectionCS.Get(clone);
 
-            if (animInstance == null)
+            if (events == null)
             {
-                Logging.LogWarning("AnimInstance is null");
+                Logging.LogError("events are null");
                 return;
             }
 
-            if (data.State == EMontageCallbackState.OnStarted && animInstance.GetCurrentActiveMontage()?.PathName != montage.PathName)
-            {
-                animInstance.Montage_Play(montage);
-            }
-            else if (data.State == EMontageCallbackState.OnInterrupted)
-            {
-                if (animInstance.GetCurrentActiveMontage()?.PathName == montage.PathName)
-                {
-                    animInstance.Montage_Stop(1f, montage);
-                }
-            }
-
-            var events = BUS_EventCollectionCS.Get(clone);
-            events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
+            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
+            animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
+            events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }
 
         private void ApplyMonsterMontageCallback(int _, MonsterMontageCallbackData data)
@@ -881,7 +902,7 @@ namespace WukongApi
             }
             else
             {
-                Logging.LogError("events is null in {Method}", nameof(ApplyMonsterMontageCallback));
+                Logging.LogError("events are null");
             }
         }
 

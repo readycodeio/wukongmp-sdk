@@ -5,17 +5,16 @@ using Photon.Client;
 
 namespace WukongApi
 {
-    public class MontageCallbackData(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
+    public class MontageCallbackData(string shortMontagePath, float position, bool reset)
     {
-        public EMontageBindReason Reason { get; } = reason;
-        public string ShortMontagePath { get; } = montagePath;
-        public EMontageCallbackState State { get; } = state;
+        public string ShortMontagePath { get; } = shortMontagePath;
+        public float Position { get; } = position;
+        public bool Reset { get; } = reset;
 
         public static short Serialize(StreamBuffer outStream, object customObject)
         {
             var data = (MontageCallbackData)customObject;
-            outStream.WriteByte((byte)data.Reason);
-            outStream.WriteByte((byte)data.State);
+            outStream.Write(BitConverter.GetBytes(data.Position), 0, 4);
 
             var nameBytes = Encoding.UTF8.GetBytes(data.ShortMontagePath);
             var nameLength = (short)nameBytes.Length;
@@ -23,13 +22,16 @@ namespace WukongApi
             outStream.Write(BitConverter.GetBytes(nameLength), 0, 2);
             outStream.Write(nameBytes, 0, nameBytes.Length);
 
-            return (short)(2 + 2 + nameLength);
+            outStream.WriteByte((byte)(data.Reset ? 1 : 0));
+
+            return (short)(4 + 2 + nameLength + 1);
         }
 
         public static object Deserialize(StreamBuffer inStream, short length)
         {
-            var reason = (EMontageBindReason)inStream.ReadByte();
-            var state = (EMontageCallbackState)inStream.ReadByte();
+            var offsetBytes = new byte[4];
+            inStream.Read(offsetBytes, 0, 4);
+            var offset = BitConverter.ToSingle(offsetBytes, 0);
 
             var nameLengthBytes = new byte[2];
             inStream.Read(nameLengthBytes, 0, 2);
@@ -39,7 +41,8 @@ namespace WukongApi
             inStream.Read(nameBytes, 0, nameLength);
             var name = Encoding.UTF8.GetString(nameBytes);
 
-            return new MontageCallbackData(reason, name, state);
+            var reset = inStream.ReadByte() == 1;
+            return new MontageCallbackData(name, offset, reset);
         }
     }
 }

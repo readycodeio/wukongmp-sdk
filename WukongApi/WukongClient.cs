@@ -325,7 +325,7 @@ namespace WukongApi
 
                             if (events == null)
                             {
-                                Logging.LogError("events is null in {Patch}", nameof(HandlePvPEvent));
+                                Logging.LogError("events are null");
                                 return;
                             }
 
@@ -437,33 +437,6 @@ namespace WukongApi
             StartClient();
         }
 
-        private void SubscribeToPlayerMontageCallbacks()
-        {
-            var myPawn = GameUtils.GetControlledPawn();
-            LocalPlayerState.Pawn = myPawn;
-
-            var events = BUS_EventCollectionCS.Get(myPawn);
-            events.Evt_PlayMontageCallback += OnPlayMontageCallback;
-        }
-
-        private void UnsubscribeFromPlayerMontageCallbacks()
-        {
-            var myPawn = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(myPawn);
-
-            if (events != null)
-            {
-                events.Evt_PlayMontageCallback -= OnPlayMontageCallback;
-            }
-        }
-
-        private void OnPlayMontageCallback(EMontageBindReason reason, UAnimMontage montage, EMontageCallbackState state)
-        {
-            var montagePath = montage.GetPathName();
-            Logging.LogDebug("Montage callback: {Reason} {Montage} {State}", reason, montagePath, state);
-            SendMontageCallback(reason, montagePath, state);
-        }
-
         private void ConfigurePhoton()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -523,11 +496,6 @@ namespace WukongApi
             }
 
             Logging.LogInformation("Stopping client...");
-
-            if (GameUtils.IsWorldValid())
-            {
-                UnsubscribeFromPlayerMontageCallbacks();
-            }
 
             _isStopped = true;
 
@@ -667,11 +635,24 @@ namespace WukongApi
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        public void SendMontageCallback(EMontageBindReason reason, string montagePath, EMontageCallbackState state)
+        public void SendMontageCallback(UAnimMontage montage, float position, bool reset)
         {
+            Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
             const byte eventCode = 2;
-            var shortMontagePath = MontageHelpers.CompressMontageName(montagePath);
-            var evData = new MontageCallbackData(reason, shortMontagePath, state);
+
+            var shortMontagePath = MontageHelpers.CompressMontageName(montage.PathName);
+            var evData = new MontageCallbackData(shortMontagePath, position, reset);
+
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendMontageCancel()
+        {
+            Logging.LogDebug("Sending montage cancel");
+            const byte eventCode = 2;
+
+            var evData = new MontageCallbackData("", 0f, false);
+
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
@@ -1063,7 +1044,6 @@ namespace WukongApi
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
-            SubscribeToPlayerMontageCallbacks();
             _joinedRoomCallback.Invoke();
             WukongChat.StartClient(PhotonClient.UserId);
 

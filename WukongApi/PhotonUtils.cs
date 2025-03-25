@@ -149,7 +149,7 @@ namespace WukongApi
 
                 if (events == null)
                 {
-                    Logging.LogError("Events is null");
+                    Logging.LogError("events are null");
                     return;
                 }
 

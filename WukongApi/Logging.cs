@@ -104,7 +104,9 @@ namespace WukongApi
 
         public static void LogTrace([StructuredMessageTemplate] string template, params Span<object?> args)
         {
+#if TRACE_LOGS
             Log(LogLevel.Trace, template, args);
+#endif
         }
 
         public static void LogDebug([StructuredMessageTemplate] string template, params Span<object?> args)

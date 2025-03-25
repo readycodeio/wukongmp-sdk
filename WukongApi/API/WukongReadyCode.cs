@@ -314,7 +314,7 @@ namespace WukongApi.API
 
             if (events == null)
             {
-                Logging.LogError("Events is null in ControlCharacter");
+                Logging.LogError("events are null");
             }
             else
             {
@@ -397,7 +397,7 @@ namespace WukongApi.API
 
             if (events == null)
             {
-                Logging.LogError("Events is null in SendMoveTo");
+                Logging.LogError("events are null");
                 return;
             }
 
@@ -438,7 +438,7 @@ namespace WukongApi.API
 
             if (events == null)
             {
-                Logging.LogError("Events is null in SendSkill");
+                Logging.LogError("events are null");
                 return;
             }
 
