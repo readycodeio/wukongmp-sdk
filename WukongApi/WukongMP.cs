@@ -791,10 +791,6 @@ namespace WukongApi
                 return;
             }
 
-            // death and rebirth animations are played locally because we sync death/rebirth events
-            if (data.ShortMontagePath is "Player/Wukong/AM/Behit/AM_Wukong_FuHuo" or "Player/Wukong/AM/Behit/Die/AM_Wukong_die_dep01_sl1_df_hf_nor")
-                return;
-
             var clone = player.Pawn as ACharacter;
 
             if (clone == null)
