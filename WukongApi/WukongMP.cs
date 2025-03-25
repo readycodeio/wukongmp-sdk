@@ -810,6 +810,22 @@ namespace WukongApi
             }
 
             var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
+
+            var animInstance = clone.Mesh.GetAnimInstance();
+            if (animInstance == null)
+            {
+                Logging.LogError("AnimInstance is null");
+                return;
+            }
+
+            var currentMontage = animInstance.GetCurrentActiveMontage();
+
+            // if the same montage is currently playing an no reset flag is given, do not play new montage
+            if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data.Reset)
+            {
+                return;
+            }
+
             var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
             if (montage == null)
@@ -825,14 +841,6 @@ namespace WukongApi
             if (events == null)
             {
                 Logging.LogError("events are null");
-                return;
-            }
-
-            var animInstance = clone.Mesh.GetAnimInstance();
-
-            if (animInstance == null)
-            {
-                Logging.LogError("AnimInstance is null");
                 return;
             }
 

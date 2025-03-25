@@ -5,10 +5,11 @@ using Photon.Client;
 
 namespace WukongApi
 {
-    public class MontageCallbackData(string shortMontagePath, float position)
+    public class MontageCallbackData(string shortMontagePath, float position, bool reset)
     {
         public string ShortMontagePath { get; } = shortMontagePath;
         public float Position { get; } = position;
+        public bool Reset { get; } = reset;
 
         public static short Serialize(StreamBuffer outStream, object customObject)
         {
@@ -21,7 +22,9 @@ namespace WukongApi
             outStream.Write(BitConverter.GetBytes(nameLength), 0, 2);
             outStream.Write(nameBytes, 0, nameBytes.Length);
 
-            return (short)(4 + nameLength);
+            outStream.Write(BitConverter.GetBytes(data.Reset), 0, 1);
+
+            return (short)(4 + 2 + nameLength + 1);
         }
 
         public static object Deserialize(StreamBuffer inStream, short length)
@@ -38,7 +41,11 @@ namespace WukongApi
             inStream.Read(nameBytes, 0, nameLength);
             var name = Encoding.UTF8.GetString(nameBytes);
 
-            return new MontageCallbackData(name, offset);
+            var booleanBytes = new byte[1];
+            inStream.Read(booleanBytes, 0, 1);
+            var reset = BitConverter.ToBoolean(booleanBytes, 0);
+
+            return new MontageCallbackData(name, offset, reset);
         }
     }
 }

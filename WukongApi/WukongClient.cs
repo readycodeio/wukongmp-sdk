@@ -635,13 +635,13 @@ namespace WukongApi
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        public void SendMontageCallback(UAnimMontage montage, float position)
+        public void SendMontageCallback(UAnimMontage montage, float position, bool reset)
         {
             Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
             const byte eventCode = 2;
 
             var shortMontagePath = MontageHelpers.CompressMontageName(montage.PathName);
-            var evData = new MontageCallbackData(shortMontagePath, position);
+            var evData = new MontageCallbackData(shortMontagePath, position, reset);
 
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
@@ -651,7 +651,7 @@ namespace WukongApi
             Logging.LogDebug("Sending montage cancel");
             const byte eventCode = 2;
 
-            var evData = new MontageCallbackData("", 0f);
+            var evData = new MontageCallbackData("", 0f, false);
 
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
