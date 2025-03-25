@@ -119,8 +119,8 @@ namespace WukongApi.Patches
                 bool isNewMontage = _localPlayerMontage != currentMontage;
                 float currentPosition = _localPlayerAnimationInstance.Montage_GetPosition(currentMontage);
 
-                bool hasMontageRewound = currentPosition < _localPlayerMontagePosition;
-                bool hasSkippedFrames = currentPosition - _localPlayerMontagePosition > 0.5f;
+                bool hasMontageRewound = currentPosition < _localPlayerMontagePosition && !isNewMontage;
+                bool hasSkippedFrames = currentPosition - _localPlayerMontagePosition > 0.5f && !isNewMontage;
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {

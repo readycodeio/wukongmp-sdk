@@ -807,7 +807,7 @@ namespace WukongApi
             }
 
             var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
-            Logging.LogDebug("Received montage: {Montage}", fullMontagePath);
+            Logging.LogDebug("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
 
             var animInstance = clone.Mesh.GetAnimInstance();
             if (animInstance == null)
