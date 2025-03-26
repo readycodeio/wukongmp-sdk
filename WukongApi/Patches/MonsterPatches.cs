@@ -210,20 +210,16 @@ namespace WukongApi.Patches
         }
     }
 
-    [HarmonyPatch]
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.OnReset))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class TamerResetPatch
     {
-        private static MethodBase TargetMethod()
-        {
-            return AccessTools.Method("b1.BGS_TamerManagerSystem:OnResetAllTamers");
-        }
-
         public static bool Prefix(EResetActorReason ResetReason)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
+            Logging.LogDebug("Skipping tamer reset, reason: {Reason}", ResetReason);
             return false; // Disabled until we figure out which cases make sense for multiplayer
         }
     }
