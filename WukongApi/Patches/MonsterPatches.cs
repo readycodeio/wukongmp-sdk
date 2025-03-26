@@ -209,4 +209,22 @@ namespace WukongApi.Patches
             return !bEnable;
         }
     }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class TamerResetPatch
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BGS_TamerManagerSystem:OnResetAllTamers");
+        }
+
+        public static bool Prefix(EResetActorReason ResetReason)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return false; // Disabled until we figure out which cases make sense for multiplayer
+        }
+    }
 }
