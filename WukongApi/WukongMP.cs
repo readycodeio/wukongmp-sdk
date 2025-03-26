@@ -233,6 +233,20 @@ namespace WukongApi
             {
                 Logging.LogDebug("Player {PlayerId} state: {State}", id, state.ToString());
             }
+
+            // dump synced monsters
+            foreach (var (guid, state) in Photon.SyncedMonsters)
+            {
+                Logging.LogDebug("Monster {Guid} state: {State}", guid, state.ToString());
+            }
+
+            // print team hostility info
+            var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
+
+            foreach (var (teamId, relation) in teamRelationData.TeamHostileInfos)
+            {
+                Logging.LogDebug("Team {TeamId} hostility: {HostileTeams}", teamId, string.Join(", ", relation.HostileTeamIDs));
+            }
         }
 
         // annotate that Photon is not null when this returns true

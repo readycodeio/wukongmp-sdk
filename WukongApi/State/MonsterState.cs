@@ -51,5 +51,10 @@ namespace WukongApi.State
 
             Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", TeamId);
         }
+
+        public override string ToString()
+        {
+            return $"MonsterState: Guid={Guid}, TeamId={TeamId}, Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
+        }
     }
 }
