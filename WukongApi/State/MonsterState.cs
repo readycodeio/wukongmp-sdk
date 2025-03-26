@@ -54,7 +54,8 @@ namespace WukongApi.State
 
         public override string ToString()
         {
-            return $"MonsterState: Guid={Guid}, TeamId={TeamId}, Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
+            var realTeamId = Pawn?.GetMonster().GetTeamIDInCS();
+            return $"MonsterState: Guid={Guid}, TeamId={TeamId}, RealTeamId={realTeamId} Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
         }
     }
 }

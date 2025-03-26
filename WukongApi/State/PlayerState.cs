@@ -119,10 +119,13 @@ namespace WukongApi.State
 
         public override string ToString()
         {
+            var realTeamId = (Pawn as BGUCharacterCS)?.GetTeamIDInCS();
+            
             var sb = new StringBuilder("PlayerState");
             sb.AppendLine($"PhotonId: {PhotonId}");
             sb.AppendLine($"NickName: {NickName}");
             sb.AppendLine($"TeamID: {TeamId}");
+            sb.AppendLine($"Real TeamId: {realTeamId}");
             sb.AppendLine($"Hp: {Hp}");
             sb.AppendLine($"Actual Hp: {BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(Pawn).GetFloatValue(EBGUAttrFloat.Hp)}");
             sb.AppendLine("------ ATTRIBUTES ------");
