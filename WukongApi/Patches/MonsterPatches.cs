@@ -210,17 +210,26 @@ namespace WukongApi.Patches
         }
     }
 
-    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.OnReset))]
+    /// <summary>
+    /// Only reset character Team ID if it was not set by us.
+    /// This prevents the game from resetting the team ID of monsters assigned to player teams in PvP.
+    /// </summary>
+    [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class TamerResetPatch
     {
-        public static bool Prefix(EResetActorReason ResetReason)
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_TeamIDManageComp:OnResetTeamID");
+        }
+
+        public static bool Prefix(UActorCompBaseCS __instance)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            Logging.LogDebug("Skipping tamer reset, reason: {Reason}", ResetReason);
-            return false; // Disabled until we figure out which cases make sense for multiplayer
+            var teamId = Traverse.Create(__instance).Field<BGUCharacterCS>("OwnerAsCharacterCS").Value.GetTeamIDInCS();
+            return !Constants.AvailableTeamIds.Contains(teamId);
         }
     }
 }
