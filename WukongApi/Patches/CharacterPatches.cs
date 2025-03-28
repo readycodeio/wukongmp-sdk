@@ -157,16 +157,16 @@ namespace WukongApi.Patches
                     var monster = photon.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
 
                     // monster
-                    if (monster is { Hp: not null, IsSynced: true })
+                    if (monster is { IsSynced: true })
                     {
-                        if (monster.Hp.Value.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                        if (monster.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                         {
                             return; // do not reapply the same value
                         }
 
-                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp.Value);
+                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp);
 
-                        if (monster.Hp.Value <= 0)
+                        if (monster.Hp <= 0)
                         {
                             var events = BUS_EventCollectionCS.Get(__instance.Owner);
                             GameLoopPatch.QueueOnGameThread(() =>
@@ -246,7 +246,7 @@ namespace WukongApi.Patches
                     var monster = photon.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (monster is { IsSynced: true })
                     {
-                        if (!monster.Hp.HasValue || !monster.Hp.Value.Equals(result, Constants.FloatComparisonTolerance))
+                        if (!monster.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
                             monster.Hp = result;
                             photon.CacheMonsterProperty(monster.Guid, AttrID.ToString(), result);

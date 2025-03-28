@@ -21,7 +21,6 @@ namespace WukongApi.State
             }
         }
 
-        public float? Hp { get; set; }
         public bool IsSynced { get; set; }
         public bool IsTamerValid => !Pawn.IsNullOrDestroyed();
 

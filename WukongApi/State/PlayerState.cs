@@ -63,9 +63,6 @@ namespace WukongApi.State
 
         #endregion
 
-        public float Hp { get; set; }
-
-        public bool IsDead => Hp <= 0;
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
