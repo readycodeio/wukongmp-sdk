@@ -799,7 +799,8 @@ namespace WukongApi
 
         public void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
         {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
+            var player = Photon.AllConnectedPlayers.FirstOrDefault(x => x.PhotonId == id);
+            if (player == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", id);
                 return;
