@@ -13,6 +13,7 @@ using HarmonyLib;
 using Photon.Realtime;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.API;
 using WukongApi.Patches;
 using WukongApi.State;
 using WukongApi.UI;
@@ -262,6 +263,10 @@ namespace WukongApi
             _gameMessageWidget.SetVisibility(false);
             _countdownWidget.StopCountdown();
             _timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
+            if (Photon.IsMasterClient && Photon.CurrentRoomState.BotsEnabled)
+            {
+                GameLoopPatch.QueueOnGameThread(() => SpawnBots(), "SpawnBots");
+            }
         }
 
         private void OnRoundEnded()
@@ -1081,6 +1086,19 @@ namespace WukongApi
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamId));
             BGS_GSEventCollection.Get(buTamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
+        }
+
+        public void SpawnBots()
+        {
+            for (int i = 0; i < Constants.BotCount; i++)
+            {
+                float angle = i / (float)Constants.MaxBotCount * 2f * FMath.PI;
+                float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
+                float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
+
+                FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
+                SpawnEnemyMaster(CharacterKind.Monkey, spawnPosition, Constants.AvailableTeamIds[1]);
+            }
         }
 
         private void OnJoinedRoomCallback()
