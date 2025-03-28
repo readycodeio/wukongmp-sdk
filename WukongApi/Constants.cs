@@ -34,6 +34,9 @@ namespace WukongApi
         public const int RoundSeconds = 0;
         public const int RoundMinutes = 3;
 
+        public const int BotCount = 2;
+        public const int MaxBotCount = 5;
+
         public const string UiManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";

@@ -88,9 +88,10 @@ namespace WukongApi
 
             if (monsterState == null)
             {
-                monsterState = new MonsterState(guid, tamer);
-                Logging.LogDebug("Registering local monster in Photon: {MonsterGuid}", guid);
-                photon.SyncedMonsters.Add(guid, monsterState);
+                //monsterState = new MonsterState(guid, tamer);
+                //photon.SyncedMonsters.Add(guid, monsterState);
+                Logging.LogWarning("Local monster not registered in Photon: {MonsterGuid}", guid);
+                return;
             }
             // sanity check guid
             else if (monsterState.Guid != guid)

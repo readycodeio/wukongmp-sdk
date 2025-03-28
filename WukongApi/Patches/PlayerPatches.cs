@@ -318,7 +318,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
+            if (DeadReason == EDeadReason.PlayerTrans)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
             var photon = WukongMP.Instance.Photon;
@@ -336,18 +336,13 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var killedPlayerState = photon.GetByActor(owner);
-            if (killedPlayerState == null)
-            {
-                return;
-            }
-
             if (photon is { IsMasterClient: true, CurrentRoomState.InPvP: true })
             {
                 if (Attacker != owner)
                 {
                     var attackerPlayerState = photon.GetByActor(Attacker);
-                    if (attackerPlayerState != null)
+                    var killedPlayerState = photon.GetByActor(owner);
+                    if (attackerPlayerState != null && killedPlayerState != null)
                     {
                         photon.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
                     }

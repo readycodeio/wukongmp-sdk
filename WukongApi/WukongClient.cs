@@ -90,6 +90,9 @@ namespace WukongApi
         public IEnumerable<PlayerState> AllPvPPlayers
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
+        public IEnumerable<CharacterState> AllPvPCharacters
+            => ConnectedPlayers.Values.Where(p => !p.IsSpectator).ToList<CharacterState>().Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]).Concat(SyncedMonsters.Values);
+
         public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
@@ -393,7 +396,7 @@ namespace WukongApi
 
             // check if all players but one are dead
             var players = AllPvPPlayers.ToList();
-            var alivePlayers = players.Where(p => !p.IsDead).ToList();
+            var alivePlayers = players.Where(p => !p.IsDead).ToList<CharacterState>();
             if (alivePlayers.Count == 0)
             {
                 Logging.LogInformation("All players are dead, ending round");
@@ -401,8 +404,9 @@ namespace WukongApi
                 return;
             }
 
-            var alivePlayersTeams = alivePlayers.Select(p => p.TeamId).Distinct().Count();
-            if (alivePlayersTeams == 1)
+            var aliveCharacters = alivePlayers.Concat(SyncedMonsters.Values.Where(m => !m.IsDead).ToList());
+            var aliveCharactersTeams = aliveCharacters.Select(p => p.TeamId).Distinct().Count();
+            if (aliveCharactersTeams == 1)
             {
                 Logging.LogInformation("One team with alive players, ending round");
                 var winner = players.First(p => !p.IsDead);
@@ -795,6 +799,7 @@ namespace WukongApi
 
             // clear previous round winners
             CurrentRoomState.RoundWinners = [];
+            CurrentRoomState.BotsEnabled = true;
 
             Task.Run(LobbyManager.StartRoundAsync);
         }
