@@ -1070,14 +1070,17 @@ namespace WukongApi
                 Logging.LogError("Could not spawn enemy: {UnitName}", unitName);
                 return;
             }
+            buTamerActor.MarkAsSpawnedTamer(null);
+            buTamerActor.ExtendConfigComp.ActorResetType = EBGUResetType.Destroy;
 
             buTamerActor.SpawnedTamerGuid = guid;
             // Update final guid
-            buTamerActor.GetFinalGuid();
+            buTamerActor.GetFinalGuid(true);
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
             Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamId));
+            BGS_GSEventCollection.Get(buTamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
         }
 
         private void OnJoinedRoomCallback()
