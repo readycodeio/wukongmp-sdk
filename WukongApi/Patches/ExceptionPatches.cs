@@ -43,7 +43,7 @@ namespace WukongApi.Patches
             Semaphore.Release();
         }
     }
-
+#if DEBUG
     [HarmonyPatch(typeof(SysLogUtil.SysLogInstance), nameof(SysLogUtil.SysLogInstance.LogInfo))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class SysLogUtilPatches1
@@ -103,4 +103,5 @@ namespace WukongApi.Patches
             Logging.LogError("[SysLogInstance | Shipping] {Message}", LogMessage);
         }
     }
+#endif
 }
