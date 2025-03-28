@@ -304,7 +304,7 @@ namespace WukongApi
 
             GameLoopPatch.QueueOnGameThread(() =>
             {
-                foreach (var team in otherTeams)
+                foreach (var team in Constants.AvailableTeamIds)
                 {
                     PhotonUtils.RegisterTeamHostility(myTeam, team);
                 }
@@ -327,7 +327,7 @@ namespace WukongApi
 
             GameLoopPatch.QueueOnGameThread(() =>
             {
-                foreach (var team in otherTeams)
+                foreach (var team in Constants.AvailableTeamIds)
                 {
                     PhotonUtils.UnregisterTeamHostility(myTeam, team);
                 }
