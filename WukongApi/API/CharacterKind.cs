@@ -2,6 +2,7 @@
 {
     public static class CharacterKind
     {
+        public const string Monkey = "monkey";
         public const string WolfSentinel = "wolf_sentinel";
         public const string WolfSoldier = "wolf_soldier";
         public const string WolfArcher = "wolf_archer";

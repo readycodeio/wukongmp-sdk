@@ -56,6 +56,9 @@ namespace WukongApi
         public event Action<int, int, ImmobilizeActionType, bool>? OnHandleImmobilize;
         public event Action<int, int>? OnTargetSet;
         public event Action? OnMatchmakingEnded;
+        public event Action<int, int, float>? OnBuffAdded;
+        public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
+        public event Action<int, EBuffEffectTriggerType, bool>? OnBuffAllRemoved;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -256,7 +259,24 @@ namespace WukongApi
                 case 15:
                     // end matchmaking phase
                     OnMatchmakingEnded?.Invoke();
-                    return;
+                    break;
+                case 16:
+                    // buff add
+                    var buffData = (byte[])photonEvent.CustomData;
+                    var buffId = BitConverter.ToInt32(buffData, 0);
+                    var buffDuration = BitConverter.ToSingle(buffData, 4);
+                    OnBuffAdded?.Invoke(photonEvent.Sender, buffId, buffDuration);
+                    break;
+                case 17:
+                    // buff remove
+                    var data = (int[])photonEvent.CustomData;
+                    OnBuffRemoved?.Invoke(photonEvent.Sender, data[0], (EBuffEffectTriggerType)data[1], data[2], data[3] != 0);
+                    break;
+                case 18:
+                    // buff all remove
+                    var evData = (byte[])photonEvent.CustomData;
+                    OnBuffAllRemoved?.Invoke(photonEvent.Sender, (EBuffEffectTriggerType)evData[0], evData[1] != 0);
+                    break;
             }
         }
 
@@ -496,6 +516,11 @@ namespace WukongApi
             }
 
             Logging.LogInformation("Stopping client...");
+
+            if (GameUtils.IsWorldValid())
+            {
+                UnsubscribeFromPlayerEvents();
+            }
 
             _isStopped = true;
 
@@ -761,17 +786,6 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.Equipment), LocalPlayerState.Equipment);
         }
 
-        public void RequestStartPvP()
-        {
-            if (!IsMasterClient)
-            {
-                GameUtils.ShowTip("Only room owner can start PvP.");
-                return;
-            }
-
-            StartPvP();
-        }
-
         public void StartPvP()
         {
             if (!IsMasterClient)
@@ -922,6 +936,57 @@ namespace WukongApi
             }
         }
 
+        private void SubscribeToPlayerEvents()
+        {
+            var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
+            events.Evt_BuffAdd += HandleBuffAdd;
+            events.Evt_BuffRemove += HandleBuffRemove;
+            events.Evt_BuffRemoveImmediately += HandleBuffRemoveImmediately;
+            events.Evt_BuffAllRemove += HandleBuffAllRemove;
+        }
+
+        private void UnsubscribeFromPlayerEvents()
+        {
+            var myPawn = GameUtils.GetControlledPawn();
+
+            if (myPawn == null)
+                return;
+
+            var events = BUS_EventCollectionCS.Get(myPawn);
+
+            if (events != null)
+            {
+                events.Evt_BuffAdd -= HandleBuffAdd;
+                events.Evt_BuffRemove -= HandleBuffRemove;
+                events.Evt_BuffRemoveImmediately -= HandleBuffRemoveImmediately;
+                events.Evt_BuffAllRemove -= HandleBuffAllRemove;
+            }
+        }
+
+        private void HandleBuffAllRemove(EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
+        {
+            const byte eventCode = 18;
+            byte[] evData = [(byte)removetriggertype, (byte)(withtriggerremmoveeffect ? 1 : 0)];
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        private void HandleBuffRemove(int buffid, EBuffEffectTriggerType removetriggertype, int layer, bool withtriggerremmoveeffect)
+        {
+            const byte eventCode = 17;
+            int[] evData = [buffid, (int)removetriggertype, layer, withtriggerremmoveeffect ? 1 : 0];
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        private void HandleBuffRemoveImmediately(int buffid, EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
+            => HandleBuffRemove(buffid, removetriggertype, -1, withtriggerremmoveeffect);
+
+        private void HandleBuffAdd(int buffid, AActor caster, AActor rootcaster, float duration, EBuffSourceType buffsourcetype, bool brecursed, FBattleAttrSnapShot battleattrsnapshot)
+        {
+            const byte eventCode = 16;
+            byte[] evData = BitConverter.GetBytes(buffid).Concat(BitConverter.GetBytes(duration)).ToArray();
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
         #region IConnectionCallbacks
 
         public void OnConnected()
@@ -1044,6 +1109,7 @@ namespace WukongApi
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
+            SubscribeToPlayerEvents();
             _joinedRoomCallback.Invoke();
             WukongChat.StartClient(PhotonClient.UserId);
 

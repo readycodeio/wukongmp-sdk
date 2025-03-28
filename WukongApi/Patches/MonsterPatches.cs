@@ -209,4 +209,27 @@ namespace WukongApi.Patches
             return !bEnable;
         }
     }
+
+    /// <summary>
+    /// Only reset character Team ID if it was not set by us.
+    /// This prevents the game from resetting the team ID of monsters assigned to player teams in PvP.
+    /// </summary>
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class TamerResetPatch
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_TeamIDManageComp:OnResetTeamID");
+        }
+
+        public static bool Prefix(UActorCompBaseCS __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var teamId = Traverse.Create(__instance).Field<BGUCharacterCS>("OwnerAsCharacterCS").Value.GetTeamIDInCS();
+            return !Constants.AvailableTeamIds.Contains(teamId);
+        }
+    }
 }

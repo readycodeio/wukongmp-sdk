@@ -233,6 +233,20 @@ namespace WukongApi
             {
                 Logging.LogDebug("Player {PlayerId} state: {State}", id, state.ToString());
             }
+
+            // dump synced monsters
+            foreach (var (guid, state) in Photon.SyncedMonsters)
+            {
+                Logging.LogDebug("Monster {Guid} state: {State}", guid, state.ToString());
+            }
+
+            // print team hostility info
+            var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
+
+            foreach (var (teamId, relation) in teamRelationData.TeamHostileInfos)
+            {
+                Logging.LogDebug("Team {TeamId} hostility: {HostileTeams}", teamId, string.Join(", ", relation.HostileTeamIDs));
+            }
         }
 
         // annotate that Photon is not null when this returns true
@@ -441,6 +455,75 @@ namespace WukongApi
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
             Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
+            Photon.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
+            Photon.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
+            Photon.OnBuffAllRemoved += (playerId, a, b) => GameLoopPatch.QueueOnGameThread(() => OnBuffAllRemoved(playerId, a, b), "OnBuffAllRemoved");
+        }
+
+        private void OnBuffAdded(int playerId, int buffId, float duration)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Adding buff {BuffId} to player {Nickname} with duration {Duration}", buffId, playerState.NickName, duration);
+            events.Evt_BuffAdd.Invoke(buffId, playerState.Pawn, playerState.Pawn, duration);
+        }
+
+        private void OnBuffRemoved(int playerId, int buffId,
+            EBuffEffectTriggerType removeTriggerType,
+            int inLayer,
+            bool withTriggerRemoveEffect)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Removing buff {BuffId} from player {Nickname}, type: {Type}", buffId, playerState.NickName, removeTriggerType);
+            events.Evt_BuffRemove.Invoke(buffId, removeTriggerType, inLayer, withTriggerRemoveEffect);
+        }
+
+        private void OnBuffAllRemoved(int playerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Removing all buffs from player {Nickname}, type: {Type}", playerState.NickName, removeTriggerType);
+            events.Evt_BuffAllRemove.Invoke(removeTriggerType, withTriggerRemoveEffect);
         }
 
         private void ExitPhantomRush(int playerId)
@@ -783,9 +866,10 @@ namespace WukongApi
             uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
         }
 
-        private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
+        public void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
         {
-            if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
+            var player = Photon.AllConnectedPlayers.FirstOrDefault(x => x.PhotonId == id);
+            if (player == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", id);
                 return;
@@ -1229,7 +1313,7 @@ namespace WukongApi
                 rot = (FRotator)playerRot;
             }
 
-            var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
+            var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
 
             if (@class == null)
             {
@@ -1251,7 +1335,7 @@ namespace WukongApi
             Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", id, newPawn.GetEntityHash());
 
             var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref loc, ref rot);
-            if (newControllerActor != null && newControllerActor is ABGUAIPlayerController newController)
+            if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
             {
                 Logging.LogDebug("Spawned new controller");
                 newController.Possess(newPawn);

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using b1;
 using BtlShare;
@@ -61,9 +63,6 @@ namespace WukongApi.State
 
         #endregion
 
-        public float Hp { get; set; }
-
-        public bool IsDead => Hp <= 0;
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
@@ -117,19 +116,17 @@ namespace WukongApi.State
 
         public override string ToString()
         {
+            var realTeamId = (Pawn as BGUCharacterCS)?.GetTeamIDInCS();
+            
             var sb = new StringBuilder("PlayerState");
             sb.AppendLine($"PhotonId: {PhotonId}");
             sb.AppendLine($"NickName: {NickName}");
             sb.AppendLine($"TeamID: {TeamId}");
+            sb.AppendLine($"Real TeamId: {realTeamId}");
             sb.AppendLine($"Hp: {Hp}");
             sb.AppendLine($"Actual Hp: {BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(Pawn).GetFloatValue(EBGUAttrFloat.Hp)}");
             sb.AppendLine("------ ATTRIBUTES ------");
-
-            foreach (var kvp in Attributes)
-            {
-                sb.AppendLine($"{kvp.Key}: {kvp.Value}");
-            }
-
+            sb.AppendLine(string.Join("\n", Attributes.Select(kvp => $"{kvp.Key}: {kvp.Value}").OrderBy(x => x)));
             sb.AppendLine("------ ANIMATION ------");
             sb.AppendLine($"InJump: {InJump}");
             sb.AppendLine($"IsFlying: {IsFlying}");

@@ -12,5 +12,8 @@ namespace WukongApi.State
         public EMoveSpeedLevel MoveSpeedLevel { get; set; } = EMoveSpeedLevel.Run;
         public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
         public int TeamId { get; protected set; }
+        public float Hp { get; set; }
+
+        public bool IsDead => Hp <= 0;
     }
 }

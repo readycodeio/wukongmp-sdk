@@ -21,7 +21,6 @@ namespace WukongApi.State
             }
         }
 
-        public float? Hp { get; set; }
         public bool IsSynced { get; set; }
         public bool IsTamerValid => !Pawn.IsNullOrDestroyed();
 
@@ -39,6 +38,8 @@ namespace WukongApi.State
             {
                 Logging.LogError("Monster is null when creating monster state");
             }
+
+            Logging.LogDebug("Created monster state with team ID: {TeamId}", TeamId);
         }
 
         public MonsterState(string guid, BUTamerActor pawn, int teamId)
@@ -46,6 +47,14 @@ namespace WukongApi.State
             Guid = guid;
             _pawn = pawn;
             TeamId = teamId;
+
+            Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", TeamId);
+        }
+
+        public override string ToString()
+        {
+            var realTeamId = Pawn?.GetMonster().GetTeamIDInCS();
+            return $"MonsterState: Guid={Guid}, TeamId={TeamId}, RealTeamId={realTeamId} Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
         }
     }
 }
