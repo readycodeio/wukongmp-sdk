@@ -58,6 +58,7 @@ namespace WukongApi
         public event Action? OnMatchmakingEnded;
         public event Action<int, int, float>? OnBuffAdded;
         public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
+        public event Action<int, EBuffEffectTriggerType, bool>? OnBuffAllRemoved;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -270,6 +271,11 @@ namespace WukongApi
                     // buff remove
                     var data = (int[])photonEvent.CustomData;
                     OnBuffRemoved?.Invoke(photonEvent.Sender, data[0], (EBuffEffectTriggerType)data[1], data[2], data[3] != 0);
+                    break;
+                case 18:
+                    // buff all remove
+                    var evData = (byte[])photonEvent.CustomData;
+                    OnBuffAllRemoved?.Invoke(photonEvent.Sender, (EBuffEffectTriggerType)evData[0], evData[1] != 0);
                     break;
             }
         }
@@ -936,6 +942,32 @@ namespace WukongApi
             events.Evt_BuffAdd += HandleBuffAdd;
             events.Evt_BuffRemove += HandleBuffRemove;
             events.Evt_BuffRemoveImmediately += HandleBuffRemoveImmediately;
+            events.Evt_BuffAllRemove += HandleBuffAllRemove;
+        }
+
+        private void UnsubscribeFromPlayerEvents()
+        {
+            var myPawn = GameUtils.GetControlledPawn();
+
+            if (myPawn == null)
+                return;
+
+            var events = BUS_EventCollectionCS.Get(myPawn);
+
+            if (events != null)
+            {
+                events.Evt_BuffAdd -= HandleBuffAdd;
+                events.Evt_BuffRemove -= HandleBuffRemove;
+                events.Evt_BuffRemoveImmediately -= HandleBuffRemoveImmediately;
+                events.Evt_BuffAllRemove -= HandleBuffAllRemove;
+            }
+        }
+
+        private void HandleBuffAllRemove(EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
+        {
+            const byte eventCode = 18;
+            byte[] evData = [(byte)removetriggertype, (byte)(withtriggerremmoveeffect ? 1 : 0)];
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         private void HandleBuffRemove(int buffid, EBuffEffectTriggerType removetriggertype, int layer, bool withtriggerremmoveeffect)
@@ -953,23 +985,6 @@ namespace WukongApi
             const byte eventCode = 16;
             byte[] evData = BitConverter.GetBytes(buffid).Concat(BitConverter.GetBytes(duration)).ToArray();
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
-        }
-
-        private void UnsubscribeFromPlayerEvents()
-        {
-            var myPawn = GameUtils.GetControlledPawn();
-
-            if (myPawn == null)
-                return;
-
-            var events = BUS_EventCollectionCS.Get(myPawn);
-
-            if (events != null)
-            {
-                events.Evt_BuffAdd -= HandleBuffAdd;
-                events.Evt_BuffRemove -= HandleBuffRemove;
-                events.Evt_BuffRemoveImmediately -= HandleBuffRemoveImmediately;
-            }
         }
 
         #region IConnectionCallbacks

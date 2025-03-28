@@ -455,8 +455,9 @@ namespace WukongApi
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
             Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
-            Photon.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffChanged");
+            Photon.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
             Photon.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
+            Photon.OnBuffAllRemoved += (playerId, a, b) => GameLoopPatch.QueueOnGameThread(() => OnBuffAllRemoved(playerId, a, b), "OnBuffAllRemoved");
         }
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
@@ -476,6 +477,7 @@ namespace WukongApi
                 return;
             }
 
+            Logging.LogDebug("Adding buff {BuffId} to player {Nickname} with duration {Duration}", buffId, playerState.NickName, duration);
             events.Evt_BuffAdd.Invoke(buffId, playerState.Pawn, playerState.Pawn, duration);
         }
 
@@ -499,7 +501,29 @@ namespace WukongApi
                 return;
             }
 
+            Logging.LogDebug("Removing buff {BuffId} from player {Nickname}, type: {Type}", buffId, playerState.NickName, removeTriggerType);
             events.Evt_BuffRemove.Invoke(buffId, removeTriggerType, inLayer, withTriggerRemoveEffect);
+        }
+
+        private void OnBuffAllRemoved(int playerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Removing all buffs from player {Nickname}, type: {Type}", playerState.NickName, removeTriggerType);
+            events.Evt_BuffAllRemove.Invoke(removeTriggerType, withTriggerRemoveEffect);
         }
 
         private void ExitPhantomRush(int playerId)
