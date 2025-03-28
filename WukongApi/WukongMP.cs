@@ -455,6 +455,20 @@ namespace WukongApi
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
             Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
+            Photon.OnBuffChanged += (playerId, buffId, oldLayer, newLayer) => GameLoopPatch.QueueOnGameThread(() => OnBuffChanged(playerId, buffId, oldLayer, newLayer), "OnBuffChanged");
+        }
+
+        private void OnBuffChanged(int playerId, int buffId, int oldLayer, int newLayer)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            events?.Evt_OnBuffLayerChangedNotify.Invoke(buffId, oldLayer, newLayer);
         }
 
         private void ExitPhantomRush(int playerId)

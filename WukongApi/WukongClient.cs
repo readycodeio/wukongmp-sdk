@@ -56,6 +56,7 @@ namespace WukongApi
         public event Action<int, int, ImmobilizeActionType, bool>? OnHandleImmobilize;
         public event Action<int, int>? OnTargetSet;
         public event Action? OnMatchmakingEnded;
+        public event Action<int, int, int, int>? OnBuffChanged;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -256,7 +257,12 @@ namespace WukongApi
                 case 15:
                     // end matchmaking phase
                     OnMatchmakingEnded?.Invoke();
-                    return;
+                    break;
+                case 16:
+                    // buff sync
+                    var buffData = (int[])photonEvent.CustomData;
+                    OnBuffChanged?.Invoke(photonEvent.Sender, buffData[0], buffData[1], buffData[2]);
+                    break;
             }
         }
 
@@ -496,6 +502,11 @@ namespace WukongApi
             }
 
             Logging.LogInformation("Stopping client...");
+
+            if (GameUtils.IsWorldValid())
+            {
+                UnsubscribeFromPlayerEvents();
+            }
 
             _isStopped = true;
 
@@ -755,21 +766,17 @@ namespace WukongApi
             }, SendOptions.SendReliable);
         }
 
+        private void OnBuffLayerChanged(int buffid, int layer_oldvalue, int layer_newvalue)
+        {
+            const byte eventCode = 16;
+            int[] evData = [buffid, layer_oldvalue, layer_newvalue];
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
         public void CacheEquipmentChange(EquipPosition position, int newEq)
         {
             LocalPlayerState.Equipment.SetEquipment(position, newEq);
             CachePlayerProperty(nameof(PlayerState.Equipment), LocalPlayerState.Equipment);
-        }
-
-        public void RequestStartPvP()
-        {
-            if (!IsMasterClient)
-            {
-                GameUtils.ShowTip("Only room owner can start PvP.");
-                return;
-            }
-
-            StartPvP();
         }
 
         public void StartPvP()
@@ -922,6 +929,27 @@ namespace WukongApi
             }
         }
 
+        private void SubscribeToPlayerEvents()
+        {
+            var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
+            events.Evt_OnBuffLayerChangedNotify += OnBuffLayerChanged;
+        }
+
+        private void UnsubscribeFromPlayerEvents()
+        {
+            var myPawn = GameUtils.GetControlledPawn();
+
+            if (myPawn == null)
+                return;
+
+            var events = BUS_EventCollectionCS.Get(myPawn);
+
+            if (events != null)
+            {
+                events.Evt_OnBuffLayerChangedNotify -= OnBuffLayerChanged;
+            }
+        }
+
         #region IConnectionCallbacks
 
         public void OnConnected()
@@ -1044,6 +1072,7 @@ namespace WukongApi
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
+            SubscribeToPlayerEvents();
             _joinedRoomCallback.Invoke();
             WukongChat.StartClient(PhotonClient.UserId);
 
