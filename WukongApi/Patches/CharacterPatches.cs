@@ -439,4 +439,26 @@ namespace WukongApi.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(BGU_UnrealWorldUtil), "DestroyActor")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchDestroyActor
+    {
+        public static void Postfix(AActor Actor)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (Actor is BGUCharacterCS character)
+            {
+                var monsterState = photon.GetMonsterByCharacter(character);
+                if (monsterState != null)
+                {
+                    Logging.LogWarning("DestroyActor called for {Name}", Actor.GetFullName());
+                    photon.RemoveMonster(monsterState.Guid);
+                }
+            }
+        }
+    }
 }
