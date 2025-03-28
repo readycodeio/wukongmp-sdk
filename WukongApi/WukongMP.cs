@@ -797,7 +797,7 @@ namespace WukongApi
             uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
         }
 
-        private void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
+        public void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
         {
             if (!Photon.ConnectedPlayers.TryGetValue(id, out var player))
             {
