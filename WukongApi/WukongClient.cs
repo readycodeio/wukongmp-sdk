@@ -57,6 +57,7 @@ namespace WukongApi
         public event Action<int, int>? OnTargetSet;
         public event Action? OnMatchmakingEnded;
         public event Action<int, int, float>? OnBuffAdded;
+        public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -259,11 +260,16 @@ namespace WukongApi
                     OnMatchmakingEnded?.Invoke();
                     break;
                 case 16:
-                    // buff sync
+                    // buff add
                     var buffData = (byte[])photonEvent.CustomData;
                     var buffId = BitConverter.ToInt32(buffData, 0);
                     var buffDuration = BitConverter.ToSingle(buffData, 4);
                     OnBuffAdded?.Invoke(photonEvent.Sender, buffId, buffDuration);
+                    break;
+                case 17:
+                    // buff remove
+                    var data = (int[])photonEvent.CustomData;
+                    OnBuffRemoved?.Invoke(photonEvent.Sender, data[0], (EBuffEffectTriggerType)data[1], data[2], data[3] != 0);
                     break;
             }
         }
@@ -927,10 +933,22 @@ namespace WukongApi
         private void SubscribeToPlayerEvents()
         {
             var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
-            events.Evt_BuffAdd += OnBuffAdd;
+            events.Evt_BuffAdd += HandleBuffAdd;
+            events.Evt_BuffRemove += HandleBuffRemove;
+            events.Evt_BuffRemoveImmediately += HandleBuffRemoveImmediately;
         }
 
-        private void OnBuffAdd(int buffid, AActor caster, AActor rootcaster, float duration, EBuffSourceType buffsourcetype, bool brecursed, FBattleAttrSnapShot battleattrsnapshot)
+        private void HandleBuffRemove(int buffid, EBuffEffectTriggerType removetriggertype, int layer, bool withtriggerremmoveeffect)
+        {
+            const byte eventCode = 17;
+            int[] evData = [buffid, (int)removetriggertype, layer, withtriggerremmoveeffect ? 1 : 0];
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        private void HandleBuffRemoveImmediately(int buffid, EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
+            => HandleBuffRemove(buffid, removetriggertype, -1, withtriggerremmoveeffect);
+
+        private void HandleBuffAdd(int buffid, AActor caster, AActor rootcaster, float duration, EBuffSourceType buffsourcetype, bool brecursed, FBattleAttrSnapShot battleattrsnapshot)
         {
             const byte eventCode = 16;
             byte[] evData = BitConverter.GetBytes(buffid).Concat(BitConverter.GetBytes(duration)).ToArray();
@@ -948,7 +966,9 @@ namespace WukongApi
 
             if (events != null)
             {
-                events.Evt_BuffAdd -= OnBuffAdd;
+                events.Evt_BuffAdd -= HandleBuffAdd;
+                events.Evt_BuffRemove -= HandleBuffRemove;
+                events.Evt_BuffRemoveImmediately -= HandleBuffRemoveImmediately;
             }
         }
 

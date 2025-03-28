@@ -456,6 +456,7 @@ namespace WukongApi
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
             Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
             Photon.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffChanged");
+            Photon.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
         }
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
@@ -476,6 +477,29 @@ namespace WukongApi
             }
 
             events.Evt_BuffAdd.Invoke(buffId, playerState.Pawn, playerState.Pawn, duration);
+        }
+
+        private void OnBuffRemoved(int playerId, int buffId,
+            EBuffEffectTriggerType removeTriggerType,
+            int inLayer,
+            bool withTriggerRemoveEffect)
+        {
+            var playerState = Photon.GetById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            events.Evt_BuffRemove.Invoke(buffId, removeTriggerType, inLayer, withTriggerRemoveEffect);
         }
 
         private void ExitPhantomRush(int playerId)
