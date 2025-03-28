@@ -6,6 +6,7 @@ using BtlB1;
 using CSharpModBase;
 using GSE.GSUI;
 using HarmonyLib;
+using UnrealEngine.AssetRegistry;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -200,6 +201,21 @@ namespace WukongApi
         public static bool IsSkillWhitelisted(int skillId)
         {
             return Constants.SkillsWhitelist.Contains(skillId);
+        }
+
+        public static void ListAssets(string path)
+        {
+            UAssetDataArray assetsInFolder = UGSE_AssetUtilFuncLib.GetAssetsInFolder(new FName(path), bRecursive: true);
+            if (assetsInFolder == null)
+            {
+                return;
+            }
+
+            int i = 0;
+            foreach (FAssetData item6 in assetsInFolder.AssetDataArr)
+            {
+                Logging.LogInformation("Asset {Id} path : {Name}", i++, item6.GetFullName().ToString());
+            }
         }
     }
 }
