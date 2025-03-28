@@ -56,7 +56,7 @@ namespace WukongApi
         public event Action<int, int, ImmobilizeActionType, bool>? OnHandleImmobilize;
         public event Action<int, int>? OnTargetSet;
         public event Action? OnMatchmakingEnded;
-        public event Action<int, int, int, int>? OnBuffChanged;
+        public event Action<int, int, float>? OnBuffAdded;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -260,8 +260,10 @@ namespace WukongApi
                     break;
                 case 16:
                     // buff sync
-                    var buffData = (int[])photonEvent.CustomData;
-                    OnBuffChanged?.Invoke(photonEvent.Sender, buffData[0], buffData[1], buffData[2]);
+                    var buffData = (byte[])photonEvent.CustomData;
+                    var buffId = BitConverter.ToInt32(buffData, 0);
+                    var buffDuration = BitConverter.ToSingle(buffData, 4);
+                    OnBuffAdded?.Invoke(photonEvent.Sender, buffId, buffDuration);
                     break;
             }
         }
@@ -766,13 +768,6 @@ namespace WukongApi
             }, SendOptions.SendReliable);
         }
 
-        private void OnBuffLayerChanged(int buffid, int layer_oldvalue, int layer_newvalue)
-        {
-            const byte eventCode = 16;
-            int[] evData = [buffid, layer_oldvalue, layer_newvalue];
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
-        }
-
         public void CacheEquipmentChange(EquipPosition position, int newEq)
         {
             LocalPlayerState.Equipment.SetEquipment(position, newEq);
@@ -932,7 +927,14 @@ namespace WukongApi
         private void SubscribeToPlayerEvents()
         {
             var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
-            events.Evt_OnBuffLayerChangedNotify += OnBuffLayerChanged;
+            events.Evt_BuffAdd += OnBuffAdd;
+        }
+
+        private void OnBuffAdd(int buffid, AActor caster, AActor rootcaster, float duration, EBuffSourceType buffsourcetype, bool brecursed, FBattleAttrSnapShot battleattrsnapshot)
+        {
+            const byte eventCode = 16;
+            byte[] evData = BitConverter.GetBytes(buffid).Concat(BitConverter.GetBytes(duration)).ToArray();
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         private void UnsubscribeFromPlayerEvents()
@@ -946,7 +948,7 @@ namespace WukongApi
 
             if (events != null)
             {
-                events.Evt_OnBuffLayerChangedNotify -= OnBuffLayerChanged;
+                events.Evt_BuffAdd -= OnBuffAdd;
             }
         }
 

@@ -455,10 +455,10 @@ namespace WukongApi
             Photon.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Photon.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
             Photon.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
-            Photon.OnBuffChanged += (playerId, buffId, oldLayer, newLayer) => GameLoopPatch.QueueOnGameThread(() => OnBuffChanged(playerId, buffId, oldLayer, newLayer), "OnBuffChanged");
+            Photon.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffChanged");
         }
 
-        private void OnBuffChanged(int playerId, int buffId, int oldLayer, int newLayer)
+        private void OnBuffAdded(int playerId, int buffId, float duration)
         {
             var playerState = Photon.GetById(playerId);
             if (playerState == null)
@@ -468,7 +468,14 @@ namespace WukongApi
             }
 
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            events?.Evt_OnBuffLayerChangedNotify.Invoke(buffId, oldLayer, newLayer);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            events.Evt_BuffAdd.Invoke(buffId, playerState.Pawn, playerState.Pawn, duration);
         }
 
         private void ExitPhantomRush(int playerId)
