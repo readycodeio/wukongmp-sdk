@@ -1243,7 +1243,7 @@ namespace WukongApi
                 rot = (FRotator)playerRot;
             }
 
-            var @class = UClass.GetClass("BGUAIPlayerController"); // "BGPPlayerController" works for sure
+            var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
 
             if (@class == null)
             {
@@ -1265,7 +1265,7 @@ namespace WukongApi
             Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", id, newPawn.GetEntityHash());
 
             var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref loc, ref rot);
-            if (newControllerActor != null && newControllerActor is ABGUAIPlayerController newController)
+            if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
             {
                 Logging.LogDebug("Spawned new controller");
                 newController.Possess(newPawn);
