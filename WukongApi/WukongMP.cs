@@ -211,7 +211,7 @@ namespace WukongApi
         {
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Texts.PressToBeReady);
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count));
             _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -844,7 +844,7 @@ namespace WukongApi
             else
             {
                 _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
-                _gameMessageWidget.SetSecondText(Texts.PressToBeReady);
+                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count));
             }
         }
 
