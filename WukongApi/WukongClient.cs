@@ -401,15 +401,29 @@ namespace WukongApi
             // check if all players but one are dead
             var players = AllPvPPlayers.ToList();
             var alivePlayers = players.Where(p => !p.IsDead).ToList<CharacterState>();
+            var aliveCharacters = alivePlayers.Concat(SyncedMonsters.Values.Where(m => !m.IsDead).ToList());
+            var aliveCharactersTeams = aliveCharacters.Select(p => p.TeamId).Distinct().Count();
+
+            var aliveTeams = aliveCharacters
+                .Select(character => character.TeamId)
+                .GroupBy(teamId => teamId)
+                .Select(group => new { TeamId = group.Key, Count = group.Count() })
+                .OrderByDescending(item => item.Count).ToList();
+
             if (alivePlayers.Count == 0)
             {
                 Logging.LogInformation("All players are dead, ending round");
-                Task.Run(async () => await LobbyManager.EndRoundAsync(Constants.DrawTeamId));
+                if (aliveCharacters.Count() == 0)
+                {
+                    Task.Run(async () => await LobbyManager.EndRoundAsync(Constants.DrawTeamId));
+                }
+                else
+                {
+                    Task.Run(async () => await LobbyManager.EndRoundAsync(aliveTeams[0].TeamId));
+                }
                 return;
             }
 
-            var aliveCharacters = alivePlayers.Concat(SyncedMonsters.Values.Where(m => !m.IsDead).ToList());
-            var aliveCharactersTeams = aliveCharacters.Select(p => p.TeamId).Distinct().Count();
             if (aliveCharactersTeams == 1)
             {
                 Logging.LogInformation("One team with alive players, ending round");
