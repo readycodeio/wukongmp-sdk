@@ -263,9 +263,13 @@ namespace WukongApi
             _gameMessageWidget.SetVisibility(false);
             _countdownWidget.StopCountdown();
             _timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
-            if (Photon.IsMasterClient && Photon.CurrentRoomState.BotsEnabled)
+            if (Photon.IsMasterClient)
             {
-                GameLoopPatch.QueueOnGameThread(() => SpawnBots(), "SpawnBots");
+                Photon.CurrentRoomState.InCombatRound = true;
+                if (Photon.CurrentRoomState.BotsEnabled && Photon.ConnectedPlayers.Count == 0)
+                {
+                    GameLoopPatch.QueueOnGameThread(() => SpawnBots(), "SpawnBots");
+                }
             }
         }
 
@@ -284,6 +288,7 @@ namespace WukongApi
 
             if (Photon.IsMasterClient)
             {
+                Photon.CurrentRoomState.InCombatRound = false;
                 foreach (var playerState in Photon.AllConnectedPlayers)
                 {
                     var events = BUS_EventCollectionCS.Get(playerState.Pawn);
@@ -812,7 +817,7 @@ namespace WukongApi
 
             if (isReady)
             {
-                if (Photon.ConnectedPlayers.Count > 0 && readyCount == Photon.ConnectedPlayers.Count + 1)
+                if ((Photon.ConnectedPlayers.Count > 0 || Photon.CurrentRoomState.BotsEnabled) && readyCount == Photon.ConnectedPlayers.Count + 1)
                 {
                     // all players are ready
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
@@ -1084,20 +1089,44 @@ namespace WukongApi
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
-            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, buTamerActor, teamId));
+            var monsterState = new MonsterState(guid, buTamerActor, teamId);
+            Photon.SyncedMonsters.Add(guid, monsterState);
             BGS_GSEventCollection.Get(buTamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
+
+            if (unitName == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+            {
+                monsterState.NickName = "Bot";
+                SetMonkeyBotConfig(buTamerActor.GetMonster());
+                CreateMarkerForCharacter(monsterState); // 3D marker above monster
+            }
+        }
+
+        private void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
+        {
+            var events = BUS_EventCollectionCS.Get(bGUCharacter);
+            if (events != null)
+            {
+                foreach (var attr in MonkeyBotConfig.Attribues)
+                {
+                    events.Evt_SetAttrFloat.Invoke(attr.Key, attr.Value);
+                }
+                foreach (var eq in MonkeyBotConfig.Equipment)
+                {
+                    events.Evt_InitDaShenEquipData.Invoke(eq.Key, eq.Value);
+                }
+            }
         }
 
         public void SpawnBots()
         {
             for (int i = 0; i < Constants.BotCount; i++)
             {
-                float angle = i / (float)Constants.MaxBotCount * 2f * FMath.PI;
-                float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
-                float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
+                float angle = i / (float)Constants.BotCount * 2f * FMath.PI;
+                float x = FMath.Cos(angle) * Constants.PvpMonsterRadius;
+                float y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
 
                 FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
-                SpawnEnemyMaster(CharacterKind.Monkey, spawnPosition, Constants.AvailableTeamIds[1]);
+                SpawnEnemyMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Photon.LocalPlayerState.TeamId));
             }
         }
 

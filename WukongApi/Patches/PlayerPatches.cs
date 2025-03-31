@@ -336,7 +336,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (photon is { IsMasterClient: true, CurrentRoomState.InPvP: true })
+            if (photon is { IsMasterClient: true, CurrentRoomState.InPvP: true, CurrentRoomState.InCombatRound: true })
             {
                 if (Attacker != owner)
                 {

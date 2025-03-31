@@ -134,6 +134,11 @@ namespace WukongApi
             return "";
         }
 
+        public static int GetOppositeTeam(int teamId)
+        {
+            return teamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
+        }
+
         public static UBGWDataAsset? GetFxAssetByResId(UObject context, IList<FPlayFXByResID> fXs, int targetResId, int ownerResId)
         {
             var text = "";

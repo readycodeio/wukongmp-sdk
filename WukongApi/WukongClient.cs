@@ -585,6 +585,7 @@ namespace WukongApi
             await PhotonClient.JoinLobbyAsync(_lobby);
 
             var gameMode = CmdLineParams.Instance.MatchmakingMode;
+            var botsEnabled = true;
             switch (gameMode)
             {
                 case GameMode.Private:
@@ -596,7 +597,8 @@ namespace WukongApi
                         {
                             [nameof(RoomState.RoundsTotal)] = 3,
                             [nameof(RoomState.RoundWinners)] = "",
-                            [nameof(RoomState.GameMode)] = gameMode
+                            [nameof(RoomState.GameMode)] = gameMode,
+                            [nameof(RoomState.BotsEnabled)] = botsEnabled
                         },
                         MaxPlayers = 10,
                         IsOpen = true,
@@ -623,7 +625,8 @@ namespace WukongApi
                         {
                             [nameof(RoomState.RoundsTotal)] = 3,
                             [nameof(RoomState.RoundWinners)] = "",
-                            [nameof(RoomState.GameMode)] = gameMode
+                            [nameof(RoomState.GameMode)] = gameMode,
+                            [nameof(RoomState.BotsEnabled)] = botsEnabled
                         },
                         MaxPlayers = 2 * playersPerTeam,
                         IsOpen = true,
@@ -803,7 +806,6 @@ namespace WukongApi
 
             // clear previous round winners
             CurrentRoomState.RoundWinners = [];
-            CurrentRoomState.BotsEnabled = true;
 
             Task.Run(LobbyManager.StartRoundAsync);
         }
