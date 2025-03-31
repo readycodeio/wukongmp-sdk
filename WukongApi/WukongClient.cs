@@ -178,9 +178,13 @@ namespace WukongApi
             return kvp.Value;
         }
 
-        public void RemoveMonster(string monsterGuid)
+        public void RemoveMonster(MonsterState monster)
         {
-            SyncedMonsters.Remove(monsterGuid);
+            if (monster.MarkerActor != null)
+            {
+                BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
+            }
+            SyncedMonsters.Remove(monster.Guid);
         }
 
         public void OnEvent(EventData photonEvent)

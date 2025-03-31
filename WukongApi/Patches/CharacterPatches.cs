@@ -174,7 +174,7 @@ namespace WukongApi.Patches
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
 
                                 // remove from collection
-                                photon.RemoveMonster(monster.Guid);
+                                photon.RemoveMonster(monster);
                             }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                         }
                     }
@@ -254,7 +254,7 @@ namespace WukongApi.Patches
                             if (result <= 0)
                             {
                                 // remove dead monster from sync
-                                photon.RemoveMonster(monster.Guid);
+                                photon.RemoveMonster(monster);
                             }
                         }
 
@@ -434,6 +434,8 @@ namespace WukongApi.Patches
                             __instance.Velocity = monsterState.Velocity;
                             __instance.MoveAcceleration = monsterState.MoveAcceleration;
                         }
+
+                        monsterState.UpdateMarkerPosition();
                     }
                 }
             }
@@ -455,8 +457,8 @@ namespace WukongApi.Patches
                 var monsterState = photon.GetMonsterByCharacter(character);
                 if (monsterState != null)
                 {
-                    Logging.LogWarning("DestroyActor called for {Name}", Actor.GetFullName());
-                    photon.RemoveMonster(monsterState.Guid);
+                    Logging.LogDebug("DestroyActor called for monster: {Name}", Actor.GetFullName());
+                    photon.RemoveMonster(monsterState);
                 }
             }
         }

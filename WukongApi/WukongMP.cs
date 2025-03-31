@@ -1241,7 +1241,7 @@ namespace WukongApi
 
             if (playerState != null)
             {
-                CreateMarkerForPlayer(playerState); // 3D marker above player
+                CreateMarkerForCharacter(playerState); // 3D marker above player
                 Photon.RegisterPlayer(playerState);
                 UpdateConnectedCount();
 
@@ -1435,7 +1435,7 @@ namespace WukongApi
             return playerState;
         }
 
-        private void CreateMarkerForPlayer(PlayerState playerState)
+        private void CreateMarkerForCharacter(CharacterState characterState)
         {
             var world = GameUtils.GetWorld();
             var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
@@ -1450,9 +1450,9 @@ namespace WukongApi
                 return;
             }
 
-            var teamName = GameUtils.GetTeamName(playerState.TeamId);
-            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
-            playerState.MarkerActor = playerMarkerActor;
+            var teamName = GameUtils.GetTeamName(characterState.TeamId);
+            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {characterState.NickName} {teamName}", true);
+            characterState.MarkerActor = playerMarkerActor;
         }
     }
 }
