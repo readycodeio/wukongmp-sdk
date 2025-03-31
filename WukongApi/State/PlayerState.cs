@@ -31,23 +31,6 @@ namespace WukongApi.State
             set => _pawn = value;
         }
 
-        private AActor? _markerActor;
-
-        public AActor? MarkerActor
-        {
-            get
-            {
-                if (_markerActor != null && _markerActor.IsNullOrDestroyed())
-                {
-                    Logging.LogWarning("Marker actor is destroyed");
-                    return null;
-                }
-
-                return _markerActor;
-            }
-            set => _markerActor = value;
-        }
-
         #region Animation
 
         public bool InJump { get; set; }
@@ -66,7 +49,6 @@ namespace WukongApi.State
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
-        public string NickName { get; set; } = "Unknown";
         public bool RunImmobilizePatches { get; set; }
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
@@ -97,7 +79,7 @@ namespace WukongApi.State
             PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
         }
 
-        public void UpdateMarkerPosition()
+        public override void UpdateMarkerPosition()
         {
             if (MarkerActor != null)
             {

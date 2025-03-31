@@ -1,4 +1,5 @@
 ﻿using b1;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
 namespace WukongApi.State
@@ -13,7 +14,27 @@ namespace WukongApi.State
         public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
         public int TeamId { get; protected set; }
         public float Hp { get; set; }
+        public string NickName { get; set; } = "Unknown";
 
         public bool IsDead => Hp <= 0;
+
+        private AActor? _markerActor;
+
+        public AActor? MarkerActor
+        {
+            get
+            {
+                if (_markerActor != null && _markerActor.IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Marker actor is destroyed");
+                    return null;
+                }
+
+                return _markerActor;
+            }
+            set => _markerActor = value;
+        }
+
+        public abstract void UpdateMarkerPosition();
     }
 }
