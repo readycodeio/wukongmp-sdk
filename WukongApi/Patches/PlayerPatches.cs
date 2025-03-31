@@ -543,4 +543,18 @@ namespace WukongApi.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(BGW_GameDB), "GetUnitBattleInfoExtendDesc")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchGetUnitBattleInfoExtendDesc
+    {
+        public static void Postfix(ref FUStUnitBattleInfoExtendDesc __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            if (__result.DefaultCamID == 0)
+                __result.DefaultCamID = 101600;
+        }
+    }
 }
