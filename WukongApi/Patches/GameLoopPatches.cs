@@ -4,6 +4,7 @@ using b1;
 using b1.ECS;
 using HarmonyLib;
 using UnrealEngine.Engine;
+using WukongApi.Monitors;
 
 namespace WukongApi.Patches
 {
@@ -157,6 +158,11 @@ namespace WukongApi.Patches
                 && mask != BGW_TickGroupMask.TG_LateTick
                 && mask != BGW_TickGroupMask.TG_ThreadTick)
                 return;
+
+            if (mask == BGW_TickGroupMask.TG_OnTick)
+            {
+                ComponentMonitorManager.Instance.Update();
+            }
 
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
                 return;
