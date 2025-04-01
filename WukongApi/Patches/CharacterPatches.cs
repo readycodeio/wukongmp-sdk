@@ -428,11 +428,28 @@ namespace WukongApi.Patches
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
                                 photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
                             }
+
+                            if (!monsterState.MaxAcceleration.Equals(__instance.MaxAcceleration, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.MaxAcceleration = __instance.MaxAcceleration;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MaxAcceleration), monsterState.MaxAcceleration);
+                            }
+
+                            if (!monsterState.MaxSpeed.Equals(__instance.MaxSpeed, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.MaxSpeed = __instance.MaxSpeed;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
+                            }
                         }
                         else
                         {
                             __instance.Velocity = monsterState.Velocity;
                             __instance.MoveAcceleration = monsterState.MoveAcceleration;
+                            __instance.MovementComp.Velocity = monsterState.Velocity;
+
+                            __instance.MaxAcceleration = monsterState.MaxAcceleration;
+                            __instance.MaxSpeed = monsterState.MaxSpeed;
+                            __instance.MovementComp.MaxAcceleration = monsterState.MaxAcceleration;
                         }
 
                         monsterState.UpdateMarkerPosition();

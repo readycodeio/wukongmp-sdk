@@ -10,6 +10,8 @@ namespace WukongApi.State
         public FRotator Rotation { get; set; }
         public FVector Velocity { get; set; }
         public FVector MoveAcceleration { get; set; }
+        public float MaxAcceleration { get; set; }
+        public float MaxSpeed { get; set; }
         public EMoveSpeedLevel MoveSpeedLevel { get; set; } = EMoveSpeedLevel.Run;
         public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
         public int TeamId { get; protected set; }
