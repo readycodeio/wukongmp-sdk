@@ -13,9 +13,9 @@ using BtlShare;
 using CSharpModBase;
 using Photon.Client;
 using Photon.Realtime;
+using ReadyM.Relay.Client;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongApi.Patches;
 using WukongApi.State;
 using WukongApi.UI;
 using PlayerState = WukongApi.State.PlayerState;
@@ -24,7 +24,9 @@ namespace WukongApi
 {
     public sealed class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
+        public readonly RelayClient RelayClient = new();
         public readonly RealtimeClient PhotonClient = new();
+
         private readonly TypedLobby _lobby = new("pvpLobby", LobbyType.Default);
 
         private const char MonsterHashtableKeySeparator = ';';
@@ -102,13 +104,15 @@ namespace WukongApi
             _joinedRoomCallback = onJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
 
+            ConfigureRelay();
             ConfigurePhoton();
         }
 
         ~WukongClient()
         {
             Logging.LogInformation("WukongClient finalizer called");
-            StopClient();
+            StopRelayClient();
+            StopPhotonClient();
             PhotonClient.RemoveCallbackTarget(this);
         }
 
@@ -184,6 +188,7 @@ namespace WukongApi
             {
                 BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
             }
+
             SyncedMonsters.Remove(monster.Guid);
         }
 
@@ -421,6 +426,7 @@ namespace WukongApi
                 {
                     Task.Run(async () => await LobbyManager.EndRoundAsync(aliveTeams[0].TeamId));
                 }
+
                 return;
             }
 
@@ -475,10 +481,11 @@ namespace WukongApi
         public void Reconnect()
         {
             Logging.LogInformation("Attempting to reconnect...");
-            StopClient();
+            StopPhotonClient();
             StartClient();
         }
 
+        [Obsolete]
         private void ConfigurePhoton()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -501,6 +508,29 @@ namespace WukongApi
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
             PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
+        }
+
+        private void ConfigureRelay()
+        {
+            RelayClient.RegisterType(typeof(UnitSpawnData), 255, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
+            RelayClient.RegisterType(typeof(FVector), 254, SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
+            RelayClient.RegisterType(typeof(FRotator), 253, SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
+            RelayClient.RegisterType(typeof(EMoveSpeedLevel), 252, (stream, obj) =>
+            {
+                stream.WriteByte((byte)obj);
+                return 1;
+            }, (stream, _) => (EMoveSpeedLevel)stream.ReadByte());
+
+            RelayClient.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
+            RelayClient.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
+            RelayClient.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
+            RelayClient.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
+            RelayClient.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
+            RelayClient.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
+
+            // PhotonClient.AddCallbackTarget(this);
+            // PhotonClient.StateChanged += OnStateChange;
+            // PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
         }
 
         public void StartClient()
@@ -529,7 +559,7 @@ namespace WukongApi
             Logging.LogInformation("Client started");
         }
 
-        public void StopClient()
+        public void StopPhotonClient()
         {
             if (_isStopped)
             {
@@ -537,7 +567,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogInformation("Stopping client...");
+            Logging.LogInformation("Stopping Photon client...");
 
             if (GameUtils.IsWorldValid())
             {
@@ -548,6 +578,18 @@ namespace WukongApi
 
             WukongChat.StopClient();
             PhotonClient.Disconnect();
+        }
+
+        public void StopRelayClient()
+        {
+            Logging.LogInformation("Stopping relay client...");
+
+            if (GameUtils.IsWorldValid())
+            {
+                UnsubscribeFromPlayerEvents();
+            }
+
+            RelayClient.Stop();
 
             // clear the chat window
             ChatWidget.Instance.ClearMessages();

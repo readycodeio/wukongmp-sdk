@@ -129,7 +129,7 @@ namespace WukongApi
         private void RequestDisconnect(ReadOnlyMemory<string> _)
         {
             SendServerMessage($"{NickName} has left!");
-            _wukongClient.StopClient();
+            _wukongClient.StopPhotonClient();
         }
 
         private void ServiceChat()

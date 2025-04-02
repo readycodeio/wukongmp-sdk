@@ -157,7 +157,7 @@ namespace WukongApi
         {
             Logging.LogInformation("End play for player.");
             DeinitializeWidgets();
-            Photon.StopClient();
+            Photon.StopPhotonClient();
         }
 
         private void InitializeWidgets()
