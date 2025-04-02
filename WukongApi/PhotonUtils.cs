@@ -128,6 +128,10 @@ namespace WukongApi
                 return;
             }
 
+            // set monster hp
+            var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
+            monsterState.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+
             if (photon.IsMasterClient)
             {
                 // subscribe to events on master
@@ -138,10 +142,6 @@ namespace WukongApi
                     Logging.LogDebug("Monster montage callback: {Guid} {Reason} {Montage} {State}", monsterState.Guid, reason, montagePath, state);
                     photon.SendMonsterMontageCallback(monsterState.Guid, reason, montagePath, state);
                 };
-
-                // also, set HP
-                var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
-                monsterState.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
             }
             else
             {

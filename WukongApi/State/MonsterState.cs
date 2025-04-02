@@ -49,17 +49,6 @@ namespace WukongApi.State
             _pawn = pawn;
             TeamId = teamId;
 
-            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn.GetMonster());
-            if (attrContainer != null)
-            {
-                Hp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
-            }
-            else
-            {
-                Hp = 1000;
-                Logging.LogWarning("AttrContainer not found. Set Hp to ", Hp);
-            }
-
             Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", TeamId);
         }
 
