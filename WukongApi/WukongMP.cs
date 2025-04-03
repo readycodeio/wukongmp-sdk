@@ -1318,7 +1318,7 @@ namespace WukongApi
         private void ShowSpectator(PlayerState playerState)
         {
             SetPlayerVisibility(playerState, true);
-            SetPlayerCollision(playerState, false);
+            SetPlayerCollision(playerState, true);
             //TeleportPlayerOnStart(playerState.PhotonId);
         }
 
