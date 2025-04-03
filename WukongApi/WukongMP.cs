@@ -199,6 +199,8 @@ namespace WukongApi
                     Logging.LogInformation("Entering free camera");
                     SetHudVisibility(false);
                     FreeCameraManager.EnterFreeCameraMode();
+                    Logging.LogDebug("Disabling visiblity");
+                    HideSpectator(Photon.LocalPlayerState);
                     SetupSpectatorUi();
                 }
                 else
@@ -1184,8 +1186,6 @@ namespace WukongApi
                 Photon.CachePlayerProperty(nameof(PlayerState.IsSpectator), true);
                 Logging.LogDebug("Setting cached properties");
                 Photon.SetCachedPlayerProperties();
-                Logging.LogDebug("Disabling visiblity");
-                HideSpectator(Photon.LocalPlayerState);
             }
         }
 
