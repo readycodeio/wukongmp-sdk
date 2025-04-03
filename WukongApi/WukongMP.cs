@@ -199,6 +199,7 @@ namespace WukongApi
                     Logging.LogInformation("Entering free camera");
                     SetHudVisibility(false);
                     FreeCameraManager.EnterFreeCameraMode();
+                    SetupSpectatorUi();
                 }
                 else
                 {
@@ -357,17 +358,16 @@ namespace WukongApi
         {
             Logging.LogInformation("End tournament");
             SetupLobbyUi();
-            ShowAllPlayers();
+            ShowSpectatingPlayers();
             FreeCameraManager.LeaveFreeCameraMode();
             SetHudVisibility(true);
         }
 
-        private void ShowAllPlayers()
+        private void ShowSpectatingPlayers()
         {
-            foreach (var playerState in Photon.AllConnectedPlayers)
+            foreach (var playerState in Photon.SpectatingPlayers)
             {
-                SetPlayerVisibility(playerState, true);
-                SetPlayerCollision(playerState, true);
+                ShowSpectator(playerState);
                 _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
             }
         }
@@ -1180,9 +1180,7 @@ namespace WukongApi
                 Logging.LogDebug("Setting cached properties");
                 Photon.SetCachedPlayerProperties();
                 Logging.LogDebug("Disabling visiblity");
-                SetPlayerVisibility(Photon.LocalPlayerState, false);
-                SetPlayerCollision(Photon.LocalPlayerState, false);
-                SetupSpectatorUi();
+                HideSpectator(Photon.LocalPlayerState);
             }
         }
 
@@ -1296,8 +1294,7 @@ namespace WukongApi
 
                 if (Photon.CurrentRoomState.InPvP && !readyForPvP)
                 {
-                    SetPlayerVisibility(playerState, false);
-                    SetPlayerCollision(playerState, false);
+                    HideSpectator(playerState);
                 }
                 else
                 {
@@ -1309,6 +1306,20 @@ namespace WukongApi
                     EndMatchmaking();
                 }
             }
+        }
+
+        private void HideSpectator(PlayerState playerState)
+        {
+            SetPlayerVisibility(playerState, false);
+            SetPlayerCollision(playerState, false);
+            SetPlayerTransform(FVector.ZeroVector, FRotator.ZeroRotator);
+        }
+
+        private void ShowSpectator(PlayerState playerState)
+        {
+            SetPlayerVisibility(playerState, true);
+            SetPlayerCollision(playerState, false);
+            TeleportPlayerOnStart(playerState.PhotonId);
         }
 
         public static void SetPlayerVisibility(PlayerState playerState, bool visible)
