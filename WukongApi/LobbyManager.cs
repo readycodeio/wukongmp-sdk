@@ -85,9 +85,9 @@ namespace WukongApi
             var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
             // check if only one team is present
-            if (!wukongClient.CurrentRoomState.BotsEnabled && wukongClient.AllPvPCharacters.Select(p => p.TeamId).Distinct().Count() == 1)
+            if (wukongClient.AllPvPCharacters.Select(p => p.TeamId).Distinct().Count() == 1)
             {
-                wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, wukongClient.LocalPlayerState.TeamId);
+                wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winner);
                 return;
             }
 
