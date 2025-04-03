@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Photon.Client;
+using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Protocol;
-using DeserializeStreamMethod = ReadyM.Relay.Client.Serialization.DeserializeStreamMethod;
-using SerializeStreamMethod = ReadyM.Relay.Client.Serialization.SerializeStreamMethod;
 
 namespace ReadyM.Relay.Client
 {
-    public class RelayClient : IDisposable
+    public class RelayClient : RelayPeerBase, IDisposable
     {
         private const string Host = "localhost";
         private const int Port = 9050;
@@ -24,8 +22,7 @@ namespace ReadyM.Relay.Client
         private Thread? _clientThread;
         private bool _isRunning;
 
-        private readonly Dictionary<Type, (byte Code, SerializeStreamMethod Serialize, DeserializeStreamMethod Deserialize)> _registeredTypes = new();
-        private readonly Dictionary<byte, (Type Type, SerializeStreamMethod Serialize, DeserializeStreamMethod Deserialize)> _code2Type = new();
+        private Dictionary<object, object> RoomState = new();
 
         public int ActorId { get; private set; } = -1;
 
@@ -58,8 +55,6 @@ namespace ReadyM.Relay.Client
 #endif
             };
             _logger = logger;
-
-            RegisterDefaultTypes();
         }
 
         public void Start()
@@ -100,33 +95,29 @@ namespace ReadyM.Relay.Client
                 return;
             }
 
-            var dataBuffer = new StreamBuffer();
-            SerializeObject(dataBuffer, data);
+            SerializeObject(writer, data);
 
-            writer.PutBytesWithLength(dataBuffer.GetBuffer());
             Server?.Send(writer, deliveryMethod);
         }
 
+        [Obsolete]
         public void RegisterType(
             Type customType,
             byte code,
             SerializeStreamMethod serializeMethod,
             DeserializeStreamMethod deserializeMethod)
         {
-            // check if already registered
-            if (_registeredTypes.ContainsKey(customType))
+            RegisterType(customType, code, (writer, customObject) =>
             {
-                throw new ArgumentException($"Type {customType} is already registered");
-            }
-
-            // check if any other type has the same code, if so - throw
-            if (_code2Type.TryGetValue(code, out var value))
+                var stream = new StreamBuffer();
+                serializeMethod(stream, customObject);
+                writer.PutBytesWithLength(stream.GetBuffer());
+            }, reader =>
             {
-                throw new ArgumentException($"Code {code} is already registered for type {value.Type}");
-            }
-
-            _registeredTypes[customType] = (code, serializeMethod, deserializeMethod);
-            _code2Type[code] = (customType, serializeMethod, deserializeMethod);
+                var bytes = reader.GetBytesWithLength();
+                var buffer = new StreamBuffer(bytes);
+                return deserializeMethod(buffer, 0);
+            });
         }
 
         public void Dispose()
@@ -149,208 +140,25 @@ namespace ReadyM.Relay.Client
                 ActorId = reader.GetInt();
                 Log(LogLevel.Information, "Assigned Actor ID {0}", ActorId);
             }
+            else if (eventCode == (byte)SystemEvent.RoomStateChanged)
+            {
+                var state = DeserializeObject(reader);
+                if (state is Dictionary<object, object> newState)
+                {
+                    RoomState = newState;
+                    Log(LogLevel.Information, "Room state changed");
+
+                    foreach (var (key, value) in newState)
+                    {
+                        Log(LogLevel.Information, "Key: {0}, Value: {1}", key.ToString(), value.ToString());
+                    }
+                }
+            }
         }
 
         private void OnNetworkLatencyUpdateEvent(NetPeer peer, int latency)
         {
             Log(LogLevel.Debug, "Network latency updated: {0}ms", latency);
-        }
-
-        private short SerializeObject(
-            StreamBuffer stream,
-            object? data)
-        {
-            if (data == null)
-            {
-                stream.WriteByte(0);
-                return 1;
-            }
-
-            if (!_registeredTypes.TryGetValue(data.GetType(), out var typeInfo))
-            {
-                throw new ArgumentException($"Type {data.GetType()} is not registered");
-            }
-
-            stream.WriteByte(typeInfo.Code);
-
-            return (short)(1 + typeInfo.Serialize(stream, data));
-        }
-
-        private object? DeserializeObject(StreamBuffer stream)
-        {
-            var typeCode = stream.ReadByte();
-            if (typeCode == 0)
-            {
-                return null;
-            }
-
-            if (!_code2Type.TryGetValue(typeCode, out var typeInfo))
-            {
-                throw new ArgumentException($"Type code {typeCode} is not registered");
-            }
-
-            return typeInfo.Deserialize(stream, 0); // length is unused
-        }
-
-        private void RegisterDefaultTypes()
-        {
-            // primitives
-            RegisterType(typeof(byte), 1, (stream, customObject) =>
-            {
-                stream.WriteByte((byte)customObject);
-                return 1;
-            }, (stream, _) => stream.ReadByte());
-
-            RegisterType(typeof(short), 2, (stream, customObject) =>
-            {
-                stream.Write(BitConverter.GetBytes((short)customObject), 0, 2);
-                return 2;
-            }, (stream, _) =>
-            {
-                var bytes = new byte[2];
-                stream.Read(bytes, 0, 2);
-                return BitConverter.ToInt16(bytes, 0);
-            });
-
-            RegisterType(typeof(int), 3, (stream, customObject) =>
-            {
-                stream.Write(BitConverter.GetBytes((int)customObject), 0, 4);
-                return 4;
-            }, (stream, _) =>
-            {
-                var bytes = new byte[4];
-                stream.Read(bytes, 0, 4);
-                return BitConverter.ToInt32(bytes, 0);
-            });
-
-            RegisterType(typeof(long), 4, (stream, customObject) =>
-            {
-                stream.Write(BitConverter.GetBytes((long)customObject), 0, 8);
-                return 8;
-            }, (stream, _) =>
-            {
-                var bytes = new byte[8];
-                stream.Read(bytes, 0, 8);
-                return BitConverter.ToInt64(bytes, 0);
-            });
-
-            RegisterType(typeof(float), 5, (stream, customObject) =>
-            {
-                stream.Write(BitConverter.GetBytes((float)customObject), 0, 4);
-                return 4;
-            }, (stream, _) =>
-            {
-                var bytes = new byte[4];
-                stream.Read(bytes, 0, 4);
-                return BitConverter.ToSingle(bytes, 0);
-            });
-
-            RegisterType(typeof(double), 6, (stream, customObject) =>
-            {
-                stream.Write(BitConverter.GetBytes((double)customObject), 0, 8);
-                return 8;
-            }, (stream, _) =>
-            {
-                var bytes = new byte[8];
-                stream.Read(bytes, 0, 8);
-                return BitConverter.ToDouble(bytes, 0);
-            });
-
-            RegisterType(typeof(string), 7, (stream, customObject) =>
-            {
-                var str = (string)customObject;
-                var bytes = Encoding.UTF8.GetBytes(str);
-                stream.Write(BitConverter.GetBytes((short)bytes.Length), 0, 2);
-                stream.Write(bytes, 0, bytes.Length);
-                return (short)(2 + bytes.Length);
-            }, (stream, _) =>
-            {
-                var lengthBytes = new byte[2];
-                stream.Read(lengthBytes, 0, 2);
-                var strLength = BitConverter.ToInt16(lengthBytes, 0);
-
-                var strBytes = new byte[strLength];
-                stream.Read(strBytes, 0, strLength);
-                return Encoding.UTF8.GetString(strBytes);
-            });
-
-            // arrays of primitives
-            RegisterType(typeof(byte[]), 8, (stream, customObject) =>
-            {
-                var arr = (byte[])customObject;
-                stream.Write(BitConverter.GetBytes((short)arr.Length), 0, 2);
-                stream.Write(arr, 0, arr.Length);
-                return (short)(2 + arr.Length);
-            }, (stream, _) =>
-            {
-                var lengthBytes = new byte[2];
-                stream.Read(lengthBytes, 0, 2);
-                var arrLength = BitConverter.ToInt16(lengthBytes, 0);
-
-                var arr = new byte[arrLength];
-                stream.Read(arr, 0, arrLength);
-                return arr;
-            });
-
-            RegisterType(typeof(int[]), 9, (stream, customObject) =>
-            {
-                var arr = (int[])customObject;
-                stream.Write(BitConverter.GetBytes((short)arr.Length), 0, 2);
-                foreach (var i in arr)
-                {
-                    stream.Write(BitConverter.GetBytes(i), 0, 4);
-                }
-
-                return (short)(2 + arr.Length * 4);
-            }, (stream, _) =>
-            {
-                var lengthBytes = new byte[2];
-                stream.Read(lengthBytes, 0, 2);
-                var arrLength = BitConverter.ToInt16(lengthBytes, 0);
-
-                var arr = new int[arrLength];
-                for (var i = 0; i < arrLength; i++)
-                {
-                    var bytes = new byte[4];
-                    stream.Read(bytes, 0, 4);
-                    arr[i] = BitConverter.ToInt32(bytes, 0);
-                }
-
-                return arr;
-            });
-
-            // photon hashtable
-            RegisterType(typeof(PhotonHashtable), 10, (stream, customObject) =>
-            {
-                var hashtable = (PhotonHashtable)customObject;
-
-                stream.Write(BitConverter.GetBytes((short)hashtable.Count), 0, 2);
-                short totalSize = 2;
-
-                foreach (var (key, value) in hashtable)
-                {
-                    totalSize += SerializeObject(stream, key);
-                    totalSize += SerializeObject(stream, value);
-                }
-
-                return totalSize;
-            }, (stream, _) =>
-            {
-                var lengthBytes = new byte[2];
-                stream.Read(lengthBytes, 0, 2);
-                var hashtableLength = BitConverter.ToInt16(lengthBytes, 0);
-
-                var hashtable = new PhotonHashtable();
-                for (var i = 0; i < hashtableLength; i++)
-                {
-                    var key = DeserializeObject(stream)!;
-                    var value = DeserializeObject(stream);
-
-                    hashtable.Add(key, value);
-                }
-
-                return hashtable;
-            });
         }
     }
 }
