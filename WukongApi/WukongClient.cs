@@ -350,6 +350,7 @@ namespace WukongApi
 
                     Task.Run(async () =>
                     {
+                        WukongMP.Instance.TeleportSpectatingPlayers();
                         await Task.Delay(2000);
                         WukongMP.Instance.EndTournament(winnerTeamId);
                         ExitPvP();

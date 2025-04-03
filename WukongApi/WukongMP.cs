@@ -196,11 +196,12 @@ namespace WukongApi
                 }
                 else if (Photon.LocalPlayerState.IsSpectator)
                 {
-                    Logging.LogInformation("Entering free camera");
-                    SetHudVisibility(false);
-                    FreeCameraManager.EnterFreeCameraMode();
                     Logging.LogDebug("Disabling visiblity");
+                    SetHudVisibility(false);
                     HideSpectator(Photon.LocalPlayerState);
+                    Logging.LogInformation("Entering free camera");
+                    FreeCameraManager.EnterFreeCameraMode();
+                    TeleportOutSpectator(Photon.LocalPlayerState);
                     SetupSpectatorUi();
                 }
                 else
@@ -371,6 +372,14 @@ namespace WukongApi
             {
                 ShowSpectator(playerState);
                 _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
+            }
+        }
+
+        public void TeleportSpectatingPlayers()
+        {
+            foreach (var playerState in Photon.SpectatingPlayers)
+            {
+                TeleportInSpectator(playerState);
             }
         }
 
@@ -1300,6 +1309,7 @@ namespace WukongApi
                 if (Photon.CurrentRoomState.InPvP && !readyForPvP)
                 {
                     HideSpectator(playerState);
+                    TeleportOutSpectator(playerState);
                 }
                 else
                 {
@@ -1316,17 +1326,23 @@ namespace WukongApi
         private void HideSpectator(PlayerState playerState)
         {
             SetPlayerVisibility(playerState, false);
-            //SetPlayerCollision(playerState, false);
+        }
+
+        private void TeleportOutSpectator(PlayerState playerState)
+        {
             playerState.Pawn?.SetActorTransform(FTransform.Identity, false, out _, true);
         }
+
 
         private void ShowSpectator(PlayerState playerState)
         {
             SetPlayerVisibility(playerState, true);
-            //SetPlayerCollision(playerState, true);
+        }
+
+        private void TeleportInSpectator(PlayerState playerState)
+        {
             var spawnPosition = GetSpawnPosition(playerState.PhotonId);
             playerState.Pawn?.SetActorTransform(new FTransform(FRotator.ZeroRotator, spawnPosition), false, out _, true);
-            //TeleportLocalPlayerOnStart(playerState.PhotonId);
         }
 
         public static void SetPlayerVisibility(PlayerState playerState, bool visible)
