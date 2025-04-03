@@ -11,9 +11,11 @@ using b1;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
+using LiteNetLib;
 using Photon.Client;
 using Photon.Realtime;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.Protocol;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
@@ -481,8 +483,12 @@ namespace WukongApi
         public void Reconnect()
         {
             Logging.LogInformation("Attempting to reconnect...");
+            
             StopPhotonClient();
-            StartClient();
+            StopRelayClient();
+
+            StartRelayClient();
+            StartPhotonClient();
         }
 
         [Obsolete]
@@ -533,7 +539,8 @@ namespace WukongApi
             // PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
         }
 
-        public void StartClient()
+        [Obsolete]
+        public void StartPhotonClient()
         {
             if (!_isStopped)
             {
@@ -559,6 +566,12 @@ namespace WukongApi
             Logging.LogInformation("Client started");
         }
 
+        public void StartRelayClient()
+        {
+            RelayClient.Start();
+        }
+
+        [Obsolete]
         public void StopPhotonClient()
         {
             if (_isStopped)
@@ -725,6 +738,7 @@ namespace WukongApi
             const byte eventCode = 1;
             var evData = new UnitSpawnData(id, unitName, teamId, x, y, z);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMontageCallback(UAnimMontage montage, float position, bool reset)
@@ -736,6 +750,7 @@ namespace WukongApi
             var evData = new MontageCallbackData(shortMontagePath, position, reset);
 
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMontageCancel()
@@ -746,6 +761,7 @@ namespace WukongApi
             var evData = new MontageCallbackData("", 0f, false);
 
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
@@ -753,18 +769,21 @@ namespace WukongApi
             const byte eventCode = 4;
             var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMonsterWakeUp(string guid)
         {
             const byte eventCode = 5;
             PhotonClient.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, guid, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendDamageNum(DamageNumParam damageNumParam)
         {
             const byte eventCode = 6;
             PhotonClient.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+            RelayClient.OpRaiseEvent(eventCode, damageNumParam, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void BroadcastPlayerRebirth(int playerId)
@@ -774,6 +793,7 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendPvPEvent(PvPEvent ev, int data = 0)
@@ -792,6 +812,7 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         public void KillCurrentPlayer()
@@ -801,6 +822,7 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.MasterClient,
             }, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, PhotonId, RelayMode.Master, DeliveryMethod.ReliableOrdered);
         }
 
         public void BroadcastPlayerTransform(int playerId, FVector location, FRotator rotation)
@@ -811,12 +833,14 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendPhantomRush(ESkillDirection phantomRushDir)
         {
             const byte eventCode = 11;
             PhotonClient.OpRaiseEvent(eventCode, phantomRushDir, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, phantomRushDir, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void BroadcastImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
@@ -824,18 +848,21 @@ namespace WukongApi
             const byte eventCode = 12;
             var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType, hasBuff);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendTarget(int playerId)
         {
             const byte eventCode = 13;
             PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void ExitPhantomRush(int playerId)
         {
             const byte eventCode = 14;
             PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendEndMatchmaking()
@@ -845,6 +872,7 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, null, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)
@@ -1035,6 +1063,7 @@ namespace WukongApi
             const byte eventCode = 18;
             byte[] evData = [(byte)removetriggertype, (byte)(withtriggerremmoveeffect ? 1 : 0)];
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         private void HandleBuffRemove(int buffid, EBuffEffectTriggerType removetriggertype, int layer, bool withtriggerremmoveeffect)
@@ -1042,6 +1071,7 @@ namespace WukongApi
             const byte eventCode = 17;
             int[] evData = [buffid, (int)removetriggertype, layer, withtriggerremmoveeffect ? 1 : 0];
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         private void HandleBuffRemoveImmediately(int buffid, EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
@@ -1052,6 +1082,7 @@ namespace WukongApi
             const byte eventCode = 16;
             byte[] evData = BitConverter.GetBytes(buffid).Concat(BitConverter.GetBytes(duration)).ToArray();
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         #region IConnectionCallbacks

@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Client", "Read
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClient", "TestClient\TestClient.csproj", "{9E70C9A9-F17A-4295-A88B-22C42EBAE859}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common", "..\ReadyM-Master-Server\api\ReadyM.Relay.Common\ReadyM.Relay.Common.csproj", "{F15F1016-C0EF-49D1-8495-0F437B836E65}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common", "..\ReadyM-Master-Server\relay\ReadyM.Relay.Common\ReadyM.Relay.Common.csproj", "{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +47,10 @@ Global
 		{9E70C9A9-F17A-4295-A88B-22C42EBAE859}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E70C9A9-F17A-4295-A88B-22C42EBAE859}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E70C9A9-F17A-4295-A88B-22C42EBAE859}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F15F1016-C0EF-49D1-8495-0F437B836E65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F15F1016-C0EF-49D1-8495-0F437B836E65}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F15F1016-C0EF-49D1-8495-0F437B836E65}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F15F1016-C0EF-49D1-8495-0F437B836E65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

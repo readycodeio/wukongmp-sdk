@@ -149,7 +149,8 @@ namespace WukongApi
                 DestroyAllMonsters();
                 BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
-                Photon.StartClient();
+                Photon.StartRelayClient();
+                Photon.StartPhotonClient();
             }
         }
 
@@ -158,6 +159,7 @@ namespace WukongApi
             Logging.LogInformation("End play for player.");
             DeinitializeWidgets();
             Photon.StopPhotonClient();
+            Photon.StopRelayClient();
         }
 
         private void InitializeWidgets()

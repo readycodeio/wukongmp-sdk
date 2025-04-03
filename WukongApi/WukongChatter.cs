@@ -130,6 +130,7 @@ namespace WukongApi
         {
             SendServerMessage($"{NickName} has left!");
             _wukongClient.StopPhotonClient();
+            _wukongClient.StopRelayClient();
         }
 
         private void ServiceChat()
