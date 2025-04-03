@@ -456,10 +456,6 @@ namespace WukongApi
             }
 
             CurrentRoomState.InPvP = true;
-            if (CurrentRoomState.GameMode == GameMode.XvX)
-            {
-                PhotonClient.CurrentRoom.IsOpen = false;
-            }
         }
 
         private void ExitPvP()
@@ -473,10 +469,6 @@ namespace WukongApi
             }
 
             CurrentRoomState.InPvP = false;
-            if (CurrentRoomState.GameMode == GameMode.XvX)
-            {
-                PhotonClient.CurrentRoom.IsOpen = true;
-            }
         }
 
         private void OnPlayerReadinessChanged(Player player, bool isReady)
