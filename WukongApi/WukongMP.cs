@@ -1312,14 +1312,14 @@ namespace WukongApi
         {
             SetPlayerVisibility(playerState, false);
             SetPlayerCollision(playerState, false);
-            SetPlayerTransform(FVector.ZeroVector, FRotator.ZeroRotator);
+            //SetPlayerTransform(FVector.ZeroVector, FRotator.ZeroRotator);
         }
 
         private void ShowSpectator(PlayerState playerState)
         {
             SetPlayerVisibility(playerState, true);
             SetPlayerCollision(playerState, false);
-            TeleportPlayerOnStart(playerState.PhotonId);
+            //TeleportPlayerOnStart(playerState.PhotonId);
         }
 
         public static void SetPlayerVisibility(PlayerState playerState, bool visible)
