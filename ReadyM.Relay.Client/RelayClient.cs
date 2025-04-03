@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
 using LiteNetLib;
@@ -8,6 +9,7 @@ using LiteNetLib.Utils;
 using Photon.Client;
 using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Protocol;
+using ReadyM.Relay.Common.Protocol.Enums;
 
 namespace ReadyM.Relay.Client
 {
@@ -28,6 +30,10 @@ namespace ReadyM.Relay.Client
         private ConcurrentDictionary<int, Dictionary<object, object>> ConnectedPlayers { get; set; } = new();
 
         public int ActorId { get; private set; } = -1;
+
+        public event Action<Dictionary<object, object?>>? OnRoomPropertiesChanged;
+        public event Action<int, Dictionary<object, object?>>? OnPlayerPropertiesChanged;
+        public event Action<CustomEventHeader, NetPacketReader>? OnCustomEvent;
 
         private NetPeer? Server
         {
@@ -87,31 +93,23 @@ namespace ReadyM.Relay.Client
             _clientThread = null;
         }
 
-        public void OpSetCustomPropertiesOfActor(int playerId, Dictionary<object, object> data)
+        public void OpSetCustomPropertiesOfActor(int playerId, Dictionary<object, object?> data)
         {
-            // send actor state
-            var writer = new NetDataWriter();
-
-            writer.PutEventHeader(SystemEvent.PlayerStateChanged);
-            writer.Put(playerId);
-
-            SerializeObject(writer, data);
+            var writer = CreatePlayerPropertiesUpdatePacket(playerId, data);
             Server?.Send(writer, DeliveryMethod.ReliableOrdered);
         }
 
         public void OpRaiseEvent(byte eventCode, object? data, RelayMode mode, DeliveryMethod deliveryMethod)
         {
             var writer = new NetDataWriter();
-            writer.PutEventHeader(eventCode, mode);
+            writer.PutCustomEventHeader(eventCode, ActorId, mode);
 
-            if (data == null)
+            if (data != null)
             {
-                Server?.Send(writer, deliveryMethod);
-                return;
+                SerializeObject(writer, data);
             }
 
-            SerializeObject(writer, data);
-
+            Log(LogLevel.Debug, "Sending event {0}", eventCode);
             Server?.Send(writer, deliveryMethod);
         }
 
@@ -148,54 +146,52 @@ namespace ReadyM.Relay.Client
 
         private void OnListenerOnNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliverymethod)
         {
-            var (eventCode, _) = reader.GetEventHeader();
+            var eventCode = reader.GetByte();
 
-            var systemEvent = (SystemEvent)eventCode;
-
-            switch (systemEvent)
+            switch ((SystemEvent)eventCode)
             {
                 case SystemEvent.ActorNumberAssigned:
+                {
                     ActorId = reader.GetInt();
                     Log(LogLevel.Information, "Assigned Actor ID {0}", ActorId);
-                    break;
-                case SystemEvent.RoomStateChanged:
-                    var state = DeserializeObject(reader);
-                    if (state is Dictionary<object, object> newState)
-                    {
-                        RoomState = newState;
-                        Log(LogLevel.Information, "Room state changed");
-
-                        foreach (var (key, value) in newState)
-                        {
-                            Log(LogLevel.Information, "Key: {0}, Value: {1}", key.ToString(), value.ToString());
-                        }
-                    }
-
-                    break;
+                    return;
+                }
                 case SystemEvent.PlayerStateChanged:
+                {
                     var playerId = reader.GetInt();
-                    var playerState = DeserializeObject(reader);
-                    if (playerState is Dictionary<object, object> newPlayerState)
+                    var changes = DeserializeObject<Dictionary<object, object?>>(reader);
+
+                    Dictionary<object, object?> diff;
+                    if (playerId == ActorId)
                     {
-                        if (playerId == ActorId)
+                        diff = DiffStates(PlayerState, changes);
+                    }
+                    else
+                    {
+                        if (!ConnectedPlayers.TryGetValue(playerId, out var player))
                         {
-                            PlayerState = newPlayerState;
-                        }
-                        else
-                        {
-                            ConnectedPlayers.AddOrUpdate(playerId, newPlayerState, (_, _) => newPlayerState);
+                            Log(LogLevel.Warning, "Player {0} not found", playerId);
+                            return;
                         }
 
-                        Log(LogLevel.Information, "Player {0} state changed", playerId);
-
-                        foreach (var (key, value) in newPlayerState)
-                        {
-                            Log(LogLevel.Information, "Key: {0}, Value: {1}", key.ToString(), value.ToString());
-                        }
+                        diff = DiffStates(player, changes);
                     }
 
-                    break;
+                    OnPlayerPropertiesChanged?.Invoke(playerId, diff);
+                    return;
+                }
+                case SystemEvent.RoomStateChanged:
+                {
+                    var changes = DeserializeObject<Dictionary<object, object?>>(reader);
+                    var diff = DiffStates(RoomState, changes);
+                    OnRoomPropertiesChanged?.Invoke(diff);
+                    return;
+                }
             }
+
+            Log(LogLevel.Debug, "Received custom event {0}", eventCode);
+            var header = reader.GetCustomEventHeader(eventCode);
+            OnCustomEvent?.Invoke(header, reader);
         }
 
         private void OnNetworkLatencyUpdateEvent(NetPeer peer, int latency)

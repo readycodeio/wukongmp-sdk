@@ -16,6 +16,7 @@ using Photon.Client;
 using Photon.Realtime;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Protocol;
+using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
@@ -533,10 +534,9 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             RelayClient.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
             RelayClient.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
-
-            // PhotonClient.AddCallbackTarget(this);
-            // PhotonClient.StateChanged += OnStateChange;
-            // PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
+            RelayClient.RegisterType(typeof(ESkillDirection), 245,
+                (writer, customObject) => writer.Put((byte)customObject),
+                reader => (ESkillDirection)reader.GetByte());
         }
 
         [Obsolete]
@@ -990,8 +990,8 @@ namespace WukongApi
 
             Logging.LogDebug("Sending remote player property: {Property} = {Value}", key, value);
 
-            RelayClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
             PhotonClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
+            RelayClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
         private ConcurrentDictionary<string, object> _monsterProperties = new();

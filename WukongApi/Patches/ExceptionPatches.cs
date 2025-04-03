@@ -44,26 +44,6 @@ namespace WukongApi.Patches
         }
     }
 #if DEBUG
-    [HarmonyPatch(typeof(SysLogUtil.SysLogInstance), nameof(SysLogUtil.SysLogInstance.LogInfo))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public class SysLogUtilPatches1
-    {
-        public static void Postfix(string LogMessage)
-        {
-            Logging.LogInformation("[SysLogInstance] {Message}", LogMessage);
-        }
-    }
-
-    [HarmonyPatch(typeof(SysLogUtil.SysLogInstance), nameof(SysLogUtil.SysLogInstance.LogDebug))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public class SysLogUtilPatches2
-    {
-        public static void Postfix(string LogMessage)
-        {
-            Logging.LogDebug("[SysLogInstance] {Message}", LogMessage);
-        }
-    }
-
     [HarmonyPatch(typeof(SysLogUtil.SysLogInstance), nameof(SysLogUtil.SysLogInstance.LogWarning))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class SysLogUtilPatches3
@@ -81,16 +61,6 @@ namespace WukongApi.Patches
         public static void Postfix(string LogMessage)
         {
             Logging.LogError("[SysLogInstance] {Message}", LogMessage);
-        }
-    }
-
-    [HarmonyPatch(typeof(SysLogUtil.SysLogInstance), nameof(SysLogUtil.SysLogInstance.LogShipping))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public class SysLogUtilPatches5
-    {
-        public static void Postfix(string LogMessage)
-        {
-            Logging.LogDebug("[SysLogInstance | Shipping] {Message}", LogMessage);
         }
     }
 
