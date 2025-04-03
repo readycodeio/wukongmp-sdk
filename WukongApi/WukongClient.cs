@@ -698,6 +698,13 @@ namespace WukongApi
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
+        private void SpawnUnitForNewPlayer(int playerId, string id, string unitName, int teamId, float x, float y, float z)
+        {
+            const byte eventCode = 1;
+            var evData = new UnitSpawnData(id, unitName, teamId, x, y, z);
+            PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs { TargetActors = [playerId] }, SendOptions.SendReliable);
+        }
+
         public void SendMontageCallback(UAnimMontage montage, float position, bool reset)
         {
             Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
@@ -1177,6 +1184,11 @@ namespace WukongApi
         {
             Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", newPlayer.NickName, newPlayer.ActorNumber);
             _playerJoinedCallback.Invoke(newPlayer);
+            // send current monsters to the new player 
+            foreach (var monsterState in SyncedMonsters.Values)
+            {
+                SpawnUnitForNewPlayer(newPlayer.ActorNumber, monsterState.Guid, monsterState.UnitName, monsterState.TeamId, monsterState.Location.X, monsterState.Location.Y, monsterState.Location.Z);
+            }
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)

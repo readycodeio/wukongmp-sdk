@@ -389,7 +389,7 @@ namespace WukongApi
 
                         if (!Photon.SyncedMonsters.ContainsKey(guid))
                         {
-                            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor));
+                            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor, actor.GetMonsterClass().PathName));
                             Logging.LogDebug("Monster was not synced, adding to synced monsters.");
                         }
 
@@ -400,7 +400,7 @@ namespace WukongApi
                     {
                         Logging.LogDebug("Monster already spawned but not synced: {Guid}.", guid);
 
-                        var state = new MonsterState(guid, actor);
+                        var state = new MonsterState(guid, actor, actor.GetMonsterClass().PathName);
                         Photon.SyncedMonsters.Add(guid, state);
 
                         PhotonUtils.PrepareMonsterForSync(Photon, state);
@@ -1102,15 +1102,15 @@ namespace WukongApi
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
-            var monsterState = new MonsterState(guid, buTamerActor, teamId);
+            var monsterState = new MonsterState(guid, buTamerActor, teamId, unitName);
             Photon.SyncedMonsters.Add(guid, monsterState);
             BGS_GSEventCollection.Get(buTamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
 
+            monsterState.NickName = "Bot";
+            CreateMarkerForCharacter(monsterState); // 3D marker above monster
             if (unitName == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
             {
-                monsterState.NickName = "Bot";
                 SetMonkeyBotConfig(buTamerActor.GetMonster());
-                CreateMarkerForCharacter(monsterState); // 3D marker above monster
             }
         }
 
