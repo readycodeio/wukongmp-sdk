@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
@@ -22,7 +23,8 @@ namespace ReadyM.Relay.Client
         private Thread? _clientThread;
         private bool _isRunning;
 
-        private Dictionary<object, object> RoomState = new();
+        private Dictionary<object, object> RoomState { get; set; } = new();
+        private ConcurrentDictionary<int, Dictionary<object, object>> PlayerStates { get; set; } = new();
 
         public int ActorId { get; private set; } = -1;
 
@@ -135,24 +137,43 @@ namespace ReadyM.Relay.Client
         {
             var (eventCode, _) = reader.GetEventHeader();
 
-            if (eventCode == (byte)SystemEvent.AssignPeerId)
-            {
-                ActorId = reader.GetInt();
-                Log(LogLevel.Information, "Assigned Actor ID {0}", ActorId);
-            }
-            else if (eventCode == (byte)SystemEvent.RoomStateChanged)
-            {
-                var state = DeserializeObject(reader);
-                if (state is Dictionary<object, object> newState)
-                {
-                    RoomState = newState;
-                    Log(LogLevel.Information, "Room state changed");
+            var systemEvent = (SystemEvent)eventCode;
 
-                    foreach (var (key, value) in newState)
+            switch (systemEvent)
+            {
+                case SystemEvent.ActorNumberAssigned:
+                    ActorId = reader.GetInt();
+                    Log(LogLevel.Information, "Assigned Actor ID {0}", ActorId);
+                    break;
+                case SystemEvent.RoomStateChanged:
+                    var state = DeserializeObject(reader);
+                    if (state is Dictionary<object, object> newState)
                     {
-                        Log(LogLevel.Information, "Key: {0}, Value: {1}", key.ToString(), value.ToString());
+                        RoomState = newState;
+                        Log(LogLevel.Information, "Room state changed");
+
+                        foreach (var (key, value) in newState)
+                        {
+                            Log(LogLevel.Information, "Key: {0}, Value: {1}", key.ToString(), value.ToString());
+                        }
                     }
-                }
+
+                    break;
+                case SystemEvent.PlayerStateChanged:
+                    var playerId = reader.GetInt();
+                    var playerState = DeserializeObject(reader);
+                    if (playerState is Dictionary<object, object> newPlayerState)
+                    {
+                        PlayerStates.AddOrUpdate(playerId, newPlayerState, (_, _) => newPlayerState);
+                        Log(LogLevel.Information, "Player {0} state changed", playerId);
+
+                        foreach (var (key, value) in newPlayerState)
+                        {
+                            Log(LogLevel.Information, "Key: {0}, Value: {1}", key.ToString(), value.ToString());
+                        }
+                    }
+
+                    break;
             }
         }
 
