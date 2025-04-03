@@ -24,7 +24,8 @@ namespace ReadyM.Relay.Client
         private bool _isRunning;
 
         private Dictionary<object, object> RoomState { get; set; } = new();
-        private ConcurrentDictionary<int, Dictionary<object, object>> PlayerStates { get; set; } = new();
+        private Dictionary<object, object> PlayerState { get; set; } = new();
+        private ConcurrentDictionary<int, Dictionary<object, object>> ConnectedPlayers { get; set; } = new();
 
         public int ActorId { get; private set; } = -1;
 
@@ -84,6 +85,18 @@ namespace ReadyM.Relay.Client
             _client.Stop();
             _clientThread?.Join();
             _clientThread = null;
+        }
+
+        public void OpSetCustomPropertiesOfActor(int playerId, Dictionary<object, object> data)
+        {
+            // send actor state
+            var writer = new NetDataWriter();
+
+            writer.PutEventHeader(SystemEvent.PlayerStateChanged);
+            writer.Put(playerId);
+
+            SerializeObject(writer, data);
+            Server?.Send(writer, DeliveryMethod.ReliableOrdered);
         }
 
         public void OpRaiseEvent(byte eventCode, object? data, RelayMode mode, DeliveryMethod deliveryMethod)
@@ -164,7 +177,15 @@ namespace ReadyM.Relay.Client
                     var playerState = DeserializeObject(reader);
                     if (playerState is Dictionary<object, object> newPlayerState)
                     {
-                        PlayerStates.AddOrUpdate(playerId, newPlayerState, (_, _) => newPlayerState);
+                        if (playerId == ActorId)
+                        {
+                            PlayerState = newPlayerState;
+                        }
+                        else
+                        {
+                            ConnectedPlayers.AddOrUpdate(playerId, newPlayerState, (_, _) => newPlayerState);
+                        }
+
                         Log(LogLevel.Information, "Player {0} state changed", playerId);
 
                         foreach (var (key, value) in newPlayerState)

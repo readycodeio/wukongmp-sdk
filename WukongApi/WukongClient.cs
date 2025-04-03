@@ -990,6 +990,7 @@ namespace WukongApi
 
             Logging.LogDebug("Sending remote player property: {Property} = {Value}", key, value);
 
+            RelayClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
             PhotonClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
