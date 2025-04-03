@@ -211,7 +211,7 @@ namespace WukongApi
         {
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count));
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
             _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -221,6 +221,15 @@ namespace WukongApi
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(Texts.MatchmakingInProgress);
+            _gameMessageWidget.SetThirdText("");
+            _lobbyStatusWidget.SetVisibility(true);
+        }
+
+        private void SetupSpectatorUi()
+        {
+            _gameMessageWidget.SetVisibility(true);
+            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Texts.WaitForEnd);
             _gameMessageWidget.SetThirdText("");
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -839,12 +848,12 @@ namespace WukongApi
             if (isReady)
             {
                 _gameMessageWidget.SetThirdText(Texts.YouAreReady);
-                _gameMessageWidget.SetSecondText(Texts.PressToBeNotReady);
+                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
             }
             else
             {
                 _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
-                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count));
+                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
             }
         }
 
@@ -870,7 +879,7 @@ namespace WukongApi
             _lobbyStatusWidget.SetConnectedCount(Photon.ConnectedPlayers.Count + 1);
             if (!Photon.LocalPlayerState.IsReadyForPvP)
             {
-                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count));
+                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
             }
         }
 
@@ -1173,6 +1182,7 @@ namespace WukongApi
                 Logging.LogDebug("Disabling visiblity");
                 SetPlayerVisibility(Photon.LocalPlayerState, false);
                 SetPlayerCollision(Photon.LocalPlayerState, false);
+                SetupSpectatorUi();
             }
         }
 
