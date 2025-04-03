@@ -150,14 +150,27 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.IsSpectator), isSpectator);
         }
 
-        public void SwitchReadyState()
+        public void SwitchReadyStateMulti()
         {
-            if (PhotonClient.InRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false })
+            if (PhotonClient.InRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count > 0)
             {
-                var isReady = LocalPlayerState.IsReadyForPvP;
-                SetReadyState(!isReady);
-                WukongMP.Instance.SwitchReadyState(!isReady);
+                SwitchReadyState();
             }
+        }
+
+        public void SwitchReadyStateSingle()
+        {
+            if (PhotonClient.InRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count == 0)
+            {
+                SwitchReadyState();
+            }
+        }
+
+        private void SwitchReadyState()
+        {
+            var isReady = LocalPlayerState.IsReadyForPvP;
+            SetReadyState(!isReady);
+            WukongMP.Instance.SwitchReadyState(!isReady);
         }
 
         public void SwitchTeam(bool force = false)
