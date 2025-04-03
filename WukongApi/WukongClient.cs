@@ -352,6 +352,7 @@ namespace WukongApi
                         ExitPvP();
                         SetReadyState(false);
                         SetIsSpectatorState(false);
+                        DestroyAllMonsters();
                     });
 
                     break;
@@ -401,6 +402,14 @@ namespace WukongApi
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ev));
+            }
+        }
+
+        public void DestroyAllMonsters()
+        {
+            foreach (var monster in SyncedMonsters.Values)
+            {
+                monster.Pawn?.DestroyActor();
             }
         }
 
