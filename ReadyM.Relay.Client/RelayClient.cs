@@ -25,7 +25,7 @@ namespace ReadyM.Relay.Client
         private Thread? _clientThread;
         private bool _isRunning;
 
-        private Dictionary<object, object> RoomState { get; set; } = new();
+        public Dictionary<object, object> RoomState { get; private set; } = new();
         private Dictionary<object, object> PlayerState { get; set; } = new();
         private ConcurrentDictionary<int, Dictionary<object, object>> ConnectedPlayers { get; set; } = new();
 
@@ -91,6 +91,11 @@ namespace ReadyM.Relay.Client
             _client.Stop();
             _clientThread?.Join();
             _clientThread = null;
+        }
+
+        public Dictionary<object, object>? GetPlayerState(int playerId)
+        {
+            return ConnectedPlayers.GetValueOrDefault(playerId);
         }
 
         public void OpSetCustomPropertiesOfActor(int playerId, Dictionary<object, object?> data)

@@ -21,6 +21,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
 using WukongApi.UI;
+using Log = Photon.Realtime.Log;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -116,7 +117,10 @@ namespace WukongApi
             Logging.LogInformation("WukongClient finalizer called");
             StopRelayClient();
             StopPhotonClient();
+
             PhotonClient.RemoveCallbackTarget(this);
+
+            RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
         }
 
         public void RegisterPlayer(PlayerState state)
@@ -475,10 +479,10 @@ namespace WukongApi
             }
         }
 
-        private void OnPlayerReadinessChanged(Player player, bool isReady)
+        private void OnPlayerReadinessChanged(string playerNickname, bool isReady)
         {
             var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (LocalPlayerState.IsReadyForPvP ? 1 : 0);
-            OnReadinessChange?.Invoke(player.NickName, isReady, playersReady);
+            OnReadinessChange?.Invoke(playerNickname, isReady, playersReady);
         }
 
         public void Reconnect()
@@ -537,6 +541,8 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(ESkillDirection), 245,
                 (writer, customObject) => writer.Put((byte)customObject),
                 reader => (ESkillDirection)reader.GetByte());
+
+            RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
         }
 
         [Obsolete]
@@ -1265,30 +1271,37 @@ namespace WukongApi
             // empty, RoomState is a proxy to this hashtable
         }
 
-        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
+        public void OnPlayerPropertiesChanged(int playerId, Dictionary<object, object?> changes)
         {
-            var id = targetPlayer.ActorNumber;
-
             PlayerState playerState;
 
-            if (targetPlayer.IsLocal)
+            if (playerId == RelayClient.ActorId) // local player
             {
+                if (_localPlayerState == null)
+                {
+                    Logging.LogWarning("Local player state is null.");
+                    return;
+                }
+
                 playerState = LocalPlayerState;
             }
-            else if (!ConnectedPlayers.TryGetValue(id, out playerState))
+            else if (!ConnectedPlayers.TryGetValue(playerId, out playerState))
             {
-                Logging.LogDebug("Player {Id} not found.", id); // TODO: Investigate why this is spammed
+                Logging.LogDebug("Player {Id} not found.", playerId); // TODO: Investigate why this is spammed
                 return;
             }
 
-            foreach (var kvp in changedProps)
+            foreach (var kvp in changes)
             {
+                if (kvp.Value == null)
+                    continue; // we don't really handle property removal
+
                 if (kvp.Key is not string propertyName)
                 {
-                    if (kvp.Key is ActorProperties.NickName)
+                    if (kvp.Key is PlayerProperties.NickName)
                     {
                         playerState.NickName = (string)kvp.Value;
-                        Logging.LogDebug("Assigning NickName = {Nickname} for player {PlayerId}", playerState.NickName, id);
+                        Logging.LogDebug("Assigning NickName = {Nickname} for player {PlayerId}", playerState.NickName, playerId);
                     }
                     else
                     {
@@ -1301,7 +1314,7 @@ namespace WukongApi
                 // attributes have special treatment
                 if (propertyName.StartsWith(Constants.AttributePrefix))
                 {
-                    Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, id);
+                    Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
 
                     var key = propertyName[Constants.AttributePrefix.Length..];
 
@@ -1320,7 +1333,7 @@ namespace WukongApi
 
                 if (kvp.Value is not (FVector or FRotator or float))
                 {
-                    Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, id);
+                    Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
                 }
 
                 setter(playerState, kvp.Value);
@@ -1329,16 +1342,22 @@ namespace WukongApi
                 switch (propertyName)
                 {
                     case nameof(PlayerState.Equipment):
-                        OnEquipmentChange?.Invoke(id, (EquipmentState)kvp.Value);
+                        OnEquipmentChange?.Invoke(playerId, (EquipmentState)kvp.Value);
                         break;
                     case nameof(PlayerState.IsReadyForPvP):
-                        OnPlayerReadinessChanged(targetPlayer, (bool)kvp.Value);
+                        var targetPlayerNickname = (string?)RelayClient.GetPlayerState(playerId).GetValueOrDefault(PlayerProperties.NickName) ?? "Unknown";
+                        OnPlayerReadinessChanged(targetPlayerNickname, (bool)kvp.Value);
                         continue;
                     case nameof(PlayerState.TeamId):
                         OnTeamChange?.Invoke(playerState, (int)kvp.Value);
                         continue;
                 }
             }
+        }
+
+        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
+        {
+            // do nothing
         }
 
         public void OnMasterClientSwitched(Player newMasterClient)
