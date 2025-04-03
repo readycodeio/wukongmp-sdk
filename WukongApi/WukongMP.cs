@@ -1139,7 +1139,7 @@ namespace WukongApi
                 float y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
 
                 FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
-                SpawnEnemyMaster(CharacterKind.WhitecladNoble, spawnPosition, GameUtils.GetOppositeTeam(Photon.LocalPlayerState.TeamId));
+                SpawnEnemyMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Photon.LocalPlayerState.TeamId));
             }
         }
 
