@@ -624,7 +624,7 @@ namespace WukongApi
             }
         }
 
-        private void SetPlayerTransform(FVector location, FRotator rotation)
+        private void SetLocalPlayerTransform(FVector location, FRotator rotation)
         {
             GameUtils.GetBguPlayerCharacterCs()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
             GameUtils.GetPlayerController()?.SetControlRotation(rotation);
@@ -1145,7 +1145,7 @@ namespace WukongApi
 
         private void OnJoinedRoomCallback()
         {
-            TeleportPlayerOnStart(Photon.LocalPlayerState.PhotonId);
+            TeleportLocalPlayerOnStart(Photon.LocalPlayerState.PhotonId);
             SetupSpectator();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
@@ -1155,7 +1155,13 @@ namespace WukongApi
             SetupMatchmaking();
         }
 
-        private void TeleportPlayerOnStart(int playerId)
+        private void TeleportLocalPlayerOnStart(int playerId)
+        {
+            var spawnPosition = GetSpawnPosition(playerId);
+            SetLocalPlayerTransform(spawnPosition, FRotator.ZeroRotator);
+        }
+
+        private FVector GetSpawnPosition(int playerId)
         {
             int maxPlayersCount = Photon.PhotonClient.CurrentRoom.MaxPlayers;
 
@@ -1163,8 +1169,7 @@ namespace WukongApi
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
             float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
-            FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
-            SetPlayerTransform(spawnPosition, FRotator.ZeroRotator);
+            return Constants.PvpStartingLocation + new FVector(x, y, 0f);
         }
 
         private void SetupSpectator()
@@ -1311,15 +1316,17 @@ namespace WukongApi
         private void HideSpectator(PlayerState playerState)
         {
             SetPlayerVisibility(playerState, false);
-            SetPlayerCollision(playerState, false);
-            //SetPlayerTransform(FVector.ZeroVector, FRotator.ZeroRotator);
+            //SetPlayerCollision(playerState, false);
+            playerState.Pawn?.SetActorTransform(FTransform.Identity, false, out _, true);
         }
 
         private void ShowSpectator(PlayerState playerState)
         {
             SetPlayerVisibility(playerState, true);
-            SetPlayerCollision(playerState, true);
-            //TeleportPlayerOnStart(playerState.PhotonId);
+            //SetPlayerCollision(playerState, true);
+            var spawnPosition = GetSpawnPosition(playerState.PhotonId);
+            playerState.Pawn?.SetActorTransform(new FTransform(FRotator.ZeroRotator, spawnPosition), false, out _, true);
+            //TeleportLocalPlayerOnStart(playerState.PhotonId);
         }
 
         public static void SetPlayerVisibility(PlayerState playerState, bool visible)

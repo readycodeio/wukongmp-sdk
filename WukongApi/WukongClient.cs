@@ -88,7 +88,7 @@ namespace WukongApi
             => ConnectedPlayers.Values.Append(LocalPlayerState);
 
         public IEnumerable<PlayerState> SpectatingPlayers
-            => ConnectedPlayers.Values.Where(p => p.IsSpectator);
+            => ConnectedPlayers.Values.Where(p => p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [LocalPlayerState] : []);
 
         public IEnumerable<PlayerState> AllPvPPlayers
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
