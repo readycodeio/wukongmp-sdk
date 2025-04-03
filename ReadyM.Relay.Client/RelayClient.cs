@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using JetBrains.Annotations;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Photon.Client;
@@ -18,6 +19,7 @@ namespace ReadyM.Relay.Client
 
         private readonly EventBasedNetListener _listener;
         private readonly NetManager _client;
+        private readonly Action<LogLevel, string, object?[]> _logger;
 
         private Thread? _clientThread;
         private bool _isRunning;
@@ -25,13 +27,169 @@ namespace ReadyM.Relay.Client
         private readonly Dictionary<Type, (byte Code, SerializeStreamMethod Serialize, DeserializeStreamMethod Deserialize)> _registeredTypes = new();
         private readonly Dictionary<byte, (Type Type, SerializeStreamMethod Serialize, DeserializeStreamMethod Deserialize)> _code2Type = new();
 
-        public RelayClient()
+        public int ActorId { get; private set; } = -1;
+
+        private NetPeer? Server
+        {
+            get
+            {
+                if (_client.FirstPeer == null)
+                {
+                    Log(LogLevel.Warning, "Disconnected from server");
+                }
+
+                return _client.FirstPeer;
+            }
+        }
+
+        public RelayClient(Action<LogLevel, string, object?[]> logger)
         {
             _listener = new EventBasedNetListener();
-            _client = new NetManager(_listener);
+            _listener.NetworkReceiveEvent += OnListenerOnNetworkReceiveEvent;
+            _listener.NetworkLatencyUpdateEvent += OnNetworkLatencyUpdateEvent;
 
-            Configure();
+            _client = new NetManager(_listener)
+            {
+                AutoRecycle = true,
+#if DEBUG
+                SimulateLatency = true,
+                SimulationMinLatency = 50,
+                SimulationMaxLatency = 150,
+#endif
+            };
+            _logger = logger;
+
             RegisterDefaultTypes();
+        }
+
+        public void Start()
+        {
+            _client.Start();
+            _client.Connect(Host, Port, "Wukong"); // TODO: JWT
+
+            _isRunning = true;
+            _clientThread = new Thread(() =>
+            {
+                Log(LogLevel.Information, "Running relay client on port {0}", Port);
+                while (_isRunning)
+                {
+                    _client.PollEvents();
+                    Thread.Sleep(15);
+                }
+            });
+
+            _clientThread.Start();
+        }
+
+        public void Stop()
+        {
+            _isRunning = false;
+            _client.Stop();
+            _clientThread?.Join();
+            _clientThread = null;
+        }
+
+        public void OpRaiseEvent(byte eventCode, object? data, RelayMode mode, DeliveryMethod deliveryMethod)
+        {
+            var writer = new NetDataWriter();
+            writer.PutEventHeader(eventCode, mode);
+
+            if (data == null)
+            {
+                Server?.Send(writer, deliveryMethod);
+                return;
+            }
+
+            var dataBuffer = new StreamBuffer();
+            SerializeObject(dataBuffer, data);
+
+            writer.PutBytesWithLength(dataBuffer.GetBuffer());
+            Server?.Send(writer, deliveryMethod);
+        }
+
+        public void RegisterType(
+            Type customType,
+            byte code,
+            SerializeStreamMethod serializeMethod,
+            DeserializeStreamMethod deserializeMethod)
+        {
+            // check if already registered
+            if (_registeredTypes.ContainsKey(customType))
+            {
+                throw new ArgumentException($"Type {customType} is already registered");
+            }
+
+            // check if any other type has the same code, if so - throw
+            if (_code2Type.TryGetValue(code, out var value))
+            {
+                throw new ArgumentException($"Code {code} is already registered for type {value.Type}");
+            }
+
+            _registeredTypes[customType] = (code, serializeMethod, deserializeMethod);
+            _code2Type[code] = (customType, serializeMethod, deserializeMethod);
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            Stop();
+        }
+
+        private void Log(LogLevel level, [StructuredMessageTemplate] string message, params object?[] values)
+        {
+            _logger(level, $"[Relay Client] {message}", values);
+        }
+
+        private void OnListenerOnNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliverymethod)
+        {
+            var (eventCode, _) = reader.GetEventHeader();
+
+            if (eventCode == (byte)SystemEvent.AssignPeerId)
+            {
+                ActorId = reader.GetInt();
+                Log(LogLevel.Information, "Assigned Actor ID {0}", ActorId);
+            }
+        }
+
+        private void OnNetworkLatencyUpdateEvent(NetPeer peer, int latency)
+        {
+            Log(LogLevel.Debug, "Network latency updated: {0}ms", latency);
+        }
+
+        private short SerializeObject(
+            StreamBuffer stream,
+            object? data)
+        {
+            if (data == null)
+            {
+                stream.WriteByte(0);
+                return 1;
+            }
+
+            if (!_registeredTypes.TryGetValue(data.GetType(), out var typeInfo))
+            {
+                throw new ArgumentException($"Type {data.GetType()} is not registered");
+            }
+
+            stream.WriteByte(typeInfo.Code);
+
+            return (short)(1 + typeInfo.Serialize(stream, data));
+        }
+
+        private object? DeserializeObject(StreamBuffer stream)
+        {
+            var typeCode = stream.ReadByte();
+            if (typeCode == 0)
+            {
+                return null;
+            }
+
+            if (!_code2Type.TryGetValue(typeCode, out var typeInfo))
+            {
+                throw new ArgumentException($"Type code {typeCode} is not registered");
+            }
+
+            return typeInfo.Deserialize(stream, 0); // length is unused
         }
 
         private void RegisterDefaultTypes()
@@ -193,135 +351,6 @@ namespace ReadyM.Relay.Client
 
                 return hashtable;
             });
-        }
-
-        private void Configure()
-        {
-            _listener.NetworkReceiveEvent += OnListenerOnNetworkReceiveEvent;
-        }
-
-        private void OnListenerOnNetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliverymethod)
-        {
-            Console.WriteLine("We got: {0}", reader.GetString(100 /* max length of string */));
-            reader.Recycle();
-        }
-
-        public void Start()
-        {
-            _client.Start();
-            _client.Connect(Host, Port, "Wukong"); // TODO: JWT
-
-            _isRunning = true;
-            _clientThread = new Thread(() =>
-            {
-                Console.WriteLine("Running client on port {0}", Port);
-                while (_isRunning)
-                {
-                    _client.PollEvents();
-                    Thread.Sleep(15);
-                }
-            });
-
-            _clientThread.Start();
-        }
-
-        public void Stop()
-        {
-            _isRunning = false;
-            _client.Stop();
-            _clientThread?.Join();
-            _clientThread = null;
-        }
-
-        public void RegisterType(
-            Type customType,
-            byte code,
-            SerializeStreamMethod serializeMethod,
-            DeserializeStreamMethod deserializeMethod)
-        {
-            // check if already registered
-            if (_registeredTypes.ContainsKey(customType))
-            {
-                throw new ArgumentException($"Type {customType} is already registered");
-            }
-
-            // check if any other type has the same code, if so - throw
-            if (_code2Type.TryGetValue(code, out var value))
-            {
-                throw new ArgumentException($"Code {code} is already registered for type {value.Type}");
-            }
-
-            _registeredTypes[customType] = (code, serializeMethod, deserializeMethod);
-            _code2Type[code] = (customType, serializeMethod, deserializeMethod);
-        }
-
-        public void OpRaiseEvent(byte eventCode, object? data, RelayMode mode, DeliveryMethod deliveryMethod)
-        {
-            var writer = new NetDataWriter();
-
-            if (data == null)
-            {
-                // send without data
-                writer.PutBytesWithLength([eventCode, (byte)mode, 0]);
-                _client.SendToAll(writer, deliveryMethod);
-                return;
-            }
-
-            if (!_registeredTypes.TryGetValue(data.GetType(), out var typeInfo))
-            {
-                throw new ArgumentException($"Type {data.GetType()} is not registered");
-            }
-
-            var dataBuffer = new StreamBuffer();
-            SerializeObject(dataBuffer, data);
-
-            writer.Put(eventCode);
-            writer.Put((byte)mode);
-            writer.PutBytesWithLength(dataBuffer.GetBuffer());
-
-            _client.SendToAll(writer, deliveryMethod);
-        }
-
-        private short SerializeObject(
-            StreamBuffer stream,
-            object? data)
-        {
-            if (data == null)
-            {
-                stream.WriteByte(0);
-                return 1;
-            }
-
-            if (!_registeredTypes.TryGetValue(data.GetType(), out var typeInfo))
-            {
-                throw new ArgumentException($"Type {data.GetType()} is not registered");
-            }
-
-            stream.WriteByte(typeInfo.Code);
-
-            return (short)(1 + typeInfo.Serialize(stream, data));
-        }
-
-        private object? DeserializeObject(StreamBuffer stream)
-        {
-            var typeCode = stream.ReadByte();
-            if (typeCode == 0)
-            {
-                return null;
-            }
-
-            if (!_code2Type.TryGetValue(typeCode, out var typeInfo))
-            {
-                throw new ArgumentException($"Type code {typeCode} is not registered");
-            }
-
-            return typeInfo.Deserialize(stream, 0); // length is unused
-        }
-
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-            Stop();
         }
     }
 }

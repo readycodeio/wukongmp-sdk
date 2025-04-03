@@ -26,7 +26,7 @@ namespace WukongApi
 {
     public sealed class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
     {
-        public readonly RelayClient RelayClient = new();
+        public readonly RelayClient RelayClient = new((level, s, args) => Logging.Log(level, s, args.AsSpan()));
         public readonly RealtimeClient PhotonClient = new();
 
         private readonly TypedLobby _lobby = new("pvpLobby", LobbyType.Default);
@@ -483,7 +483,7 @@ namespace WukongApi
         public void Reconnect()
         {
             Logging.LogInformation("Attempting to reconnect...");
-            
+
             StopPhotonClient();
             StopRelayClient();
 

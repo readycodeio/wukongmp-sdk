@@ -3,22 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using ReadyM.Relay.Client;
 
 namespace WukongApi
 {
     public static class Logging
     {
         private const string LocationPropertyName = "__Location";
-
-        private enum LogLevel
-        {
-            Trace,
-            Debug,
-            Information,
-            Warning,
-            Error,
-            Critical
-        }
 
         private static readonly Regex PlaceholderRegex = new(@"\{([_\w]+)\}", RegexOptions.Compiled);
 
@@ -29,7 +20,7 @@ namespace WukongApi
 
         private static Action<string> MakePhotonLogHandler(LogLevel level) => e => { Log(level, "[Photon] {Log}", e); };
 
-        private static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object?> values)
+        public static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object?> values)
         {
             var propertyNames = ExtractPropertyNames(messageTemplate);
             var properties = new Dictionary<string, object?>();
