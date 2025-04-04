@@ -35,20 +35,20 @@ namespace WukongApi.Patches
                     if (!state.IsTamerValid)
                         continue;
 
-                    if (state.Pawn == null)
+                    if (state.Tamer == null)
                     {
-                        Logging.LogError("Monster pawn is null");
+                        Logging.LogError("Monster tamer is null");
                         continue;
                     }
 
-                    var location = state.Pawn.GetActorLocation();
+                    var location = state.Tamer.GetActorLocation();
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
                         state.Location = location;
                         photon.CacheMonsterProperty(id, nameof(MonsterState.Location), state.Location);
                     }
 
-                    var rotation = state.Pawn.GetActorRotation();
+                    var rotation = state.Tamer.GetActorRotation();
                     if (!rotation.Equals(state.Rotation, Constants.FloatComparisonTolerance))
                     {
                         state.Rotation = rotation;
@@ -63,18 +63,18 @@ namespace WukongApi.Patches
                     if (!state.IsTamerValid || !state.IsSynced)
                         continue;
 
-                    var events = BUS_EventCollectionCS.Get(state.Pawn);
+                    var events = BUS_EventCollectionCS.Get(state.Tamer);
 
                     if (events == null)
                         continue;
 
-                    if (state.Pawn == null)
+                    if (state.Tamer == null)
                     {
-                        Logging.LogError("Monster pawn is null");
+                        Logging.LogError("Monster tamer is null");
                         continue;
                     }
 
-                    if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance))
+                    if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Tamer.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
                     }

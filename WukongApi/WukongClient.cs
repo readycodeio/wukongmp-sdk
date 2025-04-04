@@ -140,7 +140,7 @@ namespace WukongApi
 
         public MonsterState? GetByTamerActor(BUTamerActor owner)
         {
-            return SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn == owner).Value;
+            return SyncedMonsters.FirstOrDefault(x => x.Value!.Tamer == owner).Value;
         }
 
         private void SetReadyState(bool isReady)
@@ -190,7 +190,7 @@ namespace WukongApi
             if (owner == null)
                 return null;
 
-            var kvp = SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn?.GetMonster() == owner);
+            var kvp = SyncedMonsters.FirstOrDefault(x => x.Value!.Tamer?.GetMonster() == owner);
             return kvp.Value;
         }
 
@@ -414,7 +414,7 @@ namespace WukongApi
         {
             foreach (var monster in SyncedMonsters.Values.ToList())
             {
-                monster.Pawn?.DestroyActor();
+                monster.Tamer?.DestroyActor();
             }
         }
 

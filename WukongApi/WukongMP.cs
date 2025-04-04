@@ -965,7 +965,7 @@ namespace WukongApi
             if (!monster.IsTamerValid)
                 return;
 
-            var tamerActor = monster.Pawn;
+            var tamerActor = monster.Tamer;
 
             if (tamerActor == null)
             {

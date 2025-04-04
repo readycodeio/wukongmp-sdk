@@ -119,7 +119,7 @@ namespace WukongApi
                 return;
             }
 
-            var monster = monsterState.Pawn?.GetMonster();
+            var monster = monsterState.Tamer?.GetMonster();
 
             // sanity check
             if (monster == null)
@@ -135,7 +135,7 @@ namespace WukongApi
             if (photon.IsMasterClient)
             {
                 // subscribe to events on master
-                var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+                var events = BUS_EventCollectionCS.Get(monsterState.Tamer);
                 events.Evt_PlayMontageCallback += (reason, montage, state) =>
                 {
                     var montagePath = montage.GetPathName();

@@ -9,31 +9,31 @@ namespace WukongApi.State
         public string Guid { get; }
         public string UnitName { get; }
 
-        private readonly BUTamerActor? _pawn;
+        private readonly BUTamerActor? _tamer;
 
-        public BUTamerActor? Pawn
+        public BUTamerActor? Tamer
         {
             get
             {
-                if (_pawn.IsNullOrDestroyed())
+                if (_tamer.IsNullOrDestroyed())
                 {
                     return null;
                 }
 
-                return _pawn;
+                return _tamer;
             }
         }
 
         public bool IsSynced { get; set; }
-        public bool IsTamerValid => !Pawn.IsNullOrDestroyed();
+        public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
 
-        public MonsterState(string guid, BUTamerActor pawn, string unitName)
+        public MonsterState(string guid, BUTamerActor tamer, string unitName)
         {
             Guid = guid;
-            _pawn = pawn;
+            _tamer = tamer;
             UnitName = unitName;
 
-            var monster = pawn.GetMonster();
+            var monster = tamer.GetMonster();
             if (!monster.IsNullOrDestroyed())
             {
                 TeamId = monster.GetTeamIDInCS();
@@ -46,10 +46,10 @@ namespace WukongApi.State
             Logging.LogDebug("Created monster state with team ID: {TeamId}", TeamId);
         }
 
-        public MonsterState(string guid, BUTamerActor pawn, int teamId, string unitName)
+        public MonsterState(string guid, BUTamerActor tamer, int teamId, string unitName)
         {
             Guid = guid;
-            _pawn = pawn;
+            _tamer = tamer;
             TeamId = teamId;
             UnitName = unitName;
 
@@ -58,7 +58,7 @@ namespace WukongApi.State
 
         public override string ToString()
         {
-            var realTeamId = Pawn?.GetMonster().GetTeamIDInCS();
+            var realTeamId = Tamer?.GetMonster().GetTeamIDInCS();
             return $"MonsterState: Guid={Guid}, TeamId={TeamId}, RealTeamId={realTeamId} Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
         }
 
@@ -66,7 +66,7 @@ namespace WukongApi.State
         {
             if (MarkerActor != null)
             {
-                var bguCharacterCs = Pawn?.GetMonster() as BGUCharacterCS;
+                var bguCharacterCs = Tamer?.GetMonster() as BGUCharacterCS;
 
                 if (bguCharacterCs == null)
                 {
