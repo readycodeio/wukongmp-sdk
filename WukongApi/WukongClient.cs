@@ -352,6 +352,7 @@ namespace WukongApi
                     {
                         WukongMP.Instance.TeleportSpectatingPlayers();
                         await Task.Delay(2000);
+                        LocalPlayerState.IsReadyForPvP = false;
                         WukongMP.Instance.EndTournament(winnerTeamId);
                         ExitPvP();
                         SetReadyState(false);

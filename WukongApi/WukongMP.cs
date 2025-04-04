@@ -880,10 +880,7 @@ namespace WukongApi
         private void UpdateConnectedCount()
         {
             _lobbyStatusWidget.SetConnectedCount(Photon.ConnectedPlayers.Count + 1);
-            if (!Photon.LocalPlayerState.IsReadyForPvP)
-            {
-                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count, Photon.LocalPlayerState.IsReadyForPvP));
-            }
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count, Photon.LocalPlayerState.IsReadyForPvP));
         }
 
         private static void OnDamageNum(DamageNumParam damageNum)
