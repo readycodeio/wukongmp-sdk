@@ -1,6 +1,5 @@
 ﻿using b1;
-using BtlShare;
-using UnrealEngine.Runtime;
+using System;
 
 namespace WukongApi.State
 {
@@ -22,6 +21,21 @@ namespace WukongApi.State
 
                 return _tamer;
             }
+        }
+
+        public override BGUCharacterCS? Pawn
+        {
+            get
+            {
+                if (_tamer == null || _tamer.IsNullOrDestroyed() || _tamer.GetMonster().IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Tamer or monster is null or destroyed");
+                    return null;
+                }
+
+                return _tamer.GetMonster();
+            }
+            set => throw new NotSupportedException("Set monster pawn");
         }
 
         public bool IsSynced { get; set; }
@@ -60,23 +74,6 @@ namespace WukongApi.State
         {
             var realTeamId = Tamer?.GetMonster().GetTeamIDInCS();
             return $"MonsterState: Guid={Guid}, TeamId={TeamId}, RealTeamId={realTeamId} Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
-        }
-
-        public override void UpdateMarkerPosition()
-        {
-            if (MarkerActor != null)
-            {
-                var bguCharacterCs = Tamer?.GetMonster() as BGUCharacterCS;
-
-                if (bguCharacterCs == null)
-                {
-                    Logging.LogError("Failed to cast monster pawn to BGUCharacterCS");
-                    return;
-                }
-
-                var markerHeight = bguCharacterCs.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
-                MarkerActor.SetActorLocation(bguCharacterCs.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
-            }
         }
     }
 }

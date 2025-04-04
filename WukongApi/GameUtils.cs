@@ -27,16 +27,10 @@ namespace WukongApi
             return _world;
         }
 
-        public static APawn? GetControlledPawn()
+        public static BGUPlayerCharacterCS? GetControlledPawn()
         {
-            var pawn = UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn();
+            var pawn = UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn() as BGUPlayerCharacterCS;
             return pawn.IsNullOrDestroyed() ? null : pawn;
-        }
-
-        public static BGUPlayerCharacterCS? GetBguPlayerCharacterCs()
-        {
-            var controlledPawn = GetControlledPawn();
-            return (controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null) as BGUPlayerCharacterCS;
         }
 
         public static IEnumerable<BGUCharacterCS> GetMonsters()

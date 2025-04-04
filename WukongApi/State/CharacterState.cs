@@ -6,6 +6,8 @@ namespace WukongApi.State
 {
     public abstract class CharacterState
     {
+        public abstract BGUCharacterCS? Pawn { get; set; }
+
         public FVector Location { get; set; }
         public FRotator Rotation { get; set; }
         public FVector Velocity { get; set; }
@@ -35,6 +37,19 @@ namespace WukongApi.State
             set => _markerActor = value;
         }
 
-        public abstract void UpdateMarkerPosition();
+        public void UpdateMarkerPosition()
+        {
+            if (MarkerActor != null)
+            {
+                if (Pawn == null)
+                {
+                    Logging.LogError("Pawn is null");
+                    return;
+                }
+
+                var markerHeight = Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
+                MarkerActor.SetActorLocation(Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
+            }
+        }
     }
 }

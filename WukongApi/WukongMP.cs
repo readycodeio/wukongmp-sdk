@@ -637,7 +637,7 @@ namespace WukongApi
 
         private void SetLocalPlayerTransform(FVector location, FRotator rotation)
         {
-            GameUtils.GetBguPlayerCharacterCs()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
+            GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
             GameUtils.GetPlayerController()?.SetControlRotation(rotation);
         }
 
@@ -660,7 +660,7 @@ namespace WukongApi
 
         public static void ResetLocalPlayerCooldown()
         {
-            var player = GameUtils.GetBguPlayerCharacterCs();
+            var player = GameUtils.GetControlledPawn();
 
             if (player == null)
             {
@@ -1221,7 +1221,7 @@ namespace WukongApi
 
         private static void DisablePlayerSkills()
         {
-            var player = GameUtils.GetBguPlayerCharacterCs();
+            var player = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(player);
             if (events != null)
             {
@@ -1232,7 +1232,7 @@ namespace WukongApi
 
         private void DisablePlayerInteraction()
         {
-            var player = GameUtils.GetBguPlayerCharacterCs();
+            var player = GameUtils.GetControlledPawn();
             var events = BUS_EventCollectionCS.Get(player);
             if (events != null)
             {
