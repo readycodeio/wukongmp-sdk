@@ -294,8 +294,8 @@ namespace WukongApi.Patches
 
                     if (playerState == null)
                     {
-                        Logging.LogError("Player state is null");
-                        return false;
+                        Logging.LogDebug("Player state is null - continuing standard execution");
+                        return true;
                     }
 
                     photon.BroadcastImmobilize(playerState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
