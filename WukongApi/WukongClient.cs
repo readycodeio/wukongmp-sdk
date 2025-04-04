@@ -411,7 +411,7 @@ namespace WukongApi
 
         public void DestroyAllMonsters()
         {
-            foreach (var monster in SyncedMonsters.Values)
+            foreach (var monster in SyncedMonsters.Values.ToList())
             {
                 monster.Pawn?.DestroyActor();
             }
