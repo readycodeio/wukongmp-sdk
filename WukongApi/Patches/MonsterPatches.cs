@@ -232,4 +232,38 @@ namespace WukongApi.Patches
             return !Constants.AvailableTeamIds.Contains(teamId);
         }
     }
+
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.OnReset))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTamerOnReset
+    {
+        static bool Prefix(EResetActorReason ResetReason, FTamerRef __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            Logging.LogDebug("Tamer on reset called for tamer {Tamer} with reason {Reason}", __instance.TamerName, ResetReason);
+            return ResetReason != EResetActorReason.ReturnHome;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_FsmComp), "OnTriggerFsmEvent")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnTriggerFsmEvent
+    {
+        public static bool Prefix(FGameplayTag EventTag)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGoHome)
+            {
+                Logging.LogDebug("Trying change state to {State}", EventTag);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
 }
