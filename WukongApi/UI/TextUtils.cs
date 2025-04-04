@@ -2,13 +2,13 @@
 {
     public static class TextUtils
     {
-        public static string GetReadyText(WukongClient Photon)
+        public static string GetReadyText(int playersCount, bool isReady)
         {
-            if (Photon.ConnectedPlayers.Count == 0)
+            if (playersCount == 0)
             {
-                return Photon.LocalPlayerState.IsReadyForPvP ? Texts.PressToCancelMatch : Texts.PressToPlayWithBots;
+                return isReady ? Texts.PressToCancelMatch : Texts.PressToPlayWithBots;
             }
-            return Photon.LocalPlayerState.IsReadyForPvP ? Texts.PressToBeNotReady : Texts.PressToBeReady;
+            return isReady ? Texts.PressToBeNotReady : Texts.PressToBeReady;
         }
     }
 }

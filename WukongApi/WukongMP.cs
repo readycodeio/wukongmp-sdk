@@ -215,7 +215,7 @@ namespace WukongApi
         {
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count, Photon.LocalPlayerState.IsReadyForPvP));
             _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -856,16 +856,8 @@ namespace WukongApi
 
         public void SwitchReadyState(bool isReady)
         {
-            if (isReady)
-            {
-                _gameMessageWidget.SetThirdText(Texts.YouAreReady);
-                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
-            }
-            else
-            {
-                _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
-                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
-            }
+            _gameMessageWidget.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count, isReady));
         }
 
         public void RemovePlayer(PlayerState playerState)
@@ -890,7 +882,7 @@ namespace WukongApi
             _lobbyStatusWidget.SetConnectedCount(Photon.ConnectedPlayers.Count + 1);
             if (!Photon.LocalPlayerState.IsReadyForPvP)
             {
-                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon));
+                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count, Photon.LocalPlayerState.IsReadyForPvP));
             }
         }
 
