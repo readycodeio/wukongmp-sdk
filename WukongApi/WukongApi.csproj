@@ -158,7 +158,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\PhotonChatApi\PhotonChatApi.csproj" />
-        <ProjectReference Include="..\PhotonRealtimeApi\PhotonRealtimeApi.csproj" />
         <ProjectReference Include="..\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj" />
     </ItemGroup>
 

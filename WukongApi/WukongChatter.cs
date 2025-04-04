@@ -22,7 +22,7 @@ namespace WukongApi
 
         private const string ServerPrefix = "<S>";
         private const string ClientPrefix = "<C>";
-        private string RoomName => _wukongClient.PhotonClient.CurrentRoom?.Name ?? Guid.NewGuid().ToString(); // do not collide with anybody if sth goes wrong
+        private string RoomName => _wukongClient.RelayClient.RoomState.RoomId; // do not collide with anybody if sth goes wrong
         private string GeneralChannelName => $"chat-${RoomName}";
         private string NickName => _wukongClient.LocalPlayerState.NickName;
 
@@ -129,7 +129,6 @@ namespace WukongApi
         private void RequestDisconnect(ReadOnlyMemory<string> _)
         {
             SendServerMessage($"{NickName} has left!");
-            _wukongClient.StopPhotonClient();
             _wukongClient.StopRelayClient();
         }
 

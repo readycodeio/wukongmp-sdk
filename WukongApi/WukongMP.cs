@@ -8,7 +8,8 @@ using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
-using Photon.Realtime;
+using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.API;
@@ -147,8 +148,7 @@ namespace WukongApi
                 DestroyAllMonsters();
                 BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
-                Client.StartRelayClient();
-                Client.StartPhotonClient();
+                Client.StartClient();
             }
         }
 
@@ -156,7 +156,6 @@ namespace WukongApi
         {
             Logging.LogInformation("End play for player.");
             DeinitializeWidgets();
-            Client.StopPhotonClient();
             Client.StopRelayClient();
         }
 
@@ -185,7 +184,7 @@ namespace WukongApi
         private void OnLoadingScreenClose()
         {
             ChatWidget.Instance.SetVisibility(true);
-            if (Client is { PhotonClient.InRoom: true })
+            if (Client is { RelayClient.InRoom: true })
             {
                 _isAfterLoadingScreen = true;
                 if (Client.CurrentRoomState.InMatchmaking)
@@ -1144,13 +1143,13 @@ namespace WukongApi
             UpdateConnectedCount();
             DisablePlayerSkills();
             _lobbyStatusWidget.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
-            _lobbyStatusWidget.SetMaxConnectedCount(Client.PhotonClient.CurrentRoom.MaxPlayers);
+            _lobbyStatusWidget.SetMaxConnectedCount(Client.RelayClient.RoomState.MaxPlayers);
             SetupMatchmaking();
         }
 
         private void TeleportPlayerOnStart(int playerId)
         {
-            int maxPlayersCount = Client.PhotonClient.CurrentRoom.MaxPlayers;
+            int maxPlayersCount = Client.RelayClient.RoomState.MaxPlayers;
 
             float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
@@ -1280,7 +1279,7 @@ namespace WukongApi
                 Client.RegisterPlayer(playerState);
                 UpdateConnectedCount();
 
-                var props = Client.RelayClient.GetPlayerState(playerId);
+                var props = Client.RelayClient.GetPlayerState(playerId)?.Properties;
 
                 if (props == null)
                 {
@@ -1304,7 +1303,7 @@ namespace WukongApi
                     UpdatePlayerTeamUi(playerState);
                 }
 
-                if (Client.AllConnectedPlayers.Count() == Client.PhotonClient.CurrentRoom.MaxPlayers)
+                if (Client.AllConnectedPlayers.Count() == Client.RelayClient.RoomState.MaxPlayers)
                 {
                     EndMatchmaking();
                 }
@@ -1365,7 +1364,7 @@ namespace WukongApi
             FVector loc = default;
             FRotator rot = default;
 
-            var initialProps = Client.RelayClient.GetPlayerState(id);
+            var initialProps = Client.RelayClient.GetPlayerState(id)?.Properties;
 
             if (initialProps == null)
             {
@@ -1452,7 +1451,7 @@ namespace WukongApi
             };
 
             // set nickname
-            if (initialProps.TryGetValue(ActorProperties.NickName, out var nickName))
+            if (initialProps.TryGetValue(PlayerProperties.NickName, out var nickName))
             {
                 playerState.NickName = (string)nickName;
             }

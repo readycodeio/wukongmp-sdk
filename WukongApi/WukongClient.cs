@@ -3,41 +3,35 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using b1;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
 using LiteNetLib;
-using Photon.Client;
-using Photon.Realtime;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
 using WukongApi.UI;
+using Player = ReadyM.Relay.Client.Player;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
-    public sealed class WukongClient : IConnectionCallbacks, IOnEventCallback, IMatchmakingCallbacks, IInRoomCallbacks
+    public sealed class WukongClient
     {
         public readonly RelayClient RelayClient = new((level, s, args) => Logging.Log(level, s, args.AsSpan()));
-        public readonly RealtimeClient PhotonClient = new();
-
-        private readonly TypedLobby _lobby = new("pvpLobby", LobbyType.Default);
 
         private const char MonsterHashtableKeySeparator = ';';
 
-        private bool _isStopped = true;
         public bool JoinedRoomCallbacksDone { get; private set; } // prevent race condition where Photon sets InRoom = true before calling OnJoinedRoom
 
-        private int PhotonId => RelayClient.ActorId; // is -1 before joining room
-        public bool IsMasterClient => (int)RelayClient.RoomState[RoomProperties.MasterClientId] == PhotonId;
+        private int ActorNumber => RelayClient.ActorId; // is -1 before joining room
+        public bool IsMasterClient => RelayClient.RoomState.MasterClientId == ActorNumber;
         public bool ConnectedAndReady => RelayClient.InRoom;
 
         private readonly Action _joinedRoomCallback;
@@ -107,17 +101,14 @@ namespace WukongApi
             _playerJoinedCallback = playerJoinedCallback;
 
             ConfigureRelay();
-            ConfigurePhoton();
         }
 
         ~WukongClient()
         {
             Logging.LogInformation("WukongClient finalizer called");
             StopRelayClient();
-            StopPhotonClient();
 
-            PhotonClient.RemoveCallbackTarget(this);
-
+            RelayClient.OnCustomEvent -= OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
             RelayClient.OnJoinedRoom -= OnJoinedRoomHandler;
             RelayClient.OnDisconnected -= OnDisconnectedHandler;
@@ -175,7 +166,7 @@ namespace WukongApi
 
         public void SwitchTeam(bool force = false)
         {
-            if (force || (PhotonClient.InRoom && !LocalPlayerState.IsReadyForPvP && CurrentRoomState is { InPvP: false, InMatchmaking: false }))
+            if (force || (RelayClient.InRoom && !LocalPlayerState.IsReadyForPvP && CurrentRoomState is { InPvP: false, InMatchmaking: false }))
             {
                 var teamId = LocalPlayerState.TeamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
@@ -201,80 +192,81 @@ namespace WukongApi
             SyncedMonsters.Remove(monster.Guid);
         }
 
-        public void OnEvent(EventData photonEvent)
+        public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
         {
-            switch (photonEvent.Code)
+            switch (header.EventCode)
             {
                 case 1:
                     // unit spawn
-                    var unitData = (UnitSpawnData)photonEvent.CustomData;
-                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
+                    var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
+                    OnUnitSpawn?.Invoke(header.Sender, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
                     // montage callback
-                    var montData = (MontageCallbackData)photonEvent.CustomData;
-                    OnMontageCallback?.Invoke(photonEvent.Sender, montData);
+                    var montData = RelayClient.DeserializeObject<MontageCallbackData>(reader);
+                    OnMontageCallback?.Invoke(header.Sender, montData);
                     break;
                 case 3:
                     // monster properties
-                    ApplyMonsterMove((PhotonHashtable)photonEvent.CustomData);
+                    var monsterData = RelayClient.DeserializeObject<Dictionary<object, object>>(reader);
+                    ApplyMonsterMove(monsterData);
                     break;
                 case 4:
                     // montage callback
-                    var monsterMontageData = (MonsterMontageCallbackData)photonEvent.CustomData;
-                    OnMonsterMontageCallback?.Invoke(photonEvent.Sender, monsterMontageData);
+                    var monsterMontageData = RelayClient.DeserializeObject<MonsterMontageCallbackData>(reader);
+                    OnMonsterMontageCallback?.Invoke(header.Sender, monsterMontageData);
                     break;
                 case 5:
                     // monster wake up
-                    var guid = (string)photonEvent.CustomData;
+                    var guid = reader.GetString();
                     OnMonsterWakeUp?.Invoke(guid);
                     break;
                 case 6:
                     // damage num
-                    var damageNumParam = (DamageNumParam)photonEvent.CustomData;
+                    var damageNumParam = RelayClient.DeserializeObject<DamageNumParam>(reader);
                     OnDamageNum?.Invoke(damageNumParam);
                     break;
                 case 7:
                 {
                     // player rebirth
-                    var playerId = (int)photonEvent.CustomData;
+                    var playerId = reader.GetInt();
                     OnPlayerRebirth?.Invoke(playerId);
                     break;
                 }
                 case 8:
                     // PvP event
-                    var ev = (int[])photonEvent.CustomData;
+                    var ev = reader.GetIntArray();
                     HandlePvPEvent((PvPEvent)ev[0], ev[1]);
                     break;
                 case 9:
                     // kill player
-                    var id = (int)photonEvent.CustomData;
+                    var id = reader.GetInt();
                     OnKillPlayer?.Invoke(id);
                     break;
                 case 10:
                     // player transform
-                    var playerData = (PlayerTransformData)photonEvent.CustomData;
+                    var playerData = RelayClient.DeserializeObject<PlayerTransformData>(reader);
                     if (playerData.PlayerId == LocalPlayerState.PhotonId)
                         OnSetPlayerTransform?.Invoke(playerData.Location, playerData.Rotation);
                     break;
                 case 11:
                     // start phantom rush
-                    var direction = (ESkillDirection)photonEvent.CustomData;
-                    OnPhantomRush?.Invoke(photonEvent.Sender, direction);
+                    var direction = RelayClient.DeserializeObject<ESkillDirection>(reader);
+                    OnPhantomRush?.Invoke(header.Sender, direction);
                     break;
                 case 12:
                     // immobilize
-                    var immobilizeData = (ImmobilizeData)photonEvent.CustomData;
+                    var immobilizeData = RelayClient.DeserializeObject<ImmobilizeData>(reader);
                     OnHandleImmobilize?.Invoke(immobilizeData.PlayerId, immobilizeData.OtherPlayerId, immobilizeData.ImmobilizeActionType, immobilizeData.GreatSageTalentActiveBuff);
                     break;
                 case 13:
                     // target
-                    var targetId = (int)photonEvent.CustomData;
-                    OnTargetSet?.Invoke(photonEvent.Sender, targetId);
+                    var targetId = reader.GetInt();
+                    OnTargetSet?.Invoke(header.Sender, targetId);
                     break;
                 case 14:
                     // exit phantom rush
-                    var phantomRushPlayerId = (int)photonEvent.CustomData;
+                    var phantomRushPlayerId = reader.GetInt();
                     OnExitPhantomRush?.Invoke(phantomRushPlayerId);
                     break;
                 case 15:
@@ -283,20 +275,20 @@ namespace WukongApi
                     break;
                 case 16:
                     // buff add
-                    var buffData = (byte[])photonEvent.CustomData;
+                    var buffData = reader.GetBytesWithLength();
                     var buffId = BitConverter.ToInt32(buffData, 0);
                     var buffDuration = BitConverter.ToSingle(buffData, 4);
-                    OnBuffAdded?.Invoke(photonEvent.Sender, buffId, buffDuration);
+                    OnBuffAdded?.Invoke(header.Sender, buffId, buffDuration);
                     break;
                 case 17:
                     // buff remove
-                    var data = (int[])photonEvent.CustomData;
-                    OnBuffRemoved?.Invoke(photonEvent.Sender, data[0], (EBuffEffectTriggerType)data[1], data[2], data[3] != 0);
+                    var data = reader.GetIntArray();
+                    OnBuffRemoved?.Invoke(header.Sender, data[0], (EBuffEffectTriggerType)data[1], data[2], data[3] != 0);
                     break;
                 case 18:
                     // buff all remove
-                    var evData = (byte[])photonEvent.CustomData;
-                    OnBuffAllRemoved?.Invoke(photonEvent.Sender, (EBuffEffectTriggerType)evData[0], evData[1] != 0);
+                    var evData = reader.GetBytesWithLength();
+                    OnBuffAllRemoved?.Invoke(header.Sender, (EBuffEffectTriggerType)evData[0], evData[1] != 0);
                     break;
             }
         }
@@ -452,7 +444,7 @@ namespace WukongApi
             if (!IsMasterClient)
                 return;
 
-            if (PhotonClient.CurrentRoom == null)
+            if (!RelayClient.InRoom)
             {
                 Logging.LogError("No room joined.");
                 return;
@@ -461,7 +453,6 @@ namespace WukongApi
             CurrentRoomState.InPvP = true;
             if (CurrentRoomState.GameMode == GameMode.XvX)
             {
-                // PhotonClient.CurrentRoom.IsOpen = false;
                 CurrentRoomState.IsOpen = false;
             }
         }
@@ -470,7 +461,7 @@ namespace WukongApi
         {
             if (!IsMasterClient) return;
 
-            if (PhotonClient.CurrentRoom == null)
+            if (!RelayClient.InRoom)
             {
                 Logging.LogError("No room joined.");
                 return;
@@ -479,7 +470,7 @@ namespace WukongApi
             CurrentRoomState.InPvP = false;
             if (CurrentRoomState.GameMode == GameMode.XvX)
             {
-                PhotonClient.CurrentRoom.IsOpen = true;
+                CurrentRoomState.IsOpen = true;
             }
         }
 
@@ -492,37 +483,8 @@ namespace WukongApi
         public void Reconnect()
         {
             Logging.LogInformation("Attempting to reconnect...");
-
-            StopPhotonClient();
             StopRelayClient();
-
-            StartRelayClient();
-            StartPhotonClient();
-        }
-
-        [Obsolete]
-        private void ConfigurePhoton()
-        {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            PhotonPeer.RegisterType(typeof(UnitSpawnData), 255, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
-            PhotonPeer.RegisterType(typeof(FVector), 254, SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
-            PhotonPeer.RegisterType(typeof(FRotator), 253, SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
-            PhotonPeer.RegisterType(typeof(EMoveSpeedLevel), 252, (stream, obj) =>
-            {
-                stream.WriteByte((byte)obj);
-                return 1;
-            }, (stream, _) => (EMoveSpeedLevel)stream.ReadByte());
-
-            PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
-            PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
-            PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
-            PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
-            PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
-            PhotonPeer.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
-
-            PhotonClient.AddCallbackTarget(this);
-            PhotonClient.StateChanged += OnStateChange;
-            PhotonClient.AuthValues = CmdLineParams.Instance.RealtimeAuthentication!;
+            StartClient();
         }
 
         private void ConfigureRelay()
@@ -549,6 +511,7 @@ namespace WukongApi
                 (writer, customObject) => writer.Put((byte)customObject),
                 reader => (GameMode)reader.GetByte());
 
+            RelayClient.OnCustomEvent += OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
             RelayClient.OnJoinedRoom += OnJoinedRoomHandler;
             RelayClient.OnDisconnected += OnDisconnectedHandler;
@@ -556,58 +519,11 @@ namespace WukongApi
             RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
         }
 
-        [Obsolete]
-        public void StartPhotonClient()
+        public void StartClient()
         {
-            if (!_isStopped)
-            {
-                Logging.LogError("Client is already running.");
-                return;
-            }
-
             OnBeforeJoinRoom?.Invoke();
-
-            PhotonClient.ConnectUsingSettings(new AppSettings
-            {
-                AppIdRealtime = Constants.RealtimeAppId,
-                AuthMode = AuthModeOption.AuthOnce,
-                Protocol = ConnectionProtocol.Udp,
-                EnableProtocolFallback = false,
-                UseNameServer = true,
-                FixedRegion = "usw",
-            });
-
-            _isStopped = false;
-            new Thread(LoopGame).Start();
-
-            Logging.LogInformation("Client started");
-        }
-
-        public void StartRelayClient()
-        {
             RelayClient.Start();
-        }
-
-        [Obsolete]
-        public void StopPhotonClient()
-        {
-            if (_isStopped)
-            {
-                Logging.LogDebug("Client is already stopped.");
-                return;
-            }
-
-            Logging.LogInformation("Stopping Photon client...");
-
-            if (GameUtils.IsWorldValid())
-            {
-                UnsubscribeFromPlayerEvents();
-            }
-
-            _isStopped = true;
-
-            WukongChat.StopClient();
-            PhotonClient.Disconnect();
+            Logging.LogInformation("Client started");
         }
 
         public void StopRelayClient()
@@ -635,19 +551,9 @@ namespace WukongApi
             SyncedMonsters.Clear();
             _localPlayerState = null;
 
+            WukongChat.StopClient(); // TODO: Remove
+
             Logging.LogInformation("Stopped client.");
-        }
-
-        private void LoopGame()
-        {
-            Logging.LogInformation("Photon Realtime service loop started");
-            while (!_isStopped)
-            {
-                PhotonClient.Service();
-                Thread.Sleep(33);
-            }
-
-            Logging.LogInformation("Photon Realtime service loop finished");
         }
 
         public IEnumerable<Player> GetOtherPlayersInRoom()
@@ -658,18 +564,15 @@ namespace WukongApi
                 yield break;
             }
 
-            foreach (var player in PhotonClient.CurrentRoom.Players!.Values)
+            foreach (var (playerId, player) in RelayClient.OtherPlayers)
             {
-                Logging.LogDebug("Other player: {ActorNumber} {Nickname} local: {IsLocal}", player.ActorNumber, player.NickName!, player.IsLocal);
-                if (!player.IsLocal)
-                    yield return player;
+                Logging.LogDebug("Other player: {ActorNumber} {Nickname}", playerId, player.Nickname!);
+                yield return player;
             }
         }
 
-        private async Task JoinRandomOrCreateRoom()
+        private void SetCreatedRoomProperties()
         {
-            await PhotonClient.JoinLobbyAsync(_lobby);
-
             var gameMode = CmdLineParams.Instance.MatchmakingMode;
             var botsEnabled = true;
             switch (gameMode)
@@ -677,67 +580,51 @@ namespace WukongApi
                 case GameMode.Private:
                 {
                     var roomName = CmdLineParams.Instance.RoomName!; // not null if game mode is private
-                    var propertiesForRoomCreation = new RoomOptions
-                    {
-                        CustomRoomProperties = new PhotonHashtable
-                        {
-                            [nameof(RoomState.RoundsTotal)] = 3,
-                            [nameof(RoomState.RoundWinners)] = "",
-                            [nameof(RoomState.GameMode)] = gameMode,
-                            [nameof(RoomState.BotsEnabled)] = botsEnabled
-                        },
-                        MaxPlayers = 10,
-                        IsOpen = true,
-                        IsVisible = false,
-                        PublishUserId = true,
-                    };
-
-                    var createArgs = new EnterRoomArgs
-                    {
-                        RoomOptions = propertiesForRoomCreation,
-                        RoomName = roomName,
-                    };
-
                     Logging.LogInformation("Joining or creating private room {RoomName}", roomName);
-                    await PhotonClient.JoinOrCreateRoomAsync(createArgs);
+
+                    if (!IsMasterClient)
+                    {
+                        Logging.LogDebug("Not master client, skipping initialization");
+                        return;
+                    }
+
+                    CurrentRoomState.RoundsTotal = 3;
+                    CurrentRoomState.RoundWinners = [];
+                    CurrentRoomState.GameMode = GameMode.Private;
+                    CurrentRoomState.BotsEnabled = botsEnabled;
+
+                    RelayClient.RoomState.RoomId = roomName;
+                    RelayClient.RoomState.IsOpen = true;
+                    RelayClient.RoomState.IsVisible = false;
+                    RelayClient.RoomState.MaxPlayers = 10;
+
+                    RelayClient.OpSetCustomPropertiesOfRoom(RelayClient.RoomState.Properties);
+
                     break;
                 }
                 case GameMode.XvX:
                 {
                     var playersPerTeam = CmdLineParams.Instance.PlayersPerTeam!.Value; // not null when game mode is XvX
-                    var propertiesForRoomCreation = new RoomOptions
-                    {
-                        CustomRoomProperties = new PhotonHashtable
-                        {
-                            [nameof(RoomState.RoundsTotal)] = 3,
-                            [nameof(RoomState.RoundWinners)] = "",
-                            [nameof(RoomState.GameMode)] = gameMode,
-                            [nameof(RoomState.BotsEnabled)] = botsEnabled
-                        },
-                        MaxPlayers = 2 * playersPerTeam,
-                        IsOpen = true,
-                        IsVisible = true,
-                        PublishUserId = false,
-                        CustomRoomPropertiesForLobby = [nameof(RoomState.GameMode)],
-                    };
-
-                    var createArgs = new EnterRoomArgs
-                    {
-                        RoomOptions = propertiesForRoomCreation,
-                    };
-
-                    var joinArgs = new JoinRandomRoomArgs
-                    {
-                        ExpectedMaxPlayers = 2 * playersPerTeam,
-                        MatchingType = MatchmakingMode.FillRoom,
-                        ExpectedCustomRoomProperties = new PhotonHashtable
-                        {
-                            [nameof(RoomState.GameMode)] = gameMode
-                        },
-                    };
-
                     Logging.LogInformation("Joining or creating {Players}v{Players} room", playersPerTeam, playersPerTeam);
-                    await PhotonClient.JoinRandomOrCreateRoomAsync(joinArgs, createArgs);
+
+                    if (!IsMasterClient)
+                    {
+                        Logging.LogDebug("Not master client, skipping initialization");
+                        return;
+                    }
+
+                    CurrentRoomState.RoundsTotal = 3;
+                    CurrentRoomState.RoundWinners = [];
+                    CurrentRoomState.GameMode = GameMode.XvX;
+                    CurrentRoomState.BotsEnabled = botsEnabled;
+
+                    RelayClient.RoomState.RoomId = Guid.NewGuid().ToString();
+                    RelayClient.RoomState.IsOpen = true;
+                    RelayClient.RoomState.IsVisible = true;
+                    RelayClient.RoomState.MaxPlayers = 2 * playersPerTeam;
+
+                    RelayClient.OpSetCustomPropertiesOfRoom(RelayClient.RoomState.Properties);
+
                     break;
                 }
                 default:
@@ -745,16 +632,10 @@ namespace WukongApi
             }
         }
 
-        private static void OnStateChange(ClientState arg1, ClientState arg2)
-        {
-            Logging.LogDebug("Photon state change: {From} -> {To}", arg1, arg2);
-        }
-
         public void SpawnUnit(string id, string unitName, int teamId, float x, float y, float z)
         {
             const byte eventCode = 1;
             var evData = new UnitSpawnData(id, unitName, teamId, x, y, z);
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
@@ -766,7 +647,6 @@ namespace WukongApi
             var shortMontagePath = MontageHelpers.CompressMontageName(montage.PathName);
             var evData = new MontageCallbackData(shortMontagePath, position, reset);
 
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
@@ -777,7 +657,6 @@ namespace WukongApi
 
             var evData = new MontageCallbackData("", 0f, false);
 
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
@@ -785,31 +664,24 @@ namespace WukongApi
         {
             const byte eventCode = 4;
             var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMonsterWakeUp(string guid)
         {
             const byte eventCode = 5;
-            PhotonClient.OpRaiseEvent(eventCode, guid, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, guid, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendDamageNum(DamageNumParam damageNumParam)
         {
             const byte eventCode = 6;
-            PhotonClient.OpRaiseEvent(eventCode, damageNumParam, RaiseEventArgs.Default, SendOptions.SendUnreliable);
             RelayClient.OpRaiseEvent(eventCode, damageNumParam, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void BroadcastPlayerRebirth(int playerId)
         {
             const byte eventCode = 7;
-            PhotonClient.OpRaiseEvent(eventCode, playerId, new RaiseEventArgs
-            {
-                Receivers = ReceiverGroup.All
-            }, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
@@ -825,38 +697,25 @@ namespace WukongApi
 
             const byte eventCode = 8;
             var evData = new[] { (int)ev, data };
-            PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs
-            {
-                Receivers = ReceiverGroup.All
-            }, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         public void KillCurrentPlayer()
         {
             const byte eventCode = 9;
-            PhotonClient.OpRaiseEvent(eventCode, PhotonId, new RaiseEventArgs
-            {
-                Receivers = ReceiverGroup.MasterClient,
-            }, SendOptions.SendReliable);
-            RelayClient.OpRaiseEvent(eventCode, PhotonId, RelayMode.Master, DeliveryMethod.ReliableOrdered);
+            RelayClient.OpRaiseEvent(eventCode, ActorNumber, RelayMode.Master, DeliveryMethod.ReliableOrdered);
         }
 
         public void BroadcastPlayerTransform(int playerId, FVector location, FRotator rotation)
         {
             const byte eventCode = 10;
             var evData = new PlayerTransformData(playerId, location, rotation);
-            PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs
-            {
-                Receivers = ReceiverGroup.All
-            }, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendPhantomRush(ESkillDirection phantomRushDir)
         {
             const byte eventCode = 11;
-            PhotonClient.OpRaiseEvent(eventCode, phantomRushDir, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, phantomRushDir, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
@@ -864,31 +723,24 @@ namespace WukongApi
         {
             const byte eventCode = 12;
             var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType, hasBuff);
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendTarget(int playerId)
         {
             const byte eventCode = 13;
-            PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void ExitPhantomRush(int playerId)
         {
             const byte eventCode = 14;
-            PhotonClient.OpRaiseEvent(eventCode, playerId, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendEndMatchmaking()
         {
             const byte eventCode = 15;
-            PhotonClient.OpRaiseEvent(eventCode, null, new RaiseEventArgs
-            {
-                Receivers = ReceiverGroup.All
-            }, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, null, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
@@ -911,7 +763,7 @@ namespace WukongApi
             Task.Run(LobbyManager.StartRoundAsync);
         }
 
-        private void ApplyMonsterMove(PhotonHashtable props)
+        private void ApplyMonsterMove(Dictionary<object, object> props)
         {
             foreach (var (key, value) in props)
             {
@@ -957,14 +809,14 @@ namespace WukongApi
                 if (_playerPropertiesRo.Count == 0)
                     return;
 
-                var hashtable = new PhotonHashtable();
+                var hashtable = new Dictionary<object, object?>();
                 foreach (var (key, value) in _playerPropertiesRo)
                 {
                     hashtable[key] = value;
                 }
 
                 _playerPropertiesRo.Clear();
-                PhotonClient.LocalPlayer.SetCustomProperties(hashtable);
+                RelayClient.OpSetCustomPropertiesOfActor(ActorNumber, hashtable);
             }
         }
 
@@ -1000,14 +852,13 @@ namespace WukongApi
                 return;
             }
 
-            var hashtable = new PhotonHashtable
+            var hashtable = new Dictionary<object, object?>
             {
                 [key] = value
             };
 
             Logging.LogDebug("Sending remote player property: {Property} = {Value}", key, value);
 
-            PhotonClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
             RelayClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
@@ -1026,7 +877,7 @@ namespace WukongApi
                 if (_monsterPropertiesRo.Count == 0)
                     return;
 
-                var hashtable = new PhotonHashtable();
+                var hashtable = new Dictionary<object, object>();
                 foreach (var (key, value) in _monsterPropertiesRo)
                 {
                     hashtable[key] = value;
@@ -1035,7 +886,7 @@ namespace WukongApi
                 _monsterPropertiesRo.Clear();
 
                 const byte eventCode = 3;
-                PhotonClient.OpRaiseEvent(eventCode, hashtable, RaiseEventArgs.Default, SendOptions.SendUnreliable);
+                RelayClient.OpRaiseEvent(eventCode, hashtable, RelayMode.Others, DeliveryMethod.ReliableOrdered);
             }
         }
 
@@ -1080,7 +931,6 @@ namespace WukongApi
         {
             const byte eventCode = 18;
             byte[] evData = [(byte)removetriggertype, (byte)(withtriggerremmoveeffect ? 1 : 0)];
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
@@ -1088,7 +938,6 @@ namespace WukongApi
         {
             const byte eventCode = 17;
             int[] evData = [buffid, (int)removetriggertype, layer, withtriggerremmoveeffect ? 1 : 0];
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
@@ -1099,83 +948,7 @@ namespace WukongApi
         {
             const byte eventCode = 16;
             byte[] evData = BitConverter.GetBytes(buffid).Concat(BitConverter.GetBytes(duration)).ToArray();
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-        }
-
-        #region IConnectionCallbacks
-
-        public void OnConnected()
-        {
-            Logging.LogInformation("Connected");
-        }
-
-        public async void OnConnectedToMaster()
-        {
-            try
-            {
-                Logging.LogInformation("Connected to master server: {ServerIp}", PhotonClient.RealtimePeer.ServerIpAddress);
-                await JoinRandomOrCreateRoom();
-            }
-            catch (Exception e)
-            {
-                Logging.LogException(e);
-            }
-        }
-
-        public void OnDisconnected(DisconnectCause cause)
-        {
-            JoinedRoomCallbacksDone = false;
-            if (cause == DisconnectCause.DisconnectByClientLogic)
-            {
-                Logging.LogInformation("Disconnected: {Cause}", cause);
-            }
-            else
-            {
-                Logging.LogWarning("Disconnected: {Cause}", cause);
-            }
-
-            if (cause is DisconnectCause.ClientTimeout or DisconnectCause.ServerTimeout)
-            {
-                Reconnect();
-            }
-        }
-
-        public void OnRegionListReceived(RegionHandler regionHandler)
-        {
-            Logging.LogDebug("Region list received: {Regions}", regionHandler.AvailableRegionCodes);
-        }
-
-        public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
-        {
-            foreach (var kvp in data)
-            {
-                Logging.LogDebug("Custom authentication response {Key}: {Value}", kvp.Key, kvp.Value);
-            }
-        }
-
-        public void OnCustomAuthenticationFailed(string debugMessage)
-        {
-            Logging.LogError("Custom authentication failed: {Message}", debugMessage);
-        }
-
-        #endregion
-
-        #region IMatchmakingCallbacks
-
-        public void OnFriendListUpdate(List<FriendInfo> friendList)
-        {
-            Logging.LogDebug("Friend list update");
-        }
-
-        public void OnCreatedRoom()
-        {
-            Logging.LogInformation("Created room");
-        }
-
-        public void OnCreateRoomFailed(short returnCode, string message)
-        {
-            Logging.LogError("Create room failed [{Code}]: {Message}", returnCode, message);
         }
 
         private int GetTeamIdForPlayer()
@@ -1188,7 +961,7 @@ namespace WukongApi
 
             foreach (var player in GetOtherPlayersInRoom())
             {
-                if (player.CustomProperties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
+                if (player.Properties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
                 {
                     teamsCount[(int)assignedTeamId]++;
                 }
@@ -1197,12 +970,11 @@ namespace WukongApi
             return teamsCount[team1Id] > teamsCount[team2Id] ? team2Id : team1Id;
         }
 
-        [Obsolete]
-        public void OnJoinedRoom() { }
-
-        public void OnJoinedRoomHandler()
+        private void OnJoinedRoomHandler()
         {
-            var roomName = (string)RelayClient.RoomState[RoomProperties.RoomId];
+            SetCreatedRoomProperties();
+
+            var roomName = RelayClient.RoomState.RoomId;
             Logging.LogInformation("Joined room {Name}", roomName);
 
             var teamId = GetTeamIdForPlayer();
@@ -1218,60 +990,47 @@ namespace WukongApi
             var initialHp = data.GetFloatValue(EBGUAttrFloat.Hp);
             var initialHpMaxBase = data.GetFloatValue(EBGUAttrFloat.HpMaxBase);
 
-            LocalPlayerState = new PlayerState(PhotonId, controlledPawn, teamId, initialHp, initialHpMaxBase);
+            LocalPlayerState = new PlayerState(ActorNumber, controlledPawn, teamId, initialHp, initialHpMaxBase);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
 
             Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
 
             SubscribeToPlayerEvents();
             _joinedRoomCallback.Invoke();
-            WukongChat.StartClient(PhotonClient.UserId);
+            WukongChat.StartClient(RelayClient.LocalPlayer.Nickname);
 
             JoinedRoomCallbacksDone = true;
         }
-
-        public void OnJoinRoomFailed(short returnCode, string message)
-        {
-            Logging.LogError("Join room failed [{Code}]: {Message}", returnCode, message);
-        }
-
-        public void OnJoinRandomFailed(short returnCode, string message)
-        {
-            Logging.LogError("Join random failed [{Code}]: {Message}", returnCode, message);
-            JoinedRoomCallbacksDone = false;
-        }
-
-        [Obsolete]
-        public void OnLeftRoom() { }
 
         public void OnDisconnectedHandler(DisconnectReason reason)
         {
             Logging.LogInformation("Disconnected");
             JoinedRoomCallbacksDone = false;
-        }
+            if (reason == DisconnectReason.DisconnectPeerCalled)
+            {
+                Logging.LogInformation("Disconnected: {Cause}", reason);
+            }
+            else
+            {
+                Logging.LogWarning("Disconnected: {Cause}", reason);
+            }
 
-        #endregion
-
-        [Obsolete]
-        public void OnPlayerEnteredRoom(Player newPlayer)
-        {
-            // Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", newPlayer.NickName, newPlayer.ActorNumber);
-            // _playerJoinedCallback.Invoke(newPlayer.);
+            if (reason is DisconnectReason.Timeout or DisconnectReason.RemoteConnectionClose)
+            {
+                Reconnect();
+            }
         }
 
         public void OtherPlayerJoinedRoomHandler(int playerId)
         {
-            var nickname = RelayClient.GetPlayerState(playerId).GetValueOrDefault(PlayerProperties.NickName) ?? "";
+            var nickname = RelayClient.GetPlayerState(playerId)!.Nickname;
             Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", nickname, playerId);
             _playerJoinedCallback.Invoke(playerId);
         }
 
-        [Obsolete]
-        public void OnPlayerLeftRoom(Player otherPlayer) { }
-
         private void OnPlayerLeftRoomHandler(int playerId)
         {
-            var nickname = (string)RelayClient.GetPlayerState(playerId)![PlayerProperties.NickName];
+            var nickname = RelayClient.GetPlayerState(playerId)!.Nickname;
 
             Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", nickname, playerId);
 
@@ -1289,12 +1048,6 @@ namespace WukongApi
                 WukongChat.SendServerMessage($"{nickname} has left!");
                 CheckRoundEndCondition();
             }
-        }
-
-        [Obsolete]
-        public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
-        {
-            // empty, RoomState is a proxy to this hashtable
         }
 
         private void OnPlayerPropertiesChanged(int playerId, Dictionary<object, object?> changes)
@@ -1371,7 +1124,7 @@ namespace WukongApi
                         OnEquipmentChange?.Invoke(playerId, (EquipmentState)kvp.Value);
                         break;
                     case nameof(PlayerState.IsReadyForPvP):
-                        var targetPlayerNickname = (string?)RelayClient.GetPlayerState(playerId).GetValueOrDefault(PlayerProperties.NickName) ?? "Unknown";
+                        var targetPlayerNickname = RelayClient.GetPlayerState(playerId)!.Nickname;
                         OnPlayerReadinessChanged(targetPlayerNickname, (bool)kvp.Value);
                         continue;
                     case nameof(PlayerState.TeamId):
@@ -1379,14 +1132,6 @@ namespace WukongApi
                         continue;
                 }
             }
-        }
-
-        [Obsolete]
-        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps) { }
-
-        public void OnMasterClientSwitched(Player newMasterClient)
-        {
-            // do nothing
         }
 
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new();

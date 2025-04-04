@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Photon.Realtime;
 using UnrealEngine.Engine;
 
 namespace WukongApi;
@@ -9,13 +8,12 @@ public class CmdLineParams
     private static CmdLineParams? _instance;
 
     public static CmdLineParams Instance => _instance ??= new CmdLineParams();
-    public bool ShouldEnableMultiplayer => RealtimeAuthentication is not null;
+    public bool ShouldEnableMultiplayer => AccessToken is not null;
 
     public GameMode? MatchmakingMode { get; }
     public string? ModFolderOverride { get; }
     public string? RoomName { get; private set; }
     public int? PlayersPerTeam { get; private set; }
-    public AuthenticationValues? RealtimeAuthentication { get; }
     public string? AccessToken { get; }
 
     private CmdLineParams()
@@ -71,11 +69,5 @@ public class CmdLineParams
                 return;
             }
         }
-
-        RealtimeAuthentication = new AuthenticationValues
-        {
-            AuthType = CustomAuthenticationType.Custom
-        };
-        RealtimeAuthentication.AddAuthParameter("access_token", AccessToken);
     }
 }

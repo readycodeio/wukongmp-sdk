@@ -6,7 +6,7 @@ namespace WukongApi.State
 {
     public class RoomState(WukongClient client)
     {
-        private Dictionary<object, object> Room => client.RelayClient.RoomState;
+        private Dictionary<object, object> Room => client.RelayClient.RoomState.Properties;
 
         public GameMode GameMode
         {
@@ -67,6 +67,12 @@ namespace WukongApi.State
         }
 
         public int CurrentRound => RoundWinners.Count() + 1;
+
+        public bool IsVisible
+        {
+            get => GetProperty<bool>(nameof(IsVisible));
+            set => SetProperty(nameof(IsVisible), value);
+        }
 
         public void SetLastRoundWinnerTeam(int winner)
         {
