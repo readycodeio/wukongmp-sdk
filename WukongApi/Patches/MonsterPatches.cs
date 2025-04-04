@@ -22,7 +22,7 @@ namespace WukongApi.Patches
                 return;
 
             // send updates for each monster
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (photon.IsMasterClient)
             {
@@ -97,7 +97,7 @@ namespace WukongApi.Patches
                 if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                     return;
 
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
@@ -133,7 +133,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Client.IsMasterClient)
                 return true;
 
             return !bEnable;
@@ -149,7 +149,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Client.IsMasterClient)
                 return true;
 
             return IsPause;
@@ -166,7 +166,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Client.IsMasterClient)
                 return true;
 
             return !bEnable;
@@ -182,7 +182,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Client.IsMasterClient)
                 return true;
 
             return IsPause;
@@ -203,7 +203,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Photon.IsMasterClient)
+            if (WukongMP.Instance.Client.IsMasterClient)
                 return true;
 
             return !bEnable;

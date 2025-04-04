@@ -15,8 +15,8 @@ namespace ReadyM.Relay.Client
 {
     public class RelayClient : RelayPeerBase, IDisposable
     {
-        private const string Host = "localhost";
-        private const int Port = 9050;
+        private const string Host = "192.168.49.2";
+        private const int Port = 7123;
 
         private readonly EventBasedNetListener _listener;
         private readonly NetManager _client;
@@ -30,10 +30,22 @@ namespace ReadyM.Relay.Client
         private ConcurrentDictionary<int, Dictionary<object, object>> ConnectedPlayers { get; set; } = new();
 
         public int ActorId { get; private set; } = -1;
+        public bool InRoom { get; private set; }
 
         public event Action<Dictionary<object, object?>>? OnRoomPropertiesChanged;
         public event Action<int, Dictionary<object, object?>>? OnPlayerPropertiesChanged;
         public event Action<CustomEventHeader, NetPacketReader>? OnCustomEvent;
+        public event Action? OnJoinedRoom;
+        public event Action<DisconnectReason>? OnDisconnected;
+
+
+        /// <summary>
+        /// At this point the connecting player has been assigned an ID and we have synced their state.
+        /// </summary>
+        public event Action<int>? OnOtherPlayerJoined;
+
+        public event Action<int>? OnOtherPlayerLeft;
+
 
         private NetPeer? Server
         {
@@ -53,6 +65,7 @@ namespace ReadyM.Relay.Client
             _listener = new EventBasedNetListener();
             _listener.NetworkReceiveEvent += OnListenerOnNetworkReceiveEvent;
             _listener.NetworkLatencyUpdateEvent += OnNetworkLatencyUpdateEvent;
+            _listener.PeerDisconnectedEvent += OnServerDisconnected;
 
             _client = new NetManager(_listener)
             {
@@ -64,6 +77,12 @@ namespace ReadyM.Relay.Client
 #endif
             };
             _logger = logger;
+        }
+
+        private void OnServerDisconnected(NetPeer peer, DisconnectInfo disconnectinfo)
+        {
+            InRoom = false;
+            OnDisconnected?.Invoke(disconnectinfo.Reason);
         }
 
         public void Start()
@@ -101,6 +120,12 @@ namespace ReadyM.Relay.Client
         public void OpSetCustomPropertiesOfActor(int playerId, Dictionary<object, object?> data)
         {
             var writer = CreatePlayerPropertiesUpdatePacket(playerId, data);
+            Server?.Send(writer, DeliveryMethod.ReliableOrdered);
+        }
+
+        public void OpSetCustomPropertiesOfRoom(Dictionary<object, object?> data)
+        {
+            var writer = CreateRoomPropertiesUpdatePacket(data);
             Server?.Send(writer, DeliveryMethod.ReliableOrdered);
         }
 
@@ -169,7 +194,7 @@ namespace ReadyM.Relay.Client
                     Dictionary<object, object?> diff;
                     if (playerId == ActorId)
                     {
-                        diff = DiffStates(PlayerState, changes);
+                        diff = UpdateAndGetDiff(PlayerState, changes);
                     }
                     else
                     {
@@ -179,7 +204,7 @@ namespace ReadyM.Relay.Client
                             return;
                         }
 
-                        diff = DiffStates(player, changes);
+                        diff = UpdateAndGetDiff(player, changes);
                     }
 
                     OnPlayerPropertiesChanged?.Invoke(playerId, diff);
@@ -188,8 +213,38 @@ namespace ReadyM.Relay.Client
                 case SystemEvent.RoomStateChanged:
                 {
                     var changes = DeserializeObject<Dictionary<object, object?>>(reader);
-                    var diff = DiffStates(RoomState, changes);
+                    var diff = UpdateAndGetDiff(RoomState, changes);
                     OnRoomPropertiesChanged?.Invoke(diff);
+                    return;
+                }
+                case SystemEvent.PlayerJoined:
+                {
+                    var playerId = reader.GetInt();
+                    var initialState = DeserializeObject<Dictionary<object, object>>(reader);
+
+                    if (playerId == ActorId)
+                    {
+                        PlayerState = initialState;
+                        InRoom = true;
+                        OnJoinedRoom?.Invoke();
+                    }
+                    else
+                    {
+                        if (!ConnectedPlayers.TryAdd(playerId, initialState))
+                        {
+                            Log(LogLevel.Warning, "Player {0} already exists", playerId);
+                            ConnectedPlayers[playerId] = initialState;
+                        }
+
+                        OnOtherPlayerJoined?.Invoke(playerId);
+                    }
+
+                    return;
+                }
+                case SystemEvent.PlayerLeft:
+                {
+                    var playerId = reader.GetInt();
+                    OnOtherPlayerLeft?.Invoke(playerId);
                     return;
                 }
             }

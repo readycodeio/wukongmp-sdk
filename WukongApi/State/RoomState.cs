@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Photon.Client;
-using Photon.Realtime;
 
 namespace WukongApi.State
 {
     public class RoomState(WukongClient client)
     {
-        private Room Room => client.PhotonClient.CurrentRoom;
+        private Dictionary<object, object> Room => client.RelayClient.RoomState;
 
         public GameMode GameMode
         {
@@ -32,6 +30,12 @@ namespace WukongApi.State
         {
             get => GetProperty<long>(nameof(MatchmakingEndTime));
             set => SetProperty(nameof(MatchmakingEndTime), value);
+        }
+
+        public bool IsOpen
+        {
+            get => GetProperty<bool>(nameof(IsOpen));
+            set => SetProperty(nameof(IsOpen), value);
         }
 
         public bool InPvP
@@ -73,18 +77,17 @@ namespace WukongApi.State
 
         private T? GetProperty<T>(string name)
         {
-            if (Room.CustomProperties.TryGetValue(name, out var obj))
+            if (Room.TryGetValue(name, out var obj))
                 return (T)obj;
             return default;
         }
 
         private void SetProperty(string name, object value)
         {
-            var hash = new PhotonHashtable
+            client.RelayClient.OpSetCustomPropertiesOfRoom(new Dictionary<object, object?>()
             {
                 [name] = value
-            };
-            Room.SetCustomProperties(hash);
+            });
         }
     }
 }

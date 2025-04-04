@@ -125,14 +125,14 @@ namespace WukongApi.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Photon.SendMontageCallback(currentMontage, currentPosition, hasMontageRewound);
+                    WukongMP.Instance.Client.SendMontageCallback(currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 _localPlayerMontagePosition = currentPosition;
             }
             else if (_localPlayerMontage != null)
             {
-                WukongMP.Instance.Photon.SendMontageCancel();
+                WukongMP.Instance.Client.SendMontageCancel();
             }
 
             _localPlayerMontage = currentMontage;

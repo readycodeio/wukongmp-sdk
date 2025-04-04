@@ -69,7 +69,7 @@ namespace WukongApi
                 if (actor.GetMonster() != null)
                 {
                     Logging.LogDebug("Discovered monster: {Guid}", BGU_DataUtil.GetActorGuid(actor.GetMonster()));
-                    SyncMonsterAndNotify(WukongMP.Instance.Photon, actor); // Neutral monsters
+                    SyncMonsterAndNotify(WukongMP.Instance.Client, actor); // Neutral monsters
                 }
             }
         }

@@ -72,27 +72,27 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Client.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
             
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Client.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
             {
                 Logging.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Photon.SwitchReadyState();
+                    _wukongMp.Client.SwitchReadyState();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
             {
                 Logging.LogDebug("L");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Photon.SwitchTeam();
+                    _wukongMp.Client.SwitchTeam();
             });
 
             Utils.RegisterKeyBind(Key.K, () =>
@@ -124,7 +124,7 @@ namespace WukongMPMod
                 else
                 {
                     var message = ChatWidget.Instance.CommitMessage();
-                    _wukongMp.Photon.WukongChat.ProcessMessage(message);
+                    _wukongMp.Client.WukongChat.ProcessMessage(message);
                 }
 
             });

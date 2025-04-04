@@ -42,7 +42,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (!photon.IsMasterClient)
                 return false;
@@ -160,7 +160,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (photon.CurrentRoomState.InPvP)
             {

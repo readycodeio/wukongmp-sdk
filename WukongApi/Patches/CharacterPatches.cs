@@ -18,7 +18,7 @@ namespace WukongApi.Patches
 
             if (IsThreadTick)
             {
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
                 photon.SetCachedPlayerProperties();
 
                 if (photon.IsMasterClient)
@@ -38,7 +38,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (__instance.Owner.IsNullOrDestroyed())
             {
@@ -193,7 +193,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            return AttrID != EBGUAttrFloat.Hp || WukongMP.Instance.Photon.IsMasterClient;
+            return AttrID != EBGUAttrFloat.Hp || WukongMP.Instance.Client.IsMasterClient;
         }
 
         public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
@@ -201,7 +201,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -230,7 +230,7 @@ namespace WukongApi.Patches
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = WukongMP.Instance.Photon.GetByActor(owner);
+                    var remotePlayer = WukongMP.Instance.Client.GetByActor(owner);
                     if (remotePlayer != null)
                     {
                         if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
@@ -319,7 +319,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (character == photon.LocalPlayerState.Pawn)
             {
@@ -468,7 +468,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             if (Actor is BGUCharacterCS character)
             {
                 var monsterState = photon.GetMonsterByCharacter(character);

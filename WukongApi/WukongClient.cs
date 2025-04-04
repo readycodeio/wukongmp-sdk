@@ -15,13 +15,11 @@ using LiteNetLib;
 using Photon.Client;
 using Photon.Realtime;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
 using WukongApi.UI;
-using Log = Photon.Realtime.Log;
 using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
@@ -38,12 +36,12 @@ namespace WukongApi
         private bool _isStopped = true;
         public bool JoinedRoomCallbacksDone { get; private set; } // prevent race condition where Photon sets InRoom = true before calling OnJoinedRoom
 
-        private int PhotonId => PhotonClient.LocalPlayer!.ActorNumber; // LocalPlayer is never null, but can be invalid
-        public bool IsMasterClient => PhotonClient.CurrentRoom?.MasterClientId == PhotonId;
-        public bool ConnectedAndReady => PhotonClient.IsConnectedAndReady;
+        private int PhotonId => RelayClient.ActorId; // is -1 before joining room
+        public bool IsMasterClient => (int)RelayClient.RoomState[RoomProperties.MasterClientId] == PhotonId;
+        public bool ConnectedAndReady => RelayClient.InRoom;
 
         private readonly Action _joinedRoomCallback;
-        private readonly Action<Player> _playerJoinedCallback;
+        private readonly Action<int> _playerJoinedCallback;
         public event Action<int, MontageCallbackData>? OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData>? OnMonsterMontageCallback;
         public event Action<int, string, string, int, float, float, float>? OnUnitSpawn;
@@ -99,7 +97,7 @@ namespace WukongApi
         public IEnumerable<CharacterState> AllPvPCharacters
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).ToList<CharacterState>().Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]).Concat(SyncedMonsters.Values);
 
-        public WukongClient(Action onJoinedRoom, Action<Player> playerJoinedCallback)
+        public WukongClient(Action onJoinedRoom, Action<int> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
@@ -121,6 +119,10 @@ namespace WukongApi
             PhotonClient.RemoveCallbackTarget(this);
 
             RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
+            RelayClient.OnJoinedRoom -= OnJoinedRoomHandler;
+            RelayClient.OnDisconnected -= OnDisconnectedHandler;
+            RelayClient.OnOtherPlayerJoined -= OtherPlayerJoinedRoomHandler;
+            RelayClient.OnOtherPlayerLeft -= OnPlayerLeftRoomHandler;
         }
 
         public void RegisterPlayer(PlayerState state)
@@ -163,7 +165,7 @@ namespace WukongApi
 
         public void SwitchReadyState()
         {
-            if (PhotonClient.InRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false })
+            if (ConnectedAndReady && CurrentRoomState is { InPvP: false, InMatchmaking: false })
             {
                 var isReady = LocalPlayerState.IsReadyForPvP;
                 SetReadyState(!isReady);
@@ -447,7 +449,8 @@ namespace WukongApi
 
         private void EnterPvP()
         {
-            if (!IsMasterClient) return;
+            if (!IsMasterClient)
+                return;
 
             if (PhotonClient.CurrentRoom == null)
             {
@@ -458,7 +461,8 @@ namespace WukongApi
             CurrentRoomState.InPvP = true;
             if (CurrentRoomState.GameMode == GameMode.XvX)
             {
-                PhotonClient.CurrentRoom.IsOpen = false;
+                // PhotonClient.CurrentRoom.IsOpen = false;
+                CurrentRoomState.IsOpen = false;
             }
         }
 
@@ -541,8 +545,15 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(ESkillDirection), 245,
                 (writer, customObject) => writer.Put((byte)customObject),
                 reader => (ESkillDirection)reader.GetByte());
+            RelayClient.RegisterType(typeof(GameMode), 244,
+                (writer, customObject) => writer.Put((byte)customObject),
+                reader => (GameMode)reader.GetByte());
 
             RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
+            RelayClient.OnJoinedRoom += OnJoinedRoomHandler;
+            RelayClient.OnDisconnected += OnDisconnectedHandler;
+            RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
+            RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
         }
 
         [Obsolete]
@@ -641,7 +652,7 @@ namespace WukongApi
 
         public IEnumerable<Player> GetOtherPlayersInRoom()
         {
-            if (PhotonClient.CurrentRoom == null)
+            if (!RelayClient.InRoom)
             {
                 Logging.LogError("No room joined.");
                 yield break;
@@ -1133,12 +1144,6 @@ namespace WukongApi
         public void OnRegionListReceived(RegionHandler regionHandler)
         {
             Logging.LogDebug("Region list received: {Regions}", regionHandler.AvailableRegionCodes);
-            regionHandler.PingAvailableRegions(OnPingComplete);
-        }
-
-        private static void OnPingComplete(RegionHandler regionHandler)
-        {
-            Logging.LogDebug("Region ping complete: {PingResults}", regionHandler.GetResults());
         }
 
         public void OnCustomAuthenticationResponse(Dictionary<string, object> data)
@@ -1192,9 +1197,13 @@ namespace WukongApi
             return teamsCount[team1Id] > teamsCount[team2Id] ? team2Id : team1Id;
         }
 
-        public void OnJoinedRoom()
+        [Obsolete]
+        public void OnJoinedRoom() { }
+
+        public void OnJoinedRoomHandler()
         {
-            Logging.LogInformation("Joined room {Name}", PhotonClient.CurrentRoom.Name);
+            var roomName = (string)RelayClient.RoomState[RoomProperties.RoomId];
+            Logging.LogInformation("Joined room {Name}", roomName);
 
             var teamId = GetTeamIdForPlayer();
             var controlledPawn = GameUtils.GetControlledPawn();
@@ -1232,46 +1241,63 @@ namespace WukongApi
             JoinedRoomCallbacksDone = false;
         }
 
-        public void OnLeftRoom()
+        [Obsolete]
+        public void OnLeftRoom() { }
+
+        public void OnDisconnectedHandler(DisconnectReason reason)
         {
-            Logging.LogInformation("Left room");
+            Logging.LogInformation("Disconnected");
             JoinedRoomCallbacksDone = false;
         }
 
         #endregion
 
+        [Obsolete]
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
-            Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", newPlayer.NickName, newPlayer.ActorNumber);
-            _playerJoinedCallback.Invoke(newPlayer);
+            // Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", newPlayer.NickName, newPlayer.ActorNumber);
+            // _playerJoinedCallback.Invoke(newPlayer.);
         }
 
-        public void OnPlayerLeftRoom(Player otherPlayer)
+        public void OtherPlayerJoinedRoomHandler(int playerId)
         {
-            Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", otherPlayer.NickName, otherPlayer.ActorNumber);
+            var nickname = RelayClient.GetPlayerState(playerId).GetValueOrDefault(PlayerProperties.NickName) ?? "";
+            Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", nickname, playerId);
+            _playerJoinedCallback.Invoke(playerId);
+        }
 
-            if (ConnectedPlayers.Remove(otherPlayer.ActorNumber, out var playerState))
+        [Obsolete]
+        public void OnPlayerLeftRoom(Player otherPlayer) { }
+
+        private void OnPlayerLeftRoomHandler(int playerId)
+        {
+            var nickname = (string)RelayClient.GetPlayerState(playerId)![PlayerProperties.NickName];
+
+            Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", nickname, playerId);
+
+            if (ConnectedPlayers.Remove(playerId, out var playerState))
             {
                 OnPlayerLeft?.Invoke(playerState);
             }
             else
             {
-                Logging.LogWarning("Player {Id} not in ConnectedPlayers.", otherPlayer.ActorNumber);
+                Logging.LogWarning("Player {Id} not in ConnectedPlayers.", playerId);
             }
 
             if (IsMasterClient)
             {
-                WukongChat.SendServerMessage($"{otherPlayer.NickName} has left!");
+                WukongChat.SendServerMessage($"{nickname} has left!");
                 CheckRoundEndCondition();
             }
         }
 
+        [Obsolete]
         public void OnRoomPropertiesUpdate(PhotonHashtable changedProps)
         {
             // empty, RoomState is a proxy to this hashtable
         }
 
-        public void OnPlayerPropertiesChanged(int playerId, Dictionary<object, object?> changes)
+        private void OnPlayerPropertiesChanged(int playerId, Dictionary<object, object?> changes)
         {
             PlayerState playerState;
 
@@ -1355,10 +1381,8 @@ namespace WukongApi
             }
         }
 
-        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
-        {
-            // do nothing
-        }
+        [Obsolete]
+        public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps) { }
 
         public void OnMasterClientSwitched(Player newMasterClient)
         {

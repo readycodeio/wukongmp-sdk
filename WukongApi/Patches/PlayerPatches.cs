@@ -39,7 +39,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -121,7 +121,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -172,7 +172,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -222,7 +222,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             if (Owner == photon.LocalPlayerState.Pawn)
             {
@@ -291,7 +291,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -321,7 +321,7 @@ namespace WukongApi.Patches
             if (DeadReason == EDeadReason.PlayerTrans)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -360,7 +360,7 @@ namespace WukongApi.Patches
             if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -398,7 +398,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             var localPawn = photon.LocalPlayerState.Pawn;
             var owner = __instance.GetOwner();
@@ -459,7 +459,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             
             var owner = __instance.GetOwner();
             if (owner.IsNullOrDestroyed())
@@ -507,7 +507,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             if (photon.IsMasterClient)
             {
                 var owner = __instance.GetOwner();

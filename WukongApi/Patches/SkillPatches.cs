@@ -88,7 +88,7 @@ namespace WukongApi.Patches
             getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "BuffData");
             IBUC_BuffData BuffData = (IBUC_BuffData)getter.Invoke(__instance, null);
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             AActor castingCharacter = __instance.GetOwner();
 
             if (castingCharacter.IsNullOrDestroyed())
@@ -218,7 +218,7 @@ namespace WukongApi.Patches
                 if (!WukongMP.Instance.ShouldRunConnectedPatches())
                     return true;
 
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
                 if (photon.IsMasterClient)
                 {
                     return true;
@@ -237,7 +237,7 @@ namespace WukongApi.Patches
                 if (!WukongMP.Instance.ShouldRunConnectedPatches())
                     return true;
 
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
 
                 var owner = __instance.GetOwner();
 
@@ -279,7 +279,7 @@ namespace WukongApi.Patches
                 if (!WukongMP.Instance.ShouldRunConnectedPatches())
                     return true;
 
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
                 var owner = __instance.GetOwner();
 
                 if (owner.IsNullOrDestroyed())
@@ -321,7 +321,7 @@ namespace WukongApi.Patches
                 if (!WukongMP.Instance.ShouldRunConnectedPatches())
                     return true;
 
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
                 AActor owner = __instance.GetOwner();
 
                 if (owner.IsNullOrDestroyed())
@@ -433,7 +433,7 @@ namespace WukongApi.Patches
                     return;
                 }
 
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
                 var owner = __instance.GetOwner();
 
                 if (owner.IsNullOrDestroyed())
@@ -465,7 +465,7 @@ namespace WukongApi.Patches
                 if (!WukongMP.Instance.ShouldRunConnectedPatches())
                     return;
 
-                var photon = WukongMP.Instance.Photon;
+                var photon = WukongMP.Instance.Client;
                 var owner = __instance.GetOwner();
 
                 if (owner.IsNullOrDestroyed())
