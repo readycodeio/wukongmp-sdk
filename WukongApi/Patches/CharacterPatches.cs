@@ -428,6 +428,18 @@ namespace WukongApi.Patches
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
                                 photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
                             }
+
+                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.Location = __instance.ActorLocation;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Location), monsterState.Location);
+                            }
+
+                            if (!monsterState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.Rotation = __instance.ActorRotation;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Rotation), monsterState.Rotation);
+                            }
                         }
                         else
                         {
