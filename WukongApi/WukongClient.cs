@@ -439,7 +439,7 @@ namespace WukongApi
         {
             foreach (var monster in SyncedMonsters.Values.ToList())
             {
-                monster.Tamer?.DestroyActor();
+                monster.Pawn?.DestroyActor();
             }
         }
 
@@ -604,7 +604,7 @@ namespace WukongApi
 
             // clear state
             ConnectedPlayers.Clear();
-            DestroyAllMonsters();
+            Utils.TryRunOnGameThread(DestroyAllMonsters);
             SyncedMonsters.Clear();
             _localPlayerState = null;
 
