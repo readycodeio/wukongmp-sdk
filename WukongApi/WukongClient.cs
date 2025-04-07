@@ -604,6 +604,7 @@ namespace WukongApi
 
             // clear state
             ConnectedPlayers.Clear();
+            DestroyAllMonsters();
             SyncedMonsters.Clear();
             _localPlayerState = null;
 
