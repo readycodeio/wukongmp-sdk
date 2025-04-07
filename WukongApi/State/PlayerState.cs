@@ -9,8 +9,6 @@ namespace WukongApi.State
 {
     public class PlayerState : CharacterState
     {
-        public int PhotonId { get; }
-
         private BGUCharacterCS? _pawn;
 
         public override BGUCharacterCS? Pawn
@@ -46,7 +44,6 @@ namespace WukongApi.State
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
-        public bool RunImmobilizePatches { get; set; }
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
 

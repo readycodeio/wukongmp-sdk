@@ -154,7 +154,7 @@ namespace WukongApi
 
         public MonsterState? GetMonsterById(int monsterId)
         {
-            return SyncedMonsters.Values.FirstOrDefault(x => x.Id == monsterId);
+            return SyncedMonsters.Values.FirstOrDefault(x => x.PhotonId == monsterId);
         }
 
         public CharacterState? GetCharacterById(int id)
@@ -360,6 +360,7 @@ namespace WukongApi
                     {
                         GameUtils.PlayBossDefeatedSound();
                     }
+                    Utils.TryRunOnGameThread(DestroyAllMonsters);
 
                     break;
                 case PvPEvent.TournamentEnd:
@@ -382,7 +383,6 @@ namespace WukongApi
                         ExitPvP();
                         SetReadyState(false);
                         SetIsSpectatorState(false);
-                        DestroyAllMonsters();
                     });
 
                     break;
@@ -1218,7 +1218,7 @@ namespace WukongApi
             // send current monsters to the new player 
             foreach (var monsterState in SyncedMonsters.Values)
             {
-                SpawnUnitForNewPlayer(newPlayer.ActorNumber, monsterState.Id, monsterState.Guid, monsterState.UnitName, monsterState.TeamId, monsterState.Location.X, monsterState.Location.Y, monsterState.Location.Z);
+                SpawnUnitForNewPlayer(newPlayer.ActorNumber, monsterState.PhotonId, monsterState.Guid, monsterState.UnitName, monsterState.TeamId, monsterState.Location.X, monsterState.Location.Y, monsterState.Location.Z);
             }
         }
 

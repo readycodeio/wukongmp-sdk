@@ -198,11 +198,11 @@ namespace WukongApi.Patches
                 ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
                 BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
                 // broadcast
-                var immobilizedPlayerState = photon.GetPlayerByActor(item);
-                if (immobilizedPlayerState != null && castingPlayerState != null)
+                var immobilizedCharacterState = photon.GetCharacterByActor(item);
+                if (immobilizedCharacterState != null && castingPlayerState != null)
                 {
-                    Logging.LogDebug("Broadcasting trigger immobilize for player {Nickname}", immobilizedPlayerState.NickName);
-                    photon.BroadcastImmobilize(immobilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
+                    Logging.LogDebug("Broadcasting trigger immobilize for character {Nickname}", immobilizedCharacterState.NickName);
+                    photon.BroadcastImmobilize(immobilizedCharacterState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
                 }
             }
 
