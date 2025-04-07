@@ -218,7 +218,7 @@ namespace WukongApi
                     break;
                 case 5:
                     // monster wake up
-                    var guid = reader.GetString();
+                    var guid = RelayClient.DeserializeObject<string>(reader);
                     OnMonsterWakeUp?.Invoke(guid);
                     break;
                 case 6:
@@ -229,18 +229,18 @@ namespace WukongApi
                 case 7:
                 {
                     // player rebirth
-                    var playerId = reader.GetInt();
+                    var playerId = RelayClient.DeserializeObject<int>(reader);
                     OnPlayerRebirth?.Invoke(playerId);
                     break;
                 }
                 case 8:
                     // PvP event
-                    var ev = reader.GetIntArray();
+                    var ev = RelayClient.DeserializeObject<int[]>(reader);
                     HandlePvPEvent((PvPEvent)ev[0], ev[1]);
                     break;
                 case 9:
                     // kill player
-                    var id = reader.GetInt();
+                    var id = RelayClient.DeserializeObject<int>(reader);
                     OnKillPlayer?.Invoke(id);
                     break;
                 case 10:
@@ -261,12 +261,12 @@ namespace WukongApi
                     break;
                 case 13:
                     // target
-                    var targetId = reader.GetInt();
+                    var targetId = RelayClient.DeserializeObject<int>(reader);
                     OnTargetSet?.Invoke(header.Sender, targetId);
                     break;
                 case 14:
                     // exit phantom rush
-                    var phantomRushPlayerId = reader.GetInt();
+                    var phantomRushPlayerId = RelayClient.DeserializeObject<int>(reader);
                     OnExitPhantomRush?.Invoke(phantomRushPlayerId);
                     break;
                 case 15:
@@ -275,19 +275,19 @@ namespace WukongApi
                     break;
                 case 16:
                     // buff add
-                    var buffData = reader.GetBytesWithLength();
+                    var buffData = RelayClient.DeserializeObject<byte[]>(reader);
                     var buffId = BitConverter.ToInt32(buffData, 0);
                     var buffDuration = BitConverter.ToSingle(buffData, 4);
                     OnBuffAdded?.Invoke(header.Sender, buffId, buffDuration);
                     break;
                 case 17:
                     // buff remove
-                    var data = reader.GetIntArray();
+                    var data = RelayClient.DeserializeObject<int[]>(reader);
                     OnBuffRemoved?.Invoke(header.Sender, data[0], (EBuffEffectTriggerType)data[1], data[2], data[3] != 0);
                     break;
                 case 18:
                     // buff all remove
-                    var evData = reader.GetBytesWithLength();
+                    var evData = RelayClient.DeserializeObject<byte[]>(reader);
                     OnBuffAllRemoved?.Invoke(header.Sender, (EBuffEffectTriggerType)evData[0], evData[1] != 0);
                     break;
             }

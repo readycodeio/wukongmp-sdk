@@ -49,7 +49,7 @@ namespace WukongApi
         public const string JsonCompactSerializationRegex = @"[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_\.+\/=]*";
 
         public const string ServerHost = "68.154.30.5";
-        public const int ServerPort = 7134;
+        public const int ServerPort = 7384;
         
         public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
 
