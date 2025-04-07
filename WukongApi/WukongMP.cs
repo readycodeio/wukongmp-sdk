@@ -1454,6 +1454,11 @@ namespace WukongApi
             if (initialProps.TryGetValue(PlayerProperties.NickName, out var nickName))
             {
                 playerState.NickName = (string)nickName;
+                Logging.LogDebug("Setting initial Nickname to {Nickname}", playerState.NickName);
+            }
+            else
+            {
+                Logging.LogWarning("Initial nickname not provided");
             }
 
             // set attributes

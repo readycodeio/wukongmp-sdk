@@ -108,6 +108,7 @@ namespace WukongApi
             Logging.LogInformation("WukongClient finalizer called");
             StopRelayClient();
 
+            RelayClient.OnPingUpdated -= OnPingUpdated;
             RelayClient.OnCustomEvent -= OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
             RelayClient.OnJoinedRoom -= OnJoinedRoomHandler;
@@ -190,6 +191,11 @@ namespace WukongApi
             }
 
             SyncedMonsters.Remove(monster.Guid);
+        }
+
+        private void OnPingUpdated(int ping)
+        {
+            Logging.LogDebug("Ping: {Ping}", ping);
         }
 
         public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
@@ -511,6 +517,7 @@ namespace WukongApi
                 (writer, customObject) => writer.Put((byte)customObject),
                 reader => (GameMode)reader.GetByte());
 
+            RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
             RelayClient.OnJoinedRoom += OnJoinedRoomHandler;
