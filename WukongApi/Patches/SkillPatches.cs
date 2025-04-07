@@ -247,25 +247,25 @@ namespace WukongApi.Patches
                     return false;
                 }
 
-                var playerState = photon.GetPlayerByActor(owner);
+                var characterState = photon.GetCharacterByActor(owner);
 
-                if (playerState == null)
+                if (characterState == null)
                 {
                     return true;
                 }
 
                 if (photon.IsMasterClient)
                 {
-                    photon.BroadcastImmobilize(playerState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
+                    photon.BroadcastImmobilize(characterState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
                     return true;
                 }
 
-                if (!playerState.RunImmobilizePatches)
+                if (!characterState.RunImmobilizePatches)
                 {
                     return false;
                 }
 
-                playerState.RunImmobilizePatches = false;
+                characterState.RunImmobilizePatches = false;
                 return true;
             }
         }
@@ -290,16 +290,16 @@ namespace WukongApi.Patches
 
                 if (photon.IsMasterClient)
                 {
-                    var playerState = photon.GetPlayerByActor(owner);
+                    var characterState = photon.GetCharacterByActor(owner);
 
-                    if (playerState == null)
+                    if (characterState == null)
                     {
-                        Logging.LogDebug("Player state is null - continuing standard execution");
+                        Logging.LogDebug("Character state is null - continuing standard execution");
                         return true;
                     }
 
-                    photon.BroadcastImmobilize(playerState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
-                    BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
+                    photon.BroadcastImmobilize(characterState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
+                    BUS_EventCollectionCS.Get(characterState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 }
 
                 return false;
