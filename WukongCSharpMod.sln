@@ -9,9 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonChatApi", "PhotonChat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMpMod", "WukongMPMod\WukongMpMod.csproj", "{65957B97-E095-49C9-B64A-656B5C6C125E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Client", "ReadyM.Relay.Client\ReadyM.Relay.Client.csproj", "{E8769283-D460-43E6-A0EE-3C448B4CBEC3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Client", "readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj", "{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common", "..\ReadyM-Master-Server\relay\ReadyM.Relay.Common\ReadyM.Relay.Common.csproj", "{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common", "readym-gameserver\src\ReadyM.Relay.Common\ReadyM.Relay.Common.csproj", "{3FE0896E-45E6-4698-B620-FA532B53D7EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +31,14 @@ Global
 		{65957B97-E095-49C9-B64A-656B5C6C125E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65957B97-E095-49C9-B64A-656B5C6C125E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65957B97-E095-49C9-B64A-656B5C6C125E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E8769283-D460-43E6-A0EE-3C448B4CBEC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E8769283-D460-43E6-A0EE-3C448B4CBEC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E8769283-D460-43E6-A0EE-3C448B4CBEC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E8769283-D460-43E6-A0EE-3C448B4CBEC3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A30C8867-DC86-4F35-AED1-0CDA9B8EEE7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
