@@ -14,8 +14,8 @@ namespace ReadyM.Relay.Client
 {
     public sealed class RelayClient : RelayPeerBase, IDisposable
     {
-        private const string Host = "localhost";
-        private const int Port = 9050;
+        private const string Host = "68.154.30.5";
+        private const int Port = 7128;
 
         private readonly EventBasedNetListener _listener;
         private readonly NetManager _client;
@@ -69,11 +69,6 @@ namespace ReadyM.Relay.Client
             _client = new NetManager(_listener)
             {
                 AutoRecycle = true,
-#if DEBUG
-                SimulateLatency = true,
-                SimulationMinLatency = 50,
-                SimulationMaxLatency = 150,
-#endif
             };
             _logger = logger;
         }
@@ -279,7 +274,7 @@ namespace ReadyM.Relay.Client
 
         private void OnNetworkLatencyUpdateEvent(NetPeer peer, int latency)
         {
-            // Log(LogLevel.Debug, "Network latency updated: {0}ms", latency);
+            Log(LogLevel.Debug, "Network latency updated: {0}ms", latency);
         }
 
         private NetDataWriter CreatePlayerPropertiesUpdatePacket(int playerId, Dictionary<object, object?> changes)
