@@ -40,7 +40,7 @@ namespace WukongApi
         private readonly Action<Player> _playerJoinedCallback;
         public event Action<int, MontageCallbackData>? OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData>? OnMonsterMontageCallback;
-        public event Action<int, string, string, int, float, float, float>? OnUnitSpawn;
+        public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
         public event Action<string>? OnMonsterWakeUp;
         public event Action<int, EquipmentState>? OnEquipmentChange;
         public event Action<string, bool, int>? OnReadinessChange;
@@ -121,7 +121,7 @@ namespace WukongApi
             ConnectedPlayers.Add(state.PhotonId, state);
         }
 
-        public PlayerState? GetByActor(AActor? actor)
+        public PlayerState? GetPlayerByActor(AActor? actor)
         {
             if (actor == null)
                 return null;
@@ -131,11 +131,36 @@ namespace WukongApi
                 : ConnectedPlayers.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
         }
 
-        public PlayerState? GetById(int playerId)
+        public MonsterState? GetMonsterByActor(AActor? actor)
+        {
+            if (actor == null)
+                return null;
+
+            return SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
+        }
+
+        public CharacterState? GetCharacterByActor(AActor? actor)
+        {
+            var characterState = GetPlayerByActor(actor);
+            return characterState == null ? GetMonsterByActor(actor) : characterState;
+        }
+
+        public PlayerState? GetPlayerById(int playerId)
         {
             return playerId == LocalPlayerState.PhotonId
                 ? LocalPlayerState
                 : ConnectedPlayers.GetValueOrDefault(playerId);
+        }
+
+        public MonsterState? GetMonsterById(int monsterId)
+        {
+            return SyncedMonsters.Values.FirstOrDefault(x => x.Id == monsterId);
+        }
+
+        public CharacterState? GetCharacterById(int id)
+        {
+            var player = GetPlayerById(id);
+            return player == null ? GetMonsterById(id) : player;
         }
 
         public MonsterState? GetByTamerActor(BUTamerActor owner)
@@ -210,7 +235,7 @@ namespace WukongApi
                 case 1:
                     // unit spawn
                     var unitData = (UnitSpawnData)photonEvent.CustomData;
-                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
+                    OnUnitSpawn?.Invoke(photonEvent.Sender, unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
                     // montage callback
@@ -697,17 +722,17 @@ namespace WukongApi
             Logging.LogDebug("Photon state change: {From} -> {To}", arg1, arg2);
         }
 
-        public void SpawnUnit(string id, string unitName, int teamId, float x, float y, float z)
+        public void SpawnUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
         {
             const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, unitName, teamId, x, y, z);
+            var evData = new UnitSpawnData(id, guid, unitName, teamId, x, y, z);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        private void SpawnUnitForNewPlayer(int playerId, string id, string unitName, int teamId, float x, float y, float z)
+        private void SpawnUnitForNewPlayer(int playerId, int id, string guid, string unitName, int teamId, float x, float y, float z)
         {
             const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, unitName, teamId, x, y, z);
+            var evData = new UnitSpawnData(id, guid, unitName, teamId, x, y, z);
             PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs { TargetActors = [playerId] }, SendOptions.SendReliable);
         }
 
@@ -1193,7 +1218,7 @@ namespace WukongApi
             // send current monsters to the new player 
             foreach (var monsterState in SyncedMonsters.Values)
             {
-                SpawnUnitForNewPlayer(newPlayer.ActorNumber, monsterState.Guid, monsterState.UnitName, monsterState.TeamId, monsterState.Location.X, monsterState.Location.Y, monsterState.Location.Z);
+                SpawnUnitForNewPlayer(newPlayer.ActorNumber, monsterState.Id, monsterState.Guid, monsterState.UnitName, monsterState.TeamId, monsterState.Location.X, monsterState.Location.Y, monsterState.Location.Z);
             }
         }
 

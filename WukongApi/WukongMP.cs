@@ -400,8 +400,9 @@ namespace WukongApi
 
                         if (!Photon.SyncedMonsters.ContainsKey(guid))
                         {
-                            Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor, actor.GetMonsterClass().PathName));
-                            Logging.LogDebug("Monster was not synced, adding to synced monsters.");
+                            Logging.LogError("Not syncing monster");
+                            //Photon.SyncedMonsters.Add(guid, new MonsterState(guid, actor, actor.GetMonsterClass().PathName));
+                            //Logging.LogDebug("Monster was not synced, adding to synced monsters.");
                         }
 
                         Logging.LogDebug("Invoking Evt_TamerBlockingSpawnImmediately.");
@@ -411,10 +412,11 @@ namespace WukongApi
                     {
                         Logging.LogDebug("Monster already spawned but not synced: {Guid}.", guid);
 
-                        var state = new MonsterState(guid, actor, actor.GetMonsterClass().PathName);
-                        Photon.SyncedMonsters.Add(guid, state);
+                        Logging.LogError("Not syncing monster");
+                        //var state = new MonsterState(guid, actor, actor.GetMonsterClass().PathName);
+                        //Photon.SyncedMonsters.Add(guid, state);
 
-                        PhotonUtils.PrepareMonsterForSync(Photon, state);
+                        //PhotonUtils.PrepareMonsterForSync(Photon, state);
                     }
                 }
                 else
@@ -432,7 +434,7 @@ namespace WukongApi
         {
             Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
 
-            var player = Photon.GetById(playerId);
+            var player = Photon.GetPlayerById(playerId);
             if (player == null)
                 return;
 
@@ -468,7 +470,7 @@ namespace WukongApi
             }
 
             Photon.OnBeforeJoinRoom += SetPlayerProperties;
-            Photon.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z), "SpawnRemoteUnit");
+            Photon.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
             Photon.OnMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(id, data), "ApplyPlayerMontageCallback");
             Photon.OnMonsterMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyMonsterMontageCallback(id, data), "ApplyMonsterMontageCallback");
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
@@ -492,7 +494,7 @@ namespace WukongApi
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
         {
-            var playerState = Photon.GetById(playerId);
+            var playerState = Photon.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -516,7 +518,7 @@ namespace WukongApi
             int inLayer,
             bool withTriggerRemoveEffect)
         {
-            var playerState = Photon.GetById(playerId);
+            var playerState = Photon.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -537,7 +539,7 @@ namespace WukongApi
 
         private void OnBuffAllRemoved(int playerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
         {
-            var playerState = Photon.GetById(playerId);
+            var playerState = Photon.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -558,7 +560,7 @@ namespace WukongApi
 
         private void ExitPhantomRush(int playerId)
         {
-            var playerState = Photon.GetById(playerId);
+            var playerState = Photon.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -579,7 +581,7 @@ namespace WukongApi
                 return;
             }
 
-            var targetPlayerState = Photon.GetById(targetId);
+            var targetPlayerState = Photon.GetPlayerById(targetId);
             if (targetPlayerState == null)
             {
                 Logging.LogError("Player not found: {Id}", targetId);
@@ -623,7 +625,7 @@ namespace WukongApi
 
         private void KillPlayer(int playerId)
         {
-            var player = Photon.GetById(playerId)?.Pawn;
+            var player = Photon.GetPlayerById(playerId)?.Pawn;
             if (player == null)
                 return;
 
@@ -643,7 +645,7 @@ namespace WukongApi
 
         private void PerformPhantomRush(int playerId, ESkillDirection direction)
         {
-            var playerState = Photon.GetById(playerId);
+            var playerState = Photon.GetPlayerById(playerId);
             if (playerState?.Pawn == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", playerId);
@@ -693,14 +695,14 @@ namespace WukongApi
 
         private void HandleImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            var playerState = Photon.GetById(playerId);
+            var playerState = Photon.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
                 return;
             }
 
-            var otherPlayerState = Photon.GetById(otherPlayerId);
+            var otherPlayerState = Photon.GetPlayerById(otherPlayerId);
 
             switch (immobilizeAction)
             {
@@ -1061,19 +1063,21 @@ namespace WukongApi
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
-            var id = Guid.NewGuid().ToString(); // TODO: use ActorGuid
-            SpawnUnitLocally(id, unitName, teamId, loc.X, loc.Y, loc.Z);
+            var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
+            var id = Photon.SyncedMonsters.Count + Photon.PhotonClient.CurrentRoom.MaxPlayers;
+
+            SpawnUnitLocally(id, guid, unitName, teamId, loc.X, loc.Y, loc.Z);
 
             Logging.LogDebug("Sending spawn enemy {Name} at {Location}", enemyName, loc.ToCompactString());
-            Photon.SpawnUnit(id, unitName, teamId, loc.X, loc.Y, loc.Z);
+            Photon.SpawnUnit(id, guid, unitName, teamId, loc.X, loc.Y, loc.Z);
         }
 
-        private void SpawnRemoteUnit(string guid, string unitName, int teamId, float x, float y, float z)
+        private void SpawnRemoteUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
         {
-            SpawnUnitLocally(guid, unitName, teamId, x, y, z);
+            SpawnUnitLocally(id, guid, unitName, teamId, x, y, z);
         }
 
-        private void SpawnUnitLocally(string guid, string unitName, int teamId, float x, float y, float z)
+        private void SpawnUnitLocally(int id, string guid, string unitName, int teamId, float x, float y, float z)
         {
             Logging.LogDebug("Spawn unit called for {UnitName}", unitName);
 
@@ -1102,7 +1106,7 @@ namespace WukongApi
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
-            var monsterState = new MonsterState(guid, buTamerActor, teamId, unitName);
+            var monsterState = new MonsterState(id, guid, buTamerActor, teamId, unitName);
             Photon.SyncedMonsters.Add(guid, monsterState);
             BGS_GSEventCollection.Get(buTamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
 

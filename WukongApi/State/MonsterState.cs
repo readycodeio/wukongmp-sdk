@@ -5,6 +5,7 @@ namespace WukongApi.State
 {
     public class MonsterState : CharacterState
     {
+        public int Id { get; }
         public string Guid { get; }
         public string UnitName { get; }
 
@@ -41,8 +42,9 @@ namespace WukongApi.State
         public bool IsSynced { get; set; }
         public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
 
-        public MonsterState(string guid, BUTamerActor tamer, string unitName)
+        public MonsterState(int id, string guid, BUTamerActor tamer, string unitName)
         {
+            Id = id;
             Guid = guid;
             _tamer = tamer;
             UnitName = unitName;
@@ -60,8 +62,9 @@ namespace WukongApi.State
             Logging.LogDebug("Created monster state with team ID: {TeamId}", TeamId);
         }
 
-        public MonsterState(string guid, BUTamerActor tamer, int teamId, string unitName)
+        public MonsterState(int id, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
+            Id = id;
             Guid = guid;
             _tamer = tamer;
             TeamId = teamId;

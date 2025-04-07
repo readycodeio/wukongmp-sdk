@@ -52,7 +52,7 @@ namespace WukongApi.Patches
                 if (__instance.Owner == photon.LocalPlayerState.Pawn)
                     return;
 
-                var playerState = photon.GetByActor(__instance.Owner);
+                var playerState = photon.GetPlayerByActor(__instance.Owner);
                 if (playerState != null)
                 {
                     foreach (var (attr, value) in playerState.Attributes)
@@ -108,7 +108,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(__instance.Owner);
+                var playerState = photon.GetPlayerByActor(__instance.Owner);
 
                 // remote player
                 if (playerState != null)
@@ -230,7 +230,7 @@ namespace WukongApi.Patches
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = WukongMP.Instance.Photon.GetByActor(owner);
+                    var remotePlayer = WukongMP.Instance.Photon.GetPlayerByActor(owner);
                     if (remotePlayer != null)
                     {
                         if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
@@ -369,7 +369,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(character);
+                var playerState = photon.GetPlayerByActor(character);
 
                 if (playerState != null)
                 {
