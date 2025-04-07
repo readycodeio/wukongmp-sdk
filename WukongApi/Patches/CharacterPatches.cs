@@ -435,9 +435,10 @@ namespace WukongApi.Patches
                             __instance.MoveAcceleration = monsterState.MoveAcceleration;
                             __instance.MovementComp.Velocity = monsterState.Velocity;
 
-                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance * 10))
+                            var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                             {
-                                Logging.LogError("Monster {Guid} has bad location for client", monsterState.Guid);
+                                events.Evt_InterpolationMove.Invoke(monsterState.Location, monsterState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                             }
                         }
 
