@@ -48,7 +48,9 @@ namespace WukongApi
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
         public const string JsonCompactSerializationRegex = @"[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_\.+\/=]*";
 
-        public const string RealtimeAppId = "7aa130eb-9912-4845-b2de-8496a6f0fea7";
+        public const string ServerHost = "68.154.30.5";
+        public const int ServerPort = 7134;
+        
         public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([

@@ -24,7 +24,7 @@ namespace WukongApi
 {
     public sealed class WukongClient
     {
-        public readonly RelayClient RelayClient = new((level, s, args) => Logging.Log(level, s, args.AsSpan()));
+        public readonly RelayClient RelayClient = new(Constants.ServerHost, Constants.ServerPort, (level, s, args) => Logging.Log(level, s, args.AsSpan()));
 
         private const char MonsterHashtableKeySeparator = ';';
 
