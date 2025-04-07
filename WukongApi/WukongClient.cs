@@ -30,7 +30,7 @@ namespace WukongApi
 
         public bool JoinedRoomCallbacksDone { get; private set; } // prevent race condition where Photon sets InRoom = true before calling OnJoinedRoom
 
-        private int ActorNumber => RelayClient.ActorId; // is -1 before joining room
+        private int ActorNumber => RelayClient.LocalPlayer.ActorNumber; // is -1 before joining room
         public bool IsMasterClient => RelayClient.RoomState.MasterClientId == ActorNumber;
         public bool ConnectedAndReady => RelayClient.InRoom;
 
@@ -1054,7 +1054,7 @@ namespace WukongApi
         {
             PlayerState playerState;
 
-            if (playerId == RelayClient.ActorId) // local player
+            if (playerId == RelayClient.LocalPlayer.ActorNumber) // local player
             {
                 if (_localPlayerState == null)
                 {
