@@ -296,7 +296,18 @@ namespace WukongApi
                     var evData = RelayClient.DeserializeObject<byte[]>(reader);
                     OnBuffAllRemoved?.Invoke(header.Sender, (EBuffEffectTriggerType)evData[0], evData[1] != 0);
                     break;
+                case 19:
+                    // chat message received
+                    var chatMessage = RelayClient.DeserializeObject<string>(reader);
+                    WukongChat.OnGetMessage(header.Sender, chatMessage);
+                    break;
             }
+        }
+
+        public void SendChatMessage(string message)
+        {
+            const byte eventCode = 19;
+            RelayClient.OpRaiseEvent(eventCode, message, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
@@ -557,8 +568,6 @@ namespace WukongApi
             ConnectedPlayers.Clear();
             SyncedMonsters.Clear();
             _localPlayerState = null;
-
-            WukongChat.StopClient(); // TODO: Remove
 
             Logging.LogInformation("Stopped client.");
         }
@@ -1004,7 +1013,6 @@ namespace WukongApi
 
             SubscribeToPlayerEvents();
             _joinedRoomCallback.Invoke();
-            WukongChat.StartClient(RelayClient.LocalPlayer.Nickname);
 
             JoinedRoomCallbacksDone = true;
         }

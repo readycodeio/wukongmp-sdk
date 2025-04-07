@@ -157,7 +157,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PhotonChatApi\PhotonChatApi.csproj" />
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj" />
     </ItemGroup>
 
