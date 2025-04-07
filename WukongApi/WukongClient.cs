@@ -1131,7 +1131,15 @@ namespace WukongApi
                         OnEquipmentChange?.Invoke(playerId, (EquipmentState)kvp.Value);
                         break;
                     case nameof(PlayerState.IsReadyForPvP):
-                        var targetPlayerNickname = RelayClient.GetPlayerState(playerId)!.Nickname;
+                        var otherPlayerState = RelayClient.GetPlayerState(playerId);
+
+                        if (otherPlayerState == null)
+                        {
+                            Logging.LogError("Player {Id} not found.", playerId);
+                            continue;
+                        }
+
+                        var targetPlayerNickname = otherPlayerState.Nickname;
                         OnPlayerReadinessChanged(targetPlayerNickname, (bool)kvp.Value);
                         continue;
                     case nameof(PlayerState.TeamId):
