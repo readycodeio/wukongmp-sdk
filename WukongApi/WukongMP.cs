@@ -1106,7 +1106,12 @@ namespace WukongApi
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
-            var monsterState = new MonsterState(id, guid, buTamerActor, teamId, unitName);
+            var monsterState = new MonsterState(id, guid, buTamerActor, teamId, unitName)
+            {
+                Location = loc,
+                Rotation = rot
+            };
+
             Photon.SyncedMonsters.Add(guid, monsterState);
             BGS_GSEventCollection.Get(buTamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
 
