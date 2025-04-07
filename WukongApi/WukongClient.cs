@@ -1015,6 +1015,7 @@ namespace WukongApi
             _joinedRoomCallback.Invoke();
 
             JoinedRoomCallbacksDone = true;
+            WukongChat.SendServerMessage($"{LocalPlayerState.NickName} has joined!");
         }
 
         public void OnDisconnectedHandler(DisconnectReason reason)

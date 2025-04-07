@@ -120,12 +120,6 @@ namespace WukongApi
             _wukongClient.SendChatMessage($"{ServerPrefix}{message}");
         }
 
-        public void OnConnected()
-        {
-            Logging.LogDebug("Chat connected");
-            SendServerMessage($"{NickName} has joined!");
-        }
-
         public void OnGetMessage(int sender, string content)
         {
             var isServer = content.AsSpan()[..3] is ServerPrefix;
