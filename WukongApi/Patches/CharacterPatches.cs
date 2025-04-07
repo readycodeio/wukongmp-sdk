@@ -434,6 +434,11 @@ namespace WukongApi.Patches
                             __instance.Velocity = monsterState.Velocity;
                             __instance.MoveAcceleration = monsterState.MoveAcceleration;
                             __instance.MovementComp.Velocity = monsterState.Velocity;
+
+                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance * 10))
+                            {
+                                Logging.LogError("Monster {Guid} has bad location for client", monsterState.Guid);
+                            }
                         }
 
                         monsterState.UpdateMarkerPosition();
