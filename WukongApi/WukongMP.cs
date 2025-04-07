@@ -581,17 +581,17 @@ namespace WukongApi
                 return;
             }
 
-            var targetPlayerState = Photon.GetPlayerById(targetId);
-            if (targetPlayerState == null)
+            var targetCharacterState = Photon.GetCharacterById(targetId);
+            if (targetCharacterState == null)
             {
-                Logging.LogError("Player not found: {Id}", targetId);
+                Logging.LogError("Character not found: {Id}", targetId);
                 return;
             }
 
-            Logging.LogDebug("Updating player target for player {PlayerNickname} to player {TargetNickname}", playerState.NickName, targetPlayerState.NickName);
+            Logging.LogDebug("Updating target for player {PlayerNickname} to character {TargetNickname}", playerState.NickName, targetCharacterState.NickName);
 
             var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(playerState.Pawn);
-            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPlayerState.Pawn, ETargetSourceType.SkillBase_NormalUse));
+            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetCharacterState.Pawn, ETargetSourceType.SkillBase_NormalUse));
         }
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)

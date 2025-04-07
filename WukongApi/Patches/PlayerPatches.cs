@@ -475,11 +475,11 @@ namespace WukongApi.Patches
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return;
 
-            var newTargetPlayerState = photon.GetPlayerByActor(NewTargetInfo?.LockTargetActor);
-            if (newTargetPlayerState != null)
+            var newTargetCharacterState = photon.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
+            if (newTargetCharacterState  != null)
             {
-                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetPlayerState.NickName);
-                photon.SendTarget(newTargetPlayerState.PhotonId);
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetCharacterState.NickName);
+                photon.SendTarget(newTargetCharacterState.PhotonId);
             }
         }
     }
