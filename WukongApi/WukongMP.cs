@@ -743,28 +743,29 @@ namespace WukongApi
         {
             Logging.LogDebug("Received trigger immobilize for character {Nickname}", immobilizedCharacterState.NickName);
 
-            if (immobilizedCharacterState.Pawn is not BGUCharacterCS character)
+            if (immobilizedCharacterState.Pawn is not BGUCharacterCS immobilizedCharacter)
             {
-                Logging.LogError("Failed to cast pawn to BGUCharacterCS");
+                Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
                 return;
             }
 
-            var castImmobilizeData = (BUC_CastImmobilizeData)character.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+            if (castingCharacterState.Pawn is not BGUCharacterCS castingCharacter)
+            {
+                Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
+                return;
+            }
+
+            var castImmobilizeData = (BUC_CastImmobilizeData)castingCharacter.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
             var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
             if (cachedImmobilizeConfigDesc == null)
             {
+                Logging.LogError("cachedImmobilizeConfigDesc is null");
                 return;
             }
 
-            if (castingCharacterState.Pawn == null)
-            {
-                Logging.LogError("Casting player pawn is null");
-                return;
-            }
-
-            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(character, castingCharacterState.Pawn, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
-            BUS_EventCollectionCS.Get(character)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(immobilizedCharacter, castingCharacter, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
+            BUS_EventCollectionCS.Get(immobilizedCharacter)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
         }
 
         private static void RelieveImmobilize(CharacterState immobilizedCharacterState)
