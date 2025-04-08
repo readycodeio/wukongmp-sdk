@@ -622,7 +622,7 @@ namespace WukongApi
             }
 
             Logging.LogDebug("Triggering fsm event: {Event}, for player {Player}", eventName, characterState.NickName);
-            events.Evt_TriggerFsmEvent.Invoke(new FGameplayTag(new FName(eventName)));
+            events.Evt_TriggerFsmEvent.Invoke(eventName.MakeGameplayTag());
         }
 
         private void ExitPhantomRush(int playerId)
