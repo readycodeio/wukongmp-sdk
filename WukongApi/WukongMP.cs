@@ -493,7 +493,7 @@ namespace WukongApi
             Photon.OnBuffAllRemoved += (playerId, a, b) => GameLoopPatch.QueueOnGameThread(() => OnBuffAllRemoved(playerId, a, b), "OnBuffAllRemoved");
             Photon.OnStateTriggerSet += (characterId, trigger, time, isForce) => GameLoopPatch.QueueOnGameThread(() => OnStateTriggerSet(characterId, trigger, time, isForce), "OnStateTriggerSet");
             Photon.OnSimpleStateSet += (characterId, state, isRemove) => GameLoopPatch.QueueOnGameThread(() => OnSimpleStateSet(characterId, state, isRemove), "OnSimpleStateSet");
-            Photon.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet");
+            Photon.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet", BGW_TickGroupMask.TG_BeforeStartPhsic);
         }
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
