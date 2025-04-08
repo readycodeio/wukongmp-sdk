@@ -172,9 +172,8 @@ namespace WukongApi.Patches
                             GameLoopPatch.QueueOnGameThread(() =>
                             {
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-
-                                // remove from collection
-                                photon.RemoveMonster(monster);
+                                // clean up monster
+                                WukongMP.Instance.CleanupMonster(monster);
                             }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                         }
                     }
@@ -254,7 +253,7 @@ namespace WukongApi.Patches
                             if (result <= 0)
                             {
                                 // remove dead monster from sync
-                                photon.RemoveMonster(monster);
+                                WukongMP.Instance.CleanupMonster(monster);
                             }
                         }
 
@@ -476,8 +475,8 @@ namespace WukongApi.Patches
                 var monsterState = photon.GetMonsterByCharacter(character);
                 if (monsterState != null)
                 {
-                    Logging.LogDebug("DestroyActor called for monster: {Name}", Actor.GetFullName());
-                    photon.RemoveMonster(monsterState);
+                    Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
+                    WukongMP.Instance.CleanupMonster(monsterState);
                 }
             }
         }

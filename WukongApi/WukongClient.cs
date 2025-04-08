@@ -219,12 +219,8 @@ namespace WukongApi
             return kvp.Value;
         }
 
-        public void RemoveMonster(MonsterState monster)
+        public void RemoveSyncedMonster(MonsterState monster)
         {
-            if (monster.MarkerActor != null)
-            {
-                BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
-            }
             SyncedMonsters.Remove(monster.Guid);
         }
 
@@ -360,7 +356,6 @@ namespace WukongApi
                     {
                         GameUtils.PlayBossDefeatedSound();
                     }
-                    Utils.TryRunOnGameThread(DestroyAllMonsters);
 
                     break;
                 case PvPEvent.TournamentEnd:
@@ -432,14 +427,6 @@ namespace WukongApi
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ev));
-            }
-        }
-
-        public void DestroyAllMonsters()
-        {
-            foreach (var monster in SyncedMonsters.Values.ToList())
-            {
-                monster.Pawn?.DestroyActor();
             }
         }
 
@@ -604,8 +591,7 @@ namespace WukongApi
 
             // clear state
             ConnectedPlayers.Clear();
-            Utils.TryRunOnGameThread(DestroyAllMonsters);
-            SyncedMonsters.Clear();
+            Utils.TryRunOnGameThread(WukongMP.Instance.DestroySyncedMonsters);
             _localPlayerState = null;
 
             Logging.LogInformation("Stopped client.");

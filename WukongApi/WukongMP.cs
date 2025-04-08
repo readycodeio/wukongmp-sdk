@@ -146,7 +146,7 @@ namespace WukongApi
             // this is triggered for every player controller, but we want to apply the logic once
             if (!Photon.ConnectedAndReady)
             {
-                DestroyAllMonsters();
+                DestroyAllTamers();
                 BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
                 Photon.StartClient();
@@ -309,6 +309,7 @@ namespace WukongApi
                     events?.Evt_RelievePhantomRush.Invoke();
                 }
             }
+            Utils.TryRunOnGameThread(DestroySyncedMonsters);
         }
 
         public void EnablePvP()
@@ -452,7 +453,7 @@ namespace WukongApi
             }
         }
 
-        private static void DestroyAllMonsters()
+        private static void DestroyAllTamers()
         {
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
@@ -1151,6 +1152,40 @@ namespace WukongApi
                 FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
                 SpawnEnemyMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Photon.LocalPlayerState.TeamId));
             }
+        }
+
+        public void DestroySyncedMonsters()
+        {
+            foreach (var monster in Photon.SyncedMonsters.Values.ToList())
+            {
+                DestroyMonster(monster);
+            }
+        }
+
+        public void DestroyMonster(MonsterState monsterState)
+        {
+            CleanupMonster(monsterState);
+            if (monsterState.Tamer == null)
+            {
+                return;
+            }
+            var monsterPawn = monsterState.Tamer.GetMonster();
+            if (monsterPawn != null)
+            {
+                var events = BUS_EventCollectionCS.Get(monsterPawn);
+                events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
+            }
+
+            BGU_UnrealWorldUtil.DestroyActor(monsterState.Tamer);
+        }
+
+        public void CleanupMonster(MonsterState monsterState)
+        {
+            if (monsterState.MarkerActor !=  null)
+            {
+                BGU_UnrealWorldUtil.DestroyActor(monsterState.MarkerActor);
+            }
+            Photon.RemoveSyncedMonster(monsterState);
         }
 
         private void OnJoinedRoomCallback()
