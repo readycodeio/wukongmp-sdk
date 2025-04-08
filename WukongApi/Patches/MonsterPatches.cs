@@ -251,7 +251,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnTriggerFsmEvent
     {
-        public static bool Prefix(FGameplayTag EventTag)
+        public static bool Prefix(FGameplayTag EventTag, BUS_FsmComp __instance)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
@@ -260,6 +260,18 @@ namespace WukongApi.Patches
             {
                 Logging.LogDebug("Trying change state to {State}", EventTag.ToString());
                 return false;
+            }
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
+                    photon.SendTriggerFsmState(character.PhotonId, EventTag);
+                }
             }
 
             return true;

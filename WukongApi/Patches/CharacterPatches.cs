@@ -481,4 +481,50 @@ namespace WukongApi.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitSimpleStateSet")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUnitSimpleStateSet
+    {
+        public static void Postfix(EBGUSimpleState SimpleState, bool IsRemove, BUS_UnitStateSystem __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    photon.SendUnitSimpleState(character.PhotonId, SimpleState, IsRemove);
+                    Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitStateTrigger")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUnitStateTrigger
+    {
+        public static void Postfix(EBUStateTrigger Trigger, float Time, bool NeedForceUpdate, BUS_UnitStateSystem __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    photon.SendUnitStateTrigger(character.PhotonId, Trigger, Time, NeedForceUpdate);
+                    Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
+                }
+            }
+        }
+    }
 }

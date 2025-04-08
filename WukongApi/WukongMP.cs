@@ -491,6 +491,9 @@ namespace WukongApi
             Photon.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
             Photon.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
             Photon.OnBuffAllRemoved += (playerId, a, b) => GameLoopPatch.QueueOnGameThread(() => OnBuffAllRemoved(playerId, a, b), "OnBuffAllRemoved");
+            Photon.OnStateTriggerSet += (characterId, trigger, time, isForce) => GameLoopPatch.QueueOnGameThread(() => OnStateTriggerSet(characterId, trigger, time, isForce), "OnStateTriggerSet");
+            Photon.OnSimpleStateSet += (characterId, state, isRemove) => GameLoopPatch.QueueOnGameThread(() => OnSimpleStateSet(characterId, state, isRemove), "OnSimpleStateSet");
+            Photon.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet");
         }
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
@@ -557,6 +560,69 @@ namespace WukongApi
 
             Logging.LogDebug("Removing all buffs from player {Nickname}, type: {Type}", playerState.NickName, removeTriggerType);
             events.Evt_BuffAllRemove.Invoke(removeTriggerType, withTriggerRemoveEffect);
+        }
+
+        private void OnStateTriggerSet(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
+        {
+            var characterState = Photon.GetCharacterById(characterId);
+            if (characterState == null)
+            {
+                Logging.LogError("Character not found: {Id}", characterId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Applying state trigger: {Trigger} for player {Player}", trigger, characterState.NickName);
+            events.Evt_UnitStateTrigger.Invoke(trigger, time, needForceUpdate);
+        }
+
+        private void OnSimpleStateSet(int characterId, EBGUSimpleState state, bool isForce)
+        {
+            var characterState = Photon.GetCharacterById(characterId);
+            if (characterState == null)
+            {
+                Logging.LogError("Character not found: {Id}", characterId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Setting simple state: {State}, with isRemove {Remove} for player {Player}", state, isForce, characterState.NickName);
+            events.Evt_UnitSetSimpleState.Invoke(state, isForce);
+        }
+        
+        private void OnFsmStateSet(int characterId, string eventName)
+        {
+            var characterState = Photon.GetCharacterById(characterId);
+            if (characterState == null)
+            {
+                Logging.LogError("Character not found: {Id}", characterId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Triggering fsm event: {Event}, for player {Player}", eventName, characterState.NickName);
+            events.Evt_TriggerFsmEvent.Invoke(new FGameplayTag(new FName(eventName)));
         }
 
         private void ExitPhantomRush(int playerId)

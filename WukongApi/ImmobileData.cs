@@ -18,7 +18,7 @@ namespace WukongApi
             outStream.WriteByte((byte)data.ImmobilizeActionType);
             outStream.Write(BitConverter.GetBytes(data.GreatSageTalentActiveBuff), 0, 1);
 
-            return 12;
+            return 10;
         }
 
         public static object Deserialize(StreamBuffer inStream, short length)

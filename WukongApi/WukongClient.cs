@@ -59,6 +59,9 @@ namespace WukongApi
         public event Action<int, int, float>? OnBuffAdded;
         public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
         public event Action<int, EBuffEffectTriggerType, bool>? OnBuffAllRemoved;
+        public event Action<int, EBUStateTrigger, float, bool>? OnStateTriggerSet;
+        public event Action<int, EBGUSimpleState, bool>? OnSimpleStateSet;
+        public event Action<int, string>? OnFsmStateSet;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -321,6 +324,21 @@ namespace WukongApi
                     var evData = (byte[])photonEvent.CustomData;
                     OnBuffAllRemoved?.Invoke(photonEvent.Sender, (EBuffEffectTriggerType)evData[0], evData[1] != 0);
                     break;
+                case 19:
+                    // state trigger
+                    var stateTriggerData = (StateTriggerData)photonEvent.CustomData;
+                    OnStateTriggerSet?.Invoke(stateTriggerData.CharacterId, stateTriggerData.Trigger, stateTriggerData.Time, stateTriggerData.NeedForceUpdate);
+                    break;
+                case 20:
+                    // simple state
+                    var simpleStateData = (SimpleStateData)photonEvent.CustomData;
+                    OnSimpleStateSet?.Invoke(simpleStateData.CharacterId, simpleStateData.SimpleState, simpleStateData.IsRemove);
+                    break;
+                case 21:
+                    // fsm state
+                    var fsmStateData = (FsmStateData)photonEvent.CustomData;
+                    OnFsmStateSet?.Invoke(fsmStateData.CharacterId, fsmStateData.FsmStateName);
+                    break;
             }
         }
 
@@ -528,6 +546,9 @@ namespace WukongApi
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
             PhotonPeer.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
+            PhotonPeer.RegisterType(typeof(StateTriggerData), 245, StateTriggerData.Serialize, StateTriggerData.Deserialize);
+            PhotonPeer.RegisterType(typeof(SimpleStateData), 244, SimpleStateData.Serialize, SimpleStateData.Deserialize);
+            PhotonPeer.RegisterType(typeof(FsmStateData), 243, FsmStateData.Serialize, FsmStateData.Deserialize);
 
             PhotonClient.AddCallbackTarget(this);
             PhotonClient.StateChanged += OnStateChange;
@@ -841,6 +862,27 @@ namespace WukongApi
             {
                 Receivers = ReceiverGroup.All
             }, SendOptions.SendReliable);
+        }
+
+        public void SendUnitStateTrigger(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
+        {
+            const byte eventCode = 19;
+            var evData = new StateTriggerData(characterId, trigger, time, needForceUpdate);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendUnitSimpleState(int characterId, EBGUSimpleState simpleState, bool isRemove)
+        {
+            const byte eventCode = 20;
+            var evData = new SimpleStateData(characterId, simpleState, isRemove);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendTriggerFsmState(int characterId, FGameplayTag eventTag)
+        {
+            const byte eventCode = 21;
+            var evData = new FsmStateData(characterId, eventTag.TagName.ToString());
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)
