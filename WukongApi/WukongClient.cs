@@ -171,6 +171,16 @@ namespace WukongApi
             return SyncedMonsters.FirstOrDefault(x => x.Value!.Tamer == owner).Value;
         }
 
+        public void SetMasterClient(string newMasterName)
+        {
+            Logging.LogDebug("Changing master client to {Name}.", newMasterName);
+            var newMasterPlayer = PhotonClient.CurrentRoom.Players.Values.Where(x => x.NickName == newMasterName).FirstOrDefault();
+            if (newMasterPlayer != null)
+            {
+                PhotonClient.CurrentRoom.SetMasterClient(newMasterPlayer);
+            }
+        }
+
         private void SetReadyState(bool isReady)
         {
             CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
@@ -1354,7 +1364,7 @@ namespace WukongApi
 
         public void OnMasterClientSwitched(Player newMasterClient)
         {
-            // do nothing
+            WukongChat.SendServerMessage($"Master client: {newMasterClient.NickName}");
         }
 
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new();
