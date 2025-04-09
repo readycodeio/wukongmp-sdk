@@ -132,10 +132,17 @@ namespace WukongApi
             var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
             monsterState.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
 
+            var events = BUS_EventCollectionCS.Get(monsterState.Tamer);
+            if (events == null)
+            {
+                Logging.LogError("events are null");
+                return;
+            }
+            events.Evt_ChangeMotionMatchingState.Invoke(EState_MM.Free);
+
             if (photon.IsMasterClient)
             {
                 // subscribe to events on master
-                var events = BUS_EventCollectionCS.Get(monsterState.Tamer);
                 events.Evt_PlayMontageCallback += (reason, montage, state) =>
                 {
                     var montagePath = montage.GetPathName();
@@ -145,15 +152,6 @@ namespace WukongApi
             }
             else
             {
-                // disable AI on clients
-                var events = BUS_EventCollectionCS.Get(monster);
-
-                if (events == null)
-                {
-                    Logging.LogError("events are null");
-                    return;
-                }
-
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);
                 Logging.LogDebug("Tamer actor disabled.");
