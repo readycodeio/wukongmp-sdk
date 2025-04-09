@@ -46,10 +46,6 @@ namespace WukongApi
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
-        public const string JsonCompactSerializationRegex = @"[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_\.+\/=]*";
-
-        public const string ServerHost = "68.154.30.5";
-        public const int ServerPort = 7697;
         
         public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
 

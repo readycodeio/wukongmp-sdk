@@ -8,13 +8,13 @@ public class CmdLineParams
     private static CmdLineParams? _instance;
 
     public static CmdLineParams Instance => _instance ??= new CmdLineParams();
-    public bool ShouldEnableMultiplayer => AccessToken is not null;
+    public bool ShouldEnableMultiplayer => ServerIp is not null && ServerPort is not null;
 
     public GameMode? MatchmakingMode { get; }
     public string? ModFolderOverride { get; }
-    public string? RoomName { get; private set; }
     public int? PlayersPerTeam { get; private set; }
-    public string? AccessToken { get; }
+    public string? ServerIp { get; }
+    public int? ServerPort { get; }
 
     private CmdLineParams()
     {
@@ -22,15 +22,17 @@ public class CmdLineParams
 
         Logging.LogDebug("Command line: {Args}", cmd);
 
-        var tokenMatch = Regex.Match(cmd, $"""-access_token "?({Constants.JsonCompactSerializationRegex})"?""");
+        var serverMatch = Regex.Match(cmd, @"-serverIp ""?([0-9\.]+)""? -serverPort ""?(\d+)""?");
 
-        if (tokenMatch.Success)
+        if (serverMatch.Success)
         {
-            AccessToken = tokenMatch.Groups[1].Value;
+            ServerIp = serverMatch.Groups[1].Value;
+            ServerPort = int.Parse(serverMatch.Groups[2].Value);
+            Logging.LogDebug("Server IP: {Ip}, Port: {Port}", ServerIp, ServerPort);
         }
         else
         {
-            Logging.LogError("Access token not provided. Launch the game from the ReadyM Launcher.");
+            Logging.LogError("Connection info not provided, launch the game from the ReadyM Launcher.");
             return;
         }
 
@@ -45,29 +47,17 @@ public class CmdLineParams
         }
 
         // this can be either a private match (-room_name "name") or a quick match (-quick_match 1/3/5)
-
-        var roomNameMatch = Regex.Match(cmd, """-room_name "([a-zA-Z0-9_\- ]+)"|-room_name ([a-zA-Z0-9_\-]+)""");
-        if (roomNameMatch.Success)
+        var quickMatchMatch = Regex.Match(cmd, @"-quick_match (\d)");
+        if (quickMatchMatch.Success)
         {
-            // private match
-            RoomName = roomNameMatch.Groups[1].Success ? roomNameMatch.Groups[1].Value : roomNameMatch.Groups[2].Value;
-            MatchmakingMode = GameMode.Private;
+            // quick match
+            var rounds = int.Parse(quickMatchMatch.Groups[1].Value);
+            PlayersPerTeam = rounds;
+            MatchmakingMode = GameMode.XvX;
         }
         else
         {
-            var quickMatchMatch = Regex.Match(cmd, @"-quick_match (\d)");
-            if (quickMatchMatch.Success)
-            {
-                // quick match
-                var rounds = int.Parse(quickMatchMatch.Groups[1].Value);
-                MatchmakingMode = GameMode.XvX;
-                PlayersPerTeam = rounds;
-            }
-            else
-            {
-                Logging.LogError("Room name not provided. Launch the game from the ReadyM Launcher.");
-                return;
-            }
+            MatchmakingMode = GameMode.Private;
         }
     }
 }

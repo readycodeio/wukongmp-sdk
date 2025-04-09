@@ -24,7 +24,7 @@ namespace WukongApi
 {
     public sealed class WukongClient
     {
-        public readonly RelayClient RelayClient = new(Constants.ServerHost, Constants.ServerPort, (level, s, args) => Logging.Log(level, s, args.AsSpan()));
+        public readonly RelayClient RelayClient;
 
         private const char MonsterHashtableKeySeparator = ';';
 
@@ -96,6 +96,7 @@ namespace WukongApi
             WukongChat = new WukongChatter(this);
             CurrentRoomState = new RoomState(this);
             LobbyManager = new LobbyManager(this);
+            RelayClient = new(CmdLineParams.Instance.ServerIp!, CmdLineParams.Instance.ServerPort!.Value, (level, s, args) => Logging.Log(level, s, args.AsSpan()));
 
             _joinedRoomCallback = onJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
@@ -595,8 +596,7 @@ namespace WukongApi
             {
                 case GameMode.Private:
                 {
-                    var roomName = CmdLineParams.Instance.RoomName!; // not null if game mode is private
-                    Logging.LogInformation("Joining or creating private room {RoomName}", roomName);
+                    Logging.LogInformation("Joining or creating private room");
 
                     if (!IsMasterClient)
                     {
@@ -609,7 +609,6 @@ namespace WukongApi
                     CurrentRoomState.GameMode = GameMode.Private;
                     CurrentRoomState.BotsEnabled = botsEnabled;
 
-                    RelayClient.RoomState.RoomId = roomName;
                     RelayClient.RoomState.IsOpen = true;
                     RelayClient.RoomState.IsVisible = false;
                     RelayClient.RoomState.MaxPlayers = 10;
@@ -634,7 +633,6 @@ namespace WukongApi
                     CurrentRoomState.GameMode = GameMode.XvX;
                     CurrentRoomState.BotsEnabled = botsEnabled;
 
-                    RelayClient.RoomState.RoomId = Guid.NewGuid().ToString();
                     RelayClient.RoomState.IsOpen = true;
                     RelayClient.RoomState.IsVisible = true;
                     RelayClient.RoomState.MaxPlayers = 2 * playersPerTeam;
@@ -990,8 +988,7 @@ namespace WukongApi
         {
             SetCreatedRoomProperties();
 
-            var roomName = RelayClient.RoomState.RoomId;
-            Logging.LogInformation("Joined room {Name}", roomName);
+            Logging.LogInformation("Joined room");
 
             var teamId = GetTeamIdForPlayer();
             var controlledPawn = GameUtils.GetControlledPawn();

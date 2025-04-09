@@ -19,6 +19,12 @@ namespace WukongMPMod
 
         public void Init()
         {
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+            {
+                Logging.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
+                return;
+            }
+            
             // register global unhandled exception handlers
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
             TaskScheduler.UnobservedTaskException += UnobservedTaskExceptionHandler;
@@ -48,12 +54,6 @@ namespace WukongMPMod
             }
 
             _wukongMp.Init();
-
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
-            {
-                Logging.LogInformation("Multiplayer is disabled");
-                return;
-            }
 
             _wukongMp.Patch();
 #if DEBUG
@@ -133,6 +133,12 @@ namespace WukongMPMod
         public void DeInit()
         {
             Logging.LogInformation("DeInit");
+            
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+            {
+                return;
+            }
+            
             _wukongMp.Unpatch();
             _wukongMp.DeInit();
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
