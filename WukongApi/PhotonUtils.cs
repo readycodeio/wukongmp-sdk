@@ -138,7 +138,13 @@ namespace WukongApi
                 Logging.LogError("events are null");
                 return;
             }
-            events.Evt_ChangeMotionMatchingState.Invoke(EState_MM.Free);
+            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(monsterState.Pawn);
+            if (mmData == null)
+            {
+                Logging.LogError("motion matching data is null");
+                return;
+            }
+            events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
 
             if (photon.IsMasterClient)
             {
