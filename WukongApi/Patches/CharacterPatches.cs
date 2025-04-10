@@ -478,6 +478,11 @@ namespace WukongApi.Patches
                     Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
                     WukongMP.Instance.CleanupMonster(monsterState);
                 }
+                var tamer = character.GetTamerOwner();
+                if (tamer != null)
+                {
+                    BGU_UnrealWorldUtil.DestroyActor(tamer);
+                }
             }
         }
     }
