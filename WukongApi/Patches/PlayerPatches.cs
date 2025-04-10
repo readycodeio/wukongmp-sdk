@@ -558,4 +558,18 @@ namespace WukongApi.Patches
                 __result.DefaultCamID = 101600;
         }
     }
+    
+    [HarmonyPatch(typeof(BPC_PlayerRoleData), "GetNewGamePlusCount")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchGetNewGamePlusCount
+    {
+        public static bool Prefix(ref int __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            __result = 1;
+            return false;
+        }
+    }
 }
