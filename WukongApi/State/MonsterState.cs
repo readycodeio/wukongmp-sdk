@@ -40,7 +40,7 @@ namespace WukongApi.State
 
         public bool IsSynced { get; set; }
         public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
-
+        public EBGUMoveAIType MoveAIType { get; set; }
 
         public MonsterState(int id, string guid, BUTamerActor tamer, string unitName)
         {

@@ -278,4 +278,51 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_MovementSystem), "TickForMonster")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchMovementTickForMonstere
+    {
+        public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem __instance, BUC_MovementData ___MovementData)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            if (__instance == null)
+            {
+                Logging.LogError("__instance is null in BUC_ABPCharacterData.Update_GameThread");
+                return;
+            }
+
+            var owner = __instance.GetOwner();
+            if (owner is not BGUCharacterCS character)
+                return;
+
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogError("Owner is null or destroyed");
+                return;
+            }
+
+            var photon = WukongMP.Instance.Photon;
+
+            var monsterState = photon.GetMonsterByCharacter(character);
+            if (monsterState is { IsSynced: true })
+            {
+                if (photon.IsMasterClient)
+                {
+                    if (monsterState.MoveAIType != ___MovementData.MoveAIType)
+                    {
+                        monsterState.MoveAIType = ___MovementData.MoveAIType;
+                        Logging.LogWarning("Move AI type changed to {State} for {Actor}", monsterState.MoveAIType, owner.GetName());
+                        photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAIType), monsterState.MoveAIType);
+                    }
+                }
+                else
+                {
+                    var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+                    events.Evt_SwitchMoveAIType.Invoke(monsterState.MoveAIType);
+                }
+            }
+        }
+    }
 }
