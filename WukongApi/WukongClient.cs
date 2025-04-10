@@ -1383,7 +1383,7 @@ namespace WukongApi
 
         public void OnMasterClientSwitched(Player newMasterClient)
         {
-            if (IsMasterClient)
+            if (newMasterClient.ActorNumber == LocalPlayerState.PhotonId)
             {
                 Logging.LogDebug("Changing master client to {Name}.", newMasterClient.NickName);
             }
