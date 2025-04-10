@@ -270,7 +270,7 @@ namespace WukongApi.Patches
                 if (character != null)
                 {
                     Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
-                    photon.SendTriggerFsmState(character.PhotonId, EventTag);
+                    //photon.SendTriggerFsmState(character.PhotonId, EventTag);
                 }
             }
 
