@@ -175,7 +175,6 @@ namespace WukongApi
         {
             if (IsMasterClient)
             {
-                Logging.LogDebug("Changing master client to {Name}.", newMasterName);
                 var newMasterPlayer = PhotonClient.CurrentRoom.Players.Values.Where(x => x.NickName == newMasterName).FirstOrDefault();
                 if (newMasterPlayer != null)
                 {
@@ -1371,7 +1370,10 @@ namespace WukongApi
 
         public void OnMasterClientSwitched(Player newMasterClient)
         {
-            // empty
+            if (IsMasterClient)
+            {
+                Logging.LogDebug("Changing master client to {Name}.", newMasterClient.NickName);
+            }
         }
 
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new();
