@@ -447,6 +447,27 @@ namespace WukongApi.Patches
                             __instance.MovementComp.Velocity = monsterState.Velocity;
 
                             var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+
+                            if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                            {
+                                __instance.Velocity = FVector.ZeroVector;
+                                monsterState.Velocity = FVector.ZeroVector;
+
+                                // without these 5 lines the character will not jump
+                                __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
+                                __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
+                                __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
+
+                                events.Evt_StopCurrentMove.Invoke();
+                                events.Evt_MovementForceStop.Invoke();
+                            }
+
+                            if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                            {
+                                __instance.MoveAcceleration = FVector.ZeroVector;
+                                monsterState.MoveAcceleration = FVector.ZeroVector;
+                            }
+
                             if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                             {
                                 events.Evt_InterpolationMove.Invoke(monsterState.Location, monsterState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
