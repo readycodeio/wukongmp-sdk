@@ -524,6 +524,9 @@ namespace WukongApi.Patches
                 var character = photon.GetMonsterByActor(owner);
                 if (character != null)
                 {
+                    if (SimpleState == EBGUSimpleState.Immobilizing)
+                        return;
+
                     photon.SendUnitSimpleState(character.PhotonId, SimpleState, IsRemove);
                     Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
                 }
