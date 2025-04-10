@@ -1148,7 +1148,7 @@ namespace WukongApi
                 {
                     // wait for i * 200ms
                     await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                    GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, teamId); }, "SpawnEnemyMaster");
+                    GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
                 });
             }
         }
