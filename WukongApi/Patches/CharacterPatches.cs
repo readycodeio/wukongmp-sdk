@@ -172,6 +172,7 @@ namespace WukongApi.Patches
                             GameLoopPatch.QueueOnGameThread(() =>
                             {
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
+                                BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
                             }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                         }
                     }
@@ -255,7 +256,7 @@ namespace WukongApi.Patches
                                 GameLoopPatch.QueueOnGameThread(() =>
                                 {
                                     events.Evt_UnitDead.Invoke(monster.Pawn, EDeadReason.SkillDamage);
-                                    // clean up monster
+                                    BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
                                 }, "Evt_UnitDead");
                             }
                         }
