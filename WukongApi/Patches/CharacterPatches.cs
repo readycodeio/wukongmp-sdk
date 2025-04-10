@@ -258,8 +258,7 @@ namespace WukongApi.Patches
                                 {
                                     events.Evt_UnitDead.Invoke(monster.Pawn, EDeadReason.SkillDamage);
                                     // clean up monster
-                                    WukongMP.Instance.CleanupMonster(monster);
-                                }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
+                                }, "Evt_UnitDead");
                             }
                         }
 
