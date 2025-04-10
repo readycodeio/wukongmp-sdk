@@ -1261,7 +1261,7 @@ namespace WukongApi
             if (monsterPawn != null)
             {
                 var events = BUS_EventCollectionCS.Get(monsterPawn);
-                events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
+                events.Evt_UnitDead.Invoke(null, EDeadReason.SkillDamage);
             }
         }
 
