@@ -172,8 +172,6 @@ namespace WukongApi.Patches
                             GameLoopPatch.QueueOnGameThread(() =>
                             {
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-                                // clean up monster
-                                WukongMP.Instance.CleanupMonster(monster);
                             }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                         }
                     }

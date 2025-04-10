@@ -58,6 +58,10 @@ namespace WukongApi
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GetWorld());
             foreach (var actor in allActorsOfClass)
             {
+                if (actor != null && actor.GetMonster() != null)
+                {
+                    BGU_UnrealWorldUtil.DestroyActor(actor.GetMonster());
+                }
                 BGU_UnrealWorldUtil.DestroyActor(actor);
             }
         }
