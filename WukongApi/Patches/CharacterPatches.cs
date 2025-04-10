@@ -253,7 +253,13 @@ namespace WukongApi.Patches
                             if (result <= 0)
                             {
                                 // remove dead monster from sync
-                                WukongMP.Instance.CleanupMonster(monster);
+                                var events = BUS_EventCollectionCS.Get(monster.Pawn);
+                                GameLoopPatch.QueueOnGameThread(() =>
+                                {
+                                    events.Evt_UnitDead.Invoke(monster.Pawn, EDeadReason.SkillDamage);
+                                    // clean up monster
+                                    WukongMP.Instance.CleanupMonster(monster);
+                                }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                             }
                         }
 
