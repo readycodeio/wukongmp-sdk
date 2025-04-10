@@ -62,6 +62,7 @@ namespace WukongApi
         public event Action<int, EBUStateTrigger, float, bool>? OnStateTriggerSet;
         public event Action<int, EBGUSimpleState, bool>? OnSimpleStateSet;
         public event Action<int, string>? OnFsmStateSet;
+        public event Action<int, EState_MM>? OnMotionMatchingChanged;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -354,6 +355,11 @@ namespace WukongApi
                     // fsm state
                     var fsmStateData = (FsmStateData)photonEvent.CustomData;
                     OnFsmStateSet?.Invoke(fsmStateData.CharacterId, fsmStateData.FsmStateName);
+                    break;
+                case 22:
+                    // motion matching
+                    var motionaMatchingData = (int[])photonEvent.CustomData;
+                    OnMotionMatchingChanged?.Invoke(motionaMatchingData[0], (EState_MM)motionaMatchingData[1]);
                     break;
             }
         }
@@ -898,6 +904,13 @@ namespace WukongApi
         {
             const byte eventCode = 21;
             var evData = new FsmStateData(characterId, eventTag.TagName.ToString());
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendMotionMatchingState(int characterId, EState_MM MMState)
+        {
+            const byte eventCode = 22;
+            int[] evData = [characterId, (int)MMState];
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 

@@ -553,4 +553,27 @@ namespace WukongApi.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnChangeMotionMatchingState")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnChangeMotionMatchingState
+    {
+        public static void Postfix(EState_MM MMState, BUS_ABPHelperComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    photon.SendMotionMatchingState(character.PhotonId, MMState);
+                    Logging.LogDebug("Motion matching state changed to {State} for {Actor}", MMState, owner.GetName());
+                }
+            }
+        }
+    }
 }

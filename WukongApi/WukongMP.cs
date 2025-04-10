@@ -494,6 +494,7 @@ namespace WukongApi
             Photon.OnStateTriggerSet += (characterId, trigger, time, isForce) => GameLoopPatch.QueueOnGameThread(() => OnStateTriggerSet(characterId, trigger, time, isForce), "OnStateTriggerSet");
             Photon.OnSimpleStateSet += (characterId, state, isRemove) => GameLoopPatch.QueueOnGameThread(() => OnSimpleStateSet(characterId, state, isRemove), "OnSimpleStateSet");
             Photon.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet", BGW_TickGroupMask.TG_BeforeStartPhsic);
+            Photon.OnMotionMatchingChanged += (characterId, mm) => GameLoopPatch.QueueOnGameThread(() => OnMotionMatchingChanged(characterId, mm), "OnMotionMatchingChanged");
         }
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
@@ -623,6 +624,27 @@ namespace WukongApi
 
             Logging.LogDebug("Triggering fsm event: {Event}, for player {Player}", eventName, characterState.NickName);
             events.Evt_TriggerFsmEvent.Invoke(eventName.MakeGameplayTag());
+        }
+
+        private void OnMotionMatchingChanged(int characterId, EState_MM motionMatchingState)
+        {
+            var characterState = Photon.GetCharacterById(characterId);
+            if (characterState == null)
+            {
+                Logging.LogError("Character not found: {Id}", characterId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                return;
+            }
+
+            Logging.LogDebug("Changing motion matching to: {State}, for player {Player}", motionMatchingState, characterState.NickName);
+            events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
         }
 
         private void ExitPhantomRush(int playerId)
