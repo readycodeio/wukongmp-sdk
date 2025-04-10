@@ -53,6 +53,15 @@ namespace WukongApi
             }
         }
 
+        public static void DestroyAllTamers()
+        {
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GetWorld());
+            foreach (var actor in allActorsOfClass)
+            {
+                BGU_UnrealWorldUtil.DestroyActor(actor);
+            }
+        }
+
         public static BGP_PlayerControllerB1 GetPlayerController()
         {
             return (BGP_PlayerControllerB1)UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld());

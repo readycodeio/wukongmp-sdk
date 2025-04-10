@@ -427,6 +427,7 @@ namespace WukongApi
                     {
                         Utils.TryRunOnGameThread(() =>
                         {
+                            GameUtils.DestroyAllTamers();
                             var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn!);
 
                             if (events == null)

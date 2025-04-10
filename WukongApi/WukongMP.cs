@@ -146,7 +146,7 @@ namespace WukongApi
             // this is triggered for every player controller, but we want to apply the logic once
             if (!Photon.ConnectedAndReady)
             {
-                DestroyAllTamers();
+                GameUtils.DestroyAllTamers();
                 BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
                 Photon.StartClient();
@@ -463,15 +463,6 @@ namespace WukongApi
                 events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
                 events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
                 events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
-            }
-        }
-
-        private static void DestroyAllTamers()
-        {
-            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            foreach (var actor in allActorsOfClass)
-            {
-                BGU_UnrealWorldUtil.DestroyActor(actor);
             }
         }
 
