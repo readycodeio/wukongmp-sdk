@@ -1264,8 +1264,7 @@ namespace WukongApi
             var monsterPawn = monsterState.Tamer.GetMonster();
             if (monsterPawn != null)
             {
-                var events = BUS_EventCollectionCS.Get(monsterPawn);
-                events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
+                BGU_UnrealWorldUtil.DestroyActor(monsterState.Pawn);
             }
             BGU_UnrealWorldUtil.DestroyActor(monsterState.Tamer);
         }
