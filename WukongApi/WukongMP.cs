@@ -238,6 +238,19 @@ namespace WukongApi
             _lobbyStatusWidget.SetVisibility(true);
         }
 
+        public void SetBotsTarget()
+        {
+            foreach (var monsterState in Photon.SyncedMonsters.Values)
+            {
+                var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+                BGUFuncLibAICS.BGUAITriggerFSMEvent(monsterState.Pawn, EBGUFSMEventName.FSM_EVENT_LIFE_HASTARGET);
+                events.Evt_TriggerFsmEvent.Invoke(BGW_FlowUtils.NormalAIFsmEventTag.AIWakeupFinishEngage);
+                events.Evt_TriggerFsmEvent.Invoke(BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeAwake);
+                //BGUFuncLibAICS.SearchTargetSP(monsterState.Pawn);
+                BGUFuncLibAICS.BGUAITriggerFSMEvent(monsterState.Pawn, EBGUFSMEventName.FSM_EVENT_BATTLE_ATTACK);
+            }
+        }
+
         public void DumpPlayerState()
         {
             // dump player state to console for me
@@ -1261,8 +1274,9 @@ namespace WukongApi
             if (monsterPawn != null)
             {
                 var events = BUS_EventCollectionCS.Get(monsterPawn);
-                events.Evt_UnitDead.Invoke(null, EDeadReason.SkillDamage);
+                events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
             }
+            BGU_UnrealWorldUtil.DestroyActor(monsterState.Tamer);
         }
 
         public void CleanupMonster(MonsterState monsterState)
