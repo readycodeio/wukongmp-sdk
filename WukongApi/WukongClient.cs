@@ -173,11 +173,18 @@ namespace WukongApi
 
         public void SetMasterClient(string newMasterName)
         {
-            Logging.LogDebug("Changing master client to {Name}.", newMasterName);
-            var newMasterPlayer = PhotonClient.CurrentRoom.Players.Values.Where(x => x.NickName == newMasterName).FirstOrDefault();
-            if (newMasterPlayer != null)
+            if (IsMasterClient)
             {
-                PhotonClient.CurrentRoom.SetMasterClient(newMasterPlayer);
+                Logging.LogDebug("Changing master client to {Name}.", newMasterName);
+                var newMasterPlayer = PhotonClient.CurrentRoom.Players.Values.Where(x => x.NickName == newMasterName).FirstOrDefault();
+                if (newMasterPlayer != null)
+                {
+                    var result = PhotonClient.CurrentRoom.SetMasterClient(newMasterPlayer);
+                    if (result)
+                    {
+                        WukongChat.SendServerMessage($"Master client: {newMasterName}");
+                    }
+                }
             }
         }
 
@@ -1364,7 +1371,7 @@ namespace WukongApi
 
         public void OnMasterClientSwitched(Player newMasterClient)
         {
-            WukongChat.SendServerMessage($"Master client: {newMasterClient.NickName}");
+            // empty
         }
 
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new();
