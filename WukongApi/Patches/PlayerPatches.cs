@@ -494,6 +494,7 @@ namespace WukongApi.Patches
                 return true;
 
             InControlData.ArmLength = Constants.CameraArmLength;
+            InControlData.ArmTargetOffset = FVector.ZeroVector;
             return true;
         }
     }
