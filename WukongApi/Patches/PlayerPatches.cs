@@ -39,45 +39,45 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.IsStandRotate != __instance.IsStandRotate)
                 {
-                    photon.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
-                    photon.CachePlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
+                    client.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
+                    client.CachePlayerProperty(nameof(PlayerState.IsStandRotate), client.LocalPlayerState.IsStandRotate);
                 }
 
                 if (localState.IsAttacking != __instance.IsAttacking)
                 {
-                    photon.LocalPlayerState.IsAttacking = __instance.IsAttacking;
-                    photon.CachePlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
+                    client.LocalPlayerState.IsAttacking = __instance.IsAttacking;
+                    client.CachePlayerProperty(nameof(PlayerState.IsAttacking), client.LocalPlayerState.IsAttacking);
                 }
 
                 if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
                 {
-                    photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
-                    photon.CachePlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
+                    client.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
+                    client.CachePlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), client.LocalPlayerState.TurnInplaceTargetRotation);
                 }
 
                 if (!localState.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
                 {
-                    photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
-                    photon.CachePlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
+                    client.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
+                    client.CachePlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), client.LocalPlayerState.TurnInplaceRemainAngle);
                 }
 
                 if (localState.OrientRotationToMovement != __instance.bOrientRotationToMovement)
                 {
-                    photon.LocalPlayerState.OrientRotationToMovement = __instance.bOrientRotationToMovement;
-                    photon.CachePlayerProperty(nameof(PlayerState.OrientRotationToMovement), photon.LocalPlayerState.OrientRotationToMovement);
+                    client.LocalPlayerState.OrientRotationToMovement = __instance.bOrientRotationToMovement;
+                    client.CachePlayerProperty(nameof(PlayerState.OrientRotationToMovement), client.LocalPlayerState.OrientRotationToMovement);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -121,21 +121,21 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.ShouldWaitRotateFinished != __instance.bShouldWaitRotateFinished)
                 {
-                    photon.LocalPlayerState.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
-                    photon.CachePlayerProperty(nameof(PlayerState.ShouldWaitRotateFinished), photon.LocalPlayerState.ShouldWaitRotateFinished);
+                    client.LocalPlayerState.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
+                    client.CachePlayerProperty(nameof(PlayerState.ShouldWaitRotateFinished), client.LocalPlayerState.ShouldWaitRotateFinished);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -222,27 +222,27 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.MoveSpeedLevel != __instance.MoveSpeedLevel)
                 {
-                    photon.LocalPlayerState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                    photon.CachePlayerProperty(nameof(PlayerState.MoveSpeedLevel), photon.LocalPlayerState.MoveSpeedLevel);
+                    client.LocalPlayerState.MoveSpeedLevel = __instance.MoveSpeedLevel;
+                    client.CachePlayerProperty(nameof(PlayerState.MoveSpeedLevel), client.LocalPlayerState.MoveSpeedLevel);
                 }
 
                 if (localState.MoveSpeedState != __instance.MoveSpeedState)
                 {
-                    photon.LocalPlayerState.MoveSpeedState = __instance.MoveSpeedState;
-                    photon.CachePlayerProperty(nameof(PlayerState.MoveSpeedState), photon.LocalPlayerState.MoveSpeedState);
+                    client.LocalPlayerState.MoveSpeedState = __instance.MoveSpeedState;
+                    client.CachePlayerProperty(nameof(PlayerState.MoveSpeedState), client.LocalPlayerState.MoveSpeedState);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState != null)
                 {
@@ -251,24 +251,24 @@ namespace WukongApi.Patches
                 }
                 else
                 {
-                    var monsterState = photon.GetMonsterByCharacter(character);
+                    var monsterState = client.GetMonsterByCharacter(character);
 
                     if (monsterState == null)
                         return; // unsynced entity
 
-                    if (photon.IsMasterClient)
+                    if (client.IsMasterClient)
                     {
                         // send monster speed data
                         if (monsterState.MoveSpeedLevel != __instance.MoveSpeedLevel)
                         {
                             monsterState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                            photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
+                            client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
                         }
 
                         if (monsterState.MoveSpeedState != __instance.MoveSpeedState)
                         {
                             monsterState.MoveSpeedState = __instance.MoveSpeedState;
-                            photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
+                            client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
                         }
                     }
                     else
@@ -291,7 +291,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -300,12 +300,12 @@ namespace WukongApi.Patches
                 return false;
             }
 
-            if (owner == photon.LocalPlayerState.Pawn)
+            if (owner == client.LocalPlayerState.Pawn)
             {
-                photon.CacheEquipmentChange(EquipPosition, EquipID);
+                client.CacheEquipmentChange(EquipPosition, EquipID);
             }
 
-            return owner == photon.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison
+            return owner == client.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison
         }
     }
 

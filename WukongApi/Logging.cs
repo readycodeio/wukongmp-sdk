@@ -13,8 +13,6 @@ namespace WukongApi
 
         private static readonly Regex PlaceholderRegex = new(@"\{([_\w]+)\}", RegexOptions.Compiled);
 
-        private static Action<string> MakePhotonLogHandler(LogLevel level) => e => { Log(level, "[Photon] {Log}", e); };
-
         public static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object?> values)
         {
             var propertyNames = ExtractPropertyNames(messageTemplate);

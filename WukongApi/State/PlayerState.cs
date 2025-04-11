@@ -70,7 +70,7 @@ namespace WukongApi.State
             }
 
             Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
-            PhotonUtils.RegisterNewPlayerTeam(pawn, teamId);
+            ClientUtils.RegisterNewPlayerTeam(pawn, teamId);
         }
 
         public override string ToString()

@@ -18,12 +18,12 @@ namespace WukongApi.Patches
 
             if (IsThreadTick)
             {
-                var photon = WukongMP.Instance.Client;
-                photon.SetCachedPlayerProperties();
+                var client = WukongMP.Instance.Client;
+                client.SetCachedPlayerProperties();
 
-                if (photon.IsMasterClient)
+                if (client.IsMasterClient)
                 {
-                    photon.SendUpdatedMonsterProperties();
+                    client.SendUpdatedMonsterProperties();
                 }
             }
         }

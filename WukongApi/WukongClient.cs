@@ -1105,7 +1105,7 @@ namespace WukongApi
             var playerNickname = (string)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.NickName), CmdLineParams.Instance.Nickname);
             LocalPlayerState.NickName = playerNickname;
 
-            Utils.TryRunOnGameThread(PhotonUtils.DiscoverMonsters);
+            Utils.TryRunOnGameThread(ClientUtils.DiscoverMonsters);
 
             SubscribeToPlayerEvents();
             _joinedRoomCallback.Invoke();

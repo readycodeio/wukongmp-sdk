@@ -101,7 +101,7 @@ namespace WukongApi.Patches
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
-                PhotonUtils.SyncMonsterAndNotify(client, tamer);
+                ClientUtils.SyncMonsterAndNotify(client, tamer);
             }
             catch (Exception e)
             {

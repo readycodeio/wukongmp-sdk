@@ -342,7 +342,7 @@ namespace WukongApi
             {
                 foreach (var team in Constants.AvailableTeamIds)
                 {
-                    PhotonUtils.RegisterTeamHostility(myTeam, team);
+                    ClientUtils.RegisterTeamHostility(myTeam, team);
                 }
             }, "Register team hostility");
         }
@@ -365,7 +365,7 @@ namespace WukongApi
             {
                 foreach (var team in Constants.AvailableTeamIds)
                 {
-                    PhotonUtils.UnregisterTeamHostility(myTeam, team);
+                    ClientUtils.UnregisterTeamHostility(myTeam, team);
                 }
             }, "Register team hostility");
         }
@@ -692,7 +692,7 @@ namespace WukongApi
                 return;
             }
 
-            PhotonUtils.RegisterNewPlayerTeam(player, teamId);
+            ClientUtils.RegisterNewPlayerTeam(player, teamId);
 
             if (playerState.MarkerActor != null)
             {
