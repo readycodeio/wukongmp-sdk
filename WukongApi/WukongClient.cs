@@ -38,7 +38,7 @@ namespace WukongApi
         private readonly Action<int> _playerJoinedCallback;
         public event Action<int, MontageCallbackData>? OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData>? OnMonsterMontageCallback;
-        public event Action<int, string, string, int, float, float, float>? OnUnitSpawn;
+        public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
         public event Action<string>? OnMonsterWakeUp;
         public event Action<int, EquipmentState>? OnEquipmentChange;
         public event Action<string, bool, int>? OnReadinessChange;
@@ -57,6 +57,10 @@ namespace WukongApi
         public event Action<int, int, float>? OnBuffAdded;
         public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
         public event Action<int, EBuffEffectTriggerType, bool>? OnBuffAllRemoved;
+        public event Action<int, EBUStateTrigger, float, bool>? OnStateTriggerSet;
+        public event Action<int, EBGUSimpleState, bool>? OnSimpleStateSet;
+        public event Action<int, string>? OnFsmStateSet;
+        public event Action<int, EState_MM>? OnMotionMatchingChanged;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -84,6 +88,9 @@ namespace WukongApi
 
         public IEnumerable<PlayerState> AllConnectedPlayers
             => ConnectedPlayers.Values.Append(LocalPlayerState);
+
+        public IEnumerable<PlayerState> SpectatingPlayers
+            => ConnectedPlayers.Values.Where(p => p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [LocalPlayerState] : []);
 
         public IEnumerable<PlayerState> AllPvPPlayers
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
@@ -124,7 +131,7 @@ namespace WukongApi
             ConnectedPlayers.Add(state.PhotonId, state);
         }
 
-        public PlayerState? GetByActor(AActor? actor)
+        public PlayerState? GetPlayerByActor(AActor? actor)
         {
             if (actor == null)
                 return null;
@@ -134,16 +141,57 @@ namespace WukongApi
                 : ConnectedPlayers.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
         }
 
-        public PlayerState? GetById(int playerId)
+        public MonsterState? GetMonsterByActor(AActor? actor)
+        {
+            if (actor == null)
+                return null;
+
+            return SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
+        }
+
+        public CharacterState? GetCharacterByActor(AActor? actor)
+        {
+            var characterState = GetPlayerByActor(actor);
+            return characterState == null ? GetMonsterByActor(actor) : characterState;
+        }
+
+        public PlayerState? GetPlayerById(int playerId)
         {
             return playerId == LocalPlayerState.PhotonId
                 ? LocalPlayerState
                 : ConnectedPlayers.GetValueOrDefault(playerId);
         }
 
+        public MonsterState? GetMonsterById(int monsterId)
+        {
+            return SyncedMonsters.Values.FirstOrDefault(x => x.PhotonId == monsterId);
+        }
+
+        public CharacterState? GetCharacterById(int id)
+        {
+            var player = GetPlayerById(id);
+            return player == null ? GetMonsterById(id) : player;
+        }
+
         public MonsterState? GetByTamerActor(BUTamerActor owner)
         {
-            return SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn == owner).Value;
+            return SyncedMonsters.FirstOrDefault(x => x.Value!.Tamer == owner).Value;
+        }
+
+        public void SetMasterClient(string newMasterName)
+        {
+            if (IsMasterClient)
+            {
+                var newMasterPlayer = PhotonClient.CurrentRoom.Players.Values.Where(x => x.NickName == newMasterName).FirstOrDefault();
+                if (newMasterPlayer != null)
+                {
+                    var result = PhotonClient.CurrentRoom.SetMasterClient(newMasterPlayer);
+                    if (result)
+                    {
+                        WukongChat.SendServerMessage($"Master client: {newMasterName}");
+                    }
+                }
+            }
         }
 
         private void SetReadyState(bool isReady)
@@ -156,14 +204,27 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.IsSpectator), isSpectator);
         }
 
-        public void SwitchReadyState()
+        public void SwitchReadyStateMulti()
         {
-            if (ConnectedAndReady && CurrentRoomState is { InPvP: false, InMatchmaking: false })
+            if (ConnectedAndReady && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count > 0)
             {
-                var isReady = LocalPlayerState.IsReadyForPvP;
-                SetReadyState(!isReady);
-                WukongMP.Instance.SwitchReadyState(!isReady);
+                SwitchReadyState();
             }
+        }
+
+        public void SwitchReadyStateSingle()
+        {
+            if (PhotonClient.InRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count == 0)
+            {
+                SwitchReadyState();
+            }
+        }
+
+        private void SwitchReadyState()
+        {
+            var isReady = LocalPlayerState.IsReadyForPvP;
+            SetReadyState(!isReady);
+            WukongMP.Instance.SwitchReadyState(!isReady);
         }
 
         public void SwitchTeam(bool force = false)
@@ -180,17 +241,12 @@ namespace WukongApi
             if (owner == null)
                 return null;
 
-            var kvp = SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn?.GetMonster() == owner);
+            var kvp = SyncedMonsters.FirstOrDefault(x => x.Value!.Tamer?.GetMonster() == owner);
             return kvp.Value;
         }
 
-        public void RemoveMonster(MonsterState monster)
+        public void RemoveSyncedMonster(MonsterState monster)
         {
-            if (monster.MarkerActor != null)
-            {
-                BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
-            }
-
             SyncedMonsters.Remove(monster.Guid);
         }
 
@@ -206,7 +262,7 @@ namespace WukongApi
                 case 1:
                     // unit spawn
                     var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
-                    OnUnitSpawn?.Invoke(header.Sender, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
+                    OnUnitSpawn?.Invoke(header.Sender, unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
                     break;
                 case 2:
                     // montage callback
@@ -302,6 +358,26 @@ namespace WukongApi
                     var chatMessage = RelayClient.DeserializeObject<string>(reader);
                     WukongChat.OnGetMessage(header.Sender, chatMessage);
                     break;
+                case 19:
+                    // state trigger
+                    var stateTriggerData = (StateTriggerData)photonEvent.CustomData;
+                    OnStateTriggerSet?.Invoke(stateTriggerData.CharacterId, stateTriggerData.Trigger, stateTriggerData.Time, stateTriggerData.NeedForceUpdate);
+                    break;
+                case 20:
+                    // simple state
+                    var simpleStateData = (SimpleStateData)photonEvent.CustomData;
+                    OnSimpleStateSet?.Invoke(simpleStateData.CharacterId, simpleStateData.SimpleState, simpleStateData.IsRemove);
+                    break;
+                case 21:
+                    // fsm state
+                    var fsmStateData = (FsmStateData)photonEvent.CustomData;
+                    OnFsmStateSet?.Invoke(fsmStateData.CharacterId, fsmStateData.FsmStateName);
+                    break;
+                case 22:
+                    // motion matching
+                    var motionaMatchingData = (int[])photonEvent.CustomData;
+                    OnMotionMatchingChanged?.Invoke(motionaMatchingData[0], (EState_MM)motionaMatchingData[1]);
+                    break;
             }
         }
 
@@ -358,7 +434,9 @@ namespace WukongApi
 
                     Task.Run(async () =>
                     {
+                        WukongMP.Instance.TeleportSpectatingPlayers();
                         await Task.Delay(2000);
+                        LocalPlayerState.IsReadyForPvP = false;
                         WukongMP.Instance.EndTournament(winnerTeamId);
                         ExitPvP();
                         SetReadyState(false);
@@ -372,6 +450,7 @@ namespace WukongApi
                     {
                         Utils.TryRunOnGameThread(() =>
                         {
+                            GameUtils.DestroyAllTamers();
                             var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn!);
 
                             if (events == null)
@@ -439,7 +518,7 @@ namespace WukongApi
                 Logging.LogInformation("All players are dead, ending round");
                 if (aliveCharacters.Count() == 0)
                 {
-                    Task.Run(async () => await LobbyManager.EndRoundAsync(Constants.DrawTeamId));
+                    Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeams[0].TeamId)));
                 }
                 else
                 {
@@ -469,10 +548,6 @@ namespace WukongApi
             }
 
             CurrentRoomState.InPvP = true;
-            if (CurrentRoomState.GameMode == GameMode.XvX)
-            {
-                CurrentRoomState.IsOpen = false;
-            }
         }
 
         private void ExitPvP()
@@ -486,10 +561,6 @@ namespace WukongApi
             }
 
             CurrentRoomState.InPvP = false;
-            if (CurrentRoomState.GameMode == GameMode.XvX)
-            {
-                CurrentRoomState.IsOpen = true;
-            }
         }
 
         private void OnPlayerReadinessChanged(string playerNickname, bool isReady)
@@ -528,6 +599,9 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(GameMode), 244,
                 (writer, customObject) => writer.Put((byte)customObject),
                 reader => (GameMode)reader.GetByte());
+            PhotonPeer.RegisterType(typeof(FsmStateData), 243, FsmStateData.Serialize, FsmStateData.Deserialize);
+            PhotonPeer.RegisterType(typeof(StateTriggerData), 245, StateTriggerData.Serialize, StateTriggerData.Deserialize);
+            PhotonPeer.RegisterType(typeof(SimpleStateData), 244, SimpleStateData.Serialize, SimpleStateData.Deserialize);
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
@@ -567,7 +641,7 @@ namespace WukongApi
 
             // clear state
             ConnectedPlayers.Clear();
-            SyncedMonsters.Clear();
+            Utils.TryRunOnGameThread(WukongMP.Instance.DestroySyncedMonsters);
             _localPlayerState = null;
 
             Logging.LogInformation("Stopped client.");
@@ -646,11 +720,18 @@ namespace WukongApi
             }
         }
 
-        public void SpawnUnit(string id, string unitName, int teamId, float x, float y, float z)
+        public void SpawnUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
         {
             const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, unitName, teamId, x, y, z);
+            var evData = new UnitSpawnData(id, guid, unitName, teamId, x, y, z);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+        }
+
+        private void SpawnUnitForNewPlayer(int playerId, int id, string guid, string unitName, int teamId, float x, float y, float z)
+        {
+            const byte eventCode = 1;
+            var evData = new UnitSpawnData(id, guid, unitName, teamId, x, y, z);
+            PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs { TargetActors = [playerId] }, SendOptions.SendReliable);
         }
 
         public void SendMontageCallback(UAnimMontage montage, float position, bool reset)
@@ -756,6 +837,34 @@ namespace WukongApi
         {
             const byte eventCode = 15;
             RelayClient.OpRaiseEvent(eventCode, null, RelayMode.All, DeliveryMethod.ReliableOrdered);
+        }
+
+        public void SendUnitStateTrigger(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
+        {
+            const byte eventCode = 19;
+            var evData = new StateTriggerData(characterId, trigger, time, needForceUpdate);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendUnitSimpleState(int characterId, EBGUSimpleState simpleState, bool isRemove)
+        {
+            const byte eventCode = 20;
+            var evData = new SimpleStateData(characterId, simpleState, isRemove);
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendTriggerFsmState(int characterId, FGameplayTag eventTag)
+        {
+            const byte eventCode = 21;
+            var evData = new FsmStateData(characterId, eventTag.TagName.ToString());
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
+        }
+
+        public void SendMotionMatchingState(int characterId, EState_MM MMState)
+        {
+            const byte eventCode = 22;
+            int[] evData = [characterId, (int)MMState];
+            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)
@@ -1039,6 +1148,12 @@ namespace WukongApi
             var nickname = RelayClient.GetPlayerState(playerId)!.Nickname;
             Logging.LogInformation("Player {Nickname} ({PlayerId}) entered the room", nickname, playerId);
             _playerJoinedCallback.Invoke(playerId);
+            
+            // send current monsters to the new player 
+            foreach (var monsterState in SyncedMonsters.Values)
+            {
+                SpawnUnitForNewPlayer(newPlayer.ActorNumber, monsterState.PhotonId, monsterState.Guid, monsterState.UnitName, monsterState.TeamId, monsterState.Location.X, monsterState.Location.Y, monsterState.Location.Z);
+            }
         }
 
         private void OnPlayerLeftRoomHandler(int playerId)

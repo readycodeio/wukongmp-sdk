@@ -1,36 +1,55 @@
 ﻿using b1;
-using BtlShare;
-using UnrealEngine.Runtime;
+using System;
 
 namespace WukongApi.State
 {
     public class MonsterState : CharacterState
     {
         public string Guid { get; }
-        private readonly BUTamerActor? _pawn;
+        public string UnitName { get; }
 
-        public BUTamerActor? Pawn
+        private readonly BUTamerActor? _tamer;
+
+        public BUTamerActor? Tamer
         {
             get
             {
-                if (_pawn.IsNullOrDestroyed())
+                if (_tamer.IsNullOrDestroyed())
                 {
                     return null;
                 }
 
-                return _pawn;
+                return _tamer;
             }
         }
 
-        public bool IsSynced { get; set; }
-        public bool IsTamerValid => !Pawn.IsNullOrDestroyed();
-
-        public MonsterState(string guid, BUTamerActor pawn)
+        public override BGUCharacterCS? Pawn
         {
-            Guid = guid;
-            _pawn = pawn;
+            get
+            {
+                if (_tamer == null || _tamer.IsNullOrDestroyed() || _tamer.GetMonster().IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Tamer or monster is null or destroyed");
+                    return null;
+                }
 
-            var monster = pawn.GetMonster();
+                return _tamer.GetMonster();
+            }
+            set => throw new NotSupportedException("Set monster pawn");
+        }
+
+        public bool IsSynced { get; set; }
+        public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
+        public EBGUMoveAIType MoveAIType { get; set; }
+
+        public MonsterState(int id, string guid, BUTamerActor tamer, string unitName)
+        {
+            PhotonId = id;
+            Guid = guid;
+            _tamer = tamer;
+            UnitName = unitName;
+
+            var monster = tamer.GetMonster();
             if (!monster.IsNullOrDestroyed())
             {
                 TeamId = monster.GetTeamIDInCS();
@@ -43,47 +62,21 @@ namespace WukongApi.State
             Logging.LogDebug("Created monster state with team ID: {TeamId}", TeamId);
         }
 
-        public MonsterState(string guid, BUTamerActor pawn, int teamId)
+        public MonsterState(int id, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
+            PhotonId = id;
             Guid = guid;
-            _pawn = pawn;
+            _tamer = tamer;
             TeamId = teamId;
-
-            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn.GetMonster());
-            if (attrContainer != null)
-            {
-                Hp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
-            }
-            else
-            {
-                Hp = 1000;
-                Logging.LogWarning("AttrContainer not found. Set Hp to ", Hp);
-            }
+            UnitName = unitName;
 
             Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", TeamId);
         }
 
         public override string ToString()
         {
-            var realTeamId = Pawn?.GetMonster().GetTeamIDInCS();
+            var realTeamId = Tamer?.GetMonster().GetTeamIDInCS();
             return $"MonsterState: Guid={Guid}, TeamId={TeamId}, RealTeamId={realTeamId} Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
-        }
-
-        public override void UpdateMarkerPosition()
-        {
-            if (MarkerActor != null)
-            {
-                var bguCharacterCs = Pawn?.GetMonster() as BGUCharacterCS;
-
-                if (bguCharacterCs == null)
-                {
-                    Logging.LogError("Failed to cast monster pawn to BGUCharacterCS");
-                    return;
-                }
-
-                var markerHeight = bguCharacterCs.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
-                MarkerActor.SetActorLocation(bguCharacterCs.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
-            }
         }
     }
 }

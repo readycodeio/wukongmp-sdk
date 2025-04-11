@@ -119,7 +119,7 @@ namespace WukongApi
                 return;
             }
 
-            var monster = monsterState.Pawn?.GetMonster();
+            var monster = monsterState.Tamer?.GetMonster();
 
             // sanity check
             if (monster == null)
@@ -128,40 +128,41 @@ namespace WukongApi
                 return;
             }
 
+            // set monster hp
+            var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
+            monsterState.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+
+            var events = BUS_EventCollectionCS.Get(monsterState.Tamer);
+            if (events == null)
+            {
+                Logging.LogError("events are null");
+                return;
+            }
+            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(monsterState.Pawn);
+            if (mmData == null)
+            {
+                Logging.LogError("motion matching data is null");
+                return;
+            }
+            events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
+
             if (photon.IsMasterClient)
             {
                 // subscribe to events on master
-                var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
                 events.Evt_PlayMontageCallback += (reason, montage, state) =>
                 {
                     var montagePath = montage.GetPathName();
                     Logging.LogDebug("Monster montage callback: {Guid} {Reason} {Montage} {State}", monsterState.Guid, reason, montagePath, state);
                     photon.SendMonsterMontageCallback(monsterState.Guid, reason, montagePath, state);
                 };
-
-                // also, set HP
-                var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
-                monsterState.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
             }
             else
             {
-                // disable AI on clients
-                var events = BUS_EventCollectionCS.Get(monster);
-
-                if (events == null)
-                {
-                    Logging.LogError("events are null");
-                    return;
-                }
-
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);
-                events.Evt_AIPauseFsm.Invoke(true);
-                events.Evt_EnableCanUpdateHatred.Invoke(P1: false);
-                events.Evt_EnableCanSetBT.Invoke(P1: false);
+                Logging.LogDebug("Tamer actor disabled.");
             }
 
-            Logging.LogDebug("Tamer actor disabled.");
             RegisterNewPlayerTeam(monster, monsterState.TeamId);
 
             // at this point the monster exists, so we set IsSpawned

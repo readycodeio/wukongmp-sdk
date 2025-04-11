@@ -45,6 +45,7 @@ namespace WukongApi
             _commands.Add("/disconnect", new Command(RequestDisconnect));
             _commands.Add("/rebirth", new Command(RequestRebirth));
             _commands.Add("/giveup", new Command(RequestGiveUp));
+            _commands.Add("/master", new Command(RequestNewMasterClient));
         }
 
         private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -90,6 +91,15 @@ namespace WukongApi
             SendServerMessage($"{NickName} has left!");
             _wukongClient.StopRelayClient();
         }
+
+        private void RequestNewMasterClient(ReadOnlyMemory<string> args)
+        {
+            if (args.Length == 1)
+            {
+                _wukongClient.SetMasterClient(args.Span[0]);
+            }
+        }
+
 
         private bool TryHandleCommand(string message)
         {

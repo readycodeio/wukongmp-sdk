@@ -85,7 +85,7 @@ namespace WukongMPMod
             {
                 Logging.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Client.SwitchReadyState();
+                    _wukongMp.Client.SwitchReadyStateMulti();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
@@ -100,6 +100,13 @@ namespace WukongMPMod
                 Logging.LogDebug("K");
                 if (!ChatWidget.Instance.HasFocus())
                     ChatWidget.Instance.ToggleVisibility();
+            });
+
+            Utils.RegisterKeyBind(Key.I, () =>
+            {
+                Logging.LogDebug("I");
+                if (!ChatWidget.Instance.HasFocus())
+                    _wukongMp.Photon.SwitchReadyStateSingle();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>

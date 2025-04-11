@@ -77,7 +77,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(Owner);
+                var playerState = photon.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -135,7 +135,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(Owner);
+                var playerState = photon.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -186,7 +186,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(Owner);
+                var playerState = photon.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -242,7 +242,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(Owner);
+                var playerState = photon.GetPlayerByActor(Owner);
 
                 if (playerState != null)
                 {
@@ -340,8 +340,8 @@ namespace WukongApi.Patches
             {
                 if (Attacker != owner)
                 {
-                    var attackerPlayerState = photon.GetByActor(Attacker);
-                    var killedPlayerState = photon.GetByActor(owner);
+                    var attackerPlayerState = photon.GetPlayerByActor(Attacker);
+                    var killedPlayerState = photon.GetPlayerByActor(owner);
                     if (attackerPlayerState != null && killedPlayerState != null)
                     {
                         photon.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
@@ -475,11 +475,11 @@ namespace WukongApi.Patches
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return;
 
-            var newTargetPlayerState = photon.GetByActor(NewTargetInfo?.LockTargetActor);
-            if (newTargetPlayerState != null)
+            var newTargetCharacterState = photon.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
+            if (newTargetCharacterState  != null)
             {
-                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetPlayerState.NickName);
-                photon.SendTarget(newTargetPlayerState.PhotonId);
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetCharacterState.NickName);
+                photon.SendTarget(newTargetCharacterState.PhotonId);
             }
         }
     }
@@ -494,6 +494,7 @@ namespace WukongApi.Patches
                 return true;
 
             InControlData.ArmLength = Constants.CameraArmLength;
+            InControlData.ArmTargetOffset = FVector.ZeroVector;
             return true;
         }
     }
@@ -555,6 +556,20 @@ namespace WukongApi.Patches
 
             if (__result.DefaultCamID == 0)
                 __result.DefaultCamID = 101600;
+        }
+    }
+    
+    [HarmonyPatch(typeof(BPC_PlayerRoleData), "GetNewGamePlusCount")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchGetNewGamePlusCount
+    {
+        public static bool Prefix(ref int __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            __result = 1;
+            return false;
         }
     }
 }

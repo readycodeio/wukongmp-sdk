@@ -2,13 +2,13 @@
 {
     public static class TextUtils
     {
-        public static string GetReadyText(int connectedPlayersCount)
+        public static string GetReadyText(int playersCount, bool isReady)
         {
-            if (connectedPlayersCount == 0)
+            if (playersCount == 0)
             {
-                return Texts.PressToPlayWithBots;
+                return isReady ? Texts.PressToCancelMatch : Texts.PressToPlayWithBots;
             }
-            return Texts.PressToBeReady;
+            return isReady ? Texts.PressToBeNotReady : Texts.PressToBeReady;
         }
     }
 }

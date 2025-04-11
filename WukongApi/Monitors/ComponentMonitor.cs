@@ -18,18 +18,32 @@ namespace WukongApi.Monitors
             _component = component;
             foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(component))
             {
-                string name = descriptor.Name;
+                if (descriptor == null)
+                    continue;
                 object value = descriptor.GetValue(component);
+                if (value == null)
+                    continue;
+
+                string name = descriptor.Name;
                 _properties[name] = value;
             }
         }
 
         internal void Update()
         {
+            if (_component == null)
+                return;
+
             foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(_component))
             {
-                string name = descriptor.Name;
+                if (descriptor == null || descriptor.PropertyType == null)
+                    continue;
                 object value = descriptor.GetValue(_component);
+                if (value == null)
+                    continue;
+                string name = descriptor.Name;
+                if (!_properties.TryGetValue(name, out var currentValue) || currentValue == null)
+                    continue;
 
                 if ((value.GetType() == typeof(FVector) && !((FVector)value).Equals((FVector)_properties[name], 50)) ||
                     (value.GetType() == typeof(FRotator) && !((FRotator)value).Equals((FRotator)_properties[name], 10)) ||

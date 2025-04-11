@@ -4,8 +4,9 @@ using Photon.Client;
 
 namespace WukongApi
 {
-    public readonly struct UnitSpawnData(string guid, string name, int teamId, float x, float y, float z)
+    public readonly struct UnitSpawnData(int id, string guid, string name, int teamId, float x, float y, float z)
     {
+        public readonly int Id = id;
         public readonly string Guid = guid;
         public readonly string Name = name;
         public readonly int TeamId = teamId;
@@ -23,6 +24,7 @@ namespace WukongApi
             var nameBytes = Encoding.UTF8.GetBytes(spawnData.Name);
             var nameLength = (short)nameBytes.Length;
 
+            outStream.Write(BitConverter.GetBytes(spawnData.Id), 0, 4);
             outStream.Write(BitConverter.GetBytes(guidLength), 0, 2);
             outStream.Write(guidBytes, 0, guidBytes.Length);
             outStream.Write(BitConverter.GetBytes(nameLength), 0, 2);
@@ -32,11 +34,15 @@ namespace WukongApi
             outStream.Write(BitConverter.GetBytes(spawnData.Y), 0, 4);
             outStream.Write(BitConverter.GetBytes(spawnData.Z), 0, 4);
 
-            return (short)(2 + guidBytes.Length + 2 + nameBytes.Length + 12);
+            return (short)(4 + 2 + guidBytes.Length + 2 + nameBytes.Length + 12);
         }
 
         public static object Deserialize(StreamBuffer inStream, short length)
         {
+            var intBytes = new byte[4];
+            inStream.Read(intBytes, 0, 4);
+            var id = BitConverter.ToInt32(intBytes, 0);
+
             var guidLengthBytes = new byte[2];
             inStream.Read(guidLengthBytes, 0, 2);
             var guidLength = BitConverter.ToInt16(guidLengthBytes, 0);
@@ -53,7 +59,6 @@ namespace WukongApi
             inStream.Read(nameBytes, 0, nameLength);
             var name = Encoding.UTF8.GetString(nameBytes);
 
-            var intBytes = new byte[4];
             inStream.Read(intBytes, 0, 4);
             var teamId = BitConverter.ToInt32(intBytes, 0);
 
@@ -65,7 +70,7 @@ namespace WukongApi
             inStream.Read(floatBytes, 0, 4);
             var z = BitConverter.ToSingle(floatBytes, 0);
 
-            return new UnitSpawnData(guid, name, teamId, x, y, z);
+            return new UnitSpawnData(id, guid, name, teamId, x, y, z);
         }
     }
 }

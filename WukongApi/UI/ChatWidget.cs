@@ -11,6 +11,7 @@
         protected override void PostInitialize()
         {
             ClearMessages();
+            ClearToolTipText();
         }
 
         public bool HasFocus()
@@ -51,7 +52,7 @@
                 {
                     Logging.LogDebug("Got message: {Message} in GetSentMessage function", message);
                 }
-
+                ClearToolTipText();
                 return message;
             }
 
@@ -97,6 +98,11 @@
         {
             GameWidget?.CallFunctionByNameWithArguments("CommitMessage", true);
             return GetMessage();
+        }
+
+        private void ClearToolTipText()
+        {
+            GameWidget?.CallFunctionByNameWithArguments("GetSentMessage", true);
         }
     }
 }
