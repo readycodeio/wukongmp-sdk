@@ -72,13 +72,13 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Client.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Client.LocalPlayerState.PeerId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
             
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Client.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Client.LocalPlayerState.PeerId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
@@ -106,7 +106,7 @@ namespace WukongMPMod
             {
                 Logging.LogDebug("I");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Photon.SwitchReadyStateSingle();
+                    _wukongMp.Client.SwitchReadyStateSingle();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>

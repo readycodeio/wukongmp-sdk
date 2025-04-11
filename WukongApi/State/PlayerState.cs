@@ -47,9 +47,9 @@ namespace WukongApi.State
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
 
-        public PlayerState(int photonId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
-            PhotonId = photonId;
+            PeerId = peerId;
             Pawn = pawn;
             TeamId = teamId;
             Hp = initialHp;
@@ -78,7 +78,7 @@ namespace WukongApi.State
             var realTeamId = Pawn?.GetTeamIDInCS();
             
             var sb = new StringBuilder("PlayerState");
-            sb.AppendLine($"PhotonId: {PhotonId}");
+            sb.AppendLine($"PeerId: {PeerId}");
             sb.AppendLine($"NickName: {NickName}");
             sb.AppendLine($"TeamID: {TeamId}");
             sb.AppendLine($"Real TeamId: {realTeamId}");

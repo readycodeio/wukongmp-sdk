@@ -59,7 +59,7 @@ namespace WukongApi
 
                 teamMemberIndex[playerState.TeamId]++;
                 var newPlayerLocation = new FVector(x, y, center.Z);
-                wukongClient.BroadcastPlayerTransform(playerState.PhotonId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
+                wukongClient.BroadcastPlayerTransform(playerState.PeerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
             }
         }
 
@@ -154,7 +154,7 @@ namespace WukongApi
             {
                 if (player.IsDead)
                 {
-                    wukongClient.BroadcastPlayerRebirth(player.PhotonId);
+                    wukongClient.BroadcastPlayerRebirth(player.PeerId);
                 }
             }
 

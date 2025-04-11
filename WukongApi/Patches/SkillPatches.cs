@@ -102,9 +102,9 @@ namespace WukongApi.Patches
             if (!photon.IsMasterClient)
             {
                 // Broadcast that you have cast a spell
-                if (castingPlayerState != null && castingPlayerState.PhotonId == photon.LocalPlayerState.PhotonId)
+                if (castingPlayerState != null && castingPlayerState.PeerId == photon.LocalPlayerState.PeerId)
                 {
-                    photon.BroadcastImmobilize(castingPlayerState.PhotonId, -1, ImmobilizeActionType.Cast, false);
+                    photon.BroadcastImmobilize(castingPlayerState.PeerId, -1, ImmobilizeActionType.Cast, false);
                 }
 
                 return false;
@@ -202,7 +202,7 @@ namespace WukongApi.Patches
                 if (immobilizedCharacterState != null && castingPlayerState != null)
                 {
                     Logging.LogDebug("Broadcasting trigger immobilize for character {Nickname}", immobilizedCharacterState.NickName);
-                    photon.BroadcastImmobilize(immobilizedCharacterState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
+                    photon.BroadcastImmobilize(immobilizedCharacterState.PeerId, castingPlayerState.PeerId, ImmobilizeActionType.Trigger, hasBuff);
                 }
             }
 
@@ -256,7 +256,7 @@ namespace WukongApi.Patches
 
                 if (photon.IsMasterClient)
                 {
-                    photon.BroadcastImmobilize(characterState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
+                    photon.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
                     return true;
                 }
 
@@ -298,7 +298,7 @@ namespace WukongApi.Patches
                         return true;
                     }
 
-                    photon.BroadcastImmobilize(characterState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
+                    photon.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
                     BUS_EventCollectionCS.Get(characterState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 }
 
@@ -482,7 +482,7 @@ namespace WukongApi.Patches
                 if ((photon.IsMasterClient || owner == photon.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
                 {
                     Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
-                    photon.ExitPhantomRush(playerState.PhotonId);
+                    photon.ExitPhantomRush(playerState.PeerId);
                     playerState.ReceivedPhantomRushExit = false;
                 }
 

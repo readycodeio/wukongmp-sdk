@@ -44,7 +44,7 @@ namespace WukongApi.State
 
         public MonsterState(int id, string guid, BUTamerActor tamer, string unitName)
         {
-            PhotonId = id;
+            PeerId = id;
             Guid = guid;
             _tamer = tamer;
             UnitName = unitName;
@@ -64,7 +64,7 @@ namespace WukongApi.State
 
         public MonsterState(int id, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            PhotonId = id;
+            PeerId = id;
             Guid = guid;
             _tamer = tamer;
             TeamId = teamId;

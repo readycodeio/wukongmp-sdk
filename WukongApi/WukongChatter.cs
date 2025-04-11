@@ -71,7 +71,7 @@ namespace WukongApi
 
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
-            GameLoopPatch.QueueOnGameThread(() => _wukongClient.BroadcastPlayerRebirth(_wukongClient.LocalPlayerState.PhotonId), "HandleRebirth");
+            GameLoopPatch.QueueOnGameThread(() => _wukongClient.BroadcastPlayerRebirth(_wukongClient.LocalPlayerState.PeerId), "HandleRebirth");
             SendServerMessage($"Player {NickName} requested rebirth");
         }
 
@@ -134,7 +134,7 @@ namespace WukongApi
         {
             var isServer = content.AsSpan()[..3] is ServerPrefix;
             var message = content[3..];
-            var senderNickname = isServer ? "Server" : _wukongClient.GetById(sender)!.NickName;
+            var senderNickname = isServer ? "Server" : _wukongClient.GetPlayerById(sender)!.NickName;
 
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
             ChatWidget.Instance.AddMessage(isServer, senderNickname, message);

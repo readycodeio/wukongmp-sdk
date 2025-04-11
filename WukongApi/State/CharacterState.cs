@@ -7,7 +7,7 @@ namespace WukongApi.State
     public abstract class CharacterState
     {
         public abstract BGUCharacterCS? Pawn { get; set; }
-        public int PhotonId { get; protected set; }
+        public int PeerId { get; protected set; }
 
         public FVector Location { get; set; }
         public FRotator Rotation { get; set; }
@@ -17,7 +17,7 @@ namespace WukongApi.State
         public EMoveSpeedLevel MoveSpeedState { get; set; } = EMoveSpeedLevel.Run;
         public int TeamId { get; protected set; }
         public float Hp { get; set; }
-        public string NickName { get; set; } = "Unknown";
+        public string NickName { get; set; } = "";
 
         public bool RunImmobilizePatches { get; set; }
 

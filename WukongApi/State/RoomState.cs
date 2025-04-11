@@ -32,12 +32,6 @@ namespace WukongApi.State
             set => SetProperty(nameof(MatchmakingEndTime), value);
         }
 
-        public bool IsOpen
-        {
-            get => GetProperty<bool>(nameof(IsOpen));
-            set => SetProperty(nameof(IsOpen), value);
-        }
-
         public bool InPvP
         {
             get => GetProperty<bool>(nameof(InPvP));

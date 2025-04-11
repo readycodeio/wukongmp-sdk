@@ -197,10 +197,10 @@ namespace WukongApi
                 {
                     Logging.LogDebug("Disabling visiblity");
                     SetHudVisibility(false);
-                    HideSpectator(Photon.LocalPlayerState);
+                    HideSpectator(Client.LocalPlayerState);
                     Logging.LogInformation("Entering free camera");
                     FreeCameraManager.EnterFreeCameraMode();
-                    TeleportOutSpectator(Photon.LocalPlayerState);
+                    TeleportOutSpectator(Client.LocalPlayerState);
                     SetupSpectatorUi();
                 }
                 else
@@ -239,7 +239,7 @@ namespace WukongApi
 
         public void SetBotsTarget()
         {
-            foreach (var monsterState in Photon.SyncedMonsters.Values)
+            foreach (var monsterState in Client.SyncedMonsters.Values)
             {
                 var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
                 BGUFuncLibAICS.BGUAITriggerFSMEvent(monsterState.Pawn, EBGUFSMEventName.FSM_EVENT_LIFE_HASTARGET);
@@ -390,7 +390,7 @@ namespace WukongApi
 
         public void TeleportSpectatingPlayers()
         {
-            foreach (var playerState in Photon.SpectatingPlayers)
+            foreach (var playerState in Client.SpectatingPlayers)
             {
                 TeleportInSpectator(playerState);
             }
@@ -441,11 +441,11 @@ namespace WukongApi
         {
             Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
 
-            var player = Client.GetById(playerId);
+            var player = Client.GetPlayerById(playerId);
             if (player == null)
                 return;
 
-            if (player.PhotonId == Client.LocalPlayerState.PhotonId)
+            if (player.PeerId == Client.LocalPlayerState.PeerId)
             {
                 FreeCameraManager.LeaveFreeCameraMode();
             }
@@ -468,7 +468,7 @@ namespace WukongApi
             }
 
             Client.OnBeforeJoinRoom += SetPlayerProperties;
-            Client.OnUnitSpawn += (_, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(guid, name, teamId, x, y, z), "SpawnRemoteUnit");
+            Client.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
             Client.OnMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(id, data), "ApplyPlayerMontageCallback");
             Client.OnMonsterMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyMonsterMontageCallback(id, data), "ApplyMonsterMontageCallback");
             Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
@@ -479,7 +479,7 @@ namespace WukongApi
             Client.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Client.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Client.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
-            Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetPlayerTransform(loc, rot), "SetPlayerTransform");
+            Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetLocalPlayerTransform(loc, rot), "SetPlayerTransform");
             Client.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
             Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Client.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
@@ -496,7 +496,7 @@ namespace WukongApi
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
         {
-            var playerState = Client.GetById(playerId);
+            var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -520,7 +520,7 @@ namespace WukongApi
             int inLayer,
             bool withTriggerRemoveEffect)
         {
-            var playerState = Client.GetById(playerId);
+            var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -541,7 +541,7 @@ namespace WukongApi
 
         private void OnBuffAllRemoved(int playerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
         {
-            var playerState = Client.GetById(playerId);
+            var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -562,7 +562,7 @@ namespace WukongApi
 
         private void OnStateTriggerSet(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
         {
-            var characterState = Photon.GetCharacterById(characterId);
+            var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
                 Logging.LogError("Character not found: {Id}", characterId);
@@ -583,7 +583,7 @@ namespace WukongApi
 
         private void OnSimpleStateSet(int characterId, EBGUSimpleState state, bool isForce)
         {
-            var characterState = Photon.GetCharacterById(characterId);
+            var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
                 Logging.LogError("Character not found: {Id}", characterId);
@@ -604,7 +604,7 @@ namespace WukongApi
         
         private void OnFsmStateSet(int characterId, string eventName)
         {
-            var characterState = Photon.GetCharacterById(characterId);
+            var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
                 Logging.LogError("Character not found: {Id}", characterId);
@@ -625,7 +625,7 @@ namespace WukongApi
 
         private void OnMotionMatchingChanged(int characterId, EState_MM motionMatchingState)
         {
-            var characterState = Photon.GetCharacterById(characterId);
+            var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
                 Logging.LogError("Character not found: {Id}", characterId);
@@ -646,7 +646,7 @@ namespace WukongApi
 
         private void ExitPhantomRush(int playerId)
         {
-            var playerState = Client.GetById(playerId);
+            var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -667,17 +667,17 @@ namespace WukongApi
                 return;
             }
 
-            var targetPlayerState = Client.GetById(targetId);
+            var targetPlayerState = Client.GetPlayerById(targetId);
             if (targetPlayerState == null)
             {
                 Logging.LogError("Character not found: {Id}", targetId);
                 return;
             }
 
-            Logging.LogDebug("Updating target for player {PlayerNickname} to character {TargetNickname}", playerState.NickName, targetCharacterState.NickName);
+            Logging.LogDebug("Updating target for player {PlayerNickname} to character {TargetNickname}", playerState.NickName, targetPlayerState.NickName);
 
             var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(playerState.Pawn);
-            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetCharacterState.Pawn, ETargetSourceType.SkillBase_NormalUse));
+            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPlayerState.Pawn, ETargetSourceType.SkillBase_NormalUse));
         }
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)
@@ -711,7 +711,7 @@ namespace WukongApi
 
         private void KillPlayer(int playerId)
         {
-            var player = Client.GetById(playerId)?.Pawn;
+            var player = Client.GetPlayerById(playerId)?.Pawn;
             if (player == null)
                 return;
 
@@ -731,7 +731,7 @@ namespace WukongApi
 
         private void PerformPhantomRush(int playerId, ESkillDirection direction)
         {
-            var playerState = Client.GetById(playerId);
+            var playerState = Client.GetPlayerById(playerId);
             if (playerState?.Pawn == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", playerId);
@@ -781,14 +781,14 @@ namespace WukongApi
 
         private void HandleImmobilize(int characterId, int otherCharacterId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            var playerState = Client.GetById(playerId);
-            if (playerState == null)
+            var characterState = Client.GetPlayerById(characterId);
+            if (characterState == null)
             {
                 Logging.LogError("Character not found: {Id}", characterId);
                 return;
             }
 
-            var otherPlayerState = Client.GetById(otherPlayerId);
+            var otherCharacterState = Client.GetPlayerById(otherCharacterId);
 
             switch (immobilizeAction)
             {
@@ -876,6 +876,10 @@ namespace WukongApi
 
             Client.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
             Client.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
+            
+            // nickname
+            var nickname = CmdLineParams.Instance.Nickname;
+            Client.CachePlayerProperty(nameof(PlayerState.NickName), nickname);
 
             // equipment
             var eq = EquipmentHelpers.GetCurrentEquipmentStateForActor(player);
@@ -899,7 +903,7 @@ namespace WukongApi
 
         private void ChangeEquipment(int id, EquipmentState eq)
         {
-            if (id == Client.LocalPlayerState.PhotonId)
+            if (id == Client.LocalPlayerState.PeerId)
                 return;
 
             if (!Client.ConnectedPlayers.TryGetValue(id, out var player))
@@ -946,7 +950,7 @@ namespace WukongApi
         public void SwitchReadyState(bool isReady)
         {
             _gameMessageWidget.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count, isReady));
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, isReady));
         }
 
         public void RemovePlayer(PlayerState playerState)
@@ -968,8 +972,8 @@ namespace WukongApi
 
         private void UpdateConnectedCount()
         {
-            _lobbyStatusWidget.SetConnectedCount(Photon.ConnectedPlayers.Count + 1);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Photon.ConnectedPlayers.Count, Photon.LocalPlayerState.IsReadyForPvP));
+            _lobbyStatusWidget.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
         }
 
         private static void OnDamageNum(DamageNumParam damageNum)
@@ -980,7 +984,7 @@ namespace WukongApi
 
         public void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
         {
-            var player = Client.AllConnectedPlayers.FirstOrDefault(x => x.PhotonId == id);
+            var player = Client.AllConnectedPlayers.FirstOrDefault(x => x.PeerId == id);
             if (player == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", id);
@@ -1151,7 +1155,7 @@ namespace WukongApi
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
             var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
-            var id = Photon.SyncedMonsters.Count + Photon.PhotonClient.CurrentRoom.MaxPlayers;
+            var id = Client.SyncedMonsters.Count + Client.RelayClient.RoomState.MaxPlayers;
 
             SpawnUnitLocally(id, guid, unitName, teamId, loc.X, loc.Y, loc.Z);
 
@@ -1243,7 +1247,7 @@ namespace WukongApi
 
         public void DestroySyncedMonsters()
         {
-            foreach (var monster in Photon.SyncedMonsters.Values.ToList())
+            foreach (var monster in Client.SyncedMonsters.Values.ToList())
             {
                 DestroyMonster(monster);
             }
@@ -1272,12 +1276,12 @@ namespace WukongApi
             {
                 BGU_UnrealWorldUtil.DestroyActor(monsterState.MarkerActor);
             }
-            Photon.RemoveSyncedMonster(monsterState);
+            Client.RemoveSyncedMonster(monsterState);
         }
 
         private void OnJoinedRoomCallback()
         {
-            TeleportPlayerOnStart(Client.LocalPlayerState.PhotonId);
+            TeleportLocalPlayerOnStart(Client.LocalPlayerState.PeerId);
             SetupSpectator();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
@@ -1377,7 +1381,7 @@ namespace WukongApi
             // when joining game, spawn all players already in room
             foreach (var player in Client.GetOtherPlayersInRoom())
             {
-                GameLoopPatch.QueueOnGameThread(() => AddPlayer(player.ActorNumber), "AddPlayer");
+                GameLoopPatch.QueueOnGameThread(() => AddPlayer(player.PeerId), "AddPlayer");
             }
         }
 
@@ -1470,7 +1474,7 @@ namespace WukongApi
 
         private void TeleportInSpectator(PlayerState playerState)
         {
-            var spawnPosition = GetSpawnPosition(playerState.PhotonId);
+            var spawnPosition = GetSpawnPosition(playerState.PeerId);
             playerState.Pawn?.SetActorTransform(new FTransform(FRotator.ZeroRotator, spawnPosition), false, out _, true);
         }
 
@@ -1615,7 +1619,7 @@ namespace WukongApi
             };
 
             // set nickname
-            if (initialProps.TryGetValue(PlayerProperties.NickName, out var nickName))
+            if (initialProps.TryGetValue(nameof(PlayerState.NickName), out var nickName))
             {
                 playerState.NickName = (string)nickName;
                 Logging.LogDebug("Setting initial Nickname to {Nickname}", playerState.NickName);

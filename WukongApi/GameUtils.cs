@@ -116,9 +116,9 @@ namespace WukongApi
         {
             Utils.TryRunOnGameThread(() =>
             {
-                var photon = WukongMP.Instance.Client;
-                var current = photon.CurrentRoomState.CurrentRound;
-                var total = photon.CurrentRoomState.RoundsTotal;
+                var client = WukongMP.Instance.Client;
+                var current = client.CurrentRoomState.CurrentRound;
+                var total = client.CurrentRoomState.RoundsTotal;
                 ShowTip($"Round {current} of {total}");
             });
         }

@@ -101,7 +101,7 @@ namespace WukongApi.Patches
                         return;
                     }
 
-                    Logging.LogDebug("Applying unit dead for player {PlayerId}", photon.LocalPlayerState.PhotonId);
+                    Logging.LogDebug("Applying unit dead for player {PlayerId}", photon.LocalPlayerState.PeerId);
 
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
@@ -148,7 +148,7 @@ namespace WukongApi.Patches
                             return;
                         }
 
-                        Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PhotonId);
+                        Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PeerId);
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
@@ -228,13 +228,13 @@ namespace WukongApi.Patches
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = WukongMP.Instance.Client.GetByActor(owner);
+                    var remotePlayer = WukongMP.Instance.Client.GetPlayerByActor(owner);
                     if (remotePlayer != null)
                     {
                         if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
                             remotePlayer.Hp = result;
-                            photon.SetRemotePlayerProperty(remotePlayer.PhotonId, nameof(PlayerState.Hp), result);
+                            photon.SetRemotePlayerProperty(remotePlayer.PeerId, nameof(PlayerState.Hp), result);
                         }
 
                         return;
@@ -501,7 +501,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             if (photon.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
@@ -511,7 +511,7 @@ namespace WukongApi.Patches
                     if (SimpleState == EBGUSimpleState.Immobilizing)
                         return;
 
-                    photon.SendUnitSimpleState(character.PhotonId, SimpleState, IsRemove);
+                    photon.SendUnitSimpleState(character.PeerId, SimpleState, IsRemove);
                     Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
                 }
             }
@@ -527,14 +527,14 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             if (photon.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
                 var character = photon.GetMonsterByActor(owner);
                 if (character != null)
                 {
-                    photon.SendUnitStateTrigger(character.PhotonId, Trigger, Time, NeedForceUpdate);
+                    photon.SendUnitStateTrigger(character.PeerId, Trigger, Time, NeedForceUpdate);
                     Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
@@ -550,14 +550,14 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
             if (photon.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
                 var character = photon.GetMonsterByActor(owner);
                 if (character != null)
                 {
-                    photon.SendMotionMatchingState(character.PhotonId, MMState);
+                    photon.SendMotionMatchingState(character.PeerId, MMState);
                     Logging.LogDebug("Motion matching state changed to {State} for {Actor}", MMState, owner.GetName());
                 }
             }

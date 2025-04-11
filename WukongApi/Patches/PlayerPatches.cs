@@ -479,7 +479,7 @@ namespace WukongApi.Patches
             if (newTargetCharacterState  != null)
             {
                 Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetCharacterState.NickName);
-                photon.SendTarget(newTargetCharacterState.PhotonId);
+                photon.SendTarget(newTargetCharacterState.PeerId);
             }
         }
     }

@@ -22,11 +22,11 @@ namespace WukongApi.Patches
                 return;
 
             // send updates for each monster
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            if (photon.IsMasterClient)
+            if (client.IsMasterClient)
             {
-                foreach (var (id, state) in photon.SyncedMonsters)
+                foreach (var (id, state) in client.SyncedMonsters)
                 {
                     // sync location
                     if (!state.IsSynced)
@@ -45,20 +45,20 @@ namespace WukongApi.Patches
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
                         state.Location = location;
-                        photon.CacheMonsterProperty(id, nameof(MonsterState.Location), state.Location);
+                        client.CacheMonsterProperty(id, nameof(MonsterState.Location), state.Location);
                     }
 
                     var rotation = state.Tamer.GetActorRotation();
                     if (!rotation.Equals(state.Rotation, Constants.FloatComparisonTolerance))
                     {
                         state.Rotation = rotation;
-                        photon.CacheMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
+                        client.CacheMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
                     }
                 }
             }
             else
             {
-                foreach (var state in photon.SyncedMonsters.Values)
+                foreach (var state in client.SyncedMonsters.Values)
                 {
                     if (!state.IsTamerValid || !state.IsSynced)
                         continue;
@@ -97,11 +97,11 @@ namespace WukongApi.Patches
                 if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                     return;
 
-                var photon = WukongMP.Instance.Client;
+                var client = WukongMP.Instance.Client;
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
-                PhotonUtils.SyncMonsterAndNotify(photon, tamer);
+                PhotonUtils.SyncMonsterAndNotify(client, tamer);
             }
             catch (Exception e)
             {
@@ -262,15 +262,15 @@ namespace WukongApi.Patches
                 return false;
             }
 
-            var photon = WukongMP.Instance.Photon;
-            if (photon.IsMasterClient)
+            var client = WukongMP.Instance.Client;
+            if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var character = photon.GetMonsterByActor(owner);
+                var character = client.GetMonsterByActor(owner);
                 if (character != null)
                 {
                     Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
-                    photon.SendTriggerFsmState(character.PhotonId, EventTag);
+                    client.SendTriggerFsmState(character.PeerId, EventTag);
                 }
             }
 
@@ -303,7 +303,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var photon = WukongMP.Instance.Client;
 
             var monsterState = photon.GetMonsterByCharacter(character);
             if (monsterState is { IsSynced: true })
