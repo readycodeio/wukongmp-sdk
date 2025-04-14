@@ -477,7 +477,6 @@ namespace WukongApi
             Photon.OnBeforeJoinRoom += SetPlayerProperties;
             Photon.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
             Photon.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
-            Photon.OnMonsterMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyMonsterMontageCallback(id, data), "ApplyMonsterMontageCallback");
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Photon.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
@@ -1049,65 +1048,6 @@ namespace WukongApi
             Logging.LogDebug("Applying montage callback for character {CharacterId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
             animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
-        }
-
-        private void ApplyMonsterMontageCallback(int _, MonsterMontageCallbackData data)
-        {
-            if (!Photon.SyncedMonsters.TryGetValue(data.MonsterGuid, out var monster))
-            {
-                Logging.LogWarning("Monster not found: {Guid}", data.MonsterGuid);
-                return;
-            }
-
-            if (!monster.IsTamerValid)
-                return;
-
-            var tamerActor = monster.Tamer;
-
-            if (tamerActor == null)
-            {
-                Logging.LogError("Tamer actor is null");
-                return;
-            }
-
-            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(data.MontagePath, ELoadResourceType.SyncLoadAndCache);
-
-            if (montage == null)
-            {
-                Logging.LogWarning("Montage not found: {Montage}", data.MontagePath);
-                return;
-            }
-
-            Logging.LogDebug("Applying montage callback for monster {Guid} with montage {Montage} ({Reason}, {State})", data.MonsterGuid, data.MontagePath, data.Reason, data.State);
-            if (tamerActor.GetMonster() == null)
-            {
-                Logging.LogError("Monster is null");
-                return;
-            }
-
-            var animInstance = tamerActor.GetMonster().Mesh.GetAnimInstance();
-
-            if (data.State == EMontageCallbackState.OnStarted)
-            {
-                animInstance.Montage_Play(montage);
-            }
-            else if (data.State == EMontageCallbackState.OnInterrupted)
-            {
-                if (animInstance.GetCurrentActiveMontage().PathName == montage.PathName)
-                {
-                    animInstance.Montage_Stop(1f, montage);
-                }
-            }
-
-            var events = BUS_EventCollectionCS.Get(tamerActor);
-            if (events != null)
-            {
-                events.Evt_PlayMontageCallback.Invoke(data.Reason, montage, data.State);
-            }
-            else
-            {
-                Logging.LogError("events are null");
-            }
         }
 
         public void SpawnEnemiesMaster(string enemyName, int count, int teamId)

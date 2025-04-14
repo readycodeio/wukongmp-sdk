@@ -39,7 +39,6 @@ namespace WukongApi
         private readonly Action _joinedRoomCallback;
         private readonly Action<Player> _playerJoinedCallback;
         public event Action<MontageCallbackData>? OnMontageCallback;
-        public event Action<int, MonsterMontageCallbackData>? OnMonsterMontageCallback;
         public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
         public event Action<string>? OnMonsterWakeUp;
         public event Action<int, EquipmentState>? OnEquipmentChange;
@@ -263,9 +262,7 @@ namespace WukongApi
                     ApplyMonsterMove((PhotonHashtable)photonEvent.CustomData);
                     break;
                 case 4:
-                    // montage callback
-                    var monsterMontageData = (MonsterMontageCallbackData)photonEvent.CustomData;
-                    OnMonsterMontageCallback?.Invoke(photonEvent.Sender, monsterMontageData);
+                    // free
                     break;
                 case 5:
                     // monster wake up
@@ -565,7 +562,6 @@ namespace WukongApi
             }, (stream, _) => (EMoveSpeedLevel)stream.ReadByte());
 
             PhotonPeer.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
-            PhotonPeer.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
             PhotonPeer.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
             PhotonPeer.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             PhotonPeer.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
@@ -787,13 +783,6 @@ namespace WukongApi
 
             var evData = new MontageCallbackData(characterId, false, "", 0f, false);
 
-            PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
-        }
-
-        public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
-        {
-            const byte eventCode = 4;
-            var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
