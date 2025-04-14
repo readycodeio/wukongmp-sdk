@@ -377,16 +377,16 @@ namespace WukongApi
                     break;
                 case 23:
                     // chat message received
-                    var chatMessage = RelayClient.DeserializeObject<string>(reader);
-                    WukongChat.OnGetMessage(header.Sender, chatMessage);
+                    var chatMessage = RelayClient.DeserializeObject<ChatMessage>(reader);
+                    WukongChat.OnGetMessage(chatMessage);
                     break;
             }
         }
 
-        public void SendChatMessage(string message)
+        public void SendChatMessage(ChatMessage message)
         {
             const byte eventCode = 23;
-            RelayClient.OpRaiseEvent(eventCode, message, RelayMode.All, DeliveryMethod.ReliableOrdered);
+            RelayClient.OpRaiseEvent(eventCode, message, EventCaching.AddToRoomCacheGlobal);
         }
 
         private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
@@ -598,6 +598,7 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(FsmStateData), 245, FsmStateData.Serialize, FsmStateData.Deserialize);
             RelayClient.RegisterType(typeof(StateTriggerData), 244, StateTriggerData.Serialize, StateTriggerData.Deserialize);
             RelayClient.RegisterType(typeof(SimpleStateData), 243, SimpleStateData.Serialize, SimpleStateData.Deserialize);
+            RelayClient.RegisterType(typeof(ChatMessage), 243, ChatMessage.Serialize, ChatMessage.Deserialize);
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;

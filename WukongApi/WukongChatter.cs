@@ -15,8 +15,6 @@ namespace WukongApi
     {
         private readonly WukongClient _wukongClient;
 
-        private const string ServerPrefix = "<S>";
-        private const string ClientPrefix = "<C>";
         private string NickName => _wukongClient.LocalPlayerState.NickName;
         private const char Separator = ' ';
         private readonly Dictionary<string, Command> _commands = new();
@@ -118,26 +116,23 @@ namespace WukongApi
             return false;
         }
 
-        private void SendChatMessage(string message)
+        private void SendChatMessage(string nickname, string message)
         {
             Logging.LogDebug("Sending message {Message}", message);
-            _wukongClient.SendChatMessage($"{ClientPrefix}{message}");
+            _wukongClient.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
         }
 
         public void SendServerMessage(string message)
         {
             Logging.LogDebug("Sending server message {Message}", message);
-            _wukongClient.SendChatMessage($"{ServerPrefix}{message}");
+            _wukongClient.SendChatMessage(ChatMessage.CreateServerMessage(message));
         }
 
-        public void OnGetMessage(int sender, string content)
+        public void OnGetMessage(ChatMessage message)
         {
-            var isServer = content.AsSpan()[..3] is ServerPrefix;
-            var message = content[3..];
-            var senderNickname = isServer ? "Server" : _wukongClient.GetPlayerById(sender)!.NickName;
-
+            var senderNickname = message.IsServer ? "Server" : message.Nickname!;
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
-            ChatWidget.Instance.AddMessage(isServer, senderNickname, message);
+            ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, message.Message);
         }
     }
 }
