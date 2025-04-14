@@ -1,5 +1,5 @@
-﻿using b1;
-using System;
+﻿using System;
+using b1;
 
 namespace WukongApi.State
 {

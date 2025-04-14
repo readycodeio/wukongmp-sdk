@@ -1,5 +1,4 @@
-﻿using System;
-using Photon.Client;
+﻿using LiteNetLib.Utils;
 using UnrealEngine.Runtime;
 
 namespace WukongApi
@@ -10,26 +9,19 @@ namespace WukongApi
         public readonly FVector Location = location;
         public readonly FRotator Rotation = rotation;
 
-        public static short Serialize(StreamBuffer outStream, object customObject)
+        public static void Serialize(NetDataWriter outStream, object customObject)
         {
             var data = (PlayerTransformData)customObject;
-
-            short messageLength = 4;
-            outStream.Write(BitConverter.GetBytes(data.PlayerId), 0, 4);
-            messageLength += SerializationHelpers.SerializeFVector(outStream, data.Location);
-            messageLength += SerializationHelpers.SerializeFRotator(outStream, data.Rotation);
-            return messageLength;
+            outStream.Put(data.PlayerId);
+            SerializationHelpers.SerializeFVector(outStream, data.Location);
+            SerializationHelpers.SerializeFRotator(outStream, data.Rotation);
         }
 
-        public static object Deserialize(StreamBuffer inStream, short length)
+        public static object Deserialize(NetDataReader inStream)
         {
-            var intBytes = new byte[4];
-            inStream.Read(intBytes, 0, 4);
-            var playerId = BitConverter.ToInt32(intBytes, 0);
-
-            var location = (FVector)SerializationHelpers.DeserializeFVector(inStream, 12);
-            var rotation = (FRotator)SerializationHelpers.DeserializeFRotator(inStream, 12);
-
+            var playerId = inStream.GetInt();
+            var location = (FVector)SerializationHelpers.DeserializeFVector(inStream);
+            var rotation = (FRotator)SerializationHelpers.DeserializeFRotator(inStream);
             return new PlayerTransformData(playerId, location, rotation);
         }
     }

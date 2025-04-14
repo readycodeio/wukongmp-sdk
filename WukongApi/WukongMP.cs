@@ -8,8 +8,6 @@ using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.API;

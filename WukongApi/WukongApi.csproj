@@ -105,9 +105,6 @@
         <Reference Include="Novell.Directory.Ldap">
             <HintPath>Game\Novell.Directory.Ldap.dll</HintPath>
         </Reference>
-        <Reference Include="PhotonClient">
-            <HintPath>..\PhotonLibs\Debug\netstandard2.0\PhotonClient.dll</HintPath>
-        </Reference>
         <Reference Include="Protobuf.RunTime">
             <HintPath>Game\Protobuf.RunTime.dll</HintPath>
         </Reference>

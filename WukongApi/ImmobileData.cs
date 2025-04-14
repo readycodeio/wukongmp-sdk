@@ -1,5 +1,4 @@
-﻿using System;
-using Photon.Client;
+﻿using LiteNetLib.Utils;
 
 namespace WukongApi
 {
@@ -10,32 +9,21 @@ namespace WukongApi
         public ImmobilizeActionType ImmobilizeActionType { get; } = immobilizeActionType;
         public bool GreatSageTalentActiveBuff { get; } = greatSageTalentActiveBuff;
 
-        public static short Serialize(StreamBuffer outStream, object customObject)
+        public static void Serialize(NetDataWriter outStream, object customObject)
         {
             var data = (ImmobilizeData)customObject;
-            outStream.Write(BitConverter.GetBytes(data.PlayerId), 0, 4);
-            outStream.Write(BitConverter.GetBytes(data.OtherPlayerId), 0, 4);
-            outStream.WriteByte((byte)data.ImmobilizeActionType);
-            outStream.Write(BitConverter.GetBytes(data.GreatSageTalentActiveBuff), 0, 1);
-
-            return 10;
+            outStream.Put(data.PlayerId);
+            outStream.Put(data.OtherPlayerId);
+            outStream.Put((byte)data.ImmobilizeActionType);
+            outStream.Put(data.GreatSageTalentActiveBuff);
         }
 
-        public static object Deserialize(StreamBuffer inStream, short length)
+        public static object Deserialize(NetDataReader inStream)
         {
-            var intBytes = new byte[4];
-
-            inStream.Read(intBytes, 0, 4);
-            var playerId = BitConverter.ToInt32(intBytes, 0);
-
-            inStream.Read(intBytes, 0, 4);
-            var otherPlayerId = BitConverter.ToInt32(intBytes, 0);
-
-            var inputActionType = (ImmobilizeActionType)inStream.ReadByte();
-
-            var booleanBytes = new byte[1];
-            inStream.Read(booleanBytes, 0, 1);
-            var greatSageTalentActiveBuff = BitConverter.ToBoolean(booleanBytes, 0);
+            var playerId = inStream.GetInt();
+            var otherPlayerId = inStream.GetInt();
+            var inputActionType = (ImmobilizeActionType)inStream.GetByte();
+            var greatSageTalentActiveBuff = inStream.GetBool();
 
             return new ImmobilizeData(playerId, otherPlayerId, inputActionType, greatSageTalentActiveBuff);
         }

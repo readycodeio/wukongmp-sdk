@@ -1,6 +1,5 @@
-﻿using System;
-using b1;
-using Photon.Client;
+﻿using b1;
+using LiteNetLib.Utils;
 
 namespace WukongApi
 {
@@ -11,33 +10,21 @@ namespace WukongApi
         public float Time { get; } = time;
         public bool NeedForceUpdate { get; } = needForceUpdate;
 
-        public static short Serialize(StreamBuffer outStream, object customObject)
+        public static void Serialize(NetDataWriter outStream, object customObject)
         {
             var data = (StateTriggerData)customObject;
-            outStream.Write(BitConverter.GetBytes(data.CharacterId), 0, 4);
-            outStream.WriteByte((byte)data.Trigger);
-            outStream.Write(BitConverter.GetBytes(data.Time), 0, 4);
-            outStream.Write(BitConverter.GetBytes(data.NeedForceUpdate), 0, 1);
-
-            return 10;
+            outStream.Put(data.CharacterId);
+            outStream.Put((byte)data.Trigger);
+            outStream.Put(data.Time);
+            outStream.Put(data.NeedForceUpdate);
         }
 
-        public static object Deserialize(StreamBuffer inStream, short length)
+        public static object Deserialize(NetDataReader inStream)
         {
-            var bytes = new byte[4];
-
-            inStream.Read(bytes, 0, 4);
-            var characterId = BitConverter.ToInt32(bytes, 0);
-
-            var trigger = (EBUStateTrigger)inStream.ReadByte();
-
-            inStream.Read(bytes, 0, 4);
-            var time = BitConverter.ToSingle(bytes, 0);
-
-            var booleanBytes = new byte[1];
-            inStream.Read(booleanBytes, 0, 1);
-            var needForceUpdate = BitConverter.ToBoolean(booleanBytes, 0);
-
+            var characterId = inStream.GetInt();
+            var trigger = (EBUStateTrigger)inStream.GetByte();
+            var time = inStream.GetFloat();
+            var needForceUpdate = inStream.GetBool();
             return new StateTriggerData(characterId, trigger, time, needForceUpdate);
         }
     }

@@ -1,6 +1,6 @@
-﻿using BtlB1;
+﻿using System.Collections.Generic;
+using BtlB1;
 using BtlShare;
-using System.Collections.Generic;
 
 namespace WukongApi
 {

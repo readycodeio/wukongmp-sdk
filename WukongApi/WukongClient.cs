@@ -27,7 +27,7 @@ namespace WukongApi
         public readonly RelayClient RelayClient;
 
         private const char MonsterHashtableKeySeparator = ';';
-        
+
         private int PeerId => RelayClient.LocalPlayer.PeerId; // is -1 before joining room
         public bool IsMasterClient => RelayClient.RoomState.MasterClientId == PeerId;
         public bool ConnectedAndInRoom => RelayClient.InRoom;
@@ -578,25 +578,19 @@ namespace WukongApi
 
         private void ConfigureRelay()
         {
-            RelayClient.RegisterType(typeof(UnitSpawnData), 255, UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
-            RelayClient.RegisterType(typeof(FVector), 254, SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
-            RelayClient.RegisterType(typeof(FRotator), 253, SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
-            RelayClient.RegisterType(typeof(EMoveSpeedLevel), 252, (stream, obj) =>
-            {
-                stream.WriteByte((byte)obj);
-                return 1;
-            }, (stream, _) => (EMoveSpeedLevel)stream.ReadByte());
-
-            RelayClient.RegisterType(typeof(MontageCallbackData), 251, MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
-            RelayClient.RegisterType(typeof(MonsterMontageCallbackData), 250, MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
-            RelayClient.RegisterType(typeof(EquipmentState), 249, EquipmentState.Serialize, EquipmentState.Deserialize);
-            RelayClient.RegisterType(typeof(DamageNumParam), 248, SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
-            RelayClient.RegisterType(typeof(PlayerTransformData), 247, PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
-            RelayClient.RegisterType(typeof(ImmobilizeData), 246, ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
-            RelayClient.RegisterType(typeof(FsmStateData), 245, FsmStateData.Serialize, FsmStateData.Deserialize);
-            RelayClient.RegisterType(typeof(StateTriggerData), 244, StateTriggerData.Serialize, StateTriggerData.Deserialize);
-            RelayClient.RegisterType(typeof(SimpleStateData), 243, SimpleStateData.Serialize, SimpleStateData.Deserialize);
-            RelayClient.RegisterType(typeof(ChatMessage), 242, ChatMessage.Serialize, ChatMessage.Deserialize);
+            RelayClient.RegisterType(typeof(ChatMessage), ChatMessage.Serialize, ChatMessage.Deserialize);
+            RelayClient.RegisterType(typeof(UnitSpawnData), UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
+            RelayClient.RegisterType(typeof(FVector), SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
+            RelayClient.RegisterType(typeof(FRotator), SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
+            RelayClient.RegisterType(typeof(MontageCallbackData), MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
+            RelayClient.RegisterType(typeof(MonsterMontageCallbackData), MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
+            RelayClient.RegisterType(typeof(EquipmentState), EquipmentState.Serialize, EquipmentState.Deserialize);
+            RelayClient.RegisterType(typeof(DamageNumParam), SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
+            RelayClient.RegisterType(typeof(PlayerTransformData), PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
+            RelayClient.RegisterType(typeof(ImmobilizeData), ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
+            RelayClient.RegisterType(typeof(FsmStateData), FsmStateData.Serialize, FsmStateData.Deserialize);
+            RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
+            RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
