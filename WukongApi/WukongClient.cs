@@ -598,7 +598,7 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(FsmStateData), 245, FsmStateData.Serialize, FsmStateData.Deserialize);
             RelayClient.RegisterType(typeof(StateTriggerData), 244, StateTriggerData.Serialize, StateTriggerData.Deserialize);
             RelayClient.RegisterType(typeof(SimpleStateData), 243, SimpleStateData.Serialize, SimpleStateData.Deserialize);
-            RelayClient.RegisterType(typeof(ChatMessage), 243, ChatMessage.Serialize, ChatMessage.Deserialize);
+            RelayClient.RegisterType(typeof(ChatMessage), 242, ChatMessage.Serialize, ChatMessage.Deserialize);
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
