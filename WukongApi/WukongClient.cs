@@ -38,7 +38,7 @@ namespace WukongApi
 
         private readonly Action _joinedRoomCallback;
         private readonly Action<Player> _playerJoinedCallback;
-        public event Action<int, MontageCallbackData>? OnMontageCallback;
+        public event Action<MontageCallbackData>? OnMontageCallback;
         public event Action<int, MonsterMontageCallbackData>? OnMonsterMontageCallback;
         public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
         public event Action<string>? OnMonsterWakeUp;
@@ -256,7 +256,7 @@ namespace WukongApi
                 case 2:
                     // montage callback
                     var montData = (MontageCallbackData)photonEvent.CustomData;
-                    OnMontageCallback?.Invoke(photonEvent.Sender, montData);
+                    OnMontageCallback?.Invoke(montData);
                     break;
                 case 3:
                     // monster properties
@@ -768,24 +768,24 @@ namespace WukongApi
             PhotonClient.OpRaiseEvent(eventCode, evData, new RaiseEventArgs { TargetActors = [playerId] }, SendOptions.SendReliable);
         }
 
-        public void SendMontageCallback(UAnimMontage montage, float position, bool reset)
+        public void SendMontageCallback(int characterId, UAnimMontage montage, float position, bool reset)
         {
             Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
             const byte eventCode = 2;
 
             var shortened = MontageHelpers.CompressMontageName(montage.PathName, out var shortMontagePath);
             var data = shortened ? shortMontagePath : montage.PathName;
-            var evData = new MontageCallbackData(shortened, data, position, reset);
+            var evData = new MontageCallbackData(characterId, shortened, data, position, reset);
 
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }
 
-        public void SendMontageCancel()
+        public void SendMontageCancel(int characterId)
         {
             Logging.LogDebug("Sending montage cancel");
             const byte eventCode = 2;
 
-            var evData = new MontageCallbackData(false, "", 0f, false);
+            var evData = new MontageCallbackData(characterId, false, "", 0f, false);
 
             PhotonClient.OpRaiseEvent(eventCode, evData, RaiseEventArgs.Default, SendOptions.SendReliable);
         }

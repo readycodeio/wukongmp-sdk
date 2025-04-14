@@ -72,13 +72,13 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
             
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>

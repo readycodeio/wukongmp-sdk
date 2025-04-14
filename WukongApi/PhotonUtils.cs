@@ -146,17 +146,7 @@ namespace WukongApi
             }
             events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
 
-            if (photon.IsMasterClient)
-            {
-                // subscribe to events on master
-                events.Evt_PlayMontageCallback += (reason, montage, state) =>
-                {
-                    var montagePath = montage.GetPathName();
-                    Logging.LogDebug("Monster montage callback: {Guid} {Reason} {Montage} {State}", monsterState.Guid, reason, montagePath, state);
-                    photon.SendMonsterMontageCallback(monsterState.Guid, reason, montagePath, state);
-                };
-            }
-            else
+            if (!photon.IsMasterClient)
             {
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);

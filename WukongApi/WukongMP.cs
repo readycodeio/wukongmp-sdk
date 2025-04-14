@@ -476,7 +476,7 @@ namespace WukongApi
 
             Photon.OnBeforeJoinRoom += SetPlayerProperties;
             Photon.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
-            Photon.OnMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(id, data), "ApplyPlayerMontageCallback");
+            Photon.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
             Photon.OnMonsterMontageCallback += (id, data) => GameLoopPatch.QueueOnGameThread(() => ApplyMonsterMontageCallback(id, data), "ApplyMonsterMontageCallback");
             Photon.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Photon.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
@@ -985,34 +985,35 @@ namespace WukongApi
             uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
         }
 
-        public void ApplyPlayerMontageCallback(int id, MontageCallbackData data)
+        public void ApplyPlayerMontageCallback(MontageCallbackData data)
         {
-            var player = Photon.AllConnectedPlayers.FirstOrDefault(x => x.PhotonId == id);
-            if (player == null)
+            var id = data.CharacterId;
+            var character = Photon.GetCharacterById(id);
+            if (character == null)
             {
-                Logging.LogError("Player not found: {PlayerId}", id);
+                Logging.LogError("Character not found: {CharacterId}", id);
                 return;
             }
 
-            ACharacter? clone = player.Pawn;
+            var pawn = character.Pawn;
 
-            if (clone == null)
+            if (pawn == null)
             {
-                Logging.LogError("Failed to cast pawn to ACharacter");
+                Logging.LogError("Pawn is null");
                 return;
             }
 
             if (string.IsNullOrEmpty(data.MontagePath))
             {
-                Logging.LogDebug("Stopping montage playback for player {PlayerId}", id);
-                clone.StopAnimMontage(null);
+                Logging.LogDebug("Stopping montage playback for character {CharacterId}", id);
+                pawn.StopAnimMontage(null);
                 return;
             }
 
             var fullMontagePath = data.Compressed ? MontageHelpers.DecompressMontageName(data.MontagePath) : data.MontagePath;
             Logging.LogDebug("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
 
-            var animInstance = clone.Mesh.GetAnimInstance();
+            var animInstance = pawn.Mesh.GetAnimInstance();
             if (animInstance == null)
             {
                 Logging.LogError("AnimInstance is null");
@@ -1037,7 +1038,7 @@ namespace WukongApi
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(clone);
+            var events = BUS_EventCollectionCS.Get(pawn);
 
             if (events == null)
             {
@@ -1045,7 +1046,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Applying montage callback for player {PlayerId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
+            Logging.LogDebug("Applying montage callback for character {CharacterId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
             animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }
