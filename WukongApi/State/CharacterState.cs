@@ -21,6 +21,7 @@ namespace WukongApi.State
 
         public bool RunImmobilizePatches { get; set; }
 
+        public MontageState MontageState { get; set; }
 
         public bool IsDead => Hp <= 0;
 
