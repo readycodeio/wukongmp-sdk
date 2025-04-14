@@ -991,7 +991,7 @@ namespace WukongApi
                 return;
             }
 
-            var clone = player.Pawn as ACharacter;
+            ACharacter? clone = player.Pawn;
 
             if (clone == null)
             {
@@ -999,14 +999,14 @@ namespace WukongApi
                 return;
             }
 
-            if (string.IsNullOrEmpty(data.ShortMontagePath))
+            if (string.IsNullOrEmpty(data.MontagePath))
             {
                 Logging.LogDebug("Stopping montage playback for player {PlayerId}", id);
                 clone.StopAnimMontage(null);
                 return;
             }
 
-            var fullMontagePath = MontageHelpers.DecompressMontageName(data.ShortMontagePath);
+            var fullMontagePath = data.Compressed ? MontageHelpers.DecompressMontageName(data.MontagePath) : data.MontagePath;
             Logging.LogDebug("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
 
             var animInstance = clone.Mesh.GetAnimInstance();

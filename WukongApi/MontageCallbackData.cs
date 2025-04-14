@@ -5,30 +5,37 @@ using Photon.Client;
 
 namespace WukongApi
 {
-    public class MontageCallbackData(string shortMontagePath, float position, bool reset)
+    public class MontageCallbackData(bool compressed, string montagePath, float position, bool reset)
     {
-        public string ShortMontagePath { get; } = shortMontagePath;
+        public bool Compressed { get; } = compressed;
+        public string MontagePath { get; } = montagePath;
         public float Position { get; } = position;
         public bool Reset { get; } = reset;
 
         public static short Serialize(StreamBuffer outStream, object customObject)
         {
             var data = (MontageCallbackData)customObject;
+            
+            outStream.WriteByte((byte)(data.Compressed ? 1 : 0));
+            outStream.WriteByte((byte)(data.Reset ? 1 : 0));
+            
             outStream.Write(BitConverter.GetBytes(data.Position), 0, 4);
 
-            var nameBytes = Encoding.UTF8.GetBytes(data.ShortMontagePath);
+            var nameBytes = Encoding.UTF8.GetBytes(data.MontagePath);
             var nameLength = (short)nameBytes.Length;
 
             outStream.Write(BitConverter.GetBytes(nameLength), 0, 2);
             outStream.Write(nameBytes, 0, nameBytes.Length);
 
-            outStream.WriteByte((byte)(data.Reset ? 1 : 0));
 
-            return (short)(4 + 2 + nameLength + 1);
+            return (short)(1 + 1 + 4 + 2 + nameLength);
         }
 
         public static object Deserialize(StreamBuffer inStream, short length)
         {
+            var compressed = inStream.ReadByte() == 1;
+            var reset = inStream.ReadByte() == 1;
+            
             var offsetBytes = new byte[4];
             inStream.Read(offsetBytes, 0, 4);
             var offset = BitConverter.ToSingle(offsetBytes, 0);
@@ -41,8 +48,7 @@ namespace WukongApi
             inStream.Read(nameBytes, 0, nameLength);
             var name = Encoding.UTF8.GetString(nameBytes);
 
-            var reset = inStream.ReadByte() == 1;
-            return new MontageCallbackData(name, offset, reset);
+            return new MontageCallbackData(compressed, name, offset, reset);
         }
     }
 }

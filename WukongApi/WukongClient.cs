@@ -725,8 +725,9 @@ namespace WukongApi
             Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
             const byte eventCode = 2;
 
-            var shortMontagePath = MontageHelpers.CompressMontageName(montage.PathName);
-            var evData = new MontageCallbackData(shortMontagePath, position, reset);
+            var shortened = MontageHelpers.CompressMontageName(montage.PathName, out var shortMontagePath);
+            var data = shortened ? shortMontagePath : montage.PathName;
+            var evData = new MontageCallbackData(shortened, data, position, reset);
 
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
@@ -736,7 +737,7 @@ namespace WukongApi
             Logging.LogDebug("Sending montage cancel");
             const byte eventCode = 2;
 
-            var evData = new MontageCallbackData("", 0f, false);
+            var evData = new MontageCallbackData(false, "", 0f, false);
 
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }

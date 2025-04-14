@@ -8,7 +8,7 @@ public static class MontageHelpers
     private static readonly Regex ShortMontageSplitRegex = new(@"([\w/]+)/(\w+)", RegexOptions.Compiled);
     private static readonly Regex LongMontageSplitRegex = new(@"/Game/00Main/Animation/([\w/]+)/(\w+)\.(\w+)", RegexOptions.Compiled);
 
-    public static string CompressMontageName(string fullName)
+    public static bool CompressMontageName(string fullName, out string shortName)
     {
         var match = LongMontageSplitRegex.Match(fullName);
         if (match.Success)
@@ -16,14 +16,17 @@ public static class MontageHelpers
             if (match.Groups[2].Value != match.Groups[3].Value)
             {
                 Logging.LogError("Found montage with mismatched package/asset name: {MontageName}", fullName);
-                return "";
+                shortName = "";
+                return false;
             }
 
-            return $"{match.Groups[1].Value}/{match.Groups[2].Value}";
+            shortName = $"{match.Groups[1].Value}/{match.Groups[2].Value}";
+            return true;
         }
 
         Logging.LogError("Failed to compress montage name: {MontageName}", fullName);
-        return "";
+        shortName = "";
+        return false;
     }
 
     public static string DecompressMontageName(string shortName)
