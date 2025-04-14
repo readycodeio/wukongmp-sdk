@@ -984,7 +984,6 @@ namespace WukongApi
 
         public void ApplyPlayerMontageCallback(MontageCallbackData data)
         {
-            var character = Client.AllConnectedPlayers.FirstOrDefault(x => x.PeerId == id);
             var id = data.CharacterId;
             var character = Client.GetCharacterById(id);
             if (character == null)

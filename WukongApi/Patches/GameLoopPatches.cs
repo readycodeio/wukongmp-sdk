@@ -99,12 +99,12 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
             
-            SyncMontage(photon.LocalPlayerState);
-            if (photon.IsMasterClient)
+            SyncMontage(client.LocalPlayerState);
+            if (client.IsMasterClient)
             {
-                foreach (var monsterState in photon.SyncedMonsters.Values)
+                foreach (var monsterState in client.SyncedMonsters.Values)
                 {
                     SyncMontage(monsterState);
                 }
@@ -134,14 +134,14 @@ namespace WukongApi.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Client.SendMontageCallback(characterState.PhotonId, currentMontage, currentPosition, hasMontageRewound);
+                    WukongMP.Instance.Client.SendMontageCallback(characterState.PeerId, currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                WukongMP.Instance.Client.SendMontageCancel(characterState.PhotonId);
+                WukongMP.Instance.Client.SendMontageCancel(characterState.PeerId);
             }
 
             montageState.LocalMontage = currentMontage;

@@ -31,7 +31,7 @@ namespace WukongApi
             {
                 if (!TryHandleCommand(message))
                 {
-                    SendChatMessage(message);
+                    SendChatMessage(NickName, message);
                 }
             }
         }
