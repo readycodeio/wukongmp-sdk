@@ -638,12 +638,6 @@ namespace WukongApi
 
         public IEnumerable<Player> GetOtherPlayersInRoom()
         {
-            if (!RelayClient.InRoom)
-            {
-                Logging.LogError("No room joined.");
-                yield break;
-            }
-
             foreach (var (playerId, player) in RelayClient.OtherPlayers)
             {
                 Logging.LogDebug("Other player: {PeerId}", playerId);
