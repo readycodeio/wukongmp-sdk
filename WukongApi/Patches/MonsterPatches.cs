@@ -303,18 +303,18 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            var monsterState = photon.GetMonsterByCharacter(character);
+            var monsterState = client.GetMonsterByCharacter(character);
             if (monsterState is { IsSynced: true })
             {
-                if (photon.IsMasterClient)
+                if (client.IsMasterClient)
                 {
                     if (monsterState.MoveAIType != ___MovementData.MoveAIType)
                     {
                         monsterState.MoveAIType = ___MovementData.MoveAIType;
                         Logging.LogWarning("Move AI type changed to {State} for {Actor}", monsterState.MoveAIType, owner.GetName());
-                        photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAIType), monsterState.MoveAIType);
+                        client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAIType), monsterState.MoveAIType);
                     }
                 }
                 else

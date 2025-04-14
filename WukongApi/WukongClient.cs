@@ -27,12 +27,10 @@ namespace WukongApi
         public readonly RelayClient RelayClient;
 
         private const char MonsterHashtableKeySeparator = ';';
-
-        public bool JoinedRoomCallbacksDone { get; private set; } // prevent race condition where Photon sets InRoom = true before calling OnJoinedRoom
-
+        
         private int PeerId => RelayClient.LocalPlayer.PeerId; // is -1 before joining room
         public bool IsMasterClient => RelayClient.RoomState.MasterClientId == PeerId;
-        public bool ConnectedAndReady => RelayClient.InRoom;
+        public bool ConnectedAndInRoom => RelayClient.InRoom;
 
         private readonly Action _joinedRoomCallback;
         private readonly Action<int> _playerJoinedCallback;
@@ -208,7 +206,7 @@ namespace WukongApi
 
         public void SwitchReadyStateMulti()
         {
-            if (ConnectedAndReady && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count > 0)
+            if (ConnectedAndInRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count > 0)
             {
                 SwitchReadyState();
             }
@@ -216,7 +214,7 @@ namespace WukongApi
 
         public void SwitchReadyStateSingle()
         {
-            if (ConnectedAndReady && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count == 0)
+            if (ConnectedAndInRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count == 0)
             {
                 SwitchReadyState();
             }
@@ -231,7 +229,7 @@ namespace WukongApi
 
         public void SwitchTeam(bool force = false)
         {
-            if (force || (ConnectedAndReady && !LocalPlayerState.IsReadyForPvP && CurrentRoomState is { InPvP: false, InMatchmaking: false }))
+            if (force || (ConnectedAndInRoom && !LocalPlayerState.IsReadyForPvP && CurrentRoomState is { InPvP: false, InMatchmaking: false }))
             {
                 var teamId = LocalPlayerState.TeamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
@@ -506,7 +504,7 @@ namespace WukongApi
             // check if all players but one are dead
             var players = AllPvPPlayers.ToList();
             var alivePlayers = players.Where(p => !p.IsDead).ToList<CharacterState>();
-            var aliveCharacters = alivePlayers.Concat(SyncedMonsters.Values.Where(m => !m.IsDead).ToList());
+            var aliveCharacters = alivePlayers.Concat(SyncedMonsters.Values.Where(m => !m.IsDead)).ToList();
             var aliveCharactersTeams = aliveCharacters.Select(p => p.TeamId).Distinct().Count();
 
             var aliveTeams = aliveCharacters
@@ -518,7 +516,7 @@ namespace WukongApi
             if (alivePlayers.Count == 0)
             {
                 Logging.LogInformation("All players are dead, ending round");
-                if (aliveCharacters.Count() == 0)
+                if (aliveCharacters.Count == 0)
                 {
                     Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeams[0].TeamId)));
                 }
@@ -1112,14 +1110,12 @@ namespace WukongApi
             SubscribeToPlayerEvents();
             _joinedRoomCallback.Invoke();
 
-            JoinedRoomCallbacksDone = true;
             WukongChat.SendServerMessage($"{LocalPlayerState.NickName} has joined!");
         }
 
         public void OnDisconnectedHandler(DisconnectReason reason)
         {
             Logging.LogInformation("Disconnected");
-            JoinedRoomCallbacksDone = false;
             if (reason == DisconnectReason.DisconnectPeerCalled)
             {
                 Logging.LogInformation("Disconnected: {Cause}", reason);

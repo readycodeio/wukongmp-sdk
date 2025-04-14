@@ -78,7 +78,7 @@ namespace WukongApi
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
                 return;
 
-            ConfigurePhotonCallbacks();
+            ConfigureEventCallbacks();
             InitGameInstanceAsync();
         }
 
@@ -143,7 +143,7 @@ namespace WukongApi
             Logging.LogInformation("Delay begin play for player.");
 
             // this is triggered for every player controller, but we want to apply the logic once
-            if (!Client.ConnectedAndReady)
+            if (!Client.ConnectedAndInRoom)
             {
                 GameUtils.DestroyAllTamers();
                 BlueprintUiUtils.SpawnUiManagerActor();
@@ -275,11 +275,9 @@ namespace WukongApi
             }
         }
 
-        // annotate that Photon is not null when this returns true
-
         public bool ShouldRunConnectedPatches()
         {
-            return Client is { ConnectedAndReady: true, JoinedRoomCallbacksDone: true };
+            return Client is { ConnectedAndInRoom: true };
         }
 
         public void StartRound()
@@ -321,6 +319,7 @@ namespace WukongApi
                     events?.Evt_RelievePhantomRush.Invoke();
                 }
             }
+
             Utils.TryRunOnGameThread(DestroySyncedMonsters);
         }
 
@@ -459,11 +458,11 @@ namespace WukongApi
             }
         }
 
-        private void ConfigurePhotonCallbacks()
+        private void ConfigureEventCallbacks()
         {
-            if (Client.ConnectedAndReady)
+            if (Client.ConnectedAndInRoom)
             {
-                Logging.LogError("Photon is already connected and ready");
+                Logging.LogError("Relay client is already connected and ready");
                 return;
             }
 
@@ -601,7 +600,7 @@ namespace WukongApi
             Logging.LogDebug("Setting simple state: {State}, with isRemove {Remove} for player {Player}", state, isForce, characterState.NickName);
             events.Evt_UnitSetSimpleState.Invoke(state, isForce);
         }
-        
+
         private void OnFsmStateSet(int characterId, string eventName)
         {
             var characterState = Client.GetCharacterById(characterId);
@@ -876,7 +875,7 @@ namespace WukongApi
 
             Client.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
             Client.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
-            
+
             // nickname
             var nickname = CmdLineParams.Instance.Nickname;
             Client.CachePlayerProperty(nameof(PlayerState.NickName), nickname);
@@ -1261,6 +1260,7 @@ namespace WukongApi
             {
                 return;
             }
+
             var monsterPawn = monsterState.Tamer.GetMonster();
             if (monsterPawn != null)
             {
@@ -1268,15 +1268,17 @@ namespace WukongApi
                 events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
                 BGU_UnrealWorldUtil.DestroyActor(monsterState.Pawn);
             }
+
             BGU_UnrealWorldUtil.DestroyActor(monsterState.Tamer);
         }
 
         public void CleanupMonster(MonsterState monsterState)
         {
-            if (monsterState.MarkerActor !=  null)
+            if (monsterState.MarkerActor != null)
             {
                 BGU_UnrealWorldUtil.DestroyActor(monsterState.MarkerActor);
             }
+
             Client.RemoveSyncedMonster(monsterState);
         }
 

@@ -172,21 +172,21 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.InJump != __instance.bInJump)
                 {
-                    photon.LocalPlayerState.InJump = __instance.bInJump;
-                    photon.CachePlayerProperty(nameof(PlayerState.InJump), photon.LocalPlayerState.InJump);
+                    client.LocalPlayerState.InJump = __instance.bInJump;
+                    client.CachePlayerProperty(nameof(PlayerState.InJump), client.LocalPlayerState.InJump);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -321,7 +321,7 @@ namespace WukongApi.Patches
             if (DeadReason == EDeadReason.PlayerTrans)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -336,19 +336,19 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (photon is { IsMasterClient: true, CurrentRoomState.InPvP: true, CurrentRoomState.InCombatRound: true })
+            if (client is { IsMasterClient: true, CurrentRoomState.InPvP: true, CurrentRoomState.InCombatRound: true })
             {
                 if (Attacker != owner)
                 {
-                    var attackerPlayerState = photon.GetPlayerByActor(Attacker);
-                    var killedPlayerState = photon.GetPlayerByActor(owner);
+                    var attackerPlayerState = client.GetPlayerByActor(Attacker);
+                    var killedPlayerState = client.GetPlayerByActor(owner);
                     if (attackerPlayerState != null && killedPlayerState != null)
                     {
-                        photon.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
+                        client.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
                     }
                 }
 
-                photon.CheckRoundEndCondition();
+                client.CheckRoundEndCondition();
             }
         }
 
@@ -360,7 +360,7 @@ namespace WukongApi.Patches
             if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -369,7 +369,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (owner == photon.LocalPlayerState.Pawn)
+            if (owner == client.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
             }
@@ -398,9 +398,9 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            var localPawn = photon.LocalPlayerState.Pawn;
+            var localPawn = client.LocalPlayerState.Pawn;
             var owner = __instance.GetOwner();
             
             if (owner.IsNullOrDestroyed())
@@ -459,7 +459,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
             
             var owner = __instance.GetOwner();
             if (owner.IsNullOrDestroyed())
@@ -469,17 +469,17 @@ namespace WukongApi.Patches
             }
 
             // send only own updates
-            if (owner != photon.LocalPlayerState.Pawn)
+            if (owner != client.LocalPlayerState.Pawn)
                 return;
 
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return;
 
-            var newTargetCharacterState = photon.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
+            var newTargetCharacterState = client.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
             if (newTargetCharacterState  != null)
             {
-                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetCharacterState.NickName);
-                photon.SendTarget(newTargetCharacterState.PeerId);
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState.NickName);
+                client.SendTarget(newTargetCharacterState.PeerId);
             }
         }
     }
@@ -508,8 +508,8 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Client;
-            if (photon.IsMasterClient)
+            var client = WukongMP.Instance.Client;
+            if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
                 

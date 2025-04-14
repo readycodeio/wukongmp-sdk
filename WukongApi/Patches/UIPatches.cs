@@ -42,12 +42,12 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            if (!photon.IsMasterClient)
+            if (!client.IsMasterClient)
                 return false;
 
-            photon.SendDamageNum(Param);
+            client.SendDamageNum(Param);
             return true;
         }
     }
@@ -160,9 +160,9 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Client;
+            var client = WukongMP.Instance.Client;
 
-            if (photon.CurrentRoomState.InPvP)
+            if (client.CurrentRoomState.InPvP)
             {
                 __result = true;
                 return false;
