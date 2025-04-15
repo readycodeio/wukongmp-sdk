@@ -60,6 +60,16 @@ namespace WukongApi.UI
             GameWidget?.CallFunctionByNameWithArguments($"RemoveFromTeam2 {playerName}", true);
         }
 
+        private void AddSpectator(string playerName)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"AddSpectator {playerName}", true);
+        }
+
+        private void RemoveSpectator(string playerName)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"RemoveSpectator {playerName}", true);
+        }
+
         protected override void PostInitialize() { }
     }
 }
