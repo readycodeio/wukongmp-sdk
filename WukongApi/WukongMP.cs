@@ -326,6 +326,10 @@ namespace WukongApi
                     events?.Evt_RelievePhantomRush.Invoke();
                 }
             }
+        }
+
+        public void ResetRoundState()
+        {
             Utils.TryRunOnGameThread(DestroySyncedMonsters);
         }
 

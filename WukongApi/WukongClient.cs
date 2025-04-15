@@ -420,6 +420,8 @@ namespace WukongApi
                     break;
                 }
                 case PvPEvent.ResetStats:
+                    WukongMP.Instance.ResetRoundState();
+
                     if (!LocalPlayerState.IsDead)
                     {
                         Utils.TryRunOnGameThread(() =>
