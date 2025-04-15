@@ -208,7 +208,7 @@ namespace WukongApi
                 {
                     SetupLobbyUi();
                 }
-                UpdatePlayerTeamUi(Photon.LocalPlayerState, Photon.LocalPlayerState.IsSpectator);
+                UpdatePlayerTeamUi(Client.LocalPlayerState, Client.LocalPlayerState.IsSpectator);
             }
         }
 

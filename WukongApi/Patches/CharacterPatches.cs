@@ -447,7 +447,7 @@ namespace WukongApi.Patches
                             if (!monsterState.MaxSpeed.Equals(__instance.MaxSpeed, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.MaxSpeed = __instance.MaxSpeed;
-                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
+                                client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
                             }
                         }
                         else
