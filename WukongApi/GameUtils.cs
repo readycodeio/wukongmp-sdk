@@ -143,6 +143,8 @@ namespace WukongApi
 
         public static int GetOppositeTeam(int teamId)
         {
+            if (teamId == Constants.DrawTeamId)
+                return teamId;
             return teamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
         }
 

@@ -443,9 +443,16 @@ namespace WukongApi.Patches
                                 monsterState.Rotation = __instance.ActorRotation;
                                 client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Rotation), monsterState.Rotation);
                             }
+
+                            if (!monsterState.MaxSpeed.Equals(__instance.MaxSpeed, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.MaxSpeed = __instance.MaxSpeed;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
+                            }
                         }
                         else
                         {
+                            __instance.MaxSpeed = monsterState.MaxSpeed;
                             __instance.Velocity = monsterState.Velocity;
                             __instance.MoveAcceleration = monsterState.MoveAcceleration;
                             __instance.MovementComp.Velocity = monsterState.Velocity;

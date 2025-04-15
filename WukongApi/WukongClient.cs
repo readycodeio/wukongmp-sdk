@@ -35,7 +35,6 @@ namespace WukongApi
         private readonly Action _joinedRoomCallback;
         private readonly Action<int> _playerJoinedCallback;
         public event Action<MontageCallbackData>? OnMontageCallback;
-        public event Action<int, MonsterMontageCallbackData>? OnMonsterMontageCallback;
         public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
         public event Action<string>? OnMonsterWakeUp;
         public event Action<int, EquipmentState>? OnEquipmentChange;
@@ -275,9 +274,7 @@ namespace WukongApi
                     ApplyMonsterMove(monsterData);
                     break;
                 case 4:
-                    // montage callback
-                    var monsterMontageData = RelayClient.DeserializeObject<MonsterMontageCallbackData>(reader);
-                    OnMonsterMontageCallback?.Invoke(header.Sender, monsterMontageData);
+                    // free
                     break;
                 case 5:
                     // monster wake up
@@ -446,6 +443,8 @@ namespace WukongApi
                     break;
                 }
                 case PvPEvent.ResetStats:
+                    WukongMP.Instance.ResetRoundState();
+
                     if (!LocalPlayerState.IsDead)
                     {
                         Utils.TryRunOnGameThread(() =>
@@ -516,13 +515,14 @@ namespace WukongApi
             if (alivePlayers.Count == 0)
             {
                 Logging.LogInformation("All players are dead, ending round");
+                var aliveTeamId = aliveTeams.Count > 0 ? aliveTeams[0].TeamId : Constants.DrawTeamId;
                 if (aliveCharacters.Count == 0)
                 {
-                    Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeams[0].TeamId)));
+                    Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeamId)));
                 }
                 else
                 {
-                    Task.Run(async () => await LobbyManager.EndRoundAsync(aliveTeams[0].TeamId));
+                    Task.Run(async () => await LobbyManager.EndRoundAsync(aliveTeamId));
                 }
 
                 return;
@@ -583,7 +583,6 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(FVector), SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
             RelayClient.RegisterType(typeof(FRotator), SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
             RelayClient.RegisterType(typeof(MontageCallbackData), MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
-            RelayClient.RegisterType(typeof(MonsterMontageCallbackData), MonsterMontageCallbackData.Serialize, MonsterMontageCallbackData.Deserialize);
             RelayClient.RegisterType(typeof(EquipmentState), EquipmentState.Serialize, EquipmentState.Deserialize);
             RelayClient.RegisterType(typeof(DamageNumParam), SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
             RelayClient.RegisterType(typeof(PlayerTransformData), PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
@@ -726,13 +725,6 @@ namespace WukongApi
 
             var evData = new MontageCallbackData(characterId, false, "", 0f, false);
 
-            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-        }
-
-        public void SendMonsterMontageCallback(string monsterId, EMontageBindReason reason, string montagePath, EMontageCallbackState state)
-        {
-            const byte eventCode = 4;
-            var evData = new MonsterMontageCallbackData(monsterId, reason, montagePath, state);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 

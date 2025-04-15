@@ -41,6 +41,7 @@ namespace WukongApi
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
         public const string TimerWidgetName = "WBP_Timer_C";
+        public const string PingWidgetName = "WBP_PingIndicator_C";
         public const string CountdownWidgetName = "WBP_Countdown_C";
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";

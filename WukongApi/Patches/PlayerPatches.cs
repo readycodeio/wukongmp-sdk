@@ -549,12 +549,12 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchGetUnitBattleInfoExtendDesc
     {
-        public static void Postfix(ref FUStUnitBattleInfoExtendDesc __result)
+        public static void Postfix(ref FUStUnitBattleInfoExtendDesc? __result)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (__result.DefaultCamID == 0)
+            if (__result != null && __result.DefaultCamID == 0)
                 __result.DefaultCamID = 101600;
         }
     }
