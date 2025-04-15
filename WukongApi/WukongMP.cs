@@ -579,7 +579,7 @@ namespace WukongApi
             var characterState = Photon.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                Logging.LogWarning("Character not found: {Id}", characterId);
                 return;
             }
 
@@ -600,7 +600,7 @@ namespace WukongApi
             var characterState = Photon.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                Logging.LogWarning("Character not found: {Id}", characterId);
                 return;
             }
 
@@ -621,7 +621,7 @@ namespace WukongApi
             var characterState = Photon.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                Logging.LogWarning("Character not found: {Id}", characterId);
                 return;
             }
 

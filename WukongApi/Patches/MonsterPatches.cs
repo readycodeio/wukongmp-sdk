@@ -313,7 +313,7 @@ namespace WukongApi.Patches
                     if (monsterState.MoveAIType != ___MovementData.MoveAIType)
                     {
                         monsterState.MoveAIType = ___MovementData.MoveAIType;
-                        Logging.LogWarning("Move AI type changed to {State} for {Actor}", monsterState.MoveAIType, owner.GetName());
+                        Logging.LogDebug("Move AI type changed to {State} for {Actor}", monsterState.MoveAIType, owner.GetName());
                         photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAIType), monsterState.MoveAIType);
                     }
                 }
