@@ -490,13 +490,14 @@ namespace WukongApi
             if (alivePlayers.Count == 0)
             {
                 Logging.LogInformation("All players are dead, ending round");
+                var aliveTeamId = aliveTeams.Count > 0 ? aliveTeams[0].TeamId : Constants.DrawTeamId;
                 if (aliveCharacters.Count() == 0)
                 {
-                    Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeams[0].TeamId)));
+                    Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeamId)));
                 }
                 else
                 {
-                    Task.Run(async () => await LobbyManager.EndRoundAsync(aliveTeams[0].TeamId));
+                    Task.Run(async () => await LobbyManager.EndRoundAsync(aliveTeamId));
                 }
 
                 return;
