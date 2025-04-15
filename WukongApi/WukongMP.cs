@@ -1106,7 +1106,7 @@ namespace WukongApi
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
             var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
-            var id = Photon.SyncedMonsters.Count + Photon.PhotonClient.CurrentRoom.MaxPlayers;
+            var id = -(Photon.SyncedMonsters.Count + Photon.PhotonClient.CurrentRoom.MaxPlayers);
 
             SpawnUnitLocally(id, guid, unitName, teamId, loc.X, loc.Y, loc.Z);
 
