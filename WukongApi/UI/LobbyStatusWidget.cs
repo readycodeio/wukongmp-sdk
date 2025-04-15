@@ -21,23 +21,28 @@ namespace WukongApi.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
         }
 
-        public void UpdatePlayerTeam(PlayerState playerState, int teamId)
+        public void UpdatePlayerTeam(string nickName, int teamId, bool isSpectatator)
         {
-            RemovePlayerFromTeams(playerState);
-            if (teamId == Constants.AvailableTeamIds[0])
+            RemovePlayerFromTeams(nickName);
+            if (isSpectatator)
             {
-                AddToTeam1(playerState.NickName);
+                AddSpectator(nickName);
+            }
+            else if (teamId == Constants.AvailableTeamIds[0])
+            {
+                AddToTeam1(nickName);
             }
             else if (teamId == Constants.AvailableTeamIds[1])
             {
-                AddToTeam2(playerState.NickName);
+                AddToTeam2(nickName);
             }
         }
 
-        public void RemovePlayerFromTeams(PlayerState playerState)
+        public void RemovePlayerFromTeams(string nickName)
         {
-            RemoveFromTeam1(playerState.NickName);
-            RemoveFromTeam2(playerState.NickName);
+            RemoveFromTeam1(nickName);
+            RemoveFromTeam2(nickName);
+            RemoveSpectator(nickName);
         }
 
         private void AddToTeam1(string playerName)

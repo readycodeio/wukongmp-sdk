@@ -208,6 +208,7 @@ namespace WukongApi
                 {
                     SetupLobbyUi();
                 }
+                UpdatePlayerTeamUi(Photon.LocalPlayerState, Photon.LocalPlayerState.IsSpectator);
             }
         }
 
@@ -385,7 +386,7 @@ namespace WukongApi
             foreach (var playerState in Photon.SpectatingPlayers)
             {
                 ShowSpectator(playerState);
-                _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
+                _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, false);
             }
         }
 
@@ -706,13 +707,12 @@ namespace WukongApi
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             }
 
-            UpdatePlayerTeamUi(playerState);
+            UpdatePlayerTeamUi(playerState, playerState.IsSpectator);
         }
 
-        private void UpdatePlayerTeamUi(PlayerState playerState)
+        private void UpdatePlayerTeamUi(PlayerState playerState, bool isSpectator)
         {
-            if (!playerState.IsSpectator)
-                _lobbyStatusWidget.UpdatePlayerTeam(playerState, playerState.TeamId);
+            _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, isSpectator);
         }
 
         private void KillPlayer(int playerId)
@@ -967,7 +967,7 @@ namespace WukongApi
                 BGU_UnrealWorldUtil.DestroyActor(playerState.Pawn);
             }
 
-            _lobbyStatusWidget.RemovePlayerFromTeams(playerState);
+            _lobbyStatusWidget.RemovePlayerFromTeams(playerState.NickName);
             UpdateConnectedCount();
             _lobbyStatusWidget.SetReadyCount(Photon.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
         }
@@ -1373,15 +1373,13 @@ namespace WukongApi
                     readyForPvP = (bool)isReady;
                 }
 
-                if (Photon.CurrentRoomState.InPvP && !readyForPvP)
+                var isSpectator = Photon.CurrentRoomState.InPvP && !readyForPvP;
+                if (isSpectator)
                 {
                     HideSpectator(playerState);
                     TeleportOutSpectator(playerState);
                 }
-                else
-                {
-                    UpdatePlayerTeamUi(playerState);
-                }
+                UpdatePlayerTeamUi(playerState, isSpectator);
 
                 if (Photon.AllConnectedPlayers.Count() == Photon.PhotonClient.CurrentRoom.MaxPlayers)
                 {
