@@ -34,7 +34,6 @@ namespace WukongApi
         private readonly GameMessageWidget _gameMessageWidget = new();
         private readonly InfoMessageWidget _infoMessageWidget = new();
         private readonly CountdownWidget _countdownWidget = new();
-        private readonly PingIndicatorWidget _pingIndicatorWidget = new();
 
         public static WukongMP Instance { get; } = new();
 
@@ -168,7 +167,8 @@ namespace WukongApi
             _gameMessageWidget.Initialize();
             _countdownWidget.Initialize();
             _infoMessageWidget.Initialize();
-            _pingIndicatorWidget.Initialize();
+            PingIndicatorWidget.Instance.Initialize();
+            PingIndicatorWidget.Instance.SetVisibility(true);
         }
 
         private void DeinitializeWidgets()
@@ -179,7 +179,7 @@ namespace WukongApi
             _gameMessageWidget.Deinitialize();
             _countdownWidget.Deinitialize();
             _infoMessageWidget.Deinitialize();
-            _pingIndicatorWidget.Deinitialize();
+            PingIndicatorWidget.Instance.Deinitialize();
         }
 
         private void OnLoadingScreenClose()

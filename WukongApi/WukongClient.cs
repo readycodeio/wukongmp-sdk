@@ -251,7 +251,7 @@ namespace WukongApi
 
         private void OnPingUpdated(int ping)
         {
-            Logging.LogDebug("Ping: {Ping}", ping);
+            PingIndicatorWidget.Instance.SetPingText(ping);
         }
 
         public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)

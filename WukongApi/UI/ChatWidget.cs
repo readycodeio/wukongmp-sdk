@@ -2,7 +2,7 @@
 {
     public class ChatWidget : GameWidgetBase
     {
-        public static ChatWidget Instance { get; } = new ChatWidget();
+        public static ChatWidget Instance { get; } = new();
 
         private ChatWidget() : base(Constants.ChatWidgetName) { }
 
