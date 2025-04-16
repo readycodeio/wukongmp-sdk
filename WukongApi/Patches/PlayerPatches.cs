@@ -568,15 +568,13 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (CmdLineParams.Instance.RoomCreationOptions.HasValue)
+            var client = WukongMP.Instance.Client;
+            if (client.CurrentRoomState.EnemiesNgPlusLevel == -1)
             {
-                __result = CmdLineParams.Instance.RoomCreationOptions.Value.EnemiesNgPlusLevel;
-            }
-            else
-            {
-                __result = 1;
+                return true;
             }
 
+            __result = client.CurrentRoomState.EnemiesNgPlusLevel;
             return false;
         }
     }

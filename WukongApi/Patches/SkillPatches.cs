@@ -37,7 +37,11 @@ namespace WukongApi.Patches
     {
         public static bool Prefix(BUS_PlayerInputActionComp __instance)
         {
-            if (!CmdLineParams.Instance.RoomCreationOptions.HasValue || !CmdLineParams.Instance.RoomCreationOptions.Value.GourdAllowed)
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var client = WukongMP.Instance.Client;
+            if (!client.CurrentRoomState.GourdAllowed)
             {
                 return false;
             }
@@ -64,7 +68,11 @@ namespace WukongApi.Patches
 
         public static bool Prefix()
         {
-            return CmdLineParams.Instance.RoomCreationOptions.HasValue && CmdLineParams.Instance.RoomCreationOptions.Value.GourdAllowed;
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var client = WukongMP.Instance.Client;
+            return client.CurrentRoomState.GourdAllowed;
         }
     }
 
@@ -92,6 +100,12 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
+            var client = WukongMP.Instance.Client;
+            if (!client.CurrentRoomState.ImmobilizeAllowed)
+            {
+                return false;
+            }
+
             // get properties
             MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
             BUC_CastImmobilizeData CastImmobilizeData = (BUC_CastImmobilizeData)getter.Invoke(__instance, null);
@@ -100,7 +114,6 @@ namespace WukongApi.Patches
             getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "BuffData");
             IBUC_BuffData BuffData = (IBUC_BuffData)getter.Invoke(__instance, null);
 
-            var client = WukongMP.Instance.Client;
             AActor castingCharacter = __instance.GetOwner();
 
             if (castingCharacter.IsNullOrDestroyed())
@@ -334,6 +347,11 @@ namespace WukongApi.Patches
                     return true;
 
                 var client = WukongMP.Instance.Client;
+                if (!client.CurrentRoomState.PhantomRushAllowed)
+                {
+                    return false;
+                }
+
                 AActor owner = __instance.GetOwner();
 
                 if (owner.IsNullOrDestroyed())

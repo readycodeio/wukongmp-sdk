@@ -61,7 +61,13 @@ namespace WukongApi.State
             get => GetProperty<bool>(nameof(PhantomRushAllowed));
             set => SetProperty(nameof(PhantomRushAllowed), value);
         }
-        
+
+        public int EnemiesNgPlusLevel
+        {
+            get => GetProperty<int>(nameof(EnemiesNgPlusLevel));
+            set => SetProperty(nameof(EnemiesNgPlusLevel), value);
+        }
+
         public bool BotsEnabled
         {
             get => GetProperty<bool>(nameof(BotsEnabled));

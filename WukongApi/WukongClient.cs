@@ -669,6 +669,7 @@ namespace WukongApi
             CurrentRoomState.GourdAllowed = opts.GourdAllowed;
             CurrentRoomState.ImmobilizeAllowed = opts.ImmobilizeAllowed;
             CurrentRoomState.PhantomRushAllowed = opts.PhantomRushAllowed;
+            CurrentRoomState.EnemiesNgPlusLevel = opts.EnemiesNgPlusLevel;
             RelayClient.RoomState.MaxPlayers = 10;
         }
 
