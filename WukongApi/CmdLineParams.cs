@@ -87,7 +87,7 @@ public class CmdLineParams
         }
 
         // OPTIONAL: room creation params
-        var roomMatch = Regex.Match(cmd, """-rounds ""?(\d+)""? -gourd ""?(\w+)""? -immobilize ""?(\w+)""? -phantomRush ""?(\w+)""? -ng ""?(\d+)""?""");
+        var roomMatch = Regex.Match(cmd, """-rounds "?(\d+)"? -gourd "?(\w+)"? -immobilize "?(\w+)"? -phantomRush "?(\w+)"? -ng "?(\d+)"?""");
         if (roomMatch.Success)
         {
             var rounds = int.Parse(roomMatch.Groups[1].Value);
@@ -99,6 +99,10 @@ public class CmdLineParams
             RoomCreationOptions = new RoomCreationOptions(rounds, ngPlus, flask, immobilize, phantomRush);
 
             Logging.LogDebug("Room creation options set");
+        }
+        else
+        {
+            Logging.LogDebug("Room creation options not provided");
         }
     }
 }
