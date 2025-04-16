@@ -211,6 +211,7 @@ namespace WukongApi
                 {
                     SetupLobbyUi();
                 }
+
                 UpdatePlayerTeamUi(Photon.LocalPlayerState, Photon.LocalPlayerState.IsSpectator);
             }
         }
@@ -615,7 +616,7 @@ namespace WukongApi
             Logging.LogDebug("Setting simple state: {State}, with isRemove {Remove} for player {Player}", state, isForce, characterState.NickName);
             events.Evt_UnitSetSimpleState.Invoke(state, isForce);
         }
-        
+
         private void OnFsmStateSet(int characterId, string eventName)
         {
             var characterState = Photon.GetCharacterById(characterId);
@@ -1059,6 +1060,12 @@ namespace WukongApi
 
         public void SpawnEnemiesMaster(string enemyName, int count, int teamId)
         {
+            if (!UnitPathsConfig.IsValidMonsterName(enemyName))
+            {
+                ChatWidget.Instance.AddMessage(true, "Command", $"Invalid monster name \"{enemyName}\"");
+                return;
+            }
+
             var player = GameUtils.GetControlledPawn();
 
             if (player == null)
@@ -1151,6 +1158,7 @@ namespace WukongApi
                 Logging.LogError("Could not spawn enemy: {UnitName}", unitName);
                 return;
             }
+
             buTamerActor.MarkAsSpawnedTamer(null);
             buTamerActor.ExtendConfigComp.ActorResetType = EBGUResetType.Destroy;
 
@@ -1186,6 +1194,7 @@ namespace WukongApi
                 {
                     events.Evt_SetAttrFloat.Invoke(attr.Key, attr.Value);
                 }
+
                 foreach (var eq in MonkeyBotConfig.Equipment)
                 {
                     events.Evt_InitDaShenEquipData.Invoke(eq.Key, eq.Value);
@@ -1221,6 +1230,7 @@ namespace WukongApi
             {
                 return;
             }
+
             var monsterPawn = monsterState.Tamer.GetMonster();
             if (monsterPawn != null)
             {
@@ -1228,15 +1238,17 @@ namespace WukongApi
                 events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
                 BGU_UnrealWorldUtil.DestroyActor(monsterState.Pawn);
             }
+
             BGU_UnrealWorldUtil.DestroyActor(monsterState.Tamer);
         }
 
         public void CleanupMonster(MonsterState monsterState)
         {
-            if (monsterState.MarkerActor !=  null)
+            if (monsterState.MarkerActor != null)
             {
                 BGU_UnrealWorldUtil.DestroyActor(monsterState.MarkerActor);
             }
+
             Photon.RemoveSyncedMonster(monsterState);
         }
 
@@ -1398,6 +1410,7 @@ namespace WukongApi
                     HideSpectator(playerState);
                     TeleportOutSpectator(playerState);
                 }
+
                 UpdatePlayerTeamUi(playerState, isSpectator);
 
                 if (Photon.AllConnectedPlayers.Count() == Photon.PhotonClient.CurrentRoom.MaxPlayers)

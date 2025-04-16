@@ -101,8 +101,13 @@ namespace WukongApi
                 return value;
             }
 
-            Logging.LogWarning("Unit path for '{UnitName}' not found. Spawning '{SpawnedUnitName}' instead", unitName, Configurations.First().Key);
-            return Configurations.First().Value;
+            Logging.LogWarning("Unit path for '{UnitName}' not found. Spawning '{SpawnedUnitName}' instead", unitName, CharacterKind.WolfSoldier);
+            return Configurations[CharacterKind.WolfSoldier];
+        }
+
+        public static bool IsValidMonsterName(string enemyName)
+        {
+            return Configurations.ContainsKey(GameUtils.UnifyUnitName(enemyName));
         }
     }
 }
