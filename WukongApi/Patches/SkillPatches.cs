@@ -35,9 +35,21 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchTriggerItemSkill
     {
-        public static bool Prefix()
+        public static bool Prefix(BUS_PlayerInputActionComp __instance)
         {
-            return false;
+            if (!CmdLineParams.Instance.RoomCreationOptions.HasValue || !CmdLineParams.Instance.RoomCreationOptions.Value.GourdAllowed)
+            {
+                return false;
+            }
+
+            var comboCacheDataFieldInfo = AccessTools.Field(__instance.GetType(), "ComboCacheData");
+            var comboCacheData = comboCacheDataFieldInfo.GetValue(__instance);
+
+            var comboCacheDataType = comboCacheData.GetType();
+            var lastItemSkillIdField = comboCacheDataType.GetField("LastItemSkillID", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            var lastItemSkillIdValue = lastItemSkillIdField.GetValue(comboCacheData);
+            return lastItemSkillIdValue is int lastItemSkillId && lastItemSkillId == 10530;
         }
     }
 
@@ -52,7 +64,7 @@ namespace WukongApi.Patches
 
         public static bool Prefix()
         {
-            return false;
+            return CmdLineParams.Instance.RoomCreationOptions.HasValue && CmdLineParams.Instance.RoomCreationOptions.Value.GourdAllowed;
         }
     }
 
