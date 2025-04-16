@@ -46,14 +46,8 @@ namespace WukongApi.Patches
                 return false;
             }
 
-            var comboCacheDataFieldInfo = AccessTools.Field(__instance.GetType(), "ComboCacheData");
-            var comboCacheData = comboCacheDataFieldInfo.GetValue(__instance);
-
-            var comboCacheDataType = comboCacheData.GetType();
-            var lastItemSkillIdField = comboCacheDataType.GetField("LastItemSkillID", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-            var lastItemSkillIdValue = lastItemSkillIdField.GetValue(comboCacheData);
-            return lastItemSkillIdValue is int lastItemSkillId && lastItemSkillId == 10530;
+            var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
+            return lastSkill is 10530;
         }
     }
 
