@@ -1058,7 +1058,7 @@ namespace WukongApi
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }
 
-        public void SpawnEnemiesMaster(string enemyName, int count, int teamId)
+        public void SpawnEnemiesLocal(string enemyName, int count, int teamId)
         {
             if (!UnitPathsConfig.IsValidMonsterName(enemyName))
             {
@@ -1111,16 +1111,18 @@ namespace WukongApi
                     {
                         // wait for i * 200ms
                         await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                        GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
+                        GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyLocal(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
                     });
                     placed++;
                     if (placed == count)
                         return;
                 }
             }
+
+            Photon.WukongChat.SendServerMessage($"{Photon.LocalPlayerState.NickName} spawned {count} {enemyName}");
         }
 
-        private void SpawnEnemyMaster(string enemyName, FVector loc, int teamId)
+        private void SpawnEnemyLocal(string enemyName, FVector loc, int teamId)
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
@@ -1211,7 +1213,7 @@ namespace WukongApi
                 float y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
 
                 FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
-                SpawnEnemyMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Photon.LocalPlayerState.TeamId));
+                SpawnEnemyLocal(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Photon.LocalPlayerState.TeamId));
             }
         }
 
