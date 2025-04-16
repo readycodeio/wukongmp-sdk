@@ -18,7 +18,7 @@ namespace WukongApi
         public const int MonsterSpawnDelayMs = 500;
         public const string AttributePrefix = "attr_";
         public static readonly FVector PvpStartingLocation = new(-11146.926, -3229.771, 6507.035);
-        public static readonly float PvpStartingRadius = 500;
+        public const float PvpStartingRadius = 500;
         public const float PvpRadius = 4000;
         public const float PvpMonsterRadius = 1000;
         public const float CameraArmLength = 720;
@@ -33,7 +33,7 @@ namespace WukongApi
         public const int CountdownSeconds = 5;
         public const int MatchmakingSeconds = 45;
         public const int RoundSeconds = 0;
-        public const int RoundMinutes = 3;
+        public const int RoundMinutes = 5;
 
         public const int BotCount = 2;
 
