@@ -103,6 +103,10 @@ namespace WukongApi
                     {
                         GameLoopPatch.QueueOnGameThread(() => WukongMP.Instance.SpawnEnemiesLocal(args.Span[0], count, _wukongClient.LocalPlayerState.TeamId), "SpawnEnemiesMaster");
                     }
+                    else
+                    {
+                        ChatWidget.Instance.AddMessage(true, "Command", $"Invalid number of enemies: \"{args.Span[1]}\"");
+                    }
 
                     break;
                 }
