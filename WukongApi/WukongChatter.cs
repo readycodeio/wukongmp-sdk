@@ -27,8 +27,9 @@ namespace WukongApi
 
         public void ProcessMessage(string message)
         {
-            if (!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrWhiteSpace(message))
             {
+                message = message.Trim();
                 if (!TryHandleCommand(message))
                 {
                     SendChatMessage(NickName, message);
@@ -51,15 +52,17 @@ namespace WukongApi
             switch (args.Length)
             {
                 case 1:
-                    GameLoopPatch.QueueOnGameThread(() => WukongMP.Instance.SpawnEnemiesMaster(args.Span[0], 1, _wukongClient.LocalPlayerState.TeamId), "SpawnEnemiesMaster");
-                    SendServerMessage("Spawned monster");
+                    GameLoopPatch.QueueOnGameThread(() => WukongMP.Instance.SpawnEnemiesLocal(args.Span[0], 1, _wukongClient.LocalPlayerState.TeamId), "SpawnEnemiesMaster");
                     break;
                 case 2:
                 {
                     if (int.TryParse(args.Span[1], out var count))
                     {
-                        GameLoopPatch.QueueOnGameThread(() => WukongMP.Instance.SpawnEnemiesMaster(args.Span[0], count, _wukongClient.LocalPlayerState.TeamId), "SpawnEnemiesMaster");
-                        SendServerMessage($"Spawned {count} monsters");
+                        GameLoopPatch.QueueOnGameThread(() => WukongMP.Instance.SpawnEnemiesLocal(args.Span[0], count, _wukongClient.LocalPlayerState.TeamId), "SpawnEnemiesMaster");
+                    }
+                    else
+                    {
+                        ChatWidget.Instance.AddMessage(true, "Command", $"Invalid number of enemies: \"{args.Span[1]}\"");
                     }
 
                     break;

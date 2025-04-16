@@ -208,6 +208,7 @@ namespace WukongApi
                 {
                     SetupLobbyUi();
                 }
+                
                 UpdatePlayerTeamUi(Client.LocalPlayerState, Client.LocalPlayerState.IsSpectator);
             }
         }
@@ -291,7 +292,7 @@ namespace WukongApi
             if (Client.IsMasterClient)
             {
                 Client.CurrentRoomState.InCombatRound = true;
-                if (Client.CurrentRoomState.BotsEnabled && Client.ConnectedPlayers.Count == 0)
+                if (Client.CurrentRoomState.BotsEnabled && Client.ConnectedPlayers.Count == 0 && Client.SyncedMonsters.Count == 0)
                 {
                     GameLoopPatch.QueueOnGameThread(SpawnBots, "SpawnBots");
                 }
@@ -1050,8 +1051,14 @@ namespace WukongApi
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }
 
-        public void SpawnEnemiesMaster(string enemyName, int count, int teamId)
+        public void SpawnEnemiesLocal(string enemyName, int count, int teamId)
         {
+            if (!UnitPathsConfig.IsValidMonsterName(enemyName))
+            {
+                ChatWidget.Instance.AddMessage(true, "Command", $"Invalid monster name \"{enemyName}\"");
+                return;
+            }
+
             var player = GameUtils.GetControlledPawn();
 
             if (player == null)
@@ -1076,25 +1083,40 @@ namespace WukongApi
                 Logging.LogDebug("Spawning enemy by player forward vector");
             }
 
-            // spawn in a spiral around center point, separated by 100 units
-            var dAngle = 2 * FMath.PI / FMath.Min(count, 6);
-            for (var i = 0; i < count; i++)
-            {
-                var angle = i * dAngle;
-                var radius = i * Constants.MonsterSpawnSpread;
-                var loc = centerLoc + new FVector(FMath.Cos(angle), FMath.Sin(angle), 0) * radius;
+            //// spawn in a grid around center point, separated by 200 units
+            int cols = (int)Math.Ceiling(Math.Sqrt(count));
+            int rows = (int)Math.Ceiling((float)count / cols);
 
-                var localI = i;
-                Task.Run(async () =>
+            float startX = -((cols - 1) * Constants.MonsterSpawnSpread) / 2f;
+            float startY = -((rows - 1) * Constants.MonsterSpawnSpread) / 2f;
+
+            int placed = 0;
+            for (int row = 0; row < rows; row++)
+            {
+                for (int col = 0; col < cols; col++)
                 {
-                    // wait for i * 200ms
-                    await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                    GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
-                });
+                    float x = startX + col * Constants.MonsterSpawnSpread;
+                    float y = startY + row * Constants.MonsterSpawnSpread;
+                    var loc = centerLoc + new FVector(x, y, 0);
+
+                    var localI = placed;
+                    Task.Run(async () =>
+                    {
+                        // wait for i * 200ms
+                        await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
+                        GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyLocal(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
+                    });
+                    placed++;
+                    if (placed == count)
+                        goto Notify;
+                }
             }
+
+            Notify:
+            Photon.WukongChat.SendServerMessage($"{Photon.LocalPlayerState.NickName} spawned {count} {enemyName}");
         }
 
-        private void SpawnEnemyMaster(string enemyName, FVector loc, int teamId)
+        private void SpawnEnemyLocal(string enemyName, FVector loc, int teamId)
         {
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
@@ -1176,7 +1198,7 @@ namespace WukongApi
             }
         }
 
-        public void SpawnBots()
+        private void SpawnBots()
         {
             for (int i = 0; i < Constants.BotCount; i++)
             {
@@ -1185,7 +1207,7 @@ namespace WukongApi
                 float y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
 
                 FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
-                SpawnEnemyMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Client.LocalPlayerState.TeamId));
+                SpawnEnemyLocal(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Client.LocalPlayerState.TeamId));
             }
         }
 
@@ -1392,6 +1414,7 @@ namespace WukongApi
                     HideSpectator(playerState);
                     TeleportOutSpectator(playerState);
                 }
+
                 UpdatePlayerTeamUi(playerState, isSpectator);
 
                 if (Client.AllConnectedPlayers.Count() == Client.RelayClient.RoomState.MaxPlayers)
