@@ -1113,7 +1113,7 @@ namespace WukongApi
             }
 
             Notify:
-            Photon.WukongChat.SendServerMessage($"{Photon.LocalPlayerState.NickName} spawned {count} {enemyName}");
+            Client.WukongChat.SendServerMessage($"{Client.LocalPlayerState.NickName} spawned {count} {enemyName}");
         }
 
         private void SpawnEnemyLocal(string enemyName, FVector loc, int teamId)
