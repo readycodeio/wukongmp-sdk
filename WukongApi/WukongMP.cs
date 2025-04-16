@@ -296,7 +296,7 @@ namespace WukongApi
             if (Photon.IsMasterClient)
             {
                 Photon.CurrentRoomState.InCombatRound = true;
-                if (Photon.CurrentRoomState.BotsEnabled && Photon.ConnectedPlayers.Count == 0)
+                if (Photon.CurrentRoomState.BotsEnabled && Photon.ConnectedPlayers.Count == 0 && Photon.SyncedMonsters.Count == 0)
                 {
                     GameLoopPatch.QueueOnGameThread(() => SpawnBots(), "SpawnBots");
                 }
@@ -1193,7 +1193,7 @@ namespace WukongApi
             }
         }
 
-        public void SpawnBots()
+        private void SpawnBots()
         {
             for (int i = 0; i < Constants.BotCount; i++)
             {
