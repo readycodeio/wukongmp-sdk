@@ -78,18 +78,16 @@ namespace WukongApi
             { CharacterKind.PoisonChief, "/Game/00Main/Design/Units/Online/SL/TAMER_sl_shitongling.TAMER_sl_shitongling_C" },
             { CharacterKind.GoldRhino, "/Game/00Main/Design/Units/Online/SZLC/TAMER_szlc_xiniu_01.TAMER_szlc_xiniu_01_C" },
             { CharacterKind.Dear, "/Game/00Main/Design/Units/Online/SZLC/TAMER_szlc_yingzuilu_01.TAMER_szlc_yingzuilu_01_C" },
-
-            // Bosses to test
-            { CharacterKind.EarthWolf, "/Game/00Main/Design/Units/HFM/TAMER_HFM_Suoyang_01a.TAMER_HFM_Suoyang_01a_C" }, // not synchronized
-            { CharacterKind.StoneMonkey, "/Game/00Main/Design/Units/MGD/TAMER_mgd_yuan.TAMER_mgd_yuan_C" }, // desynchronize whole game 
+            { CharacterKind.EarthWolf, "/Game/00Main/Design/Units/HFM/TAMER_HFM_Suoyang_01a.TAMER_HFM_Suoyang_01a_C" },
+            { CharacterKind.StoneMonkey, "/Game/00Main/Design/Units/MGD/TAMER_mgd_yuan.TAMER_mgd_yuan_C" },
             { CharacterKind.MadTiger, "/Game/00Main/Design/Units/HFM/TAMER_hfm_bashanhu_01.TAMER_hfm_bashanhu_01_C" },
-            { CharacterKind.JiaoLoong, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_baiyi_04.TAMER_gycy_baiyi_04_C" }, // falls under ground
-            { CharacterKind.Martialist, "/Game/00Main/Design/Units/HFM/TAMER_HFM_HuanWuZhe_01a.TAMER_HFM_HuanWuZhe_01a_C" }, // not syncing completetly
 
             // Not syncing bosses
+            //{ CharacterKind.JiaoLoong, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_baiyi_04.TAMER_gycy_baiyi_04_C" },  // do not show - guid mismatch
+            //{ CharacterKind.Martialist, "/Game/00Main/Design/Units/HFM/TAMER_HFM_HuanWuZhe_01a.TAMER_HFM_HuanWuZhe_01a_C" }, // do not show - guid mismatch
             //{ CharacterKind.MacaqueChief, "/Game/00Main/Design/Units/LYS/TAMER_lys_xuehou.TAMER_lys_xuehou_C" }, // summons are not synchronized
-            //{ CharacterKind.LotusVision, "/Game/00Main/Design/Units/LYS/TAMER_lys_mo4.TAMER_lys_mo4_C" }, // do not show
-            //{ CharacterKind.BawLangLang, "/Game/00Main/Design/Units/HYS/TAMER_hys_wa_01.TAMER_hys_wa_01_C" }, // do not show
+            //{ CharacterKind.LotusVision, "/Game/00Main/Design/Units/LYS/TAMER_lys_mo4.TAMER_lys_mo4_C" }, // do not show - guid mismatch
+            //{ CharacterKind.BawLangLang, "/Game/00Main/Design/Units/HYS/TAMER_hys_wa_01.TAMER_hys_wa_01_C" }, // do not show - guid mismatch
             //{ CharacterKind.Spider, "/Game/00Main/Design/Units/Online/SL/TAMER_szlc_zizhuer_01.TAMER_szlc_zizhuer_01_C" }, // debug content
             //{ CharacterKind.Spider2, "/Game/00Main/Design/Units/Online/SL/TAMER_szlc_baiyanmojun_01.TAMER_szlc_baiyanmojun_01_C" }, // debug content
             //{ CharacterKind.BossB, "/Game/00Main/Design/Units/HYS/TAMER_hys_honghaier_01a.TAMER_hys_honghaier_01a_C" },
