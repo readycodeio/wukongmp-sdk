@@ -231,5 +231,10 @@ namespace WukongApi
                 Logging.LogInformation("Asset {Id} path : {Name}", i++, item6.GetFullName().ToString());
             }
         }
+
+        public static string UnifyUnitName(string unitName)
+        {
+            return unitName.ToLower().Replace("-", "").Replace("_", "");
+        }
     }
 }
