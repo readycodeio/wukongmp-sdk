@@ -568,7 +568,15 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            __result = 1;
+            if (CmdLineParams.Instance.RoomCreationOptions.HasValue)
+            {
+                __result = CmdLineParams.Instance.RoomCreationOptions.Value.EnemiesNgPlusLevel;
+            }
+            else
+            {
+                __result = 1;
+            }
+
             return false;
         }
     }
