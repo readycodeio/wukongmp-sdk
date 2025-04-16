@@ -644,52 +644,32 @@ namespace WukongApi
             }
         }
 
-        private void SetCreatedRoomProperties()
+        private void SetOrGetRoomProps()
         {
-            var gameMode = CmdLineParams.Instance.MatchmakingMode;
-            var botsEnabled = true;
-            switch (gameMode)
+            Logging.LogInformation("Joining or creating private room");
+
+            if (!IsMasterClient)
             {
-                case GameMode.Private:
-                {
-                    Logging.LogInformation("Joining or creating private room");
-
-                    if (!IsMasterClient)
-                    {
-                        Logging.LogDebug("Not master client, skipping initialization");
-                        return;
-                    }
-
-                    CurrentRoomState.RoundsTotal = 3;
-                    CurrentRoomState.RoundWinners = [];
-                    CurrentRoomState.GameMode = GameMode.Private;
-                    CurrentRoomState.BotsEnabled = botsEnabled;
-                    RelayClient.RoomState.MaxPlayers = 10;
-
-                    break;
-                }
-                case GameMode.XvX:
-                {
-                    var playersPerTeam = CmdLineParams.Instance.PlayersPerTeam!.Value; // not null when game mode is XvX
-                    Logging.LogInformation("Joining or creating {Players}v{Players} room", playersPerTeam, playersPerTeam);
-
-                    if (!IsMasterClient)
-                    {
-                        Logging.LogDebug("Not master client, skipping initialization");
-                        return;
-                    }
-
-                    CurrentRoomState.RoundsTotal = 3;
-                    CurrentRoomState.RoundWinners = [];
-                    CurrentRoomState.GameMode = GameMode.XvX;
-                    CurrentRoomState.BotsEnabled = botsEnabled;
-                    RelayClient.RoomState.MaxPlayers = 2 * playersPerTeam;
-
-                    break;
-                }
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(gameMode));
+                Logging.LogDebug("Not master client, skipping initialization");
+                return;
             }
+
+            if (!CmdLineParams.Instance.RoomCreationOptions.HasValue)
+            {
+                Logging.LogError("Room creation options are not set");
+                return;
+            }
+
+            var opts = CmdLineParams.Instance.RoomCreationOptions.Value;
+
+            CurrentRoomState.GameMode = GameMode.Private;
+            CurrentRoomState.RoundsTotal = opts.TournamentRounds;
+            CurrentRoomState.RoundWinners = [];
+            CurrentRoomState.BotsEnabled = true; // TODO: Selector
+            CurrentRoomState.GourdAllowed = opts.GourdAllowed;
+            CurrentRoomState.ImmobilizeAllowed = opts.ImmobilizeAllowed;
+            CurrentRoomState.PhantomRushAllowed = opts.PhantomRushAllowed;
+            RelayClient.RoomState.MaxPlayers = 10;
         }
 
         public void SpawnUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
@@ -1061,7 +1041,7 @@ namespace WukongApi
 
         private void OnJoinedRoomHandler()
         {
-            SetCreatedRoomProperties();
+            SetOrGetRoomProps();
 
             Logging.LogInformation("Joined room");
 

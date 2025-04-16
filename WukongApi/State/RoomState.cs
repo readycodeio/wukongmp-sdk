@@ -44,6 +44,24 @@ namespace WukongApi.State
             set => SetProperty(nameof(InCombatRound), value);
         }
 
+        public bool GourdAllowed
+        {
+            get => GetProperty<bool>(nameof(GourdAllowed));
+            set => SetProperty(nameof(GourdAllowed), value);
+        }
+        
+        public bool ImmobilizeAllowed
+        {
+            get => GetProperty<bool>(nameof(ImmobilizeAllowed));
+            set => SetProperty(nameof(ImmobilizeAllowed), value);
+        }
+        
+        public bool PhantomRushAllowed
+        {
+            get => GetProperty<bool>(nameof(PhantomRushAllowed));
+            set => SetProperty(nameof(PhantomRushAllowed), value);
+        }
+        
         public bool BotsEnabled
         {
             get => GetProperty<bool>(nameof(BotsEnabled));
@@ -61,12 +79,6 @@ namespace WukongApi.State
         }
 
         public int CurrentRound => RoundWinners.Count() + 1;
-
-        public bool IsVisible
-        {
-            get => GetProperty<bool>(nameof(IsVisible));
-            set => SetProperty(nameof(IsVisible), value);
-        }
 
         public void SetLastRoundWinnerTeam(int winner)
         {

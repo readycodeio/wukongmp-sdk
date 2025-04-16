@@ -293,7 +293,7 @@ namespace WukongApi
                 Client.CurrentRoomState.InCombatRound = true;
                 if (Client.CurrentRoomState.BotsEnabled && Client.ConnectedPlayers.Count == 0)
                 {
-                    GameLoopPatch.QueueOnGameThread(() => SpawnBots(), "SpawnBots");
+                    GameLoopPatch.QueueOnGameThread(SpawnBots, "SpawnBots");
                 }
             }
         }

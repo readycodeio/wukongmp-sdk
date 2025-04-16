@@ -11,13 +11,14 @@ public class CmdLineParams
     public static CmdLineParams Instance => _instance ??= new CmdLineParams();
     public bool ShouldEnableMultiplayer => ServerIp is not null && ServerPort is not null;
 
-    public GameMode? MatchmakingMode { get; }
     public string? ModFolderOverride { get; }
-    public int? PlayersPerTeam { get; private set; }
     public string? ServerIp { get; }
     public int? ServerPort { get; }
     public Guid UserGuid { get; } = Guid.Empty;
-    public string Nickname { get; set; } = "Player";
+    public string Nickname { get; } = "Player";
+
+    // room creation options
+    public RoomCreationOptions? RoomCreationOptions { get; }
 
     private CmdLineParams()
     {
@@ -61,7 +62,7 @@ public class CmdLineParams
             Logging.LogError("Connection info not provided, launch the game from the ReadyM Launcher.");
             return;
         }
-        
+
         // REQUIRED: user nickname
         var nicknameMatch = Regex.Match(cmd, """-nickname "?(\w+)"?""");
         if (nicknameMatch.Success)
@@ -85,18 +86,18 @@ public class CmdLineParams
             Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
         }
 
-        // OPTIONAL: quick match players per team count (-quick_match 1/3/5 etc.)
-        var quickMatchMatch = Regex.Match(cmd, @"-quick_match (\d)");
-        if (quickMatchMatch.Success)
+        // OPTIONAL: room creation params
+        var roomMatch = Regex.Match(cmd, """-rounds ""?(\d+)""? -gourd ""?(\w+)""? -immobilize ""?(\w+)""? -phantomRush ""?(\w+)""?""");
+        if (roomMatch.Success)
         {
-            // quick match
-            var rounds = int.Parse(quickMatchMatch.Groups[1].Value);
-            PlayersPerTeam = rounds;
-            MatchmakingMode = GameMode.XvX;
-        }
-        else
-        {
-            MatchmakingMode = GameMode.Private;
+            var rounds = int.Parse(roomMatch.Groups[1].Value);
+            var flask = bool.Parse(roomMatch.Groups[2].Value);
+            var immobilize = bool.Parse(roomMatch.Groups[3].Value);
+            var phantomRush = bool.Parse(roomMatch.Groups[4].Value);
+
+            RoomCreationOptions = new RoomCreationOptions(rounds, flask, immobilize, phantomRush);
+
+            Logging.LogDebug("Room creation options set");
         }
     }
 }
