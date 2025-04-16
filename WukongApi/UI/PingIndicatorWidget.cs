@@ -5,10 +5,10 @@
         public static PingIndicatorWidget Instance { get; } = new();
 
         private PingIndicatorWidget() : base(Constants.PingWidgetName) { }
-        
-        public void SetPingText(int pingInMiliseconds)
+
+        public void SetPingText(int pingMs)
         {
-            GameWidget?.CallFunctionByNameWithArguments($"SetPingText {pingInMiliseconds}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetPingText {pingMs}", true);
         }
 
         protected override void PostInitialize() { }

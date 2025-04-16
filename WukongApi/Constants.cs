@@ -46,8 +46,6 @@ namespace WukongApi
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
-        
-        public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             #region Calculated Attributes
