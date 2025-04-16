@@ -1083,21 +1083,33 @@ namespace WukongApi
                 Logging.LogDebug("Spawning enemy by player forward vector");
             }
 
-            // spawn in a spiral around center point, separated by 100 units
-            var dAngle = 2 * FMath.PI / FMath.Min(count, 6);
-            for (var i = 0; i < count; i++)
-            {
-                var angle = i * dAngle;
-                var radius = i * Constants.MonsterSpawnSpread;
-                var loc = centerLoc + new FVector(FMath.Cos(angle), FMath.Sin(angle), 0) * radius;
+            //// spawn in a grid around center point, separated by 200 units
+            int cols = (int)Math.Ceiling(Math.Sqrt(count));
+            int rows = (int)Math.Ceiling((float)count / cols);
 
-                var localI = i;
-                Task.Run(async () =>
+            float startX = -((cols - 1) * Constants.MonsterSpawnSpread) / 2f;
+            float startY = -((rows - 1) * Constants.MonsterSpawnSpread) / 2f;
+
+            int placed = 0;
+            for (int row = 0; row < rows; row++)
+            {
+                for (int col = 0; col < cols; col++)
                 {
-                    // wait for i * 200ms
-                    await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                    GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
-                });
+                    float x = startX + col * Constants.MonsterSpawnSpread;
+                    float y = startY + row * Constants.MonsterSpawnSpread;
+                    var loc = centerLoc + new FVector(x, y, 0);
+
+                    var localI = placed;
+                    Task.Run(async () =>
+                    {
+                        // wait for i * 200ms
+                        await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
+                        GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyMaster(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
+                    });
+                    placed++;
+                    if (placed == count)
+                        return;
+                }
             }
         }
 

@@ -14,7 +14,7 @@ namespace WukongApi
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
-        public const float MonsterSpawnSpread = 100f;
+        public const float MonsterSpawnSpread = 200f;
         public const int MonsterSpawnDelayMs = 500;
         public const string AttributePrefix = "attr_";
         public static readonly FVector PvpStartingLocation = new(-11146.926, -3229.771, 6507.035);
