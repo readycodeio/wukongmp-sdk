@@ -40,6 +40,18 @@ namespace WukongApi.State
             set => SetProperty(nameof(InPvP), value);
         }
 
+        public bool InCombatRound
+        {
+            get => GetProperty<bool>(nameof(InCombatRound));
+            set => SetProperty(nameof(InCombatRound), value);
+        }
+
+        public bool BotsEnabled
+        {
+            get => GetProperty<bool>(nameof(BotsEnabled));
+            set => SetProperty(nameof(BotsEnabled), value);
+        }
+
         public IEnumerable<int> RoundWinners
         {
             get

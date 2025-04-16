@@ -6,6 +6,7 @@ using BtlB1;
 using CSharpModBase;
 using GSE.GSUI;
 using HarmonyLib;
+using UnrealEngine.AssetRegistry;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -26,16 +27,10 @@ namespace WukongApi
             return _world;
         }
 
-        public static APawn? GetControlledPawn()
+        public static BGUPlayerCharacterCS? GetControlledPawn()
         {
-            var pawn = UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn();
+            var pawn = UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld())?.GetControlledPawn() as BGUPlayerCharacterCS;
             return pawn.IsNullOrDestroyed() ? null : pawn;
-        }
-
-        public static BGUPlayerCharacterCS? GetBguPlayerCharacterCs()
-        {
-            var controlledPawn = GetControlledPawn();
-            return (controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null) as BGUPlayerCharacterCS;
         }
 
         public static IEnumerable<BGUCharacterCS> GetMonsters()
@@ -55,6 +50,19 @@ namespace WukongApi
                     Logging.LogDebug("Actor is a monster");
                     yield return monster;
                 }
+            }
+        }
+
+        public static void DestroyAllTamers()
+        {
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GetWorld());
+            foreach (var actor in allActorsOfClass)
+            {
+                if (actor != null && actor.GetMonster() != null)
+                {
+                    BGU_UnrealWorldUtil.DestroyActor(actor.GetMonster());
+                }
+                BGU_UnrealWorldUtil.DestroyActor(actor);
             }
         }
 
@@ -133,6 +141,13 @@ namespace WukongApi
             return "";
         }
 
+        public static int GetOppositeTeam(int teamId)
+        {
+            if (teamId == Constants.DrawTeamId)
+                return teamId;
+            return teamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
+        }
+
         public static UBGWDataAsset? GetFxAssetByResId(UObject context, IList<FPlayFXByResID> fXs, int targetResId, int ownerResId)
         {
             var text = "";
@@ -200,6 +215,26 @@ namespace WukongApi
         public static bool IsSkillWhitelisted(int skillId)
         {
             return Constants.SkillsWhitelist.Contains(skillId);
+        }
+
+        public static void ListAssets(string path)
+        {
+            UAssetDataArray assetsInFolder = UGSE_AssetUtilFuncLib.GetAssetsInFolder(new FName(path), bRecursive: true);
+            if (assetsInFolder == null)
+            {
+                return;
+            }
+
+            int i = 0;
+            foreach (FAssetData item6 in assetsInFolder.AssetDataArr)
+            {
+                Logging.LogInformation("Asset {Id} path : {Name}", i++, item6.GetFullName().ToString());
+            }
+        }
+
+        public static string UnifyUnitName(string unitName)
+        {
+            return unitName.ToLower().Replace("-", "").Replace("_", "");
         }
     }
 }

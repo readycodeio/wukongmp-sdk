@@ -72,20 +72,20 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
             
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
-                WukongMP.Instance.ApplyPlayerMontageCallback(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, new MontageCallbackData("Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
             {
                 Logging.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Photon.SwitchReadyState();
+                    _wukongMp.Photon.SwitchReadyStateMulti();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
@@ -100,6 +100,13 @@ namespace WukongMPMod
                 Logging.LogDebug("K");
                 if (!ChatWidget.Instance.HasFocus())
                     ChatWidget.Instance.ToggleVisibility();
+            });
+
+            Utils.RegisterKeyBind(Key.I, () =>
+            {
+                Logging.LogDebug("I");
+                if (!ChatWidget.Instance.HasFocus())
+                    _wukongMp.Photon.SwitchReadyStateSingle();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>

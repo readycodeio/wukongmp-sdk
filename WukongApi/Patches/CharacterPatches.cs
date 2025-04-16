@@ -52,7 +52,7 @@ namespace WukongApi.Patches
                 if (__instance.Owner == photon.LocalPlayerState.Pawn)
                     return;
 
-                var playerState = photon.GetByActor(__instance.Owner);
+                var playerState = photon.GetPlayerByActor(__instance.Owner);
                 if (playerState != null)
                 {
                     foreach (var (attr, value) in playerState.Attributes)
@@ -108,7 +108,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(__instance.Owner);
+                var playerState = photon.GetPlayerByActor(__instance.Owner);
 
                 // remote player
                 if (playerState != null)
@@ -172,9 +172,7 @@ namespace WukongApi.Patches
                             GameLoopPatch.QueueOnGameThread(() =>
                             {
                                 events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-
-                                // remove from collection
-                                photon.RemoveMonster(monster.Guid);
+                                BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
                             }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                         }
                     }
@@ -230,7 +228,7 @@ namespace WukongApi.Patches
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = WukongMP.Instance.Photon.GetByActor(owner);
+                    var remotePlayer = WukongMP.Instance.Photon.GetPlayerByActor(owner);
                     if (remotePlayer != null)
                     {
                         if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
@@ -254,7 +252,12 @@ namespace WukongApi.Patches
                             if (result <= 0)
                             {
                                 // remove dead monster from sync
-                                photon.RemoveMonster(monster.Guid);
+                                var events = BUS_EventCollectionCS.Get(monster.Pawn);
+                                GameLoopPatch.QueueOnGameThread(() =>
+                                {
+                                    events.Evt_UnitDead.Invoke(monster.Pawn, EDeadReason.SkillDamage);
+                                    BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
+                                }, "Evt_UnitDead");
                             }
                         }
 
@@ -369,7 +372,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                var playerState = photon.GetByActor(character);
+                var playerState = photon.GetPlayerByActor(character);
 
                 if (playerState != null)
                 {
@@ -428,13 +431,141 @@ namespace WukongApi.Patches
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
                                 photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
                             }
+
+                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.Location = __instance.ActorLocation;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Location), monsterState.Location);
+                            }
+
+                            if (!monsterState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.Rotation = __instance.ActorRotation;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Rotation), monsterState.Rotation);
+                            }
+
+                            if (!monsterState.MaxSpeed.Equals(__instance.MaxSpeed, Constants.FloatComparisonTolerance))
+                            {
+                                monsterState.MaxSpeed = __instance.MaxSpeed;
+                                photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
+                            }
                         }
                         else
                         {
+                            __instance.MaxSpeed = monsterState.MaxSpeed;
                             __instance.Velocity = monsterState.Velocity;
                             __instance.MoveAcceleration = monsterState.MoveAcceleration;
+                            __instance.MovementComp.Velocity = monsterState.Velocity;
+
+                            var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+
+                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                            {
+                                events.Evt_InterpolationMove.Invoke(monsterState.Location, monsterState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                            }
                         }
+
+                        monsterState.UpdateMarkerPosition();
                     }
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BGU_UnrealWorldUtil), "DestroyActor")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchDestroyActor
+    {
+        public static void Postfix(AActor Actor)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (Actor is BGUCharacterCS character)
+            {
+                var monsterState = photon.GetMonsterByCharacter(character);
+                if (monsterState != null)
+                {
+                    Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
+                    WukongMP.Instance.CleanupMonster(monsterState);
+                }
+                var tamer = character.GetTamerOwner();
+                if (tamer != null)
+                {
+                    BGU_UnrealWorldUtil.DestroyActor(tamer);
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitSimpleStateSet")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUnitSimpleStateSet
+    {
+        public static void Postfix(EBGUSimpleState SimpleState, bool IsRemove, BUS_UnitStateSystem __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    if (SimpleState == EBGUSimpleState.Immobilizing)
+                        return;
+
+                    photon.SendUnitSimpleState(character.PhotonId, SimpleState, IsRemove);
+                    Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitStateTrigger")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUnitStateTrigger
+    {
+        public static void Postfix(EBUStateTrigger Trigger, float Time, bool NeedForceUpdate, BUS_UnitStateSystem __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    photon.SendUnitStateTrigger(character.PhotonId, Trigger, Time, NeedForceUpdate);
+                    Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnChangeMotionMatchingState")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnChangeMotionMatchingState
+    {
+        public static void Postfix(EState_MM MMState, BUS_ABPHelperComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    photon.SendMotionMatchingState(character.PhotonId, MMState);
+                    Logging.LogDebug("Motion matching state changed to {State} for {Actor}", MMState, owner.GetName());
                 }
             }
         }

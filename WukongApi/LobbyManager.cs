@@ -9,6 +9,8 @@ namespace WukongApi
 {
     public class LobbyManager(WukongClient wukongClient)
     {
+        private bool _isRoundEnding;
+
         public async Task StartRoundAsync()
         {
             if (!wukongClient.IsMasterClient)
@@ -68,7 +70,13 @@ namespace WukongApi
                 Logging.LogError("Only master client can use the lobby manager");
                 return;
             }
-            
+
+            if (_isRoundEnding)
+            {
+                return;
+            }
+            _isRoundEnding = true;
+
             // disable pvp until next round
             wukongClient.SendPvPEvent(PvPEvent.RoundEnd, winner);
 
@@ -87,7 +95,8 @@ namespace WukongApi
             // check if only one team is present
             if (wukongClient.AllPvPPlayers.Select(p => p.TeamId).Distinct().Count() == 1)
             {
-                wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, wukongClient.LocalPlayerState.TeamId);
+                wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winner);
+                _isRoundEnding = false;
                 return;
             }
 
@@ -96,6 +105,7 @@ namespace WukongApi
             if (winnerTeam.Key != 0)
             {
                 wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
+                _isRoundEnding = false;
                 return;
             }
 
@@ -127,6 +137,7 @@ namespace WukongApi
                 // start next round
                 await StartRoundAsync();
             }
+            _isRoundEnding = false;
         }
 
         private async Task ResetHpAndRespawnAllPlayers()

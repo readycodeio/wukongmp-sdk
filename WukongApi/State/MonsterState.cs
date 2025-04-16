@@ -1,35 +1,56 @@
 ﻿using b1;
-using UnrealEngine.Runtime;
+using System;
 
 namespace WukongApi.State
 {
     public class MonsterState : CharacterState
     {
         public string Guid { get; }
-        private readonly BUTamerActor? _pawn;
+        public string UnitName { get; }
 
-        public BUTamerActor? Pawn
+        private readonly BUTamerActor? _tamer;
+
+        public BUTamerActor? Tamer
         {
             get
             {
-                if (_pawn.IsNullOrDestroyed())
+                if (_tamer.IsNullOrDestroyed())
                 {
                     return null;
                 }
 
-                return _pawn;
+                return _tamer;
             }
         }
 
-        public bool IsSynced { get; set; }
-        public bool IsTamerValid => !Pawn.IsNullOrDestroyed();
-
-        public MonsterState(string guid, BUTamerActor pawn)
+        public override BGUCharacterCS? Pawn
         {
-            Guid = guid;
-            _pawn = pawn;
+            get
+            {
+                if (_tamer == null || _tamer.IsNullOrDestroyed() || _tamer.GetMonster().IsNullOrDestroyed())
+                {
+                    Logging.LogWarning("Tamer or monster is null or destroyed");
+                    return null;
+                }
 
-            var monster = pawn.GetMonster();
+                return _tamer.GetMonster();
+            }
+            set => throw new NotSupportedException("Set monster pawn");
+        }
+
+        public bool IsSynced { get; set; }
+        public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
+        public EBGUMoveAIType MoveAIType { get; set; }
+        public float MaxSpeed { get; set; }
+
+        public MonsterState(int id, string guid, BUTamerActor tamer, string unitName)
+        {
+            PhotonId = id;
+            Guid = guid;
+            _tamer = tamer;
+            UnitName = unitName;
+
+            var monster = tamer.GetMonster();
             if (!monster.IsNullOrDestroyed())
             {
                 TeamId = monster.GetTeamIDInCS();
@@ -42,18 +63,20 @@ namespace WukongApi.State
             Logging.LogDebug("Created monster state with team ID: {TeamId}", TeamId);
         }
 
-        public MonsterState(string guid, BUTamerActor pawn, int teamId)
+        public MonsterState(int id, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
+            PhotonId = id;
             Guid = guid;
-            _pawn = pawn;
+            _tamer = tamer;
             TeamId = teamId;
+            UnitName = unitName;
 
             Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", TeamId);
         }
 
         public override string ToString()
         {
-            var realTeamId = Pawn?.GetMonster().GetTeamIDInCS();
+            var realTeamId = Tamer?.GetMonster().GetTeamIDInCS();
             return $"MonsterState: Guid={Guid}, TeamId={TeamId}, RealTeamId={realTeamId} Hp={Hp}, IsSynced={IsSynced}, IsTamerValid={IsTamerValid}";
         }
     }

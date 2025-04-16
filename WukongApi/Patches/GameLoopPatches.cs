@@ -4,6 +4,8 @@ using b1;
 using b1.ECS;
 using HarmonyLib;
 using UnrealEngine.Engine;
+using WukongApi.Monitors;
+using WukongApi.State;
 
 namespace WukongApi.Patches
 {
@@ -92,49 +94,58 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class MontageSyncPatch
     {
-        private static UAnimMontage? _localPlayerMontage;
-        private static float _localPlayerMontagePosition;
-        private static UAnimInstance? _localPlayerAnimationInstance;
-
         public static void Postfix()
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            // Get the currently playing montage
-            var localCharacter = GameUtils.GetControlledPawn() as ACharacter;
+            var photon = WukongMP.Instance.Photon;
+            
+            SyncMontage(photon.LocalPlayerState);
+            if (photon.IsMasterClient)
+            {
+                foreach (var monsterState in photon.SyncedMonsters.Values)
+                {
+                    SyncMontage(monsterState);
+                }
+            }
+        }
 
-            if (localCharacter == null)
+        private static void SyncMontage(CharacterState characterState)
+        {
+            if (characterState.Pawn == null)
                 return;
 
-            if (_localPlayerAnimationInstance == null)
+            var montageState = characterState.MontageState;
+            if (montageState.LocalAnimationInstance == null)
             {
-                _localPlayerAnimationInstance = localCharacter.Mesh.GetAnimInstance();
+                montageState.LocalAnimationInstance = characterState.Pawn.Mesh.GetAnimInstance();
             }
 
-            var currentMontage = localCharacter.GetCurrentMontage();
+            var currentMontage = characterState.Pawn.GetCurrentMontage();
 
             if (currentMontage != null)
             {
-                bool isNewMontage = _localPlayerMontage != currentMontage;
-                float currentPosition = _localPlayerAnimationInstance.Montage_GetPosition(currentMontage);
+                bool isNewMontage = montageState.LocalMontage != currentMontage;
+                float currentPosition = montageState.LocalAnimationInstance.Montage_GetPosition(currentMontage);
 
-                bool hasMontageRewound = currentPosition < _localPlayerMontagePosition && !isNewMontage;
-                bool hasSkippedFrames = currentPosition - _localPlayerMontagePosition > 0.5f && !isNewMontage;
+                bool hasMontageRewound = currentPosition < montageState.LocalMontagePosition && !isNewMontage;
+                bool hasSkippedFrames = currentPosition - montageState.LocalMontagePosition > 0.5f && !isNewMontage;
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Photon.SendMontageCallback(currentMontage, currentPosition, hasMontageRewound);
+                    WukongMP.Instance.Photon.SendMontageCallback(characterState.PhotonId, currentMontage, currentPosition, hasMontageRewound);
                 }
 
-                _localPlayerMontagePosition = currentPosition;
+                montageState.LocalMontagePosition = currentPosition;
             }
-            else if (_localPlayerMontage != null)
+            else if (montageState.LocalMontage != null)
             {
-                WukongMP.Instance.Photon.SendMontageCancel();
+                WukongMP.Instance.Photon.SendMontageCancel(characterState.PhotonId);
             }
 
-            _localPlayerMontage = currentMontage;
+            montageState.LocalMontage = currentMontage;
+            characterState.MontageState = montageState;
         }
     }
 
@@ -158,6 +169,11 @@ namespace WukongApi.Patches
                 && mask != BGW_TickGroupMask.TG_ThreadTick)
                 return;
 
+            if (mask == BGW_TickGroupMask.TG_OnTick)
+            {
+                ComponentMonitorManager.Instance.Update();
+            }
+
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
                 return;
 
@@ -165,7 +181,7 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogTrace("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
+                    Logging.LogDebug("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)

@@ -34,7 +34,7 @@ namespace WukongApi
                 return;
             }
 
-            var player = GameUtils.GetBguPlayerCharacterCs();
+            var player = GameUtils.GetControlledPawn();
             
             if (player == null)
             {

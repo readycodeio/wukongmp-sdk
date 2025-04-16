@@ -97,7 +97,7 @@ namespace WukongApi.Patches
                 return false;
             }
 
-            var castingPlayerState = photon.GetByActor(castingCharacter);
+            var castingPlayerState = photon.GetPlayerByActor(castingCharacter);
 
             if (!photon.IsMasterClient)
             {
@@ -198,11 +198,11 @@ namespace WukongApi.Patches
                 ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
                 BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
                 // broadcast
-                var immobilizedPlayerState = photon.GetByActor(item);
-                if (immobilizedPlayerState != null && castingPlayerState != null)
+                var immobilizedCharacterState = photon.GetCharacterByActor(item);
+                if (immobilizedCharacterState != null && castingPlayerState != null)
                 {
-                    Logging.LogDebug("Broadcasting trigger immobilize for player {Nickname}", immobilizedPlayerState.NickName);
-                    photon.BroadcastImmobilize(immobilizedPlayerState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
+                    Logging.LogDebug("Broadcasting trigger immobilize for character {Nickname}", immobilizedCharacterState.NickName);
+                    photon.BroadcastImmobilize(immobilizedCharacterState.PhotonId, castingPlayerState.PhotonId, ImmobilizeActionType.Trigger, hasBuff);
                 }
             }
 
@@ -247,25 +247,25 @@ namespace WukongApi.Patches
                     return false;
                 }
 
-                var playerState = photon.GetByActor(owner);
+                var characterState = photon.GetCharacterByActor(owner);
 
-                if (playerState == null)
+                if (characterState == null)
                 {
                     return true;
                 }
 
                 if (photon.IsMasterClient)
                 {
-                    photon.BroadcastImmobilize(playerState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
+                    photon.BroadcastImmobilize(characterState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
                     return true;
                 }
 
-                if (!playerState.RunImmobilizePatches)
+                if (!characterState.RunImmobilizePatches)
                 {
                     return false;
                 }
 
-                playerState.RunImmobilizePatches = false;
+                characterState.RunImmobilizePatches = false;
                 return true;
             }
         }
@@ -290,16 +290,16 @@ namespace WukongApi.Patches
 
                 if (photon.IsMasterClient)
                 {
-                    var playerState = photon.GetByActor(owner);
+                    var characterState = photon.GetCharacterByActor(owner);
 
-                    if (playerState == null)
+                    if (characterState == null)
                     {
-                        Logging.LogError("Player state is null");
-                        return false;
+                        Logging.LogDebug("Character state is null - continuing standard execution");
+                        return true;
                     }
 
-                    photon.BroadcastImmobilize(playerState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
-                    BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
+                    photon.BroadcastImmobilize(characterState.PhotonId, -1, ImmobilizeActionType.Relieve, false);
+                    BUS_EventCollectionCS.Get(characterState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 }
 
                 return false;
@@ -448,7 +448,7 @@ namespace WukongApi.Patches
                     photon.SendPhantomRush(PhantomRushDir);
                 }
 
-                var playerState = photon.GetByActor(owner);
+                var playerState = photon.GetPlayerByActor(owner);
                 if (playerState != null && playerState != photon.LocalPlayerState)
                 {
                     WukongMP.SetPlayerVisibility(playerState, false);
@@ -474,7 +474,7 @@ namespace WukongApi.Patches
                     return;
                 }
 
-                var playerState = photon.GetByActor(owner);
+                var playerState = photon.GetPlayerByActor(owner);
 
                 if (playerState == null)
                     return;

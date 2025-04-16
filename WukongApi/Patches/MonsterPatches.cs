@@ -35,20 +35,20 @@ namespace WukongApi.Patches
                     if (!state.IsTamerValid)
                         continue;
 
-                    if (state.Pawn == null)
+                    if (state.Tamer == null)
                     {
-                        Logging.LogError("Monster pawn is null");
+                        Logging.LogError("Monster tamer is null");
                         continue;
                     }
 
-                    var location = state.Pawn.GetActorLocation();
+                    var location = state.Tamer.GetActorLocation();
                     if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
                     {
                         state.Location = location;
                         photon.CacheMonsterProperty(id, nameof(MonsterState.Location), state.Location);
                     }
 
-                    var rotation = state.Pawn.GetActorRotation();
+                    var rotation = state.Tamer.GetActorRotation();
                     if (!rotation.Equals(state.Rotation, Constants.FloatComparisonTolerance))
                     {
                         state.Rotation = rotation;
@@ -63,18 +63,18 @@ namespace WukongApi.Patches
                     if (!state.IsTamerValid || !state.IsSynced)
                         continue;
 
-                    var events = BUS_EventCollectionCS.Get(state.Pawn);
+                    var events = BUS_EventCollectionCS.Get(state.Tamer);
 
                     if (events == null)
                         continue;
 
-                    if (state.Pawn == null)
+                    if (state.Tamer == null)
                     {
-                        Logging.LogError("Monster pawn is null");
+                        Logging.LogError("Monster tamer is null");
                         continue;
                     }
 
-                    if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance))
+                    if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Tamer.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
                     }
@@ -230,6 +230,99 @@ namespace WukongApi.Patches
 
             var teamId = Traverse.Create(__instance).Field<BGUCharacterCS>("OwnerAsCharacterCS").Value.GetTeamIDInCS();
             return !Constants.AvailableTeamIds.Contains(teamId);
+        }
+    }
+
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.OnReset))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTamerOnReset
+    {
+        static bool Prefix(EResetActorReason ResetReason, FTamerRef __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            Logging.LogDebug("Tamer on reset called for tamer {Tamer} with reason {Reason}", __instance.TamerName, ResetReason);
+            return ResetReason != EResetActorReason.ReturnHome;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_FsmComp), "OnTriggerFsmEvent")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnTriggerFsmEvent
+    {
+        public static bool Prefix(FGameplayTag EventTag, BUS_FsmComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGoHome)
+            {
+                Logging.LogDebug("Trying change state to {State}", EventTag.ToString());
+                return false;
+            }
+
+            var photon = WukongMP.Instance.Photon;
+            if (photon.IsMasterClient)
+            {
+                var owner = __instance.GetOwner();
+                var character = photon.GetMonsterByActor(owner);
+                if (character != null)
+                {
+                    Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
+                    photon.SendTriggerFsmState(character.PhotonId, EventTag);
+                }
+            }
+
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_MovementSystem), "TickForMonster")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchMovementTickForMonstere
+    {
+        public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem __instance, BUC_MovementData ___MovementData)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            if (__instance == null)
+            {
+                Logging.LogError("__instance is null in BUC_ABPCharacterData.Update_GameThread");
+                return;
+            }
+
+            var owner = __instance.GetOwner();
+            if (owner is not BGUCharacterCS character)
+                return;
+
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogError("Owner is null or destroyed");
+                return;
+            }
+
+            var photon = WukongMP.Instance.Photon;
+
+            var monsterState = photon.GetMonsterByCharacter(character);
+            if (monsterState is { IsSynced: true })
+            {
+                if (photon.IsMasterClient)
+                {
+                    if (monsterState.MoveAIType != ___MovementData.MoveAIType)
+                    {
+                        monsterState.MoveAIType = ___MovementData.MoveAIType;
+                        Logging.LogDebug("Move AI type changed to {State} for {Actor}", monsterState.MoveAIType, owner.GetName());
+                        photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAIType), monsterState.MoveAIType);
+                    }
+                }
+                else
+                {
+                    var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+                    events.Evt_SwitchMoveAIType.Invoke(monsterState.MoveAIType);
+                }
+            }
         }
     }
 }

@@ -14,12 +14,13 @@ namespace WukongApi
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
-        public const float MonsterSpawnSpread = 100f;
+        public const float MonsterSpawnSpread = 200f;
         public const int MonsterSpawnDelayMs = 500;
         public const string AttributePrefix = "attr_";
         public static readonly FVector PvpStartingLocation = new(-11146.926, -3229.771, 6507.035);
-        public static readonly float PvpStartingRadius = 500;
+        public const float PvpStartingRadius = 500;
         public const float PvpRadius = 4000;
+        public const float PvpMonsterRadius = 1000;
         public const float CameraArmLength = 720;
         public const int CharacterArchiveId = 10;
         public const int NewCharacterArchiveId = 9;
@@ -32,12 +33,15 @@ namespace WukongApi
         public const int CountdownSeconds = 5;
         public const int MatchmakingSeconds = 45;
         public const int RoundSeconds = 0;
-        public const int RoundMinutes = 3;
+        public const int RoundMinutes = 5;
+
+        public const int BotCount = 2;
 
         public const string UiManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
         public const string TimerWidgetName = "WBP_Timer_C";
+        public const string PingWidgetName = "WBP_PingIndicator_C";
         public const string CountdownWidgetName = "WBP_Countdown_C";
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";

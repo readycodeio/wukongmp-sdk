@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using b1;
 using BtlShare;
-using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
 namespace WukongApi.State
 {
     public class PlayerState : CharacterState
     {
-        public int PhotonId { get; }
+        private BGUCharacterCS? _pawn;
 
-        private APawn? _pawn;
-
-        public APawn? Pawn
+        public override BGUCharacterCS? Pawn
         {
             get
             {
@@ -29,23 +24,6 @@ namespace WukongApi.State
                 return _pawn;
             }
             set => _pawn = value;
-        }
-
-        private AActor? _markerActor;
-
-        public AActor? MarkerActor
-        {
-            get
-            {
-                if (_markerActor != null && _markerActor.IsNullOrDestroyed())
-                {
-                    Logging.LogWarning("Marker actor is destroyed");
-                    return null;
-                }
-
-                return _markerActor;
-            }
-            set => _markerActor = value;
         }
 
         #region Animation
@@ -66,12 +44,10 @@ namespace WukongApi.State
         public ConcurrentDictionary<EBGUAttrFloat, float> Attributes { get; }
         public EquipmentState Equipment { get; set; }
         public bool IsReadyForPvP { get; set; }
-        public string NickName { get; set; } = "Unknown";
-        public bool RunImmobilizePatches { get; set; }
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
 
-        public PlayerState(int photonId, APawn pawn, int teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(int photonId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PhotonId = photonId;
             Pawn = pawn;
@@ -94,29 +70,12 @@ namespace WukongApi.State
             }
 
             Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
-            PhotonUtils.RegisterNewPlayerTeam((BGUCharacterCS)pawn, teamId);
-        }
-
-        public void UpdateMarkerPosition()
-        {
-            if (MarkerActor != null)
-            {
-                var bguCharacterCs = Pawn as BGUCharacterCS;
-
-                if (bguCharacterCs == null)
-                {
-                    Logging.LogError("Failed to cast pawn to BGUCharacterCS");
-                    return;
-                }
-
-                var markerHeight = bguCharacterCs.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
-                MarkerActor.SetActorLocation(bguCharacterCs.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
-            }
+            PhotonUtils.RegisterNewPlayerTeam(pawn, teamId);
         }
 
         public override string ToString()
         {
-            var realTeamId = (Pawn as BGUCharacterCS)?.GetTeamIDInCS();
+            var realTeamId = Pawn?.GetTeamIDInCS();
             
             var sb = new StringBuilder("PlayerState");
             sb.AppendLine($"PhotonId: {PhotonId}");
