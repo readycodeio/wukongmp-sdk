@@ -1115,10 +1115,11 @@ namespace WukongApi
                     });
                     placed++;
                     if (placed == count)
-                        return;
+                        goto Notify;
                 }
             }
 
+            Notify:
             Photon.WukongChat.SendServerMessage($"{Photon.LocalPlayerState.NickName} spawned {count} {enemyName}");
         }
 
