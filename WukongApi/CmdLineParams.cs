@@ -91,9 +91,9 @@ public class CmdLineParams
         if (roomMatch.Success)
         {
             var rounds = int.Parse(roomMatch.Groups[1].Value);
-            var flask = bool.Parse(roomMatch.Groups[2].Value);
-            var immobilize = bool.Parse(roomMatch.Groups[3].Value);
-            var phantomRush = bool.Parse(roomMatch.Groups[4].Value);
+            var flask = bool.Parse(roomMatch.Groups[2].Value.ToLowerInvariant());
+            var immobilize = bool.Parse(roomMatch.Groups[3].Value.ToLowerInvariant());
+            var phantomRush = bool.Parse(roomMatch.Groups[4].Value.ToLowerInvariant());
             var ngPlus = int.Parse(roomMatch.Groups[5].Value);
 
             RoomCreationOptions = new RoomCreationOptions(rounds, ngPlus, flask, immobilize, phantomRush);
