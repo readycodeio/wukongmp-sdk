@@ -673,6 +673,16 @@ namespace WukongApi
             RelayClient.RoomState.MaxPlayers = 10;
         }
 
+        public bool IsSkillEnabled(int skillId)
+        {
+            if (skillId == Constants.ImmobilizeSkillId && !CurrentRoomState.ImmobilizeAllowed)
+            {
+                return false;
+            }
+            // more skills here
+            return true;
+        }
+
         public void SpawnUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
         {
             const byte eventCode = 1;

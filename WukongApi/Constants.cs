@@ -28,8 +28,10 @@ namespace WukongApi
         public const int MaxPlayers = 20;
         public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;
+
         public static readonly List<int> SkillsWhitelist = [10518];
         public const int GourdSkillId = 10530;
+        public const int ImmobilizeSkillId = 10518;
 
         public const int CountdownSeconds = 5;
         public const int MatchmakingSeconds = 45;

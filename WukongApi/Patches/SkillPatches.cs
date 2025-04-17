@@ -18,7 +18,11 @@ public static class PatchTriggerMagicSkill
 {
     public static bool Prefix(int SkillID)
     {
-        return GameUtils.IsSkillWhitelisted(SkillID);
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        var client = WukongMP.Instance.Client;
+        return GameUtils.IsSkillWhitelisted(SkillID) && client.IsSkillEnabled(SkillID);
     }
 }
 
@@ -96,10 +100,6 @@ public static class PatchOnCastImmobilize
             return true;
 
         var client = WukongMP.Instance.Client;
-        if (!client.CurrentRoomState.ImmobilizeAllowed)
-        {
-            return false;
-        }
 
         // get properties
         MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
