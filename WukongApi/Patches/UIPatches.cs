@@ -162,7 +162,7 @@ namespace WukongApi.Patches
 
             var client = WukongMP.Instance.Client;
 
-            if (client.CurrentRoomState.InPvP)
+            if (client.RoomState.InPvP)
             {
                 __result = true;
                 return false;

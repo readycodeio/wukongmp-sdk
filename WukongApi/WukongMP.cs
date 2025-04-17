@@ -188,15 +188,15 @@ namespace WukongApi
             if (Client is { RelayClient.InRoom: true })
             {
                 _isAfterLoadingScreen = true;
-                if (Client.CurrentRoomState.InMatchmaking)
+                if (Client.RoomState.InMatchmaking)
                 {
-                    var timeDifference = new DateTime(Client.CurrentRoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
+                    var timeDifference = new DateTime(Client.RoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
                     _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
                     SetupMatchmakingUi();
                 }
                 else if (Client.LocalPlayerState.IsSpectator)
                 {
-                    Logging.LogDebug("Disabling visiblity");
+                    Logging.LogDebug("Disabling visibility");
                     SetHudVisibility(false);
                     HideSpectator(Client.LocalPlayerState);
                     Logging.LogInformation("Entering free camera");
@@ -291,8 +291,8 @@ namespace WukongApi
             _timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
             if (Client.IsMasterClient)
             {
-                Client.CurrentRoomState.InCombatRound = true;
-                if (Client.CurrentRoomState.BotsEnabled && Client.ConnectedPlayers.Count == 0 && Client.SyncedMonsters.Count == 0)
+                Client.RoomState.InCombatRound = true;
+                if (Client.RoomState.BotsEnabled && Client.ConnectedPlayers.Count == 0 && Client.SyncedMonsters.Count == 0)
                 {
                     GameLoopPatch.QueueOnGameThread(SpawnBots, "SpawnBots");
                 }
@@ -314,7 +314,7 @@ namespace WukongApi
 
             if (Client.IsMasterClient)
             {
-                Client.CurrentRoomState.InCombatRound = false;
+                Client.RoomState.InCombatRound = false;
                 foreach (var playerState in Client.AllConnectedPlayers)
                 {
                     var events = BUS_EventCollectionCS.Get(playerState.Pawn);
@@ -933,7 +933,7 @@ namespace WukongApi
 
             if (isReady)
             {
-                if ((Client.ConnectedPlayers.Count > 0 || Client.CurrentRoomState.BotsEnabled) && readyCount == Client.ConnectedPlayers.Count + 1)
+                if ((Client.ConnectedPlayers.Count > 0 || Client.RoomState.BotsEnabled) && readyCount == Client.ConnectedPlayers.Count + 1)
                 {
                     // all players are ready
                     _gameMessageWidget.SetMainText(Texts.StartingGame);
@@ -1121,7 +1121,7 @@ namespace WukongApi
             var unitName = UnitPathsConfig.GetUnitPath(enemyName);
 
             var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
-            var id = -(Client.SyncedMonsters.Count + Client.RelayClient.RoomState.MaxPlayers);
+            var id = -(Client.SyncedMonsters.Count + Client.RoomState.MaxPlayers);
 
             SpawnUnitLocally(id, guid, unitName, teamId, loc.X, loc.Y, loc.Z);
 
@@ -1256,7 +1256,7 @@ namespace WukongApi
             UpdateConnectedCount();
             DisablePlayerSkills();
             _lobbyStatusWidget.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
-            _lobbyStatusWidget.SetMaxConnectedCount(Client.RelayClient.RoomState.MaxPlayers);
+            _lobbyStatusWidget.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
             SetupMatchmaking();
         }
 
@@ -1268,7 +1268,7 @@ namespace WukongApi
 
         private FVector GetSpawnPosition(int playerId)
         {
-            int maxPlayersCount = Client.RelayClient.RoomState.MaxPlayers;
+            int maxPlayersCount = Client.RoomState.MaxPlayers;
 
             float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
@@ -1281,9 +1281,9 @@ namespace WukongApi
         {
             if (Client.IsMasterClient)
             {
-                Client.CurrentRoomState.InPvP = false;
+                Client.RoomState.InPvP = false;
             }
-            else if (Client.CurrentRoomState.InPvP)
+            else if (Client.RoomState.InPvP)
             {
                 Logging.LogDebug("Setting IsSpectator to true");
                 Client.CachePlayerProperty(nameof(PlayerState.IsSpectator), true);
@@ -1294,13 +1294,13 @@ namespace WukongApi
 
         private void SetupMatchmaking()
         {
-            if (Client.CurrentRoomState.GameMode == GameMode.Private)
+            if (Client.RoomState.GameMode == GameMode.Private)
                 return;
 
             if (Client.IsMasterClient)
             {
-                Client.CurrentRoomState.InMatchmaking = true;
-                Client.CurrentRoomState.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
+                Client.RoomState.InMatchmaking = true;
+                Client.RoomState.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
             }
         }
 
@@ -1308,7 +1308,7 @@ namespace WukongApi
         {
             if (Client.IsMasterClient)
             {
-                Client.CurrentRoomState.InMatchmaking = false;
+                Client.RoomState.InMatchmaking = false;
                 Client.SendEndMatchmaking();
             }
 
@@ -1408,7 +1408,7 @@ namespace WukongApi
                     readyForPvP = (bool)isReady;
                 }
 
-                var isSpectator = Client.CurrentRoomState.InPvP && !readyForPvP;
+                var isSpectator = Client.RoomState.InPvP && !readyForPvP;
                 if (isSpectator)
                 {
                     HideSpectator(playerState);
@@ -1417,7 +1417,7 @@ namespace WukongApi
 
                 UpdatePlayerTeamUi(playerState, isSpectator);
 
-                if (Client.AllConnectedPlayers.Count() == Client.RelayClient.RoomState.MaxPlayers)
+                if (Client.AllConnectedPlayers.Count() == Client.RoomState.MaxPlayers)
                 {
                     EndMatchmaking();
                 }

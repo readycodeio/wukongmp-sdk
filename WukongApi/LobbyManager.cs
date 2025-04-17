@@ -81,7 +81,7 @@ namespace WukongApi
             wukongClient.SendPvPEvent(PvPEvent.RoundEnd, winner);
 
             // increment round number
-            wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
+            wukongClient.RoomState.SetLastRoundWinnerTeam(winner);
 
             // wait until all players death animations are finished
             await Task.Delay(5000);
@@ -89,7 +89,7 @@ namespace WukongApi
             await ResetHpAndRespawnAllPlayers();
 
             // resolve tournament
-            var winnersSoFar = wukongClient.CurrentRoomState.RoundWinners.ToList();
+            var winnersSoFar = wukongClient.RoomState.RoundWinners.ToList();
             var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
             // check if only one team is present
@@ -101,7 +101,7 @@ namespace WukongApi
             }
 
             // check if any team won more than half of the rounds
-            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > wukongClient.CurrentRoomState.RoundsTotal / 2);
+            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > wukongClient.RoomState.RoundsTotal / 2);
             if (winnerTeam.Key != 0)
             {
                 wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
@@ -110,7 +110,7 @@ namespace WukongApi
             }
 
             // otherwise, check if we have a tie
-            if (wukongClient.CurrentRoomState.CurrentRound > wukongClient.CurrentRoomState.RoundsTotal)
+            if (wukongClient.RoomState.CurrentRound > wukongClient.RoomState.RoundsTotal)
             {
                 if (winnersByTeam.Count > 0)
                 {

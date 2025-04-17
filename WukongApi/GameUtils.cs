@@ -117,8 +117,8 @@ namespace WukongApi
             Utils.TryRunOnGameThread(() =>
             {
                 var client = WukongMP.Instance.Client;
-                var current = client.CurrentRoomState.CurrentRound;
-                var total = client.CurrentRoomState.RoundsTotal;
+                var current = client.RoomState.CurrentRound;
+                var total = client.RoomState.RoundsTotal;
                 ShowTip($"Round {current} of {total}");
             });
         }

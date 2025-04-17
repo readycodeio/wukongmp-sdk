@@ -48,15 +48,15 @@ public static class PatchTriggerItemSkill
         var client = WukongMP.Instance.Client;
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
 
-        if (!client.CurrentRoomState.GourdAllowed && !client.CurrentRoomState.ConsumablesAllowed)
+        if (!client.RoomState.GourdAllowed && !client.RoomState.ConsumablesAllowed)
         {
             return false;
         }
-        else if (client.CurrentRoomState.GourdAllowed && lastSkill == Constants.GourdSkillId)
+        else if (client.RoomState.GourdAllowed && lastSkill == Constants.GourdSkillId)
         {
             return true;
         }
-        return client.CurrentRoomState.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId;
+        return client.RoomState.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId;
     }
 }
 
@@ -75,7 +75,7 @@ public static class PatchDoPoleDrink
             return true;
 
         var client = WukongMP.Instance.Client;
-        return client.CurrentRoomState.GourdAllowed;
+        return client.RoomState.GourdAllowed;
     }
 }
 
@@ -346,7 +346,7 @@ public static class PatchOnCastImmobilize
                 return true;
 
             var client = WukongMP.Instance.Client;
-            if (!client.CurrentRoomState.PhantomRushAllowed)
+            if (!client.RoomState.PhantomRushAllowed)
             {
                 return false;
             }

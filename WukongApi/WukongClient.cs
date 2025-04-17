@@ -29,7 +29,7 @@ namespace WukongApi
         private const char MonsterHashtableKeySeparator = ';';
 
         private int PeerId => RelayClient.LocalPlayer.PeerId; // is -1 before joining room
-        public bool IsMasterClient => RelayClient.RoomState.MasterClientId == PeerId;
+        public bool IsMasterClient => RoomState.MasterClientId == PeerId;
         public bool ConnectedAndInRoom => RelayClient.InRoom;
 
         private readonly Action _joinedRoomCallback;
@@ -78,7 +78,7 @@ namespace WukongApi
             private set => _localPlayerState = value;
         }
 
-        public RoomState CurrentRoomState { get; }
+        public RoomStateProxy RoomState { get; }
 
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new();
         public readonly Dictionary<string, MonsterState> SyncedMonsters = new();
@@ -98,7 +98,6 @@ namespace WukongApi
         public WukongClient(Action onJoinedRoom, Action<int> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
-            CurrentRoomState = new RoomState(this);
             LobbyManager = new LobbyManager(this);
             RelayClient = new RelayClient(
                 CmdLineParams.Instance.UserGuid,
@@ -106,6 +105,7 @@ namespace WukongApi
                 CmdLineParams.Instance.ServerPort!.Value,
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
+            RoomState = new RoomStateProxy(RelayClient);
 
             _joinedRoomCallback = onJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
@@ -121,6 +121,7 @@ namespace WukongApi
             RelayClient.OnPingUpdated -= OnPingUpdated;
             RelayClient.OnCustomEvent -= OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
+            RelayClient.OnRoomPropertiesChanged -= OnRoomPropertiesChanged;
             RelayClient.OnJoinedRoom -= OnJoinedRoomHandler;
             RelayClient.OnDisconnected -= OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined -= OtherPlayerJoinedRoomHandler;
@@ -187,8 +188,12 @@ namespace WukongApi
                 var newMasterPlayer = AllConnectedPlayers.FirstOrDefault(x => x.NickName == newMasterName);
                 if (newMasterPlayer != null)
                 {
-                    RelayClient.RoomState.MasterClientId = newMasterPlayer.PeerId;
+                    RoomState.MasterClientId = newMasterPlayer.PeerId;
                     WukongChat.SendServerMessage($"Master client: {newMasterName}");
+                }
+                else
+                {
+                    Logging.LogError("Player {PlayerName} not found", newMasterName);
                 }
             }
         }
@@ -205,7 +210,7 @@ namespace WukongApi
 
         public void SwitchReadyStateMulti()
         {
-            if (ConnectedAndInRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count > 0)
+            if (ConnectedAndInRoom && RoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count > 0)
             {
                 SwitchReadyState();
             }
@@ -213,7 +218,7 @@ namespace WukongApi
 
         public void SwitchReadyStateSingle()
         {
-            if (ConnectedAndInRoom && CurrentRoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count == 0)
+            if (ConnectedAndInRoom && RoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count == 0)
             {
                 SwitchReadyState();
             }
@@ -228,7 +233,7 @@ namespace WukongApi
 
         public void SwitchTeam(bool force = false)
         {
-            if (force || (ConnectedAndInRoom && !LocalPlayerState.IsReadyForPvP && CurrentRoomState is { InPvP: false, InMatchmaking: false }))
+            if (force || (ConnectedAndInRoom && !LocalPlayerState.IsReadyForPvP && RoomState is { InPvP: false, InMatchmaking: false }))
             {
                 var teamId = LocalPlayerState.TeamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
@@ -495,7 +500,7 @@ namespace WukongApi
 
         public void CheckRoundEndCondition()
         {
-            if (!IsMasterClient || !CurrentRoomState.InPvP)
+            if (!IsMasterClient || !RoomState.InPvP)
             {
                 return;
             }
@@ -547,7 +552,7 @@ namespace WukongApi
                 return;
             }
 
-            CurrentRoomState.InPvP = true;
+            RoomState.InPvP = true;
         }
 
         private void ExitPvP()
@@ -560,7 +565,7 @@ namespace WukongApi
                 return;
             }
 
-            CurrentRoomState.InPvP = false;
+            RoomState.InPvP = false;
         }
 
         private void OnPlayerReadinessChanged(string playerNickname, bool isReady)
@@ -594,6 +599,7 @@ namespace WukongApi
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
+            RelayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
             RelayClient.OnJoinedRoom += OnJoinedRoomHandler;
             RelayClient.OnDisconnected += OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
@@ -650,7 +656,7 @@ namespace WukongApi
 
             if (!IsMasterClient)
             {
-                Logging.LogDebug("Not master client, skipping initialization");
+                Logging.LogInformation("Not master client, skipping initialization");
                 return;
             }
 
@@ -662,24 +668,25 @@ namespace WukongApi
 
             var opts = CmdLineParams.Instance.RoomCreationOptions.Value;
 
-            CurrentRoomState.GameMode = GameMode.Private;
-            CurrentRoomState.RoundsTotal = opts.TournamentRounds;
-            CurrentRoomState.RoundWinners = [];
-            CurrentRoomState.BotsEnabled = true; // TODO: Selector
-            CurrentRoomState.GourdAllowed = opts.GourdAllowed;
-            CurrentRoomState.ImmobilizeAllowed = opts.ImmobilizeAllowed;
-            CurrentRoomState.PhantomRushAllowed = opts.PhantomRushAllowed;
-            CurrentRoomState.EnemiesNgPlusLevel = opts.EnemiesNgPlusLevel;
-            CurrentRoomState.ConsumablesAllowed = opts.ConsumablesAllowed;
-            RelayClient.RoomState.MaxPlayers = 10;
+            RoomState.GameMode = GameMode.Private;
+            RoomState.RoundsTotal = opts.TournamentRounds;
+            RoomState.RoundWinners = [];
+            RoomState.BotsEnabled = true; // TODO: Selector
+            RoomState.GourdAllowed = opts.GourdAllowed;
+            RoomState.ImmobilizeAllowed = opts.ImmobilizeAllowed;
+            RoomState.PhantomRushAllowed = opts.PhantomRushAllowed;
+            RoomState.EnemiesNgPlusLevel = opts.EnemiesNgPlusLevel;
+            RoomState.ConsumablesAllowed = opts.ConsumablesAllowed;
+            RoomState.MaxPlayers = 10;
         }
 
         public bool IsSkillEnabled(int skillId)
         {
-            if (skillId == Constants.ImmobilizeSkillId && !CurrentRoomState.ImmobilizeAllowed)
+            if (skillId == Constants.ImmobilizeSkillId && !RoomState.ImmobilizeAllowed)
             {
                 return false;
             }
+
             // more skills here
             return true;
         }
@@ -839,7 +846,7 @@ namespace WukongApi
             }
 
             // clear previous round winners
-            CurrentRoomState.RoundWinners = [];
+            RoomState.RoundWinners = [];
 
             Task.Run(LobbyManager.StartRoundAsync);
         }
@@ -1220,6 +1227,14 @@ namespace WukongApi
                         OnTeamChange?.Invoke(playerState, (int)kvp.Value);
                         continue;
                 }
+            }
+        }
+
+        private void OnRoomPropertiesChanged(Dictionary<object, object?> diff)
+        {
+            if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is int newMasterId)
+            {
+                Logging.LogInformation("Master client changed to {NewMasterId}", newMasterId);
             }
         }
 

@@ -336,7 +336,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (client is { IsMasterClient: true, CurrentRoomState.InPvP: true, CurrentRoomState.InCombatRound: true })
+            if (client is { IsMasterClient: true, RoomState.InPvP: true, RoomState.InCombatRound: true })
             {
                 if (Attacker != owner)
                 {
@@ -569,12 +569,12 @@ namespace WukongApi.Patches
                 return true;
 
             var client = WukongMP.Instance.Client;
-            if (client.CurrentRoomState.EnemiesNgPlusLevel == -1)
+            if (client.RoomState.EnemiesNgPlusLevel == -1)
             {
                 return true;
             }
 
-            __result = client.CurrentRoomState.EnemiesNgPlusLevel;
+            __result = client.RoomState.EnemiesNgPlusLevel;
             return false;
         }
     }

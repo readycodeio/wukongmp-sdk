@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ReadyM.Relay.Client;
 
 namespace WukongApi.State
 {
-    public class RoomState(WukongClient client)
+    public sealed class RoomStateProxy(RelayClient client) : RoomStateProxyBase(client)
     {
-        private Dictionary<object, object> Room => client.RelayClient.RoomState.Properties;
-
         public GameMode GameMode
         {
             get => (GameMode)GetProperty<int>(nameof(GameMode));
@@ -61,7 +60,7 @@ namespace WukongApi.State
             get => GetProperty<bool>(nameof(ImmobilizeAllowed));
             set => SetProperty(nameof(ImmobilizeAllowed), value);
         }
-        
+
         public bool PhantomRushAllowed
         {
             get => GetProperty<bool>(nameof(PhantomRushAllowed));
@@ -97,21 +96,6 @@ namespace WukongApi.State
             var winners = RoundWinners.ToList();
             winners.Add(winner);
             RoundWinners = winners;
-        }
-
-        private T? GetProperty<T>(string name)
-        {
-            if (Room.TryGetValue(name, out var obj))
-                return (T)obj;
-            return default;
-        }
-
-        private void SetProperty(string name, object value)
-        {
-            client.RelayClient.OpSetCustomPropertiesOfRoom(new Dictionary<object, object?>()
-            {
-                [name] = value
-            });
         }
     }
 }
