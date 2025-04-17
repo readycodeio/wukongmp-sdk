@@ -89,8 +89,11 @@ namespace WukongApi
 
         private void RequestDisconnect(ReadOnlyMemory<string> _)
         {
-            SendServerMessage($"{NickName} has left!");
-            _wukongClient.StopRelayClient();
+            if (_wukongClient.ConnectedAndInRoom)
+            {
+                SendServerMessage($"{NickName} has left!");
+                _wukongClient.StopRelayClient();
+            }
         }
 
         private void RequestNewMasterClient(ReadOnlyMemory<string> args)

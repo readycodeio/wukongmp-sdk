@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ReadyM.Relay.Client;
 
 namespace WukongApi.State
@@ -96,6 +97,28 @@ namespace WukongApi.State
             var winners = RoundWinners.ToList();
             winners.Add(winner);
             RoundWinners = winners;
+        }
+
+        public override string ToString()
+        {
+            // print every single property
+            var properties = GetType().GetProperties();
+            var sb = new List<string>();
+            foreach (var property in properties)
+            {
+                var value = property.GetValue(this);
+                if (value is IEnumerable<int> enumerable)
+                {
+                    sb.Add($"{property.Name}: {string.Join(", ", enumerable)}");
+                }
+                else
+                {
+                    sb.Add($"{property.Name}: {value}");
+                }
+            }
+
+            sb.Sort();
+            return string.Join('\n', sb);
         }
     }
 }

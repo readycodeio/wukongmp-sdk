@@ -60,7 +60,7 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
-                _wukongMp.DumpPlayerState();
+                _wukongMp.DumpDebugInfo();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>

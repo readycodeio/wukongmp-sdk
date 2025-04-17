@@ -253,8 +253,11 @@ namespace WukongApi
             }
         }
 
-        public void DumpPlayerState()
+        public void DumpDebugInfo()
         {
+            // dump room state
+            Logging.LogDebug("Room state: {State}", Client.RoomState.ToString());
+            
             // dump player state to console for me
             Logging.LogDebug("Local player state: {State}", Client.LocalPlayerState.ToString());
             // dump player state to console for each connected player
@@ -500,6 +503,9 @@ namespace WukongApi
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
         {
+            if (!ShouldRunConnectedPatches())
+                return;
+            
             var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
