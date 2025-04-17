@@ -16,7 +16,7 @@ public class CmdLineParams
     public int? ServerPort { get; }
     public Guid UserGuid { get; } = Guid.Empty;
     public string Nickname { get; } = "Player";
-    public int LevelId { get; } = 0;
+    public int MapId { get; }
 
     // room creation options
     public RoomCreationOptions? RoomCreationOptions { get; }
@@ -74,6 +74,19 @@ public class CmdLineParams
         else
         {
             Logging.LogError("Nickname not provided, launch the game from the ReadyM Launcher.");
+            return;
+        }
+
+        // REQUIRED: Map ID
+        var mapMatch = Regex.Match(cmd, """-map "?(\d+)"? """);
+        if (mapMatch.Success)
+        {
+            MapId = int.Parse(mapMatch.Groups[1].Value);
+            Logging.LogDebug("Map ID: {MapId}", MapId);
+        }
+        else
+        {
+            Logging.LogError("Map ID not provided, launch the game from the ReadyM Launcher.");
             return;
         }
 
