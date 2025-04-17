@@ -95,8 +95,9 @@ public class CmdLineParams
             var immobilize = bool.Parse(roomMatch.Groups[3].Value.ToLowerInvariant());
             var phantomRush = bool.Parse(roomMatch.Groups[4].Value.ToLowerInvariant());
             var ngPlus = int.Parse(roomMatch.Groups[5].Value);
+            var consumables = false;
 
-            RoomCreationOptions = new RoomCreationOptions(rounds, ngPlus, flask, immobilize, phantomRush);
+            RoomCreationOptions = new RoomCreationOptions(rounds, ngPlus, flask, immobilize, phantomRush, consumables);
 
             Logging.LogDebug("Room creation options set");
         }

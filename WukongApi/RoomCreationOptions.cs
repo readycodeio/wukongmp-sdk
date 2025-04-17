@@ -5,7 +5,8 @@ public readonly struct RoomCreationOptions(
     int enemiesNgPlusLevel,
     bool gourdAllowed,
     bool immobilizeAllowed,
-    bool phantomRushAllowed
+    bool phantomRushAllowed,
+    bool consumablesAllowed
 )
 {
     public readonly int TournamentRounds = tournamentRounds;
@@ -13,4 +14,5 @@ public readonly struct RoomCreationOptions(
     public readonly bool GourdAllowed = gourdAllowed;
     public readonly bool ImmobilizeAllowed = immobilizeAllowed;
     public readonly bool PhantomRushAllowed = phantomRushAllowed;
+    public readonly bool ConsumablesAllowed = consumablesAllowed;
 }

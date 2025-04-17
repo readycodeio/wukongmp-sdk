@@ -46,13 +46,17 @@ public static class PatchTriggerItemSkill
             return true;
 
         var client = WukongMP.Instance.Client;
-        if (!client.CurrentRoomState.GourdAllowed)
+        var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
+
+        if (!client.CurrentRoomState.GourdAllowed && !client.CurrentRoomState.ConsumablesAllowed)
         {
             return false;
         }
-
-        var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
-        return lastSkill is 10530;
+        else if (client.CurrentRoomState.GourdAllowed && lastSkill == Constants.GourdSkillId)
+        {
+            return true;
+        }
+        return client.CurrentRoomState.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId;
     }
 }
 

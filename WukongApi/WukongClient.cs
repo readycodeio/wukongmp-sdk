@@ -670,6 +670,7 @@ namespace WukongApi
             CurrentRoomState.ImmobilizeAllowed = opts.ImmobilizeAllowed;
             CurrentRoomState.PhantomRushAllowed = opts.PhantomRushAllowed;
             CurrentRoomState.EnemiesNgPlusLevel = opts.EnemiesNgPlusLevel;
+            CurrentRoomState.ConsumablesAllowed = opts.ConsumablesAllowed;
             RelayClient.RoomState.MaxPlayers = 10;
         }
 

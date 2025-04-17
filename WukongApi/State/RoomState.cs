@@ -49,7 +49,13 @@ namespace WukongApi.State
             get => GetProperty<bool>(nameof(GourdAllowed));
             set => SetProperty(nameof(GourdAllowed), value);
         }
-        
+
+        public bool ConsumablesAllowed
+        {
+            get => GetProperty<bool>(nameof(ConsumablesAllowed));
+            set => SetProperty(nameof(ConsumablesAllowed), value);
+        }
+
         public bool ImmobilizeAllowed
         {
             get => GetProperty<bool>(nameof(ImmobilizeAllowed));
