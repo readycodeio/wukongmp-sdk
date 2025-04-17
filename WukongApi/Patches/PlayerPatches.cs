@@ -569,7 +569,7 @@ namespace WukongApi.Patches
                 return true;
 
             var client = WukongMP.Instance.Client;
-            if (client.RoomState.EnemiesNgPlusLevel == -1)
+            if (client.RoomState.EnemiesNgPlusLevel == 0)
             {
                 return true;
             }
