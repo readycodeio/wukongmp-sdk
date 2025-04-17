@@ -87,15 +87,15 @@ public class CmdLineParams
         }
 
         // OPTIONAL: room creation params
-        var roomMatch = Regex.Match(cmd, """-rounds "?(\d+)"? -gourd "?(\w+)"? -immobilize "?(\w+)"? -phantomRush "?(\w+)"? -ng "?(\d+)"?""");
+        var roomMatch = Regex.Match(cmd, """-rounds "?(\d+)"? -gourd "?(\w+)"? -consumables "?(\w+)"? -immobilize "?(\w+)"? -phantomRush "?(\w+)"? -ng "?(\d+)"?""");
         if (roomMatch.Success)
         {
             var rounds = int.Parse(roomMatch.Groups[1].Value);
             var flask = bool.Parse(roomMatch.Groups[2].Value.ToLowerInvariant());
-            var immobilize = bool.Parse(roomMatch.Groups[3].Value.ToLowerInvariant());
-            var phantomRush = bool.Parse(roomMatch.Groups[4].Value.ToLowerInvariant());
-            var ngPlus = int.Parse(roomMatch.Groups[5].Value);
-            var consumables = false;
+            var consumables = bool.Parse(roomMatch.Groups[3].Value.ToLowerInvariant());
+            var immobilize = bool.Parse(roomMatch.Groups[4].Value.ToLowerInvariant());
+            var phantomRush = bool.Parse(roomMatch.Groups[5].Value.ToLowerInvariant());
+            var ngPlus = int.Parse(roomMatch.Groups[6].Value);
 
             RoomCreationOptions = new RoomCreationOptions(rounds, ngPlus, flask, immobilize, phantomRush, consumables);
 
