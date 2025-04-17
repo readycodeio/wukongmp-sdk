@@ -19,7 +19,8 @@ namespace WukongApi
                 return;
             }
             
-            PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
+            var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+            PlacePlayers(levelData.PvpStartingLocation, levelData.PvpRadius);
             await Task.Delay(100);
 
             wukongClient.SendPvPEvent(PvPEvent.RoundStart);

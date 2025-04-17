@@ -1239,7 +1239,8 @@ namespace WukongApi
                 float x = FMath.Cos(angle) * Constants.PvpMonsterRadius;
                 float y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
 
-                FVector spawnPosition = Constants.PvpStartingLocation + new FVector(x, y, 0f);
+                var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+                FVector spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
                 SpawnEnemyLocal(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Client.LocalPlayerState.TeamId));
             }
         }
@@ -1307,7 +1308,8 @@ namespace WukongApi
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
             float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
-            return Constants.PvpStartingLocation + new FVector(x, y, 0f);
+            var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+            return levelData.PvpStartingLocation + new FVector(x, y, 0f);
         }
 
         private void SetupSpectator()

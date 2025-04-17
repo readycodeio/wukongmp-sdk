@@ -16,6 +16,7 @@ public class CmdLineParams
     public int? ServerPort { get; }
     public Guid UserGuid { get; } = Guid.Empty;
     public string Nickname { get; } = "Player";
+    public int LevelId { get; } = 0;
 
     // room creation options
     public RoomCreationOptions? RoomCreationOptions { get; }
