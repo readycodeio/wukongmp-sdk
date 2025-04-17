@@ -515,7 +515,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Adding buff {BuffId} to player {Nickname} with duration {Duration}", buffId, playerState.NickName, duration);
+            Logging.LogTrace("Adding buff {BuffId} to player {Nickname} with duration {Duration}", buffId, playerState.NickName, duration);
             events.Evt_BuffAdd.Invoke(buffId, playerState.Pawn, playerState.Pawn, duration);
         }
 
@@ -539,7 +539,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Removing buff {BuffId} from player {Nickname}, type: {Type}", buffId, playerState.NickName, removeTriggerType);
+            Logging.LogTrace("Removing buff {BuffId} from player {Nickname}, type: {Type}", buffId, playerState.NickName, removeTriggerType);
             events.Evt_BuffRemove.Invoke(buffId, removeTriggerType, inLayer, withTriggerRemoveEffect);
         }
 
@@ -560,7 +560,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Removing all buffs from player {Nickname}, type: {Type}", playerState.NickName, removeTriggerType);
+            Logging.LogTrace("Removing all buffs from player {Nickname}, type: {Type}", playerState.NickName, removeTriggerType);
             events.Evt_BuffAllRemove.Invoke(removeTriggerType, withTriggerRemoveEffect);
         }
 
@@ -581,7 +581,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Applying state trigger: {Trigger} for player {Player}", trigger, characterState.NickName);
+            Logging.LogTrace("Applying state trigger: {Trigger} for player {Player}", trigger, characterState.NickName);
             events.Evt_UnitStateTrigger.Invoke(trigger, time, needForceUpdate);
         }
 
@@ -602,7 +602,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Setting simple state: {State}, with isRemove {Remove} for player {Player}", state, isForce, characterState.NickName);
+            Logging.LogTrace("Setting simple state: {State}, with isRemove {Remove} for player {Player}", state, isForce, characterState.NickName);
             events.Evt_UnitSetSimpleState.Invoke(state, isForce);
         }
 
@@ -623,7 +623,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Triggering fsm event: {Event}, for player {Player}", eventName, characterState.NickName);
+            Logging.LogTrace("Triggering fsm event: {Event}, for player {Player}", eventName, characterState.NickName);
             events.Evt_TriggerFsmEvent.Invoke(eventName.MakeGameplayTag());
         }
 
@@ -644,7 +644,7 @@ namespace WukongApi
                 return;
             }
 
-            Logging.LogDebug("Changing motion matching to: {State}, for player {Player}", motionMatchingState, characterState.NickName);
+            Logging.LogTrace("Changing motion matching to: {State}, for player {Player}", motionMatchingState, characterState.NickName);
             events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
         }
 
@@ -688,7 +688,7 @@ namespace WukongApi
         {
             Logging.LogDebug("Updating player {Nickname} to team {Team}", playerState.NickName, teamId);
 
-            var player = playerState.Pawn as BGUCharacterCS;
+            var player = playerState.Pawn;
 
             if (player == null)
             {

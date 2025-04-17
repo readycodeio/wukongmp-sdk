@@ -16,7 +16,7 @@ namespace WukongApi.Patches
         {
             if (name != null)
             {
-                Logging.LogDebug("Enqueueing action: {Action}", name);
+                Logging.LogTrace("Enqueueing action: {Action}", name);
             }
 
             CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string?)>([(action, name)]), (_, queue) =>
@@ -78,7 +78,7 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug("Processing {Action} action for tick group {Mask}", item.Name, mask);
+                    Logging.LogTrace("Processing {Action} action for tick group {Mask}", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)
@@ -180,7 +180,7 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
+                    Logging.LogTrace("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)
