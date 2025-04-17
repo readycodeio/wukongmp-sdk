@@ -114,7 +114,7 @@ namespace WukongApi.Patches
             }
 
             // Read archive with our world state.
-            var readArchiveResult = __instance.ReadArchiveData(Constants.LevelArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(CmdLineParams.Instance.LevelId, out var gameArchiveData, out var archiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
