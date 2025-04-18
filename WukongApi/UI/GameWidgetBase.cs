@@ -22,7 +22,7 @@ namespace WukongApi.UI
 
         protected abstract void PostInitialize();
 
-        public void SetVisibility(bool visible)
+        public virtual void SetVisibility(bool visible)
         {
             GameWidget?.CallFunctionByNameWithArguments($"SetWidgetVisibility {visible}", true);
         }

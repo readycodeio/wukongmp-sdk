@@ -503,9 +503,6 @@ namespace WukongApi
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-            
             var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
@@ -530,9 +527,6 @@ namespace WukongApi
             int inLayer,
             bool withTriggerRemoveEffect)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-
             var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
@@ -554,9 +548,6 @@ namespace WukongApi
 
         private void OnBuffAllRemoved(int playerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-
             var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
@@ -578,9 +569,6 @@ namespace WukongApi
 
         private void OnStateTriggerSet(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
@@ -602,9 +590,6 @@ namespace WukongApi
 
         private void OnSimpleStateSet(int characterId, EBGUSimpleState state, bool isForce)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
@@ -626,9 +611,6 @@ namespace WukongApi
 
         private void OnFsmStateSet(int characterId, string eventName)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
@@ -650,9 +632,6 @@ namespace WukongApi
 
         private void OnMotionMatchingChanged(int characterId, EState_MM motionMatchingState)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-            
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
@@ -674,9 +653,6 @@ namespace WukongApi
 
         private void ExitPhantomRush(int playerId)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-            
             var playerState = Client.GetPlayerById(playerId);
             if (playerState == null)
             {
@@ -692,9 +668,6 @@ namespace WukongApi
 
         private void OnTargetSet(int playerId, int targetId)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-            
             if (!Client.ConnectedPlayers.TryGetValue(playerId, out var playerState))
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -716,9 +689,6 @@ namespace WukongApi
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)
         {
-            if (!ShouldRunConnectedPatches())
-                return;
-            
             Logging.LogDebug("Updating player {Nickname} to team {Team}", playerState.NickName, teamId);
 
             var player = playerState.Pawn;
