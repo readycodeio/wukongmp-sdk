@@ -210,6 +210,7 @@ namespace WukongApi
                 }
 
                 UpdatePlayerTeamUi(Client.LocalPlayerState, Client.LocalPlayerState.IsSpectator);
+                DisableTeleportProtection();
             }
         }
 
@@ -1266,8 +1267,14 @@ namespace WukongApi
 
         private void TeleportLocalPlayerOnStart(int playerId)
         {
+            BUS_EventCollectionCS.Get(Client.LocalPlayerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
             var spawnPosition = GetSpawnPosition(playerId);
             SetLocalPlayerTransform(spawnPosition, FRotator.ZeroRotator);
+        }
+
+        private void DisableTeleportProtection()
+        {
+            BUS_EventCollectionCS.Get(Client.LocalPlayerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
         }
 
         private FVector GetSpawnPosition(int playerId)
