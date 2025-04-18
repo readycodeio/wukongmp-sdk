@@ -1279,7 +1279,8 @@ namespace WukongApi
             float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-            return levelData.PvpStartingLocation + new FVector(x, y, 0f);
+            var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
+            return GameUtils.GetFinalLocation(Client.GetPlayerById(playerId)?.Pawn, baseLocation);
         }
 
         private void SetupSpectator()

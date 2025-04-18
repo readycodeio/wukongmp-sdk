@@ -236,5 +236,29 @@ namespace WukongApi
         {
             return unitName.ToLower().Replace("-", "").Replace("_", "");
         }
+
+        public static FVector GetFinalLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
+        {
+            FVector result = InTargetLocation;
+            if (CharacterCS == null)
+            {
+                return result;
+            }
+            UCapsuleComponent? uCapsuleComponent = CharacterCS.GetRootComponent() as UCapsuleComponent;
+            if (uCapsuleComponent == null)
+            {
+                return result;
+            }
+            float scaledCapsuleHalfHeight = uCapsuleComponent.GetScaledCapsuleHalfHeight();
+            float scaledCapsuleHalfHeight2 = uCapsuleComponent.GetScaledCapsuleHalfHeight();
+            float num = 2.4f;
+            FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 20.0;
+            FVector end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 20.0;
+            if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
+            {
+                result = OutHitLocation + num + FVector.UpVector * scaledCapsuleHalfHeight;
+            }
+            return result;
+        }
     }
 }

@@ -59,7 +59,7 @@ namespace WukongApi
                 var y = center.Y + radius * MathF.Sin(angle);
 
                 teamMemberIndex[playerState.TeamId]++;
-                var newPlayerLocation = new FVector(x, y, center.Z);
+                var newPlayerLocation = GameUtils.GetFinalLocation(playerState.Pawn, new FVector(x, y, center.Z));
                 wukongClient.BroadcastPlayerTransform(playerState.PeerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
             }
         }
