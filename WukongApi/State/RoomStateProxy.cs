@@ -14,10 +14,10 @@ namespace WukongApi.State
             set => SetProperty(nameof(GameMode), (int)value);
         }
 
-        public int RoundsTotal
+        public int TournamentRounds
         {
-            get => GetProperty<int>(nameof(RoundsTotal));
-            set => SetProperty(nameof(RoundsTotal), value);
+            get => GetProperty<int>(nameof(TournamentRounds));
+            set => SetProperty(nameof(TournamentRounds), value);
         }
 
         public bool InMatchmaking

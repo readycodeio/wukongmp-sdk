@@ -762,7 +762,7 @@ namespace WukongApi
         private void SetLocalPlayerTransform(FVector location, FRotator rotation)
         {
             GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
-            GameUtils.GetPlayerController()?.SetControlRotation(rotation);
+            GameUtils.GetPlayerController().SetControlRotation(rotation);
         }
 
         private void PerformPhantomRush(int playerId, ESkillDirection direction)
@@ -865,19 +865,19 @@ namespace WukongApi
         {
             Logging.LogDebug("Received trigger immobilize for character {Nickname}", immobilizedCharacterState.NickName);
 
-            if (immobilizedCharacterState.Pawn is not BGUCharacterCS immobilizedCharacter)
+            if (immobilizedCharacterState.Pawn == null)
             {
                 Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
                 return;
             }
 
-            if (castingCharacterState.Pawn is not BGUCharacterCS castingCharacter)
+            if (castingCharacterState.Pawn == null)
             {
                 Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
                 return;
             }
 
-            var castImmobilizeData = (BUC_CastImmobilizeData)castingCharacter.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+            var castImmobilizeData = (BUC_CastImmobilizeData)castingCharacterState.Pawn.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
             var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
             if (cachedImmobilizeConfigDesc == null)
@@ -886,8 +886,8 @@ namespace WukongApi
                 return;
             }
 
-            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(immobilizedCharacter, castingCharacter, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
-            BUS_EventCollectionCS.Get(immobilizedCharacter)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(immobilizedCharacterState.Pawn, castingCharacterState.Pawn, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
+            BUS_EventCollectionCS.Get(immobilizedCharacterState.Pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
         }
 
         private static void RelieveImmobilize(CharacterState immobilizedCharacterState)
@@ -948,13 +948,13 @@ namespace WukongApi
                 return;
             }
 
-            if (player.Pawn is not BGUCharacterCS pawn)
+            if (player.Pawn == null)
             {
                 Logging.LogWarning("Failed to cast pawn to BGUCharacterCS");
                 return;
             }
 
-            EquipmentHelpers.SetRemoteActorEquipment(pawn, eq);
+            EquipmentHelpers.SetRemoteActorEquipment(player.Pawn, eq);
         }
 
         private void UpdateReadiness(string playerNickName, bool isReady, int readyCount)

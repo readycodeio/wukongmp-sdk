@@ -660,23 +660,10 @@ namespace WukongApi
                 return;
             }
 
-            if (!CmdLineParams.Instance.RoomCreationOptions.HasValue)
-            {
-                Logging.LogError("Room creation options are not set");
-                return;
-            }
-
-            var opts = CmdLineParams.Instance.RoomCreationOptions.Value;
-
+            // TODO: set from initial room properties (via server allocation request)
             RoomState.GameMode = GameMode.Private;
-            RoomState.RoundsTotal = opts.TournamentRounds;
             RoomState.RoundWinners = [];
             RoomState.BotsEnabled = true; // TODO: Selector
-            RoomState.GourdAllowed = opts.GourdAllowed;
-            RoomState.ImmobilizeAllowed = opts.ImmobilizeAllowed;
-            RoomState.PhantomRushAllowed = opts.PhantomRushAllowed;
-            RoomState.EnemiesNgPlusLevel = opts.EnemiesNgPlusLevel;
-            RoomState.ConsumablesAllowed = opts.ConsumablesAllowed;
             RoomState.MaxPlayers = 10;
         }
 
@@ -1110,9 +1097,8 @@ namespace WukongApi
             }
         }
 
-        public void OtherPlayerJoinedRoomHandler(int playerId)
+        private void OtherPlayerJoinedRoomHandler(int playerId)
         {
-            var player = RelayClient.GetPlayerState(playerId)!;
             Logging.LogInformation("Player {PlayerId} entered the room", playerId);
 
             _playerJoinedCallback.Invoke(playerId);

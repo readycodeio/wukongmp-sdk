@@ -102,7 +102,7 @@ namespace WukongApi
             }
 
             // check if any team won more than half of the rounds
-            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > wukongClient.RoomState.RoundsTotal / 2);
+            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > wukongClient.RoomState.TournamentRounds / 2);
             if (winnerTeam.Key != 0)
             {
                 wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
@@ -111,7 +111,7 @@ namespace WukongApi
             }
 
             // otherwise, check if we have a tie
-            if (wukongClient.RoomState.CurrentRound > wukongClient.RoomState.RoundsTotal)
+            if (wukongClient.RoomState.CurrentRound > wukongClient.RoomState.TournamentRounds)
             {
                 if (winnersByTeam.Count > 0)
                 {

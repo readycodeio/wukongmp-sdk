@@ -16,10 +16,7 @@ public class CmdLineParams
     public int? ServerPort { get; }
     public Guid UserGuid { get; } = Guid.Empty;
     public string Nickname { get; } = "Player";
-    public int MapId { get; }
-
-    // room creation options
-    public RoomCreationOptions? RoomCreationOptions { get; }
+    public int LevelId { get; }
 
     private CmdLineParams()
     {
@@ -77,16 +74,16 @@ public class CmdLineParams
             return;
         }
 
-        // REQUIRED: Map ID
-        var mapMatch = Regex.Match(cmd, """-map "?(\d+)"? """);
+        // REQUIRED: Level ID
+        var mapMatch = Regex.Match(cmd, """-level "?(\d+)"?""");
         if (mapMatch.Success)
         {
-            MapId = int.Parse(mapMatch.Groups[1].Value);
-            Logging.LogDebug("Map ID: {MapId}", MapId);
+            LevelId = int.Parse(mapMatch.Groups[1].Value);
+            Logging.LogDebug("Level ID: {LevelId}", LevelId);
         }
         else
         {
-            Logging.LogError("Map ID not provided, launch the game from the ReadyM Launcher.");
+            Logging.LogError("Level ID not provided, launch the game from the ReadyM Launcher.");
             return;
         }
 
@@ -98,26 +95,6 @@ public class CmdLineParams
         {
             ModFolderOverride = pathMatch.Groups[1].Value;
             Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
-        }
-
-        // OPTIONAL: room creation params
-        var roomMatch = Regex.Match(cmd, """-rounds "?(\d+)"? -gourd "?(\w+)"? -consumables "?(\w+)"? -immobilize "?(\w+)"? -phantomRush "?(\w+)"? -ng "?(\d+)"?""");
-        if (roomMatch.Success)
-        {
-            var rounds = int.Parse(roomMatch.Groups[1].Value);
-            var flask = bool.Parse(roomMatch.Groups[2].Value.ToLowerInvariant());
-            var consumables = bool.Parse(roomMatch.Groups[3].Value.ToLowerInvariant());
-            var immobilize = bool.Parse(roomMatch.Groups[4].Value.ToLowerInvariant());
-            var phantomRush = bool.Parse(roomMatch.Groups[5].Value.ToLowerInvariant());
-            var ngPlus = int.Parse(roomMatch.Groups[6].Value);
-
-            RoomCreationOptions = new RoomCreationOptions(rounds, ngPlus, flask, immobilize, phantomRush, consumables);
-
-            Logging.LogDebug("Room creation options set");
-        }
-        else
-        {
-            Logging.LogDebug("Room creation options not provided");
         }
     }
 }
