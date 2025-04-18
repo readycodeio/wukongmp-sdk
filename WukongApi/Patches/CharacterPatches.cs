@@ -535,15 +535,20 @@ namespace WukongApi.Patches
                 return;
 
             var client = WukongMP.Instance.Client;
+            var owner = __instance.GetOwner();
             if (client.IsMasterClient)
             {
-                var owner = __instance.GetOwner();
                 var character = client.GetMonsterByActor(owner);
                 if (character != null)
                 {
                     client.SendUnitStateTrigger(character.PeerId, Trigger, Time, NeedForceUpdate);
                     Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
+            }
+            if (owner == client.LocalPlayerState.Pawn)
+            {
+                client.SendUnitStateTrigger(client.LocalPlayerState.PeerId, Trigger, Time, NeedForceUpdate);
+                Logging.LogDebug("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }
     }
