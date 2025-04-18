@@ -674,7 +674,7 @@ namespace WukongApi
                 return;
             }
 
-            var targetPlayerState = Client.GetPlayerById(targetId);
+            var targetPlayerState = Client.GetCharacterById(targetId);
             if (targetPlayerState == null)
             {
                 Logging.LogError("Character not found: {Id}", targetId);
@@ -787,14 +787,14 @@ namespace WukongApi
 
         private void HandleImmobilize(int characterId, int otherCharacterId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            var characterState = Client.GetPlayerById(characterId);
+            var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
                 Logging.LogError("Character not found: {Id}", characterId);
                 return;
             }
 
-            var otherCharacterState = Client.GetPlayerById(otherCharacterId);
+            var otherCharacterState = Client.GetCharacterById(otherCharacterId);
 
             switch (immobilizeAction)
             {
