@@ -402,7 +402,7 @@ namespace WukongApi.Patches
 
             var localPawn = client.LocalPlayerState.Pawn;
             var owner = __instance.GetOwner();
-            
+
             if (owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
@@ -460,7 +460,7 @@ namespace WukongApi.Patches
                 return;
 
             var client = WukongMP.Instance.Client;
-            
+
             var owner = __instance.GetOwner();
             if (owner.IsNullOrDestroyed())
             {
@@ -512,13 +512,13 @@ namespace WukongApi.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                
+
                 if (owner.IsNullOrDestroyed())
                 {
                     Logging.LogError("Owner is null or destroyed");
                     return;
                 }
-                
+
                 var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(owner);
                 var hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
 
@@ -558,7 +558,7 @@ namespace WukongApi.Patches
                 __result.DefaultCamID = 101600;
         }
     }
-    
+
     [HarmonyPatch(typeof(BPC_PlayerRoleData), "GetNewGamePlusCount")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchGetNewGamePlusCount
@@ -576,6 +576,20 @@ namespace WukongApi.Patches
 
             __result = client.RoomState.EnemiesNgPlusLevel;
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnTriggerInputActionImpl")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchOnTriggerInputActionImpl
+    {
+        public static bool Prefix(BUS_PlayerInputActionComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var client = WukongMP.Instance.Client;
+            return !(client.LocalPlayerState.Pawn == __instance.GetOwner() && client.LocalPlayerState.IsSpectator);
         }
     }
 }
