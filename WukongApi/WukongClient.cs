@@ -37,6 +37,7 @@ namespace WukongApi
         private readonly Action<int> _playerJoinedCallback;
         public event Action<MontageCallbackData>? OnMontageCallback;
         public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
+        public event Action<int>? OnTeleportFinish;
         public event Action<string>? OnMonsterWakeUp;
         public event Action<int, EquipmentState>? OnEquipmentChange;
         public event Action<string, bool, int>? OnReadinessChange;
@@ -282,7 +283,8 @@ namespace WukongApi
                     ApplyMonsterMove(monsterData);
                     break;
                 case 4:
-                    // free
+                    // teleport finish
+                    OnTeleportFinish?.Invoke(header.Sender);
                     break;
                 case 5:
                     // monster wake up
@@ -716,6 +718,12 @@ namespace WukongApi
             var evData = new MontageCallbackData(characterId, false, "", 0f, false);
 
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+        }
+
+        public void SendTeleportFinish()
+        {
+            const byte eventCode = 4;
+            RelayClient.OpRaiseEvent(eventCode, null, RelayMode.Master, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMonsterWakeUp(string guid)

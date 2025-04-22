@@ -478,6 +478,7 @@ namespace WukongApi
             Client.OnBeforeJoinRoom += SetPlayerProperties;
             Client.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
             Client.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
+            Client.OnTeleportFinish += (id) => GameLoopPatch.QueueOnGameThread(() => OnTeleportFinish(id), "WakeUpMonster");
             Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Client.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Client.OnReadinessChange += (name, isReady, readyCount) => Utils.TryRunOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
@@ -486,7 +487,7 @@ namespace WukongApi
             Client.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Client.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Client.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
-            Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => SetLocalPlayerTransform(loc, rot), "SetPlayerTransform");
+            Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => TeleportLocalPlayer(loc, rot), "TeleportLocalPlayer");
             Client.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
             Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Client.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
@@ -729,8 +730,11 @@ namespace WukongApi
             }
         }
 
-        private void SetLocalPlayerTransform(FVector location, FRotator rotation)
+        private void TeleportLocalPlayer(FVector location, FRotator rotation)
         {
+            var playerState = Client.LocalPlayerState;
+            BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
+            playerState.TeleportFinishFrames = 5;
             GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
             GameUtils.GetPlayerController().SetControlRotation(rotation);
         }
@@ -1265,33 +1269,40 @@ namespace WukongApi
 
         private void OnAfterJoinedRoomCallback()
         {
-            TeleportLocalPlayerOnStart(Client.LocalPlayerState.PeerId);
+            var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PeerId);
+            TeleportLocalPlayer(spawnPosition, FRotator.ZeroRotator);
         }
 
-        public void UpdatePlayer(PlayerState playerState)
+        private void OnTeleportFinish(int playerId)
+        {
+            var playerState = Client.GetPlayerById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {PlayerId}", playerId);
+                return;
+            }
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            events?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
+            events?.Evt_TeleportFinish.Invoke();
+        }
+
+        public void UpdatePlayer(PlayerState playerState, float deltaTime)
         {
             playerState.UpdateMarkerPosition();
-            
-            if (playerState.TeleportResetTime == 0)
+
+            if (playerState.TeleportFinishFrames >= 0)
             {
-                var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-                events?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
+                if (playerState.TeleportFinishFrames == 0)
+                {
+                    Client.SendTeleportFinish();
+                }
+                playerState.TeleportFinishFrames--;
             }
-            playerState.TeleportResetTime--;
         }
 
-        public void UpdateMonster(MonsterState monsterState)
+        public void UpdateMonster(MonsterState monsterState, float deltaTime)
         {
             monsterState.UpdateMarkerPosition();
-        }
-
-        private void TeleportLocalPlayerOnStart(int playerId)
-        {
-            var playerState = Client.LocalPlayerState;
-            BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
-            playerState.TeleportResetTime = 2;
-            var spawnPosition = GetSpawnPosition(playerId);
-            SetLocalPlayerTransform(spawnPosition, FRotator.ZeroRotator);
         }
 
         private FVector GetSpawnPosition(int playerId)
