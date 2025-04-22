@@ -238,6 +238,18 @@ namespace WukongApi
             if (isMyself)
             {
                 FreeCameraManager.LeaveFreeCameraMode();
+                if (Client.RoomState.InMatchmaking)
+                {
+                    SetupMatchmakingUi();
+                }
+                else if (!Client.RoomState.InPvP)
+                {
+                    SetupLobbyUi();
+                }
+                else
+                {
+                    _lobbyStatusWidget.SetVisibility(false);
+                }
             }
 
             UpdatePlayerTeamUi(playerState);
@@ -1291,6 +1303,7 @@ namespace WukongApi
                 Logging.LogError("Player not found: {PlayerId}", playerId);
                 return;
             }
+
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
             events?.Evt_TeleportFinish.Invoke();
@@ -1306,6 +1319,7 @@ namespace WukongApi
                 {
                     Client.SendTeleportFinish();
                 }
+
                 playerState.TeleportFinishFrames--;
             }
         }
@@ -1455,7 +1469,10 @@ namespace WukongApi
                 }
 
                 // set remote player property - IsSpectator
-                Client.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
+                if (Client.IsMasterClient)
+                {
+                    Client.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
+                }
 
                 UpdatePlayerTeamUi(playerState);
 

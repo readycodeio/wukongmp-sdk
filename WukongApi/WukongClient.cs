@@ -937,7 +937,7 @@ namespace WukongApi
         {
             if (!IsMasterClient)
             {
-                Logging.LogWarning("Only room owner can send remote player properties.");
+                Logging.LogError("Only room owner can send remote player properties.");
                 return;
             }
 
