@@ -51,7 +51,7 @@ namespace WukongApi.State
         public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PeerId = peerId;
-            Pawn = pawn;
+            _pawn = pawn;
             TeamId = teamId;
             Hp = initialHp;
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);

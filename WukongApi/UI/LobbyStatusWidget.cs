@@ -21,10 +21,10 @@ namespace WukongApi.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
         }
 
-        public void UpdatePlayerTeam(string nickName, int teamId, bool isSpectatator)
+        public void UpdatePlayerTeam(string nickName, int teamId, bool isSpectator)
         {
             RemovePlayerFromTeams(nickName);
-            if (isSpectatator)
+            if (isSpectator)
             {
                 AddSpectator(nickName);
             }

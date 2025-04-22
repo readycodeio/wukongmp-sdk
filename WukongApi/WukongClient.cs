@@ -207,11 +207,6 @@ namespace WukongApi
             CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
         }
 
-        private void SetIsSpectatorState(bool isSpectator)
-        {
-            CachePlayerProperty(nameof(PlayerState.IsSpectator), isSpectator);
-        }
-
         public void SwitchReadyStateMulti()
         {
             if (ConnectedAndInRoom && RoomState is { InPvP: false, InMatchmaking: false } && ConnectedPlayers.Count > 0)
@@ -441,13 +436,19 @@ namespace WukongApi
 
                     Task.Run(async () =>
                     {
-                        WukongMP.Instance.TeleportSpectatingPlayers();
+                        if (IsMasterClient)
+                        {
+                            foreach (var playerState in WukongMP.Instance.Client.SpectatingPlayers)
+                            {
+                                SetRemotePlayerProperty(playerState.PeerId, nameof(PlayerState.IsSpectator), false);
+                            }
+                        }
+
                         await Task.Delay(2000);
-                        LocalPlayerState.IsReadyForPvP = false;
                         WukongMP.Instance.EndTournament(winnerTeamId);
                         ExitPvP();
+                        LocalPlayerState.IsReadyForPvP = false;
                         SetReadyState(false);
-                        SetIsSpectatorState(false);
                     });
 
                     break;
@@ -562,7 +563,8 @@ namespace WukongApi
 
         private void ExitPvP()
         {
-            if (!IsMasterClient) return;
+            if (!IsMasterClient)
+                return;
 
             if (!RelayClient.InRoom)
             {
@@ -1229,6 +1231,25 @@ namespace WukongApi
                     case nameof(PlayerState.TeamId):
                         OnTeamChange?.Invoke(playerState, (int)kvp.Value);
                         continue;
+                    case nameof(PlayerState.IsSpectator):
+                    {
+                        var isSpectator = (bool)kvp.Value;
+                        Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
+
+                        Utils.TryRunOnGameThread(() =>
+                        {
+                            if (isSpectator)
+                            {
+                                WukongMP.Instance.HandleBecameSpectator(playerState);
+                            }
+                            else
+                            {
+                                WukongMP.Instance.HandleStoppedBeingSpectator(playerState);
+                            }
+                        });
+
+                        break;
+                    }
                 }
             }
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using WukongApi.Patches;
+using WukongApi.State;
 using WukongApi.UI;
 
 namespace WukongApi
@@ -45,6 +46,7 @@ namespace WukongApi
             _commands.Add("/rebirth", new Command(RequestRebirth));
             _commands.Add("/giveup", new Command(RequestGiveUp));
             _commands.Add("/master", new Command(RequestNewMasterClient));
+            _commands.Add("/spectator", new Command(SetSpectatorStatus));
         }
 
         private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -104,6 +106,20 @@ namespace WukongApi
             }
         }
 
+        private void SetSpectatorStatus(ReadOnlyMemory<string> args)
+        {
+            if (args.Length == 2)
+            {
+                var username = args.Span[0];
+                var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
+
+                var player = _wukongClient.AllConnectedPlayers.FirstOrDefault(x => x.NickName == username);
+                if (player == null)
+                    return;
+
+                _wukongClient.SetRemotePlayerProperty(player.PeerId, nameof(PlayerState.IsSpectator), isSpectator);
+            }
+        }
 
         private bool TryHandleCommand(string message)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using b1;
@@ -196,21 +197,52 @@ namespace WukongApi
                 }
                 else if (Client.LocalPlayerState.IsSpectator)
                 {
-                    Logging.LogDebug("Disabling visibility");
-                    SetHudVisibility(false);
-                    HideSpectator(Client.LocalPlayerState);
-                    Logging.LogInformation("Entering free camera");
-                    FreeCameraManager.EnterFreeCameraMode();
-                    TeleportOutSpectator(Client.LocalPlayerState);
-                    SetupSpectatorUi();
+                    HandleBecameSpectator(Client.LocalPlayerState); // TODO: Called twice?
                 }
                 else
                 {
                     SetupLobbyUi();
                 }
 
-                UpdatePlayerTeamUi(Client.LocalPlayerState, Client.LocalPlayerState.IsSpectator);
+                UpdatePlayerTeamUi(Client.LocalPlayerState);
             }
+        }
+
+        public void HandleBecameSpectator(PlayerState playerState)
+        {
+            var isMyself = playerState.PeerId == Client.LocalPlayerState.PeerId;
+
+            if (isMyself)
+                SetHudVisibility(false);
+
+            SetPlayerVisibility(playerState, false);
+
+            if (isMyself)
+            {
+                FreeCameraManager.EnterFreeCameraMode();
+                TeleportOutSpectator(playerState);
+                SetupSpectatorUi();
+            }
+
+            UpdatePlayerTeamUi(playerState);
+        }
+
+        public void HandleStoppedBeingSpectator(PlayerState playerState)
+        {
+            var isMyself = playerState.PeerId == Client.LocalPlayerState.PeerId;
+
+            if (isMyself)
+                SetHudVisibility(true);
+
+            SetPlayerVisibility(playerState, true);
+
+            if (isMyself)
+            {
+                FreeCameraManager.LeaveFreeCameraMode();
+                TeleportInSpectator(playerState);
+            }
+
+            UpdatePlayerTeamUi(playerState);
         }
 
         private void SetupLobbyUi()
@@ -257,7 +289,7 @@ namespace WukongApi
         {
             // dump room state
             Logging.LogDebug("Room state: {State}", Client.RoomState.ToString());
-            
+
             // dump player state to console for me
             Logging.LogDebug("Local player state: {State}", Client.LocalPlayerState.ToString());
             // dump player state to console for each connected player
@@ -382,18 +414,6 @@ namespace WukongApi
         {
             Logging.LogInformation("End tournament");
             SetupLobbyUi();
-            ShowSpectatingPlayers();
-            FreeCameraManager.LeaveFreeCameraMode();
-            SetHudVisibility(true);
-        }
-
-        private void ShowSpectatingPlayers()
-        {
-            foreach (var playerState in Client.SpectatingPlayers)
-            {
-                ShowSpectator(playerState);
-                _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, false);
-            }
         }
 
         public void TeleportSpectatingPlayers()
@@ -708,12 +728,12 @@ namespace WukongApi
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             }
 
-            UpdatePlayerTeamUi(playerState, playerState.IsSpectator);
+            UpdatePlayerTeamUi(playerState);
         }
 
-        private void UpdatePlayerTeamUi(PlayerState playerState, bool isSpectator)
+        private void UpdatePlayerTeamUi(PlayerState playerState)
         {
-            _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, isSpectator);
+            _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, playerState.IsSpectator);
         }
 
         private void KillPlayer(int playerId)
@@ -770,7 +790,7 @@ namespace WukongApi
             ResetMana(player);
         }
 
-        private static void SetHudVisibility(bool visible)
+        public static void SetHudVisibility(bool visible)
         {
             GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
         }
@@ -1258,7 +1278,7 @@ namespace WukongApi
 
         private void OnBeforeJoinedRoomCallback()
         {
-            SetupSpectator();
+            SetUpRoom();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
             DisablePlayerSkills();
@@ -1318,18 +1338,11 @@ namespace WukongApi
             return GameUtils.GetFinalLocation(Client.GetPlayerById(playerId)?.Pawn, baseLocation);
         }
 
-        private void SetupSpectator()
+        private void SetUpRoom()
         {
             if (Client.IsMasterClient)
             {
                 Client.RoomState.InPvP = false;
-            }
-            else if (Client.RoomState.InPvP)
-            {
-                Logging.LogDebug("Setting IsSpectator to true");
-                Client.CachePlayerProperty(nameof(PlayerState.IsSpectator), true);
-                Logging.LogDebug("Setting cached properties");
-                Client.SetCachedPlayerProperties();
             }
         }
 
@@ -1443,20 +1456,18 @@ namespace WukongApi
                     return;
                 }
 
-                var readyForPvP = false;
-                if (props.TryGetValue(nameof(PlayerState.IsReadyForPvP), out var isReady))
+                var isSpectator = (bool)props.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
+
+                if (!isSpectator)
                 {
-                    readyForPvP = (bool)isReady;
+                    var readyForPvP = (bool)props.GetValueOrDefault(nameof(PlayerState.IsReadyForPvP), false);
+                    isSpectator = Client.RoomState.InPvP && !readyForPvP;
                 }
 
-                var isSpectator = Client.RoomState.InPvP && !readyForPvP;
-                if (isSpectator)
-                {
-                    HideSpectator(playerState);
-                    TeleportOutSpectator(playerState);
-                }
+                // set remote player property - IsSpectator
+                Client.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
 
-                UpdatePlayerTeamUi(playerState, isSpectator);
+                UpdatePlayerTeamUi(playerState);
 
                 if (Client.AllConnectedPlayers.Count() == Client.RoomState.MaxPlayers)
                 {
@@ -1465,20 +1476,9 @@ namespace WukongApi
             }
         }
 
-        private void HideSpectator(PlayerState playerState)
-        {
-            SetPlayerVisibility(playerState, false);
-        }
-
         private void TeleportOutSpectator(PlayerState playerState)
         {
             playerState.Pawn?.SetActorTransform(FTransform.Identity, false, out _, true);
-        }
-
-
-        private void ShowSpectator(PlayerState playerState)
-        {
-            SetPlayerVisibility(playerState, true);
         }
 
         private void TeleportInSpectator(PlayerState playerState)
