@@ -468,19 +468,35 @@ namespace WukongApi.Patches
                 return;
             }
 
+            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
+                return;
+
+            var newTargetId = 0;
+            var clearTarget = 1;
+            var newTargetCharacterState = client.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
+            if (newTargetCharacterState != null)
+            {
+                newTargetId = newTargetCharacterState.PeerId;
+                clearTarget = 0;
+            }
+
+
+            if (client.IsMasterClient)
+            {
+                var monster = client.GetMonsterByActor(owner);
+                if (monster != null)
+                {
+                    Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
+                    client.SendTarget(monster.PeerId, newTargetId, clearTarget);
+                }
+            }
+
             // send only own updates
             if (owner != client.LocalPlayerState.Pawn)
                 return;
 
-            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
-                return;
-
-            var newTargetCharacterState = client.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
-            if (newTargetCharacterState  != null)
-            {
-                Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState.NickName);
-                client.SendTarget(newTargetCharacterState.PeerId);
-            }
+            Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
+            client.SendTarget(client.LocalPlayerState.PeerId, newTargetId, clearTarget);
         }
     }
 

@@ -51,7 +51,7 @@ namespace WukongApi
         public event Action<int, ESkillDirection>? OnPhantomRush;
         public event Action<int>? OnExitPhantomRush;
         public event Action<int, int, ImmobilizeActionType, bool>? OnHandleImmobilize;
-        public event Action<int, int>? OnTargetSet;
+        public event Action<int, int, bool>? OnTargetSet;
         public event Action? OnMatchmakingEnded;
         public event Action<int, int, float>? OnBuffAdded;
         public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
@@ -326,8 +326,8 @@ namespace WukongApi
                     break;
                 case 13:
                     // target
-                    var targetId = RelayClient.DeserializeObject<int>(reader);
-                    OnTargetSet?.Invoke(header.Sender, targetId);
+                    var targetData = RelayClient.DeserializeObject<int[]>(reader);
+                    OnTargetSet?.Invoke(targetData[0], targetData[1], targetData[2] != 0);
                     break;
                 case 14:
                     // exit phantom rush
@@ -787,10 +787,11 @@ namespace WukongApi
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SendTarget(int playerId)
+        public void SendTarget(int characterId, int targetId, int clearTarget)
         {
             const byte eventCode = 13;
-            RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+            int[] evData = [characterId, targetId, clearTarget];
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void ExitPhantomRush(int playerId)

@@ -513,7 +513,7 @@ namespace WukongApi
             Client.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
             Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Client.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
-            Client.OnTargetSet += (playerId, targetId) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(playerId, targetId), "OnTargetSet");
+            Client.OnTargetSet += (characterId, targetId, clear) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(characterId, targetId, clear), "OnTargetSet");
             Client.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
             Client.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
             Client.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
@@ -689,25 +689,32 @@ namespace WukongApi
             events?.Evt_RelievePhantomRush.Invoke();
         }
 
-        private void OnTargetSet(int playerId, int targetId)
+        private void OnTargetSet(int playerId, int targetId, bool clearTarget)
         {
-            if (!Client.ConnectedPlayers.TryGetValue(playerId, out var playerState))
-            {
-                Logging.LogError("Player not found: {Id}", playerId);
-                return;
-            }
-
-            var targetPlayerState = Client.GetCharacterById(targetId);
-            if (targetPlayerState == null)
+            var characterState = Client.GetCharacterById(playerId);
+            if (characterState == null)
             {
                 Logging.LogError("Character not found: {Id}", targetId);
                 return;
             }
 
-            Logging.LogDebug("Updating target for player {PlayerNickname} to character {TargetNickname}", playerState.NickName, targetPlayerState.NickName);
+            var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(characterState.Pawn);
+            if(clearTarget ==  true)
+            {
+                Logging.LogDebug("Updating target for character {PlayerNickname} to null", characterState.NickName);
+                targetInfoData.SetTargetInfo(new UnitLockTargetInfo(null, ETargetSourceType.SkillBase_NormalUse));
+                return;
+            }
 
-            var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(playerState.Pawn);
-            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPlayerState.Pawn, ETargetSourceType.SkillBase_NormalUse));
+            var targetCharacterState = Client.GetCharacterById(targetId);
+            if (targetCharacterState == null)
+            {
+                Logging.LogError("Character not found: {Id}", targetId);
+                return;
+            }
+
+            Logging.LogDebug("Updating target for character {PlayerNickname} to character {TargetNickname}", characterState.NickName, targetCharacterState.NickName);
+            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetCharacterState.Pawn, ETargetSourceType.SkillBase_NormalUse));
         }
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)
