@@ -184,9 +184,9 @@ namespace WukongApi
 
         private void OnLoadingScreenClose()
         {
-            ChatWidget.Instance.SetVisibility(true);
             if (Client is { RelayClient.InRoom: true })
             {
+                ChatWidget.Instance.SetVisibility(true);
                 _isAfterLoadingScreen = true;
                 if (Client.RoomState.InMatchmaking)
                 {
