@@ -42,7 +42,7 @@ namespace WukongApi
 
         private WukongMP()
         {
-            Client = new WukongClient(OnJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
+            Client = new WukongClient(OnBeforeJoinedRoomCallback, OnAfterJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
         }
 
         public void Patch()
@@ -210,7 +210,6 @@ namespace WukongApi
                 }
 
                 UpdatePlayerTeamUi(Client.LocalPlayerState, Client.LocalPlayerState.IsSpectator);
-                DisableTeleportProtection();
             }
         }
 
@@ -1253,9 +1252,8 @@ namespace WukongApi
             Client.RemoveSyncedMonster(monsterState);
         }
 
-        private void OnJoinedRoomCallback()
+        private void OnBeforeJoinedRoomCallback()
         {
-            TeleportLocalPlayerOnStart(Client.LocalPlayerState.PeerId);
             SetupSpectator();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
@@ -1265,16 +1263,35 @@ namespace WukongApi
             SetupMatchmaking();
         }
 
-        private void TeleportLocalPlayerOnStart(int playerId)
+        private void OnAfterJoinedRoomCallback()
         {
-            BUS_EventCollectionCS.Get(Client.LocalPlayerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
-            var spawnPosition = GetSpawnPosition(playerId);
-            SetLocalPlayerTransform(spawnPosition, FRotator.ZeroRotator);
+            TeleportLocalPlayerOnStart(Client.LocalPlayerState.PeerId);
         }
 
-        private void DisableTeleportProtection()
+        public void UpdatePlayer(PlayerState playerState)
         {
-            BUS_EventCollectionCS.Get(Client.LocalPlayerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
+            playerState.UpdateMarkerPosition();
+            
+            if (playerState.TeleportResetTime == 0)
+            {
+                var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+                events?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
+            }
+            playerState.TeleportResetTime--;
+        }
+
+        public void UpdateMonster(MonsterState monsterState)
+        {
+            monsterState.UpdateMarkerPosition();
+        }
+
+        private void TeleportLocalPlayerOnStart(int playerId)
+        {
+            var playerState = Client.LocalPlayerState;
+            BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
+            playerState.TeleportResetTime = 2;
+            var spawnPosition = GetSpawnPosition(playerId);
+            SetLocalPlayerTransform(spawnPosition, FRotator.ZeroRotator);
         }
 
         private FVector GetSpawnPosition(int playerId)

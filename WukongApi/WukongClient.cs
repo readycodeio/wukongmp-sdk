@@ -32,7 +32,8 @@ namespace WukongApi
         public bool IsMasterClient => RoomState.MasterClientId == PeerId;
         public bool ConnectedAndInRoom => RelayClient.InRoom;
 
-        private readonly Action _joinedRoomCallback;
+        private readonly Action _beforeJoinedRoomCallback;
+        private readonly Action _afterJoinedRoomCallback;
         private readonly Action<int> _playerJoinedCallback;
         public event Action<MontageCallbackData>? OnMontageCallback;
         public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
@@ -95,7 +96,7 @@ namespace WukongApi
         public IEnumerable<CharacterState> AllPvPCharacters
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).ToList<CharacterState>().Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]).Concat(SyncedMonsters.Values);
 
-        public WukongClient(Action onJoinedRoom, Action<int> playerJoinedCallback)
+        public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoindRoom, Action<int> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
             LobbyManager = new LobbyManager(this);
@@ -107,7 +108,8 @@ namespace WukongApi
             );
             RoomState = new RoomStateProxy(RelayClient);
 
-            _joinedRoomCallback = onJoinedRoom;
+            _beforeJoinedRoomCallback = onBeforeJoinedRoom;
+            _afterJoinedRoomCallback = onAfterJoindRoom;
             _playerJoinedCallback = playerJoinedCallback;
 
             ConfigureRelay();
@@ -122,7 +124,8 @@ namespace WukongApi
             RelayClient.OnCustomEvent -= OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
             RelayClient.OnRoomPropertiesChanged -= OnRoomPropertiesChanged;
-            RelayClient.OnJoinedRoom -= OnJoinedRoomHandler;
+            RelayClient.OnBeforeJoinedRoom -= OnBeforeJoinedRoomHandler;
+            RelayClient.OnAfterJoinedRoom -= OnAfterJoinedRoomHandler;
             RelayClient.OnDisconnected -= OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined -= OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft -= OnPlayerLeftRoomHandler;
@@ -600,7 +603,8 @@ namespace WukongApi
             RelayClient.OnCustomEvent += OnCustomEvent;
             RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
             RelayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
-            RelayClient.OnJoinedRoom += OnJoinedRoomHandler;
+            RelayClient.OnBeforeJoinedRoom += OnBeforeJoinedRoomHandler;
+            RelayClient.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
             RelayClient.OnDisconnected += OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
@@ -1045,7 +1049,7 @@ namespace WukongApi
             return teamsCount[team1Id] > teamsCount[team2Id] ? team2Id : team1Id;
         }
 
-        private void OnJoinedRoomHandler()
+        private void OnBeforeJoinedRoomHandler()
         {
             SetOrGetRoomProps();
 
@@ -1074,9 +1078,14 @@ namespace WukongApi
             Utils.TryRunOnGameThread(ClientUtils.DiscoverMonsters);
 
             SubscribeToPlayerEvents();
-            _joinedRoomCallback.Invoke();
+            _beforeJoinedRoomCallback.Invoke();
 
             WukongChat.SendServerMessage($"{LocalPlayerState.NickName} has joined!");
+        }
+
+        private void OnAfterJoinedRoomHandler()
+        {
+            _afterJoinedRoomCallback.Invoke();
         }
 
         public void OnDisconnectedHandler(DisconnectReason reason)

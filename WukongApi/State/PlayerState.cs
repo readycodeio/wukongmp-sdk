@@ -46,6 +46,7 @@ namespace WukongApi.State
         public bool IsReadyForPvP { get; set; }
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
+        public int TeleportResetTime { get; set; }
 
         public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {

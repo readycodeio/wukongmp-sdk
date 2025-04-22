@@ -369,6 +369,8 @@ namespace WukongApi.Patches
                     client.LocalPlayerState.Rotation = __instance.ActorRotation;
                     client.CachePlayerProperty(nameof(PlayerState.Rotation), client.LocalPlayerState.Rotation);
                 }
+
+                WukongMP.Instance.UpdatePlayer(localState);
             }
             else
             {
@@ -409,7 +411,7 @@ namespace WukongApi.Patches
                         events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
 
-                    playerState.UpdateMarkerPosition();
+                    WukongMP.Instance.UpdatePlayer(playerState);
                 }
                 else
                 {
@@ -465,7 +467,7 @@ namespace WukongApi.Patches
                             }
                         }
 
-                        monsterState.UpdateMarkerPosition();
+                        WukongMP.Instance.UpdateMonster(monsterState);
                     }
                 }
             }
