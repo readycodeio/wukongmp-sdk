@@ -22,7 +22,7 @@ namespace WukongApi
         public const float CameraArmLength = 720;
         public const int CharacterArchiveId = 10;
         public const int NewCharacterArchiveId = 9;
-        public const int LevelArchiveId = 0;
+        public const int WorldArchiveId = 0;
         public const int MaxPlayers = 20;
         public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;

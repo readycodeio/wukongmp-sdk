@@ -114,7 +114,7 @@ namespace WukongApi.Patches
             }
 
             // Read archive with our world state.
-            var readArchiveResult = __instance.ReadArchiveData(CmdLineParams.Instance.LevelId, out var gameArchiveData, out var archiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
@@ -128,6 +128,11 @@ namespace WukongApi.Patches
             OutArchiveData.PersistentECSData = gameArchiveData.GameArchiveData.PersistentECSData;
             OutArchiveData.StateMachineArchiveData = gameArchiveData.GameArchiveData.StateMachineArchiveData;
             OutArchiveData.TaskArchiveData = gameArchiveData.GameArchiveData.TaskArchiveData;
+
+            var levelConfig = LevelSpawnConfig.GetCurrentLevelSpawnData();
+            OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = levelConfig.MapId;
+            OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
+            OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
 
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
