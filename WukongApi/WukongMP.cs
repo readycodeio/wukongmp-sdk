@@ -220,7 +220,6 @@ namespace WukongApi
             if (isMyself)
             {
                 FreeCameraManager.EnterFreeCameraMode();
-                TeleportOutSpectator(playerState);
                 SetupSpectatorUi();
             }
 
@@ -239,7 +238,6 @@ namespace WukongApi
             if (isMyself)
             {
                 FreeCameraManager.LeaveFreeCameraMode();
-                TeleportInSpectator(playerState);
             }
 
             UpdatePlayerTeamUi(playerState);
@@ -414,14 +412,6 @@ namespace WukongApi
         {
             Logging.LogInformation("End tournament");
             SetupLobbyUi();
-        }
-
-        public void TeleportSpectatingPlayers()
-        {
-            foreach (var playerState in Client.SpectatingPlayers)
-            {
-                TeleportInSpectator(playerState);
-            }
         }
 
         private void WakeUpMonster(string guid)
@@ -1474,17 +1464,6 @@ namespace WukongApi
                     EndMatchmaking();
                 }
             }
-        }
-
-        private void TeleportOutSpectator(PlayerState playerState)
-        {
-            playerState.Pawn?.SetActorTransform(FTransform.Identity, false, out _, true);
-        }
-
-        private void TeleportInSpectator(PlayerState playerState)
-        {
-            var spawnPosition = GetSpawnPosition(playerState.PeerId);
-            playerState.Pawn?.SetActorTransform(new FTransform(FRotator.ZeroRotator, spawnPosition), false, out _, true);
         }
 
         public static void SetPlayerVisibility(PlayerState playerState, bool visible)

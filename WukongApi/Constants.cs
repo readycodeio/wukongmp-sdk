@@ -6,6 +6,7 @@ namespace WukongApi
 {
     public static class Constants
     {
+        public const int PlayerTtlMs = 3000;
         public const int ToleratedLatencyMs = 50;
         public const float FloatComparisonTolerance = 0.1f;
         public const string ConnectedPatches = "Connected";

@@ -234,7 +234,7 @@ namespace WukongApi
         {
             if (force || (ConnectedAndInRoom && !LocalPlayerState.IsReadyForPvP && RoomState is { InPvP: false, InMatchmaking: false }))
             {
-                var teamId = LocalPlayerState.TeamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
+                var teamId = GameUtils.GetOppositeTeam(LocalPlayerState.TeamId);
                 CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
             }
         }
@@ -1040,7 +1040,7 @@ namespace WukongApi
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        private int GetTeamIdForPlayer()
+        private int GetSmallerTeamId()
         {
             Dictionary<int, int> teamsCount = [];
             var team1Id = Constants.AvailableTeamIds[0];
@@ -1065,7 +1065,8 @@ namespace WukongApi
 
             Logging.LogInformation("Joined room");
 
-            var teamId = GetTeamIdForPlayer();
+            var teamId = (int)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.TeamId), GetSmallerTeamId());
+
             var controlledPawn = GameUtils.GetControlledPawn();
 
             if (controlledPawn.IsNullOrDestroyed())
@@ -1148,7 +1149,12 @@ namespace WukongApi
             if (IsMasterClient)
             {
                 WukongChat.SendServerMessage($"{nickname} has left!");
-                CheckRoundEndCondition();
+
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(Constants.PlayerTtlMs);
+                    CheckRoundEndCondition();
+                });
             }
         }
 
