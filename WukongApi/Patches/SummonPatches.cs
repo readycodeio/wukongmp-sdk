@@ -31,7 +31,7 @@ namespace WukongApi.Patches
 
             if (queue.TryDequeue(out var item))
             {
-                if (tamerClassName != item.TamerTemplate.GetFullName())
+                if (tamerClassName != item.TamerTemplate.PathName)
                 {
                     Logging.LogError("Requested and enqueued tamer servants have different classes");
                     return;
