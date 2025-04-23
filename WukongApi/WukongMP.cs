@@ -595,7 +595,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogWarning("Character not found: {Id}", characterId);
+                Logging.LogError("Character not found: {Id}", characterId);
                 return;
             }
 
@@ -616,7 +616,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogWarning("Character not found: {Id}", characterId);
+                Logging.LogError("Character not found: {Id}", characterId);
                 return;
             }
 
@@ -637,7 +637,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogWarning("Character not found: {Id}", characterId);
+                Logging.LogError("Character not found: {Id}", characterId);
                 return;
             }
 
