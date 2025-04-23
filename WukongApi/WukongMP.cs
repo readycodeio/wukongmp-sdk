@@ -702,7 +702,7 @@ namespace WukongApi
             if(clearTarget ==  true)
             {
                 Logging.LogDebug("Updating target for character {PlayerNickname} to null", characterState.NickName);
-                targetInfoData.SetTargetInfo(new UnitLockTargetInfo(null, ETargetSourceType.SkillBase_NormalUse));
+                targetInfoData.SetTargetInfo(new UnitLockTargetInfo());
                 return;
             }
 
