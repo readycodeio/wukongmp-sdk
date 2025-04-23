@@ -1086,6 +1086,10 @@ namespace WukongApi
             // get nickname from Relay
             var playerNickname = (string)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.NickName), CmdLineParams.Instance.Nickname);
             LocalPlayerState.NickName = playerNickname;
+            
+            // same for IsReadyForPvP and IsSpectator
+            LocalPlayerState.IsReadyForPvP = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsReadyForPvP), false);
+            LocalPlayerState.IsSpectator = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
 
             Utils.TryRunOnGameThread(ClientUtils.DiscoverMonsters);
 
