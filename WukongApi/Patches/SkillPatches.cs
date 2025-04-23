@@ -479,7 +479,7 @@ public static class PatchOnTriggerPhantomRush
     }
 }
 
-[HarmonyPatch(typeof(BUS_SkillInstsCompSvr), "OnUnitCastSkillTry")]
+[HarmonyPatch(typeof(BUS_SkillInstsCompSvr), "OnUnitCastSkillTry", typeof(FCastSkillInfo))]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnUnitCastSkillTry
 {
