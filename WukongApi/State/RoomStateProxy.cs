@@ -103,22 +103,32 @@ namespace WukongApi.State
         {
             // print every single property
             var properties = GetType().GetProperties();
-            var sb = new List<string>();
+            var lines = new List<string>();
             foreach (var property in properties)
             {
                 var value = property.GetValue(this);
                 if (value is IEnumerable<int> enumerable)
                 {
-                    sb.Add($"{property.Name}: {string.Join(", ", enumerable)}");
+                    lines.Add($"{property.Name}: {string.Join(", ", enumerable)}");
                 }
                 else
                 {
-                    sb.Add($"{property.Name}: {value}");
+                    lines.Add($"{property.Name}: {value}");
                 }
             }
 
-            sb.Sort();
-            return string.Join('\n', sb);
+            lines.Sort();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("-------------------------");
+            sb.AppendLine("ROOM STATE:");
+
+            foreach (var line in lines)
+            {
+                sb.AppendLine(line);
+            }
+
+            return sb.ToString();
         }
     }
 }
