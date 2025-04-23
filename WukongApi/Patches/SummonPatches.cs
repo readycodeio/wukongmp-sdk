@@ -15,7 +15,7 @@ namespace WukongApi.Patches
 
         public static void QueueServant(int summonerId, FServantReq summonReq)
         {
-            Logging.LogDebug("Enqueueing summon for character {Id}, type: {Action}", summonerId, summonReq.ServantType);
+            Logging.LogDebug("Enqueueing summon for character {Id}, type: {Action}", summonerId, summonReq.TamerTemplate.GetPathName());
 
             _summonsQueues.AddOrUpdate(summonerId, _ => new ConcurrentQueue<FServantReq>([summonReq]), (_, queue) =>
             {
@@ -26,6 +26,8 @@ namespace WukongApi.Patches
 
         public static void ExecuteSummon(int summonerId, int id, string guid, string tamerClassName, int teamId)
         {
+            Logging.LogDebug("Executing summon for character {Id}, type: {Action}", summonerId, tamerClassName);
+
             if (!_summonsQueues.TryGetValue(summonerId, out var queue))
                 return;
 
@@ -43,6 +45,8 @@ namespace WukongApi.Patches
 
         public static string? SpawnServant(int id, string guid, int teamId, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
         {
+            Logging.LogDebug("Spawning servant: {TamerName}, with Guid {Guid}", TamerClass.Value.GetPathName(), guid);
+
             var client = WukongMP.Instance.Client;
 
             var world = GameUtils.GetWorld();
@@ -99,10 +103,10 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public static class PatchSpawnRunProcessor
     {
-        public static bool Prefix(ref bool __result, FSummonInstance InSummonInstance)
+        public static void Prefix(FSummonInstance InSummonInstance)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return true;
+                return;
 
             var client = WukongMP.Instance.Client;
             if (!client.IsMasterClient)
@@ -116,11 +120,7 @@ namespace WukongApi.Patches
                         SummonPatch.QueueServant(summonerState.PeerId, fServantReq);
                     }
                 }
-                __result = false;
-                return false;
             }
-
-            return true;
         }
     }
     

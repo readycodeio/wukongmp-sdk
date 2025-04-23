@@ -231,293 +231,316 @@ public static class PatchOnCastImmobilize
 
         return false;
     }
+}
 
-    [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTickWithGroup")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchImmobilizeOnTickWithGroup
+[HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTickWithGroup")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchImmobilizeOnTickWithGroup
+{
+    public static bool Prefix()
     {
-        public static bool Prefix()
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        var client = WukongMP.Instance.Client;
+        if (client.IsMasterClient)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return true;
+            return true;
+        }
 
-            var client = WukongMP.Instance.Client;
-            if (client.IsMasterClient)
-            {
-                return true;
-            }
+        return false;
+    }
+}
 
+[HarmonyPatch(typeof(BUS_BeImmobilizedComp), "RelieveImmobilized")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchRelieveImmobilized
+{
+    public static bool Prefix(BUS_BeImmobilizedComp __instance)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        var client = WukongMP.Instance.Client;
+
+        var owner = __instance.GetOwner();
+
+        if (owner.IsNullOrDestroyed())
+        {
+            Logging.LogError("Owner is null or destroyed");
             return false;
         }
-    }
 
-    [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "RelieveImmobilized")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchRelieveImmobilized
-    {
-        public static bool Prefix(BUS_BeImmobilizedComp __instance)
+        var characterState = client.GetCharacterByActor(owner);
+
+        if (characterState == null)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return true;
+            return true;
+        }
 
-            var client = WukongMP.Instance.Client;
+        if (client.IsMasterClient)
+        {
+            client.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
+            return true;
+        }
 
-            var owner = __instance.GetOwner();
+        if (!characterState.RunImmobilizePatches)
+        {
+            return false;
+        }
 
-            if (owner.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return false;
-            }
+        characterState.RunImmobilizePatches = false;
+        return true;
+    }
+}
 
+[HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTriggerImmobilizedBreak")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchOnTriggerImmobilizedBreak
+{
+    public static bool Prefix(BUS_BeImmobilizedComp __instance)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        var client = WukongMP.Instance.Client;
+        var owner = __instance.GetOwner();
+
+        if (owner.IsNullOrDestroyed())
+        {
+            Logging.LogError("Owner is null or destroyed");
+            return false;
+        }
+
+        if (client.IsMasterClient)
+        {
             var characterState = client.GetCharacterByActor(owner);
 
             if (characterState == null)
             {
+                Logging.LogDebug("Character state is null - continuing standard execution");
                 return true;
             }
 
-            if (client.IsMasterClient)
-            {
-                client.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
-                return true;
-            }
-
-            if (!characterState.RunImmobilizePatches)
-            {
-                return false;
-            }
-
-            characterState.RunImmobilizePatches = false;
-            return true;
+            client.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
+            BUS_EventCollectionCS.Get(characterState.Pawn)?.Evt_RelieveImmobilized.Invoke();
         }
+
+        return false;
     }
+}
 
-    [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTriggerImmobilizedBreak")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchOnTriggerImmobilizedBreak
+[HarmonyPatch(typeof(BUS_PhantomRushComp), "OnTriggerPhantomRush")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchOnTriggerPhantomRush
+{
+    public static bool Prefix(
+        BUS_PhantomRushComp __instance,
+        IBUC_SimpleStateData ___SimpleStateData,
+        IBUC_UnitStateData ___UnitStateData,
+        BUC_PhantomRushData ___PhantomRushData,
+        IBUC_SkillInstsData ___SkillInstsData,
+        ESkillDirection PhantomRushDir)
     {
-        public static bool Prefix(BUS_BeImmobilizedComp __instance)
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        var client = WukongMP.Instance.Client;
+        if (!client.RoomState.PhantomRushAllowed)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return true;
-
-            var client = WukongMP.Instance.Client;
-            var owner = __instance.GetOwner();
-
-            if (owner.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return false;
-            }
-
-            if (client.IsMasterClient)
-            {
-                var characterState = client.GetCharacterByActor(owner);
-
-                if (characterState == null)
-                {
-                    Logging.LogDebug("Character state is null - continuing standard execution");
-                    return true;
-                }
-
-                client.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
-                BUS_EventCollectionCS.Get(characterState.Pawn)?.Evt_RelieveImmobilized.Invoke();
-            }
-
             return false;
         }
-    }
 
-    [HarmonyPatch(typeof(BUS_PhantomRushComp), "OnTriggerPhantomRush")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchOnTriggerPhantomRush
-    {
-        public static bool Prefix(
-            BUS_PhantomRushComp __instance,
-            IBUC_SimpleStateData ___SimpleStateData,
-            IBUC_UnitStateData ___UnitStateData,
-            BUC_PhantomRushData ___PhantomRushData,
-            IBUC_SkillInstsData ___SkillInstsData,
-            ESkillDirection PhantomRushDir)
+        AActor owner = __instance.GetOwner();
+
+        if (owner.IsNullOrDestroyed())
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return true;
+            Logging.LogError("Owner is null or destroyed");
+            return false;
+        }
 
-            var client = WukongMP.Instance.Client;
-            if (!client.RoomState.PhantomRushAllowed)
+        if (owner == client.LocalPlayerState.Pawn)
+            return true;
+
+        // Modified original implementation
+        MethodInfo GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
+        if (GetActualUseConfigIDMethod == null)
+        {
+            Logging.LogError("GetActualUseConfigID method info is null");
+            return false;
+        }
+
+        BUS_GSEventCollection BUSEventCollection = BUS_EventCollectionCS.Get(owner);
+        BGS_GSEventCollection BGSEventCollection = BGS_GSEventCollection.Get(owner);
+        var aCharacter = owner as ACharacter;
+        if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
+        {
+            Logging.LogDebug("aCharacter is null or PhantomRush is already active");
+            return false;
+        }
+
+        FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
+        if (phantomRushSkillConfigDesc == null)
+        {
+            Logging.LogError("phantomRushSkillConfigDesc is null");
+            return false;
+        }
+
+        __instance.PreloadAssetMgr.TryGetCachedResourceObj<BGWDataAsset_PhantomRushRelatedeSkillConfig>(phantomRushSkillConfigDesc.PhantomRushRelatedSkillConfigPath, ELoadResourceType.AsyncLoadAndCache, EAssetPriority.Medium);
+        FPoseSnapshot Snapshot = default(FPoseSnapshot);
+        aCharacter.Mesh.SnapshotPose(ref Snapshot);
+        ___PhantomRushData.PoseSnapshot = Snapshot;
+        UAnimInstance animInstance = aCharacter.Mesh.GetAnimInstance();
+        FContinueBehaviorInfo cBI = default(FContinueBehaviorInfo);
+        if (animInstance != null)
+        {
+            UAnimMontage currentActiveMontage = animInstance.GetCurrentActiveMontage();
+            if (currentActiveMontage != null)
             {
-                return false;
-            }
-
-            AActor owner = __instance.GetOwner();
-
-            if (owner.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return false;
-            }
-
-            if (owner == client.LocalPlayerState.Pawn)
-                return true;
-
-            // Modified original implementation
-            MethodInfo GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
-            if (GetActualUseConfigIDMethod == null)
-            {
-                Logging.LogError("GetActualUseConfigID method info is null");
-                return false;
-            }
-
-            BUS_GSEventCollection BUSEventCollection = BUS_EventCollectionCS.Get(owner);
-            BGS_GSEventCollection BGSEventCollection = BGS_GSEventCollection.Get(owner);
-            var aCharacter = owner as ACharacter;
-            if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
-            {
-                Logging.LogDebug("aCharacter is null or PhantomRush is already active");
-                return false;
-            }
-
-            FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
-            if (phantomRushSkillConfigDesc == null)
-            {
-                Logging.LogError("phantomRushSkillConfigDesc is null");
-                return false;
-            }
-
-            __instance.PreloadAssetMgr.TryGetCachedResourceObj<BGWDataAsset_PhantomRushRelatedeSkillConfig>(phantomRushSkillConfigDesc.PhantomRushRelatedSkillConfigPath, ELoadResourceType.AsyncLoadAndCache, EAssetPriority.Medium);
-            FPoseSnapshot Snapshot = default(FPoseSnapshot);
-            aCharacter.Mesh.SnapshotPose(ref Snapshot);
-            ___PhantomRushData.PoseSnapshot = Snapshot;
-            UAnimInstance animInstance = aCharacter.Mesh.GetAnimInstance();
-            FContinueBehaviorInfo cBI = default(FContinueBehaviorInfo);
-            if (animInstance != null)
-            {
-                UAnimMontage currentActiveMontage = animInstance.GetCurrentActiveMontage();
-                if (currentActiveMontage != null)
+                if (___SimpleStateData.HasSimpleState(EBGUSimpleState.InAnimationSyncing))
                 {
-                    if (___SimpleStateData.HasSimpleState(EBGUSimpleState.InAnimationSyncing))
-                    {
-                        cBI.CBT = EContinueBehaviorType.AnimationSyncing;
-                        cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
-                        cBI.BeatbackMontage = currentActiveMontage;
-                    }
-                    else if (___UnitStateData.HasState(EBGUUnitState.Attacking))
-                    {
-                        cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
-                        cBI.CBT = EContinueBehaviorType.Skill;
-                        cBI.SkillID = ___SkillInstsData.CurrentCastingSkillID;
-                    }
-                    else if (___UnitStateData.HasState(EBGUUnitState.Beatback))
-                    {
-                        cBI.CBT = EContinueBehaviorType.Beatback;
-                        cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
-                        cBI.BeatbackMontage = currentActiveMontage;
-                    }
+                    cBI.CBT = EContinueBehaviorType.AnimationSyncing;
+                    cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
+                    cBI.BeatbackMontage = currentActiveMontage;
+                }
+                else if (___UnitStateData.HasState(EBGUUnitState.Attacking))
+                {
+                    cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
+                    cBI.CBT = EContinueBehaviorType.Skill;
+                    cBI.SkillID = ___SkillInstsData.CurrentCastingSkillID;
+                }
+                else if (___UnitStateData.HasState(EBGUUnitState.Beatback))
+                {
+                    cBI.CBT = EContinueBehaviorType.Beatback;
+                    cBI.MontagePos = animInstance.Montage_GetPosition(currentActiveMontage);
+                    cBI.BeatbackMontage = currentActiveMontage;
                 }
             }
+        }
 
-            BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill);
-            BUSEventCollection.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(phantomRushSkillConfigDesc.PhantomRushSkillID, ECastSkillSourceType.PhantomRush, _HasSetSkillBaseTarget: false, PhantomRushDir)
-            {
-                NeedCheckSkillCanCast = true
-            });
-            BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill, IsRemove: true);
-            if (___SkillInstsData.GetLastSkillCastResult() != 0)
-            {
-                Logging.LogDebug("GetLastSkillCastResult was not success");
-                return false;
-            }
+        BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill);
+        BUSEventCollection.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(phantomRushSkillConfigDesc.PhantomRushSkillID, ECastSkillSourceType.PhantomRush, _HasSetSkillBaseTarget: false, PhantomRushDir)
+        {
+            NeedCheckSkillCanCast = true
+        });
+        BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ForceSkill, IsRemove: true);
+        if (___SkillInstsData.GetLastSkillCastResult() != 0)
+        {
+            Logging.LogDebug("GetLastSkillCastResult was not success");
+            return false;
+        }
 
-            BUSEventCollection.Evt_ClearAbnormalState.Invoke([
-                EAbnormalStateType.Abnormal_Burn,
+        BUSEventCollection.Evt_ClearAbnormalState.Invoke([
+            EAbnormalStateType.Abnormal_Burn,
                 EAbnormalStateType.Abnormal_Freeze,
                 EAbnormalStateType.Abnormal_Poison,
                 EAbnormalStateType.Abnormal_Thunder
-            ]);
-            int phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
-            BUSEventCollection.Evt_SummonSkillCastByPhantomRush.Invoke(phantomRushSummonID, cBI);
-            BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PhantomRush);
-            foreach (int phantomRushBeginAddBuffID in phantomRushSkillConfigDesc.PhantomRushBeginAddBuffIDList)
-            {
-                BUSEventCollection.Evt_BuffAdd.Invoke(phantomRushBeginAddBuffID, owner, owner, -1f, EBuffSourceType.PhantomRush);
-            }
-
-            ___PhantomRushData.PhantomRushTimer = phantomRushSkillConfigDesc.PhantomRushDuration;
-            ___PhantomRushData.PhantomRushNoMagicProtectTimer = 1f;
-            BGSEventCollection?.Evt_BGS_ClearAttachedProjectiles_OnUnit.Invoke(owner);
-
-            return false;
+        ]);
+        int phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
+        BUSEventCollection.Evt_SummonSkillCastByPhantomRush.Invoke(phantomRushSummonID, cBI);
+        BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PhantomRush);
+        foreach (int phantomRushBeginAddBuffID in phantomRushSkillConfigDesc.PhantomRushBeginAddBuffIDList)
+        {
+            BUSEventCollection.Evt_BuffAdd.Invoke(phantomRushBeginAddBuffID, owner, owner, -1f, EBuffSourceType.PhantomRush);
         }
 
-        public static void Postfix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData, ESkillDirection PhantomRushDir)
+        ___PhantomRushData.PhantomRushTimer = phantomRushSkillConfigDesc.PhantomRushDuration;
+        ___PhantomRushData.PhantomRushNoMagicProtectTimer = 1f;
+        BGSEventCollection?.Evt_BGS_ClearAttachedProjectiles_OnUnit.Invoke(owner);
+
+        return false;
+    }
+
+    public static void Postfix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData, ESkillDirection PhantomRushDir)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        // PhantomRush not triggered - skip
+        if (!___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
+            return;
+        }
 
-            // PhantomRush not triggered - skip
-            if (!___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
-            {
-                return;
-            }
+        var client = WukongMP.Instance.Client;
+        var owner = __instance.GetOwner();
 
-            var client = WukongMP.Instance.Client;
-            var owner = __instance.GetOwner();
+        if (owner.IsNullOrDestroyed())
+        {
+            Logging.LogError("Owner is null or destroyed");
+            return;
+        }
 
-            if (owner.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return;
-            }
+        var playerState = client.GetPlayerByActor(owner);
+        if (playerState != null && playerState != client.LocalPlayerState)
+        {
+            WukongMP.SetPlayerVisibility(playerState, false);
+        }
+    }
+}
 
+[HarmonyPatch(typeof(BUS_SkillInstsCompSvr), "OnUnitCastSkillTry")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchOnUnitCastSkillTry
+{
+    public static void Postfix(FCastSkillInfo CSI, BUC_SkillInstsData ___SkillInstsData, BUS_SkillInstsCompSvr __instance)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        var client = WukongMP.Instance.Client;
+        var owner = __instance.GetOwner();
+
+        if (___SkillInstsData.GetLastSkillCastResult() != 0)
+        {
+            Logging.LogDebug("GetLastSkillCastResult was not success");
+            return;
+        }
+
+        if (CSI.SourceType == ECastSkillSourceType.PhantomRush)
+        {
             if (owner == client.LocalPlayerState.Pawn)
             {
-                Logging.LogDebug("Sending phantom rush with direction: {Direction}", PhantomRushDir);
-                client.SendPhantomRush(PhantomRushDir);
-            }
-
-            var playerState = client.GetPlayerByActor(owner);
-            if (playerState != null && playerState != client.LocalPlayerState)
-            {
-                WukongMP.SetPlayerVisibility(playerState, false);
+                Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
+                client.SendPhantomRush(CSI.SkillDirection);
             }
         }
     }
+}
 
-    [HarmonyPatch(typeof(BUS_PhantomRushComp), "ExitPhantomRush")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchExitPhantomRush
+[HarmonyPatch(typeof(BUS_PhantomRushComp), "ExitPhantomRush")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchExitPhantomRush
+{
+    public static void Prefix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData)
     {
-        public static void Prefix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData)
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        var client = WukongMP.Instance.Client;
+        var owner = __instance.GetOwner();
+
+        if (owner.IsNullOrDestroyed())
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
+            Logging.LogError("Owner is null or destroyed");
+            return;
+        }
 
-            var client = WukongMP.Instance.Client;
-            var owner = __instance.GetOwner();
+        var playerState = client.GetPlayerByActor(owner);
 
-            if (owner.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return;
-            }
+        if (playerState == null)
+            return;
 
-            var playerState = client.GetPlayerByActor(owner);
+        if ((client.IsMasterClient || owner == client.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
+        {
+            Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
+            client.ExitPhantomRush(playerState.PeerId);
+            playerState.ReceivedPhantomRushExit = false;
+        }
 
-            if (playerState == null)
-                return;
-
-            if ((client.IsMasterClient || owner == client.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
-            {
-                Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
-                client.ExitPhantomRush(playerState.PeerId);
-                playerState.ReceivedPhantomRushExit = false;
-            }
-
-            if (playerState != client.LocalPlayerState)
-            {
-                WukongMP.SetPlayerVisibility(playerState, true);
-            }
+        if (playerState != client.LocalPlayerState)
+        {
+            WukongMP.SetPlayerVisibility(playerState, true);
         }
     }
 }
