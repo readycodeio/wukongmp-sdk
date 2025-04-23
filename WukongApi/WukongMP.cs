@@ -1640,6 +1640,19 @@ namespace WukongApi
             {
                 Logging.LogWarning("Initial nickname not provided");
             }
+            
+            // set IsReadyForPvP and IsSpectator
+            if (initialProps.TryGetValue(nameof(PlayerState.IsReadyForPvP), out var isReady))
+            {
+                playerState.IsReadyForPvP = (bool)isReady;
+                Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", playerState.IsReadyForPvP);
+            }
+            
+            if (initialProps.TryGetValue(nameof(PlayerState.IsSpectator), out var isSpectator))
+            {
+                playerState.IsSpectator = (bool)isSpectator;
+                Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", playerState.IsSpectator);
+            }
 
             // set attributes
             foreach (var attr in Constants.SyncedAttributes)
