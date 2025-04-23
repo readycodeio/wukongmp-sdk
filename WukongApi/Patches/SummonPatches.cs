@@ -15,7 +15,7 @@ namespace WukongApi.Patches
 
         public static void QueueServant(int summonerId, FServantReq summonReq)
         {
-            Logging.LogDebug("Enqueueing summon for character {Id}: {Action}", summonReq.ServantType);
+            Logging.LogDebug("Enqueueing summon for character {Id}, type: {Action}", summonerId, summonReq.ServantType);
 
             _summonsQueues.AddOrUpdate(summonerId, _ => new ConcurrentQueue<FServantReq>([summonReq]), (_, queue) =>
             {
@@ -149,8 +149,10 @@ namespace WukongApi.Patches
                 return false;
             }
 
-            var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
+            var guid = Guid.NewGuid().ToString();
             __result = SummonPatch.SpawnServant(id, guid, ownerState.TeamId, TamerClass, InTransform, InServantReq, SafeClampToLand);
+            Logging.LogDebug("Sending spawn summon for tamer {TamerPath}", TamerClass.Value.PathName);
+            client.SpawnSummon(ownerState.PeerId, id, guid, TamerClass.Value.PathName, ownerState.TeamId);
             return false;
         }
     }
