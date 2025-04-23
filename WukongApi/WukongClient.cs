@@ -37,6 +37,7 @@ namespace WukongApi
         private readonly Action<int> _playerJoinedCallback;
         public event Action<MontageCallbackData>? OnMontageCallback;
         public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
+        public event Action<int, int, string, string, int>? OnSummonSpawn;
         public event Action<int>? OnTeleportFinish;
         public event Action<string>? OnMonsterWakeUp;
         public event Action<int, EquipmentState>? OnEquipmentChange;
@@ -380,6 +381,11 @@ namespace WukongApi
                     var chatMessage = RelayClient.DeserializeObject<ChatMessage>(reader);
                     WukongChat.OnGetMessage(chatMessage);
                     break;
+                case 24:
+                    // spawnSummon
+                    var summonData = RelayClient.DeserializeObject<UnitSummonData>(reader);
+                    OnSummonSpawn?.Invoke(summonData.SummonerId, summonData.Id, summonData.Guid, summonData.Name, summonData.TeamId);
+                    break;
             }
         }
 
@@ -592,6 +598,7 @@ namespace WukongApi
         {
             RelayClient.RegisterType(typeof(ChatMessage), ChatMessage.Serialize, ChatMessage.Deserialize);
             RelayClient.RegisterType(typeof(UnitSpawnData), UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
+            RelayClient.RegisterType(typeof(UnitSummonData), UnitSummonData.Serialize, UnitSummonData.Deserialize);
             RelayClient.RegisterType(typeof(FVector), SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
             RelayClient.RegisterType(typeof(FRotator), SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
             RelayClient.RegisterType(typeof(MontageCallbackData), MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
@@ -831,6 +838,13 @@ namespace WukongApi
         {
             const byte eventCode = 22;
             int[] evData = [characterId, (int)MMState];
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+        }
+
+        public void SpawnSummon(int summonerId, int id, string guid, string unitName, int teamId)
+        {
+            const byte eventCode = 24;
+            var evData = new UnitSummonData(summonerId, id, guid, unitName, teamId);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 

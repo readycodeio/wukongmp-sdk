@@ -24,9 +24,8 @@ namespace WukongApi.Patches
             });
         }
 
-        public static void ExecuteSummon(int summonerId, string tamerClassName, string guid, int id, int teamId)
+        public static void ExecuteSummon(int summonerId, int id, string guid, string tamerClassName, int teamId)
         {
-
             if (!_summonsQueues.TryGetValue(summonerId, out var queue))
                 return;
 
@@ -38,7 +37,7 @@ namespace WukongApi.Patches
                     return;
                 }
                 item.ServantTamerGuid = guid;
-                BGU_UnrealWorldUtil.RequestSpawnServant(GameUtils.GetWorld(), item.TamerTemplate, item.BornTransform, item, item.SafeClampToLand);
+                SpawnServant(id, guid, teamId, item.TamerTemplate, item.BornTransform, item, item.SafeClampToLand);
             }
         }
 

@@ -499,6 +499,7 @@ namespace WukongApi
 
             Client.OnBeforeJoinRoom += SetPlayerProperties;
             Client.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
+            Client.OnSummonSpawn += (summonerId, id, guid, name, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteSummon(summonerId, id, guid, name, teamId), "SpawnRemoteSummon");
             Client.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
             Client.OnTeleportFinish += (id) => GameLoopPatch.QueueOnGameThread(() => OnTeleportFinish(id), "WakeUpMonster");
             Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
@@ -1168,6 +1169,11 @@ namespace WukongApi
         private void SpawnRemoteUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
         {
             SpawnUnitLocally(id, guid, unitName, teamId, x, y, z);
+        }
+
+        private void SpawnRemoteSummon(int summonerId, int id, string guid, string unitName, int teamId)
+        {
+            SummonPatch.ExecuteSummon(summonerId, id, guid, unitName, teamId);
         }
 
         private void SpawnUnitLocally(int id, string guid, string unitName, int teamId, float x, float y, float z)
