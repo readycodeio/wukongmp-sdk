@@ -151,6 +151,7 @@ namespace WukongApi
             {
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);
+                events.Evt_EnableCanSetTarget.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled.");
             }
 
