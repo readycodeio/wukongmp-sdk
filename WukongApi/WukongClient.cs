@@ -581,7 +581,7 @@ namespace WukongApi
             RoomState.InPvP = false;
         }
 
-        private void OnPlayerReadinessChanged(string playerNickname, bool isReady)
+        public void OnPlayerReadinessChanged(string playerNickname, bool isReady)
         {
             var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (LocalPlayerState.IsReadyForPvP ? 1 : 0);
             OnReadinessChange?.Invoke(playerNickname, isReady, playersReady);
@@ -1141,7 +1141,7 @@ namespace WukongApi
             Logging.LogInformation("Player {PlayerId} entered the room", playerId);
 
             _playerJoinedCallback.Invoke(playerId);
-
+            
             // send current monsters to the new player 
             foreach (var monsterState in SyncedMonsters.Values)
             {

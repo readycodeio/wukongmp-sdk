@@ -1473,12 +1473,12 @@ namespace WukongApi
                     return;
                 }
 
-                var isSpectator = (bool)props.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
+                // set IsSpectator if client should be (joining during fight)
+                var isSpectator = playerState.IsSpectator;
 
                 if (!isSpectator)
                 {
-                    var readyForPvP = (bool)props.GetValueOrDefault(nameof(PlayerState.IsReadyForPvP), false);
-                    isSpectator = Client.RoomState.InPvP && !readyForPvP;
+                    isSpectator = Client.RoomState.InPvP && !playerState.IsReadyForPvP;
                 }
 
                 // set remote player property - IsSpectator
@@ -1486,6 +1486,9 @@ namespace WukongApi
                 {
                     Client.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
                 }
+                
+                // readiness callback
+                Client.OnPlayerReadinessChanged(playerState.NickName, playerState.IsReadyForPvP);
 
                 UpdatePlayerTeamUi(playerState);
 
