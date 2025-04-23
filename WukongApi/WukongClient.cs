@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using b1;
 using BtlB1;
@@ -591,7 +592,11 @@ namespace WukongApi
         {
             Logging.LogInformation("Attempting to reconnect...");
             StopRelayClient();
-            StartClient();
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(Constants.ReconnectDelayMs);
+                StartClient();
+            });
         }
 
         private void ConfigureRelay()
@@ -1100,7 +1105,7 @@ namespace WukongApi
             // get nickname from Relay
             var playerNickname = (string)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.NickName), CmdLineParams.Instance.Nickname);
             LocalPlayerState.NickName = playerNickname;
-            
+
             // same for IsReadyForPvP and IsSpectator
             LocalPlayerState.IsReadyForPvP = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsReadyForPvP), false);
             LocalPlayerState.IsSpectator = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
@@ -1141,7 +1146,7 @@ namespace WukongApi
             Logging.LogInformation("Player {PlayerId} entered the room", playerId);
 
             _playerJoinedCallback.Invoke(playerId);
-            
+
             // send current monsters to the new player 
             foreach (var monsterState in SyncedMonsters.Values)
             {
