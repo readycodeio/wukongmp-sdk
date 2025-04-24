@@ -239,6 +239,11 @@ namespace WukongApi
 
         public static FVector GetFinalLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
         {
+            // TODO: For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
+            if (CmdLineParams.Instance.LevelId == 0)
+            {
+                return InTargetLocation;
+            }
             FVector result = InTargetLocation;
             if (CharacterCS == null)
             {
@@ -252,7 +257,7 @@ namespace WukongApi
             float scaledCapsuleHalfHeight = uCapsuleComponent.GetScaledCapsuleHalfHeight();
             float scaledCapsuleHalfHeight2 = uCapsuleComponent.GetScaledCapsuleHalfHeight();
             float num = 2.4f;
-            FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight;
+            FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
             FVector end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
             if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
             {
