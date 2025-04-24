@@ -446,11 +446,13 @@ namespace WukongApi
                 var events = BGS_GSEventCollection.Get(actor);
                 if (events != null)
                 {
+                    var hasGuid = Client.SyncedMonsters.Values.FirstOrDefault(x => x.Guid == guid) != null;
+                    
                     if (actor.GetMonster() == null)
                     {
                         Logging.LogDebug("Spawning monster for tamer with guid: {Guid}.", guid);
 
-                        if (!Client.SyncedMonsters.ContainsKey(guid))
+                        if (!hasGuid)
                         {
                             Logging.LogError("Not syncing monster");
                         }
@@ -458,7 +460,7 @@ namespace WukongApi
                         Logging.LogDebug("Invoking Evt_TamerBlockingSpawnImmediately.");
                         events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
                     }
-                    else if (!Client.SyncedMonsters.ContainsKey(guid))
+                    else if (!hasGuid)
                     {
                         Logging.LogDebug("Monster already spawned but not synced: {Guid}.", guid);
 
@@ -1157,8 +1159,8 @@ namespace WukongApi
         {
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
 
-            var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
-            var id = -(Client.SyncedMonsters.Count + Client.RoomState.MaxPlayers);
+            var guid = Guid.NewGuid().ToString();
+            var id = --Client.RoomState.NextMonsterId;
 
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
             Client.SpawnUnit(id, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
@@ -1210,7 +1212,7 @@ namespace WukongApi
                 Location = loc,
                 Rotation = rot
             };
-            Client.SyncedMonsters.Add(guid, monsterState);
+            Client.SyncedMonsters.Add(id, monsterState);
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
             BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);

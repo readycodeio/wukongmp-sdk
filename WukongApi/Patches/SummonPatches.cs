@@ -88,7 +88,7 @@ namespace WukongApi.Patches
                 Location = InServantReq.BornTransform.GetLocation(),
                 Rotation = InServantReq.BornTransform.Rotator()
             };
-            client.SyncedMonsters.Add(guid, monsterState);
+            client.SyncedMonsters.Add(id, monsterState);
 
             bUTamerActor.MarkAsServant();
             InServantReq.ServantTamerGuid = bUTamerActor.GetFinalGuid();

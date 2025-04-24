@@ -310,17 +310,17 @@ namespace WukongApi.Patches
             {
                 if (client.IsMasterClient)
                 {
-                    if (monsterState.MoveAIType != ___MovementData.MoveAIType)
+                    if (monsterState.MoveAiType != ___MovementData.MoveAIType)
                     {
-                        monsterState.MoveAIType = ___MovementData.MoveAIType;
-                        Logging.LogDebug("Move AI type changed to {State} for {Actor}", monsterState.MoveAIType, owner.GetName());
-                        client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAIType), monsterState.MoveAIType);
+                        monsterState.MoveAiType = ___MovementData.MoveAIType;
+                        Logging.LogDebug("Move AI type changed to {State} for {Actor}", monsterState.MoveAiType, owner.GetName());
+                        client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveAiType), monsterState.MoveAiType);
                     }
                 }
                 else
                 {
                     var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
-                    events.Evt_SwitchMoveAIType.Invoke(monsterState.MoveAIType);
+                    events.Evt_SwitchMoveAIType.Invoke(monsterState.MoveAiType);
                 }
             }
         }

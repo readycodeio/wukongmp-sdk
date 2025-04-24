@@ -40,7 +40,7 @@ namespace WukongApi.State
 
         public bool IsSynced { get; set; }
         public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
-        public EBGUMoveAIType MoveAIType { get; set; }
+        public EBGUMoveAIType MoveAiType { get; set; }
         public EState_MM MotionMatchingState { get; set; }
         public float MaxSpeed { get; set; }
 

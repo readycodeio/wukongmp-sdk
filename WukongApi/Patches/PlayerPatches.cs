@@ -15,7 +15,7 @@ namespace WukongApi.Patches
     public class PatchBGUPlayerAnimation
     {
         public static void Postfix(
-            BUC_ABPBGUCharacterData __instance,
+            BUC_ABPBGUCharacterData? __instance,
             AActor Owner,
             IBUC_ABPCharacterData ChrData,
             IBUC_SpeedCtrlData SpeedCtrlData,
@@ -262,13 +262,13 @@ namespace WukongApi.Patches
                         if (monsterState.MoveSpeedLevel != __instance.MoveSpeedLevel)
                         {
                             monsterState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                            client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
+                            client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
                         }
 
                         if (monsterState.MoveSpeedState != __instance.MoveSpeedState)
                         {
                             monsterState.MoveSpeedState = __instance.MoveSpeedState;
-                            client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
+                            client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
                         }
                     }
                     else

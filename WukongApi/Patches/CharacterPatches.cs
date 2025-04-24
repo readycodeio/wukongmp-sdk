@@ -247,7 +247,7 @@ namespace WukongApi.Patches
                         if (!monster.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
                             monster.Hp = result;
-                            client.CacheMonsterProperty(monster.Guid, AttrID.ToString(), result);
+                            client.CacheMonsterProperty(monster.PeerId, AttrID.ToString(), result);
 
                             if (result <= 0)
                             {
@@ -302,7 +302,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchCharacterAnimation
     {
-        public static void Postfix(BUC_ABPCharacterData __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
+        public static void Postfix(BUC_ABPCharacterData? __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -425,31 +425,31 @@ namespace WukongApi.Patches
                             if (!monsterState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.Velocity = __instance.Velocity;
-                                client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Velocity), monsterState.Velocity);
+                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.Velocity), monsterState.Velocity);
                             }
 
                             if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.MoveAcceleration = __instance.MoveAcceleration;
-                                client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
+                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
                             }
 
                             if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.Location = __instance.ActorLocation;
-                                client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Location), monsterState.Location);
+                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.Location), monsterState.Location);
                             }
 
                             if (!monsterState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.Rotation = __instance.ActorRotation;
-                                client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.Rotation), monsterState.Rotation);
+                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.Rotation), monsterState.Rotation);
                             }
 
                             if (!monsterState.MaxSpeed.Equals(__instance.MaxSpeed, Constants.FloatComparisonTolerance))
                             {
                                 monsterState.MaxSpeed = __instance.MaxSpeed;
-                                client.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
+                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
                             }
                         }
                         else

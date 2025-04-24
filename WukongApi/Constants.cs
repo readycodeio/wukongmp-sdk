@@ -16,7 +16,7 @@ namespace WukongApi
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 200f;
         public const int MonsterSpawnDelayMs = 500;
-        public const string AttributePrefix = "attr_";
+        public const string AttributePrefix = "a_";
         public const float PvpStartingRadius = 500;
         public const float PvpMonsterRadius = 1000;
         public const float CameraArmLength = 720;

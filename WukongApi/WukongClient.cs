@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using b1;
 using BtlB1;
@@ -87,7 +86,7 @@ namespace WukongApi
         public RoomStateProxy RoomState { get; }
 
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new();
-        public readonly Dictionary<string, MonsterState> SyncedMonsters = new();
+        public readonly Dictionary<int, MonsterState> SyncedMonsters = new();
 
         public IEnumerable<PlayerState> AllConnectedPlayers
             => ConnectedPlayers.Values.Append(LocalPlayerState);
@@ -175,7 +174,7 @@ namespace WukongApi
 
         public MonsterState? GetMonsterById(int monsterId)
         {
-            return SyncedMonsters.Values.FirstOrDefault(x => x.PeerId == monsterId);
+            return SyncedMonsters.GetValueOrDefault(monsterId);
         }
 
         public CharacterState? GetCharacterById(int id)
@@ -254,7 +253,7 @@ namespace WukongApi
 
         public void RemoveSyncedMonster(MonsterState monster)
         {
-            SyncedMonsters.Remove(monster.Guid);
+            SyncedMonsters.Remove(monster.PeerId);
         }
 
         private void OnPingUpdated(int ping)
@@ -278,8 +277,8 @@ namespace WukongApi
                     break;
                 case 3:
                     // monster properties
-                    var monsterData = RelayClient.DeserializeObject<Dictionary<object, object>>(reader);
-                    ApplyMonsterMove(monsterData);
+                    var packet = RelayClient.DeserializeObject<MonsterPropertiesPacket>(reader);
+                    ApplyMonsterMove(packet);
                     break;
                 case 4:
                     // teleport finish
@@ -622,6 +621,7 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
             RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
             RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
+            RelayClient.RegisterType(typeof(MonsterPropertiesPacket), MonsterPropertiesPacket.Serialize, MonsterPropertiesPacket.Deserialize);
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
@@ -887,24 +887,15 @@ namespace WukongApi
             Task.Run(LobbyManager.StartRoundAsync);
         }
 
-        private void ApplyMonsterMove(Dictionary<object, object> props)
+        private void ApplyMonsterMove(MonsterPropertiesPacket packet)
         {
-            foreach (var (key, value) in props)
+            foreach (var (key, value) in packet.Data)
             {
-                var compositeKey = (string)key;
-                var parts = compositeKey.Split(MonsterHashtableKeySeparator);
-                if (parts.Length != 2)
-                {
-                    Logging.LogDebug("Invalid key: {Key}", compositeKey);
-                    continue;
-                }
+                var propName = (string)key;
 
-                var guid = parts[0];
-                var propName = parts[1];
-
-                if (!SyncedMonsters.TryGetValue(guid, out var monsterState))
+                if (!SyncedMonsters.TryGetValue(packet.Id, out var monsterState))
                 {
-                    Logging.LogDebug("Monster {Guid} not found.", guid);
+                    Logging.LogDebug("Monster {Id} not found.", packet.Id);
                     continue;
                 }
 
@@ -986,9 +977,9 @@ namespace WukongApi
             RelayClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
         }
 
-        private ConcurrentDictionary<string, object> _monsterProperties = new();
+        private ConcurrentDictionary<(int, string), object> _monsterProperties = new();
 
-        private ConcurrentDictionary<string, object> _monsterPropertiesRo = new();
+        private ConcurrentDictionary<(int, string), object> _monsterPropertiesRo = new();
 
         private readonly object _monsterPropertiesLock = new();
 
@@ -1001,26 +992,37 @@ namespace WukongApi
                 if (_monsterPropertiesRo.Count == 0)
                     return;
 
-                var hashtable = new Dictionary<object, object>();
+                Dictionary<int, Dictionary<object, object>> hashtables = new();
+
                 foreach (var (key, value) in _monsterPropertiesRo)
                 {
-                    hashtable[key] = value;
+                    if (!hashtables.TryGetValue(key.Item1, out var hash))
+                    {
+                        hash = new Dictionary<object, object>();
+                        hashtables[key.Item1] = hash;
+                    }
+
+                    hash[key.Item2] = value;
+                }
+
+                foreach (var (id, data) in hashtables)
+                {
+                    const byte eventCode = 3;
+                    var packet = new MonsterPropertiesPacket(id, data);
+                    RelayClient.OpRaiseEvent(eventCode, packet, RelayMode.Others, DeliveryMethod.Unreliable);
                 }
 
                 _monsterPropertiesRo.Clear();
-
-                const byte eventCode = 3;
-                RelayClient.OpRaiseEvent(eventCode, hashtable, RelayMode.Others, DeliveryMethod.ReliableOrdered);
             }
         }
 
-        public void CacheMonsterProperty(string guid, string prop, object value)
+        public void CacheMonsterProperty(int id, string prop, object value)
         {
-            _monsterProperties[$"{guid}{MonsterHashtableKeySeparator}{prop}"] = value;
+            _monsterProperties[(id, prop)] = value;
 
             if (value is not (FVector or FRotator))
             {
-                Logging.LogDebug("Set monster property [{Guid}]: {Property} = {Value}", guid, prop, value);
+                Logging.LogDebug("Set monster property [{Guid}]: {Property} = {Value}", id, prop, value);
             }
         }
 
