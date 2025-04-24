@@ -267,7 +267,7 @@ namespace WukongApi.Patches
             {
                 var owner = __instance.GetOwner();
                 var character = client.GetMonsterByActor(owner);
-                if (character != null)
+                if (character != null && character.Pawn != null && !BGU_CommonUtil.IsInFsmState(character.Pawn, EventTag))
                 {
                     Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
                     client.SendTriggerFsmState(character.PeerId, EventTag);
