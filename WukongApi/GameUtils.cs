@@ -252,7 +252,7 @@ namespace WukongApi
             float scaledCapsuleHalfHeight = uCapsuleComponent.GetScaledCapsuleHalfHeight();
             float scaledCapsuleHalfHeight2 = uCapsuleComponent.GetScaledCapsuleHalfHeight();
             float num = 2.4f;
-            FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 20.0;
+            FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
             FVector end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
             if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
             {
