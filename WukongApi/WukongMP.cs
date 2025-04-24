@@ -666,22 +666,24 @@ namespace WukongApi
 
         private void OnMotionMatchingChanged(int characterId, EState_MM motionMatchingState)
         {
-            var characterState = Client.GetCharacterById(characterId);
-            if (characterState == null)
+            var monsterState = Client.GetMonsterById(characterId);
+            if (monsterState == null)
             {
                 Logging.LogError("Character not found: {Id}", characterId);
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+            monsterState.MotionMatchingState = motionMatchingState;
+
+            var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
 
             if (events == null)
             {
-                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                Logging.LogError("Failed to get event collection for character {Nickname}", monsterState.NickName);
                 return;
             }
 
-            Logging.LogTrace("Changing motion matching to: {State}, for player {Player}", motionMatchingState, characterState.NickName);
+            Logging.LogTrace("Changing motion matching to: {State}, for monster {Monster}", motionMatchingState, monsterState.NickName);
             events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
         }
 

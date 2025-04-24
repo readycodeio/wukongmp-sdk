@@ -492,6 +492,7 @@ namespace WukongApi.Patches
                     Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
                     WukongMP.Instance.CleanupMonster(monsterState);
                 }
+
                 var tamer = character.GetTamerOwner();
                 if (tamer != null)
                 {
@@ -547,6 +548,7 @@ namespace WukongApi.Patches
                     Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
+
             if (owner == client.LocalPlayerState.Pawn)
             {
                 client.SendUnitStateTrigger(client.LocalPlayerState.PeerId, Trigger, Time, NeedForceUpdate);
@@ -569,8 +571,9 @@ namespace WukongApi.Patches
             {
                 var owner = __instance.GetOwner();
                 var character = client.GetMonsterByActor(owner);
-                if (character != null)
+                if (character != null && character.MotionMatchingState != MMState)
                 {
+                    character.MotionMatchingState = MMState;
                     client.SendMotionMatchingState(character.PeerId, MMState);
                     Logging.LogDebug("Motion matching state changed to {State} for {Actor}", MMState, owner.GetName());
                 }
