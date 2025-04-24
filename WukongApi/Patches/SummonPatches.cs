@@ -99,61 +99,61 @@ namespace WukongApi.Patches
         }
     }
     
-    [HarmonyPatch(typeof(FSummonProcessor_Spawn), "RunProcessor")]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public static class PatchSpawnRunProcessor
-    {
-        public static void Prefix(FSummonInstance InSummonInstance)
-        {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
+    //[HarmonyPatch(typeof(FSummonProcessor_Spawn), "RunProcessor")]
+    //[HarmonyPatchCategory(Constants.GlobalPatches)]
+    //public static class PatchSpawnRunProcessor
+    //{
+    //    public static void Prefix(FSummonInstance InSummonInstance)
+    //    {
+    //        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+    //            return;
 
-            var client = WukongMP.Instance.Client;
-            if (!client.IsMasterClient)
-            {
-                for (int i = 0; i < InSummonInstance.ServantReqList.Count; i++)
-                {
-                    FServantReq fServantReq = InSummonInstance.ServantReqList[i];
-                    var summonerState = client.GetCharacterByActor(fServantReq.Summoner);
-                    if (summonerState != null)
-                    {
-                        SummonPatch.QueueServant(summonerState.PeerId, fServantReq);
-                    }
-                }
-            }
-        }
-    }
+    //        var client = WukongMP.Instance.Client;
+    //        if (!client.IsMasterClient)
+    //        {
+    //            for (int i = 0; i < InSummonInstance.ServantReqList.Count; i++)
+    //            {
+    //                FServantReq fServantReq = InSummonInstance.ServantReqList[i];
+    //                var summonerState = client.GetCharacterByActor(fServantReq.Summoner);
+    //                if (summonerState != null)
+    //                {
+    //                    SummonPatch.QueueServant(summonerState.PeerId, fServantReq);
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
     
-    [HarmonyPatch(typeof(BGU_UnrealWorldUtil), nameof(BGU_UnrealWorldUtil.RequestSpawnServant))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public static class PatchRequestSpawnServant
-    {
-        public static bool Prefix(ref string? __result, UWorld World, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
-        {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return true;
+    //[HarmonyPatch(typeof(BGU_UnrealWorldUtil), nameof(BGU_UnrealWorldUtil.RequestSpawnServant))]
+    //[HarmonyPatchCategory(Constants.GlobalPatches)]
+    //public static class PatchRequestSpawnServant
+    //{
+    //    public static bool Prefix(ref string? __result, UWorld World, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
+    //    {
+    //        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+    //            return true;
 
-            var client = WukongMP.Instance.Client;
-            if (!client.IsMasterClient)
-            {
-                __result = null;
-                return false;
-            }
+    //        var client = WukongMP.Instance.Client;
+    //        if (!client.IsMasterClient)
+    //        {
+    //            __result = null;
+    //            return false;
+    //        }
 
-            var id = -(client.SyncedMonsters.Count + client.RoomState.MaxPlayers);
-            var ownerState = client.GetCharacterByActor(InServantReq.Summoner);
-            if (ownerState == null)
-            {
-                Logging.LogDebug("Not synced chanracter {CharacterName} trying to summon tamer", InServantReq.Summoner.GetName());
-                __result = null;
-                return false;
-            }
+    //        var id = -(client.SyncedMonsters.Count + client.RoomState.MaxPlayers);
+    //        var ownerState = client.GetCharacterByActor(InServantReq.Summoner);
+    //        if (ownerState == null)
+    //        {
+    //            Logging.LogDebug("Not synced chanracter {CharacterName} trying to summon tamer", InServantReq.Summoner.GetName());
+    //            __result = null;
+    //            return false;
+    //        }
 
-            var guid = Guid.NewGuid().ToString();
-            __result = SummonPatch.SpawnServant(id, guid, ownerState.TeamId, TamerClass, InTransform, InServantReq, SafeClampToLand);
-            Logging.LogDebug("Sending spawn summon for tamer {TamerPath}", TamerClass.Value.PathName);
-            client.SpawnSummon(ownerState.PeerId, id, guid, TamerClass.Value.PathName, ownerState.TeamId);
-            return false;
-        }
-    }
+    //        var guid = Guid.NewGuid().ToString();
+    //        __result = SummonPatch.SpawnServant(id, guid, ownerState.TeamId, TamerClass, InTransform, InServantReq, SafeClampToLand);
+    //        Logging.LogDebug("Sending spawn summon for tamer {TamerPath}", TamerClass.Value.PathName);
+    //        client.SpawnSummon(ownerState.PeerId, id, guid, TamerClass.Value.PathName, ownerState.TeamId);
+    //        return false;
+    //    }
+    //}
 }
