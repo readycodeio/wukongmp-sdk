@@ -33,7 +33,7 @@ namespace WukongApi.State
             {
                 if (_markerActor != null && _markerActor.IsNullOrDestroyed())
                 {
-                    Logging.LogDebug("Marker actor is destroyed");
+                    Logging.LogTrace("Marker actor is destroyed");
                     return null;
                 }
 

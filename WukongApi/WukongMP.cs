@@ -257,6 +257,9 @@ namespace WukongApi
 
         private void SetupLobbyUi()
         {
+            if (!_isAfterLoadingScreen)
+                return;
+
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
@@ -266,6 +269,9 @@ namespace WukongApi
 
         private void SetupMatchmakingUi()
         {
+            if (!_isAfterLoadingScreen)
+                return;
+
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(Texts.MatchmakingInProgress);
@@ -275,6 +281,9 @@ namespace WukongApi
 
         private void SetupSpectatorUi()
         {
+            if (!_isAfterLoadingScreen)
+                return;
+
             _gameMessageWidget.SetVisibility(true);
             _gameMessageWidget.SetMainText(Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(Texts.WaitForEnd);
