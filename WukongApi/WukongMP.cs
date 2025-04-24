@@ -700,7 +700,7 @@ namespace WukongApi
             }
 
             var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(characterState.Pawn);
-            if(clearTarget ==  true)
+            if (clearTarget == true)
             {
                 Logging.LogDebug("Updating target for character {PlayerNickname} to null", characterState.NickName);
                 targetInfoData.SetTargetInfo(new UnitLockTargetInfo());
@@ -1486,9 +1486,12 @@ namespace WukongApi
                 {
                     Client.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
                 }
-                
+
                 // readiness callback
-                Client.OnPlayerReadinessChanged(playerState.NickName, playerState.IsReadyForPvP);
+                if (playerState.IsReadyForPvP)
+                {
+                    Client.OnPlayerReadinessChanged(playerState.NickName, playerState.IsReadyForPvP);
+                }
 
                 UpdatePlayerTeamUi(playerState);
 
@@ -1649,14 +1652,14 @@ namespace WukongApi
             {
                 Logging.LogWarning("Initial nickname not provided");
             }
-            
+
             // set IsReadyForPvP and IsSpectator
             if (initialProps.TryGetValue(nameof(PlayerState.IsReadyForPvP), out var isReady))
             {
                 playerState.IsReadyForPvP = (bool)isReady;
                 Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", playerState.IsReadyForPvP);
             }
-            
+
             if (initialProps.TryGetValue(nameof(PlayerState.IsSpectator), out var isSpectator))
             {
                 playerState.IsSpectator = (bool)isSpectator;
