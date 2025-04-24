@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using b1;
 using b1.ECS;
 using HarmonyLib;
-using UnrealEngine.Engine;
 using WukongApi.Monitors;
 using WukongApi.State;
 
@@ -17,7 +16,7 @@ namespace WukongApi.Patches
         {
             if (name != null)
             {
-                Logging.LogDebug("Enqueueing action: {Action}", name);
+                Logging.LogTrace("Enqueueing action: {Action}", name);
             }
 
             CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string?)>([(action, name)]), (_, queue) =>
@@ -79,7 +78,7 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug("Processing {Action} action for tick group {Mask}", item.Name, mask);
+                    Logging.LogTrace("Processing {Action} action for tick group {Mask}", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)
@@ -99,12 +98,12 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
             
-            SyncMontage(photon.LocalPlayerState);
-            if (photon.IsMasterClient)
+            SyncMontage(client.LocalPlayerState);
+            if (client.IsMasterClient)
             {
-                foreach (var monsterState in photon.SyncedMonsters.Values)
+                foreach (var monsterState in client.SyncedMonsters.Values)
                 {
                     SyncMontage(monsterState);
                 }
@@ -134,14 +133,14 @@ namespace WukongApi.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Photon.SendMontageCallback(characterState.PhotonId, currentMontage, currentPosition, hasMontageRewound);
+                    WukongMP.Instance.Client.SendMontageCallback(characterState.PeerId, currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                WukongMP.Instance.Photon.SendMontageCancel(characterState.PhotonId);
+                WukongMP.Instance.Client.SendMontageCancel(characterState.PeerId);
             }
 
             montageState.LocalMontage = currentMontage;
@@ -181,7 +180,7 @@ namespace WukongApi.Patches
             {
                 try
                 {
-                    Logging.LogDebug("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
+                    Logging.LogTrace("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)

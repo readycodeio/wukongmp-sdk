@@ -9,6 +9,7 @@
         <RootNamespace>WukongMpMod</RootNamespace>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <Nullable>enable</Nullable>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <PropertyGroup>

@@ -19,6 +19,12 @@ namespace WukongMPMod
 
         public void Init()
         {
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+            {
+                Logging.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
+                return;
+            }
+            
             // register global unhandled exception handlers
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
             TaskScheduler.UnobservedTaskException += UnobservedTaskExceptionHandler;
@@ -49,18 +55,12 @@ namespace WukongMPMod
 
             _wukongMp.Init();
 
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
-            {
-                Logging.LogInformation("Multiplayer is disabled");
-                return;
-            }
-
             _wukongMp.Patch();
 #if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
-                _wukongMp.DumpPlayerState();
+                _wukongMp.DumpDebugInfo();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
@@ -72,27 +72,27 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
-                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Client.LocalPlayerState.PeerId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
             
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
-                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Photon.LocalPlayerState.PhotonId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Client.LocalPlayerState.PeerId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
             {
                 Logging.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Photon.SwitchReadyStateMulti();
+                    _wukongMp.Client.SwitchReadyStateMulti();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
             {
                 Logging.LogDebug("L");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Photon.SwitchTeam();
+                    _wukongMp.Client.SwitchTeam();
             });
 
             Utils.RegisterKeyBind(Key.K, () =>
@@ -106,7 +106,7 @@ namespace WukongMPMod
             {
                 Logging.LogDebug("I");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Photon.SwitchReadyStateSingle();
+                    _wukongMp.Client.SwitchReadyStateSingle();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>
@@ -131,7 +131,7 @@ namespace WukongMPMod
                 else
                 {
                     var message = ChatWidget.Instance.CommitMessage();
-                    _wukongMp.Photon.WukongChat.ProcessMessage(message);
+                    _wukongMp.Client.WukongChat.ProcessMessage(message);
                 }
 
             });
@@ -140,6 +140,12 @@ namespace WukongMPMod
         public void DeInit()
         {
             Logging.LogInformation("DeInit");
+            
+            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+            {
+                return;
+            }
+            
             _wukongMp.Unpatch();
             _wukongMp.DeInit();
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;

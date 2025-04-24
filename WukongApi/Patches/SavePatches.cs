@@ -114,7 +114,7 @@ namespace WukongApi.Patches
             }
 
             // Read archive with our world state.
-            var readArchiveResult = __instance.ReadArchiveData(Constants.LevelArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
             if (readArchiveResult != 0)
             {
                 Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
@@ -129,12 +129,16 @@ namespace WukongApi.Patches
             OutArchiveData.StateMachineArchiveData = gameArchiveData.GameArchiveData.StateMachineArchiveData;
             OutArchiveData.TaskArchiveData = gameArchiveData.GameArchiveData.TaskArchiveData;
 
+            var levelConfig = LevelSpawnConfig.GetCurrentLevelSpawnData();
+            OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = levelConfig.MapId;
+            OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
+            OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
+
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5201, Type = SpellType.ShenFa }); // Phantom dash
             OutArchiveData.RoleData.RoleCs.Actor.Wear.WearSoulSkill = null;
             OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.ShortcutsList.Clear();
 
             OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5102); // Ring of fire
             OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5103); // Spell binder

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using b1;
@@ -46,11 +47,12 @@ namespace WukongApi.State
         public bool IsReadyForPvP { get; set; }
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
+        public int TeleportFinishFrames { get; set; }
 
-        public PlayerState(int photonId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
-            PhotonId = photonId;
-            Pawn = pawn;
+            PeerId = peerId;
+            _pawn = pawn;
             TeamId = teamId;
             Hp = initialHp;
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
@@ -70,39 +72,50 @@ namespace WukongApi.State
             }
 
             Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
-            PhotonUtils.RegisterNewPlayerTeam(pawn, teamId);
+            ClientUtils.RegisterNewPlayerTeam(pawn, teamId);
         }
 
         public override string ToString()
         {
             var realTeamId = Pawn?.GetTeamIDInCS();
-            
-            var sb = new StringBuilder("PlayerState");
-            sb.AppendLine($"PhotonId: {PhotonId}");
-            sb.AppendLine($"NickName: {NickName}");
-            sb.AppendLine($"TeamID: {TeamId}");
-            sb.AppendLine($"Real TeamId: {realTeamId}");
-            sb.AppendLine($"Hp: {Hp}");
-            sb.AppendLine($"Actual Hp: {BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(Pawn).GetFloatValue(EBGUAttrFloat.Hp)}");
-            sb.AppendLine("------ ATTRIBUTES ------");
-            sb.AppendLine(string.Join("\n", Attributes.Select(kvp => $"{kvp.Key}: {kvp.Value}").OrderBy(x => x)));
-            sb.AppendLine("------ ANIMATION ------");
-            sb.AppendLine($"InJump: {InJump}");
-            sb.AppendLine($"IsFlying: {IsFlying}");
-            sb.AppendLine($"IsFalling: {IsFalling}");
-            sb.AppendLine($"IsLandingMove: {IsLandingMove}");
-            sb.AppendLine($"Velocity: {Velocity}");
-            sb.AppendLine($"MoveAcceleration: {MoveAcceleration}");
-            sb.AppendLine($"ActorLocation: {Location}");
-            sb.AppendLine($"ActorRotation: {Rotation}");
-            sb.AppendLine($"TurnInplaceTargetRotation: {TurnInplaceTargetRotation}");
-            sb.AppendLine($"IsStandRotate: {IsStandRotate}");
-            sb.AppendLine($"TurnInplaceRemainAngle: {TurnInplaceRemainAngle}");
-            sb.AppendLine($"IsAttacking: {IsAttacking}");
-            sb.AppendLine($"OrientRotationToMovement: {OrientRotationToMovement}");
-            sb.AppendLine($"MoveSpeedLevel: {MoveSpeedLevel}");
-            sb.AppendLine($"MoveSpeedState: {MoveSpeedState}");
-            sb.AppendLine($"ShouldWaitRotateFinished: {ShouldWaitRotateFinished}");
+
+            List<string> lines =
+            [
+                $"Real TeamId: {realTeamId}",
+                $"Actual Hp: {BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(Pawn).GetFloatValue(EBGUAttrFloat.Hp)}",
+            ];
+
+            lines.AddRange(Attributes.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+
+            // reflection - print every public property
+            var properties = GetType().GetProperties();
+            foreach (var property in properties)
+            {
+                if (property.Name is nameof(Pawn) or nameof(Attributes) or nameof(Equipment))
+                    continue;
+
+                var value = property.GetValue(this);
+                if (value is IEnumerable<int> enumerable)
+                {
+                    lines.Add($"{property.Name}: {string.Join(", ", enumerable)}");
+                }
+                else
+                {
+                    lines.Add($"{property.Name}: {value}");
+                }
+            }
+
+            lines.Sort();
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine("-------------------------");
+            sb.AppendLine("PLAYER STATE:");
+
+            foreach (var line in lines)
+            {
+                sb.AppendLine(line);
+            }
 
             return sb.ToString();
         }

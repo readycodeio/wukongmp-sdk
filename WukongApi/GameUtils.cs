@@ -116,9 +116,9 @@ namespace WukongApi
         {
             Utils.TryRunOnGameThread(() =>
             {
-                var photon = WukongMP.Instance.Photon;
-                var current = photon.CurrentRoomState.CurrentRound;
-                var total = photon.CurrentRoomState.RoundsTotal;
+                var client = WukongMP.Instance.Client;
+                var current = client.RoomState.CurrentRound;
+                var total = client.RoomState.TournamentRounds;
                 ShowTip($"Round {current} of {total}");
             });
         }
@@ -235,6 +235,35 @@ namespace WukongApi
         public static string UnifyUnitName(string unitName)
         {
             return unitName.ToLower().Replace("-", "").Replace("_", "");
+        }
+
+        public static FVector GetFinalLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
+        {
+            // TODO: For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
+            if (CmdLineParams.Instance.LevelId == 0)
+            {
+                return InTargetLocation;
+            }
+            FVector result = InTargetLocation;
+            if (CharacterCS == null)
+            {
+                return result;
+            }
+            UCapsuleComponent? uCapsuleComponent = CharacterCS.GetRootComponent() as UCapsuleComponent;
+            if (uCapsuleComponent == null)
+            {
+                return result;
+            }
+            float scaledCapsuleHalfHeight = uCapsuleComponent.GetScaledCapsuleHalfHeight();
+            float scaledCapsuleHalfHeight2 = uCapsuleComponent.GetScaledCapsuleHalfHeight();
+            float num = 2.4f;
+            FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+            FVector end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+            if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
+            {
+                result = OutHitLocation + num + FVector.UpVector * scaledCapsuleHalfHeight;
+            }
+            return result;
         }
     }
 }

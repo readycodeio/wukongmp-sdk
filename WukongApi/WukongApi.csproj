@@ -2,7 +2,6 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <LangVersion>latest</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -106,9 +105,6 @@
         <Reference Include="Novell.Directory.Ldap">
             <HintPath>Game\Novell.Directory.Ldap.dll</HintPath>
         </Reference>
-        <Reference Include="PhotonClient">
-            <HintPath>..\PhotonLibs\Debug\netstandard2.0\PhotonClient.dll</HintPath>
-        </Reference>
         <Reference Include="Protobuf.RunTime">
             <HintPath>Game\Protobuf.RunTime.dll</HintPath>
         </Reference>
@@ -158,8 +154,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PhotonChatApi\PhotonChatApi.csproj" />
-        <ProjectReference Include="..\PhotonRealtimeApi\PhotonRealtimeApi.csproj" />
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj" />
     </ItemGroup>
 
 </Project>

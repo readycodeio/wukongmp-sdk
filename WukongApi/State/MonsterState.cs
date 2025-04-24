@@ -1,5 +1,5 @@
-﻿using b1;
-using System;
+﻿using System;
+using b1;
 
 namespace WukongApi.State
 {
@@ -40,12 +40,13 @@ namespace WukongApi.State
 
         public bool IsSynced { get; set; }
         public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
-        public EBGUMoveAIType MoveAIType { get; set; }
+        public EBGUMoveAIType MoveAiType { get; set; }
+        public EState_MM MotionMatchingState { get; set; }
         public float MaxSpeed { get; set; }
 
         public MonsterState(int id, string guid, BUTamerActor tamer, string unitName)
         {
-            PhotonId = id;
+            PeerId = id;
             Guid = guid;
             _tamer = tamer;
             UnitName = unitName;
@@ -65,7 +66,7 @@ namespace WukongApi.State
 
         public MonsterState(int id, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            PhotonId = id;
+            PeerId = id;
             Guid = guid;
             _tamer = tamer;
             TeamId = teamId;

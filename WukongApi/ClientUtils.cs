@@ -6,7 +6,7 @@ using WukongApi.State;
 
 namespace WukongApi
 {
-    public static class PhotonUtils
+    public static class ClientUtils
     {
         public static void RegisterTeamHostility(int team1, int team2)
         {
@@ -69,32 +69,33 @@ namespace WukongApi
                 if (actor.GetMonster() != null)
                 {
                     Logging.LogDebug("Discovered monster: {Guid}", BGU_DataUtil.GetActorGuid(actor.GetMonster()));
-                    SyncMonsterAndNotify(WukongMP.Instance.Photon, actor); // Neutral monsters
+                    SyncMonsterAndNotify(WukongMP.Instance.Client, actor); // Neutral monsters
                 }
             }
         }
 
         /// <summary>
-        /// Register a spawned monster in Photon and notify other clients.
+        /// Register a spawned monster and notify other clients.
         /// If successful, the monster will be prepared for syncing.
         /// </summary>
-        public static void SyncMonsterAndNotify(WukongClient photon, BUTamerActor tamer)
+        public static void SyncMonsterAndNotify(WukongClient client, BUTamerActor tamer)
         {
             var monster = tamer.GetMonster();
             var guid = BGU_DataUtil.GetActorGuid(monster);
 
-            // register in Photon if not present
-            var monsterState = photon.GetByTamerActor(tamer);
+            // register if not present
+            var monsterState = client.GetByTamerActor(tamer);
 
             if (monsterState == null)
             {
                 //monsterState = new MonsterState(guid, tamer);
-                //photon.SyncedMonsters.Add(guid, monsterState);
-                Logging.LogWarning("Local monster not registered in Photon: {MonsterGuid}", guid);
+                //client.SyncedMonsters.Add(guid, monsterState);
+                Logging.LogWarning("Local monster not registered: {MonsterGuid}", guid);
                 return;
             }
             // sanity check guid
-            else if (monsterState.Guid != guid)
+
+            if (monsterState.Guid != guid)
             {
                 Logging.LogError("Guid mismatch: {Guid1} != {Guid2}", monsterState.Guid, guid);
                 return;
@@ -103,15 +104,15 @@ namespace WukongApi
             if (!monsterState.IsSynced)
             {
                 // notify other clients
-                photon.SendMonsterWakeUp(guid);
-                PrepareMonsterForSync(photon, monsterState);
+                client.SendMonsterWakeUp(guid);
+                PrepareMonsterForSync(client, monsterState);
             }
         }
 
         /// <summary>
         /// Prepare a monster for syncing.
         /// </summary>
-        public static void PrepareMonsterForSync(WukongClient photon, MonsterState monsterState)
+        public static void PrepareMonsterForSync(WukongClient client, MonsterState monsterState)
         {
             if (monsterState.IsSynced)
             {
@@ -146,7 +147,7 @@ namespace WukongApi
             }
             events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
 
-            if (!photon.IsMasterClient)
+            if (!client.IsMasterClient)
             {
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);

@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using BtlShare;
-using UnrealEngine.Runtime;
 using WukongApi.Helpers;
 
 namespace WukongApi
 {
     public static class Constants
     {
+        public const int PlayerTtlMs = 3000;
         public const int ToleratedLatencyMs = 50;
         public const float FloatComparisonTolerance = 0.1f;
         public const string ConnectedPatches = "Connected";
@@ -16,19 +16,22 @@ namespace WukongApi
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 200f;
         public const int MonsterSpawnDelayMs = 500;
-        public const string AttributePrefix = "attr_";
-        public static readonly FVector PvpStartingLocation = new(-11146.926, -3229.771, 6507.035);
+        public const string AttributePrefix = "a_";
         public const float PvpStartingRadius = 500;
-        public const float PvpRadius = 4000;
         public const float PvpMonsterRadius = 1000;
         public const float CameraArmLength = 720;
         public const int CharacterArchiveId = 10;
         public const int NewCharacterArchiveId = 9;
-        public const int LevelArchiveId = 0;
+        public const int WorldArchiveId = 0;
         public const int MaxPlayers = 20;
         public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;
+        public const int ReconnectDelayMs = 1000;
+
         public static readonly List<int> SkillsWhitelist = [10518];
+        public const int GourdSkillId = 10530;
+        public const int ImmobilizeSkillId = 10518;
+        public const int ConsumableBuffSkillId = 10913;
 
         public const int CountdownSeconds = 5;
         public const int MatchmakingSeconds = 45;
@@ -46,10 +49,6 @@ namespace WukongApi
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
-        public const string JsonCompactSerializationRegex = @"[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_\.+\/=]*";
-
-        public const string RealtimeAppId = "7aa130eb-9912-4845-b2de-8496a6f0fea7";
-        public const string ChatAppId = "7fdefcca-ff84-4499-8f27-7d59bbd9c163";
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             #region Calculated Attributes

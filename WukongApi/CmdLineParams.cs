@@ -1,5 +1,5 @@
-﻿using System.Text.RegularExpressions;
-using Photon.Realtime;
+﻿using System;
+using System.Text.RegularExpressions;
 using UnrealEngine.Engine;
 
 namespace WukongApi;
@@ -9,14 +9,14 @@ public class CmdLineParams
     private static CmdLineParams? _instance;
 
     public static CmdLineParams Instance => _instance ??= new CmdLineParams();
-    public bool ShouldEnableMultiplayer => RealtimeAuthentication is not null;
+    public bool ShouldEnableMultiplayer => ServerIp is not null && ServerPort is not null;
 
-    public GameMode? MatchmakingMode { get; }
     public string? ModFolderOverride { get; }
-    public string? RoomName { get; private set; }
-    public int? PlayersPerTeam { get; private set; }
-    public AuthenticationValues? RealtimeAuthentication { get; }
-    public string? AccessToken { get; }
+    public string? ServerIp { get; }
+    public int? ServerPort { get; }
+    public Guid UserGuid { get; } = Guid.Empty;
+    public string Nickname { get; } = "Player";
+    public int LevelId { get; }
 
     private CmdLineParams()
     {
@@ -24,19 +24,70 @@ public class CmdLineParams
 
         Logging.LogDebug("Command line: {Args}", cmd);
 
-        var tokenMatch = Regex.Match(cmd, $"""-access_token "?({Constants.JsonCompactSerializationRegex})"?""");
-
-        if (tokenMatch.Success)
+        // REQUIRED: user GUID
+        var idMatch = Regex.Match(cmd, """-id "?([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"?""");
+        if (idMatch.Success)
         {
-            AccessToken = tokenMatch.Groups[1].Value;
+            var guidString = idMatch.Groups[1].Value;
+            if (Guid.TryParse(guidString, out var guid))
+            {
+                UserGuid = guid;
+                Logging.LogDebug("User GUID: {Guid}", UserGuid);
+            }
+            else
+            {
+                Logging.LogError("Invalid GUID format: {Guid}", guidString);
+                return;
+            }
         }
         else
         {
-            Logging.LogError("Access token not provided. Launch the game from the ReadyM Launcher.");
+            Logging.LogError("GUID not provided, launch the game from the ReadyM Launcher.");
             return;
         }
 
-        // check for custom mod folder
+        // REQUIRED: server IP and port number
+        var serverMatch = Regex.Match(cmd, @"-serverIp ""?([0-9\.]+)""? -serverPort ""?(\d+)""?");
+
+        if (serverMatch.Success)
+        {
+            ServerIp = serverMatch.Groups[1].Value;
+            ServerPort = int.Parse(serverMatch.Groups[2].Value);
+            Logging.LogDebug("Server IP: {Ip}, Port: {Port}", ServerIp, ServerPort);
+        }
+        else
+        {
+            Logging.LogError("Connection info not provided, launch the game from the ReadyM Launcher.");
+            return;
+        }
+
+        // REQUIRED: user nickname
+        var nicknameMatch = Regex.Match(cmd, """-nickname "?(\w+)"?""");
+        if (nicknameMatch.Success)
+        {
+            Nickname = nicknameMatch.Groups[1].Value;
+            Logging.LogDebug("Nickname: {Nickname}", Nickname);
+        }
+        else
+        {
+            Logging.LogError("Nickname not provided, launch the game from the ReadyM Launcher.");
+            return;
+        }
+
+        // REQUIRED: Level ID
+        var mapMatch = Regex.Match(cmd, """-level "?(\d+)"?""");
+        if (mapMatch.Success)
+        {
+            LevelId = int.Parse(mapMatch.Groups[1].Value);
+            Logging.LogDebug("Level ID: {LevelId}", LevelId);
+        }
+        else
+        {
+            Logging.LogError("Level ID not provided, launch the game from the ReadyM Launcher.");
+            return;
+        }
+
+        // OPTIONAL: custom mod folder
         const string modFolderPattern = """[a-zA-Z]:\\(?:[^<>:"/\\|?*]+\\)*[^<>:"/\\|?*]*""";
         var pathMatch = Regex.Match(cmd, $"""-mod_folder "?({modFolderPattern})"?""");
 
@@ -45,37 +96,5 @@ public class CmdLineParams
             ModFolderOverride = pathMatch.Groups[1].Value;
             Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
         }
-
-        // this can be either a private match (-room_name "name") or a quick match (-quick_match 1/3/5)
-
-        var roomNameMatch = Regex.Match(cmd, """-room_name "([a-zA-Z0-9_\- ]+)"|-room_name ([a-zA-Z0-9_\-]+)""");
-        if (roomNameMatch.Success)
-        {
-            // private match
-            RoomName = roomNameMatch.Groups[1].Success ? roomNameMatch.Groups[1].Value : roomNameMatch.Groups[2].Value;
-            MatchmakingMode = GameMode.Private;
-        }
-        else
-        {
-            var quickMatchMatch = Regex.Match(cmd, @"-quick_match (\d)");
-            if (quickMatchMatch.Success)
-            {
-                // quick match
-                var rounds = int.Parse(quickMatchMatch.Groups[1].Value);
-                MatchmakingMode = GameMode.XvX;
-                PlayersPerTeam = rounds;
-            }
-            else
-            {
-                Logging.LogError("Room name not provided. Launch the game from the ReadyM Launcher.");
-                return;
-            }
-        }
-
-        RealtimeAuthentication = new AuthenticationValues
-        {
-            AuthType = CustomAuthenticationType.Custom
-        };
-        RealtimeAuthentication.AddAuthParameter("access_token", AccessToken);
     }
 }

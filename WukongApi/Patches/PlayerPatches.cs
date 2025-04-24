@@ -15,7 +15,7 @@ namespace WukongApi.Patches
     public class PatchBGUPlayerAnimation
     {
         public static void Postfix(
-            BUC_ABPBGUCharacterData __instance,
+            BUC_ABPBGUCharacterData? __instance,
             AActor Owner,
             IBUC_ABPCharacterData ChrData,
             IBUC_SpeedCtrlData SpeedCtrlData,
@@ -39,45 +39,45 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.IsStandRotate != __instance.IsStandRotate)
                 {
-                    photon.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
-                    photon.CachePlayerProperty(nameof(PlayerState.IsStandRotate), photon.LocalPlayerState.IsStandRotate);
+                    client.LocalPlayerState.IsStandRotate = __instance.IsStandRotate;
+                    client.CachePlayerProperty(nameof(PlayerState.IsStandRotate), client.LocalPlayerState.IsStandRotate);
                 }
 
                 if (localState.IsAttacking != __instance.IsAttacking)
                 {
-                    photon.LocalPlayerState.IsAttacking = __instance.IsAttacking;
-                    photon.CachePlayerProperty(nameof(PlayerState.IsAttacking), photon.LocalPlayerState.IsAttacking);
+                    client.LocalPlayerState.IsAttacking = __instance.IsAttacking;
+                    client.CachePlayerProperty(nameof(PlayerState.IsAttacking), client.LocalPlayerState.IsAttacking);
                 }
 
                 if (!localState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
                 {
-                    photon.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
-                    photon.CachePlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), photon.LocalPlayerState.TurnInplaceTargetRotation);
+                    client.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
+                    client.CachePlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), client.LocalPlayerState.TurnInplaceTargetRotation);
                 }
 
                 if (!localState.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
                 {
-                    photon.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
-                    photon.CachePlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), photon.LocalPlayerState.TurnInplaceRemainAngle);
+                    client.LocalPlayerState.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
+                    client.CachePlayerProperty(nameof(PlayerState.TurnInplaceRemainAngle), client.LocalPlayerState.TurnInplaceRemainAngle);
                 }
 
                 if (localState.OrientRotationToMovement != __instance.bOrientRotationToMovement)
                 {
-                    photon.LocalPlayerState.OrientRotationToMovement = __instance.bOrientRotationToMovement;
-                    photon.CachePlayerProperty(nameof(PlayerState.OrientRotationToMovement), photon.LocalPlayerState.OrientRotationToMovement);
+                    client.LocalPlayerState.OrientRotationToMovement = __instance.bOrientRotationToMovement;
+                    client.CachePlayerProperty(nameof(PlayerState.OrientRotationToMovement), client.LocalPlayerState.OrientRotationToMovement);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -121,21 +121,21 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.ShouldWaitRotateFinished != __instance.bShouldWaitRotateFinished)
                 {
-                    photon.LocalPlayerState.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
-                    photon.CachePlayerProperty(nameof(PlayerState.ShouldWaitRotateFinished), photon.LocalPlayerState.ShouldWaitRotateFinished);
+                    client.LocalPlayerState.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
+                    client.CachePlayerProperty(nameof(PlayerState.ShouldWaitRotateFinished), client.LocalPlayerState.ShouldWaitRotateFinished);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -172,21 +172,21 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.InJump != __instance.bInJump)
                 {
-                    photon.LocalPlayerState.InJump = __instance.bInJump;
-                    photon.CachePlayerProperty(nameof(PlayerState.InJump), photon.LocalPlayerState.InJump);
+                    client.LocalPlayerState.InJump = __instance.bInJump;
+                    client.CachePlayerProperty(nameof(PlayerState.InJump), client.LocalPlayerState.InJump);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState == null)
                 {
@@ -222,27 +222,27 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
 
-            if (Owner == photon.LocalPlayerState.Pawn)
+            if (Owner == client.LocalPlayerState.Pawn)
             {
-                var localState = photon.LocalPlayerState;
+                var localState = client.LocalPlayerState;
 
                 if (localState.MoveSpeedLevel != __instance.MoveSpeedLevel)
                 {
-                    photon.LocalPlayerState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                    photon.CachePlayerProperty(nameof(PlayerState.MoveSpeedLevel), photon.LocalPlayerState.MoveSpeedLevel);
+                    client.LocalPlayerState.MoveSpeedLevel = __instance.MoveSpeedLevel;
+                    client.CachePlayerProperty(nameof(PlayerState.MoveSpeedLevel), client.LocalPlayerState.MoveSpeedLevel);
                 }
 
                 if (localState.MoveSpeedState != __instance.MoveSpeedState)
                 {
-                    photon.LocalPlayerState.MoveSpeedState = __instance.MoveSpeedState;
-                    photon.CachePlayerProperty(nameof(PlayerState.MoveSpeedState), photon.LocalPlayerState.MoveSpeedState);
+                    client.LocalPlayerState.MoveSpeedState = __instance.MoveSpeedState;
+                    client.CachePlayerProperty(nameof(PlayerState.MoveSpeedState), client.LocalPlayerState.MoveSpeedState);
                 }
             }
             else
             {
-                var playerState = photon.GetPlayerByActor(Owner);
+                var playerState = client.GetPlayerByActor(Owner);
 
                 if (playerState != null)
                 {
@@ -251,24 +251,24 @@ namespace WukongApi.Patches
                 }
                 else
                 {
-                    var monsterState = photon.GetMonsterByCharacter(character);
+                    var monsterState = client.GetMonsterByCharacter(character);
 
                     if (monsterState == null)
                         return; // unsynced entity
 
-                    if (photon.IsMasterClient)
+                    if (client.IsMasterClient)
                     {
                         // send monster speed data
                         if (monsterState.MoveSpeedLevel != __instance.MoveSpeedLevel)
                         {
                             monsterState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                            photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
+                            client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
                         }
 
                         if (monsterState.MoveSpeedState != __instance.MoveSpeedState)
                         {
                             monsterState.MoveSpeedState = __instance.MoveSpeedState;
-                            photon.CacheMonsterProperty(monsterState.Guid, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
+                            client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
                         }
                     }
                     else
@@ -291,7 +291,7 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -300,12 +300,12 @@ namespace WukongApi.Patches
                 return false;
             }
 
-            if (owner == photon.LocalPlayerState.Pawn)
+            if (owner == client.LocalPlayerState.Pawn)
             {
-                photon.CacheEquipmentChange(EquipPosition, EquipID);
+                client.CacheEquipmentChange(EquipPosition, EquipID);
             }
 
-            return owner == photon.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison
+            return owner == client.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison
         }
     }
 
@@ -321,7 +321,7 @@ namespace WukongApi.Patches
             if (DeadReason == EDeadReason.PlayerTrans)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -336,19 +336,19 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (photon is { IsMasterClient: true, CurrentRoomState.InPvP: true, CurrentRoomState.InCombatRound: true })
+            if (client is { IsMasterClient: true, RoomState.InPvP: true, RoomState.InCombatRound: true })
             {
                 if (Attacker != owner)
                 {
-                    var attackerPlayerState = photon.GetPlayerByActor(Attacker);
-                    var killedPlayerState = photon.GetPlayerByActor(owner);
+                    var attackerPlayerState = client.GetPlayerByActor(Attacker);
+                    var killedPlayerState = client.GetPlayerByActor(owner);
                     if (attackerPlayerState != null && killedPlayerState != null)
                     {
-                        photon.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
+                        client.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} killed {killedPlayerState.NickName}");
                     }
                 }
 
-                photon.CheckRoundEndCondition();
+                client.CheckRoundEndCondition();
             }
         }
 
@@ -360,7 +360,7 @@ namespace WukongApi.Patches
             if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -369,7 +369,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            if (owner == photon.LocalPlayerState.Pawn)
+            if (owner == client.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
             }
@@ -398,11 +398,11 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var photon = WukongMP.Instance.Photon;
+            var client = WukongMP.Instance.Client;
 
-            var localPawn = photon.LocalPlayerState.Pawn;
+            var localPawn = client.LocalPlayerState.Pawn;
             var owner = __instance.GetOwner();
-            
+
             if (owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
@@ -454,33 +454,58 @@ namespace WukongApi.Patches
             return AccessTools.Method("b1.BUS_BattleStateComp:SetTargetToData");
         }
 
-        public static void Prefix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
+        public static bool Prefix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
+                return true;
 
-            var photon = WukongMP.Instance.Photon;
-            
+            var client = WukongMP.Instance.Client;
+
             var owner = __instance.GetOwner();
             if (owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
-                return;
+                return false;
+            }
+
+            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
+                return true;
+
+            var newTargetId = 0;
+            var clearTarget = 1;
+            var newTargetCharacterState = client.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
+
+            if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && newTargetCharacterState == null)
+            {
+                // not synchronized character targeted
+                return true;
+            }
+
+            if (newTargetCharacterState != null)
+            {
+                newTargetId = newTargetCharacterState.PeerId;
+                clearTarget = 0;
             }
 
             // send only own updates
-            if (owner != photon.LocalPlayerState.Pawn)
-                return;
-
-            if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
-                return;
-
-            var newTargetCharacterState = photon.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
-            if (newTargetCharacterState  != null)
+            if (owner == client.LocalPlayerState.Pawn)
             {
-                Logging.LogDebug("New target sent for {Subject} as: {Target}", photon.LocalPlayerState.NickName, newTargetCharacterState.NickName);
-                photon.SendTarget(newTargetCharacterState.PhotonId);
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
+                client.SendTarget(client.LocalPlayerState.PeerId, newTargetId, clearTarget);
+                return true;
             }
+
+            // master sends targets for monsters
+            if (!client.IsMasterClient)
+                return false;
+
+            var monster = client.GetMonsterByActor(owner);
+            if (monster != null)
+            {
+                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
+                client.SendTarget(monster.PeerId, newTargetId, clearTarget);
+            }
+            return true;
         }
     }
 
@@ -508,17 +533,17 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var photon = WukongMP.Instance.Photon;
-            if (photon.IsMasterClient)
+            var client = WukongMP.Instance.Client;
+            if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                
+
                 if (owner.IsNullOrDestroyed())
                 {
                     Logging.LogError("Owner is null or destroyed");
                     return;
                 }
-                
+
                 var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(owner);
                 var hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
 
@@ -558,7 +583,7 @@ namespace WukongApi.Patches
                 __result.DefaultCamID = 101600;
         }
     }
-    
+
     [HarmonyPatch(typeof(BPC_PlayerRoleData), "GetNewGamePlusCount")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchGetNewGamePlusCount
@@ -568,8 +593,28 @@ namespace WukongApi.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            __result = 1;
+            var client = WukongMP.Instance.Client;
+            if (client.RoomState.EnemiesNgPlusLevel == 0)
+            {
+                return true;
+            }
+
+            __result = client.RoomState.EnemiesNgPlusLevel;
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnTriggerInputActionImpl")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchOnTriggerInputActionImpl
+    {
+        public static bool Prefix(BUS_PlayerInputActionComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var client = WukongMP.Instance.Client;
+            return !(client.LocalPlayerState.Pawn == __instance.GetOwner() && client.LocalPlayerState.IsSpectator);
         }
     }
 }

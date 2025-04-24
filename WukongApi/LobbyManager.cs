@@ -19,7 +19,8 @@ namespace WukongApi
                 return;
             }
             
-            PlacePlayers(Constants.PvpStartingLocation, Constants.PvpRadius);
+            var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+            PlacePlayers(levelData.PvpStartingLocation, levelData.PvpRadius);
             await Task.Delay(100);
 
             wukongClient.SendPvPEvent(PvPEvent.RoundStart);
@@ -58,8 +59,8 @@ namespace WukongApi
                 var y = center.Y + radius * MathF.Sin(angle);
 
                 teamMemberIndex[playerState.TeamId]++;
-                var newPlayerLocation = new FVector(x, y, center.Z);
-                wukongClient.BroadcastPlayerTransform(playerState.PhotonId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
+                var newPlayerLocation = GameUtils.GetFinalLocation(playerState.Pawn, new FVector(x, y, center.Z));
+                wukongClient.BroadcastPlayerTransform(playerState.PeerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
             }
         }
 
@@ -81,7 +82,7 @@ namespace WukongApi
             wukongClient.SendPvPEvent(PvPEvent.RoundEnd, winner);
 
             // increment round number
-            wukongClient.CurrentRoomState.SetLastRoundWinnerTeam(winner);
+            wukongClient.RoomState.SetLastRoundWinnerTeam(winner);
 
             // wait until all players death animations are finished
             await Task.Delay(5000);
@@ -89,7 +90,7 @@ namespace WukongApi
             await ResetHpAndRespawnAllPlayers();
 
             // resolve tournament
-            var winnersSoFar = wukongClient.CurrentRoomState.RoundWinners.ToList();
+            var winnersSoFar = wukongClient.RoomState.RoundWinners.ToList();
             var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
             // check if only one team is present
@@ -101,7 +102,7 @@ namespace WukongApi
             }
 
             // check if any team won more than half of the rounds
-            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > wukongClient.CurrentRoomState.RoundsTotal / 2);
+            var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > wukongClient.RoomState.TournamentRounds / 2);
             if (winnerTeam.Key != 0)
             {
                 wukongClient.SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
@@ -110,7 +111,7 @@ namespace WukongApi
             }
 
             // otherwise, check if we have a tie
-            if (wukongClient.CurrentRoomState.CurrentRound > wukongClient.CurrentRoomState.RoundsTotal)
+            if (wukongClient.RoomState.CurrentRound > wukongClient.RoomState.TournamentRounds)
             {
                 if (winnersByTeam.Count > 0)
                 {
@@ -154,7 +155,7 @@ namespace WukongApi
             {
                 if (player.IsDead)
                 {
-                    wukongClient.BroadcastPlayerRebirth(player.PhotonId);
+                    wukongClient.BroadcastPlayerRebirth(player.PeerId);
                 }
             }
 

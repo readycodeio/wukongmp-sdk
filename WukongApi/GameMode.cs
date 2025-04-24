@@ -1,8 +1,8 @@
 ﻿namespace WukongApi
 {
-    public enum GameMode
+    public enum GameMode : byte
     {
-        Private = 1,
-        XvX = 2,
+        Private = 0,
+        XvX = 1, // matchmaking not enabled for now
     }
 }

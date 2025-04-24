@@ -24,7 +24,7 @@ public static class MontageHelpers
             return true;
         }
 
-        Logging.LogError("Failed to compress montage name: {MontageName}", fullName);
+        Logging.LogDebug("Failed to compress montage name: {MontageName}", fullName);
         shortName = "";
         return false;
     }

@@ -1,7 +1,5 @@
-﻿using ILRuntime.Runtime;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
 namespace WukongApi.Monitors
@@ -10,7 +8,7 @@ namespace WukongApi.Monitors
     {
         private readonly Dictionary<string, object> _properties = [];
         private readonly string _componentName;
-        private readonly object _component;
+        private readonly object? _component;
 
         internal ComponentMonitor(object component, string componentName)
         {
@@ -20,11 +18,12 @@ namespace WukongApi.Monitors
             {
                 if (descriptor == null)
                     continue;
-                object value = descriptor.GetValue(component);
+                
+                var value = descriptor.GetValue(component);
                 if (value == null)
                     continue;
 
-                string name = descriptor.Name;
+                var name = descriptor.Name;
                 _properties[name] = value;
             }
         }
@@ -38,16 +37,16 @@ namespace WukongApi.Monitors
             {
                 if (descriptor == null || descriptor.PropertyType == null)
                     continue;
-                object value = descriptor.GetValue(_component);
+                var value = descriptor.GetValue(_component);
                 if (value == null)
                     continue;
-                string name = descriptor.Name;
+                var name = descriptor.Name;
                 if (!_properties.TryGetValue(name, out var currentValue) || currentValue == null)
                     continue;
 
-                if ((value.GetType() == typeof(FVector) && !((FVector)value).Equals((FVector)_properties[name], 50)) ||
-                    (value.GetType() == typeof(FRotator) && !((FRotator)value).Equals((FRotator)_properties[name], 10)) ||
-                    (value.GetType() == typeof(float) && !((float)value).Equals((float)_properties[name], 1)) ||
+                if ((value is FVector vector && !vector.Equals((FVector)_properties[name], 50)) ||
+                    (value is FRotator rotator && !rotator.Equals((FRotator)_properties[name], 10)) ||
+                    (value is float f && !f.Equals((float)_properties[name], 1)) ||
                     (!descriptor.PropertyType.IsAssignableFrom(typeof(FVector)) && !descriptor.PropertyType.IsAssignableFrom(typeof(FRotator)) && !descriptor.PropertyType.IsAssignableFrom(typeof(float)) &&!value.Equals(_properties[name])))
                 {
                     Logging.LogDebug("[{Component}] Property {Name} changed from {OldValue} to {NewValue}", _componentName, name, _properties[name].ToString(), value.ToString());
