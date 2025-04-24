@@ -7,7 +7,7 @@ namespace WukongApi
     {
         private static readonly Dictionary<int, LevelSpawnData> Configurations = new()
         {
-            { 0, new LevelSpawnData(61, 17, 6101, new FVector(-11146, -3229, 6507)) },
+            { 0, new LevelSpawnData(61, 17, 6101, new FVector(-11146, -3229, 6507), 3000) },
             { 1, new LevelSpawnData(98, 5, 9803, new FVector(78686, -22648, 14646)) },
             { 2, new LevelSpawnData(98, 7, 9802, new FVector(-48308, -92826, 5658)) },
             { 3, new LevelSpawnData(20, 21, 2010, new FVector(-82034, 26036, -10158), 3000) },
