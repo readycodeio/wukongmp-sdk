@@ -16,6 +16,7 @@ using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.DataTransferObjects;
 using WukongApi.State;
 using WukongApi.UI;
 using Player = ReadyM.Relay.Client.Player;
@@ -62,6 +63,7 @@ namespace WukongApi
         public event Action<int, EBGUSimpleState, bool>? OnSimpleStateSet;
         public event Action<int, string>? OnFsmStateSet;
         public event Action<int, EState_MM>? OnMotionMatchingChanged;
+        public event Action<int, string, int, int>? OnRequestSpawnUnits;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -383,9 +385,14 @@ namespace WukongApi
                     WukongChat.OnGetMessage(chatMessage);
                     break;
                 case 24:
-                    // spawnSummon
+                    // spawn summon
                     var summonData = RelayClient.DeserializeObject<UnitSummonData>(reader);
                     OnSummonSpawn?.Invoke(summonData.SummonerId, summonData.Id, summonData.Guid, summonData.Name, summonData.TeamId);
+                    break;
+                case 25:
+                    // spawn request 
+                    var spawnRequestData = RelayClient.DeserializeObject<UnitSpawnRequestData>(reader);
+                    OnRequestSpawnUnits?.Invoke(header.Sender, spawnRequestData.UnitName, spawnRequestData.Count, spawnRequestData.TeamId);
                     break;
             }
         }
@@ -614,6 +621,7 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(FsmStateData), FsmStateData.Serialize, FsmStateData.Deserialize);
             RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
             RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
+            RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
@@ -851,6 +859,13 @@ namespace WukongApi
             const byte eventCode = 24;
             var evData = new UnitSummonData(summonerId, id, guid, unitName, teamId);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+        }
+
+        public void RequestSpawnUnits(string enemyName, int count, int teamId)
+        {
+            const byte eventCode = 25;
+            var evData = new UnitSpawnRequestData(enemyName, count, teamId);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Master, DeliveryMethod.ReliableOrdered);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)

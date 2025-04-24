@@ -51,20 +51,28 @@ namespace WukongApi
 
         private void RequestSpawn(ReadOnlyMemory<string> args)
         {
+            if (!UnitPathsConfig.IsValidMonsterName(args.Span[0]))
+            {
+                ChatWidget.Instance.AddMessage(true, "Command", $"Invalid unit name \"{args.Span[0]}\"");
+                return;
+            }
+
+            var teamId = GameUtils.GetOppositeTeam(_wukongClient.LocalPlayerState.TeamId);
+
             switch (args.Length)
             {
                 case 1:
-                    GameLoopPatch.QueueOnGameThread(() => WukongMP.Instance.SpawnEnemiesLocal(args.Span[0], 1, _wukongClient.LocalPlayerState.TeamId), "SpawnEnemiesMaster");
+                    _wukongClient.RequestSpawnUnits(args.Span[0], 1, teamId);
                     break;
                 case 2:
                 {
                     if (int.TryParse(args.Span[1], out var count))
                     {
-                        GameLoopPatch.QueueOnGameThread(() => WukongMP.Instance.SpawnEnemiesLocal(args.Span[0], count, _wukongClient.LocalPlayerState.TeamId), "SpawnEnemiesMaster");
+                            _wukongClient.RequestSpawnUnits(args.Span[0], count, teamId);
                     }
                     else
                     {
-                        ChatWidget.Instance.AddMessage(true, "Command", $"Invalid number of enemies: \"{args.Span[1]}\"");
+                        ChatWidget.Instance.AddMessage(true, "Command", $"Invalid number of units: \"{args.Span[1]}\"");
                     }
 
                     break;

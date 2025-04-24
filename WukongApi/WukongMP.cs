@@ -532,6 +532,7 @@ namespace WukongApi
             Client.OnSimpleStateSet += (characterId, state, isRemove) => GameLoopPatch.QueueOnGameThread(() => OnSimpleStateSet(characterId, state, isRemove), "OnSimpleStateSet");
             Client.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet", BGW_TickGroupMask.TG_BeforeStartPhsic);
             Client.OnMotionMatchingChanged += (characterId, mm) => GameLoopPatch.QueueOnGameThread(() => OnMotionMatchingChanged(characterId, mm), "OnMotionMatchingChanged");
+            Client.OnRequestSpawnUnits += (playerId, unitName, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnUnitsMaster(playerId, unitName, count, teamId), "SpawnUnitsMaster");
         }
 
         private void OnBuffAdded(int playerId, int buffId, float duration)
@@ -1097,39 +1098,27 @@ namespace WukongApi
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }
 
-        public void SpawnEnemiesLocal(string enemyName, int count, int teamId)
+        public void SpawnUnitsMaster(int spawningPlayerId, string unitName, int count, int teamId)
         {
-            if (!UnitPathsConfig.IsValidMonsterName(enemyName))
+            var playerState = Client.GetPlayerById(spawningPlayerId);
+            if (playerState == null || playerState.Pawn == null)
             {
-                ChatWidget.Instance.AddMessage(true, "Command", $"Invalid monster name \"{enemyName}\"");
+                Logging.LogError("Player not found: {PlayerId}", spawningPlayerId);
                 return;
             }
 
-            var player = GameUtils.GetControlledPawn();
-
-            if (player == null)
-            {
-                Logging.LogError("Failed to get controlled pawn");
-                return;
-            }
-
-            var traceLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
+            var spawnLoc = playerState.Pawn.GetActorLocation() + playerState.Pawn.GetActorForwardVector() * Constants.MonsterSpawnDistance;
+            var startLoc = spawnLoc + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
+            var endLoc = spawnLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
 
             // trace vertically for spawn height
-            var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), traceLoc, traceLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight, out var hitResultSimple);
-            FVector centerLoc;
+            var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), startLoc, endLoc, out var hitResultSimple);
             if (hit)
             {
-                centerLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
-                Logging.LogDebug("Spawning enemy by line trace");
-            }
-            else
-            {
-                centerLoc = player.GetActorLocation() + player.GetActorForwardVector() * Constants.MonsterSpawnDistance;
-                Logging.LogDebug("Spawning enemy by player forward vector");
+                spawnLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
             }
 
-            //// spawn in a grid around center point, separated by 200 units
+            // spawn in a grid around center point, separated by 200 units
             int cols = (int)Math.Ceiling(Math.Sqrt(count));
             int rows = (int)Math.Ceiling((float)count / cols);
 
@@ -1143,14 +1132,14 @@ namespace WukongApi
                 {
                     float x = startX + col * Constants.MonsterSpawnSpread;
                     float y = startY + row * Constants.MonsterSpawnSpread;
-                    var loc = centerLoc + new FVector(x, y, 0);
+                    var loc = spawnLoc + new FVector(x, y, 0);
 
                     var localI = placed;
                     Task.Run(async () =>
                     {
                         // wait for i * 200ms
                         await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                        GameLoopPatch.QueueOnGameThread(() => { SpawnEnemyLocal(enemyName, loc, GameUtils.GetOppositeTeam(teamId)); }, "SpawnEnemyMaster");
+                        GameLoopPatch.QueueOnGameThread(() => { SpawnUnitMaster(unitName, loc, teamId); }, "SpawnUnitMaster");
                     });
                     placed++;
                     if (placed == count)
@@ -1159,20 +1148,20 @@ namespace WukongApi
             }
 
             Notify:
-            Client.WukongChat.SendServerMessage($"{Client.LocalPlayerState.NickName} spawned {count} {enemyName}");
+            Client.WukongChat.SendServerMessage($"{Client.LocalPlayerState.NickName} spawned {count} {unitName}");
         }
 
-        private void SpawnEnemyLocal(string enemyName, FVector loc, int teamId)
+        private void SpawnUnitMaster(string unitName, FVector loc, int teamId)
         {
-            var unitName = UnitPathsConfig.GetUnitPath(enemyName);
+            var unitPath = UnitPathsConfig.GetUnitPath(unitName);
 
             var guid = Guid.NewGuid().ToString(); // TODO: use ActorGuid
             var id = -(Client.SyncedMonsters.Count + Client.RoomState.MaxPlayers);
 
-            SpawnUnitLocally(id, guid, unitName, teamId, loc.X, loc.Y, loc.Z);
+            Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
+            Client.SpawnUnit(id, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
 
-            Logging.LogDebug("Sending spawn enemy {Name} at {Location}", enemyName, loc.ToCompactString());
-            Client.SpawnUnit(id, guid, unitName, teamId, loc.X, loc.Y, loc.Z);
+            SpawnUnitLocally(id, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
         }
 
         private void SpawnRemoteUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
@@ -1185,11 +1174,11 @@ namespace WukongApi
             SummonPatch.ExecuteSummon(summonerId, id, guid, unitName, teamId);
         }
 
-        private void SpawnUnitLocally(int id, string guid, string unitName, int teamId, float x, float y, float z)
+        private void SpawnUnitLocally(int id, string guid, string unitPath, int teamId, float x, float y, float z)
         {
-            Logging.LogDebug("Spawn unit called for {UnitName}", unitName);
+            Logging.LogDebug("Spawn unit called for {UnitPath}", unitPath);
 
-            if (string.IsNullOrEmpty(unitName))
+            if (string.IsNullOrEmpty(unitPath))
                 return;
 
             var loc = new FVector(x, y, z);
@@ -1197,38 +1186,38 @@ namespace WukongApi
 
             var world = GameUtils.GetWorld();
 
-            var cachedResourceObj = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitName, ELoadResourceType.SyncLoadAndCache);
+            var unitClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
             var transform = new FTransform(rot, loc);
-            var buTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)cachedResourceObj, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
-            if (buTamerActor == null)
+            var tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)unitClass, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
+            if (tamerActor == null)
             {
-                Logging.LogError("Could not spawn enemy: {UnitName}", unitName);
+                Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
                 return;
             }
 
-            buTamerActor.MarkAsSpawnedTamer(null);
-            buTamerActor.ExtendConfigComp.ActorResetType = EBGUResetType.Destroy;
+            tamerActor.MarkAsSpawnedTamer(null);
+            tamerActor.ExtendConfigComp.ActorResetType = EBGUResetType.Destroy;
 
-            buTamerActor.SpawnedTamerGuid = guid;
+            tamerActor.SpawnedTamerGuid = guid;
             // Update final guid
-            buTamerActor.GetFinalGuid(true);
+            tamerActor.GetFinalGuid(true);
 
-            UBGUFunctionLibrary.BGUFinishSpawningActor(buTamerActor, transform);
-            Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", buTamerActor.GetName(), guid);
-            var monsterState = new MonsterState(id, guid, buTamerActor, teamId, unitName)
+            Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
+            var monsterState = new MonsterState(id, guid, tamerActor, teamId, unitPath)
             {
                 Location = loc,
                 Rotation = rot
             };
-
             Client.SyncedMonsters.Add(guid, monsterState);
-            BGS_GSEventCollection.Get(buTamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
+
+            UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
+            BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
 
             monsterState.NickName = "Bot";
             CreateMarkerForCharacter(monsterState); // 3D marker above monster
-            if (unitName == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+            if (unitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
             {
-                SetMonkeyBotConfig(buTamerActor.GetMonster());
+                SetMonkeyBotConfig(tamerActor.GetMonster());
             }
         }
 
@@ -1259,7 +1248,7 @@ namespace WukongApi
 
                 var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
                 FVector spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-                SpawnEnemyLocal(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Client.LocalPlayerState.TeamId));
+                SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Client.LocalPlayerState.TeamId));
             }
         }
 
