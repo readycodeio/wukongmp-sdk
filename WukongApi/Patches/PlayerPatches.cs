@@ -474,6 +474,13 @@ namespace WukongApi.Patches
             var newTargetId = 0;
             var clearTarget = 1;
             var newTargetCharacterState = client.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
+
+            if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && newTargetCharacterState == null)
+            {
+                // not synchronized character targeted
+                return;
+            }
+
             if (newTargetCharacterState != null)
             {
                 newTargetId = newTargetCharacterState.PeerId;
