@@ -745,7 +745,7 @@ namespace WukongApi
         public void SendTeleportFinish()
         {
             const byte eventCode = 4;
-            RelayClient.OpRaiseEvent(eventCode, null, RelayMode.Master, DeliveryMethod.ReliableOrdered);
+            RelayClient.OpRaiseEvent(eventCode, null, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMonsterWakeUp(string guid)
