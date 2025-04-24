@@ -454,10 +454,10 @@ namespace WukongApi.Patches
             return AccessTools.Method("b1.BUS_BattleStateComp:SetTargetToData");
         }
 
-        public static void Prefix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
+        public static bool Prefix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
+                return true;
 
             var client = WukongMP.Instance.Client;
 
@@ -465,11 +465,11 @@ namespace WukongApi.Patches
             if (owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
-                return;
+                return false;
             }
 
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
-                return;
+                return true;
 
             var newTargetId = 0;
             var clearTarget = 1;
@@ -478,7 +478,7 @@ namespace WukongApi.Patches
             if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && newTargetCharacterState == null)
             {
                 // not synchronized character targeted
-                return;
+                return true;
             }
 
             if (newTargetCharacterState != null)
@@ -487,23 +487,25 @@ namespace WukongApi.Patches
                 clearTarget = 0;
             }
 
-
-            if (client.IsMasterClient)
+            // send only own updates
+            if (owner == client.LocalPlayerState.Pawn)
             {
-                var monster = client.GetMonsterByActor(owner);
-                if (monster != null)
-                {
-                    Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
-                    client.SendTarget(monster.PeerId, newTargetId, clearTarget);
-                }
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
+                client.SendTarget(client.LocalPlayerState.PeerId, newTargetId, clearTarget);
+                return true;
             }
 
-            // send only own updates
-            if (owner != client.LocalPlayerState.Pawn)
-                return;
+            // master sends targets for monsters
+            if (!client.IsMasterClient)
+                return false;
 
-            Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
-            client.SendTarget(client.LocalPlayerState.PeerId, newTargetId, clearTarget);
+            var monster = client.GetMonsterByActor(owner);
+            if (monster != null)
+            {
+                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
+                client.SendTarget(monster.PeerId, newTargetId, clearTarget);
+            }
+            return true;
         }
     }
 
