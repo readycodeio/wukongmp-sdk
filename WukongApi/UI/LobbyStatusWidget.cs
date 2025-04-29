@@ -47,7 +47,9 @@ namespace WukongApi.UI
 
         public void SetDescriptionTexts(string teamRed, string teamBlue, string spectators, string ready, string connected, string more, string and)
         {
-            GameWidget?.CallFunctionByNameWithArguments($"SetDescriptionTexts {teamRed} {teamBlue} {spectators} {ready} {connected} {more} {and}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetTeamRedText {teamRed}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetTeamBlueText {teamBlue}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetDescriptionTexts {spectators} {ready} {connected} {more} {and}", true);
         }
 
         private void AddToTeam1(string playerName)

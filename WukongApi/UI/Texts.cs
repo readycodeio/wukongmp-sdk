@@ -30,8 +30,8 @@
 
         public const string ConnectedString = "Connected";
         public const string ReadyString = "Ready";
-        public const string RedTeamString = "TeamRed";
-        public const string BlueTeamString = "TeamBlue";
+        public const string RedTeamString = "Team Red";
+        public const string BlueTeamString = "Team Blue";
         public const string SpectatorsString = "Spectators";
         public const string AndString = "and";
         public const string MoreString = "more";
