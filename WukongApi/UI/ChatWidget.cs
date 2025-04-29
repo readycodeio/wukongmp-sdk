@@ -17,6 +17,7 @@ namespace WukongApi.UI
         {
             ClearMessages();
             ClearToolTipText();
+            SetDescriptionTexts(Texts.ChatHelperDescription);
         }
 
         public bool HasFocus()
@@ -132,6 +133,11 @@ namespace WukongApi.UI
         {
             GameWidget?.CallFunctionByNameWithArguments("CommitMessage", true);
             return GetMessage();
+        }
+
+        public void SetDescriptionTexts(string chatHelperText)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetDescriptionTexts {chatHelperText}", true);
         }
 
         private void ClearToolTipText()
