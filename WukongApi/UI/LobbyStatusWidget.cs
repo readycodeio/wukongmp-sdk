@@ -45,6 +45,11 @@ namespace WukongApi.UI
             RemoveSpectator(nickName);
         }
 
+        public void SetDescriptionTexts(string teamRed, string teamBlue, string spectators, string ready, string connected, string more, string and)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetDescriptionTexts {teamRed} {teamBlue} {spectators} {ready} {connected} {more} {and}", true);
+        }
+
         private void AddToTeam1(string playerName)
         {
             GameWidget?.CallFunctionByNameWithArguments($"AddToTeam1 {playerName}", true);
@@ -75,6 +80,9 @@ namespace WukongApi.UI
             GameWidget?.CallFunctionByNameWithArguments($"RemoveSpectator {playerName}", true);
         }
 
-        protected override void PostInitialize() { }
+        protected override void PostInitialize()
+        {
+            SetDescriptionTexts(Texts.RedTeamString, Texts.BlueTeamString, Texts.SpectatorsString, Texts.ReadyString, Texts.ConnectedString, Texts.MoreString, Texts.AndString);
+        }
     }
 }

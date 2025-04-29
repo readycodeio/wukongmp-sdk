@@ -16,5 +16,29 @@
         public const string QuickJoin = "Quick Join";
         public const string NewCharacter = "New Character";
         public const string SelectCharacter = "Select Character";
+
+        // Const UI texts:
+        public const string CameraDownDescription = "Down";
+        public const string CameraMoveDescription = "Move";
+        public const string CameraRotateDescription = "Rotate";
+        public const string CameraUpDescription = "Up";
+
+        public const string CameraDownControls = "Q";
+        public const string CameraMoveControls = "W,S,A,D";
+        public const string CameraRotateControls = "RMB";
+        public const string CameraUpControls = "E";
+
+        public const string ConnectedString = "Connected";
+        public const string ReadyString = "Ready";
+        public const string RedTeamString = "TeamRed";
+        public const string BlueTeamString = "TeamBlue";
+        public const string SpectatorsString = "Spectators";
+        public const string AndString = "and";
+        public const string MoreString = "more";
+
+        public const string ChatHelperDescription = "ENTER - Type/Send   |   K - Hide/Show Chat";
+
+        public const string PingString = "Ping";
+        public const string PingUnitsString = "ms";
     }
 }

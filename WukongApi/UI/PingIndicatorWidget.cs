@@ -6,11 +6,19 @@
 
         private PingIndicatorWidget() : base(Constants.PingWidgetName) { }
 
-        public void SetPingText(int pingMs)
+        public void SetPingValue(int pingMs)
         {
-            GameWidget?.CallFunctionByNameWithArguments($"SetPingText {pingMs}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetPingValue {pingMs}", true);
         }
 
-        protected override void PostInitialize() { }
+        public void SetDescriptionTexts(string pingText, string pingUnitsText)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetDescriptionTexts {pingText} {pingUnitsText}", true);
+        }
+
+        protected override void PostInitialize() 
+        {
+            SetDescriptionTexts(Texts.PingString, Texts.PingUnitsString);
+        }
     }
 }
