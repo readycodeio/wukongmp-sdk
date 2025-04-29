@@ -608,7 +608,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                LogNullCharacter(characterId);
                 return;
             }
 
@@ -629,7 +629,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                LogNullCharacter(characterId);
                 return;
             }
 
@@ -650,7 +650,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                LogNullCharacter(characterId);
                 return;
             }
 
@@ -671,7 +671,7 @@ namespace WukongApi
             var monsterState = Client.GetMonsterById(characterId);
             if (monsterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                LogNullCharacter(characterId);
                 return;
             }
 
@@ -709,7 +709,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(playerId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", targetId);
+                LogNullCharacter(targetId);
                 return;
             }
 
@@ -724,7 +724,7 @@ namespace WukongApi
             var targetCharacterState = Client.GetCharacterById(targetId);
             if (targetCharacterState == null)
             {
-                Logging.LogError("Character not found: {Id}", targetId);
+                LogNullCharacter(targetId);
                 return;
             }
 
@@ -838,7 +838,7 @@ namespace WukongApi
             var characterState = Client.GetCharacterById(characterId);
             if (characterState == null)
             {
-                Logging.LogError("Character not found: {Id}", characterId);
+                LogNullCharacter(characterId);
                 return;
             }
 
@@ -1042,7 +1042,7 @@ namespace WukongApi
             var character = Client.GetCharacterById(id);
             if (character == null)
             {
-                Logging.LogError("Character not found: {CharacterId}", id);
+                LogNullCharacter(id);
                 return;
             }
 
@@ -1713,6 +1713,15 @@ namespace WukongApi
             var teamName = GameUtils.GetTeamName(characterState.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {characterState.NickName} {teamName}", true);
             characterState.MarkerActor = playerMarkerActor;
+        }
+
+        // TODO: This should always be error, make sure that creation and destruction of monsters is synchronized
+        private void LogNullCharacter(int characterId)
+        {
+            if (characterId < 0)
+                Logging.LogWarning("Character not found: {Id}", characterId); // monster not found
+            else
+                Logging.LogError("Character not found: {Id}", characterId); // player not found
         }
     }
 }
