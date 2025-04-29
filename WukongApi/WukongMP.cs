@@ -1715,6 +1715,7 @@ namespace WukongApi
             characterState.MarkerActor = playerMarkerActor;
         }
 
+        // TODO: This should always be error, make sure that creation and destruction of monsters is synchronized
         private void LogNullCharacter(int characterId)
         {
             if (characterId < 0)
