@@ -2,6 +2,7 @@
 using b1.BGW;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.UI;
 
 namespace WukongApi
 {
@@ -79,6 +80,7 @@ namespace WukongApi
             aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
             BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.UIAndGame, EGSInputModeChangeReason.Replay);
             _isInFreeCameraMode = true;
+            FreeCameraControlsWidget.Instance.SetVisibility(true);
         }
 
         public void LeaveFreeCameraMode()
@@ -132,6 +134,7 @@ namespace WukongApi
             _freeCameraActor = null;
             _cachePlayerPawn = null;
             _isInFreeCameraMode = false;
+            FreeCameraControlsWidget.Instance.SetVisibility(false);
         }
 
         public void SwitchFreeCameraMode()

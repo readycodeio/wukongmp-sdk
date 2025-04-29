@@ -170,6 +170,7 @@ namespace WukongApi
             _infoMessageWidget.Initialize();
             PingIndicatorWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.SetVisibility(true);
+            FreeCameraControlsWidget.Instance.Initialize();
         }
 
         private void DeinitializeWidgets()
