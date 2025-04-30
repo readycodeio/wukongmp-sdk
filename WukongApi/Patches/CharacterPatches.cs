@@ -130,7 +130,7 @@ namespace WukongApi.Patches
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogDebug("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
+                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
                     var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
                     if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
@@ -522,7 +522,7 @@ namespace WukongApi.Patches
                         return;
 
                     client.SendUnitSimpleState(character.PeerId, SimpleState, IsRemove);
-                    Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
+                    Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
                 }
             }
         }
@@ -545,14 +545,14 @@ namespace WukongApi.Patches
                 if (character != null)
                 {
                     client.SendUnitStateTrigger(character.PeerId, Trigger, Time, NeedForceUpdate);
-                    Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
+                    Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
 
             if (owner == client.LocalPlayerState.Pawn)
             {
                 client.SendUnitStateTrigger(client.LocalPlayerState.PeerId, Trigger, Time, NeedForceUpdate);
-                Logging.LogDebug("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
+                Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }
     }
@@ -575,7 +575,7 @@ namespace WukongApi.Patches
                 {
                     character.MotionMatchingState = MMState;
                     client.SendMotionMatchingState(character.PeerId, MMState);
-                    Logging.LogDebug("Motion matching state changed to {State} for {Actor}", MMState, owner.GetName());
+                    Logging.LogTrace("Motion matching state changed to {State} for {Actor}", MMState, owner.GetName());
                 }
             }
         }

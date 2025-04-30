@@ -44,26 +44,6 @@ namespace WukongApi.State
         public EState_MM MotionMatchingState { get; set; }
         public float MaxSpeed { get; set; }
 
-        public MonsterState(int id, string guid, BUTamerActor tamer, string unitName)
-        {
-            PeerId = id;
-            Guid = guid;
-            _tamer = tamer;
-            UnitName = unitName;
-
-            var monster = tamer.GetMonster();
-            if (!monster.IsNullOrDestroyed())
-            {
-                TeamId = monster.GetTeamIDInCS();
-            }
-            else
-            {
-                Logging.LogError("Monster is null when creating monster state");
-            }
-
-            Logging.LogDebug("Created monster state with team ID: {TeamId}", TeamId);
-        }
-
         public MonsterState(int id, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
             PeerId = id;

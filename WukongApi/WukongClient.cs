@@ -1022,7 +1022,7 @@ namespace WukongApi
 
             if (value is not (FVector or FRotator))
             {
-                Logging.LogDebug("Set monster property [{Guid}]: {Property} = {Value}", id, prop, value);
+                Logging.LogTrace("Set monster property [{Guid}]: {Property} = {Value}", id, prop, value);
             }
         }
 
