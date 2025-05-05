@@ -153,6 +153,12 @@
   <data name="InMultiplayer" xml:space="preserve">
     <value>W lobby trybu wieloosobowego</value>
   </data>
+  <data name="InvalidUnitName" xml:space="preserve">
+    <value>Niepoprawna nazwa jednostki</value>
+  </data>
+  <data name="InvalidUnitsCount" xml:space="preserve">
+    <value>Niepoprawna liczba jednostek</value>
+  </data>
   <data name="MatchmakingInProgress" xml:space="preserve">
     <value>Szukanie graczy...</value>
   </data>

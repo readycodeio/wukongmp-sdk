@@ -169,6 +169,24 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid unit name.
+        /// </summary>
+        internal static string InvalidUnitName {
+            get {
+                return ResourceManager.GetString("InvalidUnitName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid number of units.
+        /// </summary>
+        internal static string InvalidUnitsCount {
+            get {
+                return ResourceManager.GetString("InvalidUnitsCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Matchmaking in progress....
         /// </summary>
         internal static string MatchmakingInProgress {
