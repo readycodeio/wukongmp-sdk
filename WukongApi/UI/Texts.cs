@@ -24,7 +24,7 @@
         public const string CameraUpDescription = "Up";
 
         public const string CameraDownControls = "Q";
-        public const string CameraMoveControls = "W,S,A,D";
+        public const string CameraMoveControls = "W S A D";
         public const string CameraRotateControls = "RMB";
         public const string CameraUpControls = "E";
 
@@ -33,7 +33,6 @@
         public const string RedTeamString = "Team Red";
         public const string BlueTeamString = "Team Blue";
         public const string SpectatorsString = "Spectators";
-        public const string AndString = "and";
         public const string MoreString = "more";
 
         public const string ChatHelperDescription = "ENTER - Type/Send   |   K - Hide/Show Chat";
