@@ -11,14 +11,25 @@
             GameWidget?.CallFunctionByNameWithArguments($"SetPingValue {pingMs}", true);
         }
 
-        public void SetDescriptionTexts(string pingText, string pingUnitsText)
+        private void SetPingText(string pingText)
         {
-            GameWidget?.CallFunctionByNameWithArguments($"SetDescriptionTexts {pingText} {pingUnitsText}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetPingText {pingText}", true);
+        }
+
+        private void SetUnitsText(string pingUnitsText)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetUnitsText {pingUnitsText}", true);
+        }
+
+        private void SetStaticTexts(string pingText, string pingUnitsText)
+        {
+            SetPingText(pingText);
+            SetUnitsText(pingUnitsText);
         }
 
         protected override void PostInitialize() 
         {
-            SetDescriptionTexts(Texts.PingString, Texts.PingUnitsString);
+            SetStaticTexts(Texts.PingString, Texts.PingUnitsString);
         }
     }
 }
