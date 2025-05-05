@@ -53,7 +53,7 @@ namespace WukongApi
         {
             if (!UnitPathsConfig.IsValidMonsterName(args.Span[0]))
             {
-                ChatWidget.Instance.AddMessage(true, "Command", $"Invalid unit name \"{args.Span[0]}\"");
+                ChatWidget.Instance.AddMessage(true, "Command", $"{Resources.Texts.InvalidUnitName}: \"{args.Span[0]}\"");
                 return;
             }
 
@@ -72,7 +72,7 @@ namespace WukongApi
                     }
                     else
                     {
-                        ChatWidget.Instance.AddMessage(true, "Command", $"Invalid number of units: \"{args.Span[1]}\"");
+                        ChatWidget.Instance.AddMessage(true, "Command", $"{Resources.Texts.InvalidUnitName}: \"{args.Span[1]}\"");
                     }
 
                     break;
