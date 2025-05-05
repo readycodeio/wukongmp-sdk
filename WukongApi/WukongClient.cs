@@ -1132,7 +1132,7 @@ namespace WukongApi
             SubscribeToPlayerEvents();
             _beforeJoinedRoomCallback.Invoke();
 
-            WukongChat.SendServerMessage($"{LocalPlayerState.NickName} has joined!");
+            WukongChat.SendServerMessage($"{LocalPlayerState.NickName} {Resources.Texts.PlayerJoined}!");
         }
 
         private void OnAfterJoinedRoomHandler()
@@ -1189,7 +1189,7 @@ namespace WukongApi
 
             if (IsMasterClient)
             {
-                WukongChat.SendServerMessage($"{nickname} has left!");
+                WukongChat.SendServerMessage($"{nickname} {Resources.Texts.PlayerLeft}!");
 
                 _ = Task.Run(async () =>
                 {

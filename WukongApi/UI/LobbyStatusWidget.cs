@@ -109,7 +109,7 @@
 
         protected override void PostInitialize()
         {
-            SetStaticTexts(Texts.RedTeamString, Texts.BlueTeamString, Texts.SpectatorsString, Texts.ReadyString, Texts.ConnectedString, Texts.MoreString);
+            SetStaticTexts(Resources.Texts.RedTeam, Resources.Texts.BlueTeam, Resources.Texts.Spectators, Resources.Texts.Ready, Resources.Texts.Connected, Resources.Texts.More);
         }
     }
 }

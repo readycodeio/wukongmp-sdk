@@ -83,12 +83,12 @@ namespace WukongApi
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
             GameLoopPatch.QueueOnGameThread(() => _wukongClient.BroadcastPlayerRebirth(_wukongClient.LocalPlayerState.PeerId), "HandleRebirth");
-            SendServerMessage($"Player {NickName} requested rebirth");
+            SendServerMessage($"{NickName} {Resources.Texts.PlayerRequestedRebirth}");
         }
 
         private void RequestGiveUp(ReadOnlyMemory<string> _)
         {
-            SendServerMessage($"Player {NickName} gave up");
+            SendServerMessage($"{NickName} {Resources.Texts.PlayerGaveUp}");
             _wukongClient.KillCurrentPlayer();
         }
 
@@ -101,7 +101,7 @@ namespace WukongApi
         {
             if (_wukongClient.ConnectedAndInRoom)
             {
-                SendServerMessage($"{NickName} has left!");
+                SendServerMessage($"{NickName} {Resources.Texts.PlayerLeft}!");
                 _wukongClient.StopRelayClient();
             }
         }
