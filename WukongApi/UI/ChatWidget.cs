@@ -17,7 +17,7 @@ namespace WukongApi.UI
         {
             ClearMessages();
             ClearToolTipText();
-            SetHelperText(Texts.ChatHelperDescription);
+            SetHelperText(Resources.Texts.ChatHelperDescription);
         }
 
         public bool HasFocus()

@@ -61,10 +61,10 @@
         protected override void PostInitialize()
         {
             SetStaticTexts(
-                Texts.CameraDownControls, Texts.CameraDownDescription,
-                Texts.CameraMoveControls, Texts.CameraMoveDescription,
-                Texts.CameraRotateControls, Texts.CameraRotateDescription,
-                Texts.CameraUpControls, Texts.CameraUpDescription);
+                Resources.Texts.CameraDownControls, Resources.Texts.CameraDownDescription,
+                Resources.Texts.CameraMoveControls, Resources.Texts.CameraMoveDescription,
+                Resources.Texts.CameraRotateControls, Resources.Texts.CameraRotateDescription,
+                Resources.Texts.CameraUpControls, Resources.Texts.CameraUpDescription);
         }
     }
 }

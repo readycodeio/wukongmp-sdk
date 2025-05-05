@@ -29,7 +29,7 @@
 
         protected override void PostInitialize() 
         {
-            SetStaticTexts(Texts.PingString, Texts.PingUnitsString);
+            SetStaticTexts(Resources.Texts.Ping, Resources.Texts.PingUnits);
         }
     }
 }
