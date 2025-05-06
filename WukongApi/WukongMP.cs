@@ -980,7 +980,14 @@ namespace WukongApi
         {
             if (Client.IsMasterClient) // send this only once
             {
-                Client.WukongChat.SendServerMessage($"{playerNickName} is {(isReady ? "ready" : "not ready")}");
+                if (isReady)
+                {
+                    Client.WukongChat.SendServerMessage($"{playerNickName} {{PlayerIsReady}}");
+                }
+                else
+                {
+                    Client.WukongChat.SendServerMessage($"{playerNickName} {{PlayerIsNotReady}}");
+                }
             }
 
             if (isReady)
@@ -1153,7 +1160,7 @@ namespace WukongApi
             }
 
             Notify:
-            Client.WukongChat.SendServerMessage($"{Client.LocalPlayerState.NickName} spawned {count} {unitName}");
+            Client.WukongChat.SendServerMessage($"{Client.LocalPlayerState.NickName} {{PlayerSpawned}} {count} {unitName}");
         }
 
         private void SpawnUnitMaster(string unitName, FVector loc, int teamId)

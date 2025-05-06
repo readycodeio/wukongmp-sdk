@@ -159,6 +159,9 @@
   <data name="InvalidUnitsCount" xml:space="preserve">
     <value>Niepoprawna liczba jednostek</value>
   </data>
+  <data name="MasterClient" xml:space="preserve">
+    <value>Master client</value>
+  </data>
   <data name="MatchmakingInProgress" xml:space="preserve">
     <value>Szukanie graczy...</value>
   </data>
@@ -177,6 +180,12 @@
   <data name="PlayerGaveUp" xml:space="preserve">
     <value>poddał się</value>
   </data>
+  <data name="PlayerIsNotReady" xml:space="preserve">
+    <value>jest niegotowy</value>
+  </data>
+  <data name="PlayerIsReady" xml:space="preserve">
+    <value>jest gotowy</value>
+  </data>
   <data name="PlayerJoined" xml:space="preserve">
     <value>dołączył</value>
   </data>
@@ -185,6 +194,9 @@
   </data>
   <data name="PlayerRequestedRebirth" xml:space="preserve">
     <value>zażądał odrodzenie</value>
+  </data>
+  <data name="PlayerSpawned" xml:space="preserve">
+    <value>stworzył</value>
   </data>
   <data name="PressToBeNotReady" xml:space="preserve">
     <value>Naciśnij J aby odznaczyć gotowość</value>
