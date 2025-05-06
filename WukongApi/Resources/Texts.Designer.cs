@@ -70,6 +70,15 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bot.
+        /// </summary>
+        internal static string BotName {
+            get {
+                return ResourceManager.GetString("BotName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Q.
         /// </summary>
         internal static string CameraDownControls {
@@ -187,7 +196,7 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Master client.
+        ///   Looks up a localized string similar to Master client: {0}.
         /// </summary>
         internal static string MasterClient {
             get {
@@ -241,7 +250,7 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to gave up.
+        ///   Looks up a localized string similar to {0} gave up.
         /// </summary>
         internal static string PlayerGaveUp {
             get {
@@ -250,7 +259,7 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to is not ready.
+        ///   Looks up a localized string similar to {0} is not ready.
         /// </summary>
         internal static string PlayerIsNotReady {
             get {
@@ -259,7 +268,7 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to is ready.
+        ///   Looks up a localized string similar to {0} is ready.
         /// </summary>
         internal static string PlayerIsReady {
             get {
@@ -268,7 +277,7 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to has joined.
+        ///   Looks up a localized string similar to {0} has joined!.
         /// </summary>
         internal static string PlayerJoined {
             get {
@@ -277,7 +286,16 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to has left.
+        ///   Looks up a localized string similar to {0} killed {1}.
+        /// </summary>
+        internal static string PlayerKilledPlayer {
+            get {
+                return ResourceManager.GetString("PlayerKilledPlayer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has left!.
         /// </summary>
         internal static string PlayerLeft {
             get {
@@ -286,7 +304,7 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to requested rebirth.
+        ///   Looks up a localized string similar to {0} requested rebirth.
         /// </summary>
         internal static string PlayerRequestedRebirth {
             get {
@@ -295,7 +313,7 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to spawned.
+        ///   Looks up a localized string similar to {0} spawned {1} {2}.
         /// </summary>
         internal static string PlayerSpawned {
             get {
@@ -376,6 +394,33 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Round {0} of {1}.
+        /// </summary>
+        internal static string RoundCount {
+            get {
+                return ResourceManager.GetString("RoundCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Round ended. Draw.
+        /// </summary>
+        internal static string RoundDraw {
+            get {
+                return ResourceManager.GetString("RoundDraw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Round ended. {0} won.
+        /// </summary>
+        internal static string RoundEndedWinner {
+            get {
+                return ResourceManager.GetString("RoundEndedWinner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select Character.
         /// </summary>
         internal static string SelectCharacter {
@@ -399,6 +444,24 @@ namespace WukongApi.Resources {
         internal static string StartingGame {
             get {
                 return ResourceManager.GetString("StartingGame", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Draw.
+        /// </summary>
+        internal static string TournamentDraw {
+            get {
+                return ResourceManager.GetString("TournamentDraw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Winner: {0}.
+        /// </summary>
+        internal static string TournamentEndedWinner {
+            get {
+                return ResourceManager.GetString("TournamentEndedWinner", resourceCulture);
             }
         }
         
