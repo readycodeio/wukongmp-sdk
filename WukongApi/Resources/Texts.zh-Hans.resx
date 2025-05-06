@@ -120,6 +120,9 @@
   <data name="BlueTeam" xml:space="preserve">
     <value>蓝队</value>
   </data>
+  <data name="BotName" xml:space="preserve">
+    <value>机器人</value>
+  </data>
   <data name="CameraDownControls" xml:space="preserve">
     <value>Q</value>
   </data>
@@ -160,7 +163,7 @@
     <value>单位数量无效</value>
   </data>
   <data name="MasterClient" xml:space="preserve">
-    <value>主客户端</value>
+    <value>主客户端: {0}</value>
   </data>
   <data name="MatchmakingInProgress" xml:space="preserve">
     <value>匹配正在进行中...</value>
@@ -178,25 +181,28 @@
     <value>ms</value>
   </data>
   <data name="PlayerGaveUp" xml:space="preserve">
-    <value>放弃</value>
+    <value>{0} 放弃</value>
   </data>
   <data name="PlayerIsNotReady" xml:space="preserve">
-    <value>不准备</value>
+    <value>{0} 不准备</value>
   </data>
   <data name="PlayerIsReady" xml:space="preserve">
-    <value>准备就绪</value>
+    <value>{0} 准备就绪</value>
   </data>
   <data name="PlayerJoined" xml:space="preserve">
-    <value>已加入</value>
+    <value>{0} 已加入</value>
+  </data>
+  <data name="PlayerKilledPlayer" xml:space="preserve">
+    <value>{0} 蒙难 {1}</value>
   </data>
   <data name="PlayerLeft" xml:space="preserve">
-    <value>已离开</value>
+    <value>{0} 已离开</value>
   </data>
   <data name="PlayerRequestedRebirth" xml:space="preserve">
-    <value>要求重生</value>
+    <value>{0} 要求重生</value>
   </data>
   <data name="PlayerSpawned" xml:space="preserve">
-    <value>产卵</value>
+    <value>{0} 产卵 {1} {2}</value>
   </data>
   <data name="PressToBeNotReady" xml:space="preserve">
     <value>按 J 不准备</value>
@@ -222,6 +228,15 @@
   <data name="RedTeam" xml:space="preserve">
     <value>红队</value>
   </data>
+  <data name="RoundCount" xml:space="preserve">
+    <value>{1}的{0}轮</value>
+  </data>
+  <data name="RoundDraw" xml:space="preserve">
+    <value>回合结束。抽签</value>
+  </data>
+  <data name="RoundEndedWinner" xml:space="preserve">
+    <value>回合结束。{0}获胜</value>
+  </data>
   <data name="SelectCharacter" xml:space="preserve">
     <value>选择字符</value>
   </data>
@@ -230,6 +245,12 @@
   </data>
   <data name="StartingGame" xml:space="preserve">
     <value>开始 PvP 比赛</value>
+  </data>
+  <data name="TournamentDraw" xml:space="preserve">
+    <value>绘制</value>
+  </data>
+  <data name="TournamentEndedWinner" xml:space="preserve">
+    <value>优胜者： {0}</value>
   </data>
   <data name="WaitForEnd" xml:space="preserve">
     <value>等待比赛结束</value>

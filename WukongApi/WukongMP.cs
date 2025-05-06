@@ -982,11 +982,11 @@ namespace WukongApi
             {
                 if (isReady)
                 {
-                    Client.WukongChat.SendServerMessage($"{playerNickName} {{PlayerIsReady}}");
+                    Client.WukongChat.SendServerMessage("PlayerIsReady", playerNickName);
                 }
                 else
                 {
-                    Client.WukongChat.SendServerMessage($"{playerNickName} {{PlayerIsNotReady}}");
+                    Client.WukongChat.SendServerMessage("PlayerIsNotReady", playerNickName);
                 }
             }
 
@@ -1160,7 +1160,7 @@ namespace WukongApi
             }
 
             Notify:
-            Client.WukongChat.SendServerMessage($"{Client.LocalPlayerState.NickName} {{PlayerSpawned}} {count} {unitName}");
+            Client.WukongChat.SendServerMessage("PlayerSpawned", Client.LocalPlayerState.NickName, count.ToString(), unitName);
         }
 
         private void SpawnUnitMaster(string unitName, FVector loc, int teamId)

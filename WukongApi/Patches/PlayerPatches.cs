@@ -344,7 +344,7 @@ namespace WukongApi.Patches
                     var killedPlayerState = client.GetPlayerByActor(owner);
                     if (attackerPlayerState != null && killedPlayerState != null)
                     {
-                        client.WukongChat.SendServerMessage($"{attackerPlayerState.NickName} {{killed}} {killedPlayerState.NickName}");
+                        client.WukongChat.SendServerMessage("PlayerKilledPlayer", attackerPlayerState.NickName, killedPlayerState.NickName);
                     }
                 }
 

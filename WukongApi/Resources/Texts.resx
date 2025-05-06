@@ -120,6 +120,9 @@
   <data name="BlueTeam" xml:space="preserve">
     <value>Team Blue</value>
   </data>
+  <data name="BotName" xml:space="preserve">
+    <value>Bot</value>
+  </data>
   <data name="CameraDownControls" xml:space="preserve">
     <value>Q</value>
   </data>
@@ -160,7 +163,7 @@
     <value>Invalid number of units</value>
   </data>
   <data name="MasterClient" xml:space="preserve">
-    <value>Master client</value>
+    <value>Master client: {0}</value>
   </data>
   <data name="MatchmakingInProgress" xml:space="preserve">
     <value>Matchmaking in progress...</value>
@@ -178,25 +181,28 @@
     <value>ms</value>
   </data>
   <data name="PlayerGaveUp" xml:space="preserve">
-    <value>gave up</value>
+    <value>{0} gave up</value>
   </data>
   <data name="PlayerIsNotReady" xml:space="preserve">
-    <value>is not ready</value>
+    <value>{0} is not ready</value>
   </data>
   <data name="PlayerIsReady" xml:space="preserve">
-    <value>is ready</value>
+    <value>{0} is ready</value>
   </data>
   <data name="PlayerJoined" xml:space="preserve">
-    <value>has joined</value>
+    <value>{0} has joined!</value>
+  </data>
+  <data name="PlayerKilledPlayer" xml:space="preserve">
+    <value>{0} killed {1}</value>
   </data>
   <data name="PlayerLeft" xml:space="preserve">
-    <value>has left</value>
+    <value>{0} has left!</value>
   </data>
   <data name="PlayerRequestedRebirth" xml:space="preserve">
-    <value>requested rebirth</value>
+    <value>{0} requested rebirth</value>
   </data>
   <data name="PlayerSpawned" xml:space="preserve">
-    <value>spawned</value>
+    <value>{0} spawned {1} {2}</value>
   </data>
   <data name="PressToBeNotReady" xml:space="preserve">
     <value>Press J to be not ready</value>
@@ -222,6 +228,15 @@
   <data name="RedTeam" xml:space="preserve">
     <value>Team Red</value>
   </data>
+  <data name="RoundCount" xml:space="preserve">
+    <value>Round {0} of {1}</value>
+  </data>
+  <data name="RoundDraw" xml:space="preserve">
+    <value>Round ended. Draw</value>
+  </data>
+  <data name="RoundEndedWinner" xml:space="preserve">
+    <value>Round ended. {0} won</value>
+  </data>
   <data name="SelectCharacter" xml:space="preserve">
     <value>Select Character</value>
   </data>
@@ -230,6 +245,12 @@
   </data>
   <data name="StartingGame" xml:space="preserve">
     <value>Starting PvP match</value>
+  </data>
+  <data name="TournamentDraw" xml:space="preserve">
+    <value>Draw</value>
+  </data>
+  <data name="TournamentEndedWinner" xml:space="preserve">
+    <value>Winner: {0}</value>
   </data>
   <data name="WaitForEnd" xml:space="preserve">
     <value>Wait for the match to end</value>

@@ -1,29 +1,32 @@
 ﻿using LiteNetLib.Utils;
+using System.Collections.Generic;
 
 namespace WukongApi;
 
 public class ChatMessage
 {
-    private ChatMessage(bool isServer, string nickname, string message)
+    private ChatMessage(bool isServer, string nickname, string message, List<string> placeholders)
     {
         IsServer = isServer;
         Nickname = nickname;
         Message = message;
+        Placeholders = placeholders;
     }
 
-    public static ChatMessage CreateServerMessage(string message)
+    public static ChatMessage CreateServerMessage(string message, List<string> placeholders)
     {
-        return new ChatMessage(true, "", message);
+        return new ChatMessage(true, "", message, placeholders);
     }
 
     public static ChatMessage CreateClientMessage(string nickname, string message)
     {
-        return new ChatMessage(false, nickname, message);
+        return new ChatMessage(false, nickname, message, []);
     }
 
     public bool IsServer { get; }
     public string? Nickname { get; }
     public string Message { get; }
+    public List<string> Placeholders { get; }
 
     public static void Serialize(NetDataWriter writer, object customObject)
     {
@@ -34,6 +37,14 @@ public class ChatMessage
         if (!chatMessage.IsServer)
         {
             writer.Put(chatMessage.Nickname);
+        }
+        else
+        {
+            writer.Put(chatMessage.Placeholders.Count);
+            foreach (var placeholder in chatMessage.Placeholders)
+            {
+                writer.Put(placeholder);
+            }
         }
     }
 
@@ -46,7 +57,15 @@ public class ChatMessage
             var nickname = reader.GetString();
             return CreateClientMessage(nickname, message);
         }
-
-        return CreateServerMessage(message);
+        else
+        {
+            var count = reader.GetInt();
+            List<string> placeholders = [];
+            for (int i = 0; i < count; i++)
+            {
+                placeholders.Add(reader.GetString());
+            }
+            return CreateServerMessage(message, placeholders);
+        }
     }
 }

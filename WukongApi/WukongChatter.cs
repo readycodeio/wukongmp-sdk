@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using WukongApi.Localization;
 using WukongApi.Patches;
 using WukongApi.State;
 using WukongApi.UI;
@@ -84,12 +83,12 @@ namespace WukongApi
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
             GameLoopPatch.QueueOnGameThread(() => _wukongClient.BroadcastPlayerRebirth(_wukongClient.LocalPlayerState.PeerId), "HandleRebirth");
-            SendServerMessage($"{NickName} {{PlayerRequestedRebirth}}");
+            SendServerMessage("PlayerRequestedRebirth", NickName);
         }
 
         private void RequestGiveUp(ReadOnlyMemory<string> _)
         {
-            SendServerMessage($"{NickName} {{PlayerGaveUp}}");
+            SendServerMessage("PlayerGaveUp", NickName);
             _wukongClient.KillCurrentPlayer();
         }
 
@@ -102,7 +101,7 @@ namespace WukongApi
         {
             if (_wukongClient.ConnectedAndInRoom)
             {
-                SendServerMessage($"{NickName} {{PlayerLeft}}!");
+                SendServerMessage("PlayerLeft", NickName);
                 _wukongClient.StopRelayClient();
             }
         }
@@ -153,10 +152,10 @@ namespace WukongApi
             _wukongClient.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
         }
 
-        public void SendServerMessage(string message)
+        public void SendServerMessage(string message, params List<string> args)
         {
             Logging.LogDebug("Sending server message {Message}", message);
-            _wukongClient.SendChatMessage(ChatMessage.CreateServerMessage(message));
+            _wukongClient.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
         }
 
         public void OnGetMessage(ChatMessage message)
@@ -165,7 +164,7 @@ namespace WukongApi
             var translatedMessage = message.Message;
             if (message.IsServer)
             {
-                translatedMessage = Localizer.LocalizeMessage(translatedMessage);
+                translatedMessage = string.Format(Resources.Texts.ResourceManager.GetString(message.Message, Resources.Texts.Culture), [.. message.Placeholders]);
             }
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
             ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
