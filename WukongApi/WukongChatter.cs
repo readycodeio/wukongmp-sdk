@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using WukongApi.Localization;
 using WukongApi.Patches;
 using WukongApi.State;
 using WukongApi.UI;
@@ -83,12 +84,12 @@ namespace WukongApi
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
             GameLoopPatch.QueueOnGameThread(() => _wukongClient.BroadcastPlayerRebirth(_wukongClient.LocalPlayerState.PeerId), "HandleRebirth");
-            SendServerMessage($"{NickName} {Resources.Texts.PlayerRequestedRebirth}");
+            SendServerMessage($"{NickName} {{PlayerRequestedRebirth}}");
         }
 
         private void RequestGiveUp(ReadOnlyMemory<string> _)
         {
-            SendServerMessage($"{NickName} {Resources.Texts.PlayerGaveUp}");
+            SendServerMessage($"{NickName} {{PlayerGaveUp}}");
             _wukongClient.KillCurrentPlayer();
         }
 
@@ -101,7 +102,7 @@ namespace WukongApi
         {
             if (_wukongClient.ConnectedAndInRoom)
             {
-                SendServerMessage($"{NickName} {Resources.Texts.PlayerLeft}!");
+                SendServerMessage($"{NickName} {{PlayerLeft}}!");
                 _wukongClient.StopRelayClient();
             }
         }
@@ -161,8 +162,13 @@ namespace WukongApi
         public void OnGetMessage(ChatMessage message)
         {
             var senderNickname = message.IsServer ? "Server" : message.Nickname!;
+            var translatedMessage = message.Message;
+            if (message.IsServer)
+            {
+                translatedMessage = Localizer.LocalizeMessage(translatedMessage);
+            }
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
-            ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, message.Message);
+            ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
         }
     }
 }

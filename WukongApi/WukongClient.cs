@@ -196,7 +196,7 @@ namespace WukongApi
                 if (newMasterPlayer != null)
                 {
                     RoomState.MasterClientId = newMasterPlayer.PeerId;
-                    WukongChat.SendServerMessage($"Master client: {newMasterName}");
+                    WukongChat.SendServerMessage($"{{MasterClient}}: {newMasterName}");
                 }
                 else
                 {
@@ -1132,7 +1132,7 @@ namespace WukongApi
             SubscribeToPlayerEvents();
             _beforeJoinedRoomCallback.Invoke();
 
-            WukongChat.SendServerMessage($"{LocalPlayerState.NickName} {Resources.Texts.PlayerJoined}!");
+            WukongChat.SendServerMessage($"{LocalPlayerState.NickName} {{PlayerJoined}}!");
         }
 
         private void OnAfterJoinedRoomHandler()
@@ -1189,7 +1189,7 @@ namespace WukongApi
 
             if (IsMasterClient)
             {
-                WukongChat.SendServerMessage($"{nickname} {Resources.Texts.PlayerLeft}!");
+                WukongChat.SendServerMessage($"{nickname} {{PlayerLeft}}!");
 
                 _ = Task.Run(async () =>
                 {

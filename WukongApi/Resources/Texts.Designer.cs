@@ -187,6 +187,15 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Master client.
+        /// </summary>
+        internal static string MasterClient {
+            get {
+                return ResourceManager.GetString("MasterClient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Matchmaking in progress....
         /// </summary>
         internal static string MatchmakingInProgress {
@@ -241,6 +250,24 @@ namespace WukongApi.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to is not ready.
+        /// </summary>
+        internal static string PlayerIsNotReady {
+            get {
+                return ResourceManager.GetString("PlayerIsNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is ready.
+        /// </summary>
+        internal static string PlayerIsReady {
+            get {
+                return ResourceManager.GetString("PlayerIsReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to has joined.
         /// </summary>
         internal static string PlayerJoined {
@@ -264,6 +291,15 @@ namespace WukongApi.Resources {
         internal static string PlayerRequestedRebirth {
             get {
                 return ResourceManager.GetString("PlayerRequestedRebirth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to spawned.
+        /// </summary>
+        internal static string PlayerSpawned {
+            get {
+                return ResourceManager.GetString("PlayerSpawned", resourceCulture);
             }
         }
         
