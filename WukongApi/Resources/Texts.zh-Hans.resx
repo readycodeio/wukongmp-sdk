@@ -118,123 +118,123 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BlueTeam" xml:space="preserve">
-    <value>Zespół Niebieski</value>
+    <value>蓝队</value>
   </data>
   <data name="CameraDownControls" xml:space="preserve">
     <value>Q</value>
   </data>
   <data name="CameraDownDescription" xml:space="preserve">
-    <value>Dół</value>
+    <value>下降</value>
   </data>
   <data name="CameraMoveControls" xml:space="preserve">
     <value>W S A D</value>
   </data>
   <data name="CameraMoveDescription" xml:space="preserve">
-    <value>Przemieszczanie</value>
+    <value>移动</value>
   </data>
   <data name="CameraRotateControls" xml:space="preserve">
-    <value>PPM</value>
+    <value>RMB</value>
   </data>
   <data name="CameraRotateDescription" xml:space="preserve">
-    <value>Obrót</value>
+    <value>旋转</value>
   </data>
   <data name="CameraUpControls" xml:space="preserve">
     <value>E</value>
   </data>
   <data name="CameraUpDescription" xml:space="preserve">
-    <value>Góra</value>
+    <value>向上</value>
   </data>
   <data name="ChatHelperDescription" xml:space="preserve">
-    <value>ENTER - Pisz/Wyślij   |   K - Ukryj/Pokaż Czat</value>
+    <value>ENTER - 输入/发送   |   K - 隐藏/显示聊天内容</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>Połączeni</value>
+    <value>已连接</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
-    <value>W lobby trybu wieloosobowego</value>
+    <value>在多人游戏大厅</value>
   </data>
   <data name="InvalidUnitName" xml:space="preserve">
-    <value>Niepoprawna nazwa jednostki</value>
+    <value>单位名称无效</value>
   </data>
   <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>Niepoprawna liczba jednostek</value>
+    <value>单位数量无效</value>
   </data>
   <data name="MasterClient" xml:space="preserve">
-    <value>Master client</value>
+    <value>主客户端</value>
   </data>
   <data name="MatchmakingInProgress" xml:space="preserve">
-    <value>Szukanie graczy...</value>
+    <value>匹配正在进行中...</value>
   </data>
   <data name="More" xml:space="preserve">
-    <value>więcej</value>
+    <value>更多</value>
   </data>
   <data name="NewCharacter" xml:space="preserve">
-    <value>Nowa postać</value>
+    <value>新角色</value>
   </data>
   <data name="Ping" xml:space="preserve">
-    <value>Ping</value>
+    <value>平</value>
   </data>
   <data name="PingUnits" xml:space="preserve">
     <value>ms</value>
   </data>
   <data name="PlayerGaveUp" xml:space="preserve">
-    <value>poddał się</value>
+    <value>放弃</value>
   </data>
   <data name="PlayerIsNotReady" xml:space="preserve">
-    <value>jest niegotowy</value>
+    <value>不准备</value>
   </data>
   <data name="PlayerIsReady" xml:space="preserve">
-    <value>jest gotowy</value>
+    <value>准备就绪</value>
   </data>
   <data name="PlayerJoined" xml:space="preserve">
-    <value>dołączył</value>
+    <value>已加入</value>
   </data>
   <data name="PlayerLeft" xml:space="preserve">
-    <value>wyszedł</value>
+    <value>已离开</value>
   </data>
   <data name="PlayerRequestedRebirth" xml:space="preserve">
-    <value>zażądał odrodzenie</value>
+    <value>要求重生</value>
   </data>
   <data name="PlayerSpawned" xml:space="preserve">
-    <value>stworzył</value>
+    <value>产卵</value>
   </data>
   <data name="PressToBeNotReady" xml:space="preserve">
-    <value>Naciśnij J aby odznaczyć gotowość</value>
+    <value>按 J 不准备</value>
   </data>
   <data name="PressToBeReady" xml:space="preserve">
-    <value>Naciśnij J aby oznaczyć gotowość</value>
+    <value>按 J 准备</value>
   </data>
   <data name="PressToCancelMatch" xml:space="preserve">
-    <value>Naciśnij I aby anulować mecz</value>
+    <value>按 I 取消匹配</value>
   </data>
   <data name="PressToPlayWithBots" xml:space="preserve">
-    <value>Naciśnij I aby grać z botami</value>
+    <value>按 I 与机器人玩游戏</value>
   </data>
   <data name="PressToSwitchTeam" xml:space="preserve">
-    <value>Naciśnij L aby zmienić zespół</value>
+    <value>按 L 键切换团队</value>
   </data>
   <data name="QuickJoin" xml:space="preserve">
-    <value>Szybkie dołączenie</value>
+    <value>快速加入</value>
   </data>
   <data name="Ready" xml:space="preserve">
-    <value>Gotowi</value>
+    <value>准备就绪</value>
   </data>
   <data name="RedTeam" xml:space="preserve">
-    <value>Zespół Czerwony</value>
+    <value>红队</value>
   </data>
   <data name="SelectCharacter" xml:space="preserve">
-    <value>Wybierz postać</value>
+    <value>选择字符</value>
   </data>
   <data name="Spectators" xml:space="preserve">
-    <value>Widzowie</value>
+    <value>观众</value>
   </data>
   <data name="StartingGame" xml:space="preserve">
-    <value>Rozpoczynanie meczu PvP</value>
+    <value>开始 PvP 比赛</value>
   </data>
   <data name="WaitForEnd" xml:space="preserve">
-    <value>Czekaj na konic meczu</value>
+    <value>等待比赛结束</value>
   </data>
   <data name="YouAreReady" xml:space="preserve">
-    <value>Gotowość</value>
+    <value>您准备好了</value>
   </data>
 </root>
