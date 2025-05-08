@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using b1;
-using b1.ECS;
 using HarmonyLib;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Wukong;
+using WukongApi.ECS;
 using WukongApi.Monitors;
 using WukongApi.State;
+using EntityManager = b1.ECS.EntityManager;
 
 namespace WukongApi.Patches
 {
@@ -101,15 +104,52 @@ namespace WukongApi.Patches
             var client = WukongMP.Instance.Client;
             
             SyncMontage(client.LocalPlayerState);
+            
             if (client.IsMasterClient)
             {
-                foreach (var monsterState in client.SyncedMonsters.Values)
-                {
-                    SyncMontage(monsterState);
-                }
+                client.entityManager.RunSystem<TamerComponent, PeerIdComponent>(SyncMontage);
             }
         }
+        
+        private static void SyncMontage(EntityId entityId, ref TamerComponent tamerComponent, ref PeerIdComponent netId)
+        {
+            if (tamerComponent.Pawn == null)
+                return;
 
+            var montageState = tamerComponent.MontageState;
+            if (montageState.LocalAnimationInstance == null)
+            {
+                montageState.LocalAnimationInstance = tamerComponent.Pawn.Mesh.GetAnimInstance();
+            }
+
+            var currentMontage = tamerComponent.Pawn.GetCurrentMontage();
+
+            if (currentMontage != null)
+            {
+                bool isNewMontage = montageState.LocalMontage != currentMontage;
+                float currentPosition = montageState.LocalAnimationInstance.Montage_GetPosition(currentMontage);
+
+                bool hasMontageRewound = currentPosition < montageState.LocalMontagePosition && !isNewMontage;
+                bool hasSkippedFrames = currentPosition - montageState.LocalMontagePosition > 0.5f && !isNewMontage;
+
+                if (isNewMontage || hasMontageRewound || hasSkippedFrames)
+                {
+                    // TODO: Replace by system
+                    WukongMP.Instance.Client.SendMontageCallback(netId.PeerId, currentMontage, currentPosition, hasMontageRewound);
+                }
+
+                montageState.LocalMontagePosition = currentPosition;
+            }
+            else if (montageState.LocalMontage != null)
+            {
+                WukongMP.Instance.Client.SendMontageCancel(netId.PeerId);
+            }
+
+            montageState.LocalMontage = currentMontage;
+            tamerComponent.MontageState = montageState;
+        }
+
+        [Obsolete]
         private static void SyncMontage(CharacterState characterState)
         {
             if (characterState.Pawn == null)
@@ -171,7 +211,6 @@ namespace WukongApi.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 ComponentMonitorManager.Instance.Update();
-                WukongMP.Instance.Client.RunTickSystems();
             }
 
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))

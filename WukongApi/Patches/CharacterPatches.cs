@@ -1,10 +1,10 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.ECS;
 using WukongApi.State;
 
 namespace WukongApi.Patches
@@ -21,12 +21,7 @@ namespace WukongApi.Patches
             if (IsThreadTick)
             {
                 var client = WukongMP.Instance.Client;
-                client.SetCachedPlayerProperties();
-
-                if (client.IsMasterClient)
-                {
-                    client.SendUpdatedMonsterProperties();
-                }
+                client.RunTickSystems();
             }
         }
     }
@@ -156,27 +151,33 @@ namespace WukongApi.Patches
                 }
                 else
                 {
-                    var monster = client.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+                    var entity = client.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+                    if (!entity.HasValue)
+                        return;
 
-                    // monster
-                    if (monster is { IsSynced: true })
+                    if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
                     {
-                        if (monster.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
-                        {
-                            return; // do not reapply the same value
-                        }
+                        return;
+                    }
 
-                        __instance.SetFloatValue(EBGUAttrFloat.Hp, monster.Hp);
+                    var hpComp = client.GetEntityComponent<HpComponent>(entity.Value);
 
-                        if (monster.Hp <= 0)
+                    if (hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                    {
+                        return; // do not reapply the same value
+                    }
+
+                    __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
+
+                    if (hpComp.Hp <= 0)
+                    {
+                        var events = BUS_EventCollectionCS.Get(__instance.Owner);
+                        GameLoopPatch.QueueOnGameThread(() =>
                         {
-                            var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                            GameLoopPatch.QueueOnGameThread(() =>
-                            {
-                                events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-                                BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
-                            }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
-                        }
+                            events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
+                            var markerComp = client.GetEntityComponent<MarkerComponent>(entity.Value);
+                            BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
+                        }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
                     }
                 }
             }
@@ -243,26 +244,17 @@ namespace WukongApi.Patches
                     }
 
                     // monster was damaged
-                    var monster = client.GetMonsterByCharacter(owner as BGUCharacterCS);
-                    if (monster is { IsSynced: true })
+                    var entity = client.GetMonsterByCharacter(owner as BGUCharacterCS);
+                    if (entity.HasValue)
                     {
-                        if (!monster.Hp.Equals(result, Constants.FloatComparisonTolerance))
+                        if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
                         {
-                            monster.Hp = result;
-                            client.CacheMonsterProperty(monster.PeerId, AttrID.ToString(), result);
-
-                            if (result <= 0)
-                            {
-                                // remove dead monster from sync
-                                var events = BUS_EventCollectionCS.Get(monster.Pawn);
-                                GameLoopPatch.QueueOnGameThread(() =>
-                                {
-                                    events.Evt_UnitDead.Invoke(monster.Pawn, EDeadReason.SkillDamage);
-                                    BGU_UnrealWorldUtil.DestroyActor(monster.MarkerActor);
-                                }, "Evt_UnitDead");
-                            }
+                            return;
                         }
 
+                        ref var hpComp = ref client.GetEntityComponent<HpComponent>(entity.Value);
+
+                        hpComp.Hp = result;
                         return;
                     }
 
@@ -295,28 +287,6 @@ namespace WukongApi.Patches
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     client.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
                     client.CachePlayerAttribute(calc.finalVal, finalVal);
-                }
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnTickImpl")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchOnTickImpl
-    {
-        public static void Postfix(float DeltaTime, bool IsThreadTick, BUS_ABPHelperComp __instance)
-        {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
-
-            if (IsThreadTick)
-            {
-                var client = WukongMP.Instance.Client;
-                client.SetCachedPlayerProperties();
-
-                if (client.IsMasterClient)
-                {
-                    client.SendUpdatedMonsterProperties();
                 }
             }
         }
@@ -440,56 +410,46 @@ namespace WukongApi.Patches
                 else
                 {
                     // maybe it's a monster
-                    var monsterState = client.GetMonsterByCharacter(character);
+                    var entity = client.GetMonsterByCharacter(character);
 
-                    if (monsterState is { IsSynced: true })
+                    if (entity.HasValue)
                     {
-                        var id = monsterState.PeerId;
+                        if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
+                        {
+                            return;
+                        }
+
                         if (client.IsMasterClient)
                         {
-                            ref var anim = ref client.GetEntityComponent<CharacterAnimationComponent>(id);
-                            
+                            ref var anim = ref client.GetEntityComponent<AnimationComponent>(entity.Value);
                             anim.Velocity = __instance.Velocity.ToVector3();
+                            anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
 
-                            if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
-                            {
-                                anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
-                            }
-
-                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
-                            {
-                                monsterState.Location = __instance.ActorLocation;
-                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.Location), monsterState.Location);
-                            }
-
-                            if (!monsterState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
-                            {
-                                monsterState.Rotation = __instance.ActorRotation;
-                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.Rotation), monsterState.Rotation);
-                            }
-
-                            if (!monsterState.MaxSpeed.Equals(__instance.MaxSpeed, Constants.FloatComparisonTolerance))
-                            {
-                                monsterState.MaxSpeed = __instance.MaxSpeed;
-                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MaxSpeed), monsterState.MaxSpeed);
-                            }
+                            ref var trans = ref client.GetEntityComponent<TranslationComponent>(entity.Value);
+                            trans.Position = __instance.ActorLocation.ToVector3();
+                            trans.Rotation = __instance.ActorRotation.ToVector3();
                         }
                         else
                         {
-                            __instance.MaxSpeed = monsterState.MaxSpeed;
-                            __instance.Velocity = monsterState.Velocity;
-                            __instance.MoveAcceleration = monsterState.MoveAcceleration;
-                            __instance.MovementComp.Velocity = monsterState.Velocity;
+                            var anim = client.GetEntityComponent<AnimationComponent>(entity.Value);
+                            var tamer = client.GetEntityComponent<TamerComponent>(entity.Value);
 
-                            var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
+                            __instance.Velocity = anim.Velocity.ToFVector();
+                            __instance.MoveAcceleration = anim.MoveAcceleration.ToFVector();
+                            __instance.MovementComp.Velocity = anim.Velocity.ToFVector();
 
-                            if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                            var events = BUS_EventCollectionCS.Get(tamer.Pawn);
+
+                            var trans = client.GetEntityComponent<TranslationComponent>(entity.Value);
+                            var location = trans.Position.ToFVector();
+                            var rotation = trans.Rotation.ToFRotator();
+
+                            if (!location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
+                                !rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                             {
-                                events.Evt_InterpolationMove.Invoke(monsterState.Location, monsterState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                                events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                             }
                         }
-
-                        WukongMP.Instance.UpdateMonster(monsterState, DeltaTime);
                     }
                 }
             }
@@ -506,13 +466,14 @@ namespace WukongApi.Patches
                 return;
 
             var client = WukongMP.Instance.Client;
+
             if (Actor is BGUCharacterCS character)
             {
-                var monsterState = client.GetMonsterByCharacter(character);
-                if (monsterState != null)
+                var entity = client.GetMonsterByCharacter(character);
+                if (entity.HasValue)
                 {
                     Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
-                    WukongMP.Instance.CleanupMonster(monsterState);
+                    WukongMP.Instance.CleanupMonster(entity.Value);
                 }
 
                 var tamer = character.GetTamerOwner();
@@ -537,13 +498,15 @@ namespace WukongApi.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var character = client.GetMonsterByActor(owner);
-                if (character != null)
+                var entity = client.GetMonsterByActor(owner);
+                if (entity.HasValue)
                 {
                     if (SimpleState == EBGUSimpleState.Immobilizing)
                         return;
 
-                    client.SendUnitSimpleState(character.PeerId, SimpleState, IsRemove);
+                    var peerId = client.GetEntityComponent<PeerIdComponent>(entity.Value).PeerId;
+
+                    client.SendUnitSimpleState(peerId, SimpleState, IsRemove);
                     Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
                 }
             }
@@ -563,10 +526,12 @@ namespace WukongApi.Patches
             var owner = __instance.GetOwner();
             if (client.IsMasterClient)
             {
-                var character = client.GetMonsterByActor(owner);
-                if (character != null)
+                var entity = client.GetMonsterByActor(owner);
+                if (entity.HasValue)
                 {
-                    client.SendUnitStateTrigger(character.PeerId, Trigger, Time, NeedForceUpdate);
+                    var peerId = client.GetEntityComponent<PeerIdComponent>(entity.Value).PeerId;
+
+                    client.SendUnitStateTrigger(peerId, Trigger, Time, NeedForceUpdate);
                     Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
@@ -593,11 +558,11 @@ namespace WukongApi.Patches
             {
                 var owner = __instance.GetOwner();
                 var character = client.GetMonsterByActor(owner);
-                if (character != null && character.MotionMatchingState != MMState)
+
+                if (character.HasValue)
                 {
-                    character.MotionMatchingState = MMState;
-                    client.SendMotionMatchingState(character.PeerId, MMState);
-                    Logging.LogDebug("Motion matching state changed to {State} for {Actor}", MMState, owner.GetName());
+                    ref var monsterAnim = ref client.GetEntityComponent<MonsterAnimationComponent>(character.Value);
+                    monsterAnim.MotionMatchingState = (byte)MMState;
                 }
             }
         }

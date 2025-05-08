@@ -3,9 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using b1;
+using b1.ECS;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
@@ -18,8 +20,10 @@ using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.DataTransferObjects;
+using WukongApi.ECS;
 using WukongApi.State;
 using WukongApi.UI;
+using EntityManager = ReadyM.Relay.Common.ECS.EntityManager;
 using Player = ReadyM.Relay.Client.Player;
 using PlayerState = WukongApi.State.PlayerState;
 
@@ -85,7 +89,6 @@ namespace WukongApi
         public RoomStateProxy RoomState { get; }
 
         public readonly Dictionary<int, PlayerState> ConnectedPlayers = new();
-        public readonly Dictionary<int, MonsterState> SyncedMonsters = new();
 
         public IEnumerable<PlayerState> AllConnectedPlayers
             => ConnectedPlayers.Values.Append(LocalPlayerState);
@@ -96,17 +99,16 @@ namespace WukongApi
         public IEnumerable<PlayerState> AllPvPPlayers
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
-        public IEnumerable<CharacterState> AllPvPCharacters
-            => ConnectedPlayers.Values.Where(p => !p.IsSpectator).ToList<CharacterState>().Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]).Concat(SyncedMonsters.Values);
-
         public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<int> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
             LobbyManager = new LobbyManager(this);
             RelayClient = new RelayClient(
                 CmdLineParams.Instance.UserGuid,
-                CmdLineParams.Instance.ServerIp!,
-                CmdLineParams.Instance.ServerPort!.Value,
+                // CmdLineParams.Instance.ServerIp!,
+                // CmdLineParams.Instance.ServerPort!.Value,
+                "localhost",
+                9050,
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
             RoomState = new RoomStateProxy(RelayClient);
@@ -153,18 +155,29 @@ namespace WukongApi
                 : ConnectedPlayers.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
         }
 
-        public MonsterState? GetMonsterByActor(AActor? actor)
+        public EntityId? GetMonsterByActor(AActor? actor)
         {
             if (actor == null)
                 return null;
 
-            return SyncedMonsters.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
+            EntityId? entityId = null;
+            entityManager.RunSystem((EntityId entity, ref TamerComponent tamerComponent) =>
+            {
+                if (tamerComponent.Pawn == actor)
+                {
+                    entityId = entity;
+                }
+            });
+
+            return entityId;
         }
 
         public CharacterState? GetCharacterByActor(AActor? actor)
         {
             var characterState = GetPlayerByActor(actor);
-            return characterState == null ? GetMonsterByActor(actor) : characterState;
+            // return characterState == null ? GetMonsterByActor(actor) : characterState;
+            // TODO: Unify this
+            return characterState;
         }
 
         public PlayerState? GetPlayerById(int playerId)
@@ -174,20 +187,28 @@ namespace WukongApi
                 : ConnectedPlayers.GetValueOrDefault(playerId);
         }
 
-        public MonsterState? GetMonsterById(int monsterId)
-        {
-            return SyncedMonsters.GetValueOrDefault(monsterId);
-        }
-
         public CharacterState? GetCharacterById(int id)
         {
             var player = GetPlayerById(id);
-            return player == null ? GetMonsterById(id) : player;
+            return player;
+            // return player == null ? GetMonsterById(id) : player;
         }
 
-        public MonsterState? GetByTamerActor(BUTamerActor owner)
+        public EntityId? GetByTamerActor(BUTamerActor? owner)
         {
-            return SyncedMonsters.FirstOrDefault(x => x.Value!.Tamer == owner).Value;
+            if (owner == null)
+                return null;
+
+            EntityId? entityId = null;
+            entityManager.RunSystem((EntityId entity, ref TamerComponent tamerComponent) =>
+            {
+                if (tamerComponent.Tamer == owner)
+                {
+                    entityId = entity;
+                }
+            });
+
+            return entityId;
         }
 
         public void SetMasterClient(string newMasterName)
@@ -244,18 +265,26 @@ namespace WukongApi
             }
         }
 
-        public MonsterState? GetMonsterByCharacter(BGUCharacterCS? owner)
+        public EntityId? GetMonsterByCharacter(BGUCharacterCS? owner)
         {
             if (owner == null)
                 return null;
 
-            var kvp = SyncedMonsters.FirstOrDefault(x => x.Value!.Tamer?.GetMonster() == owner);
-            return kvp.Value;
+            EntityId? entityId = null;
+            entityManager.RunSystem((EntityId entity, ref TamerComponent tamerComponent) =>
+            {
+                if (tamerComponent.Tamer == owner)
+                {
+                    entityId = entity;
+                }
+            });
+
+            return entityId;
         }
 
-        public void RemoveSyncedMonster(MonsterState monster)
+        public void RemoveSyncedMonster(EntityId entity)
         {
-            SyncedMonsters.Remove(monster.PeerId);
+            entityManager.DestroyEntity(entity);
         }
 
         private void OnPingUpdated(int ping)
@@ -277,10 +306,9 @@ namespace WukongApi
                     var montData = RelayClient.DeserializeObject<MontageCallbackData>(reader);
                     OnMontageCallback?.Invoke(montData);
                     break;
-                case 3:
-                    // monster properties
-                    var packet = RelayClient.DeserializeObject<MonsterPropertiesPacket>(reader);
-                    ApplyMonsterMove(packet);
+                case (byte)SystemEvent.EcsUpdate:
+                    // Monster archetype ECS delta
+                    ApplyMonsterArchetypeDelta(reader);
                     break;
                 case 4:
                     // teleport finish
@@ -363,7 +391,7 @@ namespace WukongApi
                 case 19:
                     // state trigger
                     var stateTriggerData = RelayClient.DeserializeObject<StateTriggerData>(reader);
-                    OnStateTriggerSet?.Invoke(stateTriggerData.CharacterId, stateTriggerData.Trigger, stateTriggerData.Time, stateTriggerData.NeedForceUpdate);
+                    OnStateTriggerSet?.Invoke(stateTriggerData.EntityId, stateTriggerData.Trigger, stateTriggerData.Time, stateTriggerData.NeedForceUpdate);
                     break;
                 case 20:
                     // simple state
@@ -377,8 +405,8 @@ namespace WukongApi
                     break;
                 case 22:
                     // motion matching
-                    var motionaMatchingData = RelayClient.DeserializeObject<int[]>(reader);
-                    OnMotionMatchingChanged?.Invoke(motionaMatchingData[0], (EState_MM)motionaMatchingData[1]);
+                    var mmdata = RelayClient.DeserializeObject<int[]>(reader);
+                    OnMotionMatchingChanged?.Invoke(mmdata[0], (EState_MM)mmdata[1]);
                     break;
                 case 23:
                     // chat message received
@@ -528,21 +556,31 @@ namespace WukongApi
 
             // check if all players but one are dead
             var players = AllPvPPlayers.ToList();
-            var alivePlayers = players.Where(p => !p.IsDead).ToList<CharacterState>();
-            var aliveCharacters = alivePlayers.Concat(SyncedMonsters.Values.Where(m => !m.IsDead)).ToList();
-            var aliveCharactersTeams = aliveCharacters.Select(p => p.TeamId).Distinct().Count();
+            var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
+            
+            var aliveMonsters = new List<int>();
+            entityManager.RunSystem((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
+            {
+                if (hp.Hp <= 0)
+                    return;
 
-            var aliveTeams = aliveCharacters
-                .Select(character => character.TeamId)
+                aliveMonsters.Add(team.TeamId);
+            });
+            
+            var alivePlayersTeams = aliveTeamIds.Concat(aliveMonsters).ToList();
+
+            var aliveTeamCount = alivePlayersTeams.Distinct().Count();
+
+            var aliveTeamPlayers = alivePlayersTeams
                 .GroupBy(teamId => teamId)
                 .Select(group => new { TeamId = group.Key, Count = group.Count() })
                 .OrderByDescending(item => item.Count).ToList();
 
-            if (alivePlayers.Count == 0)
+            if (aliveTeamIds.Count == 0)
             {
                 Logging.LogInformation("All players are dead, ending round");
-                var aliveTeamId = aliveTeams.Count > 0 ? aliveTeams[0].TeamId : Constants.DrawTeamId;
-                if (aliveCharacters.Count == 0)
+                var aliveTeamId = aliveTeamPlayers.Count > 0 ? aliveTeamPlayers[0].TeamId : Constants.DrawTeamId;
+                if (alivePlayersTeams.Count == 0)
                 {
                     Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeamId)));
                 }
@@ -554,7 +592,7 @@ namespace WukongApi
                 return;
             }
 
-            if (aliveCharactersTeams == 1)
+            if (aliveTeamCount == 1)
             {
                 Logging.LogInformation("One team with alive players, ending round");
                 var winner = players.First(p => !p.IsDead);
@@ -623,7 +661,6 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
             RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
             RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
-            RelayClient.RegisterType(typeof(MonsterPropertiesPacket), MonsterPropertiesPacket.Serialize, MonsterPropertiesPacket.Deserialize);
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
@@ -713,13 +750,6 @@ namespace WukongApi
             const byte eventCode = 1;
             var evData = new UnitSpawnData(id, guid, unitName, teamId, x, y, z);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-        }
-
-        private void SpawnUnitForNewPlayer(int playerId, int id, string guid, string unitName, int teamId, float x, float y, float z)
-        {
-            const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, guid, unitName, teamId, x, y, z);
-            RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
         }
 
         public void SendMontageCallback(int characterId, UAnimMontage montage, float position, bool reset)
@@ -849,13 +879,6 @@ namespace WukongApi
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SendMotionMatchingState(int characterId, EState_MM MMState)
-        {
-            const byte eventCode = 22;
-            int[] evData = [characterId, (int)MMState];
-            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-        }
-
         public void SpawnSummon(int summonerId, int id, string guid, string unitName, int teamId)
         {
             const byte eventCode = 24;
@@ -887,28 +910,6 @@ namespace WukongApi
             RoomState.RoundWinners = [];
 
             Task.Run(LobbyManager.StartRoundAsync);
-        }
-
-        private void ApplyMonsterMove(MonsterPropertiesPacket packet)
-        {
-            foreach (var (key, value) in packet.Data)
-            {
-                var propName = (string)key;
-
-                if (!SyncedMonsters.TryGetValue(packet.Id, out var monsterState))
-                {
-                    Logging.LogDebug("Monster {Id} not found.", packet.Id);
-                    continue;
-                }
-
-                if (!MonsterSetters.TryGetValue(propName, out var setter))
-                {
-                    setter = CreateSetter<MonsterState>(propName);
-                    MonsterSetters[propName] = setter;
-                }
-
-                setter(monsterState, value);
-            }
         }
 
         private ConcurrentDictionary<string, object> _playerProperties = new();
@@ -1118,10 +1119,12 @@ namespace WukongApi
             _playerJoinedCallback.Invoke(playerId);
 
             // send current monsters to the new player 
-            foreach (var monsterState in SyncedMonsters.Values)
+            entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref PeerIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
             {
-                SpawnUnitForNewPlayer(playerId, monsterState.PeerId, monsterState.Guid, monsterState.UnitName, monsterState.TeamId, monsterState.Location.X, monsterState.Location.Y, monsterState.Location.Z);
-            }
+                const byte eventCode = 1;
+                var evData = new UnitSpawnData(netId.PeerId, tamer.Guid, tamer.UnitName, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
+                RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
+            });
         }
 
         private void OnPlayerLeftRoomHandler(int playerId)
@@ -1263,7 +1266,6 @@ namespace WukongApi
         }
 
         private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new();
-        private static readonly Dictionary<string, Action<MonsterState, object>> MonsterSetters = new();
 
         private static Action<T, object> CreateSetter<T>(string propertyName)
         {

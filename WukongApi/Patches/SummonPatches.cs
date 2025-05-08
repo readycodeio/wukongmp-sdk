@@ -5,6 +5,7 @@ using System;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using System.Collections.Generic;
+using ReadyM.Relay.Common.Wukong;
 using WukongApi.State;
 
 namespace WukongApi.Patches
@@ -38,6 +39,7 @@ namespace WukongApi.Patches
                     Logging.LogError("Requested and enqueued tamer servants have different classes");
                     return;
                 }
+
                 item.ServantTamerGuid = guid;
                 SpawnServant(id, guid, teamId, item.TamerTemplate, item.BornTransform, item, item.SafeClampToLand);
             }
@@ -54,15 +56,18 @@ namespace WukongApi.Patches
             {
                 return null;
             }
+
             if (BGWGameInstanceCS.TickingGameInstNetMode(world) == EGameInstNetMode.Client)
             {
                 return null;
             }
+
             BUTamerActor? bUTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, TamerClass.Value, InTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
             if (bUTamerActor == null)
             {
                 return null;
             }
+
             if (SafeClampToLand)
             {
                 FVector fVector = BGUFuncLibActorTransformCS.BGUGetActorLocation(bUTamerActor);
@@ -83,12 +88,12 @@ namespace WukongApi.Patches
             bUTamerActor.GetFinalGuid(true);
 
             Logging.LogDebug("Spawned servant: {TamerName}, with Guid {Guid}", bUTamerActor.GetName(), guid);
-            var monsterState = new MonsterState(id, guid, bUTamerActor, teamId, TamerClass.Value.PathName)
-            {
-                Location = InServantReq.BornTransform.GetLocation(),
-                Rotation = InServantReq.BornTransform.Rotator()
-            };
-            client.SyncedMonsters.Add(id, monsterState);
+
+            var entity = WukongMP.Instance.CreateMonster(id, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
+
+            ref var trans = ref client.GetEntityComponent<TranslationComponent>(entity);
+            trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();
+            trans.Rotation = InServantReq.BornTransform.Rotator().ToVector3();
 
             bUTamerActor.MarkAsServant();
             InServantReq.ServantTamerGuid = bUTamerActor.GetFinalGuid();
@@ -98,7 +103,7 @@ namespace WukongApi.Patches
             return guid;
         }
     }
-    
+
     //[HarmonyPatch(typeof(FSummonProcessor_Spawn), "RunProcessor")]
     //[HarmonyPatchCategory(Constants.GlobalPatches)]
     //public static class PatchSpawnRunProcessor
@@ -123,7 +128,7 @@ namespace WukongApi.Patches
     //        }
     //    }
     //}
-    
+
     //[HarmonyPatch(typeof(BGU_UnrealWorldUtil), nameof(BGU_UnrealWorldUtil.RequestSpawnServant))]
     //[HarmonyPatchCategory(Constants.GlobalPatches)]
     //public static class PatchRequestSpawnServant

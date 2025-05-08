@@ -33,15 +33,15 @@ namespace WukongApi
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FQuat ToFQuat(this Quaternion quaternion)
+        public static Vector3 ToVector3(this FRotator vector)
         {
-            return new FQuat(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
+            return new Vector3(vector.Pitch, vector.Roll, vector.Yaw);
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion ToQuaternion(this FQuat quaternion)
+        public static FRotator ToFRotator(this Vector3 vector)
         {
-            return new Quaternion(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
+            return new FRotator(vector.X, vector.Y, vector.Z);
         }
     }
 }

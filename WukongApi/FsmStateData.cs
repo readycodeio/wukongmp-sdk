@@ -7,9 +7,9 @@ namespace WukongApi
         public int CharacterId { get; } = characterId;
         public string FsmStateName { get; } = fsmStateName;
 
-        public static void Serialize(NetDataWriter outStream, object unitSpawnData)
+        public static void Serialize(NetDataWriter outStream, object fsmStateData)
         {
-            var spawnData = (FsmStateData)unitSpawnData;
+            var spawnData = (FsmStateData)fsmStateData;
             outStream.Put(spawnData.CharacterId);
             outStream.Put(spawnData.FsmStateName);
         }

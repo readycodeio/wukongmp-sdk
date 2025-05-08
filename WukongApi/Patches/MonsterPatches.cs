@@ -2,8 +2,10 @@
 using System.Reflection;
 using b1;
 using HarmonyLib;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Runtime;
-using WukongApi.State;
+using WukongApi.ECS;
 
 namespace WukongApi.Patches
 {
@@ -26,59 +28,46 @@ namespace WukongApi.Patches
 
             if (client.IsMasterClient)
             {
-                foreach (var (id, state) in client.SyncedMonsters)
+                client.entityManager.RunSystem((
+                    EntityId _,
+                    ref TamerComponent tamer,
+                    ref TranslationComponent trans
+                ) =>
                 {
-                    // sync location
-                    if (!state.IsSynced)
-                        continue;
+                    if (!tamer.IsSynced || !tamer.IsTamerValid)
+                        return;
 
-                    if (!state.IsTamerValid)
-                        continue;
-
-                    if (state.Tamer == null)
-                    {
-                        Logging.LogError("Monster tamer is null");
-                        continue;
-                    }
-
-                    var location = state.Tamer.GetActorLocation();
-                    if (!location.Equals(state.Location, Constants.FloatComparisonTolerance))
-                    {
-                        state.Location = location;
-                        client.CacheMonsterProperty(id, nameof(MonsterState.Location), state.Location);
-                    }
-
-                    var rotation = state.Tamer.GetActorRotation();
-                    if (!rotation.Equals(state.Rotation, Constants.FloatComparisonTolerance))
-                    {
-                        state.Rotation = rotation;
-                        client.CacheMonsterProperty(id, nameof(MonsterState.Rotation), state.Rotation);
-                    }
-                }
+                    trans.Position = tamer.Tamer!.GetActorLocation().ToVector3();
+                    trans.Rotation = tamer.Tamer.GetActorRotation().ToVector3();
+                });
             }
             else
             {
-                foreach (var state in client.SyncedMonsters.Values)
+                client.entityManager.RunSystem((
+                    EntityId _,
+                    ref TamerComponent tamer,
+                    ref TranslationComponent trans
+                ) =>
                 {
-                    if (!state.IsTamerValid || !state.IsSynced)
-                        continue;
+                    if (!tamer.IsTamerValid || !tamer.IsSynced)
+                        return;
 
-                    var events = BUS_EventCollectionCS.Get(state.Tamer);
+                    var events = BUS_EventCollectionCS.Get(tamer.Tamer);
 
                     if (events == null)
-                        continue;
+                        return;
 
-                    if (state.Tamer == null)
-                    {
-                        Logging.LogError("Monster tamer is null");
-                        continue;
-                    }
+                    var pos = trans.Position.ToFVector();
+                    var rot = trans.Rotation.ToFRotator();
 
-                    if (!state.Location.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !state.Location.Equals(state.Tamer.GetActorLocation(), Constants.FloatComparisonTolerance))
+                    if (!pos.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !pos.Equals(tamer.Tamer!.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(state.Location, state.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
+                        GameLoopPatch.QueueOnGameThread(() =>
+                        {
+                            events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        });
                     }
-                }
+                });
             }
         }
     }
@@ -266,11 +255,16 @@ namespace WukongApi.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var character = client.GetMonsterByActor(owner);
-                if (character != null && character.Pawn != null && !BGU_CommonUtil.IsInFsmState(character.Pawn, EventTag))
+                var entity = client.GetMonsterByActor(owner);
+                if (entity != null)
                 {
-                    Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
-                    client.SendTriggerFsmState(character.PeerId, EventTag);
+                    var tamerComp = client.GetEntityComponent<TamerComponent>(entity.Value);
+                    if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
+                    {
+                        Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
+                        var netPeer = client.GetEntityComponent<PeerIdComponent>(entity.Value).PeerId;
+                        client.SendTriggerFsmState(netPeer, EventTag);
+                    }
                 }
             }
 
@@ -282,7 +276,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchMovementTickForMonstere
     {
-        public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem __instance, BUC_MovementData ___MovementData)
+        public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem? __instance, BUC_MovementData ___MovementData)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -305,22 +299,23 @@ namespace WukongApi.Patches
 
             var client = WukongMP.Instance.Client;
 
-            var monsterState = client.GetMonsterByCharacter(character);
-            if (monsterState is { IsSynced: true })
+            var entity = client.GetMonsterByCharacter(character);
+            if (entity.HasValue)
             {
+                ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entity.Value);
+                
+                if (!tamerComp.IsTamerValid)
+                    return;
+                
+                ref var anim = ref client.GetEntityComponent<MonsterAnimationComponent>(entity.Value);
                 if (client.IsMasterClient)
                 {
-                    if (monsterState.MoveAiType != ___MovementData.MoveAIType)
-                    {
-                        monsterState.MoveAiType = ___MovementData.MoveAIType;
-                        Logging.LogDebug("Move AI type changed to {State} for {Actor}", monsterState.MoveAiType, owner.GetName());
-                        client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveAiType), monsterState.MoveAiType);
-                    }
+                    anim.MoveAiType = (byte)___MovementData.MoveAIType;
                 }
                 else
                 {
-                    var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
-                    events.Evt_SwitchMoveAIType.Invoke(monsterState.MoveAiType);
+                    var events = BUS_EventCollectionCS.Get(tamerComp.Pawn);
+                    events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
                 }
             }
         }

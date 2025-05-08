@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
+using WukongApi.ECS;
 using WukongApi.State;
 
 namespace WukongApi
@@ -84,35 +87,38 @@ namespace WukongApi
             var guid = BGU_DataUtil.GetActorGuid(monster);
 
             // register if not present
-            var monsterState = client.GetByTamerActor(tamer);
+            var entity = client.GetByTamerActor(tamer);
 
-            if (monsterState == null)
+            if (!entity.HasValue)
             {
                 //monsterState = new MonsterState(guid, tamer);
                 //client.SyncedMonsters.Add(guid, monsterState);
                 Logging.LogWarning("Local monster not registered: {MonsterGuid}", guid);
                 return;
             }
+            
             // sanity check guid
 
-            if (monsterState.Guid != guid)
+            ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entity.Value);
+
+            if (tamerComp.Guid != guid)
             {
-                Logging.LogError("Guid mismatch: {Guid1} != {Guid2}", monsterState.Guid, guid);
+                Logging.LogError("Guid mismatch: {Guid1} != {Guid2}", tamerComp.Guid, guid);
                 return;
             }
 
-            if (!monsterState.IsSynced)
+            if (!tamerComp.IsSynced)
             {
                 // notify other clients
                 client.SendMonsterWakeUp(guid);
-                PrepareMonsterForSync(client, monsterState);
+                PrepareMonsterForSync(client, entity.Value, ref tamerComp);
             }
         }
 
         /// <summary>
         /// Prepare a monster for syncing.
         /// </summary>
-        public static void PrepareMonsterForSync(WukongClient client, MonsterState monsterState)
+        public static void PrepareMonsterForSync(WukongClient client, EntityId entity, ref TamerComponent monsterState)
         {
             if (monsterState.IsSynced)
             {
@@ -131,7 +137,7 @@ namespace WukongApi
 
             // set monster hp
             var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
-            monsterState.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+            client.GetEntityComponent<HpComponent>(entity).Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
 
             var events = BUS_EventCollectionCS.Get(monsterState.Tamer);
             if (events == null)
@@ -154,7 +160,8 @@ namespace WukongApi
                 Logging.LogDebug("Tamer actor disabled.");
             }
 
-            RegisterNewPlayerTeam(monster, monsterState.TeamId);
+            var teamId = client.GetEntityComponent<TeamComponent>(entity).TeamId;
+            RegisterNewPlayerTeam(monster, teamId);
 
             // at this point the monster exists, so we set IsSpawned
             monsterState.IsSynced = true;

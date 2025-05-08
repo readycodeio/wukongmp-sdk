@@ -18,7 +18,7 @@ if (!(Test-Path -Path $destDir)) {
 }
 
 # Define the files to copy
-$files = @("WukongApi.dll", "WukongMpMod.dll", "ReadyM.Relay.Client.dll", "ReadyM.Relay.Common.dll")
+$files = @("WukongApi.dll", "WukongMpMod.dll", "ReadyM.Relay.Client.dll", "ReadyM.Relay.Common.dll", "ReadyM.Relay.Common.Wukong.dll")
 
 # Copy each file to the destination directory
 foreach ($file in $files) {

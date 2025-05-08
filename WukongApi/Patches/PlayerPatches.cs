@@ -4,6 +4,7 @@ using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
+using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
@@ -251,31 +252,23 @@ namespace WukongApi.Patches
                 }
                 else
                 {
-                    var monsterState = client.GetMonsterByCharacter(character);
+                    var entity = client.GetMonsterByCharacter(character);
 
-                    if (monsterState == null)
+                    if (!entity.HasValue)
                         return; // unsynced entity
+
+                    ref var anim = ref client.GetEntityComponent<AnimationComponent>(entity.Value);
 
                     if (client.IsMasterClient)
                     {
-                        // send monster speed data
-                        if (monsterState.MoveSpeedLevel != __instance.MoveSpeedLevel)
-                        {
-                            monsterState.MoveSpeedLevel = __instance.MoveSpeedLevel;
-                            client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveSpeedLevel), monsterState.MoveSpeedLevel);
-                        }
-
-                        if (monsterState.MoveSpeedState != __instance.MoveSpeedState)
-                        {
-                            monsterState.MoveSpeedState = __instance.MoveSpeedState;
-                            client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveSpeedState), monsterState.MoveSpeedState);
-                        }
+                        anim.MoveSpeedLevel = (byte)__instance.MoveSpeedLevel;
+                        anim.MoveSpeedState = (byte)__instance.MoveSpeedState;
                     }
                     else
                     {
                         // apply monster speed data
-                        __instance.MoveSpeedLevel = monsterState.MoveSpeedLevel;
-                        __instance.MoveSpeedState = monsterState.MoveSpeedState;
+                        __instance.MoveSpeedLevel = (EMoveSpeedLevel)anim.MoveSpeedLevel;
+                        __instance.MoveSpeedState = (EMoveSpeedLevel)anim.MoveSpeedState;
                     }
                 }
             }
@@ -499,12 +492,15 @@ namespace WukongApi.Patches
             if (!client.IsMasterClient)
                 return false;
 
-            var monster = client.GetMonsterByActor(owner);
-            if (monster != null)
+            var entityId = client.GetMonsterByActor(owner);
+            if (entityId.HasValue)
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
-                client.SendTarget(monster.PeerId, newTargetId, clearTarget);
+                
+                var peerId = client.GetEntityComponent<PeerIdComponent>(entityId.Value).PeerId;
+                client.SendTarget(peerId, newTargetId, clearTarget);
             }
+
             return true;
         }
     }

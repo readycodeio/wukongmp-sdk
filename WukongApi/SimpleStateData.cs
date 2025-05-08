@@ -1,5 +1,7 @@
 ﻿using b1;
 using LiteNetLib.Utils;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Protocol;
 
 namespace WukongApi
 {
