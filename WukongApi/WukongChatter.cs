@@ -158,13 +158,13 @@ namespace WukongApi
             _wukongClient.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
         }
 
-        public void OnGetMessage(ChatMessage message)
+        public static void OnGetMessage(ChatMessage message)
         {
             var senderNickname = message.IsServer ? "Server" : message.Nickname!;
             var translatedMessage = message.Message;
             if (message.IsServer)
             {
-                translatedMessage = string.Format(Resources.Texts.ResourceManager.GetString(message.Message, Resources.Texts.Culture), [.. message.Placeholders]);
+                translatedMessage = string.Format(Resources.Texts.ResourceManager.GetString(message.Message, Resources.Texts.Culture)!, [.. message.Placeholders]);
             }
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
             ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);

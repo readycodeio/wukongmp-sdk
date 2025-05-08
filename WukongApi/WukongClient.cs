@@ -11,8 +11,10 @@ using BtlShare;
 using CSharpModBase;
 using LiteNetLib;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
+using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.DataTransferObjects;
@@ -23,12 +25,9 @@ using PlayerState = WukongApi.State.PlayerState;
 
 namespace WukongApi
 {
-    public sealed class WukongClient
+    public sealed partial class WukongClient
     {
         public readonly RelayClient RelayClient;
-
-        private const char MonsterHashtableKeySeparator = ';';
-
         private int PeerId => RelayClient.LocalPlayer.PeerId; // is -1 before joining room
         public bool IsMasterClient => RoomState.MasterClientId == PeerId;
         public bool ConnectedAndInRoom => RelayClient.InRoom;
@@ -100,7 +99,7 @@ namespace WukongApi
         public IEnumerable<CharacterState> AllPvPCharacters
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).ToList<CharacterState>().Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]).Concat(SyncedMonsters.Values);
 
-        public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoindRoom, Action<int> playerJoinedCallback)
+        public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<int> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
             LobbyManager = new LobbyManager(this);
@@ -111,9 +110,12 @@ namespace WukongApi
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
             RoomState = new RoomStateProxy(RelayClient);
+            entityManager = new EntityManager();
+
+            DefineEcs();
 
             _beforeJoinedRoomCallback = onBeforeJoinedRoom;
-            _afterJoinedRoomCallback = onAfterJoindRoom;
+            _afterJoinedRoomCallback = onAfterJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
 
             ConfigureRelay();
@@ -381,7 +383,7 @@ namespace WukongApi
                 case 23:
                     // chat message received
                     var chatMessage = RelayClient.DeserializeObject<ChatMessage>(reader);
-                    WukongChat.OnGetMessage(chatMessage);
+                    WukongChatter.OnGetMessage(chatMessage);
                     break;
                 case 24:
                     // spawn summon
@@ -975,55 +977,6 @@ namespace WukongApi
             Logging.LogDebug("Sending remote player property: {Property} = {Value}", key, value);
 
             RelayClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
-        }
-
-        private ConcurrentDictionary<(int, string), object> _monsterProperties = new();
-
-        private ConcurrentDictionary<(int, string), object> _monsterPropertiesRo = new();
-
-        private readonly object _monsterPropertiesLock = new();
-
-        public void SendUpdatedMonsterProperties()
-        {
-            lock (_monsterPropertiesLock)
-            {
-                (_monsterProperties, _monsterPropertiesRo) = (_monsterPropertiesRo, _monsterProperties);
-
-                if (_monsterPropertiesRo.Count == 0)
-                    return;
-
-                Dictionary<int, Dictionary<object, object>> hashtables = new();
-
-                foreach (var (key, value) in _monsterPropertiesRo)
-                {
-                    if (!hashtables.TryGetValue(key.Item1, out var hash))
-                    {
-                        hash = new Dictionary<object, object>();
-                        hashtables[key.Item1] = hash;
-                    }
-
-                    hash[key.Item2] = value;
-                }
-
-                foreach (var (id, data) in hashtables)
-                {
-                    const byte eventCode = 3;
-                    var packet = new MonsterPropertiesPacket(id, data);
-                    RelayClient.OpRaiseEvent(eventCode, packet, RelayMode.Others, DeliveryMethod.Unreliable);
-                }
-
-                _monsterPropertiesRo.Clear();
-            }
-        }
-
-        public void CacheMonsterProperty(int id, string prop, object value)
-        {
-            _monsterProperties[(id, prop)] = value;
-
-            if (value is not (FVector or FRotator))
-            {
-                Logging.LogDebug("Set monster property [{Guid}]: {Property} = {Value}", id, prop, value);
-            }
         }
 
         private void SubscribeToPlayerEvents()

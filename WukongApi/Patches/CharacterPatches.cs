@@ -1,6 +1,8 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.State;
@@ -298,6 +300,28 @@ namespace WukongApi.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnTickImpl")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnTickImpl
+    {
+        public static void Postfix(float DeltaTime, bool IsThreadTick, BUS_ABPHelperComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            if (IsThreadTick)
+            {
+                var client = WukongMP.Instance.Client;
+                client.SetCachedPlayerProperties();
+
+                if (client.IsMasterClient)
+                {
+                    client.SendUpdatedMonsterProperties();
+                }
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchCharacterAnimation
@@ -420,18 +444,16 @@ namespace WukongApi.Patches
 
                     if (monsterState is { IsSynced: true })
                     {
+                        var id = monsterState.PeerId;
                         if (client.IsMasterClient)
                         {
-                            if (!monsterState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
-                            {
-                                monsterState.Velocity = __instance.Velocity;
-                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.Velocity), monsterState.Velocity);
-                            }
+                            ref var anim = ref client.GetEntityComponent<CharacterAnimationComponent>(id);
+                            
+                            anim.Velocity = __instance.Velocity.ToVector3();
 
                             if (!monsterState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                             {
-                                monsterState.MoveAcceleration = __instance.MoveAcceleration;
-                                client.CacheMonsterProperty(monsterState.PeerId, nameof(MonsterState.MoveAcceleration), monsterState.MoveAcceleration);
+                                anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
                             }
 
                             if (!monsterState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))

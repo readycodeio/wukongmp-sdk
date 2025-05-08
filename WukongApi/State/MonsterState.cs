@@ -1,10 +1,12 @@
 ﻿using System;
 using b1;
+using ReadyM.Relay.Common.ECS;
 
 namespace WukongApi.State
 {
     public class MonsterState : CharacterState
     {
+        public EntityId EntityId { get; }
         public string Guid { get; }
         public string UnitName { get; }
 
@@ -50,6 +52,7 @@ namespace WukongApi.State
             Guid = guid;
             _tamer = tamer;
             UnitName = unitName;
+            EntityId = WukongMP.Instance.Client.RegisterMonster(id);
 
             var monster = tamer.GetMonster();
             if (!monster.IsNullOrDestroyed())

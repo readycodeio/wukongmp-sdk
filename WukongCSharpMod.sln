@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Client", "read
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common", "readym-gameserver\src\ReadyM.Relay.Common\ReadyM.Relay.Common.csproj", "{3FE0896E-45E6-4698-B620-FA532B53D7EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common.Wukong", "readym-gameserver\src\ReadyM.Relay.Common.Wukong\ReadyM.Relay.Common.Wukong.csproj", "{D08A4198-D19A-419C-A942-CA084974DC73}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common.Generators", "readym-gameserver\src\ReadyM.Relay.Common.Generators\ReadyM.Relay.Common.Generators.csproj", "{5741AB77-F3C2-4786-9D6A-A081188224B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D08A4198-D19A-419C-A942-CA084974DC73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D08A4198-D19A-419C-A942-CA084974DC73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D08A4198-D19A-419C-A942-CA084974DC73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D08A4198-D19A-419C-A942-CA084974DC73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5741AB77-F3C2-4786-9D6A-A081188224B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5741AB77-F3C2-4786-9D6A-A081188224B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5741AB77-F3C2-4786-9D6A-A081188224B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5741AB77-F3C2-4786-9D6A-A081188224B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

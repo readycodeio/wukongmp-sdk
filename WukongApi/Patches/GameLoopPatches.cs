@@ -171,6 +171,7 @@ namespace WukongApi.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 ComponentMonitorManager.Instance.Update();
+                WukongMP.Instance.Client.RunTickSystems();
             }
 
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
