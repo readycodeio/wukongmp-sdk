@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
 using LiteNetLib;
@@ -49,6 +49,8 @@ public sealed partial class WukongClient
 
     private void CheckMonsterDeath()
     {
+        List<EntityId> deadEntities = [];
+
         entityManager.RunSystem((
             EntityId entityId,
             ref HpComponent hpComp,
@@ -60,6 +62,7 @@ public sealed partial class WukongClient
             {
                 Logging.LogDebug("Monster {Id} died", entityId);
                 localDeath.killed = true;
+                deadEntities.Add(entityId);
 
                 var pawn = tamer.Pawn;
                 var markerActor = marker.MarkerActor;
@@ -72,6 +75,18 @@ public sealed partial class WukongClient
                 }, "Evt_UnitDead");
             }
         });
+
+        foreach (var deadEntity in deadEntities)
+        {
+            if (entityManager.DestroyEntity(deadEntity))
+            {
+                Logging.LogDebug("Monster {Id} removed from ECS", deadEntity);
+            }
+            else
+            {
+                Logging.LogError("Monster already removed from ECS {Id}", deadEntity);
+            }
+        }
     }
 
     public EntityId RegisterMonster()
@@ -88,7 +103,7 @@ public sealed partial class WukongClient
     {
         entityManager.RunSystem((EntityId _,
             ref TamerComponent tamer,
-            ref MarkerComponent marker, 
+            ref MarkerComponent marker,
             ref TranslationComponent trans) =>
         {
             if (marker.MarkerActor == null)

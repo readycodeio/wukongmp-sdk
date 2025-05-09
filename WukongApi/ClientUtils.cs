@@ -96,7 +96,7 @@ namespace WukongApi
                 Logging.LogWarning("Local monster not registered: {MonsterGuid}", guid);
                 return;
             }
-            
+
             // sanity check guid
 
             ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entity.Value);
@@ -118,7 +118,7 @@ namespace WukongApi
         /// <summary>
         /// Prepare a monster for syncing.
         /// </summary>
-        public static void PrepareMonsterForSync(WukongClient client, EntityId entity, ref TamerComponent monsterState)
+        private static void PrepareMonsterForSync(WukongClient client, EntityId entity, ref TamerComponent monsterState)
         {
             if (monsterState.IsSynced)
             {
@@ -137,7 +137,9 @@ namespace WukongApi
 
             // set monster hp
             var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
-            client.GetEntityComponent<HpComponent>(entity).Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+            
+            ref var hpComp = ref client.GetEntityComponent<HpComponent>(entity);
+            hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
 
             var events = BUS_EventCollectionCS.Get(monsterState.Tamer);
             if (events == null)
@@ -145,12 +147,14 @@ namespace WukongApi
                 Logging.LogError("events are null");
                 return;
             }
+
             IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(monsterState.Pawn);
             if (mmData == null)
             {
                 Logging.LogError("motion matching data is null");
                 return;
             }
+
             events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
 
             if (!client.IsMasterClient)
@@ -165,6 +169,7 @@ namespace WukongApi
 
             // at this point the monster exists, so we set IsSpawned
             monsterState.IsSynced = true;
+            Logging.LogDebug("Monster {Guid} synced", monsterState.Guid);
         }
     }
 }

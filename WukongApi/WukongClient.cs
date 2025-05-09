@@ -283,11 +283,6 @@ namespace WukongApi
             return entityId;
         }
 
-        public void RemoveSyncedMonster(EntityId entity)
-        {
-            entityManager.DestroyEntity(entity);
-        }
-
         private void OnPingUpdated(int ping)
         {
             PingIndicatorWidget.Instance.SetPingValue(ping);

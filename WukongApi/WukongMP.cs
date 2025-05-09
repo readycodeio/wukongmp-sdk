@@ -1249,11 +1249,10 @@ namespace WukongApi
 
             ref var netIdComp = ref Client.GetEntityComponent<PeerIdComponent>(id);
             netIdComp.PeerId = peerId;
-            
+
             Client.entityManager.AssociatePeerIdWithEntity(peerId, id);
 
             ref var tamerComp = ref Client.GetEntityComponent<TamerComponent>(id);
-
             tamerComp.Tamer = tamer;
             tamerComp.Guid = guid;
             tamerComp.UnitName = unitName;
@@ -1308,7 +1307,7 @@ namespace WukongApi
         public void DestroyMonster(EntityId entity)
         {
             var tamerComp = Client.GetEntityComponent<TamerComponent>(entity);
-            
+
             if (tamerComp.Tamer == null)
             {
                 return;
@@ -1323,20 +1322,20 @@ namespace WukongApi
             }
 
             BGU_UnrealWorldUtil.DestroyActor(tamerComp.Tamer);
-            
+
             CleanupMonster(entity);
         }
 
         public void CleanupMonster(EntityId entity)
         {
             var markerComp = Client.GetEntityComponent<MarkerComponent>(entity);
-            
+
             if (markerComp.MarkerActor != null)
             {
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
-            Client.RemoveSyncedMonster(entity);
+            Client.entityManager.DestroyEntity(entity);
         }
 
         private void OnBeforeJoinedRoomCallback()

@@ -100,7 +100,10 @@ namespace WukongApi.Patches
 
                     Logging.LogDebug("Applying unit dead for player {PlayerId}", client.LocalPlayerState.PeerId);
 
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    GameLoopPatch.QueueOnGameThread(() =>
+                    {
+                        events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
+                    }, "Evt_UnitDead");
                 }
             }
             else
@@ -146,7 +149,10 @@ namespace WukongApi.Patches
                         }
 
                         Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PeerId);
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                        GameLoopPatch.QueueOnGameThread(() =>
+                        {
+                            events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
+                        }, "Evt_UnitDead");
                     }
                 }
                 else
@@ -168,17 +174,6 @@ namespace WukongApi.Patches
                     }
 
                     __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-
-                    if (hpComp.Hp <= 0)
-                    {
-                        var events = BUS_EventCollectionCS.Get(__instance.Owner);
-                        GameLoopPatch.QueueOnGameThread(() =>
-                        {
-                            events.Evt_UnitDead.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-                            var markerComp = client.GetEntityComponent<MarkerComponent>(entity.Value);
-                            BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
-                        }, "Evt_UnitDead"); // TODO: Sync other dead reasons?
-                    }
                 }
             }
         }
@@ -249,6 +244,7 @@ namespace WukongApi.Patches
                     {
                         if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
                         {
+                            Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
                             return;
                         }
 
