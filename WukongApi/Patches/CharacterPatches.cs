@@ -163,7 +163,9 @@ namespace WukongApi.Patches
 
                     if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
                     {
-                        return;
+                        Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
+                        // TODO: Rethink "IsSynced"
+                        // return;
                     }
 
                     var hpComp = client.GetEntityComponent<HpComponent>(entity.Value);
