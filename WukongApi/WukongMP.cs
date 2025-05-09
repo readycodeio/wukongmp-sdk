@@ -1753,7 +1753,7 @@ namespace WukongApi
 
             var teamIdComp = Client.GetEntityComponent<TeamComponent>(entity);
             var nameComp = Client.GetEntityComponent<NicknameComponent>(entity);
-            var markerComp = Client.GetEntityComponent<MarkerComponent>(entity);
+            ref var markerComp = ref Client.GetEntityComponent<MarkerComponent>(entity);
 
             var teamName = GameUtils.GetTeamName(teamIdComp.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamName}", true);

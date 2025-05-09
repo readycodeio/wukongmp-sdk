@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Numerics;
+using b1;
 using BtlShare;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -84,7 +85,7 @@ public sealed partial class WukongClient
 
     private void UpdateMarkerPositions()
     {
-        entityManager.RunSystem((EntityId _, ref TamerComponent tamer, ref MarkerComponent marker) =>
+        entityManager.RunSystem((EntityId _, ref TamerComponent tamer, ref MarkerComponent marker, ref TranslationComponent trans) =>
         {
             if (marker.MarkerActor == null)
                 return;
@@ -95,8 +96,8 @@ public sealed partial class WukongClient
                 return;
             }
 
-            var markerHeight = tamer.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
-            marker.MarkerActor.SetActorLocation(tamer.Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out var _, true);
+            var markerHeight = tamer.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
+            marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
         });
     }
 
@@ -158,12 +159,14 @@ public sealed partial class WukongClient
 
             if (entity.HasValue)
             {
-                var animation = GetEntityComponent<AnimationComponent>(entity.Value);
-                var health = GetEntityComponent<HpComponent>(entity.Value);
-                var monsterAnimation = GetEntityComponent<MonsterAnimationComponent>(entity.Value);
-                var nickname = GetEntityComponent<NicknameComponent>(entity.Value);
-                var team = GetEntityComponent<TeamComponent>(entity.Value);
-                var translation = GetEntityComponent<TranslationComponent>(entity.Value);
+                Logging.LogDebug("Received delta for peer {Peer}", peerId);
+
+                ref var animation = ref GetEntityComponent<AnimationComponent>(entity.Value);
+                ref var health = ref GetEntityComponent<HpComponent>(entity.Value);
+                ref var monsterAnimation = ref GetEntityComponent<MonsterAnimationComponent>(entity.Value);
+                ref var nickname = ref GetEntityComponent<NicknameComponent>(entity.Value);
+                ref var team = ref GetEntityComponent<TeamComponent>(entity.Value);
+                ref var translation = ref GetEntityComponent<TranslationComponent>(entity.Value);
 
                 animation.ReadDelta(RelayClient, reader);
                 health.ReadDelta(RelayClient, reader);

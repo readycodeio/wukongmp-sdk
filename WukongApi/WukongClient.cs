@@ -137,6 +137,7 @@ namespace WukongApi
             RelayClient.OnDisconnected -= OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined -= OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft -= OnPlayerLeftRoomHandler;
+            RelayClient.OnEcsDelta -= ApplyMonsterArchetypeDelta;
         }
 
         public void RegisterPlayer(PlayerState state)
@@ -305,10 +306,6 @@ namespace WukongApi
                     // montage callback
                     var montData = RelayClient.DeserializeObject<MontageCallbackData>(reader);
                     OnMontageCallback?.Invoke(montData);
-                    break;
-                case (byte)SystemEvent.EcsUpdate:
-                    // Monster archetype ECS delta
-                    ApplyMonsterArchetypeDelta(reader);
                     break;
                 case 4:
                     // teleport finish
@@ -671,6 +668,7 @@ namespace WukongApi
             RelayClient.OnDisconnected += OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
+            RelayClient.OnEcsDelta += ApplyMonsterArchetypeDelta;
         }
 
         public void StartClient()
