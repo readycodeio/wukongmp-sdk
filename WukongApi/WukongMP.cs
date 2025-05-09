@@ -615,88 +615,88 @@ namespace WukongApi
 
         private void OnStateTriggerSet(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
         {
-            var characterState = Client.GetCharacterById(characterId);
-            if (characterState == null)
+            var pawn = Client.GetPawnByPeerId(characterId);
+            if (pawn == null)
             {
                 LogNullCharacter(characterId);
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+            var events = BUS_EventCollectionCS.Get(pawn);
 
             if (events == null)
             {
-                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                Logging.LogError("Failed to get event collection for pawn {PathName}", pawn.PathName);
                 return;
             }
 
-            Logging.LogTrace("Applying state trigger: {Trigger} for player {Player}", trigger, characterState.NickName);
             events.Evt_UnitStateTrigger.Invoke(trigger, time, needForceUpdate);
         }
 
         private void OnSimpleStateSet(int characterId, EBGUSimpleState state, bool isForce)
         {
-            var characterState = Client.GetCharacterById(characterId);
-            if (characterState == null)
+            var pawn = Client.GetPawnByPeerId(characterId);
+            if (pawn == null)
             {
                 LogNullCharacter(characterId);
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+            var events = BUS_EventCollectionCS.Get(pawn);
 
             if (events == null)
             {
-                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                Logging.LogError("Failed to get event collection for pawn {PathName}", pawn.PathName);
                 return;
             }
 
-            Logging.LogTrace("Setting simple state: {State}, with isRemove {Remove} for player {Player}", state, isForce, characterState.NickName);
+            Logging.LogTrace("Setting simple state: {State}, with isRemove {Remove} for pawn {PathName}", state, isForce, pawn.PathName);
             events.Evt_UnitSetSimpleState.Invoke(state, isForce);
         }
 
         private void OnFsmStateSet(int characterId, string eventName)
         {
-            var characterState = Client.GetCharacterById(characterId);
-            if (characterState == null)
+            var pawn = Client.GetPawnByPeerId(characterId);
+            if (pawn == null)
             {
                 LogNullCharacter(characterId);
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(characterState.Pawn);
+            var events = BUS_EventCollectionCS.Get(pawn);
 
             if (events == null)
             {
-                Logging.LogError("Failed to get event collection for character {Nickname}", characterState.NickName);
+                Logging.LogError("Failed to get event collection for character {Pawn}", pawn.PathName);
                 return;
             }
 
-            Logging.LogTrace("Triggering fsm event: {Event}, for player {Player}", eventName, characterState.NickName);
+            Logging.LogTrace("Triggering fsm event: {Event}, for player {Player}", eventName, pawn.PathName);
             events.Evt_TriggerFsmEvent.Invoke(eventName.MakeGameplayTag());
         }
 
+        // TODO: System, this is not called anywhere
         private void OnMotionMatchingChanged(int characterId, EState_MM motionMatchingState)
         {
-            // var monsterState = Client.GetMonsterById(characterId);
-            // if (monsterState == null)
-            // {
-            //     LogNullCharacter(characterId);
-            //     return;
-            // }
-            //
-            // monsterState.MotionMatchingState = motionMatchingState;
-            //
-            // var events = BUS_EventCollectionCS.Get(monsterState.Pawn);
-            //
-            // if (events == null)
-            // {
-            //     Logging.LogError("Failed to get event collection for character {Nickname}", monsterState.NickName);
-            //     return;
-            // }
-            //
-            // Logging.LogTrace("Changing motion matching to: {State}, for monster {Monster}", motionMatchingState, monsterState.NickName);
-            // events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
+            var entity = Client.entityManager.GetEntityByPeerId(characterId);
+            if (!entity.HasValue)
+            {
+                LogNullCharacter(characterId);
+                return;
+            }
+
+            var tamerComponent = Client.GetEntityComponent<TamerComponent>(entity.Value);
+            
+            var events = BUS_EventCollectionCS.Get(tamerComponent.Pawn);
+            
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for pawn {PathName}", tamerComponent.Pawn!.PathName);
+                return;
+            }
+            
+            Logging.LogTrace("Changing motion matching to: {State}, for monster {Monster}", motionMatchingState, tamerComponent.Pawn!.PathName);
+            events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
         }
 
         private void ExitPhantomRush(int playerId)
@@ -716,30 +716,30 @@ namespace WukongApi
 
         private void OnTargetSet(int playerId, int targetId, bool clearTarget)
         {
-            var characterState = Client.GetCharacterById(playerId);
-            if (characterState == null)
+            var pawn = Client.GetPawnByPeerId(playerId);
+            if (pawn == null)
             {
                 LogNullCharacter(targetId);
                 return;
             }
 
-            var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(characterState.Pawn);
-            if (clearTarget == true)
+            var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
+            if (clearTarget)
             {
-                Logging.LogDebug("Updating target for character {PlayerNickname} to null", characterState.NickName);
+                Logging.LogDebug("Updating target for pawn {Pawn} to null", pawn.PathName);
                 targetInfoData.SetTargetInfo(new UnitLockTargetInfo());
                 return;
             }
 
-            var targetCharacterState = Client.GetCharacterById(targetId);
-            if (targetCharacterState == null)
+            var targetPawn = Client.GetPawnByPeerId(targetId);
+            if (targetPawn == null)
             {
                 LogNullCharacter(targetId);
                 return;
             }
 
-            Logging.LogDebug("Updating target for character {PlayerNickname} to character {TargetNickname}", characterState.NickName, targetCharacterState.NickName);
-            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetCharacterState.Pawn, ETargetSourceType.SkillBase_NormalUse));
+            Logging.LogDebug("Updating target for pawn {Pawn} to pawn {Pawn}", pawn.PathName, targetPawn.PathName);
+            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPawn, ETargetSourceType.SkillBase_NormalUse));
         }
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)
@@ -845,19 +845,19 @@ namespace WukongApi
 
         private void HandleImmobilize(int characterId, int otherCharacterId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            var characterState = Client.GetCharacterById(characterId);
-            if (characterState == null)
+            var pawn = Client.GetPawnByPeerId(characterId);
+            if (pawn == null)
             {
                 LogNullCharacter(characterId);
                 return;
             }
 
-            var otherCharacterState = Client.GetCharacterById(otherCharacterId);
+            var otherCharacterState = Client.GetPawnByPeerId(otherCharacterId);
 
             switch (immobilizeAction)
             {
                 case ImmobilizeActionType.Cast:
-                    CastImmobilize(characterState);
+                    CastImmobilize(pawn);
                     break;
                 case ImmobilizeActionType.Trigger:
                     if (otherCharacterState == null)
@@ -866,10 +866,10 @@ namespace WukongApi
                         return;
                     }
 
-                    TriggerImmobilize(characterState, otherCharacterState, hasBuff);
+                    TriggerImmobilize(pawn, otherCharacterState, hasBuff);
                     break;
                 case ImmobilizeActionType.Relieve:
-                    RelieveImmobilize(characterState);
+                    RelieveImmobilize(pawn);
                     break;
                 case ImmobilizeActionType.Break:
                 // Currently not supported
@@ -879,33 +879,33 @@ namespace WukongApi
             }
         }
 
-        private void CastImmobilize(CharacterState castingCharacterState)
+        private void CastImmobilize(BGUCharacterCS castingCharacterState)
         {
             if (Client.IsMasterClient)
             {
-                Logging.LogDebug("Received cast immobilize for character {Nickname}", castingCharacterState.NickName);
-                var playerEvents = BUS_EventCollectionCS.Get(castingCharacterState.Pawn);
+                Logging.LogDebug("Received cast immobilize for character {Nickname}", castingCharacterState.GetName());
+                var playerEvents = BUS_EventCollectionCS.Get(castingCharacterState);
                 playerEvents.Evt_CastImmobilize.Invoke(0);
             }
         }
 
-        private static void TriggerImmobilize(CharacterState immobilizedCharacterState, CharacterState castingCharacterState, bool hasBuff)
+        private static void TriggerImmobilize(BGUCharacterCS? pawn, BGUCharacterCS? caster, bool hasBuff)
         {
-            Logging.LogDebug("Received trigger immobilize for character {Nickname}", immobilizedCharacterState.NickName);
+            Logging.LogDebug("Received trigger immobilize for character {Pawn}", pawn?.GetName());
 
-            if (immobilizedCharacterState.Pawn == null)
+            if (pawn == null)
             {
                 Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
                 return;
             }
 
-            if (castingCharacterState.Pawn == null)
+            if (caster == null)
             {
                 Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
                 return;
             }
 
-            var castImmobilizeData = (BUC_CastImmobilizeData)castingCharacterState.Pawn.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+            var castImmobilizeData = (BUC_CastImmobilizeData)caster.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
             var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
             if (cachedImmobilizeConfigDesc == null)
@@ -914,15 +914,18 @@ namespace WukongApi
                 return;
             }
 
-            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(immobilizedCharacterState.Pawn, castingCharacterState.Pawn, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
-            BUS_EventCollectionCS.Get(immobilizedCharacterState.Pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
+            BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
         }
 
-        private static void RelieveImmobilize(CharacterState immobilizedCharacterState)
+        private static void RelieveImmobilize(BGUCharacterCS pawn)
         {
-            Logging.LogDebug("Received relieve immobilize for player {Nickname}", immobilizedCharacterState.NickName);
-            var playerEvents = BUS_EventCollectionCS.Get(immobilizedCharacterState.Pawn);
-            immobilizedCharacterState.RunImmobilizePatches = true;
+            Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
+            var playerEvents = BUS_EventCollectionCS.Get(pawn);
+            
+            // TODO
+            // pawn.RunImmobilizePatches = true;
+            
             playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
@@ -1056,18 +1059,10 @@ namespace WukongApi
         public void ApplyPlayerMontageCallback(MontageCallbackData data)
         {
             var id = data.CharacterId;
-            var character = Client.GetCharacterById(id);
-            if (character == null)
-            {
-                LogNullCharacter(id);
-                return;
-            }
-
-            var pawn = character.Pawn;
-
+            var pawn = Client.GetPawnByPeerId(id);
             if (pawn == null)
             {
-                Logging.LogError("Pawn is null");
+                LogNullCharacter(id);
                 return;
             }
 

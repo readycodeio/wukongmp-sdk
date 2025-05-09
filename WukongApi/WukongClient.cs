@@ -186,13 +186,6 @@ namespace WukongApi
                 : ConnectedPlayers.GetValueOrDefault(playerId);
         }
 
-        public CharacterState? GetCharacterById(int id)
-        {
-            var player = GetPlayerById(id);
-            return player;
-            // return player == null ? GetMonsterById(id) : player;
-        }
-
         public EntityId? GetByTamerActor(BUTamerActor? owner)
         {
             if (owner == null)

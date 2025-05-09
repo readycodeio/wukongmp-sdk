@@ -11,6 +11,7 @@ public struct TamerComponent
     public string UnitName;
     public string Guid;
     public bool IsSynced;
+    public bool RunImmobilizePatches;
     
     public MontageState MontageState;
     

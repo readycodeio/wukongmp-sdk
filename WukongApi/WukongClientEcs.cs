@@ -6,9 +6,11 @@ using LiteNetLib.Utils;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
 using WukongApi.Patches;
+using WukongApi.State;
 using EntityManager = ReadyM.Relay.Common.ECS.EntityManager;
 
 namespace WukongApi;
@@ -206,5 +208,21 @@ public sealed partial class WukongClient
                 TranslationComponent.SkipDelta(RelayClient, reader);
             }
         }
+    }
+
+    public BGUCharacterCS? GetPawnByPeerId(int id)
+    {
+        var player = GetPlayerById(id);
+        if (player != null)
+            return player.Pawn;
+
+        var entity = entityManager.GetEntityByPeerId(id);
+        if (entity.HasValue)
+        {
+            ref var tamer = ref GetEntityComponent<TamerComponent>(entity.Value);
+            return tamer.Pawn;
+        }
+
+        return null;
     }
 }
