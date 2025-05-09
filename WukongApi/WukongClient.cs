@@ -105,10 +105,8 @@ namespace WukongApi
             LobbyManager = new LobbyManager(this);
             RelayClient = new RelayClient(
                 CmdLineParams.Instance.UserGuid,
-                // CmdLineParams.Instance.ServerIp!,
-                // CmdLineParams.Instance.ServerPort!.Value,
-                "localhost",
-                9050,
+                CmdLineParams.Instance.ServerIp!,
+                CmdLineParams.Instance.ServerPort!.Value,
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
             RoomState = new RoomStateProxy(RelayClient);
