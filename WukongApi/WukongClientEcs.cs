@@ -50,7 +50,7 @@ public sealed partial class WukongClient
     private void CheckMonsterDeath()
     {
         entityManager.RunSystem((
-            EntityId _,
+            EntityId entityId,
             ref HpComponent hpComp,
             ref TamerComponent tamer,
             ref LocalDeathComponent localDeath,
@@ -58,6 +58,7 @@ public sealed partial class WukongClient
         {
             if (hpComp.Hp <= 0 && !localDeath.killed)
             {
+                Logging.LogDebug("Monster {Id} died", entityId);
                 localDeath.killed = true;
 
                 var pawn = tamer.Pawn;
@@ -85,7 +86,10 @@ public sealed partial class WukongClient
 
     private void UpdateMarkerPositions()
     {
-        entityManager.RunSystem((EntityId _, ref TamerComponent tamer, ref MarkerComponent marker, ref TranslationComponent trans) =>
+        entityManager.RunSystem((EntityId _,
+            ref TamerComponent tamer,
+            ref MarkerComponent marker, 
+            ref TranslationComponent trans) =>
         {
             if (marker.MarkerActor == null)
                 return;
