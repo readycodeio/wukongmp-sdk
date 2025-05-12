@@ -36,7 +36,7 @@ public sealed partial class WukongClient
             typeof(TranslationComponent)
         );
 
-        entityManager.EntityDestroyed += OnNetworkedEntityDestroyed;
+        entityManager.OnEntityDestroyed += OnNetworkedEntityDestroyed;
     }
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent obj)
@@ -188,45 +188,29 @@ public sealed partial class WukongClient
         while (reader.TryGetShort(out var owner))
         {
             var id = reader.GetUInt();
+
             var netId = new NetworkIdComponent(owner, id);
             var entity = entityManager.GetEntityByNetworkId(netId);
 
-            if (!entity.HasValue || !entityManager.IsEntityAlive(entity.Value))
+            if (!entity.HasValue)
             {
-                if (!entity.HasValue)
-                {
-                    Logging.LogWarning("Entity not found in index for {Id}", netId);
-                }
-                else
-                {
-                    Logging.LogWarning("Entity not alive for {Id}", netId);
-                }
-
-                AnimationComponent.SkipDelta(RelayClient, reader);
-                HpComponent.SkipDelta(RelayClient, reader);
-                MonsterAnimationComponent.SkipDelta(RelayClient, reader);
-                NicknameComponent.SkipDelta(RelayClient, reader);
-                TeamComponent.SkipDelta(RelayClient, reader);
-                TranslationComponent.SkipDelta(RelayClient, reader);
+                Logging.LogDebug("Creating new entity {Id}", netId);
+                entity = CreateNetworkedEntity(netId);
             }
-            else
-            {
-                Logging.LogDebug("Received delta for {Id}", netId);
 
-                ref var animation = ref GetEntityComponent<AnimationComponent>(entity.Value);
-                ref var health = ref GetEntityComponent<HpComponent>(entity.Value);
-                ref var monsterAnimation = ref GetEntityComponent<MonsterAnimationComponent>(entity.Value);
-                ref var nickname = ref GetEntityComponent<NicknameComponent>(entity.Value);
-                ref var team = ref GetEntityComponent<TeamComponent>(entity.Value);
-                ref var translation = ref GetEntityComponent<TranslationComponent>(entity.Value);
+            ref var animation = ref GetEntityComponent<AnimationComponent>(entity.Value);
+            ref var health = ref GetEntityComponent<HpComponent>(entity.Value);
+            ref var monsterAnimation = ref GetEntityComponent<MonsterAnimationComponent>(entity.Value);
+            ref var nickname = ref GetEntityComponent<NicknameComponent>(entity.Value);
+            ref var team = ref GetEntityComponent<TeamComponent>(entity.Value);
+            ref var translation = ref GetEntityComponent<TranslationComponent>(entity.Value);
 
-                animation.ReadDelta(RelayClient, reader);
-                health.ReadDelta(RelayClient, reader);
-                monsterAnimation.ReadDelta(RelayClient, reader);
-                nickname.ReadDelta(RelayClient, reader);
-                team.ReadDelta(RelayClient, reader);
-                translation.ReadDelta(RelayClient, reader);
-            }
+            animation.ReadDelta(RelayClient, reader);
+            health.ReadDelta(RelayClient, reader);
+            monsterAnimation.ReadDelta(RelayClient, reader);
+            nickname.ReadDelta(RelayClient, reader);
+            team.ReadDelta(RelayClient, reader);
+            translation.ReadDelta(RelayClient, reader);
         }
     }
 
