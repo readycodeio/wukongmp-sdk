@@ -1,11 +1,12 @@
 ﻿using b1;
 using LiteNetLib.Utils;
+using ReadyM.Relay.Common.ECS.Components;
 
 namespace WukongApi
 {
-    public class StateTriggerData(int entityId, EBUStateTrigger trigger, float time, bool needForceUpdate)
+    public class StateTriggerData(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
     {
-        public int EntityId { get; } = entityId;
+        public NetworkIdComponent NetId { get; } = netId;
         public EBUStateTrigger Trigger { get; } = trigger;
         public float Time { get; } = time;
         public bool NeedForceUpdate { get; } = needForceUpdate;
@@ -13,7 +14,8 @@ namespace WukongApi
         public static void Serialize(NetDataWriter outStream, object customObject)
         {
             var data = (StateTriggerData)customObject;
-            outStream.Put(data.EntityId);
+            outStream.Put(data.NetId.Owner);
+            outStream.Put(data.NetId.Id);
             outStream.Put((byte)data.Trigger);
             outStream.Put(data.Time);
             outStream.Put(data.NeedForceUpdate);
@@ -21,11 +23,12 @@ namespace WukongApi
 
         public static object Deserialize(NetDataReader inStream)
         {
-            var entityId = inStream.GetInt();
+            var owner = inStream.GetShort();
+            var id = inStream.GetUInt();
             var trigger = (EBUStateTrigger)inStream.GetByte();
             var time = inStream.GetFloat();
             var needForceUpdate = inStream.GetBool();
-            return new StateTriggerData(entityId, trigger, time, needForceUpdate);
+            return new StateTriggerData(new NetworkIdComponent(owner, id), trigger, time, needForceUpdate);
         }
     }
 }

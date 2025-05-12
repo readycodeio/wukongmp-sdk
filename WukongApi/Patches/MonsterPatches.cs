@@ -3,6 +3,7 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
@@ -262,7 +263,7 @@ namespace WukongApi.Patches
                     if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
                     {
                         Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
-                        var netPeer = client.GetEntityComponent<PeerIdComponent>(entity.Value).PeerId;
+                        var netPeer = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
                         client.SendTriggerFsmState(netPeer, EventTag);
                     }
                 }

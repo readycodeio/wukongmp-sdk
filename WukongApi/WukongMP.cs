@@ -10,6 +10,7 @@ using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -520,7 +521,7 @@ namespace WukongApi
 
             Client.OnBeforeJoinRoom += SetPlayerProperties;
             Client.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
-            Client.OnSummonSpawn += (summonerId, id, guid, name, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteSummon(summonerId, id, guid, name, teamId), "SpawnRemoteSummon");
+            Client.OnSummonSpawn += (summonerId, summonId, guid, name, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteSummon(summonerId, summonId, guid, name, teamId), "SpawnRemoteSummon");
             Client.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
             Client.OnTeleportFinish += (id) => GameLoopPatch.QueueOnGameThread(() => OnTeleportFinish(id), "WakeUpMonster");
             Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
@@ -613,12 +614,12 @@ namespace WukongApi
             events.Evt_BuffAllRemove.Invoke(removeTriggerType, withTriggerRemoveEffect);
         }
 
-        private void OnStateTriggerSet(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
+        private void OnStateTriggerSet(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
         {
-            var pawn = Client.GetPawnByPeerId(characterId);
+            var pawn = Client.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
-                LogNullCharacter(characterId);
+                LogNullCharacter(netId);
                 return;
             }
 
@@ -633,12 +634,12 @@ namespace WukongApi
             events.Evt_UnitStateTrigger.Invoke(trigger, time, needForceUpdate);
         }
 
-        private void OnSimpleStateSet(int characterId, EBGUSimpleState state, bool isForce)
+        private void OnSimpleStateSet(NetworkIdComponent netId, EBGUSimpleState state, bool isForce)
         {
-            var pawn = Client.GetPawnByPeerId(characterId);
+            var pawn = Client.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
-                LogNullCharacter(characterId);
+                LogNullCharacter(netId);
                 return;
             }
 
@@ -654,12 +655,12 @@ namespace WukongApi
             events.Evt_UnitSetSimpleState.Invoke(state, isForce);
         }
 
-        private void OnFsmStateSet(int characterId, string eventName)
+        private void OnFsmStateSet(NetworkIdComponent netId, string eventName)
         {
-            var pawn = Client.GetPawnByPeerId(characterId);
+            var pawn = Client.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
-                LogNullCharacter(characterId);
+                LogNullCharacter(netId);
                 return;
             }
 
@@ -676,25 +677,25 @@ namespace WukongApi
         }
 
         // TODO: System, this is not called anywhere
-        private void OnMotionMatchingChanged(int characterId, EState_MM motionMatchingState)
+        private void OnMotionMatchingChanged(NetworkIdComponent netId, EState_MM motionMatchingState)
         {
-            var entity = Client.entityManager.GetEntityByPeerId(characterId);
+            var entity = Client.entityManager.GetEntityByNetworkId(netId);
             if (!entity.HasValue)
             {
-                LogNullCharacter(characterId);
+                LogNullCharacter(netId);
                 return;
             }
 
             var tamerComponent = Client.GetEntityComponent<TamerComponent>(entity.Value);
-            
+
             var events = BUS_EventCollectionCS.Get(tamerComponent.Pawn);
-            
+
             if (events == null)
             {
                 Logging.LogError("Failed to get event collection for pawn {PathName}", tamerComponent.Pawn!.PathName);
                 return;
             }
-            
+
             Logging.LogTrace("Changing motion matching to: {State}, for monster {Monster}", motionMatchingState, tamerComponent.Pawn!.PathName);
             events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
         }
@@ -714,9 +715,9 @@ namespace WukongApi
             events?.Evt_RelievePhantomRush.Invoke();
         }
 
-        private void OnTargetSet(int playerId, int targetId, bool clearTarget)
+        private void OnTargetSet(NetworkIdComponent playerId, NetworkIdComponent targetId, bool clearTarget)
         {
-            var pawn = Client.GetPawnByPeerId(playerId);
+            var pawn = Client.GetPawnByNetworkId(playerId);
             if (pawn == null)
             {
                 LogNullCharacter(targetId);
@@ -731,7 +732,7 @@ namespace WukongApi
                 return;
             }
 
-            var targetPawn = Client.GetPawnByPeerId(targetId);
+            var targetPawn = Client.GetPawnByNetworkId(targetId);
             if (targetPawn == null)
             {
                 LogNullCharacter(targetId);
@@ -843,16 +844,15 @@ namespace WukongApi
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
 
-        private void HandleImmobilize(int characterId, int otherCharacterId, ImmobilizeActionType immobilizeAction, bool hasBuff)
+        private void HandleImmobilize(NetworkIdComponent netId, NetworkIdComponent otherNetId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            var pawn = Client.GetPawnByPeerId(characterId);
+            var pawn = Client.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
-                LogNullCharacter(characterId);
+                LogNullCharacter(netId);
                 return;
             }
 
-            var otherCharacterState = Client.GetPawnByPeerId(otherCharacterId);
 
             switch (immobilizeAction)
             {
@@ -860,13 +860,14 @@ namespace WukongApi
                     CastImmobilize(pawn);
                     break;
                 case ImmobilizeActionType.Trigger:
-                    if (otherCharacterState == null)
+                    var otherPawn = Client.GetPawnByNetworkId(otherNetId);
+                    if (otherPawn == null)
                     {
-                        Logging.LogError("Player not found: {Id}", otherCharacterId);
+                        Logging.LogError("Target not found: {Id}", otherNetId);
                         return;
                     }
 
-                    TriggerImmobilize(pawn, otherCharacterState, hasBuff);
+                    TriggerImmobilize(pawn, otherPawn, hasBuff);
                     break;
                 case ImmobilizeActionType.Relieve:
                     RelieveImmobilize(pawn);
@@ -922,10 +923,10 @@ namespace WukongApi
         {
             Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
             var playerEvents = BUS_EventCollectionCS.Get(pawn);
-            
+
             // TODO
             // pawn.RunImmobilizePatches = true;
-            
+
             playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
@@ -1058,8 +1059,8 @@ namespace WukongApi
 
         public void ApplyPlayerMontageCallback(MontageCallbackData data)
         {
-            var id = data.CharacterId;
-            var pawn = Client.GetPawnByPeerId(id);
+            var id = data.NetId;
+            var pawn = Client.GetPawnByNetworkId(id);
             if (pawn == null)
             {
                 LogNullCharacter(id);
@@ -1167,35 +1168,33 @@ namespace WukongApi
             Client.WukongChat.SendServerMessage("PlayerSpawned", Client.LocalPlayerState.NickName, count.ToString(), unitName);
         }
 
-        private void SpawnUnitMaster(string unitName, FVector loc, int teamId)
+        private NetworkIdComponent? SpawnUnitMaster(string unitName, FVector loc, int teamId)
         {
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
 
             var guid = Guid.NewGuid().ToString();
-            var id = --Client.RoomState.NextMonsterId;
 
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
-            Client.SpawnUnit(id, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
 
-            SpawnUnitLocally(id, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
+            return SpawnUnitLocally(null, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
         }
 
-        private void SpawnRemoteUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
+        private void SpawnRemoteUnit(NetworkIdComponent netId, string guid, string unitName, int teamId, float x, float y, float z)
         {
-            SpawnUnitLocally(id, guid, unitName, teamId, x, y, z);
+            SpawnUnitLocally(netId, guid, unitName, teamId, x, y, z);
         }
 
-        private void SpawnRemoteSummon(int summonerId, int id, string guid, string unitName, int teamId)
+        private void SpawnRemoteSummon(NetworkIdComponent summonerId, NetworkIdComponent summonId, string guid, string unitName, int teamId)
         {
-            SummonPatch.ExecuteSummon(summonerId, id, guid, unitName, teamId);
+            SummonPatch.ExecuteSummon(summonerId, summonId, guid, unitName, teamId);
         }
 
-        private void SpawnUnitLocally(int peerId, string guid, string unitPath, int teamId, float x, float y, float z)
+        private NetworkIdComponent? SpawnUnitLocally(NetworkIdComponent? providedNetId, string guid, string unitPath, int teamId, float x, float y, float z)
         {
             Logging.LogDebug("Spawn unit called for {UnitPath}", unitPath);
 
             if (string.IsNullOrEmpty(unitPath))
-                return;
+                return null;
 
             var loc = new FVector(x, y, z);
             var rot = new FRotator();
@@ -1208,7 +1207,7 @@ namespace WukongApi
             if (tamerActor == null)
             {
                 Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
-                return;
+                return null;
             }
 
             tamerActor.MarkAsSpawnedTamer(null);
@@ -1219,7 +1218,7 @@ namespace WukongApi
             tamerActor.GetFinalGuid(true);
 
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
-            var entity = CreateMonster(peerId, guid, tamerActor, teamId, unitPath);
+            var entity = providedNetId.HasValue ? CreateRemoteMonster(providedNetId.Value, guid, tamerActor, teamId, unitPath) : CreateMonster(guid, tamerActor, teamId, unitPath);
 
             ref var trans = ref Client.GetEntityComponent<TranslationComponent>(entity);
             trans.Position = loc.ToVector3();
@@ -1236,16 +1235,30 @@ namespace WukongApi
             {
                 SetMonkeyBotConfig(tamerActor.GetMonster());
             }
+
+            var netId = Client.GetEntityComponent<NetworkIdComponent>(entity);
+            return netId;
         }
 
-        public EntityId CreateMonster(int peerId, string guid, BUTamerActor tamer, int teamId, string unitName)
+        public EntityId CreateRemoteMonster(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            var id = Client.RegisterMonster();
+            var id = Client.CreateNetworkedEntity(netId);
 
-            ref var netIdComp = ref Client.GetEntityComponent<PeerIdComponent>(id);
-            netIdComp.PeerId = peerId;
+            ref var tamerComp = ref Client.GetEntityComponent<TamerComponent>(id);
+            tamerComp.Tamer = tamer;
+            tamerComp.Guid = guid;
+            tamerComp.UnitName = unitName;
 
-            Client.entityManager.AssociatePeerIdWithEntity(peerId, id);
+            ref var teamComp = ref Client.GetEntityComponent<TeamComponent>(id);
+            teamComp.TeamId = teamId;
+
+            Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
+            return id;
+        }
+        
+        public EntityId CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
+        {
+            var id = Client.CreateNetworkedEntity();
 
             ref var tamerComp = ref Client.GetEntityComponent<TamerComponent>(id);
             tamerComp.Tamer = tamer;
@@ -1295,7 +1308,7 @@ namespace WukongApi
             var entities = Client.entityManager.GetArchetype(Client.monsterArchetype)!;
             foreach (var entityId in entities.Entities.ToArray())
             {
-                Client.entityManager.DestroyEntity(entityId);
+                Client.entityManager.QueueDestroyEntity(entityId);
             }
         }
 
@@ -1330,7 +1343,7 @@ namespace WukongApi
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
-            Client.entityManager.DestroyEntity(entity);
+            Client.entityManager.QueueDestroyEntity(entity);
         }
 
         private void OnBeforeJoinedRoomCallback()
@@ -1779,12 +1792,21 @@ namespace WukongApi
         }
 
         // TODO: This should always be error, make sure that creation and destruction of monsters is synchronized
+        [Obsolete]
         private void LogNullCharacter(int characterId)
         {
             if (characterId < 0)
                 Logging.LogWarning("Character not found: {Id}", characterId); // monster not found
             else
                 Logging.LogError("Character not found: {Id}", characterId); // player not found
+        }
+
+        private void LogNullCharacter(NetworkIdComponent characterId)
+        {
+            if (characterId.Owner >= 0)
+                Logging.LogWarning("Monster not found: {Id}", characterId); // monster not found
+            else
+                Logging.LogError("Player not found: {Id}", characterId); // player not found
         }
     }
 }

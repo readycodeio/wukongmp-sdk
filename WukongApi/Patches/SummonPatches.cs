@@ -1,20 +1,18 @@
-﻿using b1;
-using HarmonyLib;
-using System.Collections.Concurrent;
-using System;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using b1;
+using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using System.Collections.Generic;
-using ReadyM.Relay.Common.Wukong;
-using WukongApi.State;
 
 namespace WukongApi.Patches
 {
     public static class SummonPatch
     {
-        private static readonly ConcurrentDictionary<int, ConcurrentQueue<FServantReq>> _summonsQueues = new();
+        private static readonly ConcurrentDictionary<NetworkIdComponent, ConcurrentQueue<FServantReq>> _summonsQueues = new();
 
-        public static void QueueServant(int summonerId, FServantReq summonReq)
+        public static void QueueServant(NetworkIdComponent summonerId, FServantReq summonReq)
         {
             Logging.LogDebug("Enqueueing summon for character {Id}, type: {Action}", summonerId, summonReq.TamerTemplate.GetPathName());
 
@@ -25,7 +23,7 @@ namespace WukongApi.Patches
             });
         }
 
-        public static void ExecuteSummon(int summonerId, int id, string guid, string tamerClassName, int teamId)
+        public static void ExecuteSummon(NetworkIdComponent summonerId, NetworkIdComponent summonId, string guid, string tamerClassName, int teamId)
         {
             Logging.LogDebug("Executing summon for character {Id}, type: {Action}", summonerId, tamerClassName);
 
@@ -41,11 +39,11 @@ namespace WukongApi.Patches
                 }
 
                 item.ServantTamerGuid = guid;
-                SpawnServant(id, guid, teamId, item.TamerTemplate, item.BornTransform, item, item.SafeClampToLand);
+                SpawnServant(summonId, guid, teamId, item.TamerTemplate, item.BornTransform, item, item.SafeClampToLand);
             }
         }
 
-        public static string? SpawnServant(int id, string guid, int teamId, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
+        public static string? SpawnServant(NetworkIdComponent summonId, string guid, int teamId, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
         {
             Logging.LogDebug("Spawning servant: {TamerName}, with Guid {Guid}", TamerClass.Value.GetPathName(), guid);
 
@@ -89,7 +87,7 @@ namespace WukongApi.Patches
 
             Logging.LogDebug("Spawned servant: {TamerName}, with Guid {Guid}", bUTamerActor.GetName(), guid);
 
-            var entity = WukongMP.Instance.CreateMonster(id, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
+            var entity = WukongMP.Instance.CreateRemoteMonster(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
 
             ref var trans = ref client.GetEntityComponent<TranslationComponent>(entity);
             trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();

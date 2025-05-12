@@ -1,11 +1,13 @@
 ﻿using LiteNetLib.Utils;
+using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Protocol;
 
 namespace WukongApi
 {
-    public class ImmobilizeData(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool greatSageTalentActiveBuff)
+    public class ImmobilizeData(NetworkIdComponent playerId, NetworkIdComponent otherPlayerId, ImmobilizeActionType immobilizeActionType, bool greatSageTalentActiveBuff)
     {
-        public int PlayerId { get; } = playerId;
-        public int OtherPlayerId { get; } = otherPlayerId;
+        public NetworkIdComponent PlayerId { get; } = playerId;
+        public NetworkIdComponent OtherPlayerId { get; } = otherPlayerId;
         public ImmobilizeActionType ImmobilizeActionType { get; } = immobilizeActionType;
         public bool GreatSageTalentActiveBuff { get; } = greatSageTalentActiveBuff;
 
@@ -20,8 +22,8 @@ namespace WukongApi
 
         public static object Deserialize(NetDataReader inStream)
         {
-            var playerId = inStream.GetInt();
-            var otherPlayerId = inStream.GetInt();
+            var playerId = inStream.GetNetworkId();
+            var otherPlayerId = inStream.GetNetworkId();
             var inputActionType = (ImmobilizeActionType)inStream.GetByte();
             var greatSageTalentActiveBuff = inStream.GetBool();
 

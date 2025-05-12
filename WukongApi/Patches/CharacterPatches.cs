@@ -1,6 +1,7 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
+using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -473,7 +474,7 @@ namespace WukongApi.Patches
                     if (SimpleState == EBGUSimpleState.Immobilizing)
                         return;
 
-                    var peerId = client.GetEntityComponent<PeerIdComponent>(entity.Value).PeerId;
+                    var peerId = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
 
                     client.SendUnitSimpleState(peerId, SimpleState, IsRemove);
                     Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
@@ -498,7 +499,7 @@ namespace WukongApi.Patches
                 var entity = client.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
-                    var peerId = client.GetEntityComponent<PeerIdComponent>(entity.Value).PeerId;
+                    var peerId = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
 
                     client.SendUnitStateTrigger(peerId, Trigger, Time, NeedForceUpdate);
                     Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
@@ -507,7 +508,7 @@ namespace WukongApi.Patches
 
             if (owner == client.LocalPlayerState.Pawn)
             {
-                client.SendUnitStateTrigger(client.LocalPlayerState.PeerId, Trigger, Time, NeedForceUpdate);
+                client.SendUnitStateTrigger(NetworkIdComponent.FromPlayerPeerId(client.LocalPlayerState.PeerId), Trigger, Time, NeedForceUpdate);
                 Logging.LogDebug("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }

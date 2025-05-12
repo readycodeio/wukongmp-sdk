@@ -8,12 +8,12 @@ namespace WukongApi.ECS;
 [StructLayout(LayoutKind.Sequential)]
 public struct TamerComponent
 {
-    public string UnitName;
-    public string Guid;
     public bool IsSynced;
     public bool RunImmobilizePatches;
-    
     public MontageState MontageState;
+    
+    public string UnitName;
+    public string Guid;
     
     private BUTamerActor? _tamer;
 

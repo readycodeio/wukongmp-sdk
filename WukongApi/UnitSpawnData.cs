@@ -1,10 +1,12 @@
 ﻿using LiteNetLib.Utils;
+using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Protocol;
 
 namespace WukongApi
 {
-    public readonly struct UnitSpawnData(int id, string guid, string name, int teamId, float x, float y, float z)
+    public readonly struct UnitSpawnData(NetworkIdComponent id, string guid, string name, int teamId, float x, float y, float z)
     {
-        public readonly int Id = id;
+        public readonly NetworkIdComponent Id = id;
         public readonly string Guid = guid;
         public readonly string Name = name;
         public readonly int TeamId = teamId;
@@ -26,7 +28,7 @@ namespace WukongApi
 
         public static object Deserialize(NetDataReader inStream)
         {
-            var id = inStream.GetInt();
+            var id = inStream.GetNetworkId();
             var guid = inStream.GetString();
             var name = inStream.GetString();
             var teamId = inStream.GetInt();

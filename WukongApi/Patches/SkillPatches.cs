@@ -6,8 +6,10 @@ using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
+using ReadyM.Relay.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.ECS;
 
 namespace WukongApi.Patches;
 
@@ -55,6 +57,7 @@ public static class PatchTriggerItemSkill
         {
             return true;
         }
+
         return client.RoomState.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId;
     }
 }
@@ -127,7 +130,8 @@ public static class PatchOnCastImmobilize
             // Broadcast that you have cast a spell
             if (castingPlayerState != null && castingPlayerState.PeerId == client.LocalPlayerState.PeerId)
             {
-                client.BroadcastImmobilize(castingPlayerState.PeerId, -1, ImmobilizeActionType.Cast, false);
+                // target doesn't matter, not evaluated
+                client.BroadcastImmobilize(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), default, ImmobilizeActionType.Cast, false);
             }
 
             return false;
@@ -220,12 +224,19 @@ public static class PatchOnCastImmobilize
             var hasBuff = BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
             ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
             BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+
             // broadcast
-            var immobilizedCharacterState = client.GetCharacterByActor(item);
-            if (immobilizedCharacterState != null && castingPlayerState != null)
+            var immobilizedPlayer = client.GetPlayerByActor(item);
+            var immobilizedMonster = client.GetMonsterByActor(item);
+
+            if ((immobilizedPlayer != null || immobilizedMonster.HasValue) && castingPlayerState != null)
             {
-                Logging.LogDebug("Broadcasting trigger immobilize for character {Nickname}", immobilizedCharacterState.NickName);
-                client.BroadcastImmobilize(immobilizedCharacterState.PeerId, castingPlayerState.PeerId, ImmobilizeActionType.Trigger, hasBuff);
+                Logging.LogDebug("Broadcasting trigger immobilize");
+                var netId = immobilizedPlayer == null
+                    ? client.GetEntityComponent<NetworkIdComponent>(immobilizedMonster.Value)
+                    : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
+
+                client.BroadcastImmobilize(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff);
             }
         }
 
@@ -271,25 +282,41 @@ public static class PatchRelieveImmobilized
             return false;
         }
 
-        var characterState = client.GetCharacterByActor(owner);
+        var playerState = client.GetPlayerByActor(owner);
+        var entityId = client.GetMonsterByActor(owner);
 
-        if (characterState == null)
+        if (playerState == null && !entityId.HasValue)
         {
             return true;
         }
+
+        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : client.GetEntityComponent<NetworkIdComponent>(entityId!.Value);
 
         if (client.IsMasterClient)
         {
-            client.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
+            client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
             return true;
         }
 
-        if (!characterState.RunImmobilizePatches)
+        if (playerState != null)
+        {
+            if (!playerState.RunImmobilizePatches)
+            {
+                return false;
+            }
+
+            playerState.RunImmobilizePatches = false;
+            return true;
+        }
+
+        ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entityId!.Value);
+
+        if (!tamerComp.RunImmobilizePatches)
         {
             return false;
         }
 
-        characterState.RunImmobilizePatches = false;
+        tamerComp.RunImmobilizePatches = false;
         return true;
     }
 }
@@ -314,16 +341,28 @@ public static class PatchOnTriggerImmobilizedBreak
 
         if (client.IsMasterClient)
         {
-            var characterState = client.GetCharacterByActor(owner);
+            var playerState = client.GetPlayerByActor(owner);
 
-            if (characterState == null)
+            if (playerState != null)
             {
-                Logging.LogDebug("Character state is null - continuing standard execution");
-                return true;
+                client.BroadcastImmobilize(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId), default, ImmobilizeActionType.Relieve, false);
+                BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
+                return false;
             }
 
-            client.BroadcastImmobilize(characterState.PeerId, -1, ImmobilizeActionType.Relieve, false);
-            BUS_EventCollectionCS.Get(characterState.Pawn)?.Evt_RelieveImmobilized.Invoke();
+            var entityId = client.GetMonsterByActor(owner);
+
+            if (entityId.HasValue)
+            {
+                var netId = client.GetEntityComponent<NetworkIdComponent>(entityId.Value);
+                var pawn = client.GetEntityComponent<TamerComponent>(entityId.Value).Pawn;
+
+                client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
+                BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();
+            }
+
+            Logging.LogDebug("Character state is null - continuing standard execution");
+            return true;
         }
 
         return false;
@@ -432,9 +471,9 @@ public static class PatchOnTriggerPhantomRush
 
         BUSEventCollection.Evt_ClearAbnormalState.Invoke([
             EAbnormalStateType.Abnormal_Burn,
-                EAbnormalStateType.Abnormal_Freeze,
-                EAbnormalStateType.Abnormal_Poison,
-                EAbnormalStateType.Abnormal_Thunder
+            EAbnormalStateType.Abnormal_Freeze,
+            EAbnormalStateType.Abnormal_Poison,
+            EAbnormalStateType.Abnormal_Thunder
         ]);
         int phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
         BUSEventCollection.Evt_SummonSkillCastByPhantomRush.Invoke(phantomRushSummonID, cBI);

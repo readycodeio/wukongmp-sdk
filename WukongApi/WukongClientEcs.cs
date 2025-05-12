@@ -1,21 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using b1;
 using BtlShare;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
 using WukongApi.Patches;
-using EntityManager = ReadyM.Relay.Common.ECS.EntityManager;
 
 namespace WukongApi;
 
 public sealed partial class WukongClient
 {
-    public readonly EntityManager entityManager;
+    public readonly NetworkedEntityManager entityManager;
     public ArchetypeId monsterArchetype;
 
     private void DefineEcs()
@@ -28,16 +31,27 @@ public sealed partial class WukongClient
             typeof(HpComponent),
             typeof(MonsterAnimationComponent),
             typeof(NicknameComponent),
-            typeof(PeerIdComponent),
+            typeof(NetworkIdComponent),
             typeof(TeamComponent),
             typeof(TranslationComponent)
         );
+
+        entityManager.EntityDestroyed += OnNetworkedEntityDestroyed;
+    }
+
+    private void OnNetworkedEntityDestroyed(NetworkIdComponent obj)
+    {
+        var writer = new NetDataWriter();
+        writer.Put((byte)SystemEvent.DestroyEntity);
+        writer.Put(obj);
+        RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
     }
 
     public void RunTickSystems()
     {
-        SetCachedPlayerProperties(); // not a system
+        entityManager.RemoveQueuedEntities();
 
+        SetCachedPlayerProperties(); // not a system
         UpdateMarkerPositions();
         CheckMonsterDeath();
 
@@ -78,20 +92,18 @@ public sealed partial class WukongClient
 
         foreach (var deadEntity in deadEntities)
         {
-            if (entityManager.DestroyEntity(deadEntity))
-            {
-                Logging.LogDebug("Monster {Id} removed from ECS", deadEntity);
-            }
-            else
-            {
-                Logging.LogError("Monster already removed from ECS {Id}", deadEntity);
-            }
+            entityManager.QueueDestroyEntity(deadEntity);
         }
     }
 
-    public EntityId RegisterMonster()
+    public EntityId CreateNetworkedEntity()
     {
-        return entityManager.CreateEntity(monsterArchetype);
+        return entityManager.CreateNetworkedEntity(monsterArchetype, (short)RelayClient.LocalPlayer.PeerId);
+    }
+
+    public EntityId CreateNetworkedEntity(NetworkIdComponent netId)
+    {
+        return entityManager.CreateNetworkedEntity(monsterArchetype, netId);
     }
 
     public ref T GetEntityComponent<T>(EntityId entity) where T : struct
@@ -131,7 +143,7 @@ public sealed partial class WukongClient
             ref HpComponent health,
             ref MonsterAnimationComponent monsterAnimation,
             ref NicknameComponent nickname,
-            ref PeerIdComponent peerId,
+            ref NetworkIdComponent peerId,
             ref TeamComponent team,
             ref TranslationComponent translation
         ) =>
@@ -146,7 +158,8 @@ public sealed partial class WukongClient
             if (!anyDirty)
                 return;
 
-            writer.Put(peerId.PeerId);
+            writer.Put(peerId.Owner);
+            writer.Put(peerId.Id);
 
             animation.WriteDelta(RelayClient, writer);
             animation.ClearDirty();
@@ -172,19 +185,21 @@ public sealed partial class WukongClient
 
     private void ApplyMonsterArchetypeDelta(NetDataReader reader)
     {
-        while (reader.TryGetInt(out var peerId))
+        while (reader.TryGetShort(out var owner))
         {
-            var entity = entityManager.GetEntityByPeerId(peerId);
+            var id = reader.GetUInt();
+            var netId = new NetworkIdComponent(owner, id);
+            var entity = entityManager.GetEntityByNetworkId(netId);
 
             if (!entity.HasValue || !entityManager.IsEntityAlive(entity.Value))
             {
                 if (!entity.HasValue)
                 {
-                    Logging.LogWarning("Entity not found in index for peer {Peer}", peerId);
+                    Logging.LogWarning("Entity not found in index for {Id}", netId);
                 }
                 else
                 {
-                    Logging.LogWarning("Entity not alive for peer {Peer}", peerId);
+                    Logging.LogWarning("Entity not alive for {Id}", netId);
                 }
 
                 AnimationComponent.SkipDelta(RelayClient, reader);
@@ -196,7 +211,7 @@ public sealed partial class WukongClient
             }
             else
             {
-                Logging.LogDebug("Received delta for peer {Peer}", peerId);
+                Logging.LogDebug("Received delta for {Id}", netId);
 
                 ref var animation = ref GetEntityComponent<AnimationComponent>(entity.Value);
                 ref var health = ref GetEntityComponent<HpComponent>(entity.Value);
@@ -215,13 +230,16 @@ public sealed partial class WukongClient
         }
     }
 
-    public BGUCharacterCS? GetPawnByPeerId(int id)
+    public BGUCharacterCS? GetPawnByNetworkId(NetworkIdComponent netId)
     {
-        var player = GetPlayerById(id);
-        if (player != null)
-            return player.Pawn;
+        if (netId.Owner == -1)
+        {
+            var player = GetPlayerById((int)netId.Id);
+            if (player != null)
+                return player.Pawn;
+        }
 
-        var entity = entityManager.GetEntityByPeerId(id);
+        var entity = entityManager.GetEntityByNetworkId(netId);
         if (entity.HasValue)
         {
             ref var tamer = ref GetEntityComponent<TamerComponent>(entity.Value);

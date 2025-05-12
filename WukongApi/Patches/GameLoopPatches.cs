@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using b1;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong;
 using WukongApi.ECS;
 using WukongApi.Monitors;
@@ -107,11 +108,11 @@ namespace WukongApi.Patches
 
             if (client.IsMasterClient)
             {
-                client.entityManager.RunSystem<TamerComponent, PeerIdComponent>(SyncMontage);
+                client.entityManager.RunSystem<TamerComponent, NetworkIdComponent>(SyncMontage);
             }
         }
 
-        private static void SyncMontage(EntityId entityId, ref TamerComponent tamerComponent, ref PeerIdComponent netId)
+        private static void SyncMontage(EntityId entityId, ref TamerComponent tamerComponent, ref NetworkIdComponent netId)
         {
             if (tamerComponent.Pawn == null)
                 return;
@@ -135,14 +136,14 @@ namespace WukongApi.Patches
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
                     // TODO: Replace by system
-                    WukongMP.Instance.Client.SendMontageCallback(netId.PeerId, currentMontage, currentPosition, hasMontageRewound);
+                    WukongMP.Instance.Client.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                WukongMP.Instance.Client.SendMontageCancel(netId.PeerId);
+                WukongMP.Instance.Client.SendMontageCancel(netId);
             }
 
             montageState.LocalMontage = currentMontage;
@@ -173,14 +174,14 @@ namespace WukongApi.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Client.SendMontageCallback(characterState.PeerId, currentMontage, currentPosition, hasMontageRewound);
+                    WukongMP.Instance.Client.SendMontageCallback(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId), currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                WukongMP.Instance.Client.SendMontageCancel(characterState.PeerId);
+                WukongMP.Instance.Client.SendMontageCancel(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId));
             }
 
             montageState.LocalMontage = currentMontage;

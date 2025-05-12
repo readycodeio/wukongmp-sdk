@@ -4,9 +4,11 @@ using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
+using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.ECS;
 using WukongApi.State;
 
 namespace WukongApi.Patches
@@ -464,27 +466,37 @@ namespace WukongApi.Patches
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return true;
 
-            var newTargetId = 0;
+            NetworkIdComponent newTargetId = default;
             var clearTarget = 1;
-            var newTargetCharacterState = client.GetCharacterByActor(NewTargetInfo?.LockTargetActor);
+            string name = string.Empty;
 
-            if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && newTargetCharacterState == null)
+            var newTargetPlayerState = client.GetPlayerByActor(NewTargetInfo?.LockTargetActor);
+            var newTargetMonsterState = client.GetMonsterByActor(NewTargetInfo?.LockTargetActor);
+
+            if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && newTargetPlayerState == null && !newTargetMonsterState.HasValue)
             {
                 // not synchronized character targeted
                 return true;
             }
 
-            if (newTargetCharacterState != null)
+            if (newTargetPlayerState != null)
             {
-                newTargetId = newTargetCharacterState.PeerId;
+                newTargetId = NetworkIdComponent.FromPlayerPeerId(newTargetPlayerState.PeerId);
+                name = newTargetPlayerState.NickName;
+                clearTarget = 0;
+            }
+            else if (newTargetMonsterState.HasValue)
+            {
+                newTargetId = client.GetEntityComponent<NetworkIdComponent>(newTargetMonsterState.Value);
+                name = client.GetEntityComponent<NicknameComponent>(newTargetMonsterState.Value).Nickname;
                 clearTarget = 0;
             }
 
             // send only own updates
             if (owner == client.LocalPlayerState.Pawn)
             {
-                Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
-                client.SendTarget(client.LocalPlayerState.PeerId, newTargetId, clearTarget);
+                Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, name);
+                client.SendTarget(NetworkIdComponent.FromPlayerPeerId(client.LocalPlayerState.PeerId), newTargetId, clearTarget);
                 return true;
             }
 
@@ -495,9 +507,9 @@ namespace WukongApi.Patches
             var entityId = client.GetMonsterByActor(owner);
             if (entityId.HasValue)
             {
-                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
-                
-                var peerId = client.GetEntityComponent<PeerIdComponent>(entityId.Value).PeerId;
+                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, name);
+
+                var peerId = client.GetEntityComponent<NetworkIdComponent>(entityId.Value);
                 client.SendTarget(peerId, newTargetId, clearTarget);
             }
 

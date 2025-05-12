@@ -12,6 +12,7 @@ using CSharpModBase;
 using LiteNetLib;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
@@ -39,8 +40,8 @@ namespace WukongApi
         private readonly Action _afterJoinedRoomCallback;
         private readonly Action<int> _playerJoinedCallback;
         public event Action<MontageCallbackData>? OnMontageCallback;
-        public event Action<int, int, string, string, int, float, float, float>? OnUnitSpawn;
-        public event Action<int, int, string, string, int>? OnSummonSpawn;
+        public event Action<int, NetworkIdComponent, string, string, int, float, float, float>? OnUnitSpawn;
+        public event Action<NetworkIdComponent, NetworkIdComponent, string, string, int>? OnSummonSpawn;
         public event Action<int>? OnTeleportFinish;
         public event Action<string>? OnMonsterWakeUp;
         public event Action<int, EquipmentState>? OnEquipmentChange;
@@ -54,16 +55,16 @@ namespace WukongApi
         public event Action<DamageNumParam>? OnDamageNum;
         public event Action<int, ESkillDirection>? OnPhantomRush;
         public event Action<int>? OnExitPhantomRush;
-        public event Action<int, int, ImmobilizeActionType, bool>? OnHandleImmobilize;
-        public event Action<int, int, bool>? OnTargetSet;
+        public event Action<NetworkIdComponent, NetworkIdComponent, ImmobilizeActionType, bool>? OnHandleImmobilize;
+        public event Action<NetworkIdComponent, NetworkIdComponent, bool>? OnTargetSet;
         public event Action? OnMatchmakingEnded;
         public event Action<int, int, float>? OnBuffAdded;
         public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
         public event Action<int, EBuffEffectTriggerType, bool>? OnBuffAllRemoved;
-        public event Action<int, EBUStateTrigger, float, bool>? OnStateTriggerSet;
-        public event Action<int, EBGUSimpleState, bool>? OnSimpleStateSet;
-        public event Action<int, string>? OnFsmStateSet;
-        public event Action<int, EState_MM>? OnMotionMatchingChanged;
+        public event Action<NetworkIdComponent, EBUStateTrigger, float, bool>? OnStateTriggerSet;
+        public event Action<NetworkIdComponent, EBGUSimpleState, bool>? OnSimpleStateSet;
+        public event Action<NetworkIdComponent, string>? OnFsmStateSet;
+        public event Action<NetworkIdComponent, EState_MM>? OnMotionMatchingChanged;
         public event Action<int, string, int, int>? OnRequestSpawnUnits;
 
         public WukongChatter WukongChat { get; }
@@ -109,7 +110,7 @@ namespace WukongApi
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
             RoomState = new RoomStateProxy(RelayClient);
-            entityManager = new EntityManager();
+            entityManager = new NetworkedEntityManager();
 
             DefineEcs();
 
@@ -170,14 +171,7 @@ namespace WukongApi
             return entityId;
         }
 
-        public CharacterState? GetCharacterByActor(AActor? actor)
-        {
-            var characterState = GetPlayerByActor(actor);
-            // return characterState == null ? GetMonsterByActor(actor) : characterState;
-            // TODO: Unify this
-            return characterState;
-        }
-
+        [Obsolete]
         public PlayerState? GetPlayerById(int playerId)
         {
             return playerId == LocalPlayerState.PeerId
@@ -342,7 +336,7 @@ namespace WukongApi
                 case 13:
                     // target
                     var targetData = RelayClient.DeserializeObject<int[]>(reader);
-                    OnTargetSet?.Invoke(targetData[0], targetData[1], targetData[2] != 0);
+                    OnTargetSet?.Invoke(new NetworkIdComponent((short)targetData[0], (uint)targetData[1]), new NetworkIdComponent((short)targetData[2], (uint)targetData[3]), targetData[4] != 0);
                     break;
                 case 14:
                     // exit phantom rush
@@ -373,22 +367,22 @@ namespace WukongApi
                 case 19:
                     // state trigger
                     var stateTriggerData = RelayClient.DeserializeObject<StateTriggerData>(reader);
-                    OnStateTriggerSet?.Invoke(stateTriggerData.EntityId, stateTriggerData.Trigger, stateTriggerData.Time, stateTriggerData.NeedForceUpdate);
+                    OnStateTriggerSet?.Invoke(stateTriggerData.NetId, stateTriggerData.Trigger, stateTriggerData.Time, stateTriggerData.NeedForceUpdate);
                     break;
                 case 20:
                     // simple state
                     var simpleStateData = RelayClient.DeserializeObject<SimpleStateData>(reader);
-                    OnSimpleStateSet?.Invoke(simpleStateData.CharacterId, simpleStateData.SimpleState, simpleStateData.IsRemove);
+                    OnSimpleStateSet?.Invoke(simpleStateData.NetId, simpleStateData.SimpleState, simpleStateData.IsRemove);
                     break;
                 case 21:
                     // fsm state
                     var fsmStateData = RelayClient.DeserializeObject<FsmStateData>(reader);
-                    OnFsmStateSet?.Invoke(fsmStateData.CharacterId, fsmStateData.FsmStateName);
+                    OnFsmStateSet?.Invoke(fsmStateData.NetId, fsmStateData.FsmStateName);
                     break;
                 case 22:
                     // motion matching
                     var mmdata = RelayClient.DeserializeObject<int[]>(reader);
-                    OnMotionMatchingChanged?.Invoke(mmdata[0], (EState_MM)mmdata[1]);
+                    OnMotionMatchingChanged?.Invoke(new NetworkIdComponent((short)mmdata[0], (uint)mmdata[1]), (EState_MM)mmdata[1]);
                     break;
                 case 23:
                     // chat message received
@@ -398,7 +392,7 @@ namespace WukongApi
                 case 24:
                     // spawn summon
                     var summonData = RelayClient.DeserializeObject<UnitSummonData>(reader);
-                    OnSummonSpawn?.Invoke(summonData.SummonerId, summonData.Id, summonData.Guid, summonData.Name, summonData.TeamId);
+                    OnSummonSpawn?.Invoke(summonData.SummonerId, summonData.SummonId, summonData.Guid, summonData.Name, summonData.TeamId);
                     break;
                 case 25:
                     // spawn request 
@@ -539,7 +533,7 @@ namespace WukongApi
             // check if all players but one are dead
             var players = AllPvPPlayers.ToList();
             var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
-            
+
             var aliveMonsters = new List<int>();
             entityManager.RunSystem((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
             {
@@ -548,7 +542,7 @@ namespace WukongApi
 
                 aliveMonsters.Add(team.TeamId);
             });
-            
+
             var alivePlayersTeams = aliveTeamIds.Concat(aliveMonsters).ToList();
 
             var aliveTeamCount = alivePlayersTeams.Distinct().Count();
@@ -643,6 +637,11 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
             RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
             RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
+            RelayClient.RegisterType(typeof(NetworkIdComponent), (writer, customObject) =>
+            {
+                var id = (NetworkIdComponent)customObject;
+                writer.Put(id.Id);
+            }, reader => reader.GetNetworkId());
 
             RelayClient.OnPingUpdated += OnPingUpdated;
             RelayClient.OnCustomEvent += OnCustomEvent;
@@ -728,31 +727,24 @@ namespace WukongApi
             return true;
         }
 
-        public void SpawnUnit(int id, string guid, string unitName, int teamId, float x, float y, float z)
-        {
-            const byte eventCode = 1;
-            var evData = new UnitSpawnData(id, guid, unitName, teamId, x, y, z);
-            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-        }
-
-        public void SendMontageCallback(int characterId, UAnimMontage montage, float position, bool reset)
+        public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
         {
             Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
             const byte eventCode = 2;
 
             var shortened = MontageHelpers.CompressMontageName(montage.PathName, out var shortMontagePath);
             var data = shortened ? shortMontagePath : montage.PathName;
-            var evData = new MontageCallbackData(characterId, shortened, data, position, reset);
+            var evData = new MontageCallbackData(netId, shortened, data, position, reset);
 
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SendMontageCancel(int characterId)
+        public void SendMontageCancel(NetworkIdComponent netId)
         {
             Logging.LogDebug("Sending montage cancel");
             const byte eventCode = 2;
 
-            var evData = new MontageCallbackData(characterId, false, "", 0f, false);
+            var evData = new MontageCallbackData(netId, false, "", 0f, false);
 
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
@@ -815,17 +807,17 @@ namespace WukongApi
             RelayClient.OpRaiseEvent(eventCode, phantomRushDir, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void BroadcastImmobilize(int playerId, int otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
+        public void BroadcastImmobilize(NetworkIdComponent playerId, NetworkIdComponent otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
         {
             const byte eventCode = 12;
             var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType, hasBuff);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SendTarget(int characterId, int targetId, int clearTarget)
+        public void SendTarget(NetworkIdComponent characterId, NetworkIdComponent targetId, int clearTarget)
         {
             const byte eventCode = 13;
-            int[] evData = [characterId, targetId, clearTarget];
+            int[] evData = [characterId.Owner, (int)characterId.Id, targetId.Owner, (int)targetId.Id, clearTarget];
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
@@ -841,28 +833,28 @@ namespace WukongApi
             RelayClient.OpRaiseEvent(eventCode, null, RelayMode.All, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SendUnitStateTrigger(int characterId, EBUStateTrigger trigger, float time, bool needForceUpdate)
+        public void SendUnitStateTrigger(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
         {
             const byte eventCode = 19;
-            var evData = new StateTriggerData(characterId, trigger, time, needForceUpdate);
+            var evData = new StateTriggerData(netId, trigger, time, needForceUpdate);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SendUnitSimpleState(int characterId, EBGUSimpleState simpleState, bool isRemove)
+        public void SendUnitSimpleState(NetworkIdComponent netId, EBGUSimpleState simpleState, bool isRemove)
         {
             const byte eventCode = 20;
-            var evData = new SimpleStateData(characterId, simpleState, isRemove);
+            var evData = new SimpleStateData(netId, simpleState, isRemove);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SendTriggerFsmState(int characterId, FGameplayTag eventTag)
+        public void SendTriggerFsmState(NetworkIdComponent netId, FGameplayTag eventTag)
         {
             const byte eventCode = 21;
-            var evData = new FsmStateData(characterId, eventTag.TagName.ToString());
+            var evData = new FsmStateData(netId, eventTag.TagName.ToString());
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
-        public void SpawnSummon(int summonerId, int id, string guid, string unitName, int teamId)
+        public void SpawnSummon(NetworkIdComponent summonerId, NetworkIdComponent id, string guid, string unitName, int teamId)
         {
             const byte eventCode = 24;
             var evData = new UnitSummonData(summonerId, id, guid, unitName, teamId);
@@ -1102,10 +1094,10 @@ namespace WukongApi
             _playerJoinedCallback.Invoke(playerId);
 
             // send current monsters to the new player 
-            entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref PeerIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
+            entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
             {
                 const byte eventCode = 1;
-                var evData = new UnitSpawnData(netId.PeerId, tamer.Guid, tamer.UnitName, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
+                var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitName, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
             });
         }

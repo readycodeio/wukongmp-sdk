@@ -92,12 +92,6 @@ namespace WukongApi.State
 
         public int CurrentRound => RoundWinners.Count() + 1;
 
-        public int NextMonsterId
-        {
-            get => GetProperty<int>(nameof(NextMonsterId));
-            set => SetProperty(nameof(NextMonsterId), value);
-        }
-
         public void SetLastRoundWinnerTeam(int winner)
         {
             var winners = RoundWinners.ToList();

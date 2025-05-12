@@ -1,24 +1,27 @@
 ﻿using LiteNetLib.Utils;
+using ReadyM.Relay.Common.ECS.Components;
 
 namespace WukongApi
 {
-    public class FsmStateData(int characterId, string fsmStateName)
+    public class FsmStateData(NetworkIdComponent netId, string fsmStateName)
     {
-        public int CharacterId { get; } = characterId;
+        public NetworkIdComponent NetId { get; } = netId;
         public string FsmStateName { get; } = fsmStateName;
 
         public static void Serialize(NetDataWriter outStream, object fsmStateData)
         {
             var spawnData = (FsmStateData)fsmStateData;
-            outStream.Put(spawnData.CharacterId);
+            outStream.Put(spawnData.NetId.Owner);
+            outStream.Put(spawnData.NetId.Id);
             outStream.Put(spawnData.FsmStateName);
         }
 
         public static object Deserialize(NetDataReader inStream)
         {
-            var id = inStream.GetInt();
+            var owner = inStream.GetShort();
+            var id = inStream.GetUInt();
             var name = inStream.GetString();
-            return new FsmStateData(id, name);
+            return new FsmStateData(new NetworkIdComponent(owner, id), name);
         }
     }
 }

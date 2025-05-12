@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CSharpModBase;
 using CSharpModBase.Input;
+using ReadyM.Relay.Common.ECS.Components;
 using WukongApi;
 using WukongApi.UI;
 
@@ -72,13 +73,13 @@ namespace WukongMPMod
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
-                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Client.LocalPlayerState.PeerId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMP.Instance.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
             
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
-                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(WukongMP.Instance.Client.LocalPlayerState.PeerId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMP.Instance.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
