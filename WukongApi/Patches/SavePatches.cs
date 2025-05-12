@@ -113,26 +113,35 @@ namespace WukongApi.Patches
                 }
             }
 
-            // Read archive with our world state.
-            var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
-            if (readArchiveResult != 0)
+            if (!Constants.IsCoop)
             {
-                Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
-                return;
+                // Read archive with our world state.
+                var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
+                if (readArchiveResult != 0)
+                {
+                    Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
+                    return;
+                }
+
+                // Keep only RoleData with player state
+                OutArchiveData.LevelArchiveData = gameArchiveData.GameArchiveData.LevelArchiveData;
+                OutArchiveData.PersistentECSData = gameArchiveData.GameArchiveData.PersistentECSData;
+                OutArchiveData.StateMachineArchiveData = gameArchiveData.GameArchiveData.StateMachineArchiveData;
+                OutArchiveData.TaskArchiveData = gameArchiveData.GameArchiveData.TaskArchiveData;
+
+                var levelConfig = LevelSpawnConfig.GetCurrentLevelSpawnData();
+                OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = levelConfig.MapId;
+                OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
+                OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
+            }
+            else
+            {
+                OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = 10;
+                OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = 1;
+                OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = 1001;
             }
 
             SavePatchesData.CustomSaveEnabled = false;
-
-            // Keep only RoleData with player state
-            OutArchiveData.LevelArchiveData = gameArchiveData.GameArchiveData.LevelArchiveData;
-            OutArchiveData.PersistentECSData = gameArchiveData.GameArchiveData.PersistentECSData;
-            OutArchiveData.StateMachineArchiveData = gameArchiveData.GameArchiveData.StateMachineArchiveData;
-            OutArchiveData.TaskArchiveData = gameArchiveData.GameArchiveData.TaskArchiveData;
-
-            var levelConfig = LevelSpawnConfig.GetCurrentLevelSpawnData();
-            OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = levelConfig.MapId;
-            OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
-            OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
 
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
             OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
@@ -209,6 +218,54 @@ namespace WukongApi.Patches
         {
             __result = false;
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnSetRebirthPointAsCurrentBirthPoint")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnSetRebirthPointAsCurrentBirthPoint
+    {
+        public static void Postfix(UActorCompBaseCS __instance, int RebirthPointID)
+        {
+            Logging.LogWarning("BirthPointID updated: {Id}", RebirthPointID);
+            FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointID);
+            if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
+            {
+                Logging.LogWarning("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogWarning("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnSetCurrentBirthPoint")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnSetCurrentBirthPoint
+    {
+        public static void Postfix(UActorCompBaseCS __instance, int BirthPointID)
+        {
+            Logging.LogWarning("BirthPointID updated: {Id}", BirthPointID);
+            FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(BirthPointID);
+            if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
+            {
+                Logging.LogWarning("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogWarning("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnForceSetRebirthPoint")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnForceSetRebirthPoint
+    {
+        public static void Postfix(UActorCompBaseCS __instance, int RebirthPointId)
+        {
+            Logging.LogWarning("BirthPointID updated: {Id}", RebirthPointId);
+            FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointId);
+            if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
+            {
+                Logging.LogWarning("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogWarning("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+            }
         }
     }
 }

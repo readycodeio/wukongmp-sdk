@@ -1347,7 +1347,10 @@ namespace WukongApi
         private void OnAfterJoinedRoomCallback()
         {
             var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PeerId);
-            TeleportLocalPlayer(spawnPosition, FRotator.ZeroRotator);
+            if (!Constants.IsCoop)
+            {
+                TeleportLocalPlayer(spawnPosition, FRotator.ZeroRotator);
+            }
         }
 
         private void OnTeleportFinish(int playerId)
