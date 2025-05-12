@@ -9,23 +9,6 @@ using WukongApi.State;
 
 namespace WukongApi.Patches
 {
-    [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnTickImpl")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchTick
-    {
-        public static void Postfix(float DeltaTime, bool IsThreadTick)
-        {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
-
-            if (IsThreadTick)
-            {
-                var client = WukongMP.Instance.Client;
-                client.RunTickSystems();
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchAttrs
@@ -100,10 +83,7 @@ namespace WukongApi.Patches
 
                     Logging.LogDebug("Applying unit dead for player {PlayerId}", client.LocalPlayerState.PeerId);
 
-                    GameLoopPatch.QueueOnGameThread(() =>
-                    {
-                        events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-                    }, "Evt_UnitDead");
+                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
             else
@@ -149,10 +129,7 @@ namespace WukongApi.Patches
                         }
 
                         Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PeerId);
-                        GameLoopPatch.QueueOnGameThread(() =>
-                        {
-                            events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-                        }, "Evt_UnitDead");
+                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
                 else
@@ -242,21 +219,15 @@ namespace WukongApi.Patches
 
                     // monster was damaged
                     var entity = client.GetMonsterByCharacter(owner as BGUCharacterCS);
-                    if (entity.HasValue)
+                    if (!entity.HasValue || !client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
                     {
-                        if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
-                        {
-                            Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
-                            return;
-                        }
-
-                        ref var hpComp = ref client.GetEntityComponent<HpComponent>(entity.Value);
-
-                        hpComp.Hp = result;
+                        Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
                         return;
                     }
 
-                    // unsynced monster or sth else
+                    ref var hpComp = ref client.GetEntityComponent<HpComponent>(entity.Value);
+
+                    hpComp.Hp = result;
                     return;
                 }
 

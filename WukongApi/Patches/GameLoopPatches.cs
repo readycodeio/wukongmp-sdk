@@ -102,15 +102,15 @@ namespace WukongApi.Patches
                 return;
 
             var client = WukongMP.Instance.Client;
-            
+
             SyncMontage(client.LocalPlayerState);
-            
+
             if (client.IsMasterClient)
             {
                 client.entityManager.RunSystem<TamerComponent, PeerIdComponent>(SyncMontage);
             }
         }
-        
+
         private static void SyncMontage(EntityId entityId, ref TamerComponent tamerComponent, ref PeerIdComponent netId)
         {
             if (tamerComponent.Pawn == null)
@@ -211,6 +211,7 @@ namespace WukongApi.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 ComponentMonitorManager.Instance.Update();
+                WukongMP.Instance.Client.RunTickSystems();
             }
 
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))

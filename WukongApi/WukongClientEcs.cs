@@ -6,11 +6,9 @@ using LiteNetLib.Utils;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
-using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
 using WukongApi.Patches;
-using WukongApi.State;
 using EntityManager = ReadyM.Relay.Common.ECS.EntityManager;
 
 namespace WukongApi;
@@ -178,7 +176,25 @@ public sealed partial class WukongClient
         {
             var entity = entityManager.GetEntityByPeerId(peerId);
 
-            if (entity.HasValue)
+            if (!entity.HasValue || !entityManager.IsEntityAlive(entity.Value))
+            {
+                if (!entity.HasValue)
+                {
+                    Logging.LogWarning("Entity not found in index for peer {Peer}", peerId);
+                }
+                else
+                {
+                    Logging.LogWarning("Entity not alive for peer {Peer}", peerId);
+                }
+
+                AnimationComponent.SkipDelta(RelayClient, reader);
+                HpComponent.SkipDelta(RelayClient, reader);
+                MonsterAnimationComponent.SkipDelta(RelayClient, reader);
+                NicknameComponent.SkipDelta(RelayClient, reader);
+                TeamComponent.SkipDelta(RelayClient, reader);
+                TranslationComponent.SkipDelta(RelayClient, reader);
+            }
+            else
             {
                 Logging.LogDebug("Received delta for peer {Peer}", peerId);
 
@@ -195,17 +211,6 @@ public sealed partial class WukongClient
                 nickname.ReadDelta(RelayClient, reader);
                 team.ReadDelta(RelayClient, reader);
                 translation.ReadDelta(RelayClient, reader);
-            }
-            else
-            {
-                Logging.LogWarning("Entity not found in index for peer {Peer}", peerId);
-
-                AnimationComponent.SkipDelta(RelayClient, reader);
-                HpComponent.SkipDelta(RelayClient, reader);
-                MonsterAnimationComponent.SkipDelta(RelayClient, reader);
-                NicknameComponent.SkipDelta(RelayClient, reader);
-                TeamComponent.SkipDelta(RelayClient, reader);
-                TranslationComponent.SkipDelta(RelayClient, reader);
             }
         }
     }

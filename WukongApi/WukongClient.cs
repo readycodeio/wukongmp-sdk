@@ -3,11 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using b1;
-using b1.ECS;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
@@ -21,6 +19,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.DataTransferObjects;
 using WukongApi.ECS;
+using WukongApi.Resources;
 using WukongApi.State;
 using WukongApi.UI;
 using EntityManager = ReadyM.Relay.Common.ECS.EntityManager;
@@ -265,7 +264,7 @@ namespace WukongApi
             EntityId? entityId = null;
             entityManager.RunSystem((EntityId entity, ref TamerComponent tamerComponent) =>
             {
-                if (tamerComponent.Tamer == owner)
+                if (tamerComponent.Pawn == owner)
                 {
                     entityId = entity;
                 }
@@ -433,11 +432,11 @@ namespace WukongApi
 
                     if (winnerTeamId == Constants.DrawTeamId)
                     {
-                        GameUtils.ShowTip(Resources.Texts.RoundDraw);
+                        GameUtils.ShowTip(Texts.RoundDraw);
                     }
                     else
                     {
-                        GameUtils.ShowTip(string.Format(Resources.Texts.RoundEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
+                        GameUtils.ShowTip(string.Format(Texts.RoundEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
                     }
 
                     if (winnerTeamId == Constants.DrawTeamId)
@@ -453,11 +452,11 @@ namespace WukongApi
                 {
                     if (winnerTeamId == Constants.DrawTeamId)
                     {
-                        GameUtils.ShowTip(Resources.Texts.TournamentDraw);
+                        GameUtils.ShowTip(Texts.TournamentDraw);
                     }
                     else
                     {
-                        GameUtils.ShowTip(string.Format(Resources.Texts.TournamentEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
+                        GameUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
                     }
 
                     Task.Run(async () =>
