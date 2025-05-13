@@ -31,7 +31,7 @@ namespace WukongApi.Patches
             {
                 client.entityManager.RunSystem((
                     EntityId _,
-                    ref TamerComponent tamer,
+                    ref LocalTamerComponent tamer,
                     ref TranslationComponent trans
                 ) =>
                 {
@@ -46,7 +46,7 @@ namespace WukongApi.Patches
             {
                 client.entityManager.RunSystem((
                     EntityId _,
-                    ref TamerComponent tamer,
+                    ref LocalTamerComponent tamer,
                     ref TranslationComponent trans
                 ) =>
                 {
@@ -91,7 +91,16 @@ namespace WukongApi.Patches
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
-                ClientUtils.SyncMonsterAndNotify(client, tamer);
+                var entity = client.GetByTamerActor(tamer);
+                if (entity != null)
+                {
+                    ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entity.Value);
+                    tamerComp.IsSpawned = true; 
+                }
+                else
+                {
+                    Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
+                }
             }
             catch (Exception e)
             {
@@ -259,7 +268,7 @@ namespace WukongApi.Patches
                 var entity = client.GetMonsterByActor(owner);
                 if (entity != null)
                 {
-                    var tamerComp = client.GetEntityComponent<TamerComponent>(entity.Value);
+                    var tamerComp = client.GetEntityComponent<LocalTamerComponent>(entity.Value);
                     if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
                     {
                         Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
@@ -303,7 +312,7 @@ namespace WukongApi.Patches
             var entity = client.GetMonsterByCharacter(character);
             if (entity.HasValue)
             {
-                ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entity.Value);
+                ref var tamerComp = ref client.GetEntityComponent<LocalTamerComponent>(entity.Value);
                 
                 if (!tamerComp.IsTamerValid)
                     return;

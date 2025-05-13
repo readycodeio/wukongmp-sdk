@@ -148,7 +148,10 @@ namespace WukongApi
             // this is triggered for every player controller, but we want to apply the logic once
             if (!Client.ConnectedAndInRoom)
             {
-                GameUtils.DestroyAllTamers();
+                if (!Constants.IsCoop)
+                {
+                    GameUtils.DestroyAllTamers();
+                }
                 BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
                 Client.StartClient();
@@ -310,10 +313,10 @@ namespace WukongApi
             }
 
             // dump synced monsters
-            Client.entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref HpComponent hp, ref TeamComponent team) =>
+            Client.entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref LocalTamerComponent localTamer, ref HpComponent hp, ref TeamComponent team) =>
             {
-                var realTeamId = tamer.Tamer?.GetMonster().GetTeamIDInCS();
-                Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={tamer.IsSynced}, IsTamerValid={tamer.IsTamerValid}");
+                var realTeamId = localTamer.Tamer?.GetMonster().GetTeamIDInCS();
+                Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={localTamer.IsSynced}, IsTamerValid={localTamer.IsTamerValid}");
             });
 
             // print team hostility info
@@ -341,7 +344,7 @@ namespace WukongApi
                 Client.RoomState.InCombatRound = true;
 
                 var monsterCount = 0;
-                Client.entityManager.RunSystem((EntityId _, ref TamerComponent tamer) =>
+                Client.entityManager.RunSystem((EntityId _, ref LocalTamerComponent tamer) =>
                 {
                     if (tamer.IsSynced)
                     {
@@ -686,7 +689,7 @@ namespace WukongApi
                 return;
             }
 
-            var tamerComponent = Client.GetEntityComponent<TamerComponent>(entity.Value);
+            var tamerComponent = Client.GetEntityComponent<LocalTamerComponent>(entity.Value);
 
             var events = BUS_EventCollectionCS.Get(tamerComponent.Pawn);
 
@@ -1244,10 +1247,12 @@ namespace WukongApi
         {
             var id = Client.CreateNetworkedMonster(netId);
 
+            ref var localTamerComp = ref Client.GetEntityComponent<LocalTamerComponent>(id);
+            localTamerComp.Tamer = tamer;
+
             ref var tamerComp = ref Client.GetEntityComponent<TamerComponent>(id);
-            tamerComp.Tamer = tamer;
             tamerComp.Guid = guid;
-            tamerComp.UnitName = unitName;
+            tamerComp.UnitPath = unitName;
 
             ref var teamComp = ref Client.GetEntityComponent<TeamComponent>(id);
             teamComp.TeamId = teamId;
@@ -1260,10 +1265,12 @@ namespace WukongApi
         {
             var id = Client.CreateNetworkedMonster();
 
+            ref var localTamerComp = ref Client.GetEntityComponent<LocalTamerComponent>(id);
+            localTamerComp.Tamer = tamer;
+
             ref var tamerComp = ref Client.GetEntityComponent<TamerComponent>(id);
-            tamerComp.Tamer = tamer;
             tamerComp.Guid = guid;
-            tamerComp.UnitName = unitName;
+            tamerComp.UnitPath = unitName;
 
             ref var teamComp = ref Client.GetEntityComponent<TeamComponent>(id);
             teamComp.TeamId = teamId;
@@ -1303,6 +1310,34 @@ namespace WukongApi
             }
         }
 
+        public void DiscoverMonsters()
+        {
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            if (Client.IsMasterClient)
+            {
+                foreach (var actor in allActorsOfClass)
+                {
+                    var tamerRef = actor.CurrentRef;
+                    Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, BGU_DataUtil.GetActorGuid(actor));
+                    if (tamerRef.Phase != ETamerPhase.Dead)
+                    {
+                        CreateMonster(BGU_DataUtil.GetActorGuid(actor), actor, 2, actor.MonsterClassPath);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var actor in allActorsOfClass)
+                {
+                    var entity = Client.GetByTamerActor(actor);
+                    if (!entity.HasValue)
+                    {
+                        actor.DestroyActor();
+                    }
+                }
+            }
+        }
+
         public void DestroySyncedMonsters()
         {
             var entities = Client.entityManager.GetArchetype(Client.monsterArchetype)!;
@@ -1314,7 +1349,7 @@ namespace WukongApi
 
         public void DestroyMonster(EntityId entity)
         {
-            var tamerComp = Client.GetEntityComponent<TamerComponent>(entity);
+            var tamerComp = Client.GetEntityComponent<LocalTamerComponent>(entity);
 
             if (tamerComp.Tamer == null)
             {
@@ -1363,6 +1398,10 @@ namespace WukongApi
             if (!Constants.IsCoop)
             {
                 TeleportLocalPlayer(spawnPosition, FRotator.ZeroRotator);
+            }
+            else
+            {
+                Utils.TryRunOnGameThread(DiscoverMonsters);
             }
         }
 

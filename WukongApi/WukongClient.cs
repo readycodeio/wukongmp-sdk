@@ -160,7 +160,7 @@ namespace WukongApi
                 return null;
 
             EntityId? entityId = null;
-            entityManager.RunSystem((EntityId entity, ref TamerComponent tamerComponent) =>
+            entityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == actor)
                 {
@@ -185,7 +185,7 @@ namespace WukongApi
                 return null;
 
             EntityId? entityId = null;
-            entityManager.RunSystem((EntityId entity, ref TamerComponent tamerComponent) =>
+            entityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Tamer == owner)
                 {
@@ -256,7 +256,7 @@ namespace WukongApi
                 return null;
 
             EntityId? entityId = null;
-            entityManager.RunSystem((EntityId entity, ref TamerComponent tamerComponent) =>
+            entityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == owner)
                 {
@@ -1056,8 +1056,6 @@ namespace WukongApi
             LocalPlayerState.IsReadyForPvP = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsReadyForPvP), false);
             LocalPlayerState.IsSpectator = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
 
-            Utils.TryRunOnGameThread(ClientUtils.DiscoverMonsters);
-
             SubscribeToPlayerEvents();
             _beforeJoinedRoomCallback.Invoke();
 
@@ -1097,7 +1095,7 @@ namespace WukongApi
             entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
             {
                 const byte eventCode = 1;
-                var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitName, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
+                var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
             });
         }

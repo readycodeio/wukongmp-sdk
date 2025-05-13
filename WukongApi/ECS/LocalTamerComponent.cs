@@ -6,14 +6,15 @@ using WukongApi.State;
 namespace WukongApi.ECS;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct TamerComponent
+public struct LocalTamerComponent
 {
     public bool IsSynced;
+    public bool IsMonsterSpawned;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
     
-    public string UnitName;
-    public string Guid;
+    //public string UnitName;
+    //public string Guid;
     
     private BUTamerActor? _tamer;
 
@@ -35,9 +36,19 @@ public struct TamerComponent
     {
         get
         {
-            if (_tamer == null || _tamer.IsNullOrDestroyed() || _tamer.GetMonster().IsNullOrDestroyed())
+            if (!IsMonsterSpawned)
             {
-                Logging.LogWarning("Tamer or monster is null or destroyed");
+                return null;
+            }
+            if (_tamer == null || _tamer.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Tamer is null or destroyed in getPawn");
+                return null;
+            }
+            if (_tamer.GetMonster().IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Monster is null or destroyed in getPawn");
+                Logging.LogWarning(new System.Diagnostics.StackTrace(true).ToString());
                 return null;
             }
 

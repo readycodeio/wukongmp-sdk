@@ -139,7 +139,7 @@ namespace WukongApi.Patches
                     if (!entity.HasValue)
                         return;
 
-                    if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
+                    if (!client.GetEntityComponent<LocalTamerComponent>(entity.Value).IsSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
                         // TODO: Rethink "IsSynced"
@@ -220,7 +220,7 @@ namespace WukongApi.Patches
 
                     // monster was damaged
                     var entity = client.GetMonsterByCharacter(owner as BGUCharacterCS);
-                    if (!entity.HasValue || !client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
+                    if (!entity.HasValue || !client.GetEntityComponent<LocalTamerComponent>(entity.Value).IsSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
                         return;
@@ -384,7 +384,7 @@ namespace WukongApi.Patches
 
                     if (entity.HasValue)
                     {
-                        if (!client.GetEntityComponent<TamerComponent>(entity.Value).IsSynced)
+                        if (!client.GetEntityComponent<LocalTamerComponent>(entity.Value).IsSynced)
                         {
                             return;
                         }
@@ -402,7 +402,7 @@ namespace WukongApi.Patches
                         else
                         {
                             var anim = client.GetEntityComponent<AnimationComponent>(entity.Value);
-                            var tamer = client.GetEntityComponent<TamerComponent>(entity.Value);
+                            var tamer = client.GetEntityComponent<LocalTamerComponent>(entity.Value);
 
                             __instance.Velocity = anim.Velocity.ToFVector();
                             __instance.MoveAcceleration = anim.MoveAcceleration.ToFVector();

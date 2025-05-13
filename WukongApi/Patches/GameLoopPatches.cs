@@ -108,11 +108,11 @@ namespace WukongApi.Patches
 
             if (client.IsMasterClient)
             {
-                client.entityManager.RunSystem<TamerComponent, NetworkIdComponent>(SyncMontage);
+                client.entityManager.RunSystem<LocalTamerComponent, NetworkIdComponent>(SyncMontage);
             }
         }
 
-        private static void SyncMontage(EntityId entityId, ref TamerComponent tamerComponent, ref NetworkIdComponent netId)
+        private static void SyncMontage(EntityId entityId, ref LocalTamerComponent tamerComponent, ref NetworkIdComponent netId)
         {
             if (tamerComponent.Pawn == null)
                 return;

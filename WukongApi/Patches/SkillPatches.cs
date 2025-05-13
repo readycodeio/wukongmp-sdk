@@ -309,7 +309,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entityId!.Value);
+        ref var tamerComp = ref client.GetEntityComponent<LocalTamerComponent>(entityId!.Value);
 
         if (!tamerComp.RunImmobilizePatches)
         {
@@ -355,7 +355,7 @@ public static class PatchOnTriggerImmobilizedBreak
             if (entityId.HasValue)
             {
                 var netId = client.GetEntityComponent<NetworkIdComponent>(entityId.Value);
-                var pawn = client.GetEntityComponent<TamerComponent>(entityId.Value).Pawn;
+                var pawn = client.GetEntityComponent<LocalTamerComponent>(entityId.Value).Pawn;
 
                 client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();

@@ -9,6 +9,7 @@ using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
 using WukongApi.Patches;
@@ -25,6 +26,7 @@ public sealed partial class WukongClient
         monsterArchetype = entityManager.DefineArchetype(
             typeof(LocalDeathComponent),
             typeof(MarkerComponent),
+            typeof(LocalTamerComponent),
             typeof(TamerComponent),
             typeof(AnimationComponent),
             typeof(HpComponent),
@@ -51,13 +53,109 @@ public sealed partial class WukongClient
         entityManager.RemoveQueuedEntities();
 
         SetCachedPlayerProperties(); // not a system
+
+        SyncTamers();
         UpdateMarkerPositions();
         CheckMonsterDeath();
+        SyncMonsters();
 
         if (IsMasterClient)
         {
             SendMonsterArchetypeDelta();
         }
+    }
+
+    private void SyncTamers()
+    {
+        entityManager.RunSystem((
+           EntityId entityId,
+           ref TamerComponent tamer,
+           ref LocalTamerComponent localTamer) =>
+        {
+            if (!localTamer.IsSynced)
+            {
+                bool found = false;
+                var allTamers = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+                foreach (var actor in allTamers)
+                {
+                    if (actor != null && BGU_DataUtil.GetActorGuid(actor) == tamer.Guid)
+                    {
+                        found = true;
+                        localTamer.Tamer = actor;
+                        localTamer.IsSynced = true;
+                    }
+                }
+                if (!found)
+                {
+                    // spawn tamer
+                }
+            }
+        });
+    }
+
+    private void SyncMonsters()
+    {
+        entityManager.RunSystem((
+                   EntityId entityId,
+                   ref HpComponent hpComp,
+                   ref TeamComponent teamComp,
+                   ref TamerComponent tamer,
+                   ref LocalTamerComponent localTamer) =>
+        {
+            if (localTamer.IsMonsterSpawned || !tamer.IsSpawned)
+            {
+                return;
+            }
+
+
+            var monster = localTamer.Tamer?.GetMonster();
+            if (monster == null)
+            {
+                var bgsEvents = BGS_EventCollectionCS.Get(localTamer.Tamer);
+                if (bgsEvents == null)
+                {
+                    Logging.LogError("events are null");
+                    return;
+                }
+                bgsEvents.Evt_TamerBlockingSpawnImmediately.Invoke(tamer.Guid);
+            }
+
+            monster = localTamer.Tamer?.GetMonster();
+            if (monster == null)
+            {
+                Logging.LogError("monster is null");
+                return;
+            }
+
+            // set monster hp
+            var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
+            hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+
+            var events = BUS_EventCollectionCS.Get(localTamer.Tamer);
+            if (events == null)
+            {
+                Logging.LogError("events are null");
+                return;
+            }
+
+            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(localTamer.Pawn);
+            if (mmData != null)
+            {
+                events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
+            }
+
+            if (!IsMasterClient)
+            {
+                events.Evt_AIPerceptionSetting.Invoke(false);
+                events.Evt_AIPauseBT.Invoke(true);
+                Logging.LogDebug("Tamer actor disabled.");
+            }
+
+            ClientUtils.RegisterNewPlayerTeam(monster, teamComp.TeamId);
+
+            localTamer.IsMonsterSpawned = true;
+            Logging.LogDebug("Monster {Guid} synced", tamer.Guid);
+        });
     }
 
     private void CheckMonsterDeath()
@@ -67,11 +165,11 @@ public sealed partial class WukongClient
         entityManager.RunSystem((
             EntityId entityId,
             ref HpComponent hpComp,
-            ref TamerComponent tamer,
+            ref LocalTamerComponent tamer,
             ref LocalDeathComponent localDeath,
             ref MarkerComponent marker) =>
         {
-            if (hpComp.Hp <= 0 && !localDeath.killed)
+            if (tamer.IsMonsterSpawned && hpComp.Hp <= 0 && !localDeath.killed)
             {
                 Logging.LogDebug("Monster {Id} died", entityId);
                 localDeath.killed = true;
@@ -113,7 +211,7 @@ public sealed partial class WukongClient
     private void UpdateMarkerPositions()
     {
         entityManager.RunSystem((EntityId _,
-            ref TamerComponent tamer,
+            ref LocalTamerComponent tamer,
             ref MarkerComponent marker,
             ref TranslationComponent trans) =>
         {
@@ -144,7 +242,8 @@ public sealed partial class WukongClient
             ref NicknameComponent nickname,
             ref NetworkIdComponent netId,
             ref TeamComponent team,
-            ref TranslationComponent translation
+            ref TranslationComponent translation,
+            ref TamerComponent tamer
         ) =>
         {
             bool retried = false;
@@ -182,6 +281,9 @@ public sealed partial class WukongClient
 
                 translation.WriteDelta(RelayClient, writer);
                 translation.ClearDirty();
+
+                tamer.WriteDelta(RelayClient, writer);
+                tamer.ClearDirty();
 
                 if (writer.Length > RelayClient.GetMaxPacketSize(DeliveryMethod.Unreliable))
                 {
@@ -271,7 +373,7 @@ public sealed partial class WukongClient
         var entity = entityManager.GetEntityByNetworkId(netId);
         if (entity.HasValue)
         {
-            ref var tamer = ref GetEntityComponent<TamerComponent>(entity.Value);
+            ref var tamer = ref GetEntityComponent<LocalTamerComponent>(entity.Value);
             return tamer.Pawn;
         }
 
