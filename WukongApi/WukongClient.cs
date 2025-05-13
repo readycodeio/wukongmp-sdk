@@ -1091,13 +1091,16 @@ namespace WukongApi
 
             _playerJoinedCallback.Invoke(playerId);
 
-            // send current monsters to the new player 
-            entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
+            if (!Constants.IsCoop)
             {
-                const byte eventCode = 1;
-                var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
-                RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
-            });
+                // send current monsters to the new player
+                entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
+                {
+                    const byte eventCode = 1;
+                    var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
+                    RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
+                });
+            }
         }
 
         private void OnPlayerLeftRoomHandler(int playerId)
