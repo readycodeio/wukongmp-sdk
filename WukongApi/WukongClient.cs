@@ -15,7 +15,6 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
-using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.DataTransferObjects;
@@ -23,7 +22,6 @@ using WukongApi.ECS;
 using WukongApi.Resources;
 using WukongApi.State;
 using WukongApi.UI;
-using EntityManager = ReadyM.Relay.Common.ECS.EntityManager;
 using Player = ReadyM.Relay.Client.Player;
 using PlayerState = WukongApi.State.PlayerState;
 

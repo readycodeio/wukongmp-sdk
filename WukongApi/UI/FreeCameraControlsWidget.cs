@@ -1,4 +1,6 @@
-﻿namespace WukongApi.UI
+﻿using WukongApi.Resources;
+
+namespace WukongApi.UI
 {
     public class FreeCameraControlsWidget : GameWidgetBase
     {
@@ -61,10 +63,10 @@
         protected override void PostInitialize()
         {
             SetStaticTexts(
-                Resources.Texts.CameraDownControls, Resources.Texts.CameraDownDescription,
-                Resources.Texts.CameraMoveControls, Resources.Texts.CameraMoveDescription,
-                Resources.Texts.CameraRotateControls, Resources.Texts.CameraRotateDescription,
-                Resources.Texts.CameraUpControls, Resources.Texts.CameraUpDescription);
+                Texts.CameraDownControls, Texts.CameraDownDescription,
+                Texts.CameraMoveControls, Texts.CameraMoveDescription,
+                Texts.CameraRotateControls, Texts.CameraRotateDescription,
+                Texts.CameraUpControls, Texts.CameraUpDescription);
         }
     }
 }

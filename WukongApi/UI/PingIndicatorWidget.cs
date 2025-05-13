@@ -1,4 +1,6 @@
-﻿namespace WukongApi.UI
+﻿using WukongApi.Resources;
+
+namespace WukongApi.UI
 {
     public class PingIndicatorWidget : GameWidgetBase
     {
@@ -29,7 +31,7 @@
 
         protected override void PostInitialize() 
         {
-            SetStaticTexts(Resources.Texts.Ping, Resources.Texts.PingUnits);
+            SetStaticTexts(Texts.Ping, Texts.PingUnits);
         }
     }
 }

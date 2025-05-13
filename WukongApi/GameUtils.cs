@@ -9,6 +9,7 @@ using HarmonyLib;
 using UnrealEngine.AssetRegistry;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.Resources;
 
 namespace WukongApi
 {
@@ -119,7 +120,7 @@ namespace WukongApi
                 var client = WukongMP.Instance.Client;
                 var current = client.RoomState.CurrentRound;
                 var total = client.RoomState.TournamentRounds;
-                ShowTip(string.Format(Resources.Texts.RoundCount, current, total));
+                ShowTip(string.Format(Texts.RoundCount, current, total));
             });
         }
 
@@ -144,9 +145,9 @@ namespace WukongApi
         public static string GetLocalizedTeamName(int teamId)
         {
             if (teamId == Constants.AvailableTeamIds[0])
-                return Resources.Texts.RedTeam;
+                return Texts.RedTeam;
             if (teamId == Constants.AvailableTeamIds[1])
-                return Resources.Texts.BlueTeam;
+                return Texts.BlueTeam;
             return "";
         }
 

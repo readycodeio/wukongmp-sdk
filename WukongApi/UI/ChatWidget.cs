@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using WukongApi.Resources;
 
 namespace WukongApi.UI
 {
@@ -17,7 +18,7 @@ namespace WukongApi.UI
         {
             ClearMessages();
             ClearToolTipText();
-            SetHelperText(Resources.Texts.ChatHelperDescription);
+            SetHelperText(Texts.ChatHelperDescription);
         }
 
         public bool HasFocus()

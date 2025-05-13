@@ -1,4 +1,6 @@
-﻿namespace WukongApi.UI
+﻿using WukongApi.Resources;
+
+namespace WukongApi.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
     {
@@ -109,7 +111,7 @@
 
         protected override void PostInitialize()
         {
-            SetStaticTexts(Resources.Texts.RedTeam, Resources.Texts.BlueTeam, Resources.Texts.Spectators, Resources.Texts.Ready, Resources.Texts.Connected, Resources.Texts.More);
+            SetStaticTexts(Texts.RedTeam, Texts.BlueTeam, Texts.Spectators, Texts.Ready, Texts.Connected, Texts.More);
         }
     }
 }

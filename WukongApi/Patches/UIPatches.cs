@@ -12,7 +12,8 @@ using HarmonyLib;
 using ResB1;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using WukongApi.UI;
+using WukongApi.Resources;
+using CultureInfo = System.Globalization.CultureInfo;
 
 namespace WukongApi.Patches
 {
@@ -76,7 +77,7 @@ namespace WukongApi.Patches
                     Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
                     if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                     {
-                        ___StartGameBtnList[j].SetTxtName(FText.FromString(Resources.Texts.QuickJoin));
+                        ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
                     }
                     else
                     {
@@ -91,12 +92,12 @@ namespace WukongApi.Patches
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
                     Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Resources.Texts.NewCharacter));
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
                 {
                     Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Resources.Texts.SelectCharacter));
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
                 {
@@ -261,7 +262,7 @@ namespace WukongApi.Patches
         public static void Postfix(string Culture)
         {
             Logging.LogDebug("Culture changed to: {Culture}", Culture);
-            Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo(Culture);
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo(Culture);
         }
     }
 }

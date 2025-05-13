@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using WukongApi.Patches;
+using WukongApi.Resources;
 using WukongApi.State;
 using WukongApi.UI;
 
@@ -53,7 +54,7 @@ namespace WukongApi
         {
             if (!UnitPathsConfig.IsValidMonsterName(args.Span[0]))
             {
-                ChatWidget.Instance.AddMessage(true, "Command", $"{Resources.Texts.InvalidUnitName}: \"{args.Span[0]}\"");
+                ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[0]}\"");
                 return;
             }
 
@@ -72,7 +73,7 @@ namespace WukongApi
                     }
                     else
                     {
-                        ChatWidget.Instance.AddMessage(true, "Command", $"{Resources.Texts.InvalidUnitName}: \"{args.Span[1]}\"");
+                        ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
                     }
 
                     break;
@@ -164,7 +165,7 @@ namespace WukongApi
             var translatedMessage = message.Message;
             if (message.IsServer)
             {
-                translatedMessage = string.Format(Resources.Texts.ResourceManager.GetString(message.Message, Resources.Texts.Culture)!, [.. message.Placeholders]);
+                translatedMessage = string.Format(Texts.ResourceManager.GetString(message.Message, Texts.Culture)!, [.. message.Placeholders]);
             }
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
             ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);

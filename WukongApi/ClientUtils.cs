@@ -1,11 +1,5 @@
 ﻿using System.Collections.Generic;
 using b1;
-using BtlShare;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong;
-using UnrealEngine.Engine;
-using WukongApi.ECS;
-using WukongApi.State;
 
 namespace WukongApi
 {

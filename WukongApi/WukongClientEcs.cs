@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
 using LiteNetLib;
@@ -8,7 +7,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
-using ReadyM.Relay.Common.Wukong;
+using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
@@ -270,25 +269,12 @@ public sealed partial class WukongClient
                 writer.Put(netId);
 
                 animation.WriteDelta(RelayClient, writer);
-                animation.ClearDirty();
-
                 health.WriteDelta(RelayClient, writer);
-                health.ClearDirty();
-
                 monsterAnimation.WriteDelta(RelayClient, writer);
-                monsterAnimation.ClearDirty();
-
                 nickname.WriteDelta(RelayClient, writer);
-                nickname.ClearDirty();
-
                 team.WriteDelta(RelayClient, writer);
-                team.ClearDirty();
-
                 translation.WriteDelta(RelayClient, writer);
-                translation.ClearDirty();
-
                 tamer.WriteDelta(RelayClient, writer);
-                tamer.ClearDirty();
 
                 if (writer.Length > RelayClient.GetMaxPacketSize(DeliveryMethod.Unreliable))
                 {
@@ -311,6 +297,14 @@ public sealed partial class WukongClient
                     // Continue loop to retry
                     continue;
                 }
+
+                animation.ClearDirty();
+                health.ClearDirty();
+                monsterAnimation.ClearDirty();
+                nickname.ClearDirty();
+                team.ClearDirty();
+                translation.ClearDirty();
+                tamer.ClearDirty();
 
                 break;
             }
