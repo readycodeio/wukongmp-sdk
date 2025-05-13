@@ -96,12 +96,12 @@ public sealed partial class WukongClient
         }
     }
 
-    public EntityId CreateNetworkedEntity()
+    public EntityId CreateNetworkedMonster()
     {
-        return entityManager.CreateNetworkedEntity(monsterArchetype, (short)RelayClient.LocalPlayer.PeerId);
+        return entityManager.CreateNetworkedEntity(monsterArchetype, (short)RelayClient.LocalPlayer.PeerId).EntityId;
     }
 
-    public EntityId CreateNetworkedEntity(NetworkIdComponent netId)
+    public EntityId CreateNetworkedMonster(NetworkIdComponent netId)
     {
         return entityManager.CreateNetworkedEntity(monsterArchetype, netId);
     }
@@ -195,7 +195,7 @@ public sealed partial class WukongClient
             if (!entity.HasValue)
             {
                 Logging.LogDebug("Creating new entity {Id}", netId);
-                entity = CreateNetworkedEntity(netId);
+                entity = CreateNetworkedMonster(netId);
             }
 
             ref var animation = ref GetEntityComponent<AnimationComponent>(entity.Value);

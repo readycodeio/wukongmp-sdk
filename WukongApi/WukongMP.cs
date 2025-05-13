@@ -1242,7 +1242,7 @@ namespace WukongApi
 
         public EntityId CreateRemoteMonster(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            var id = Client.CreateNetworkedEntity(netId);
+            var id = Client.CreateNetworkedMonster(netId);
 
             ref var tamerComp = ref Client.GetEntityComponent<TamerComponent>(id);
             tamerComp.Tamer = tamer;
@@ -1258,7 +1258,7 @@ namespace WukongApi
         
         public EntityId CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            var id = Client.CreateNetworkedEntity();
+            var id = Client.CreateNetworkedMonster();
 
             ref var tamerComp = ref Client.GetEntityComponent<TamerComponent>(id);
             tamerComp.Tamer = tamer;
