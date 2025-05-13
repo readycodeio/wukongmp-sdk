@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using b1;
 using BtlShare;
 using LiteNetLib;
@@ -146,38 +147,72 @@ public sealed partial class WukongClient
             ref TranslationComponent translation
         ) =>
         {
-            var anyDirty = animation.IsDirty ||
-                           health.IsDirty ||
-                           monsterAnimation.IsDirty ||
-                           nickname.IsDirty ||
-                           team.IsDirty ||
-                           translation.IsDirty;
+            bool retried = false;
 
-            if (!anyDirty)
-                return;
+            while (true)
+            {
+                var beforeApplyPosition = writer.Length;
 
-            writer.Put(netId);
+                var anyDirty = animation.IsDirty ||
+                               health.IsDirty ||
+                               monsterAnimation.IsDirty ||
+                               nickname.IsDirty ||
+                               team.IsDirty ||
+                               translation.IsDirty;
 
-            animation.WriteDelta(RelayClient, writer);
-            animation.ClearDirty();
+                if (!anyDirty)
+                    return;
 
-            health.WriteDelta(RelayClient, writer);
-            health.ClearDirty();
+                writer.Put(netId);
 
-            monsterAnimation.WriteDelta(RelayClient, writer);
-            monsterAnimation.ClearDirty();
+                animation.WriteDelta(RelayClient, writer);
+                animation.ClearDirty();
 
-            nickname.WriteDelta(RelayClient, writer);
-            nickname.ClearDirty();
+                health.WriteDelta(RelayClient, writer);
+                health.ClearDirty();
 
-            team.WriteDelta(RelayClient, writer);
-            team.ClearDirty();
+                monsterAnimation.WriteDelta(RelayClient, writer);
+                monsterAnimation.ClearDirty();
 
-            translation.WriteDelta(RelayClient, writer);
-            translation.ClearDirty();
+                nickname.WriteDelta(RelayClient, writer);
+                nickname.ClearDirty();
+
+                team.WriteDelta(RelayClient, writer);
+                team.ClearDirty();
+
+                translation.WriteDelta(RelayClient, writer);
+                translation.ClearDirty();
+
+                if (writer.Length > RelayClient.GetMaxPacketSize(DeliveryMethod.Unreliable))
+                {
+                    if (retried)
+                    {
+                        // if we retried and still failed, log an error
+                        Logging.LogError("Packet too large, unable to send");
+                        return;
+                    }
+
+                    // Rewind and send the partial packet
+                    writer.SetPosition(beforeApplyPosition);
+                    RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.Unreliable);
+
+                    // Start a new writer and retry
+                    writer = new NetDataWriter();
+                    writer.Put((byte)SystemEvent.EcsUpdate);
+                    retried = true;
+
+                    // Continue loop to retry
+                    continue;
+                }
+
+                break;
+            }
         });
 
-        RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.Unreliable);
+        if (writer.Length > 1)
+        {
+            RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.Unreliable);
+        }
     }
 
     private void ApplyMonsterArchetypeDelta(NetDataReader reader)
@@ -202,7 +237,7 @@ public sealed partial class WukongClient
                     TranslationComponent.SkipDelta(RelayClient, reader);
                     continue;
                 }
-                
+
                 // it must be new
                 Logging.LogDebug("Creating new entity {Id}", netId);
                 entity = CreateNetworkedMonster(netId);
