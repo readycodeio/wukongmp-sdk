@@ -315,7 +315,7 @@ namespace WukongApi
             // dump synced monsters
             Client.entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref LocalTamerComponent localTamer, ref HpComponent hp, ref TeamComponent team) =>
             {
-                var realTeamId = localTamer.Tamer?.GetMonster().GetTeamIDInCS();
+                var realTeamId = localTamer.IsTamerValid ? localTamer.Tamer?.GetMonster()?.GetTeamIDInCS() : null;
                 Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={localTamer.IsSynced}, IsTamerValid={localTamer.IsTamerValid}");
             });
 

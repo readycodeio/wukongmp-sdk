@@ -36,11 +36,19 @@ public sealed partial class WukongClient
             typeof(TranslationComponent)
         );
 
+        entityManager.OnEntityCreated += OnNetworkedEntityCreated;
         entityManager.OnEntityDestroyed += OnNetworkedEntityDestroyed;
+    }
+
+    private void OnNetworkedEntityCreated(NetworkIdComponent obj)
+    {
+        Logging.LogDebug("Networked entity created: {Id}", obj);
     }
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent obj)
     {
+        Logging.LogDebug("Networked entity destroyed: {Id}", obj);
+
         var writer = new NetDataWriter();
         writer.Put((byte)SystemEvent.DestroyEntity);
         writer.Put(obj);
@@ -49,7 +57,7 @@ public sealed partial class WukongClient
 
     public void RunTickSystems()
     {
-        entityManager.RemoveQueuedEntities();
+        entityManager.DestroyQueuedEntities();
 
         SetCachedPlayerProperties(); // not a system
 
