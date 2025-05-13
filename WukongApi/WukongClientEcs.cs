@@ -68,9 +68,9 @@ public sealed partial class WukongClient
     private void SyncTamers()
     {
         entityManager.RunSystem((
-           EntityId entityId,
-           ref TamerComponent tamer,
-           ref LocalTamerComponent localTamer) =>
+            EntityId entityId,
+            ref TamerComponent tamer,
+            ref LocalTamerComponent localTamer) =>
         {
             if (!localTamer.IsSynced)
             {
@@ -85,6 +85,7 @@ public sealed partial class WukongClient
                         localTamer.IsSynced = true;
                     }
                 }
+
                 if (!found)
                 {
                     // spawn tamer
@@ -96,11 +97,11 @@ public sealed partial class WukongClient
     private void SyncMonsters()
     {
         entityManager.RunSystem((
-                   EntityId entityId,
-                   ref HpComponent hpComp,
-                   ref TeamComponent teamComp,
-                   ref TamerComponent tamer,
-                   ref LocalTamerComponent localTamer) =>
+            EntityId entityId,
+            ref HpComponent hpComp,
+            ref TeamComponent teamComp,
+            ref TamerComponent tamer,
+            ref LocalTamerComponent localTamer) =>
         {
             if (localTamer.IsMonsterSpawned || !tamer.IsSpawned)
             {
@@ -117,6 +118,7 @@ public sealed partial class WukongClient
                     Logging.LogError("events are null");
                     return;
                 }
+
                 bgsEvents.Evt_TamerBlockingSpawnImmediately.Invoke(tamer.Guid);
             }
 
@@ -257,7 +259,8 @@ public sealed partial class WukongClient
                                monsterAnimation.IsDirty ||
                                nickname.IsDirty ||
                                team.IsDirty ||
-                               translation.IsDirty;
+                               translation.IsDirty ||
+                               tamer.IsDirty;
 
                 if (!anyDirty)
                     return;
@@ -337,6 +340,7 @@ public sealed partial class WukongClient
                     NicknameComponent.SkipDelta(RelayClient, reader);
                     TeamComponent.SkipDelta(RelayClient, reader);
                     TranslationComponent.SkipDelta(RelayClient, reader);
+                    TamerComponent.SkipDelta(RelayClient, reader);
                     continue;
                 }
 
@@ -351,6 +355,7 @@ public sealed partial class WukongClient
             ref var nickname = ref GetEntityComponent<NicknameComponent>(entity.Value);
             ref var team = ref GetEntityComponent<TeamComponent>(entity.Value);
             ref var translation = ref GetEntityComponent<TranslationComponent>(entity.Value);
+            ref var tamer = ref GetEntityComponent<TamerComponent>(entity.Value);
 
             animation.ReadDelta(RelayClient, reader);
             health.ReadDelta(RelayClient, reader);
@@ -358,6 +363,7 @@ public sealed partial class WukongClient
             nickname.ReadDelta(RelayClient, reader);
             team.ReadDelta(RelayClient, reader);
             translation.ReadDelta(RelayClient, reader);
+            tamer.ReadDelta(RelayClient, reader);
         }
     }
 
