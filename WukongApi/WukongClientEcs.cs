@@ -45,13 +45,16 @@ public sealed partial class WukongClient
         Logging.LogDebug("Networked entity created: {Id}", obj);
     }
 
-    private void OnNetworkedEntityDestroyed(NetworkIdComponent obj)
+    private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
     {
-        Logging.LogDebug("Networked entity destroyed: {Id}", obj);
+        Logging.LogDebug("Networked entity destroyed: {Id}", netId);
+
+        if (netId.Owner != RelayClient.LocalPlayer.PeerId)
+            return; // that was a remote entity
 
         var writer = new NetDataWriter();
         writer.Put((byte)SystemEvent.DestroyEntity);
-        writer.Put(obj);
+        writer.Put(netId);
         RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
     }
 
@@ -75,7 +78,7 @@ public sealed partial class WukongClient
     private void SyncTamers()
     {
         entityManager.RunSystem((
-            EntityId entityId,
+            EntityId _,
             ref TamerComponent tamer,
             ref LocalTamerComponent localTamer) =>
         {
@@ -106,7 +109,7 @@ public sealed partial class WukongClient
     private void SyncMonsters()
     {
         entityManager.RunSystem((
-            EntityId entityId,
+            EntityId _,
             ref HpComponent hpComp,
             ref TeamComponent teamComp,
             ref TamerComponent tamer,
@@ -116,7 +119,6 @@ public sealed partial class WukongClient
             {
                 return;
             }
-
 
             var monster = localTamer.Tamer?.GetMonster();
             if (monster == null)
@@ -321,6 +323,20 @@ public sealed partial class WukongClient
         if (writer.Length > 1)
         {
             RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.Unreliable);
+        }
+    }
+
+    private void DestroyRemoteEntity(NetworkIdComponent netId)
+    {
+        var entity = entityManager.GetEntityByNetworkId(netId);
+
+        if (entity.HasValue)
+        {
+            entityManager.QueueDestroyEntity(entity.Value);
+        }
+        else
+        {
+            Logging.LogError("Received destroy event for locally non-existent entity: {Id}", netId);
         }
     }
 

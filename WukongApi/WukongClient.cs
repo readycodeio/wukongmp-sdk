@@ -135,6 +135,7 @@ namespace WukongApi
             RelayClient.OnOtherPlayerJoined -= OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft -= OnPlayerLeftRoomHandler;
             RelayClient.OnEcsDelta -= ApplyMonsterArchetypeDelta;
+            RelayClient.OnReceivedDestroyEntity -= DestroyRemoteEntity;
         }
 
         public void RegisterPlayer(PlayerState state)
@@ -652,6 +653,7 @@ namespace WukongApi
             RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
             RelayClient.OnEcsDelta += ApplyMonsterArchetypeDelta;
+            RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
         }
 
         public void StartClient()
