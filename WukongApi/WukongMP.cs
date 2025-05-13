@@ -1325,17 +1325,6 @@ namespace WukongApi
                     }
                 }
             }
-            else
-            {
-                foreach (var actor in allActorsOfClass)
-                {
-                    var entity = Client.GetByTamerActor(actor);
-                    if (!entity.HasValue)
-                    {
-                        actor.DestroyActor();
-                    }
-                }
-            }
         }
 
         public void DestroySyncedMonsters()
