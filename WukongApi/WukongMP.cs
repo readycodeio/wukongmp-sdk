@@ -10,6 +10,7 @@ using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.API;

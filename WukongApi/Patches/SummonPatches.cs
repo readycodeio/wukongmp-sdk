@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using b1;
 using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 

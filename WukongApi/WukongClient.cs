@@ -15,6 +15,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
+using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.DataTransferObjects;

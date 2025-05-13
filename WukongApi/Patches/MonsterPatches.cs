@@ -4,6 +4,7 @@ using b1;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
 

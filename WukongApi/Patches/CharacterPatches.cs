@@ -2,6 +2,7 @@
 using BtlShare;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.ECS;
