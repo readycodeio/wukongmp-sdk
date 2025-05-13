@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
 using LiteNetLib;
@@ -143,7 +141,7 @@ public sealed partial class WukongClient
             ref HpComponent health,
             ref MonsterAnimationComponent monsterAnimation,
             ref NicknameComponent nickname,
-            ref NetworkIdComponent peerId,
+            ref NetworkIdComponent netId,
             ref TeamComponent team,
             ref TranslationComponent translation
         ) =>
@@ -158,8 +156,7 @@ public sealed partial class WukongClient
             if (!anyDirty)
                 return;
 
-            writer.Put(peerId.Owner);
-            writer.Put(peerId.Id);
+            writer.Put(netId);
 
             animation.WriteDelta(RelayClient, writer);
             animation.ClearDirty();
@@ -194,6 +191,19 @@ public sealed partial class WukongClient
 
             if (!entity.HasValue)
             {
+                if (entityManager.IsNetworkEntityDestroyed(netId))
+                {
+                    // already dead, skip
+                    AnimationComponent.SkipDelta(RelayClient, reader);
+                    HpComponent.SkipDelta(RelayClient, reader);
+                    MonsterAnimationComponent.SkipDelta(RelayClient, reader);
+                    NicknameComponent.SkipDelta(RelayClient, reader);
+                    TeamComponent.SkipDelta(RelayClient, reader);
+                    TranslationComponent.SkipDelta(RelayClient, reader);
+                    continue;
+                }
+                
+                // it must be new
                 Logging.LogDebug("Creating new entity {Id}", netId);
                 entity = CreateNetworkedMonster(netId);
             }
