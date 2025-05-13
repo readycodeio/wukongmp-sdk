@@ -83,12 +83,14 @@ public sealed partial class WukongClient
                         found = true;
                         localTamer.Tamer = actor;
                         localTamer.IsSynced = true;
+                        Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
                     }
                 }
 
                 if (!found)
                 {
                     // spawn tamer
+                    Logging.LogDebug("Matching tamer not found for guid: {Guid}", tamer.Guid);
                 }
             }
         });
