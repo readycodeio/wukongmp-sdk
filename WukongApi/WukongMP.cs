@@ -1321,7 +1321,7 @@ namespace WukongApi
                     Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, BGU_DataUtil.GetActorGuid(actor));
                     if (tamerRef.Phase != ETamerPhase.Dead)
                     {
-                        CreateMonster(BGU_DataUtil.GetActorGuid(actor), actor, 2, actor.MonsterClassPath);
+                        CreateMonster(BGU_DataUtil.GetActorGuid(actor), actor, 2, actor.PathName);
                     }
                 }
             }
