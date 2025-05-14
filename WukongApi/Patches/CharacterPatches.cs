@@ -436,7 +436,10 @@ namespace WukongApi.Patches
                 return;
 
             if (!___UnitStateData.HasState(EBGUUnitState.Dead))
+            {
+                Logging.LogWarning("OnTriggerDeadDissolve: actor does not have state EBGUUnitState.Dead");
                 return;
+            }
 
             var client = WukongMP.Instance.Client;
 
@@ -453,6 +456,7 @@ namespace WukongApi.Patches
 
             if (entity.HasValue)
             {
+                Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value);
                 client.EntityManager.QueueDestroyEntity(entity.Value);
             }
         }

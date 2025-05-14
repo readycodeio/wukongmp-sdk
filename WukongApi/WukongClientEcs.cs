@@ -64,8 +64,15 @@ public sealed partial class WukongClient
                 var tamerComponent = EntityManager.GetComponent<LocalTamerComponent>(entity.Value);
 
                 if (tamerComponent.Pawn != null)
+                {
+                    Logging.LogDebug("Dissolving pawn {Pawn}", tamerComponent.Pawn);
                     BUS_EventCollectionCS.Get(tamerComponent.Pawn).Evt_TriggerDeadDissolve.Invoke();
-                
+                }
+                else
+                {
+                    Logging.LogError("Pawn is null for entity {Id}", netId);
+                }
+
                 EntityManager.QueueDestroyEntity(entity.Value);
             }
             else
