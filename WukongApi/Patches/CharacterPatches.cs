@@ -426,7 +426,7 @@ namespace WukongApi.Patches
             }
         }
     }
-    
+
     [HarmonyPatch(typeof(BGU_UnrealWorldUtil), "DestroyActor")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchDestroyActor
@@ -500,6 +500,9 @@ namespace WukongApi.Patches
                 var entity = client.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
+                    if (Trigger == EBUStateTrigger.Die)
+                        return;
+
                     var peerId = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
 
                     client.SendUnitStateTrigger(peerId, Trigger, Time, NeedForceUpdate);
