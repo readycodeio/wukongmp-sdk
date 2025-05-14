@@ -330,6 +330,11 @@ namespace WukongApi
             }
         }
 
+        public void SkipCutscene()
+        {
+            BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());
+        }
+
         public bool ShouldRunConnectedPatches()
         {
             return Client is { ConnectedAndInRoom: true };

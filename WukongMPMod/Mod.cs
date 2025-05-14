@@ -64,6 +64,12 @@ namespace WukongMPMod
                 _wukongMp.DumpDebugInfo();
             });
 
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
+            {
+                Logging.LogDebug("Alt + S");
+                _wukongMp.SkipCutscene();
+            });
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 Logging.LogDebug("Alt + X");
