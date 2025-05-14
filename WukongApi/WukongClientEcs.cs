@@ -156,13 +156,10 @@ public sealed partial class WukongClient
             // set monster hp
             var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
 
-            if (attrs == null)
+            if (attrs != null)
             {
-                Logging.LogError("attrs are null");
-                return;
+                hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
             }
-
-            hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
 
             var events = BUS_EventCollectionCS.Get(localTamer.Tamer);
             if (events == null)
