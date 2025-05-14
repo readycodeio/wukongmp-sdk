@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,144 +118,144 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BlueTeam" xml:space="preserve">
-    <value>蓝方阵营方</value>
-  </data>
-  <data name="BotName" xml:space="preserve">
-    <value>生成物</value>
+    <value>Equipo Azul</value>
   </data>
   <data name="CameraDownControls" xml:space="preserve">
     <value>Q</value>
   </data>
   <data name="CameraDownDescription" xml:space="preserve">
-    <value>下降视角</value>
+    <value>Abajo</value>
   </data>
   <data name="CameraMoveControls" xml:space="preserve">
     <value>W S A D</value>
   </data>
   <data name="CameraMoveDescription" xml:space="preserve">
-    <value>移动视角</value>
+    <value>Mover</value>
   </data>
   <data name="CameraRotateControls" xml:space="preserve">
-    <value>鼠标右键长按</value>
+    <value>Botón Derecho</value>
   </data>
   <data name="CameraRotateDescription" xml:space="preserve">
-    <value>旋转视角</value>
+    <value>Rotar</value>
   </data>
   <data name="CameraUpControls" xml:space="preserve">
     <value>E</value>
   </data>
   <data name="CameraUpDescription" xml:space="preserve">
-    <value>升起视角</value>
+    <value>Arriba</value>
   </data>
   <data name="ChatHelperDescription" xml:space="preserve">
-    <value>ENTER - 输入/发送 | K - 隐藏/显示对话框</value>
+    <value>ENTER - Escribir/Enviar | K - Ocultar/Mostrar Chat</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>在线模组已连接成功</value>
+    <value>Conectado</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
-    <value>在多人游戏准备大厅中</value>
+    <value>En Lobby Multijugador</value>
   </data>
   <data name="InvalidUnitName" xml:space="preserve">
-    <value>无效的单位名称</value>
+    <value>Nombre de unidad inválido</value>
   </data>
   <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>无效的单位数量</value>
-  </data>
-  <data name="MasterClient" xml:space="preserve">
-    <value>主机玩家：{0}</value>
+    <value>Número de unidades inválido</value>
   </data>
   <data name="MatchmakingInProgress" xml:space="preserve">
-    <value>正在匹配中...</value>
+    <value>Buscando partida...</value>
   </data>
   <data name="More" xml:space="preserve">
-    <value>排队</value>
+    <value>más</value>
   </data>
   <data name="NewCharacter" xml:space="preserve">
-    <value>初始天命人状态进入</value>
+    <value>Nuevo Personaje</value>
   </data>
   <data name="Ping" xml:space="preserve">
-    <value>网络延迟</value>
+    <value>Ping</value>
   </data>
   <data name="PingUnits" xml:space="preserve">
-    <value>毫秒</value>
+    <value>ms</value>
   </data>
   <data name="PlayerGaveUp" xml:space="preserve">
-    <value>{0}放弃战斗</value>
+    <value>{0} se rindió</value>
   </data>
   <data name="PlayerIsNotReady" xml:space="preserve">
-    <value>{0}未准备好战斗</value>
+    <value>{0} no está listo</value>
   </data>
   <data name="PlayerIsReady" xml:space="preserve">
-    <value>{0}已准备好战斗</value>
+    <value>{0} está listo</value>
   </data>
   <data name="PlayerJoined" xml:space="preserve">
-    <value>{0}已加入在线房间！</value>
-  </data>
-  <data name="PlayerKilledPlayer" xml:space="preserve">
-    <value>{0}击杀了{1}</value>
+    <value>¡{0} se ha unido!</value>
   </data>
   <data name="PlayerLeft" xml:space="preserve">
-    <value>{0}已离开在线房间（断开连接）！</value>
+    <value>¡{0} se ha ido!</value>
   </data>
   <data name="PlayerRequestedRebirth" xml:space="preserve">
-    <value>{0}请求重生</value>
+    <value>{0} solicitó renacer</value>
   </data>
   <data name="PlayerSpawned" xml:space="preserve">
-    <value>{0}生成了{1}{2}</value>
+    <value>{0} generó {1} {2}</value>
   </data>
   <data name="PressToBeNotReady" xml:space="preserve">
-    <value>按J键取消准备</value>
+    <value>Pulsa J para no estar listo</value>
   </data>
   <data name="PressToBeReady" xml:space="preserve">
-    <value>按J键准备</value>
+    <value>Pulsa J para estar listo</value>
   </data>
   <data name="PressToCancelMatch" xml:space="preserve">
-    <value>按I键取消匹配</value>
+    <value>Pulsa I para cancelar partida</value>
   </data>
   <data name="PressToPlayWithBots" xml:space="preserve">
-    <value>按I键与Ai大圣套装天命对战（仅限房间单人）</value>
+    <value>Pulsa I para jugar con bots</value>
   </data>
   <data name="PressToSwitchTeam" xml:space="preserve">
-    <value>按L键切换战斗阵营</value>
+    <value>Pulsa L para cambiar de equipo</value>
   </data>
   <data name="QuickJoin" xml:space="preserve">
-    <value>快速加入在线房间</value>
+    <value>Unirse Rápido</value>
   </data>
   <data name="Ready" xml:space="preserve">
-    <value>准备开始</value>
+    <value>Listo</value>
   </data>
   <data name="RedTeam" xml:space="preserve">
-    <value>红色阵营方</value>
-  </data>
-  <data name="RoundCount" xml:space="preserve">
-    <value>第{0}回合（共{1}回合）</value>
-  </data>
-  <data name="RoundDraw" xml:space="preserve">
-    <value>回合结束。平局</value>
-  </data>
-  <data name="RoundEndedWinner" xml:space="preserve">
-    <value>回合结束。{0}获胜</value>
+    <value>Equipo Rojo</value>
   </data>
   <data name="SelectCharacter" xml:space="preserve">
-    <value>选择独立存档内容进行联机</value>
+    <value>Seleccionar Personaje</value>
   </data>
   <data name="Spectators" xml:space="preserve">
-    <value>观战排队玩家</value>
+    <value>Espectadores</value>
   </data>
   <data name="StartingGame" xml:space="preserve">
-    <value>开始PvP对战</value>
-  </data>
-  <data name="TournamentDraw" xml:space="preserve">
-    <value>平局</value>
-  </data>
-  <data name="TournamentEndedWinner" xml:space="preserve">
-    <value>胜者：{0}</value>
+    <value>Iniciando partida PvP</value>
   </data>
   <data name="WaitForEnd" xml:space="preserve">
-    <value>等待比赛结束</value>
+    <value>Espera a que termine la partida</value>
   </data>
   <data name="YouAreReady" xml:space="preserve">
-    <value>你已准备好战斗</value>
+    <value>Estás listo</value>
+  </data>
+  <data name="PlayerKilledPlayer" xml:space="preserve">
+    <value>{0} mató a {1}</value>
+  </data>
+  <data name="MasterClient" xml:space="preserve">
+    <value>Cliente principal: {0}</value>
+  </data>
+  <data name="BotName" xml:space="preserve">
+    <value>Bot</value>
+  </data>
+  <data name="TournamentDraw" xml:space="preserve">
+    <value>Empate</value>
+  </data>
+  <data name="RoundDraw" xml:space="preserve">
+    <value>Ronda terminada. Empate</value>
+  </data>
+  <data name="RoundCount" xml:space="preserve">
+    <value>Ronda {0} de {1}</value>
+  </data>
+  <data name="RoundEndedWinner" xml:space="preserve">
+    <value>Ronda terminada. {0} ganó</value>
+  </data>
+  <data name="TournamentEndedWinner" xml:space="preserve">
+    <value>Ganador: {0}</value>
   </data>
 </root>
