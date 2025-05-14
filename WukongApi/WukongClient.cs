@@ -109,7 +109,7 @@ namespace WukongApi
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
             RoomState = new RoomStateProxy(RelayClient);
-            entityManager = new NetworkedEntityManager();
+            EntityManager = new NetworkedEntityManager();
 
             DefineEcs();
 
@@ -160,7 +160,7 @@ namespace WukongApi
                 return null;
 
             EntityId? entityId = null;
-            entityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            EntityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == actor)
                 {
@@ -185,7 +185,7 @@ namespace WukongApi
                 return null;
 
             EntityId? entityId = null;
-            entityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            EntityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Tamer == owner)
                 {
@@ -256,7 +256,7 @@ namespace WukongApi
                 return null;
 
             EntityId? entityId = null;
-            entityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            EntityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == owner)
                 {
@@ -535,7 +535,7 @@ namespace WukongApi
             var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
 
             var aliveMonsters = new List<int>();
-            entityManager.RunSystem((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
+            EntityManager.RunSystem((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
             {
                 if (hp.Hp <= 0)
                     return;
@@ -1095,7 +1095,7 @@ namespace WukongApi
             if (!Constants.IsCoop)
             {
                 // send current monsters to the new player
-                entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
+                EntityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
                 {
                     const byte eventCode = 1;
                     var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);

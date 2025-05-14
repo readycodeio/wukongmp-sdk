@@ -29,7 +29,7 @@ namespace WukongApi.Patches
 
             if (client.IsMasterClient)
             {
-                client.entityManager.RunSystem((
+                client.EntityManager.RunSystem((
                     EntityId _,
                     ref LocalTamerComponent tamer,
                     ref TranslationComponent trans
@@ -44,7 +44,7 @@ namespace WukongApi.Patches
             }
             else
             {
-                client.entityManager.RunSystem((
+                client.EntityManager.RunSystem((
                     EntityId _,
                     ref LocalTamerComponent tamer,
                     ref TranslationComponent trans

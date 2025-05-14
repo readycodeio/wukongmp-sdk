@@ -6,6 +6,7 @@ namespace WukongApi.ECS;
 [StructLayout(LayoutKind.Sequential)]
 public struct MarkerComponent
 {
+    public bool DestroyQueued;
     private AActor? _markerActor;
 
     public AActor? MarkerActor

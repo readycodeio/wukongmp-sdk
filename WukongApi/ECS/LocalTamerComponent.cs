@@ -13,10 +13,7 @@ public struct LocalTamerComponent
     public bool IsMonsterSpawned;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
-    
-    //public string UnitName;
-    //public string Guid;
-    
+
     private BUTamerActor? _tamer;
 
     public BUTamerActor? Tamer
@@ -32,7 +29,7 @@ public struct LocalTamerComponent
         }
         set => _tamer = value;
     }
-    
+
     public BGUCharacterCS? Pawn
     {
         get
@@ -41,11 +38,13 @@ public struct LocalTamerComponent
             {
                 return null;
             }
+
             if (_tamer == null || _tamer.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Tamer is null or destroyed in getPawn");
                 return null;
             }
+
             if (_tamer.GetMonster().IsNullOrDestroyed())
             {
                 Logging.LogWarning("Monster is null or destroyed in getPawn");
@@ -57,6 +56,6 @@ public struct LocalTamerComponent
         }
         set => throw new NotSupportedException("Set monster pawn");
     }
-    
+
     public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
 }

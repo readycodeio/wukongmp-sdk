@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using b1;
+﻿using b1;
 using BtlShare;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -17,13 +16,12 @@ namespace WukongApi;
 
 public sealed partial class WukongClient
 {
-    public readonly NetworkedEntityManager entityManager;
-    public ArchetypeId monsterArchetype;
+    public readonly NetworkedEntityManager EntityManager;
+    public ArchetypeId MonsterArchetype;
 
     private void DefineEcs()
     {
-        monsterArchetype = entityManager.DefineArchetype(
-            typeof(LocalDeathComponent),
+        MonsterArchetype = EntityManager.DefineArchetype(
             typeof(MarkerComponent),
             typeof(LocalTamerComponent),
             typeof(TamerComponent),
@@ -36,8 +34,8 @@ public sealed partial class WukongClient
             typeof(TranslationComponent)
         );
 
-        entityManager.OnEntityCreated += OnNetworkedEntityCreated;
-        entityManager.OnEntityDestroyed += OnNetworkedEntityDestroyed;
+        EntityManager.OnEntityCreated += OnNetworkedEntityCreated;
+        EntityManager.OnEntityDestroyed += OnNetworkedEntityDestroyed;
     }
 
     private void OnNetworkedEntityCreated(NetworkIdComponent obj)
@@ -47,26 +45,45 @@ public sealed partial class WukongClient
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
     {
-        Logging.LogDebug("Networked entity destroyed: {Id}", netId);
+        if (netId.Owner == RelayClient.LocalPlayer.PeerId)
+        {
+            // our own entity - send destroy event
+            Logging.LogDebug("Networked entity destroyed: {Id} (owned)", netId);
+            var writer = new NetDataWriter();
+            writer.Put((byte)SystemEvent.DestroyEntity);
+            writer.Put(netId);
+            RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
+        }
+        else
+        {
+            // remote entity, dissolve it locally
+            var entity = EntityManager.GetEntityByNetworkId(netId);
+            if (entity.HasValue)
+            {
+                Logging.LogDebug("Networked entity destroyed: {Id} (remote)", netId);
+                var tamerComponent = EntityManager.GetComponent<LocalTamerComponent>(entity.Value);
 
-        if (netId.Owner != RelayClient.LocalPlayer.PeerId)
-            return; // that was a remote entity
-
-        var writer = new NetDataWriter();
-        writer.Put((byte)SystemEvent.DestroyEntity);
-        writer.Put(netId);
-        RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
+                if (tamerComponent.Pawn != null)
+                    BUS_EventCollectionCS.Get(tamerComponent.Pawn).Evt_TriggerDeadDissolve.Invoke();
+                
+                EntityManager.QueueDestroyEntity(entity.Value);
+            }
+            else
+            {
+                Logging.LogError("Received destroy event for locally non-existent entity: {Id}", netId);
+            }
+        }
     }
 
     public void RunTickSystems()
     {
-        entityManager.DestroyQueuedEntities();
+        EntityManager.DestroyQueuedEntities();
 
         SetCachedPlayerProperties(); // not a system
 
         SyncTamers();
         UpdateMarkerPositions();
-        CheckMonsterDeath();
+        DestroyDeadMonsterMarkers();
         SyncMonsters();
 
         if (IsMasterClient)
@@ -77,7 +94,7 @@ public sealed partial class WukongClient
 
     private void SyncTamers()
     {
-        entityManager.RunSystem((
+        EntityManager.RunSystem((
             EntityId _,
             ref TamerComponent tamer,
             ref LocalTamerComponent localTamer) =>
@@ -108,7 +125,7 @@ public sealed partial class WukongClient
 
     private void SyncMonsters()
     {
-        entityManager.RunSystem((
+        EntityManager.RunSystem((
             EntityId _,
             ref HpComponent hpComp,
             ref TeamComponent teamComp,
@@ -171,59 +188,46 @@ public sealed partial class WukongClient
         });
     }
 
-    private void CheckMonsterDeath()
+    private void DestroyDeadMonsterMarkers()
     {
-        List<EntityId> deadEntities = [];
-
-        entityManager.RunSystem((
+        EntityManager.RunSystem((
             EntityId entityId,
             ref HpComponent hpComp,
             ref LocalTamerComponent tamer,
-            ref LocalDeathComponent localDeath,
             ref MarkerComponent marker) =>
         {
-            if (tamer.IsMonsterSpawned && hpComp.Hp <= 0 && !localDeath.killed)
+            if (tamer.IsMonsterSpawned && hpComp.Hp <= 0 && !marker.DestroyQueued)
             {
                 Logging.LogDebug("Monster {Id} died", entityId);
-                localDeath.killed = true;
-                deadEntities.Add(entityId);
+                marker.DestroyQueued = true;
 
-                var pawn = tamer.Pawn;
                 var markerActor = marker.MarkerActor;
-
-                var events = BUS_EventCollectionCS.Get(pawn);
-                GameLoopPatch.QueueOnGameThread(() =>
+                if (markerActor != null)
                 {
-                    events.Evt_UnitDead.Invoke(pawn, EDeadReason.SkillDamage);
-                    BGU_UnrealWorldUtil.DestroyActor(markerActor);
-                }, "Evt_UnitDead");
+                    GameLoopPatch.QueueOnGameThread(() => { BGU_UnrealWorldUtil.DestroyActor(markerActor); }, "DestroyMarkerActor");
+                }
             }
         });
-
-        foreach (var deadEntity in deadEntities)
-        {
-            entityManager.QueueDestroyEntity(deadEntity);
-        }
     }
 
     public EntityId CreateNetworkedMonster()
     {
-        return entityManager.CreateNetworkedEntity(monsterArchetype, (short)RelayClient.LocalPlayer.PeerId).EntityId;
+        return EntityManager.CreateNetworkedEntity(MonsterArchetype, (short)RelayClient.LocalPlayer.PeerId).EntityId;
     }
 
     public EntityId CreateNetworkedMonster(NetworkIdComponent netId)
     {
-        return entityManager.CreateNetworkedEntity(monsterArchetype, netId);
+        return EntityManager.CreateNetworkedEntity(MonsterArchetype, netId);
     }
 
     public ref T GetEntityComponent<T>(EntityId entity) where T : struct
     {
-        return ref entityManager.GetComponent<T>(entity);
+        return ref EntityManager.GetComponent<T>(entity);
     }
 
     private void UpdateMarkerPositions()
     {
-        entityManager.RunSystem((EntityId _,
+        EntityManager.RunSystem((EntityId _,
             ref LocalTamerComponent tamer,
             ref MarkerComponent marker,
             ref TranslationComponent trans) =>
@@ -247,7 +251,7 @@ public sealed partial class WukongClient
         var writer = new NetDataWriter();
         writer.Put((byte)SystemEvent.EcsUpdate);
 
-        entityManager.RunSystem((
+        EntityManager.RunSystem((
             EntityId _,
             ref AnimationComponent animation,
             ref HpComponent health,
@@ -328,11 +332,11 @@ public sealed partial class WukongClient
 
     private void DestroyRemoteEntity(NetworkIdComponent netId)
     {
-        var entity = entityManager.GetEntityByNetworkId(netId);
+        var entity = EntityManager.GetEntityByNetworkId(netId);
 
         if (entity.HasValue)
         {
-            entityManager.QueueDestroyEntity(entity.Value);
+            EntityManager.QueueDestroyEntity(entity.Value);
         }
         else
         {
@@ -347,11 +351,11 @@ public sealed partial class WukongClient
             var id = reader.GetUInt();
 
             var netId = new NetworkIdComponent(owner, id);
-            var entity = entityManager.GetEntityByNetworkId(netId);
+            var entity = EntityManager.GetEntityByNetworkId(netId);
 
             if (!entity.HasValue)
             {
-                if (entityManager.IsNetworkEntityDestroyed(netId))
+                if (EntityManager.IsNetworkEntityDestroyed(netId))
                 {
                     // already dead, skip
                     AnimationComponent.SkipDelta(RelayClient, reader);
@@ -396,7 +400,7 @@ public sealed partial class WukongClient
                 return player.Pawn;
         }
 
-        var entity = entityManager.GetEntityByNetworkId(netId);
+        var entity = EntityManager.GetEntityByNetworkId(netId);
         if (entity.HasValue)
         {
             ref var tamer = ref GetEntityComponent<LocalTamerComponent>(entity.Value);

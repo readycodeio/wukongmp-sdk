@@ -313,7 +313,7 @@ namespace WukongApi
             }
 
             // dump synced monsters
-            Client.entityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref LocalTamerComponent localTamer, ref HpComponent hp, ref TeamComponent team) =>
+            Client.EntityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref LocalTamerComponent localTamer, ref HpComponent hp, ref TeamComponent team) =>
             {
                 var realTeamId = localTamer.IsTamerValid ? localTamer.Tamer?.GetMonster()?.GetTeamIDInCS() : null;
                 Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={localTamer.IsSynced}, IsTamerValid={localTamer.IsTamerValid}");
@@ -344,7 +344,7 @@ namespace WukongApi
                 Client.RoomState.InCombatRound = true;
 
                 var monsterCount = 0;
-                Client.entityManager.RunSystem((EntityId _, ref LocalTamerComponent tamer) =>
+                Client.EntityManager.RunSystem((EntityId _, ref LocalTamerComponent tamer) =>
                 {
                     if (tamer.IsSynced)
                     {
@@ -454,7 +454,7 @@ namespace WukongApi
                 {
                     var hasGuid = false;
 
-                    Client.entityManager.RunSystem((EntityId _, ref TamerComponent tamer) =>
+                    Client.EntityManager.RunSystem((EntityId _, ref TamerComponent tamer) =>
                     {
                         if (tamer.Guid == guid)
                         {
@@ -682,7 +682,7 @@ namespace WukongApi
         // TODO: System, this is not called anywhere
         private void OnMotionMatchingChanged(NetworkIdComponent netId, EState_MM motionMatchingState)
         {
-            var entity = Client.entityManager.GetEntityByNetworkId(netId);
+            var entity = Client.EntityManager.GetEntityByNetworkId(netId);
             if (!entity.HasValue)
             {
                 LogNullCharacter(netId);
@@ -1329,10 +1329,10 @@ namespace WukongApi
 
         public void DestroySyncedMonsters()
         {
-            var entities = Client.entityManager.GetArchetype(Client.monsterArchetype)!;
+            var entities = Client.EntityManager.GetArchetype(Client.MonsterArchetype)!;
             foreach (var entityId in entities.Entities.ToArray())
             {
-                Client.entityManager.QueueDestroyEntity(entityId);
+                Client.EntityManager.QueueDestroyEntity(entityId);
             }
         }
 
@@ -1367,7 +1367,7 @@ namespace WukongApi
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
-            Client.entityManager.QueueDestroyEntity(entity);
+            Client.EntityManager.QueueDestroyEntity(entity);
         }
 
         private void OnBeforeJoinedRoomCallback()

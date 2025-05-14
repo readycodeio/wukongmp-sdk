@@ -426,31 +426,34 @@ namespace WukongApi.Patches
         }
     }
 
-    [HarmonyPatch(typeof(BGU_UnrealWorldUtil), "DestroyActor")]
+    [HarmonyPatch(typeof(BUS_DeadComp), "OnTriggerDeadDissolve")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchDestroyActor
     {
-        public static void Postfix(AActor Actor)
+        public static void Prefix(BUS_DeadComp __instance, IBUC_UnitStateData ___UnitStateData)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
+            if (!___UnitStateData.HasState(EBGUUnitState.Dead))
+                return;
+
             var client = WukongMP.Instance.Client;
 
-            if (Actor is BGUCharacterCS character)
-            {
-                var entity = client.GetMonsterByCharacter(character);
-                if (entity.HasValue)
-                {
-                    Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
-                    WukongMP.Instance.CleanupMonster(entity.Value);
-                }
+            // only the master client can destroy entities
+            if (!client.IsMasterClient)
+                return;
 
-                var tamer = character.GetTamerOwner();
-                if (tamer != null)
-                {
-                    BGU_UnrealWorldUtil.DestroyActor(tamer);
-                }
+            var owner = __instance.GetOwner();
+
+            if (owner == null)
+                return;
+
+            var entity = client.GetMonsterByActor(owner);
+
+            if (entity.HasValue)
+            {
+                client.EntityManager.QueueDestroyEntity(entity.Value);
             }
         }
     }

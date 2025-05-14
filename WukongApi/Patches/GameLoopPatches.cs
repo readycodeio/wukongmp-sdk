@@ -107,7 +107,7 @@ namespace WukongApi.Patches
 
             if (client.IsMasterClient)
             {
-                client.entityManager.RunSystem<LocalTamerComponent, NetworkIdComponent>(SyncMontage);
+                client.EntityManager.RunSystem<LocalTamerComponent, NetworkIdComponent>(SyncMontage);
             }
         }
 
