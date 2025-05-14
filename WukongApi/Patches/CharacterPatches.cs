@@ -462,7 +462,7 @@ namespace WukongApi.Patches
 
             if (entity.HasValue)
             {
-                Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value);
+                Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
                 client.EntityManager.QueueDestroyEntity(entity.Value);
             }
         }
