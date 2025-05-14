@@ -65,7 +65,7 @@ public sealed partial class WukongClient
 
                 if (tamerComponent.Pawn != null)
                 {
-                    Logging.LogDebug("Dissolving pawn {Pawn}", tamerComponent.Pawn);
+                    Logging.LogDebug("Dissolving pawn {Pawn}", tamerComponent.Pawn.GetName());
                     BUS_EventCollectionCS.Get(tamerComponent.Pawn).Evt_TriggerDeadDissolve.Invoke();
                 }
                 else

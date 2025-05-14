@@ -431,7 +431,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchDestroyActor
     {
-        public static void Prefix(BUS_DeadComp __instance, IBUC_UnitStateData ___UnitStateData, BUC_DispLibDispBaseConfigDataAsset ___DissolveDispDBC)
+        public static void Prefix(BUS_DeadComp __instance, IBUC_UnitStateData ___UnitStateData, ref BUC_DispLibDispBaseConfigDataAsset ___DissolveDispDBC)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -442,20 +442,20 @@ namespace WukongApi.Patches
                 return;
             }
 
+            var owner = __instance.GetOwner();
+
+            if (owner == null)
+                return;
+
             if (___DissolveDispDBC.IsNullOrDestroyed())
             {
-                Logging.LogWarning("OnTriggerDeadDissolve: DissolveDispDBC is null or destroyed");
+                ___DissolveDispDBC = Traverse.Create(__instance).Method("GetNowUseUDDConfig").GetValue<BGWDataAsset_UnitDeathDispConfig>(owner).NormalDissolveDBC;
             }
 
             var client = WukongMP.Instance.Client;
 
             // only the master client can destroy entities
             if (!client.IsMasterClient)
-                return;
-
-            var owner = __instance.GetOwner();
-
-            if (owner == null)
                 return;
 
             var entity = client.GetMonsterByActor(owner);
