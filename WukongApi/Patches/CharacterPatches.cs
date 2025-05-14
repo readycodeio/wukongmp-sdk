@@ -1,5 +1,6 @@
 ﻿using b1;
 using BtlShare;
+using GSDispLib;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -430,7 +431,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchDestroyActor
     {
-        public static void Prefix(BUS_DeadComp __instance, IBUC_UnitStateData ___UnitStateData)
+        public static void Prefix(BUS_DeadComp __instance, IBUC_UnitStateData ___UnitStateData, BUC_DispLibDispBaseConfigDataAsset ___DissolveDispDBC)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -439,6 +440,11 @@ namespace WukongApi.Patches
             {
                 Logging.LogWarning("OnTriggerDeadDissolve: actor does not have state EBGUUnitState.Dead");
                 return;
+            }
+
+            if (___DissolveDispDBC.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("OnTriggerDeadDissolve: DissolveDispDBC is null or destroyed");
             }
 
             var client = WukongMP.Instance.Client;
