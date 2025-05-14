@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Linq;
+using b1;
 using BtlShare;
 using GSDispLib;
 using HarmonyLib;
@@ -431,7 +432,11 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchDestroyActor
     {
-        public static void Prefix(BUS_DeadComp __instance, IBUC_UnitStateData ___UnitStateData, ref BUC_DispLibDispBaseConfigDataAsset ___DissolveDispDBC)
+        public static void Prefix(
+            BUS_DeadComp __instance,
+            IBUC_UnitStateData ___UnitStateData,
+            ref BUC_DispLibDispBaseConfigDataAsset ___DissolveDispDBC,
+            BUC_DeadData ___DeadData)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
@@ -449,7 +454,10 @@ namespace WukongApi.Patches
 
             if (___DissolveDispDBC.IsNullOrDestroyed())
             {
-                ___DissolveDispDBC = Traverse.Create(__instance).Method("GetNowUseUDDConfig").GetValue<BGWDataAsset_UnitDeathDispConfig>(owner).NormalDissolveDBC;
+                var dispConfig = Traverse.Create(__instance).Method("GetNowUseUDDConfig", [typeof(AActor)]).GetValue<BGWDataAsset_UnitDeathDispConfig>(owner);
+                ___DissolveDispDBC = dispConfig.NormalDissolveDBC;
+
+                Traverse.Create(__instance).Method("SetDelayDestroyTime", []).GetValue();
             }
 
             var client = WukongMP.Instance.Client;
