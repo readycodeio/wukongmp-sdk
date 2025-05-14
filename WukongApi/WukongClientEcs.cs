@@ -9,6 +9,7 @@ using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.DTO;
 using WukongApi.ECS;
 using WukongApi.Patches;
 
@@ -60,19 +61,7 @@ public sealed partial class WukongClient
             var entity = EntityManager.GetEntityByNetworkId(netId);
             if (entity.HasValue)
             {
-                Logging.LogDebug("Networked entity destroyed: {Id} (remote)", netId);
-                var tamerComponent = EntityManager.GetComponent<LocalTamerComponent>(entity.Value);
-
-                if (tamerComponent.Pawn != null)
-                {
-                    Logging.LogDebug("Dissolving pawn {Pawn}", tamerComponent.Pawn.GetName());
-                    BUS_EventCollectionCS.Get(tamerComponent.Pawn).Evt_TriggerDeadDissolve.Invoke();
-                }
-                else
-                {
-                    Logging.LogError("Pawn is null for entity {Id}", netId);
-                }
-
+                Logging.LogDebug("Queueing remote entity for destruction: {Id}", netId);
                 EntityManager.QueueDestroyEntity(entity.Value);
             }
             else
@@ -415,5 +404,12 @@ public sealed partial class WukongClient
         }
 
         return null;
+    }
+
+    public void SendUnitDead(NetworkIdComponent networkId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType)
+    {
+        const byte eventCode = 3;
+        var payload = new UnitDeadPacket(networkId, deadReason, dmgId, stiffLevel, isDotDmg, abnormalType);
+        RelayClient.OpRaiseEvent(eventCode, payload, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 }

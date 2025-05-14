@@ -1,6 +1,6 @@
 ﻿using LiteNetLib.Utils;
 
-namespace WukongApi.DataTransferObjects
+namespace WukongApi.DTO
 {
     public readonly struct UnitSpawnRequestData(string unitName, int count, int teamId)
     {

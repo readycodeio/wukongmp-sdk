@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using b1;
+﻿using b1;
 using BtlShare;
 using GSDispLib;
 using HarmonyLib;
@@ -427,51 +426,32 @@ namespace WukongApi.Patches
             }
         }
     }
-
-    [HarmonyPatch(typeof(BUS_DeadComp), "OnTriggerDeadDissolve")]
+    
+    [HarmonyPatch(typeof(BGU_UnrealWorldUtil), "DestroyActor")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchDestroyActor
     {
-        public static void Prefix(
-            BUS_DeadComp __instance,
-            IBUC_UnitStateData ___UnitStateData,
-            ref BUC_DispLibDispBaseConfigDataAsset ___DissolveDispDBC,
-            BUC_DeadData ___DeadData)
+        public static void Postfix(AActor Actor)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (!___UnitStateData.HasState(EBGUUnitState.Dead))
-            {
-                Logging.LogWarning("OnTriggerDeadDissolve: actor does not have state EBGUUnitState.Dead");
-                return;
-            }
-
-            var owner = __instance.GetOwner();
-
-            if (owner == null)
-                return;
-
-            if (___DissolveDispDBC.IsNullOrDestroyed())
-            {
-                var dispConfig = Traverse.Create(__instance).Method("GetNowUseUDDConfig", [typeof(AActor)]).GetValue<BGWDataAsset_UnitDeathDispConfig>(owner);
-                ___DissolveDispDBC = dispConfig.NormalDissolveDBC;
-
-                Traverse.Create(__instance).Method("SetDelayDestroyTime", []).GetValue();
-            }
-
             var client = WukongMP.Instance.Client;
 
-            // only the master client can destroy entities
-            if (!client.IsMasterClient)
-                return;
-
-            var entity = client.GetMonsterByActor(owner);
-
-            if (entity.HasValue)
+            if (Actor is BGUCharacterCS character)
             {
-                Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
-                client.EntityManager.QueueDestroyEntity(entity.Value);
+                var entity = client.GetMonsterByCharacter(character);
+                if (entity.HasValue)
+                {
+                    Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
+                    WukongMP.Instance.CleanupMonster(entity.Value);
+                }
+
+                var tamer = character.GetTamerOwner();
+                if (tamer != null)
+                {
+                    BGU_UnrealWorldUtil.DestroyActor(tamer);
+                }
             }
         }
     }

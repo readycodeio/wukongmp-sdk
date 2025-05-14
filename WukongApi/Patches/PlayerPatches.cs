@@ -346,12 +346,20 @@ namespace WukongApi.Patches
             }
         }
 
-        public static void Postfix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker)
+        public static void Postfix(
+            BUS_DeadComp __instance,
+            EDeadReason DeadReason,
+            AActor Attacker,
+            int DmgID = -1,
+            int StiffLevel = -1,
+            UAnimMontage? BeAttackedAM = null,
+            bool bIsDotDmg = false,
+            EAbnormalStateType AbnormalType = EAbnormalStateType.None)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (DeadReason == EDeadReason.PlayerTrans || DeadReason == EDeadReason.OnlyDestroyUnit)
+            if (DeadReason is EDeadReason.PlayerTrans or EDeadReason.OnlyDestroyUnit)
                 return; // TODO: Camera is broken after transformation, stuck in one direction
 
             var client = WukongMP.Instance.Client;
@@ -366,6 +374,23 @@ namespace WukongApi.Patches
             if (owner == client.LocalPlayerState.Pawn)
             {
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
+                return;
+            }
+
+            var entity = client.GetMonsterByActor(owner);
+
+            if (entity.HasValue)
+            {
+                if (client.EntityManager.HasComponent<NetworkIdComponent>(entity.Value))
+                {
+                    var networkId = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
+
+                    // TODO: send attacker and anim montage
+                    client.SendUnitDead(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                }
+
+                Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
+                client.EntityManager.QueueDestroyEntity(entity.Value);
             }
         }
     }

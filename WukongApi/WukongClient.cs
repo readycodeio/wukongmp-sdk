@@ -18,7 +18,7 @@ using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongApi.DataTransferObjects;
+using WukongApi.DTO;
 using WukongApi.ECS;
 using WukongApi.Resources;
 using WukongApi.State;
@@ -39,6 +39,7 @@ namespace WukongApi
         private readonly Action _afterJoinedRoomCallback;
         private readonly Action<int> _playerJoinedCallback;
         public event Action<MontageCallbackData>? OnMontageCallback;
+        public event Action<UnitDeadPacket>? OnUnitDead;
         public event Action<int, NetworkIdComponent, string, string, int, float, float, float>? OnUnitSpawn;
         public event Action<NetworkIdComponent, NetworkIdComponent, string, string, int>? OnSummonSpawn;
         public event Action<int>? OnTeleportFinish;
@@ -285,6 +286,11 @@ namespace WukongApi
                     // montage callback
                     var montData = RelayClient.DeserializeObject<MontageCallbackData>(reader);
                     OnMontageCallback?.Invoke(montData);
+                    break;
+                case 3:
+                    // unit dead
+                    var unitDeadData = RelayClient.DeserializeObject<UnitDeadPacket>(reader);
+                    OnUnitDead?.Invoke(unitDeadData);
                     break;
                 case 4:
                     // teleport finish
@@ -637,6 +643,7 @@ namespace WukongApi
             RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
             RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
             RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
+            RelayClient.RegisterType(typeof(UnitDeadPacket), UnitDeadPacket.Serialize, UnitDeadPacket.Deserialize);
             RelayClient.RegisterType(typeof(NetworkIdComponent), (writer, customObject) =>
             {
                 var id = (NetworkIdComponent)customObject;

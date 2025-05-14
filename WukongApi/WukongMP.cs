@@ -14,6 +14,7 @@ using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongApi.API;
+using WukongApi.DTO;
 using WukongApi.ECS;
 using WukongApi.Patches;
 using WukongApi.Resources;
@@ -152,6 +153,7 @@ namespace WukongApi
                 {
                     GameUtils.DestroyAllTamers();
                 }
+
                 BlueprintUiUtils.SpawnUiManagerActor();
                 InitializeWidgets();
                 Client.StartClient();
@@ -526,6 +528,7 @@ namespace WukongApi
             Client.OnUnitSpawn += (_, id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
             Client.OnSummonSpawn += (summonerId, summonId, guid, name, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteSummon(summonerId, summonId, guid, name, teamId), "SpawnRemoteSummon");
             Client.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
+            Client.OnUnitDead += (data) => GameLoopPatch.QueueOnGameThread(() => OnRemoteUnitDead(data), "RemoteUnitDead");
             Client.OnTeleportFinish += (id) => GameLoopPatch.QueueOnGameThread(() => OnTeleportFinish(id), "WakeUpMonster");
             Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Client.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
@@ -1060,6 +1063,25 @@ namespace WukongApi
             uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
         }
 
+        private void OnRemoteUnitDead(UnitDeadPacket data)
+        {
+            var pawn = Client.GetPawnByNetworkId(data.NetworkId);
+            if (pawn == null)
+            {
+                LogNullCharacter(data.NetworkId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(pawn);
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for unit {Unit}", pawn.GetName());
+                return;
+            }
+
+            events.Evt_UnitDead.Invoke(null, data.DeadReason, data.DmgId, data.StiffLevel, null, default, data.IsDotDmg, data.AbnormalType);
+        }
+
         public void ApplyPlayerMontageCallback(MontageCallbackData data)
         {
             var id = data.NetId;
@@ -1260,7 +1282,7 @@ namespace WukongApi
             Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
             return id;
         }
-        
+
         public EntityId CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
         {
             var id = Client.CreateNetworkedMonster();

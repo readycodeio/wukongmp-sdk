@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using b1;
 using WukongApi.State;
 
@@ -48,13 +46,11 @@ public struct LocalTamerComponent
             if (_tamer.GetMonster().IsNullOrDestroyed())
             {
                 Logging.LogWarning("Monster is null or destroyed in getPawn");
-                Logging.LogWarning(new StackTrace(true).ToString());
                 return null;
             }
 
             return _tamer.GetMonster();
         }
-        set => throw new NotSupportedException("Set monster pawn");
     }
 
     public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
