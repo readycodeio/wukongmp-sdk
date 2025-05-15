@@ -52,6 +52,7 @@ namespace WukongApi
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
+        public const string CoopStatusWidgetName = "WBP_CoopStatus_C";
 
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             #region Calculated Attributes
