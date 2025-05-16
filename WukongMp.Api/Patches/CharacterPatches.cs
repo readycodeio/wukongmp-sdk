@@ -142,11 +142,17 @@ namespace WukongMp.Api.Patches
                     if (!client.GetEntityComponent<LocalTamerComponent>(entity.Value).IsSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
-                        // TODO: Rethink "IsSynced"
-                        // return;
+                        return;
                     }
 
                     var hpComp = client.GetEntityComponent<HpComponent>(entity.Value);
+
+                    if (hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
+                    {
+                        return; // do not reapply the same value
+                    }
+
+                    __instance.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
 
                     if (hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                     {

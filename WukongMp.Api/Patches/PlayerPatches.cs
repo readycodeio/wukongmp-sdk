@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
 using BtlB1;
@@ -389,8 +390,12 @@ namespace WukongMp.Api.Patches
                     client.SendUnitDead(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                 }
 
-                Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
-                client.EntityManager.QueueDestroyEntity(entity.Value);
+                Task.Run(async () =>
+                {
+                    await Task.Delay(1000);
+                    Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
+                    client.EntityManager.QueueDestroyEntity(entity.Value);
+                });
             }
         }
     }
