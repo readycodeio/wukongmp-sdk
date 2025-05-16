@@ -1,12 +1,15 @@
-param([String]$Configuration = "Release")
+param(
+    [string]$ModVariant,
+    [String]$Configuration = "Release"
+)
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$solutionPath = Join-Path $scriptDir "WukongMpMod/WukongMpMod.csproj"
+$solutionPath = Join-Path $scriptDir "WukongMp.$ModVariant/WukongMp.$ModVariant.csproj"
 
 # 1. Build solution
 
 Write-Output "Building solution $solutionPath in configuration $Configuration..."
-$buildOutput = dotnet build "./WukongMPMod" -c $Configuration -v minimal /t:Rebuild
+$buildOutput = dotnet build $solutionPath -c $Configuration -v minimal /t:Rebuild
 
 # 2. Extract version number from build output
 $pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){4})'
@@ -27,7 +30,7 @@ if (!(Test-Path -Path "Mods")) {
     Get-ChildItem -Path "Mods" | Remove-Item -Force -Recurse
 }
 
-$sourceDir = "WukongMpMod/bin/Release/netstandard2.1"
+$sourceDir = "WukongMp.$ModVariant/bin/Release/netstandard2.1"
 $destDir = "Mods/WukongMpMod"
 
 # Create the destination directory if it doesn't exist
