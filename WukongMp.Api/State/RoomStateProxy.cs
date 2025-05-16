@@ -46,25 +46,25 @@ namespace WukongMp.Api.State
 
         public bool GourdAllowed
         {
-            get => GetProperty<bool>(nameof(GourdAllowed));
+            get => Constants.IsCoop || GetProperty<bool>(nameof(GourdAllowed));
             set => SetProperty(nameof(GourdAllowed), value);
         }
 
         public bool ConsumablesAllowed
         {
-            get => GetProperty<bool>(nameof(ConsumablesAllowed));
+            get => Constants.IsCoop || GetProperty<bool>(nameof(ConsumablesAllowed));
             set => SetProperty(nameof(ConsumablesAllowed), value);
         }
 
         public bool ImmobilizeAllowed
         {
-            get => GetProperty<bool>(nameof(ImmobilizeAllowed));
+            get => Constants.IsCoop || GetProperty<bool>(nameof(ImmobilizeAllowed));
             set => SetProperty(nameof(ImmobilizeAllowed), value);
         }
 
         public bool PhantomRushAllowed
         {
-            get => GetProperty<bool>(nameof(PhantomRushAllowed));
+            get => Constants.IsCoop || GetProperty<bool>(nameof(PhantomRushAllowed));
             set => SetProperty(nameof(PhantomRushAllowed), value);
         }
 

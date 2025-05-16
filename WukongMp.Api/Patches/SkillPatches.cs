@@ -385,6 +385,7 @@ public static class PatchOnTriggerPhantomRush
             return true;
 
         var client = WukongMP.Instance.Client;
+
         if (!client.RoomState.PhantomRushAllowed)
         {
             return false;
