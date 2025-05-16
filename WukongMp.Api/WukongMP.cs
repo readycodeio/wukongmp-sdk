@@ -801,7 +801,15 @@ namespace WukongMp.Api
 
         private void UpdatePlayerTeamUi(PlayerState playerState)
         {
-            _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, playerState.IsSpectator);
+            if (Constants.IsCoop)
+            {
+                _coopStatusWidget.RemovePlayer(playerState.NickName);
+                _coopStatusWidget.AddPlayer(playerState.NickName);
+            }
+            else
+            {
+                _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, playerState.IsSpectator);
+            }
         }
 
         private void KillPlayer(int playerId)
