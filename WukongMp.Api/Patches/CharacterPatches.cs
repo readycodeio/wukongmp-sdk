@@ -147,19 +147,15 @@ namespace WukongMp.Api.Patches
 
                     var hpComp = client.GetEntityComponent<HpComponent>(entity.Value);
 
-                    if (hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
+                    if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
                     {
-                        return; // do not reapply the same value
+                        __instance.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
                     }
 
-                    __instance.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
-
-                    if (hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                    if (!hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                     {
-                        return; // do not reapply the same value
+                        __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
                     }
-
-                    __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
                 }
             }
         }
@@ -234,6 +230,7 @@ namespace WukongMp.Api.Patches
 
                     ref var hpComp = ref client.GetEntityComponent<HpComponent>(entity.Value);
 
+                    hpComp.HpMaxBase = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = result;
                 }
 

@@ -158,8 +158,8 @@ public sealed partial class WukongClient
 
             if (attrs != null)
             {
+                hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                 hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMax);
 
                 if (IsMasterClient && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
                 {
