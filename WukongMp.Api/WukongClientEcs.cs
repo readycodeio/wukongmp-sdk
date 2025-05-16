@@ -154,11 +154,24 @@ public sealed partial class WukongClient
             }
 
             // set monster hp
-            var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(monster);
+            var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(monster);
 
             if (attrs != null)
             {
                 hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMax);
+
+                if (IsMasterClient && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
+                {
+                    hpComp.HpMaxBase *= hpComp.HpMult;
+                    hpComp.Hp *= hpComp.HpMult;
+
+                    attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
+                    attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
+
+                    hpComp.LastMult = hpComp.HpMult;
+                    Logging.LogDebug("Monster {Guid} HP scaling set to {Scaling}x", tamer.Guid, hpComp.HpMult);
+                }
             }
 
             var events = BUS_EventCollectionCS.Get(localTamer.Tamer);
@@ -415,5 +428,46 @@ public sealed partial class WukongClient
         const byte eventCode = 3;
         var payload = new UnitDeadPacket(networkId, deadReason, dmgId, stiffLevel, isDotDmg, abnormalType);
         RelayClient.OpRaiseEvent(eventCode, payload, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+    }
+
+    public void SetMonsterHpScaling(int scaling)
+    {
+        if (!IsMasterClient)
+        {
+            GameUtils.ShowTip(string.Format(Resources.Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
+        }
+
+        Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);
+
+        EntityManager.RunSystem((EntityId entity, ref HpComponent hp, ref LocalTamerComponent tamer) =>
+        {
+            hp.HpMult = scaling;
+
+            if (hp.LastMult == 0)
+                hp.LastMult = 1;
+
+            if (hp is { Hp: 0, HpMaxBase: 0 })
+                return;
+
+            // apply update immediately to discovered monsters
+            if (hp.HpMult != hp.LastMult)
+            {
+                if (tamer.Pawn == null)
+                    return;
+
+                var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(tamer.Pawn);
+                var currentHp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMax);
+
+                hp.HpMaxBase = maxHp / hp.LastMult * hp.HpMult;
+                hp.Hp = currentHp / hp.LastMult * hp.HpMult;
+
+                attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hp.HpMaxBase);
+                attrs.SetFloatValue(EBGUAttrFloat.Hp, hp.Hp);
+
+                hp.LastMult = hp.HpMult;
+                Logging.LogDebug("Monster {Entity} HP scaling set to {Scaling}x", entity, hp.HpMult);
+            }
+        });
     }
 }

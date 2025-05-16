@@ -229,7 +229,6 @@ namespace WukongMp.Api.Patches
                     ref var hpComp = ref client.GetEntityComponent<HpComponent>(entity.Value);
 
                     hpComp.Hp = result;
-                    return;
                 }
 
                 // I am a client

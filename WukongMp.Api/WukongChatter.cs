@@ -48,6 +48,7 @@ namespace WukongMp.Api
             _commands.Add("/giveup", new Command(RequestGiveUp));
             _commands.Add("/master", new Command(RequestNewMasterClient));
             _commands.Add("/spectator", new Command(SetSpectatorStatus));
+            _commands.Add("/hp_scaling", new Command(SetMonsterHpScaling));
         }
 
         private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -69,7 +70,7 @@ namespace WukongMp.Api
                 {
                     if (int.TryParse(args.Span[1], out var count))
                     {
-                            _wukongClient.RequestSpawnUnits(args.Span[0], count, teamId);
+                        _wukongClient.RequestSpawnUnits(args.Span[0], count, teamId);
                     }
                     else
                     {
@@ -130,6 +131,24 @@ namespace WukongMp.Api
             }
         }
 
+        private void SetMonsterHpScaling(ReadOnlyMemory<string> args)
+        {
+            if (args.Length == 1)
+            {
+                var hpScaling = args.Span[0];
+
+                if (int.TryParse(hpScaling, out var scaling))
+                {
+                    _wukongClient.SetMonsterHpScaling(scaling);
+                    SendServerMessage(nameof(Texts.SetMonsterHpScaling), scaling.ToString());
+                }
+                else
+                {
+                    ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidCommand}: \"{hpScaling}\"");
+                }
+            }
+        }
+
         private bool TryHandleCommand(string message)
         {
             var commandParts = message.Split(Separator);
@@ -167,6 +186,7 @@ namespace WukongMp.Api
             {
                 translatedMessage = string.Format(Texts.ResourceManager.GetString(message.Message, Texts.Culture)!, [.. message.Placeholders]);
             }
+
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
             ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
         }

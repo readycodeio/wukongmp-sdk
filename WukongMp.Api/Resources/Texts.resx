@@ -258,4 +258,13 @@
   <data name="YouAreReady" xml:space="preserve">
     <value>You are ready</value>
   </data>
+  <data name="InvalidCommand" xml:space="preserve">
+    <value>Invalid command: {0}</value>
+  </data>
+  <data name="OnlyRoomOwnerCanUse" xml:space="preserve">
+    <value>Only room owner can use {0}</value>
+  </data>
+  <data name="SetMonsterHpScaling" xml:space="preserve">
+    <value>Set monster HP scaling: {0}x</value>
+  </data>
 </root>
