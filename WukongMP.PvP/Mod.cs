@@ -8,12 +8,12 @@ using ReadyM.Relay.Common.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.UI;
 
-namespace WukongMp.Coop
+namespace WukongMp.PvP
 {
     // ReSharper disable once UnusedType.Global
     public class Mod : ICSharpMod
     {
-        public string Name => "WukongMp co-op";
+        public string Name => "WukongMp PvP";
         public string Version => "1.0.0";
 
         private WukongMP _wukongMp = null!; // initialized in Init

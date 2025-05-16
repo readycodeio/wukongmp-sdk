@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+        <LangVersion>latest</LangVersion>
+        <OutputType>Library</OutputType>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <Nullable>enable</Nullable>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <RootNamespace>WukongMp.PvP</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <BuildTimestamp>$([System.DateTime]::UtcNow.ToString("yyyyMMdd.HHmm"))</BuildTimestamp>
+        <FileVersion>1.0.0.$(BuildTimestamp)</FileVersion>
+        <InformationalVersion>1.0.0.$(BuildTimestamp)</InformationalVersion>
+    </PropertyGroup>
+
+    <Target Name="PrintBuildVersion" AfterTargets="AfterBuild">
+        <Message Importance="High" Text="Build Version: $(InformationalVersion)"/>
+    </Target>
+
+    <ItemGroup>
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Generators\ReadyM.Relay.Common.Generators.csproj" />
+        <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="CSharpModBase">
+            <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+</Project>

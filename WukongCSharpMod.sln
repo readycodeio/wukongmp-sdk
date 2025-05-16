@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35514.174 d17.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongApi", "WukongApi\WukongApi.csproj", "{9168670A-C7BC-41DA-B4B4-3C2097F18A13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Api", "WukongMp.Api\WukongMp.Api.csproj", "{9168670A-C7BC-41DA-B4B4-3C2097F18A13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMpMod", "WukongMPMod\WukongMpMod.csproj", "{65957B97-E095-49C9-B64A-656B5C6C125E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Coop", "WukongMPMod\WukongMp.Coop.csproj", "{65957B97-E095-49C9-B64A-656B5C6C125E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Client", "readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj", "{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common.Wukong", "readym-gameserver\src\ReadyM.Relay.Common.Wukong\ReadyM.Relay.Common.Wukong.csproj", "{D08A4198-D19A-419C-A942-CA084974DC73}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common.Generators", "readym-gameserver\src\ReadyM.Relay.Common.Generators\ReadyM.Relay.Common.Generators.csproj", "{5741AB77-F3C2-4786-9D6A-A081188224B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMP.PvP", "WukongMP.PvP\WukongMP.PvP.csproj", "{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{5741AB77-F3C2-4786-9D6A-A081188224B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5741AB77-F3C2-4786-9D6A-A081188224B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5741AB77-F3C2-4786-9D6A-A081188224B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
