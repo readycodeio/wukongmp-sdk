@@ -271,9 +271,9 @@ namespace WukongMp.Api
                 return;
 
             _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
-            _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
+            _gameMessageWidget.SetThirdText(Resources.Texts.PressToSwitchTeam);
             _lobbyStatusWidget.SetVisibility(true);
         }
 
@@ -283,8 +283,8 @@ namespace WukongMp.Api
                 return;
 
             _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Texts.MatchmakingInProgress);
+            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Resources.Texts.MatchmakingInProgress);
             _gameMessageWidget.SetThirdText("");
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -295,8 +295,8 @@ namespace WukongMp.Api
                 return;
 
             _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Texts.WaitForEnd);
+            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Resources.Texts.WaitForEnd);
             _gameMessageWidget.SetThirdText("");
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -1019,7 +1019,7 @@ namespace WukongMp.Api
                 if ((Client.ConnectedPlayers.Count > 0 || Client.RoomState.BotsEnabled) && readyCount == Client.ConnectedPlayers.Count + 1)
                 {
                     // all players are ready
-                    _gameMessageWidget.SetMainText(Texts.StartingGame);
+                    _gameMessageWidget.SetMainText(Resources.Texts.StartingGame);
                     _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Client.StartPvP);
                 }
 
@@ -1028,14 +1028,14 @@ namespace WukongMp.Api
             else
             {
                 _countdownWidget.StopCountdown();
-                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+                _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
         }
 
         public void SwitchReadyState(bool isReady)
         {
-            _gameMessageWidget.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
+            _gameMessageWidget.SetThirdText(isReady ? Resources.Texts.YouAreReady : Resources.Texts.PressToSwitchTeam);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, isReady));
         }
 

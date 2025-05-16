@@ -111,7 +111,7 @@ namespace WukongMp.Api.Patches
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogDebug("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
+                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
                     var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
                     if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
@@ -477,7 +477,7 @@ namespace WukongMp.Api.Patches
                     var peerId = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
 
                     client.SendUnitSimpleState(peerId, SimpleState, IsRemove);
-                    Logging.LogDebug("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
+                    Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
                 }
             }
         }
@@ -505,14 +505,14 @@ namespace WukongMp.Api.Patches
                     var peerId = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
 
                     client.SendUnitStateTrigger(peerId, Trigger, Time, NeedForceUpdate);
-                    Logging.LogDebug("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
+                    Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
 
             if (owner == client.LocalPlayerState.Pawn)
             {
                 client.SendUnitStateTrigger(NetworkIdComponent.FromPlayerPeerId(client.LocalPlayerState.PeerId), Trigger, Time, NeedForceUpdate);
-                Logging.LogDebug("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
+                Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }
     }

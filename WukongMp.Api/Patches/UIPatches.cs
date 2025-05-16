@@ -77,7 +77,7 @@ namespace WukongMp.Api.Patches
                     Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
                     if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                     {
-                        ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
+                        ___StartGameBtnList[j].SetTxtName(FText.FromString(Resources.Texts.QuickJoin));
                     }
                     else
                     {
@@ -92,12 +92,12 @@ namespace WukongMp.Api.Patches
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
                     Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Resources.Texts.NewCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
                 {
                     Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Resources.Texts.SelectCharacter));
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
                 {
