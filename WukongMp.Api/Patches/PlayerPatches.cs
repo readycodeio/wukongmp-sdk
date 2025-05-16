@@ -299,7 +299,7 @@ namespace WukongMp.Api.Patches
                 client.CacheEquipmentChange(EquipPosition, EquipID);
             }
 
-            return owner == client.LocalPlayerState.Pawn || owner.GetName().Contains("Preview"); // TODO: Exact comparison
+            return owner == client.LocalPlayerState.Pawn || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer"); // TODO: Exact comparison
         }
     }
 
