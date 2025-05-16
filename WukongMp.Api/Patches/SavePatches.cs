@@ -143,15 +143,18 @@ namespace WukongMp.Api.Patches
 
             SavePatchesData.CustomSaveEnabled = false;
 
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5201, Type = SpellType.ShenFa }); // Phantom dash
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.WearSoulSkill = null;
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
+            if (!Constants.IsCoop)
+            {
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5201, Type = SpellType.ShenFa }); // Phantom dash
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.WearSoulSkill = null;
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
 
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5102); // Ring of fire
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5103); // Spell binder
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5202); // Rock solid
+                OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5102); // Ring of fire
+                OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5103); // Spell binder
+                OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5202); // Rock solid
+            }
         }
     }
 
