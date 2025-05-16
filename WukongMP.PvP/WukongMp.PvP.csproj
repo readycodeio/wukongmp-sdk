@@ -9,6 +9,7 @@
         <Nullable>enable</Nullable>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <RootNamespace>WukongMp.PvP</RootNamespace>
+        <TargetName>WukongMpMod</TargetName>
     </PropertyGroup>
 
     <PropertyGroup>
