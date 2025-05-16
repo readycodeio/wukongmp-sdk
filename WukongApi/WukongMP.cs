@@ -170,6 +170,7 @@ namespace WukongApi
             _infoMessageWidget.Initialize();
             PingIndicatorWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.SetVisibility(true);
+            FreeCameraControlsWidget.Instance.Initialize();
         }
 
         private void DeinitializeWidgets()
@@ -261,9 +262,9 @@ namespace WukongApi
                 return;
 
             _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
-            _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
+            _gameMessageWidget.SetThirdText(Resources.Texts.PressToSwitchTeam);
             _lobbyStatusWidget.SetVisibility(true);
         }
 
@@ -273,8 +274,8 @@ namespace WukongApi
                 return;
 
             _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Texts.MatchmakingInProgress);
+            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Resources.Texts.MatchmakingInProgress);
             _gameMessageWidget.SetThirdText("");
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -285,8 +286,8 @@ namespace WukongApi
                 return;
 
             _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Texts.WaitForEnd);
+            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Resources.Texts.WaitForEnd);
             _gameMessageWidget.SetThirdText("");
             _lobbyStatusWidget.SetVisibility(true);
         }
@@ -979,7 +980,14 @@ namespace WukongApi
         {
             if (Client.IsMasterClient) // send this only once
             {
-                Client.WukongChat.SendServerMessage($"{playerNickName} is {(isReady ? "ready" : "not ready")}");
+                if (isReady)
+                {
+                    Client.WukongChat.SendServerMessage("PlayerIsReady", playerNickName);
+                }
+                else
+                {
+                    Client.WukongChat.SendServerMessage("PlayerIsNotReady", playerNickName);
+                }
             }
 
             if (isReady)
@@ -987,7 +995,7 @@ namespace WukongApi
                 if ((Client.ConnectedPlayers.Count > 0 || Client.RoomState.BotsEnabled) && readyCount == Client.ConnectedPlayers.Count + 1)
                 {
                     // all players are ready
-                    _gameMessageWidget.SetMainText(Texts.StartingGame);
+                    _gameMessageWidget.SetMainText(Resources.Texts.StartingGame);
                     _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Client.StartPvP);
                 }
 
@@ -996,14 +1004,14 @@ namespace WukongApi
             else
             {
                 _countdownWidget.StopCountdown();
-                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+                _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
                 _lobbyStatusWidget.SetReadyCount(readyCount);
             }
         }
 
         public void SwitchReadyState(bool isReady)
         {
-            _gameMessageWidget.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
+            _gameMessageWidget.SetThirdText(isReady ? Resources.Texts.YouAreReady : Resources.Texts.PressToSwitchTeam);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, isReady));
         }
 
@@ -1152,7 +1160,7 @@ namespace WukongApi
             }
 
             Notify:
-            Client.WukongChat.SendServerMessage($"{Client.LocalPlayerState.NickName} spawned {count} {unitName}");
+            Client.WukongChat.SendServerMessage("PlayerSpawned", Client.LocalPlayerState.NickName, count.ToString(), unitName);
         }
 
         private void SpawnUnitMaster(string unitName, FVector loc, int teamId)

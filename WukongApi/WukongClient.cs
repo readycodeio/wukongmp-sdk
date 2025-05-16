@@ -196,7 +196,7 @@ namespace WukongApi
                 if (newMasterPlayer != null)
                 {
                     RoomState.MasterClientId = newMasterPlayer.PeerId;
-                    WukongChat.SendServerMessage($"Master client: {newMasterName}");
+                    WukongChat.SendServerMessage("MasterClient", newMasterName);
                 }
                 else
                 {
@@ -258,7 +258,7 @@ namespace WukongApi
 
         private void OnPingUpdated(int ping)
         {
-            PingIndicatorWidget.Instance.SetPingText(ping);
+            PingIndicatorWidget.Instance.SetPingValue(ping);
         }
 
         public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
@@ -420,11 +420,11 @@ namespace WukongApi
 
                     if (winnerTeamId == Constants.DrawTeamId)
                     {
-                        GameUtils.ShowTip("Round ended: Draw");
+                        GameUtils.ShowTip(Resources.Texts.RoundDraw);
                     }
                     else
                     {
-                        GameUtils.ShowTip($"Round ended. Team {GameUtils.GetTeamName(winnerTeamId)} won");
+                        GameUtils.ShowTip(string.Format(Resources.Texts.RoundEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
                     }
 
                     if (winnerTeamId == Constants.DrawTeamId)
@@ -440,11 +440,11 @@ namespace WukongApi
                 {
                     if (winnerTeamId == Constants.DrawTeamId)
                     {
-                        GameUtils.ShowTip("Draw");
+                        GameUtils.ShowTip(Resources.Texts.TournamentDraw);
                     }
                     else
                     {
-                        GameUtils.ShowTip($"Winner: Team {GameUtils.GetTeamName(winnerTeamId)}");
+                        GameUtils.ShowTip(string.Format(Resources.Texts.TournamentEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
                     }
 
                     Task.Run(async () =>
@@ -1132,7 +1132,7 @@ namespace WukongApi
             SubscribeToPlayerEvents();
             _beforeJoinedRoomCallback.Invoke();
 
-            WukongChat.SendServerMessage($"{LocalPlayerState.NickName} has joined!");
+            WukongChat.SendServerMessage("PlayerJoined", LocalPlayerState.NickName);
         }
 
         private void OnAfterJoinedRoomHandler()
@@ -1189,7 +1189,7 @@ namespace WukongApi
 
             if (IsMasterClient)
             {
-                WukongChat.SendServerMessage($"{nickname} has left!");
+                WukongChat.SendServerMessage("PlayerLeft", nickname);
 
                 _ = Task.Run(async () =>
                 {

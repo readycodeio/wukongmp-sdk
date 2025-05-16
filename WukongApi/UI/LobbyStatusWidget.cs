@@ -1,6 +1,4 @@
-﻿using WukongApi.State;
-
-namespace WukongApi.UI
+﻿namespace WukongApi.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
     {
@@ -75,6 +73,43 @@ namespace WukongApi.UI
             GameWidget?.CallFunctionByNameWithArguments($"RemoveSpectator {playerName}", true);
         }
 
-        protected override void PostInitialize() { }
+        private void SetTeamRedText(string teamRed)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetTeamRedText {teamRed}", true);
+        }
+
+        private void SetSpectatorsText(string spectators)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetSpectatorsText {spectators}", true);
+        }
+
+        private void SetTeamBlueText(string teamBlue)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetTeamBlueText {teamBlue}", true);
+        }
+
+        private void SetMoreText(string more)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetMoreText {more}", true);
+        }
+
+        private void SetStatusTexts(string ready, string connected)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetStatusTexts {ready} {connected}", true);
+        }
+
+        private void SetStaticTexts(string teamRed, string teamBlue, string spectators, string ready, string connected, string more)
+        {
+            SetTeamRedText(teamRed);
+            SetTeamBlueText(teamBlue);
+            SetSpectatorsText(spectators);
+            SetStatusTexts(ready, connected);
+            SetMoreText(more);
+        }
+
+        protected override void PostInitialize()
+        {
+            SetStaticTexts(Resources.Texts.RedTeam, Resources.Texts.BlueTeam, Resources.Texts.Spectators, Resources.Texts.Ready, Resources.Texts.Connected, Resources.Texts.More);
+        }
     }
 }

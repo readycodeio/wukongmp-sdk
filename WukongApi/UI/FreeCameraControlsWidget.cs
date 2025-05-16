@@ -1,0 +1,70 @@
+﻿namespace WukongApi.UI
+{
+    public class FreeCameraControlsWidget : GameWidgetBase
+    {
+        public static FreeCameraControlsWidget Instance { get; } = new();
+
+        private FreeCameraControlsWidget() : base(Constants.FreeCameraWidgetName) { }
+
+        public void SetDownDescriptionText(string down)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetDownDescriptionText {down}", true);
+        }
+
+        public void SetMoveDescriptionText(string move)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetMoveDescriptionText {move}", true);
+        }
+
+        public void SetRotateDescriptionText(string rotate)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetRotateDescriptionText {rotate}", true);
+        }
+
+        public void SetUpDescriptionText(string up)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetUpDescriptionText {up}", true);
+        }
+
+        public void SetDownControlsText(string down)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetDownControlsText {down}", true);
+        }
+
+        public void SetMoveControlsText(string move)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetMoveControlsText {move}", true);
+        }
+
+        public void SetRotateControlsText(string rotate)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetRotateControlsText {rotate}", true);
+        }
+
+        public void SetUpControlsText(string up)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetUpControlsText {up}", true);
+        }
+
+        private void SetStaticTexts(
+            string downControls, string downDescription,
+            string moveControls, string moveDescription,
+            string rotateControls, string rotateDescription,
+            string upControls, string upDescription)
+        {
+            SetDownControlsText(downControls); SetDownDescriptionText(downDescription);
+            SetMoveControlsText(moveControls); SetMoveDescriptionText(moveDescription);
+            SetRotateControlsText(rotateControls); SetRotateDescriptionText(rotateDescription);
+            SetUpControlsText(upControls); SetUpDescriptionText(upDescription);
+        }
+
+        protected override void PostInitialize()
+        {
+            SetStaticTexts(
+                Resources.Texts.CameraDownControls, Resources.Texts.CameraDownDescription,
+                Resources.Texts.CameraMoveControls, Resources.Texts.CameraMoveDescription,
+                Resources.Texts.CameraRotateControls, Resources.Texts.CameraRotateDescription,
+                Resources.Texts.CameraUpControls, Resources.Texts.CameraUpDescription);
+        }
+    }
+}

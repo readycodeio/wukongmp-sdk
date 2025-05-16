@@ -53,7 +53,7 @@ namespace WukongApi
         {
             if (!UnitPathsConfig.IsValidMonsterName(args.Span[0]))
             {
-                ChatWidget.Instance.AddMessage(true, "Command", $"Invalid unit name \"{args.Span[0]}\"");
+                ChatWidget.Instance.AddMessage(true, "Command", $"{Resources.Texts.InvalidUnitName}: \"{args.Span[0]}\"");
                 return;
             }
 
@@ -72,7 +72,7 @@ namespace WukongApi
                     }
                     else
                     {
-                        ChatWidget.Instance.AddMessage(true, "Command", $"Invalid number of units: \"{args.Span[1]}\"");
+                        ChatWidget.Instance.AddMessage(true, "Command", $"{Resources.Texts.InvalidUnitName}: \"{args.Span[1]}\"");
                     }
 
                     break;
@@ -83,12 +83,12 @@ namespace WukongApi
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
             GameLoopPatch.QueueOnGameThread(() => _wukongClient.BroadcastPlayerRebirth(_wukongClient.LocalPlayerState.PeerId), "HandleRebirth");
-            SendServerMessage($"Player {NickName} requested rebirth");
+            SendServerMessage("PlayerRequestedRebirth", NickName);
         }
 
         private void RequestGiveUp(ReadOnlyMemory<string> _)
         {
-            SendServerMessage($"Player {NickName} gave up");
+            SendServerMessage("PlayerGaveUp", NickName);
             _wukongClient.KillCurrentPlayer();
         }
 
@@ -101,7 +101,7 @@ namespace WukongApi
         {
             if (_wukongClient.ConnectedAndInRoom)
             {
-                SendServerMessage($"{NickName} has left!");
+                SendServerMessage("PlayerLeft", NickName);
                 _wukongClient.StopRelayClient();
             }
         }
@@ -152,17 +152,22 @@ namespace WukongApi
             _wukongClient.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
         }
 
-        public void SendServerMessage(string message)
+        public void SendServerMessage(string message, params List<string> args)
         {
             Logging.LogDebug("Sending server message {Message}", message);
-            _wukongClient.SendChatMessage(ChatMessage.CreateServerMessage(message));
+            _wukongClient.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
         }
 
         public void OnGetMessage(ChatMessage message)
         {
             var senderNickname = message.IsServer ? "Server" : message.Nickname!;
+            var translatedMessage = message.Message;
+            if (message.IsServer)
+            {
+                translatedMessage = string.Format(Resources.Texts.ResourceManager.GetString(message.Message, Resources.Texts.Culture), [.. message.Placeholders]);
+            }
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
-            ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, message.Message);
+            ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
         }
     }
 }

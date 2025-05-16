@@ -119,7 +119,7 @@ namespace WukongApi
                 var client = WukongMP.Instance.Client;
                 var current = client.RoomState.CurrentRound;
                 var total = client.RoomState.TournamentRounds;
-                ShowTip($"Round {current} of {total}");
+                ShowTip(string.Format(Resources.Texts.RoundCount, current, total));
             });
         }
 
@@ -138,6 +138,15 @@ namespace WukongApi
                 return "Red";
             if (teamId == Constants.AvailableTeamIds[1])
                 return "Blue";
+            return "";
+        }
+
+        public static string GetLocalizedTeamName(int teamId)
+        {
+            if (teamId == Constants.AvailableTeamIds[0])
+                return Resources.Texts.RedTeam;
+            if (teamId == Constants.AvailableTeamIds[1])
+                return Resources.Texts.BlueTeam;
             return "";
         }
 
