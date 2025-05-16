@@ -960,13 +960,25 @@ namespace WukongMp.Api
             BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
         }
 
-        private static void RelieveImmobilize(BGUCharacterCS pawn)
+        private void RelieveImmobilize(BGUCharacterCS pawn)
         {
             Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
             var playerEvents = BUS_EventCollectionCS.Get(pawn);
 
-            // TODO
-            // pawn.RunImmobilizePatches = true;
+            var entity = Client.GetMonsterByCharacter(pawn);
+            if (entity.HasValue)
+            {
+                ref var tamerComponent = ref Client.GetEntityComponent<LocalTamerComponent>(entity.Value);
+                tamerComponent.RunImmobilizePatches = true;
+            }
+            else
+            {
+                var player = Client.GetPlayerByActor(pawn);
+                if (player != null)
+                {
+                    player.RunImmobilizePatches = true;
+                }
+            }
 
             playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
