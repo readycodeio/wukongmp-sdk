@@ -37,6 +37,7 @@ namespace WukongMp.Api
 
         private readonly TimerWidget _timerWidget = new();
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
+        private readonly CoopStatusWidget _coopStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
         private readonly InfoMessageWidget _infoMessageWidget = new();
         private readonly CountdownWidget _countdownWidget = new();
@@ -174,6 +175,8 @@ namespace WukongMp.Api
             _timerWidget.Initialize();
             _lobbyStatusWidget.Initialize();
             _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
+            _coopStatusWidget.Initialize();
+            _coopStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
             _gameMessageWidget.Initialize();
             _countdownWidget.Initialize();
             _infoMessageWidget.Initialize();
@@ -187,6 +190,7 @@ namespace WukongMp.Api
             ChatWidget.Instance.Deinitialize();
             _timerWidget.Deinitialize();
             _lobbyStatusWidget.Deinitialize();
+            _coopStatusWidget.Deinitialize();
             _gameMessageWidget.Deinitialize();
             _countdownWidget.Deinitialize();
             _infoMessageWidget.Deinitialize();
@@ -259,6 +263,7 @@ namespace WukongMp.Api
                 else
                 {
                     _lobbyStatusWidget.SetVisibility(false);
+                    _coopStatusWidget.SetVisibility(false);
                 }
             }
 
@@ -270,11 +275,18 @@ namespace WukongMp.Api
             if (!_isAfterLoadingScreen)
                 return;
 
-            _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
-            _gameMessageWidget.SetThirdText(Resources.Texts.PressToSwitchTeam);
-            _lobbyStatusWidget.SetVisibility(true);
+            if (!Constants.IsCoop)
+            {
+                _gameMessageWidget.SetVisibility(true);
+                _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
+                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
+                _gameMessageWidget.SetThirdText(Resources.Texts.PressToSwitchTeam);
+                _lobbyStatusWidget.SetVisibility(true);
+            }
+            else
+            {
+                _coopStatusWidget.SetVisibility(true);
+            }
         }
 
         private void SetupMatchmakingUi()
@@ -286,7 +298,14 @@ namespace WukongMp.Api
             _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
             _gameMessageWidget.SetSecondText(Resources.Texts.MatchmakingInProgress);
             _gameMessageWidget.SetThirdText("");
-            _lobbyStatusWidget.SetVisibility(true);
+            if (!Constants.IsCoop)
+            {
+                _lobbyStatusWidget.SetVisibility(true);
+            }
+            else
+            {
+                _coopStatusWidget.SetVisibility(true);
+            }
         }
 
         private void SetupSpectatorUi()
@@ -294,11 +313,14 @@ namespace WukongMp.Api
             if (!_isAfterLoadingScreen)
                 return;
 
-            _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Resources.Texts.WaitForEnd);
-            _gameMessageWidget.SetThirdText("");
-            _lobbyStatusWidget.SetVisibility(true);
+            if (!Constants.IsCoop)
+            {
+                _gameMessageWidget.SetVisibility(true);
+                _gameMessageWidget.SetMainText(Resources.Texts.InMultiplayer);
+                _gameMessageWidget.SetSecondText(Resources.Texts.WaitForEnd);
+                _gameMessageWidget.SetThirdText("");
+                _lobbyStatusWidget.SetVisibility(true);
+            }
         }
 
         public void DumpDebugInfo()
@@ -1054,11 +1076,13 @@ namespace WukongMp.Api
             _lobbyStatusWidget.RemovePlayerFromTeams(playerState.NickName);
             UpdateConnectedCount();
             _lobbyStatusWidget.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
+            _coopStatusWidget.RemovePlayer(playerState.NickName);
         }
 
         private void UpdateConnectedCount()
         {
             _lobbyStatusWidget.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
+            _coopStatusWidget.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
         }
 
@@ -1404,7 +1428,9 @@ namespace WukongMp.Api
             UpdateConnectedCount();
             DisablePlayerSkills();
             _lobbyStatusWidget.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
+            _coopStatusWidget.SetConnectedCount(Client.AllConnectedPlayers.Count());
             _lobbyStatusWidget.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
+            _coopStatusWidget.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
             SetupMatchmaking();
         }
 
