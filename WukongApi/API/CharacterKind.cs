@@ -62,11 +62,7 @@
         public static readonly string YinTiger = GameUtils.UnifyUnitName("yin_tiger");
         
         public static readonly string DaSheng = GameUtils.UnifyUnitName("da_sheng");
-        public static readonly string DaShengP2 = GameUtils.UnifyUnitName("da_sheng_p2");
-        public static readonly string DaShengJ = GameUtils.UnifyUnitName("da_sheng_j");
-        public static readonly string DaShengI = GameUtils.UnifyUnitName("da_sheng_i");
-        public static readonly string DaShengSP = GameUtils.UnifyUnitName("da_sheng_sp");
-        public static readonly string DaShengSummon = GameUtils.UnifyUnitName("da_sheng_summon");
+        public static readonly string DaSheng2 = GameUtils.UnifyUnitName("da_sheng_p2");
 
         // not working yet
         public static readonly string BawLangLang = GameUtils.UnifyUnitName("baw_lang_lang");
