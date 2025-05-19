@@ -10,6 +10,8 @@ using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.API;
+using WukongMp.Api.ECS;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.Patches
@@ -343,10 +345,10 @@ namespace WukongMp.Api.Patches
                     }
                 }
 
-                var monsterState = client.GetMonsterByActor(owner);
-                if (monsterState != null)
+                var entity = client.GetMonsterByActor(owner);
+                if (entity.HasValue)
                 {
-                    var tamerClass = monsterState.Tamer?.GetClass();
+                    var tamerClass = WukongMP.Instance.Client.GetEntityComponent<LocalTamerComponent>(entity.Value).Tamer?.GetClass();
                     if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
                     {
                         var teamId = ownerCharacter.GetTeamIDInCS();
@@ -355,7 +357,10 @@ namespace WukongMp.Api.Patches
                         _ = Task.Run(async () =>
                         {
                             await Task.Delay(5000);
-                            Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
+                            Utils.TryRunOnGameThread(() =>
+                            {
+                                WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId);
+                            });
                         });
                         return;
                     }

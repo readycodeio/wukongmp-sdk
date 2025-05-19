@@ -1242,7 +1242,7 @@ namespace WukongMp.Api
             Client.WukongChat.SendServerMessage("PlayerSpawned", Client.LocalPlayerState.NickName, count.ToString(), unitName);
         }
 
-        public NetworkIdComponent? SpawnUnitMaster(string unitName, FVector loc, int teamId)
+        public void SpawnUnitMaster(string unitName, FVector loc, int teamId)
         {
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
 
@@ -1250,7 +1250,7 @@ namespace WukongMp.Api
 
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
 
-            return SpawnUnitLocally(null, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
+            SpawnUnitLocally(null, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
         }
 
         private void SpawnRemoteUnit(NetworkIdComponent netId, string guid, string unitName, int teamId, float x, float y, float z)
