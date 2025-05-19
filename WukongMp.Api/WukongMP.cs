@@ -1242,7 +1242,7 @@ namespace WukongMp.Api
             Client.WukongChat.SendServerMessage("PlayerSpawned", Client.LocalPlayerState.NickName, count.ToString(), unitName);
         }
 
-        private NetworkIdComponent? SpawnUnitMaster(string unitName, FVector loc, int teamId)
+        public NetworkIdComponent? SpawnUnitMaster(string unitName, FVector loc, int teamId)
         {
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
 

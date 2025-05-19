@@ -619,9 +619,9 @@ namespace WukongMp.Api
         public void Reconnect()
         {
             Logging.LogInformation("Attempting to reconnect...");
-            StopRelayClient();
             _ = Task.Run(async () =>
             {
+                StopRelayClient();
                 await Task.Delay(Constants.ReconnectDelayMs);
                 StartClient();
             });

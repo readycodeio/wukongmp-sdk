@@ -4,6 +4,7 @@ using b1;
 using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
+using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -325,8 +326,7 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var bGUCharacterCS = owner as BGUCharacterCS;
-            if (bGUCharacterCS == null || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
+            if (owner is not BGUCharacterCS ownerCharacter || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 return;
             }
@@ -340,6 +340,24 @@ namespace WukongMp.Api.Patches
                     if (attackerPlayerState != null && killedPlayerState != null)
                     {
                         client.WukongChat.SendServerMessage("PlayerKilledPlayer", attackerPlayerState.NickName, killedPlayerState.NickName);
+                    }
+                }
+
+                var monsterState = client.GetMonsterByActor(owner);
+                if (monsterState != null)
+                {
+                    var tamerClass = monsterState.Tamer?.GetClass();
+                    if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
+                    {
+                        var teamId = ownerCharacter.GetTeamIDInCS();
+                        var location = ownerCharacter.GetActorLocation();
+
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(5000);
+                            Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
+                        });
+                        return;
                     }
                 }
 
@@ -631,12 +649,8 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var client = WukongMP.Instance.Client;
-            if (client.RoomState.EnemiesNgPlusLevel == 0)
-            {
-                return true;
-            }
 
-            __result = client.RoomState.EnemiesNgPlusLevel;
+            __result = client.RoomState.EnemiesNgPlusLevel + 1;
             return false;
         }
     }
