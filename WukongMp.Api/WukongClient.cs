@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using b1;
+using b1.ECS;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
@@ -111,6 +112,7 @@ namespace WukongMp.Api
             );
             RoomState = new RoomStateProxy(RelayClient);
             EntityManager = new NetworkedEntityManager();
+            EcsWorld = new World(EntityManager);
 
             DefineEcs();
 
@@ -161,7 +163,7 @@ namespace WukongMp.Api
                 return null;
 
             EntityId? entityId = null;
-            EntityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            EcsWorld.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == actor)
                 {
@@ -186,7 +188,7 @@ namespace WukongMp.Api
                 return null;
 
             EntityId? entityId = null;
-            EntityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            EcsWorld.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Tamer == owner)
                 {
@@ -257,7 +259,7 @@ namespace WukongMp.Api
                 return null;
 
             EntityId? entityId = null;
-            EntityManager.RunSystem((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            EcsWorld.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == owner)
                 {
@@ -541,7 +543,7 @@ namespace WukongMp.Api
             var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
 
             var aliveMonsters = new List<int>();
-            EntityManager.RunSystem((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
+            EcsWorld.Entities.ForEach((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
             {
                 if (hp.Hp <= 0)
                     return;
@@ -1102,7 +1104,7 @@ namespace WukongMp.Api
             if (!Constants.IsCoop)
             {
                 // send current monsters to the new player
-                EntityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
+                EcsWorld.Entities.ForEach((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
                 {
                     const byte eventCode = 1;
                     var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);

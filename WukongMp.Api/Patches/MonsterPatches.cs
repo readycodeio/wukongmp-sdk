@@ -29,7 +29,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                client.EntityManager.RunSystem((
+                client.EcsWorld.Entities.ForEach((
                     EntityId _,
                     ref LocalTamerComponent tamer,
                     ref TranslationComponent trans
@@ -44,7 +44,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                client.EntityManager.RunSystem((
+                client.EcsWorld.Entities.ForEach((
                     EntityId _,
                     ref LocalTamerComponent tamer,
                     ref TranslationComponent trans
@@ -63,10 +63,7 @@ namespace WukongMp.Api.Patches
 
                     if (!Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !Equals(tamer.Tamer!.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
-                        GameLoopPatch.QueueOnGameThread(() =>
-                        {
-                            events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                        });
+                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
                     }
                 });
             }
@@ -95,7 +92,7 @@ namespace WukongMp.Api.Patches
                 if (entity != null)
                 {
                     ref var tamerComp = ref client.GetEntityComponent<TamerComponent>(entity.Value);
-                    tamerComp.IsSpawned = true; 
+                    tamerComp.IsSpawned = true;
                 }
                 else
                 {
@@ -313,10 +310,10 @@ namespace WukongMp.Api.Patches
             if (entity.HasValue)
             {
                 ref var tamerComp = ref client.GetEntityComponent<LocalTamerComponent>(entity.Value);
-                
+
                 if (!tamerComp.IsTamerValid)
                     return;
-                
+
                 ref var anim = ref client.GetEntityComponent<MonsterAnimationComponent>(entity.Value);
                 if (client.IsMasterClient)
                 {

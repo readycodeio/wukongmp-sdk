@@ -7,11 +7,11 @@ using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
-using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
-using WukongMp.Api.Patches;
+using WukongMp.Api.ECS.Jobs;
+using WukongMp.Api.ECS.Systems;
+using WukongMp.Api.Resources;
 
 namespace WukongMp.Api;
 
@@ -19,6 +19,7 @@ public sealed partial class WukongClient
 {
     public readonly NetworkedEntityManager EntityManager;
     public ArchetypeId MonsterArchetype;
+    public readonly World EcsWorld;
 
     private void DefineEcs()
     {
@@ -37,6 +38,13 @@ public sealed partial class WukongClient
 
         EntityManager.OnEntityCreated += OnNetworkedEntityCreated;
         EntityManager.OnEntityDestroyed += OnNetworkedEntityDestroyed;
+
+        EcsWorld.AddSystemGroup("OnUpdate", g => g
+            .AddSystem<SyncTamersSystem>()
+            .AddSystem<UpdateMarkersSystem>()
+            .AddSystem<DestroyDeadMonstersMarkersSystem>()
+            .AddSystem<SyncMonstersSystem>()
+            .AddSystem(new SendEcsDeltaSystem(RelayClient)));
     }
 
     private void OnNetworkedEntityCreated(NetworkIdComponent obj)
@@ -71,156 +79,10 @@ public sealed partial class WukongClient
         }
     }
 
-    public void RunTickSystems()
+    public void RunEcsWorldUpdate()
     {
-        EntityManager.DestroyQueuedEntities();
-
         SetCachedPlayerProperties(); // not a system
-
-        SyncTamers();
-        UpdateMarkerPositions();
-        DestroyDeadMonsterMarkers();
-        SyncMonsters();
-
-        if (IsMasterClient)
-        {
-            SendMonsterArchetypeDelta();
-        }
-    }
-
-    private void SyncTamers()
-    {
-        EntityManager.RunSystem((
-            EntityId _,
-            ref TamerComponent tamer,
-            ref LocalTamerComponent localTamer) =>
-        {
-            if (!localTamer.IsSynced)
-            {
-                bool found = false;
-                var allTamers = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-                foreach (var actor in allTamers)
-                {
-                    if (actor != null && BGU_DataUtil.GetActorGuid(actor) == tamer.Guid)
-                    {
-                        found = true;
-                        localTamer.Tamer = actor;
-                        localTamer.IsSynced = true;
-                        Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
-                    }
-                }
-
-                if (!found)
-                {
-                    // spawn tamer
-                    Logging.LogDebug("Matching tamer not found for guid: {Guid}", tamer.Guid);
-                }
-            }
-        });
-    }
-
-    private void SyncMonsters()
-    {
-        EntityManager.RunSystem((
-            EntityId _,
-            ref HpComponent hpComp,
-            ref TeamComponent teamComp,
-            ref TamerComponent tamer,
-            ref LocalTamerComponent localTamer) =>
-        {
-            if (localTamer.IsMonsterSpawned || !tamer.IsSpawned)
-            {
-                return;
-            }
-
-            var monster = localTamer.Tamer?.GetMonster();
-            if (monster == null)
-            {
-                var bgsEvents = BGS_EventCollectionCS.Get(localTamer.Tamer);
-                if (bgsEvents == null)
-                {
-                    Logging.LogError("events are null");
-                    return;
-                }
-
-                bgsEvents.Evt_TamerBlockingSpawnImmediately.Invoke(tamer.Guid);
-            }
-
-            monster = localTamer.Tamer?.GetMonster();
-            if (monster == null)
-            {
-                Logging.LogError("monster is null");
-                return;
-            }
-
-            // set monster hp
-            var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(monster);
-
-            if (attrs != null)
-            {
-                hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-                hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-
-                if (IsMasterClient && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
-                {
-                    hpComp.HpMaxBase *= hpComp.HpMult;
-                    hpComp.Hp *= hpComp.HpMult;
-
-                    attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
-                    attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-
-                    hpComp.LastMult = hpComp.HpMult;
-                    Logging.LogDebug("Monster {Guid} HP scaling set to {Scaling}x", tamer.Guid, hpComp.HpMult);
-                }
-            }
-
-            var events = BUS_EventCollectionCS.Get(localTamer.Tamer);
-            if (events == null)
-            {
-                Logging.LogError("events are null");
-                return;
-            }
-
-            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(localTamer.Pawn);
-            if (mmData != null)
-            {
-                events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
-            }
-
-            if (!IsMasterClient)
-            {
-                events.Evt_AIPerceptionSetting.Invoke(false);
-                events.Evt_AIPauseBT.Invoke(true);
-                Logging.LogDebug("Tamer actor disabled.");
-            }
-
-            ClientUtils.RegisterNewPlayerTeam(monster, teamComp.TeamId);
-
-            localTamer.IsMonsterSpawned = true;
-            Logging.LogDebug("Monster {Guid} synced", tamer.Guid);
-        });
-    }
-
-    private void DestroyDeadMonsterMarkers()
-    {
-        EntityManager.RunSystem((
-            EntityId entityId,
-            ref HpComponent hpComp,
-            ref LocalTamerComponent tamer,
-            ref MarkerComponent marker) =>
-        {
-            if (tamer.IsMonsterSpawned && hpComp.Hp <= 0 && !marker.DestroyQueued)
-            {
-                Logging.LogDebug("Monster {Id} died", entityId);
-                marker.DestroyQueued = true;
-
-                var markerActor = marker.MarkerActor;
-                if (markerActor != null)
-                {
-                    GameLoopPatch.QueueOnGameThread(() => { BGU_UnrealWorldUtil.DestroyActor(markerActor); }, "DestroyMarkerActor");
-                }
-            }
-        });
+        EcsWorld.Update();
     }
 
     public EntityId CreateNetworkedMonster()
@@ -236,111 +98,6 @@ public sealed partial class WukongClient
     public ref T GetEntityComponent<T>(EntityId entity) where T : struct
     {
         return ref EntityManager.GetComponent<T>(entity);
-    }
-
-    private void UpdateMarkerPositions()
-    {
-        EntityManager.RunSystem((EntityId _,
-            ref LocalTamerComponent tamer,
-            ref MarkerComponent marker,
-            ref TranslationComponent trans) =>
-        {
-            if (marker.MarkerActor == null)
-                return;
-
-            if (tamer.Pawn == null)
-            {
-                Logging.LogError("Pawn is null");
-                return;
-            }
-
-            var markerHeight = tamer.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-            marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
-        });
-    }
-
-    private void SendMonsterArchetypeDelta()
-    {
-        var writer = new NetDataWriter();
-        writer.Put((byte)SystemEvent.EcsUpdate);
-
-        EntityManager.RunSystem((
-            EntityId _,
-            ref AnimationComponent animation,
-            ref HpComponent health,
-            ref MonsterAnimationComponent monsterAnimation,
-            ref NicknameComponent nickname,
-            ref NetworkIdComponent netId,
-            ref TeamComponent team,
-            ref TranslationComponent translation,
-            ref TamerComponent tamer
-        ) =>
-        {
-            bool retried = false;
-
-            while (true)
-            {
-                var beforeApplyPosition = writer.Length;
-
-                var anyDirty = animation.IsDirty ||
-                               health.IsDirty ||
-                               monsterAnimation.IsDirty ||
-                               nickname.IsDirty ||
-                               team.IsDirty ||
-                               translation.IsDirty ||
-                               tamer.IsDirty;
-
-                if (!anyDirty)
-                    return;
-
-                writer.Put(netId);
-
-                animation.WriteDelta(RelayClient, writer);
-                health.WriteDelta(RelayClient, writer);
-                monsterAnimation.WriteDelta(RelayClient, writer);
-                nickname.WriteDelta(RelayClient, writer);
-                team.WriteDelta(RelayClient, writer);
-                translation.WriteDelta(RelayClient, writer);
-                tamer.WriteDelta(RelayClient, writer);
-
-                if (writer.Length > RelayClient.GetMaxPacketSize(DeliveryMethod.Unreliable))
-                {
-                    if (retried)
-                    {
-                        // if we retried and still failed, log an error
-                        Logging.LogError("Packet too large, unable to send");
-                        return;
-                    }
-
-                    // Rewind and send the partial packet
-                    writer.SetPosition(beforeApplyPosition);
-                    RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.Unreliable);
-
-                    // Start a new writer and retry
-                    writer = new NetDataWriter();
-                    writer.Put((byte)SystemEvent.EcsUpdate);
-                    retried = true;
-
-                    // Continue loop to retry
-                    continue;
-                }
-
-                animation.ClearDirty();
-                health.ClearDirty();
-                monsterAnimation.ClearDirty();
-                nickname.ClearDirty();
-                team.ClearDirty();
-                translation.ClearDirty();
-                tamer.ClearDirty();
-
-                break;
-            }
-        });
-
-        if (writer.Length > 1)
-        {
-            RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.Unreliable);
-        }
     }
 
     private void DestroyRemoteEntity(NetworkIdComponent netId)
@@ -434,40 +191,11 @@ public sealed partial class WukongClient
     {
         if (!IsMasterClient)
         {
-            GameUtils.ShowTip(string.Format(Resources.Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
+            GameUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
         }
 
         Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);
 
-        EntityManager.RunSystem((EntityId entity, ref HpComponent hp, ref LocalTamerComponent tamer) =>
-        {
-            hp.HpMult = scaling;
-
-            if (hp.LastMult == 0)
-                hp.LastMult = 1;
-
-            if (hp is { Hp: 0, HpMaxBase: 0 })
-                return;
-
-            // apply update immediately to discovered monsters
-            if (hp.HpMult != hp.LastMult)
-            {
-                if (tamer.Pawn == null)
-                    return;
-
-                var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(tamer.Pawn);
-                var currentHp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMax);
-
-                hp.HpMaxBase = maxHp / hp.LastMult * hp.HpMult;
-                hp.Hp = currentHp / hp.LastMult * hp.HpMult;
-
-                attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hp.HpMaxBase);
-                attrs.SetFloatValue(EBGUAttrFloat.Hp, hp.Hp);
-
-                hp.LastMult = hp.HpMult;
-                Logging.LogDebug("Monster {Entity} HP scaling set to {Scaling}x", entity, hp.HpMult);
-            }
-        });
+        EcsWorld.RunJob(new ScaleMonsterHpJob(scaling));
     }
 }

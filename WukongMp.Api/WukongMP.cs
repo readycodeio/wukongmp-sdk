@@ -337,7 +337,7 @@ namespace WukongMp.Api
             }
 
             // dump synced monsters
-            Client.EntityManager.RunSystem((EntityId entity, ref TamerComponent tamer, ref LocalTamerComponent localTamer, ref HpComponent hp, ref TeamComponent team) =>
+            Client.EcsWorld.Entities.ForEach((EntityId entity, ref TamerComponent tamer, ref LocalTamerComponent localTamer, ref HpComponent hp, ref TeamComponent team) =>
             {
                 var realTeamId = localTamer.IsTamerValid ? localTamer.Tamer?.GetMonster()?.GetTeamIDInCS() : null;
                 Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={localTamer.IsSynced}, IsTamerValid={localTamer.IsTamerValid}");
@@ -373,7 +373,7 @@ namespace WukongMp.Api
                 Client.RoomState.InCombatRound = true;
 
                 var monsterCount = 0;
-                Client.EntityManager.RunSystem((EntityId _, ref LocalTamerComponent tamer) =>
+                Client.EcsWorld.Entities.ForEach((EntityId _, ref LocalTamerComponent tamer) =>
                 {
                     if (tamer.IsSynced)
                     {
@@ -483,7 +483,7 @@ namespace WukongMp.Api
                 {
                     var hasGuid = false;
 
-                    Client.EntityManager.RunSystem((EntityId _, ref TamerComponent tamer) =>
+                    Client.EcsWorld.Entities.ForEach((EntityId _, ref TamerComponent tamer) =>
                     {
                         if (tamer.Guid == guid)
                         {
