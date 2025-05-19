@@ -349,7 +349,11 @@ namespace WukongApi.Patches
                     }
                 }
 
-                if (owner.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
+                Logging.LogWarning("PathName: {Name}", owner.PathName);
+                Logging.LogWarning("FullName: {Name}", owner.GetFullName());
+                Logging.LogWarning("Name: {Name}", owner.GetName());
+
+                if (owner.GetFullName().Contains("mgd_jsds"))
                 {
                     var teamId = ownerCharacter.GetTeamIDInCS();
                     var location = ownerCharacter.GetActorLocation();
