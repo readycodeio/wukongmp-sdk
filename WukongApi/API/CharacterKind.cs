@@ -16,7 +16,7 @@
         public static readonly string EarthRakshasa = GameUtils.UnifyUnitName("earth_rakshasa");
         public static readonly string RatCaptain = GameUtils.UnifyUnitName("rat_captain");
         public static readonly string RatSoldier = GameUtils.UnifyUnitName("rat_soldier");
-        public static readonly string SnakePatroller = GameUtils.UnifyUnitName("snake_partoller");
+        public static readonly string SnakePatroller = GameUtils.UnifyUnitName("snake_patroller");
         public static readonly string TurtleTreasure = GameUtils.UnifyUnitName("turtle_treasure");
         public static readonly string WolfArcher = GameUtils.UnifyUnitName("wolf_archer");
         public static readonly string WolfArcherMove = GameUtils.UnifyUnitName("wolf_archer_move");
@@ -53,7 +53,7 @@
         public static readonly string PoisonChief = GameUtils.UnifyUnitName("poison_chief");
         public static readonly string RedBoy = GameUtils.UnifyUnitName("red_boy");
         public static readonly string RedLoong = GameUtils.UnifyUnitName("red_loong");
-        public static readonly string StoneMonkey = GameUtils.UnifyUnitName("stone_moneky");
+        public static readonly string StoneMonkey = GameUtils.UnifyUnitName("stone_monkey");
         public static readonly string TigerVanguard = GameUtils.UnifyUnitName("tiger_vanguard");
         public static readonly string WhitecladNoble = GameUtils.UnifyUnitName("whiteclad_noble");
         public static readonly string YellowLoong = GameUtils.UnifyUnitName("yellow_loong");
@@ -62,7 +62,7 @@
         public static readonly string YinTiger = GameUtils.UnifyUnitName("yin_tiger");
         
         public static readonly string DaSheng = GameUtils.UnifyUnitName("da_sheng");
-        public static readonly string DaSheng2 = GameUtils.UnifyUnitName("da_sheng_p2");
+        public static readonly string DaSheng2 = GameUtils.UnifyUnitName("da_sheng_2");
 
         // not working yet
         public static readonly string BawLangLang = GameUtils.UnifyUnitName("baw_lang_lang");

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
 using BtlB1;
@@ -6,6 +7,7 @@ using BtlShare;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.API;
 using WukongApi.State;
 
 namespace WukongApi.Patches
@@ -330,8 +332,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var bGUCharacterCS = owner as BGUCharacterCS;
-            if (bGUCharacterCS == null || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
+            if (owner is not BGUCharacterCS ownerCharacter || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 return;
             }
@@ -348,7 +349,21 @@ namespace WukongApi.Patches
                     }
                 }
 
-                client.CheckRoundEndCondition();
+                if (owner.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
+                {
+                    var teamId = ownerCharacter.GetTeamIDInCS();
+                    var location = ownerCharacter.GetActorLocation();
+
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(3000);
+                        WukongMP.Instance.SpawnUnitMaster(UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng2), location, teamId);
+                    });
+                }
+                else
+                {
+                    client.CheckRoundEndCondition();
+                }
             }
         }
 
@@ -505,6 +520,7 @@ namespace WukongApi.Patches
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
                 client.SendTarget(monster.PeerId, newTargetId, clearTarget);
             }
+
             return true;
         }
     }
