@@ -4,6 +4,7 @@ using b1;
 using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
+using CSharpModBase;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -349,19 +350,15 @@ namespace WukongApi.Patches
                     }
                 }
 
-                Logging.LogWarning("PathName: {Name}", owner.PathName);
-                Logging.LogWarning("FullName: {Name}", owner.GetFullName());
-                Logging.LogWarning("Name: {Name}", owner.GetName());
-
-                if (owner.GetFullName().Contains("mgd_jsds"))
+                if (owner.GetFullName().StartsWith("Unit_mgd_jsds_C"))
                 {
                     var teamId = ownerCharacter.GetTeamIDInCS();
                     var location = ownerCharacter.GetActorLocation();
 
                     _ = Task.Run(async () =>
                     {
-                        await Task.Delay(3000);
-                        WukongMP.Instance.SpawnUnitMaster(UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng2), location, teamId);
+                        await Task.Delay(5000);
+                        Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
                     });
                 }
                 else
