@@ -82,6 +82,13 @@ namespace WukongApi
             { CharacterKind.YellowWind, "/Game/00Main/Design/Units/HFM/TAMER_hfm_hfds_01a.TAMER_hfm_hfds_01a_C" },
             { CharacterKind.YinTiger, "/Game/00Main/Design/Units/HFM/TAMER_hfm_hu_wind_01.TAMER_hfm_hu_wind_01_C" }, // Cutscene not synchronized
 
+            { CharacterKind.DaSheng, "/Game/00Main/Design/Units/MGD/TAMER_mgd_jsds.TAMER_mgd_jsds_C" },
+            { CharacterKind.DaShengP2, "/Game/00Main/Design/Units/MGD/TAMER_mgd_jsds_p2.TAMER_mgd_jsds_p2_C" },
+            { CharacterKind.DaShengJ, "/Game/00Main/Design/Units/MGD/TAMER_mgd_jsds_jxsq.TAMER_mgd_jsds_jxsq_C" },
+            { CharacterKind.DaShengI, "/Game/00Main/Design/Units/MGD/TAMER_mgd_jsds_jxsq_immoblized.TAMER_mgd_jsds_jxsq_immoblized_C" },
+            { CharacterKind.DaShengSP, "/Game/00Main/Design/Units/MGD/TAMER_mgd_jsds_sp.TAMER_mgd_jsds_sp_C" },
+            { CharacterKind.DaShengSummon, "/Game/00Main/Design/Units/MGD/TAMER_mgd_jsds_summon.TTAMER_mgd_jsds_summon_C" },
+
             // Not syncing bosses
             //{ CharacterKind.JiaoLoong, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_baiyi_04.TAMER_gycy_baiyi_04_C" },  // do not show - guid mismatch
             //{ CharacterKind.Martialist, "/Game/00Main/Design/Units/HFM/TAMER_HFM_HuanWuZhe_01a.TAMER_HFM_HuanWuZhe_01a_C" }, // do not show - guid mismatch
