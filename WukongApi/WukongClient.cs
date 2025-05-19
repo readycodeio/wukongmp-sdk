@@ -97,10 +97,7 @@ namespace WukongApi
         public IEnumerable<PlayerState> AllPvPPlayers
             => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
-        public IEnumerable<CharacterState> AllPvPCharacters
-            => ConnectedPlayers.Values.Where(p => !p.IsSpectator).ToList<CharacterState>().Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]).Concat(SyncedMonsters.Values);
-
-        public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoindRoom, Action<int> playerJoinedCallback)
+        public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<int> playerJoinedCallback)
         {
             WukongChat = new WukongChatter(this);
             LobbyManager = new LobbyManager(this);
@@ -113,7 +110,7 @@ namespace WukongApi
             RoomState = new RoomStateProxy(RelayClient);
 
             _beforeJoinedRoomCallback = onBeforeJoinedRoom;
-            _afterJoinedRoomCallback = onAfterJoindRoom;
+            _afterJoinedRoomCallback = onAfterJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
 
             ConfigureRelay();
@@ -597,9 +594,9 @@ namespace WukongApi
         public void Reconnect()
         {
             Logging.LogInformation("Attempting to reconnect...");
-            StopRelayClient();
             _ = Task.Run(async () =>
             {
+                StopRelayClient();
                 await Task.Delay(Constants.ReconnectDelayMs);
                 StartClient();
             });
