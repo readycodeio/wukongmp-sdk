@@ -350,21 +350,25 @@ namespace WukongApi.Patches
                     }
                 }
 
-                if (owner.GetFullName().StartsWith("Unit_mgd_jsds_C"))
+                var monsterState = client.GetMonsterByActor(owner);
+                if (monsterState != null)
                 {
-                    var teamId = ownerCharacter.GetTeamIDInCS();
-                    var location = ownerCharacter.GetActorLocation();
-
-                    _ = Task.Run(async () =>
+                    var tamerClass = monsterState.Tamer?.GetClass();
+                    if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
                     {
-                        await Task.Delay(5000);
-                        Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
-                    });
+                        var teamId = ownerCharacter.GetTeamIDInCS();
+                        var location = ownerCharacter.GetActorLocation();
+
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(5000);
+                            Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
+                        });
+                        return;
+                    }
                 }
-                else
-                {
-                    client.CheckRoundEndCondition();
-                }
+
+                client.CheckRoundEndCondition();
             }
         }
 
