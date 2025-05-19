@@ -1,11 +1,14 @@
 ﻿using System.Reflection;
+using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
+using CSharpModBase;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongApi.API;
 using WukongApi.State;
 
 namespace WukongApi.Patches
@@ -330,8 +333,7 @@ namespace WukongApi.Patches
                 return;
             }
 
-            var bGUCharacterCS = owner as BGUCharacterCS;
-            if (bGUCharacterCS == null || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
+            if (owner is not BGUCharacterCS ownerCharacter || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 return;
             }
@@ -345,6 +347,24 @@ namespace WukongApi.Patches
                     if (attackerPlayerState != null && killedPlayerState != null)
                     {
                         client.WukongChat.SendServerMessage("PlayerKilledPlayer", attackerPlayerState.NickName, killedPlayerState.NickName);
+                    }
+                }
+
+                var monsterState = client.GetMonsterByActor(owner);
+                if (monsterState != null)
+                {
+                    var tamerClass = monsterState.Tamer?.GetClass();
+                    if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
+                    {
+                        var teamId = ownerCharacter.GetTeamIDInCS();
+                        var location = ownerCharacter.GetActorLocation();
+
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(5000);
+                            Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
+                        });
+                        return;
                     }
                 }
 
@@ -505,6 +525,7 @@ namespace WukongApi.Patches
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, newTargetCharacterState?.NickName);
                 client.SendTarget(monster.PeerId, newTargetId, clearTarget);
             }
+
             return true;
         }
     }
@@ -594,12 +615,8 @@ namespace WukongApi.Patches
                 return true;
 
             var client = WukongMP.Instance.Client;
-            if (client.RoomState.EnemiesNgPlusLevel == 0)
-            {
-                return true;
-            }
 
-            __result = client.RoomState.EnemiesNgPlusLevel;
+            __result = client.RoomState.EnemiesNgPlusLevel + 1;
             return false;
         }
     }

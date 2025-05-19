@@ -1163,7 +1163,7 @@ namespace WukongApi
             Client.WukongChat.SendServerMessage("PlayerSpawned", Client.LocalPlayerState.NickName, count.ToString(), unitName);
         }
 
-        private void SpawnUnitMaster(string unitName, FVector loc, int teamId)
+        public void SpawnUnitMaster(string unitName, FVector loc, int teamId)
         {
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
 

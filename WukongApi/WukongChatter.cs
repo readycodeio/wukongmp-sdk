@@ -164,7 +164,7 @@ namespace WukongApi
             var translatedMessage = message.Message;
             if (message.IsServer)
             {
-                translatedMessage = string.Format(Resources.Texts.ResourceManager.GetString(message.Message, Resources.Texts.Culture), [.. message.Placeholders]);
+                translatedMessage = string.Format(Resources.Texts.ResourceManager.GetString(message.Message, Resources.Texts.Culture)!, [.. message.Placeholders]);
             }
             Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
             ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
