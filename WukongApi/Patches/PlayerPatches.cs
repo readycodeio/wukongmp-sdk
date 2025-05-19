@@ -594,12 +594,8 @@ namespace WukongApi.Patches
                 return true;
 
             var client = WukongMP.Instance.Client;
-            if (client.RoomState.EnemiesNgPlusLevel == 0)
-            {
-                return true;
-            }
 
-            __result = client.RoomState.EnemiesNgPlusLevel;
+            __result = client.RoomState.EnemiesNgPlusLevel + 1;
             return false;
         }
     }
