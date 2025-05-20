@@ -63,6 +63,7 @@ namespace WukongMp.Api
                 {
                     BGU_UnrealWorldUtil.DestroyActor(actor.GetMonster());
                 }
+
                 BGU_UnrealWorldUtil.DestroyActor(actor);
             }
         }
@@ -224,7 +225,7 @@ namespace WukongMp.Api
 
         public static bool IsSkillWhitelisted(int skillId)
         {
-            return Constants.SkillsWhitelist.Contains(skillId);
+            return Constants.IsCoop || Constants.SkillsWhitelist.Contains(skillId);
         }
 
         public static void ListAssets(string path)
@@ -254,16 +255,19 @@ namespace WukongMp.Api
             {
                 return InTargetLocation;
             }
+
             FVector result = InTargetLocation;
             if (CharacterCS == null)
             {
                 return result;
             }
+
             UCapsuleComponent? uCapsuleComponent = CharacterCS.GetRootComponent() as UCapsuleComponent;
             if (uCapsuleComponent == null)
             {
                 return result;
             }
+
             float scaledCapsuleHalfHeight = uCapsuleComponent.GetScaledCapsuleHalfHeight();
             float scaledCapsuleHalfHeight2 = uCapsuleComponent.GetScaledCapsuleHalfHeight();
             float num = 2.4f;
@@ -273,6 +277,7 @@ namespace WukongMp.Api
             {
                 result = OutHitLocation + num + FVector.UpVector * scaledCapsuleHalfHeight;
             }
+
             return result;
         }
     }
