@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common.Generat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMP.PvP", "WukongMp.PvP\WukongMp.PvP.csproj", "{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Ecs.Generators", "readym-gameserver\src\ReadyM.Ecs.Generators\ReadyM.Ecs.Generators.csproj", "{E92D1A46-5785-49D9-ABEA-14DE8E886108}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{874A4690-1FEA-4127-AE29-6B39DB8DCA5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E92D1A46-5785-49D9-ABEA-14DE8E886108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E92D1A46-5785-49D9-ABEA-14DE8E886108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E92D1A46-5785-49D9-ABEA-14DE8E886108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E92D1A46-5785-49D9-ABEA-14DE8E886108}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
