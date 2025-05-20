@@ -89,7 +89,7 @@ namespace WukongMp.Api.Patches
 
             var entity = WukongMP.Instance.CreateRemoteMonster(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
 
-            ref var trans = ref client.GetEntityComponent<TranslationComponent>(entity);
+            ref var trans = ref WukongEcs.Instance.GetEntityComponent<TranslationComponent>(entity);
             trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();
             trans.Rotation = InServantReq.BornTransform.Rotator().ToVector3();
 

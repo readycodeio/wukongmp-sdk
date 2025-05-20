@@ -108,7 +108,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                client.EcsWorld.RunJob(new SyncMontageJob());
+                WukongEcs.Instance.World.RunJob(new SyncMontageJob());
             }
         }
 
@@ -174,7 +174,7 @@ namespace WukongMp.Api.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 ComponentMonitorManager.Instance.Update();
-                WukongMP.Instance.Client.RunEcsWorldUpdate();
+                WukongEcs.Instance.RunEcsWorldUpdate();
             }
 
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))

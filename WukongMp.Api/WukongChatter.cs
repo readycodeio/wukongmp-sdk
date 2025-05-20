@@ -139,7 +139,7 @@ namespace WukongMp.Api
 
                 if (int.TryParse(hpScaling, out var scaling))
                 {
-                    _wukongClient.SetMonsterHpScaling(scaling);
+                    WukongEcs.Instance.SetMonsterHpScaling(scaling);
                     SendServerMessage(nameof(Texts.SetMonsterHpScaling), scaling.ToString());
                 }
                 else

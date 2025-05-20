@@ -234,7 +234,7 @@ public static class PatchOnCastImmobilize
             {
                 Logging.LogDebug("Broadcasting trigger immobilize");
                 var netId = immobilizedPlayer == null
-                    ? client.GetEntityComponent<NetworkIdComponent>(immobilizedMonster.Value)
+                    ? WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(immobilizedMonster.Value)
                     : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
 
                 client.BroadcastImmobilize(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff);
@@ -291,7 +291,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : client.GetEntityComponent<NetworkIdComponent>(entityId!.Value);
+        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entityId!.Value);
 
         if (client.IsMasterClient)
         {
@@ -310,7 +310,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        ref var tamerComp = ref client.GetEntityComponent<LocalTamerComponent>(entityId!.Value);
+        ref var tamerComp = ref WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entityId!.Value);
 
         if (!tamerComp.RunImmobilizePatches)
         {
@@ -355,8 +355,8 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (entityId.HasValue)
             {
-                var netId = client.GetEntityComponent<NetworkIdComponent>(entityId.Value);
-                var pawn = client.GetEntityComponent<LocalTamerComponent>(entityId.Value).Pawn;
+                var netId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entityId.Value);
+                var pawn = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entityId.Value).Pawn;
 
                 client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();

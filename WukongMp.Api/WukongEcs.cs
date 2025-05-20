@@ -1,5 +1,4 @@
 ﻿using b1;
-using BtlShare;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using ReadyM.Relay.Common.ECS;
@@ -8,7 +7,6 @@ using ReadyM.Relay.Common.Multiplayer;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
-using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Systems;
@@ -16,15 +14,21 @@ using WukongMp.Api.Resources;
 
 namespace WukongMp.Api;
 
-public sealed partial class WukongClient
+public class WukongEcs
 {
-    public readonly World EcsWorld;
+    public readonly World World;
     public readonly NetworkedEntityManager NetManager;
-    private ArchetypeId _monsterArchetype;
+    private readonly WukongClient _client;
+    private readonly ArchetypeId _monsterArchetype;
 
-    private void DefineEcs()
+    public static WukongEcs Instance { get; } = new(WukongMP.Instance.Client);
+
+    private WukongEcs(WukongClient client)
     {
-        _monsterArchetype = EcsWorld.DefineArchetype(
+        _client = client;
+        World = new World();
+        NetManager = new NetworkedEntityManager(World, OnNetworkedEntityCreated, OnNetworkedEntityDestroyed);
+        _monsterArchetype = World.DefineArchetype(
             typeof(MarkerComponent),
             typeof(LocalTamerComponent),
             typeof(TamerComponent),
@@ -37,12 +41,15 @@ public sealed partial class WukongClient
             typeof(TranslationComponent)
         );
 
-        EcsWorld.DefineSystemGroup("OnUpdate", g => g
+        World.DefineSystemGroup("OnUpdate", g => g
             .AddSystem<SyncTamersSystem>()
             .AddSystem<UpdateMarkersSystem>()
             .AddSystem<DestroyDeadMonstersMarkersSystem>()
             .AddSystem<SyncMonstersSystem>()
-            .AddSystem(new SendEcsDeltaSystem(RelayClient)));
+            .AddSystem(new SendEcsDeltaSystem(_client.RelayClient)));
+
+        _client.RelayClient.OnEcsDelta += ApplyMonsterArchetypeDelta;
+        _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
     }
 
     private void OnNetworkedEntityCreated(NetworkIdComponent obj)
@@ -52,14 +59,14 @@ public sealed partial class WukongClient
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
     {
-        if (netId.Owner == RelayClient.LocalPlayer.PeerId)
+        if (netId.Owner == _client.RelayClient.LocalPlayer.PeerId)
         {
             // our own entity - send destroy event
             Logging.LogDebug("Networked entity destroyed: {Id} (owned)", netId);
             var writer = new NetDataWriter();
             writer.Put((byte)SystemEvent.DestroyEntity);
             writer.Put(netId);
-            RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
+            _client.RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
         }
         else
         {
@@ -68,7 +75,7 @@ public sealed partial class WukongClient
             if (entity.HasValue)
             {
                 Logging.LogDebug("Queueing remote entity for destruction: {Id}", netId);
-                EcsWorld.EntityManager.QueueDestroyEntity(entity.Value);
+                World.EntityManager.QueueDestroyEntity(entity.Value);
             }
             else
             {
@@ -79,13 +86,13 @@ public sealed partial class WukongClient
 
     public void RunEcsWorldUpdate()
     {
-        SetCachedPlayerProperties(); // not a system
-        EcsWorld.Update();
+        WukongMP.Instance.Client.SetCachedPlayerProperties(); // not a system, TODO
+        World.Update();
     }
 
     public EntityId CreateNetworkedMonster()
     {
-        return NetManager.CreateNetworkedEntity(_monsterArchetype, (short)RelayClient.LocalPlayer.PeerId).EntityId;
+        return NetManager.CreateNetworkedEntity(_monsterArchetype, (short)_client.RelayClient.LocalPlayer.PeerId).EntityId;
     }
 
     public EntityId CreateNetworkedMonster(NetworkIdComponent netId)
@@ -95,7 +102,7 @@ public sealed partial class WukongClient
 
     public ref T GetEntityComponent<T>(EntityId entity) where T : struct
     {
-        return ref EcsWorld.EntityManager.GetComponent<T>(entity);
+        return ref World.EntityManager.GetComponent<T>(entity);
     }
 
     private void DestroyRemoteEntity(NetworkIdComponent netId)
@@ -104,7 +111,7 @@ public sealed partial class WukongClient
 
         if (entity.HasValue)
         {
-            EcsWorld.EntityManager.QueueDestroyEntity(entity.Value);
+            World.EntityManager.QueueDestroyEntity(entity.Value);
         }
         else
         {
@@ -126,13 +133,13 @@ public sealed partial class WukongClient
                 if (NetManager.IsNetworkEntityDestroyed(netId))
                 {
                     // already dead, skip
-                    AnimationComponent.SkipDelta(RelayClient, reader);
-                    HpComponent.SkipDelta(RelayClient, reader);
-                    MonsterAnimationComponent.SkipDelta(RelayClient, reader);
-                    NicknameComponent.SkipDelta(RelayClient, reader);
-                    TeamComponent.SkipDelta(RelayClient, reader);
-                    TranslationComponent.SkipDelta(RelayClient, reader);
-                    TamerComponent.SkipDelta(RelayClient, reader);
+                    AnimationComponent.SkipDelta(_client.RelayClient, reader);
+                    HpComponent.SkipDelta(_client.RelayClient, reader);
+                    MonsterAnimationComponent.SkipDelta(_client.RelayClient, reader);
+                    NicknameComponent.SkipDelta(_client.RelayClient, reader);
+                    TeamComponent.SkipDelta(_client.RelayClient, reader);
+                    TranslationComponent.SkipDelta(_client.RelayClient, reader);
+                    TamerComponent.SkipDelta(_client.RelayClient, reader);
                     continue;
                 }
 
@@ -149,13 +156,13 @@ public sealed partial class WukongClient
             ref var translation = ref GetEntityComponent<TranslationComponent>(entity.Value);
             ref var tamer = ref GetEntityComponent<TamerComponent>(entity.Value);
 
-            animation.ReadDelta(RelayClient, reader);
-            health.ReadDelta(RelayClient, reader);
-            monsterAnimation.ReadDelta(RelayClient, reader);
-            nickname.ReadDelta(RelayClient, reader);
-            team.ReadDelta(RelayClient, reader);
-            translation.ReadDelta(RelayClient, reader);
-            tamer.ReadDelta(RelayClient, reader);
+            animation.ReadDelta(_client.RelayClient, reader);
+            health.ReadDelta(_client.RelayClient, reader);
+            monsterAnimation.ReadDelta(_client.RelayClient, reader);
+            nickname.ReadDelta(_client.RelayClient, reader);
+            team.ReadDelta(_client.RelayClient, reader);
+            translation.ReadDelta(_client.RelayClient, reader);
+            tamer.ReadDelta(_client.RelayClient, reader);
         }
     }
 
@@ -163,7 +170,7 @@ public sealed partial class WukongClient
     {
         if (netId.Owner == -1)
         {
-            var player = GetPlayerById((int)netId.Id);
+            var player = WukongMP.Instance.Client.GetPlayerById((int)netId.Id);
             if (player != null)
                 return player.Pawn;
         }
@@ -178,22 +185,15 @@ public sealed partial class WukongClient
         return null;
     }
 
-    public void SendUnitDead(NetworkIdComponent networkId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType)
-    {
-        const byte eventCode = 3;
-        var payload = new UnitDeadPacket(networkId, deadReason, dmgId, stiffLevel, isDotDmg, abnormalType);
-        RelayClient.OpRaiseEvent(eventCode, payload, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-    }
-
     public void SetMonsterHpScaling(int scaling)
     {
-        if (!IsMasterClient)
+        if (!WukongMP.Instance.Client.IsMasterClient)
         {
             GameUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
         }
 
         Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);
 
-        EcsWorld.RunJob(new ScaleMonsterHpJob(scaling));
+        World.RunJob(new ScaleMonsterHpJob(scaling));
     }
 }

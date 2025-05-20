@@ -114,11 +114,7 @@ namespace WukongMp.Api
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
             RoomState = new RoomStateProxy(RelayClient);
-            EcsWorld = new World();
-            NetManager = new NetworkedEntityManager(EcsWorld, OnNetworkedEntityCreated, OnNetworkedEntityDestroyed);
-
-            DefineEcs();
-
+            
             _beforeJoinedRoomCallback = onBeforeJoinedRoom;
             _afterJoinedRoomCallback = onAfterJoinedRoom;
             _playerJoinedCallback = playerJoinedCallback;
@@ -140,8 +136,6 @@ namespace WukongMp.Api
             RelayClient.OnDisconnected -= OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined -= OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft -= OnPlayerLeftRoomHandler;
-            RelayClient.OnEcsDelta -= ApplyMonsterArchetypeDelta;
-            RelayClient.OnReceivedDestroyEntity -= DestroyRemoteEntity;
         }
 
         public void RegisterPlayer(PlayerState state)
@@ -166,7 +160,7 @@ namespace WukongMp.Api
                 return null;
 
             EntityId? entityId = null;
-            EcsWorld.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == actor)
                 {
@@ -191,7 +185,7 @@ namespace WukongMp.Api
                 return null;
 
             EntityId? entityId = null;
-            EcsWorld.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Tamer == owner)
                 {
@@ -262,7 +256,7 @@ namespace WukongMp.Api
                 return null;
 
             EntityId? entityId = null;
-            EcsWorld.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+            WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
             {
                 if (tamerComponent.Pawn == owner)
                 {
@@ -556,7 +550,7 @@ namespace WukongMp.Api
             var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
 
             var aliveMonsters = new List<int>();
-            EcsWorld.Entities.ForEach((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
+            WukongEcs.Instance.World.Entities.ForEach((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
             {
                 if (hp.Hp <= 0)
                     return;
@@ -676,8 +670,6 @@ namespace WukongMp.Api
             RelayClient.OnDisconnected += OnDisconnectedHandler;
             RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
             RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
-            RelayClient.OnEcsDelta += ApplyMonsterArchetypeDelta;
-            RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
         }
 
         public void StartClient()
@@ -772,6 +764,13 @@ namespace WukongMp.Api
             var evData = new MontageCallbackData(netId, false, "", 0f, false);
 
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+        }
+        
+        public void SendUnitDead(NetworkIdComponent networkId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType)
+        {
+            const byte eventCode = 3;
+            var payload = new UnitDeadPacket(networkId, deadReason, dmgId, stiffLevel, isDotDmg, abnormalType);
+            RelayClient.OpRaiseEvent(eventCode, payload, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void SendTeleportFinish()
@@ -1133,7 +1132,7 @@ namespace WukongMp.Api
             if (!Constants.IsCoop)
             {
                 // send current monsters to the new player
-                EcsWorld.Entities.ForEach((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
+                WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
                 {
                     const byte eventCode = 1;
                     var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
