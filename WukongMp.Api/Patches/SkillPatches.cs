@@ -648,6 +648,8 @@ public static class TransformationPatch
         }
 
         playerState.Pawn = newOwner;
+        // update equipment
+        EquipmentHelpers.SetRemoteActorEquipment(newOwner, playerState.Equipment);
         Logging.LogDebug($"Transformed {oldOwner?.GetName()} to {newOwner?.GetName()}");
     }
 }

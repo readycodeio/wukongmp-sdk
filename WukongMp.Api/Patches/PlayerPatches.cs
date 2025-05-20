@@ -303,11 +303,7 @@ namespace WukongMp.Api.Patches
                 client.CacheEquipmentChange(EquipPosition, EquipID);
             }
 
-            if (Constants.IsCoop)
-            {
-                return true;
-            }
-            return owner == client.LocalPlayerState.Pawn || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer"); // TODO: Exact comparison
+            return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer"); // TODO: Exact comparison
         }
     }
 
