@@ -12,12 +12,12 @@ public sealed class SendEcsDeltaSystem(RelayClient client) : SendEcsDeltaSystemB
         return WukongMP.Instance.Client.IsMasterClient;
     }
 
-    public override int GetMaxPacketSize()
+    protected override int GetMaxPacketSize()
     {
         return client.GetMaxPacketSize(DeliveryMethod.Unreliable);
     }
 
-    public override void Send(NetDataWriter data)
+    protected override void Send(NetDataWriter data)
     {
         client.OpRaiseEventRaw(data, DeliveryMethod.Unreliable);
     }
