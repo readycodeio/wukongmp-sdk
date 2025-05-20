@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using b1;
@@ -606,5 +607,220 @@ public static class PatchBuffPlayerWinePartnerAttr
         }
 
         return true;
+    }
+}
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class TransformationPatch
+{
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BUS_PlayerTransComp:TransferData");
+    }
+
+    public static void Postfix(UActorCompBaseCS __instance, ABGUCharacter ToReplaceUnitInst)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        var oldOwner = __instance.GetOwner() as APawn;
+        if (oldOwner == null)
+        {
+            Logging.LogDebug("Skipping transformation because the owner is not a pawn");
+            return;
+        }
+
+        var newOwner = ToReplaceUnitInst as BGUCharacterCS;
+        if (newOwner == null)
+        {
+            Logging.LogDebug("Skipping transformation because the new owner is not a BGUCharacterCS");
+            return;
+        }
+
+        var client = WukongMP.Instance.Client;
+        var playerState = client.GetPlayerByActor(oldOwner);
+
+        if (playerState == null)
+        {
+            Logging.LogDebug($"Skipping transformation of {oldOwner?.GetName()} because player state is null");
+            return;
+        }
+
+        playerState.Pawn = newOwner;
+        Logging.LogDebug($"Transformed {oldOwner?.GetName()} to {newOwner?.GetName()}");
+    }
+}
+
+// TODO: This fixes follower transform (UI for skills no longer crashes) but also causes me and them to be unable to transform back
+// Also, skill UI for myself when I transform does not appear
+[HarmonyPatch(typeof(BPC_BattleMainInfoData), "GetCommonDisabledState")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchLogs4
+{
+    public static bool Prefix(BPC_BattleMainInfoData __instance, ref bool __result, out bool IsDisabled)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+        {
+            IsDisabled = false;
+            return true;
+        }
+        if (__instance.OwnerCharacter?.GetName() != GameUtils.GetControlledPawn()?.GetName())
+        {
+            __result = true;
+            IsDisabled = false;
+            return false;
+        }
+
+        IsDisabled = false;
+        return true;
+    }
+}
+
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnTransBeginSpawnNewOne
+{
+    private static IEnumerable<MethodBase> TargetMethods()
+    {
+        yield return AccessTools.Method("b1.BUS_PlayerTransComp:OnTransBeginSpawnNewOne");
+    }
+
+    public static void Prefix(
+        UActorCompBaseCS __instance,
+        int ToReplaceUnitResID,
+        int ToReplaceUnitBornSkillID,
+        bool EnableBlendViewTarget,
+        EPlayerTransBeginType TransBeginType)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        var client = WukongMP.Instance.Client;
+        if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
+        {
+            Logging.LogError("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
+            client.SendPlayerTransBegin(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType);
+        }
+    }
+}
+
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnTransBackSpawnNewOne
+{
+    private static IEnumerable<MethodBase> TargetMethods()
+    {
+        yield return AccessTools.Method("b1.BUS_PlayerTransComp:OnTransBackSpawnNewOne");
+    }
+
+    public static void Prefix(
+        UActorCompBaseCS __instance,
+        int ToReplaceUnitResID,
+        int ToReplaceUnitBornSkillID,
+        bool EnableBlendViewTarget,
+        EPlayerTransEndType TransEndType)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        var client = WukongMP.Instance.Client;
+        if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
+        {
+            Logging.LogError("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
+            client.SendPlayerTransEnd(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType);
+        }
+    }
+}
+
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchSpawnAndPossess
+{
+    private static IEnumerable<MethodBase> TargetMethods()
+    {
+        yield return AccessTools.Method("b1.BUS_PlayerTransComp:SpawnAndPossessTransUnit");
+    }
+
+    public static bool Prefix(
+        UActorCompBaseCS __instance,
+        BUC_PlayerTransData ___PlayerTransData,
+        BGUCharacterCS ___OwnerAsCharacterCS,
+        AActor ___Owner,
+        ref APawn? __result,
+        UClass CharacterClass,
+        FTransform BornTransform,
+        BGUFuncLibPlayer.SpawnControlledPawnBlendParam SpawnControlledPawnBlendParam,
+        int ToReplaceUnitResID)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        var bgwEventCollection = Traverse.Create(__instance).Property<BGW_EventCollection>("BGWEventCollection").Value;
+        var busEventCollection = Traverse.Create(__instance).Property<BUS_GSEventCollection>("BUSEventCollection").Value;
+
+        APawn? newPawn = null;
+        var unitTransType = ___PlayerTransData.TransTypeCached == EPlayerTransEndType.None ? EPlayerTransEndType.CastSpell : ___PlayerTransData.TransTypeCached;
+        bgwEventCollection.Evt_BGW_UnitTrans(___Owner, unitTransType);
+        busEventCollection.Evt_NotifyUnitTrans_BeforePosses.Invoke(unitTransType);
+        var instigator = ___OwnerAsCharacterCS.Instigator;
+        var controller = instigator != null ? instigator.GetController() : null;
+
+        if (controller == null)
+        {
+            Logging.LogDebug("Controller is null, cannot transform");
+            __result = null;
+            return false;
+        }
+
+        var playerController = controller as ABGPPlayerController;
+
+        SpawnTransform(controller, CharacterClass, BornTransform, Pawn =>
+        {
+            newPawn = Pawn;
+            if (playerController != null)
+            {
+                BPS_EventCollectionCS.Get(playerController)?.Evt_PlayerActorSpawn.Invoke();
+                BPS_EventCollectionCS.Get(playerController)?.Evt_BPS_SwitchPlayerTransState.Invoke(___Owner, ToReplaceUnitResID);
+            }
+        }, SpawnControlledPawnBlendParam);
+
+        if (playerController != null)
+        {
+            if (!SpawnControlledPawnBlendParam.EnableBlendViewTarget)
+                playerController.SetViewTargetWithBlend(___Owner);
+        }
+
+        __result = newPawn;
+        return false;
+    }
+
+    private static APawn? SpawnTransform(AController controller, UClass pawnClass, FTransform spawnTransform, Action<APawn> beforeBeginPlayCb, BGUFuncLibPlayer.SpawnControlledPawnBlendParam blendParam)
+    {
+        var controlledPawn = controller.GetControlledPawn();
+        var playerController = controller as ABGPPlayerController;
+        var newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(controller.World, (TSubclassOf<AActor>)pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
+        if (newPawn == null)
+        {
+            Logging.LogDebug("New pawn is null, cannot transform");
+            return null;
+        }
+        if (blendParam.NeedBlend && playerController != null)
+            playerController.OnPossessWithViewTargetBlend(newPawn, blendParam.PossessBlendTime, (EViewTargetBlendFunction)blendParam.PossessBlendFunc, blendParam.PossessBlendExp, true, blendParam.EnableBlendViewTarget);
+        else
+            controller.Possess(newPawn);
+        beforeBeginPlayCb(newPawn);
+        var actor = (ACharacter)newPawn;
+        actor.CapsuleComponent.SetGenerateOverlapEvents(false);
+        actor.CapsuleComponent.SetGenerateOverlapEvents(false);
+        BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(controller, newPawn, spawnTransform);
+
+        if (playerController != null)
+        {
+            BPS_GSEventCollection.Get(playerController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
+            BGS_EventCollectionCS.Get(playerController)?.Evt_NotifyPossessEntityChanged.Invoke(controlledPawn.ToEntity(), newPawn.ToEntity());
+        }
+
+        actor.CapsuleComponent.SetGenerateOverlapEvents(true);
+        actor.CapsuleComponent.SetGenerateOverlapEvents(true);
+        UGSE_ActorFuncLib.UpdateActorOverlaps(actor);
+        return newPawn;
     }
 }

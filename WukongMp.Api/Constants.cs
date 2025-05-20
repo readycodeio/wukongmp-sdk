@@ -28,7 +28,7 @@ namespace WukongMp.Api
         public const int DrawTeamId = 9999;
         public const int ReconnectDelayMs = 1000;
 
-        public static readonly List<int> SkillsWhitelist = [10518];
+        public static readonly List<int> SkillsWhitelist = [10518, -999];
         public const int GourdSkillId = 10530;
         public const int ImmobilizeSkillId = 10518;
         public const int ConsumableBuffSkillId = 10913;

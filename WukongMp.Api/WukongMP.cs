@@ -579,6 +579,50 @@ namespace WukongMp.Api
             Client.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet", BGW_TickGroupMask.TG_BeforeStartPhsic);
             Client.OnMotionMatchingChanged += (characterId, mm) => GameLoopPatch.QueueOnGameThread(() => OnMotionMatchingChanged(characterId, mm), "OnMotionMatchingChanged");
             Client.OnRequestSpawnUnits += (playerId, unitName, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnUnitsMaster(playerId, unitName, count, teamId), "SpawnUnitsMaster");
+            Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
+            Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
+        }
+
+        private void OnPlayerTransBegin(int playerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
+        {
+            var playerState = Client.GetPlayerById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            Logging.LogTrace("Transforming player {Nickname} to unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transBeginType);
+            events.Evt_TransBeginSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transBeginType);
+        }
+
+        private void OnPlayerTransEnd(int playerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
+        {
+            var playerState = Client.GetPlayerById(playerId);
+            if (playerState == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+
+            if (events == null)
+            {
+                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
+                return;
+            }
+
+            Logging.LogTrace("Transforming player {Nickname} from unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transEndType);
+            events.Evt_TransBackSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transEndType);
         }
 
         private void OnBuffAdded(int playerId, int buffId, float duration)

@@ -67,6 +67,8 @@ namespace WukongMp.Api
         public event Action<NetworkIdComponent, string>? OnFsmStateSet;
         public event Action<NetworkIdComponent, EState_MM>? OnMotionMatchingChanged;
         public event Action<int, string, int, int>? OnRequestSpawnUnits;
+        public event Action<int, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
+        public event Action<int, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
 
         public WukongChatter WukongChat { get; }
         public LobbyManager LobbyManager { get; }
@@ -407,6 +409,16 @@ namespace WukongMp.Api
                     var spawnRequestData = RelayClient.DeserializeObject<UnitSpawnRequestData>(reader);
                     OnRequestSpawnUnits?.Invoke(header.Sender, spawnRequestData.UnitName, spawnRequestData.Count, spawnRequestData.TeamId);
                     break;
+                case 26:
+                    // begin transform request 
+                    var transBeginRequestData = RelayClient.DeserializeObject<PlayerTransBeginData>(reader);
+                    OnPlayerTransBegin?.Invoke(header.Sender, transBeginRequestData.UnitResId, transBeginRequestData.UnitBornSkillId, transBeginRequestData.EnableBlendViewTarget, transBeginRequestData.TransBeginType);
+                    break;
+                case 27:
+                    // end transform request 
+                    var transEndRequestData = RelayClient.DeserializeObject<PlayerTransEndData>(reader);
+                    OnPlayerTransEnd?.Invoke(header.Sender, transEndRequestData.UnitResId, transEndRequestData.UnitBornSkillId, transEndRequestData.EnableBlendViewTarget, transEndRequestData.TransEndType);
+                    break;
             }
         }
 
@@ -646,6 +658,8 @@ namespace WukongMp.Api
             RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
             RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
             RelayClient.RegisterType(typeof(UnitDeadPacket), UnitDeadPacket.Serialize, UnitDeadPacket.Deserialize);
+            RelayClient.RegisterType(typeof(PlayerTransBeginData), PlayerTransBeginData.Serialize, PlayerTransBeginData.Deserialize);
+            RelayClient.RegisterType(typeof(PlayerTransEndData), PlayerTransEndData.Serialize, PlayerTransEndData.Deserialize);
             RelayClient.RegisterType(typeof(NetworkIdComponent), (writer, customObject) =>
             {
                 var id = (NetworkIdComponent)customObject;
@@ -876,6 +890,20 @@ namespace WukongMp.Api
             const byte eventCode = 25;
             var evData = new UnitSpawnRequestData(enemyName, count, teamId);
             RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Master, DeliveryMethod.ReliableOrdered);
+        }
+
+        public void SendPlayerTransBegin(int unitResId, int unitSkillId, bool blendViewTarget, EPlayerTransBeginType type)
+        {
+            const byte eventCode = 26;
+            var evData = new PlayerTransBeginData(unitResId, unitSkillId, blendViewTarget, type);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+        }
+
+        public void SendPlayerTransEnd(int unitResId, int unitSkillId, bool blendViewTarget, EPlayerTransEndType type)
+        {
+            const byte eventCode = 27;
+            var evData = new PlayerTransEndData(unitResId, unitSkillId, blendViewTarget, type);
+            RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
         }
 
         public void CacheEquipmentChange(EquipPosition position, int newEq)
