@@ -578,8 +578,11 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            InControlData.ArmLength = Constants.CameraArmLength;
-            InControlData.ArmTargetOffset = FVector.ZeroVector;
+            if (!Constants.IsCoop)
+            {
+                InControlData.ArmLength = Constants.CameraArmLength;
+                InControlData.ArmTargetOffset = FVector.ZeroVector;
+            }
             return true;
         }
     }
