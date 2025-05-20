@@ -1,0 +1,53 @@
+#!powershell.exe -ExecutionPolicy Bypass -File
+
+$solutionName = "WukongCSharpMod"
+$zipName = "WukongMp"
+
+# Define the source and destination directories
+$modSourceDir = "WukongMp.$ModVariant/bin/$Configuration/netstandard2.1"
+
+$modDestDir = "Mods/WukongMpMod"
+
+# Define the files to copy
+$modFiles = @(
+    "WukongMp.Api.dll", 
+    "WukongMp.Api.pdb", 
+    "WukongMpMod.dll", 
+    "WukongMpMod.pdb", 
+    "ReadyM.Relay.Client.dll", 
+    "ReadyM.Relay.Client.pdb", 
+    "ReadyM.Relay.Common.dll", 
+    "ReadyM.Relay.Common.pdb", 
+    "ReadyM.Relay.Common.Wukong.dll", 
+    "ReadyM.Relay.Common.Wukong.pdb"
+)
+
+# List of culture codes
+$cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
+
+$allFiles = @(
+    @($modFiles, $modSourceDir, $modDestDir),
+    @($cultureFolders, $modSourceDir, $modDestDir)
+)
+
+function CopyFiles($files, $sourceDir, $destDir) {
+    # Create the destination directory if it doesn't exist
+    if (!(Test-Path -Path $destDir)) {
+        New-Item -ItemType Directory -Path $destDir -Force
+    }
+    
+    # Copy each file to the destination directory
+    foreach ($file in $files) {
+        $sourceFile = Join-Path -Path $sourceDir -ChildPath $file
+        $destFile = Join-Path -Path $destDir -ChildPath $file
+        if (Test-Path -Path $sourceFile -PathType Leaf) {
+            Copy-Item -Path $sourceFile -Destination $destFile -Force
+            Write-Output "Copied $file to $destDir"
+        } elseif (Test-Path -Path $sourceFile -PathType Container) {
+            Copy-Item -Path $sourceFile -Destination $destFile -Recurse -Force
+            Write-Output "Copied $file to $destDir (recursive)"
+        } else {
+            Write-Output "[Error] $file does not exist in $sourceDir"
+        }
+    }
+}
