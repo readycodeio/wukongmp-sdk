@@ -10,6 +10,7 @@
         <RootNamespace>WukongMp.Api</RootNamespace>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>CS8600;CS8602;CS8603;CS8604;CS8618;CS8625;CS8619</WarningsAsErrors>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>

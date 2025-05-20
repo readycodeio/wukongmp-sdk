@@ -22,6 +22,7 @@ public class WukongEcs
     public readonly NetworkedEntityManager NetManager;
     private readonly WukongClient _client;
     private readonly ArchetypeId _monsterArchetype;
+    private readonly ArchetypeId _playerArchetype;
 
     public static WukongEcs Instance { get; } = new(WukongMP.Instance.Client);
 
@@ -30,13 +31,30 @@ public class WukongEcs
         _client = client;
         World = new World();
         NetManager = new NetworkedEntityManager(World, OnNetworkedEntityCreated, OnNetworkedEntityDestroyed);
+
         _monsterArchetype = World.DefineArchetype(
+            // local
             typeof(MarkerComponent),
             typeof(LocalTamerComponent),
+            // synced
             typeof(TamerComponent),
             typeof(AnimationComponent),
             typeof(HpComponent),
             typeof(MonsterAnimationComponent),
+            typeof(NicknameComponent),
+            typeof(NetworkIdComponent),
+            typeof(TeamComponent),
+            typeof(TranslationComponent)
+        );
+
+        _playerArchetype = World.DefineArchetype(
+            // local
+            typeof(MarkerComponent),
+            typeof(LocalPlayerComponent),
+            // synced
+            typeof(PlayerComponent),
+            typeof(AnimationComponent),
+            typeof(HpComponent),
             typeof(NicknameComponent),
             typeof(NetworkIdComponent),
             typeof(TeamComponent),
@@ -50,7 +68,7 @@ public class WukongEcs
             .AddSystem<SyncMonstersSystem>()
             .AddSystem(new SendEcsDeltaSystem(_client.RelayClient)));
 
-        _client.RelayClient.OnEcsDelta += ApplyMonsterArchetypeDelta;
+        _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
         _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
     }
 
@@ -121,7 +139,7 @@ public class WukongEcs
         }
     }
 
-    private void ApplyMonsterArchetypeDelta(NetDataReader reader)
+    private void ApplyArchetypeDelta(NetDataReader reader)
     {
         World.RunJob(new ApplyDeltaJob(reader, _client.RelayClient, NetManager, _monsterArchetype));
     }
