@@ -372,6 +372,8 @@ namespace WukongMp.Api.Patches
 
         public static void Postfix(
             BUS_DeadComp __instance,
+            IBUC_SimpleStateData ___SimpleStateData, 
+            IBUC_UnitStateData ___UnitStateData,
             EDeadReason DeadReason,
             AActor Attacker,
             int DmgID = -1,
@@ -394,6 +396,11 @@ namespace WukongMp.Api.Patches
                 Logging.LogError("Owner is null or destroyed");
                 return;
             }
+            
+            if (owner is not BGUCharacterCS || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
+            {
+                return;
+            }
 
             if (owner == client.LocalPlayerState.Pawn)
             {
@@ -413,7 +420,7 @@ namespace WukongMp.Api.Patches
                     client.SendUnitDead(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                 }
 
-                Task.Run(async () =>
+                _ = Task.Run(async () =>
                 {
                     await Task.Delay(1000);
                     Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
