@@ -405,7 +405,7 @@ namespace WukongMp.Api.Patches
 
             if (entity.HasValue)
             {
-                if (client.EntityManager.HasComponent<NetworkIdComponent>(entity.Value))
+                if (client.EcsWorld.EntityManager.HasComponent<NetworkIdComponent>(entity.Value))
                 {
                     var networkId = client.GetEntityComponent<NetworkIdComponent>(entity.Value);
 
@@ -417,7 +417,7 @@ namespace WukongMp.Api.Patches
                 {
                     await Task.Delay(1000);
                     Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
-                    client.EntityManager.QueueDestroyEntity(entity.Value);
+                    client.EcsWorld.EntityManager.QueueDestroyEntity(entity.Value);
                 });
             }
         }

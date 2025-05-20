@@ -14,6 +14,7 @@ using LiteNetLib;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Multiplayer;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -113,8 +114,8 @@ namespace WukongMp.Api
                 (level, s, args) => Logging.Log(level, s, args.AsSpan())
             );
             RoomState = new RoomStateProxy(RelayClient);
-            EntityManager = new NetworkedEntityManager();
-            EcsWorld = new World(EntityManager);
+            EcsWorld = new World();
+            NetManager = new NetworkedEntityManager(EcsWorld, OnNetworkedEntityCreated, OnNetworkedEntityDestroyed);
 
             DefineEcs();
 

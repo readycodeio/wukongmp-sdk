@@ -4,6 +4,7 @@ using LiteNetLib;
 using LiteNetLib.Utils;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Multiplayer;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -17,13 +18,13 @@ namespace WukongMp.Api;
 
 public sealed partial class WukongClient
 {
-    public readonly NetworkedEntityManager EntityManager;
-    public ArchetypeId MonsterArchetype;
     public readonly World EcsWorld;
+    public readonly NetworkedEntityManager NetManager;
+    private ArchetypeId _monsterArchetype;
 
     private void DefineEcs()
     {
-        MonsterArchetype = EntityManager.DefineArchetype(
+        _monsterArchetype = EcsWorld.DefineArchetype(
             typeof(MarkerComponent),
             typeof(LocalTamerComponent),
             typeof(TamerComponent),
@@ -36,10 +37,7 @@ public sealed partial class WukongClient
             typeof(TranslationComponent)
         );
 
-        EntityManager.OnEntityCreated += OnNetworkedEntityCreated;
-        EntityManager.OnEntityDestroyed += OnNetworkedEntityDestroyed;
-
-        EcsWorld.AddSystemGroup("OnUpdate", g => g
+        EcsWorld.DefineSystemGroup("OnUpdate", g => g
             .AddSystem<SyncTamersSystem>()
             .AddSystem<UpdateMarkersSystem>()
             .AddSystem<DestroyDeadMonstersMarkersSystem>()
@@ -66,11 +64,11 @@ public sealed partial class WukongClient
         else
         {
             // remote entity, dissolve it locally
-            var entity = EntityManager.GetEntityByNetworkId(netId);
+            var entity = NetManager.GetEntityByNetworkId(netId);
             if (entity.HasValue)
             {
                 Logging.LogDebug("Queueing remote entity for destruction: {Id}", netId);
-                EntityManager.QueueDestroyEntity(entity.Value);
+                EcsWorld.EntityManager.QueueDestroyEntity(entity.Value);
             }
             else
             {
@@ -87,26 +85,26 @@ public sealed partial class WukongClient
 
     public EntityId CreateNetworkedMonster()
     {
-        return EntityManager.CreateNetworkedEntity(MonsterArchetype, (short)RelayClient.LocalPlayer.PeerId).EntityId;
+        return NetManager.CreateNetworkedEntity(_monsterArchetype, (short)RelayClient.LocalPlayer.PeerId).EntityId;
     }
 
     public EntityId CreateNetworkedMonster(NetworkIdComponent netId)
     {
-        return EntityManager.CreateNetworkedEntity(MonsterArchetype, netId);
+        return NetManager.CreateNetworkedEntity(_monsterArchetype, netId);
     }
 
     public ref T GetEntityComponent<T>(EntityId entity) where T : struct
     {
-        return ref EntityManager.GetComponent<T>(entity);
+        return ref EcsWorld.EntityManager.GetComponent<T>(entity);
     }
 
     private void DestroyRemoteEntity(NetworkIdComponent netId)
     {
-        var entity = EntityManager.GetEntityByNetworkId(netId);
+        var entity = NetManager.GetEntityByNetworkId(netId);
 
         if (entity.HasValue)
         {
-            EntityManager.QueueDestroyEntity(entity.Value);
+            EcsWorld.EntityManager.QueueDestroyEntity(entity.Value);
         }
         else
         {
@@ -121,11 +119,11 @@ public sealed partial class WukongClient
             var id = reader.GetUInt();
 
             var netId = new NetworkIdComponent(owner, id);
-            var entity = EntityManager.GetEntityByNetworkId(netId);
+            var entity = NetManager.GetEntityByNetworkId(netId);
 
             if (!entity.HasValue)
             {
-                if (EntityManager.IsNetworkEntityDestroyed(netId))
+                if (NetManager.IsNetworkEntityDestroyed(netId))
                 {
                     // already dead, skip
                     AnimationComponent.SkipDelta(RelayClient, reader);
@@ -170,7 +168,7 @@ public sealed partial class WukongClient
                 return player.Pawn;
         }
 
-        var entity = EntityManager.GetEntityByNetworkId(netId);
+        var entity = NetManager.GetEntityByNetworkId(netId);
         if (entity.HasValue)
         {
             ref var tamer = ref GetEntityComponent<LocalTamerComponent>(entity.Value);

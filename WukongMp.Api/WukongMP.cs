@@ -756,7 +756,7 @@ namespace WukongMp.Api
         // TODO: System, this is not called anywhere
         private void OnMotionMatchingChanged(NetworkIdComponent netId, EState_MM motionMatchingState)
         {
-            var entity = Client.EntityManager.GetEntityByNetworkId(netId);
+            var entity = Client.NetManager.GetEntityByNetworkId(netId);
             if (!entity.HasValue)
             {
                 LogNullCharacter(netId);
@@ -1444,11 +1444,7 @@ namespace WukongMp.Api
 
         public void DestroySyncedMonsters()
         {
-            var entities = Client.EntityManager.GetArchetype(Client.MonsterArchetype)!;
-            foreach (var entityId in entities.Entities.ToArray())
-            {
-                Client.EntityManager.QueueDestroyEntity(entityId);
-            }
+            Client.EcsWorld.Entities.ForEach((EntityId entity, ref LocalTamerComponent _) => { Client.EcsWorld.EntityManager.QueueDestroyEntity(entity); });
         }
 
         public void DestroyMonster(EntityId entity)
@@ -1482,7 +1478,7 @@ namespace WukongMp.Api
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
-            Client.EntityManager.QueueDestroyEntity(entity);
+            Client.EcsWorld.EntityManager.QueueDestroyEntity(entity);
         }
 
         private void OnBeforeJoinedRoomCallback()
