@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Client;
 
 namespace WukongMp.Api
 {

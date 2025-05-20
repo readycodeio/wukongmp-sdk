@@ -7,6 +7,8 @@ using ReadyM.Relay.Common.Multiplayer;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Relay.Common.Wukong.Jobs;
+using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Systems;
@@ -121,49 +123,7 @@ public class WukongEcs
 
     private void ApplyMonsterArchetypeDelta(NetDataReader reader)
     {
-        while (reader.TryGetShort(out var owner))
-        {
-            var id = reader.GetUInt();
-
-            var netId = new NetworkIdComponent(owner, id);
-            var entity = NetManager.GetEntityByNetworkId(netId);
-
-            if (!entity.HasValue)
-            {
-                if (NetManager.IsNetworkEntityDestroyed(netId))
-                {
-                    // already dead, skip
-                    AnimationComponent.SkipDelta(_client.RelayClient, reader);
-                    HpComponent.SkipDelta(_client.RelayClient, reader);
-                    MonsterAnimationComponent.SkipDelta(_client.RelayClient, reader);
-                    NicknameComponent.SkipDelta(_client.RelayClient, reader);
-                    TeamComponent.SkipDelta(_client.RelayClient, reader);
-                    TranslationComponent.SkipDelta(_client.RelayClient, reader);
-                    TamerComponent.SkipDelta(_client.RelayClient, reader);
-                    continue;
-                }
-
-                // it must be new
-                Logging.LogDebug("Creating new entity {Id}", netId);
-                entity = CreateNetworkedMonster(netId);
-            }
-
-            ref var animation = ref GetEntityComponent<AnimationComponent>(entity.Value);
-            ref var health = ref GetEntityComponent<HpComponent>(entity.Value);
-            ref var monsterAnimation = ref GetEntityComponent<MonsterAnimationComponent>(entity.Value);
-            ref var nickname = ref GetEntityComponent<NicknameComponent>(entity.Value);
-            ref var team = ref GetEntityComponent<TeamComponent>(entity.Value);
-            ref var translation = ref GetEntityComponent<TranslationComponent>(entity.Value);
-            ref var tamer = ref GetEntityComponent<TamerComponent>(entity.Value);
-
-            animation.ReadDelta(_client.RelayClient, reader);
-            health.ReadDelta(_client.RelayClient, reader);
-            monsterAnimation.ReadDelta(_client.RelayClient, reader);
-            nickname.ReadDelta(_client.RelayClient, reader);
-            team.ReadDelta(_client.RelayClient, reader);
-            translation.ReadDelta(_client.RelayClient, reader);
-            tamer.ReadDelta(_client.RelayClient, reader);
-        }
+        World.RunJob(new ApplyDeltaJob(reader, _client.RelayClient, NetManager, _monsterArchetype));
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkIdComponent netId)

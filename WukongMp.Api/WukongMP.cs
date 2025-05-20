@@ -14,6 +14,7 @@ using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.API;
+using WukongMp.Api.Client;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Patches;

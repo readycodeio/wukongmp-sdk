@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using WukongMp.Api.Client;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
