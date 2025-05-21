@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using b1;
@@ -317,6 +318,7 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
+        private static int _pendingDaSheng;
         private static HashSet<int> _spawnedDaSheng2 = [];
 
         public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData)
@@ -364,10 +366,15 @@ namespace WukongApi.Patches
 
                         if (_spawnedDaSheng2.Add(monsterState.PeerId))
                         {
+                            _pendingDaSheng++;
                             _ = Task.Run(async () =>
                             {
                                 await Task.Delay(5000);
-                                Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
+                                Utils.TryRunOnGameThread(() =>
+                                {
+                                    WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId);
+                                    _pendingDaSheng--;
+                                });
                             });
                         }
                         else
@@ -379,7 +386,10 @@ namespace WukongApi.Patches
                     }
                 }
 
-                client.CheckRoundEndCondition();
+                if (_pendingDaSheng == 0)
+                {
+                    client.CheckRoundEndCondition();
+                }
             }
         }
 
