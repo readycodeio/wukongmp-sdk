@@ -2,6 +2,9 @@ param (
     [string]$Configuration
 )
 
+# Change to the directory where this script is located
+Set-Location -Path $PSScriptRoot
+
 # Debug by default
 if (-not $Configuration) {
     $Configuration = "Debug"
