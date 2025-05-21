@@ -758,14 +758,14 @@ public class PatchSpawnAndPossess
         var mainPlayerPawn = GameUtils.GetControlledPawn();
         var mainPlayerController = GameUtils.GetPlayerController();
         var transformingPlayerController = ___OwnerAsCharacterCS.GetController();
-        bool isLocalTransform = false;
+        bool isNonLocalTransform = false;
         if (___OwnerAsCharacterCS != GameUtils.GetControlledPawn())
         {
             // Set player controller to transforming player
-            isLocalTransform = true;
+            isNonLocalTransform = true;
             mainPlayerController.Possess(___OwnerAsCharacterCS);
-            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(mainPlayerPawn);
-            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(___OwnerAsCharacterCS.ToEntity(), mainPlayerPawn.ToEntity());
+            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(___OwnerAsCharacterCS);
+            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(mainPlayerPawn.ToEntity(), ___OwnerAsCharacterCS.ToEntity());
         }
 
         var bgwEventCollection = Traverse.Create(__instance).Property<BGW_EventCollection>("BGWEventCollection").Value;
@@ -797,12 +797,12 @@ public class PatchSpawnAndPossess
             }
         }, SpawnControlledPawnBlendParam);
 
-        if (isLocalTransform)
+        if (isNonLocalTransform)
         {
             // Set player controller back to main player
             mainPlayerController.Possess(mainPlayerPawn);
-            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
-            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(mainPlayerPawn.ToEntity(), newPawn.ToEntity());
+            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(mainPlayerPawn);
+            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), mainPlayerPawn.ToEntity());
             transformingPlayerController.Possess(newPawn);
         }
 
