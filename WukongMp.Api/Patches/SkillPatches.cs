@@ -758,9 +758,11 @@ public class PatchSpawnAndPossess
         var mainPlayerPawn = GameUtils.GetControlledPawn();
         var mainPlayerController = GameUtils.GetPlayerController();
         var transformingPlayerController = ___OwnerAsCharacterCS.GetController();
+        bool isLocalTransform = false;
         if (___OwnerAsCharacterCS != GameUtils.GetControlledPawn())
         {
             // Set player controller to transforming player
+            isLocalTransform = true;
             mainPlayerController.Possess(___OwnerAsCharacterCS);
             BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(mainPlayerPawn);
             BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(___OwnerAsCharacterCS.ToEntity(), mainPlayerPawn.ToEntity());
@@ -795,7 +797,7 @@ public class PatchSpawnAndPossess
             }
         }, SpawnControlledPawnBlendParam);
 
-        if (___OwnerAsCharacterCS != GameUtils.GetControlledPawn())
+        if (isLocalTransform)
         {
             // Set player controller back to main player
             mainPlayerController.Possess(mainPlayerPawn);
