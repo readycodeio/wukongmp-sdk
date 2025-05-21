@@ -755,6 +755,17 @@ public class PatchSpawnAndPossess
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
+        var mainPlayerPawn = GameUtils.GetControlledPawn();
+        var mainPlayerController = GameUtils.GetPlayerController();
+        var transformingPlayerController = ___OwnerAsCharacterCS.GetController();
+        if (___OwnerAsCharacterCS != GameUtils.GetControlledPawn())
+        {
+            // Set player controller to transforming player
+            mainPlayerController.Possess(___OwnerAsCharacterCS);
+            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(mainPlayerPawn);
+            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(___OwnerAsCharacterCS.ToEntity(), mainPlayerPawn.ToEntity());
+        }
+
         var bgwEventCollection = Traverse.Create(__instance).Property<BGW_EventCollection>("BGWEventCollection").Value;
         var busEventCollection = Traverse.Create(__instance).Property<BUS_GSEventCollection>("BUSEventCollection").Value;
 
@@ -783,6 +794,15 @@ public class PatchSpawnAndPossess
                 BPS_EventCollectionCS.Get(playerController)?.Evt_BPS_SwitchPlayerTransState.Invoke(___Owner, ToReplaceUnitResID);
             }
         }, SpawnControlledPawnBlendParam);
+
+        if (___OwnerAsCharacterCS != GameUtils.GetControlledPawn())
+        {
+            // Set player controller back to main player
+            mainPlayerController.Possess(mainPlayerPawn);
+            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
+            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(mainPlayerPawn.ToEntity(), newPawn.ToEntity());
+            transformingPlayerController.Possess(newPawn);
+        }
 
         if (playerController != null)
         {
