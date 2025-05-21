@@ -90,6 +90,7 @@ namespace WukongMp.Api
 
         public void DeInit()
         {
+            Client.StopRelayClient();
             IsInitialized = false;
         }
 
@@ -135,7 +136,7 @@ namespace WukongMp.Api
             }
         }
 
-        private static void  OnMapLoaded()
+        private static void OnMapLoaded()
         {
             var world = GameUtils.GetWorld();
             if (world != null)
