@@ -655,4 +655,18 @@ namespace WukongApi.Patches
             return !(client.LocalPlayerState.Pawn == __instance.GetOwner() && client.LocalPlayerState.IsSpectator);
         }
     }
+
+    // Disable slowing down time
+    [HarmonyPatch(typeof(BUS_TimeScaleComp), "OnTriggerScaleTime")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchOnTriggerScaleTime
+    {
+        public static bool Prefix()
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return false;
+        }
+    }
 }
