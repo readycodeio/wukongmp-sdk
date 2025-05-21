@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using b1;
 using B1UI.GSUI;
@@ -316,6 +317,8 @@ namespace WukongApi.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
+        private static HashSet<int> _spawnedDaSheng2 = [];
+
         public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData)
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
@@ -359,11 +362,19 @@ namespace WukongApi.Patches
                         var teamId = ownerCharacter.GetTeamIDInCS();
                         var location = ownerCharacter.GetActorLocation();
 
-                        _ = Task.Run(async () =>
+                        if (_spawnedDaSheng2.Add(monsterState.PeerId))
                         {
-                            await Task.Delay(5000);
-                            Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
-                        });
+                            _ = Task.Run(async () =>
+                            {
+                                await Task.Delay(5000);
+                                Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
+                            });
+                        }
+                        else
+                        {
+                            Logging.LogWarning("Would spawn DaSheng2, but already spawned for this monster: {Monster}", monsterState.PeerId);
+                        }
+
                         return;
                     }
                 }
