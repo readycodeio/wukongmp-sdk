@@ -11,11 +11,11 @@ using WukongMp.Api.UI;
 namespace WukongMp.Coop
 {
     // ReSharper disable once UnusedType.Global
-    public class Mod : ICSharpMod
+    public class Mod : ICSharpModEx
     {
         public string Name => "WukongMp co-op";
         public string Version => "1.0.0";
-
+        
         private WukongMP _wukongMp = null!; // initialized in Init
 
         public void Init()
@@ -58,6 +58,11 @@ namespace WukongMp.Coop
 
             _wukongMp.Patch();
 #if DEBUG
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.B, () =>
+            {
+                Logging.LogDebug("Alt + B: Test");
+            });
+            
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
@@ -140,7 +145,6 @@ namespace WukongMp.Coop
                     var message = ChatWidget.Instance.CommitMessage();
                     _wukongMp.Client.WukongChat.ProcessMessage(message);
                 }
-
             });
         }
 
@@ -158,6 +162,24 @@ namespace WukongMp.Coop
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
             TaskScheduler.UnobservedTaskException -= UnobservedTaskExceptionHandler;
             Logger.Instance.Dispose();
+        }
+
+        public object GetReloadContext()
+        {
+            Logging.LogInformation("GetReloadContext");
+            return (bool?) _wukongMp.Client.ConnectedAndInRoom;
+        }
+        
+        public void Reload(object? context)
+        {
+            Logging.LogInformation("Reload");
+
+            var connectedAndInRoom = context as bool?;
+            if (connectedAndInRoom == true)
+            {
+                Logging.LogInformation("Reconnecting after a reload");
+                _wukongMp.Reload();
+            }
         }
 
         private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)

@@ -40,7 +40,10 @@ function CopyFiles($files, $sourceDir, $destDir) {
     foreach ($file in $files) {
         $sourceFile = Join-Path -Path $sourceDir -ChildPath $file
         $destFile = Join-Path -Path $destDir -ChildPath $file
-        if (Test-Path -Path $sourceFile -PathType Leaf) {
+        if ($file -eq "*") {
+            Copy-Item -Path $sourceFile -Destination $destDir -Recurse -Force
+            Write-Output "Copied $file to $destDir (recursive)"
+        } elseif (Test-Path -Path $sourceFile -PathType Leaf) {
             Copy-Item -Path $sourceFile -Destination $destFile -Force
             Write-Output "Copied $file to $destDir"
         } elseif (Test-Path -Path $sourceFile -PathType Container) {

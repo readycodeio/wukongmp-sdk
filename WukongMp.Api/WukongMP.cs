@@ -135,7 +135,7 @@ namespace WukongMp.Api
             }
         }
 
-        private static void OnMapLoaded()
+        private static void  OnMapLoaded()
         {
             var world = GameUtils.GetWorld();
             if (world != null)
@@ -160,6 +160,13 @@ namespace WukongMp.Api
                 InitializeWidgets();
                 Client.StartClient();
             }
+        }
+
+        public void Reload()
+        {
+            OnMapLoaded();
+            OnDelayBeginPlay();
+            OnLoadingScreenClose();
         }
 
         private void OnEndPlay()
