@@ -848,3 +848,20 @@ public class PatchSpawnAndPossess
         return newPawn;
     }
 }
+
+[HarmonyPatch(typeof(BUS_TransGuideComp), "OnObservedUnitAddBuff")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnObservedUnitAddBuff
+{
+    public static bool Prefix(BUS_TransGuideComp __instance)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        if (__instance.GetOwner() != GameUtils.GetControlledPawn())
+        {
+            return false;
+        }
+        return true;
+    }
+}
