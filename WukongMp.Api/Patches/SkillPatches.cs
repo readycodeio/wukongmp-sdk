@@ -849,9 +849,9 @@ public class PatchSpawnAndPossess
     }
 }
 
-[HarmonyPatch(typeof(BUS_TransGuideComp), "OnObservedUnitAddBuff")]
+[HarmonyPatch(typeof(BUS_TransGuideComp), "UpdateTransGuideData")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnObservedUnitAddBuff
+public class PatchUpdateTransGuideData
 {
     public static bool Prefix(BUS_TransGuideComp __instance)
     {
