@@ -7,11 +7,6 @@ namespace WukongMp.Api.ECS.Systems;
 
 public sealed class SendEcsDeltaSystem(RelayClient client) : SendEcsDeltaSystemBase(client)
 {
-    public override bool ShouldRunSystem()
-    {
-        return WukongMP.Instance.Client.IsMasterClient;
-    }
-
     protected override int GetMaxPacketSize()
     {
         return client.GetMaxPacketSize(DeliveryMethod.Unreliable);

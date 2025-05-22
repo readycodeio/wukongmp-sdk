@@ -1,17 +1,16 @@
 ﻿using b1;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncTamersSystem : SystemBase
+public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
 {
-    public override void OnUpdate()
+    protected override void OnUpdate()
     {
-        Entities.ForEach((EntityId _,
-            ref TamerComponent tamer,
-            ref LocalTamerComponent localTamer) =>
+        Query.ForEachEntity((ref tamer, ref localTamer, _) =>
         {
             if (!localTamer.IsSynced)
             {

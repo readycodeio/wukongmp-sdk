@@ -108,7 +108,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                WukongEcs.Instance.World.RunJob(new SyncMontageJob());
+                new SyncMontageJob().Execute(WukongEcs.Instance.World);
             }
         }
 

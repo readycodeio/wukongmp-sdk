@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
@@ -29,11 +30,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                WukongEcs.Instance.World.Entities.ForEach((
-                    EntityId _,
-                    ref LocalTamerComponent tamer,
-                    ref TranslationComponent trans
-                ) =>
+                WukongEcs.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
                     if (!tamer.IsSynced || !tamer.IsTamerValid)
                         return;
@@ -44,11 +41,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                WukongEcs.Instance.World.Entities.ForEach((
-                    EntityId _,
-                    ref LocalTamerComponent tamer,
-                    ref TranslationComponent trans
-                ) =>
+                WukongEcs.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
                     if (!tamer.IsTamerValid || !tamer.IsSynced)
                         return;
@@ -91,7 +84,7 @@ namespace WukongMp.Api.Patches
                 var entity = client.GetByTamerActor(tamer);
                 if (entity != null)
                 {
-                    ref var tamerComp = ref WukongEcs.Instance.GetEntityComponent<TamerComponent>(entity.Value);
+                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
                     tamerComp.IsSpawned = true;
                 }
                 else
@@ -265,11 +258,11 @@ namespace WukongMp.Api.Patches
                 var entity = client.GetMonsterByActor(owner);
                 if (entity != null)
                 {
-                    var tamerComp = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value);
+                    var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
                     if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
                     {
                         Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
-                        var netPeer = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entity.Value);
+                        var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                         client.SendTriggerFsmState(netPeer, EventTag);
                     }
                 }
@@ -309,12 +302,12 @@ namespace WukongMp.Api.Patches
             var entity = client.GetMonsterByCharacter(character);
             if (entity.HasValue)
             {
-                ref var tamerComp = ref WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value);
+                ref var tamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
 
                 if (!tamerComp.IsTamerValid)
                     return;
 
-                ref var anim = ref WukongEcs.Instance.GetEntityComponent<MonsterAnimationComponent>(entity.Value);
+                ref var anim = ref entity.Value.GetComponent<MonsterAnimationComponent>();
                 if (client.IsMasterClient)
                 {
                     anim.MoveAiType = (byte)___MovementData.MoveAIType;

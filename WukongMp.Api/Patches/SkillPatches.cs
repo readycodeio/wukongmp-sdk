@@ -6,6 +6,7 @@ using b1;
 using b1.BGW;
 using BtlB1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS.Components;
 using UnrealEngine.Engine;
@@ -234,7 +235,7 @@ public static class PatchOnCastImmobilize
             {
                 Logging.LogDebug("Broadcasting trigger immobilize");
                 var netId = immobilizedPlayer == null
-                    ? WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(immobilizedMonster.Value)
+                    ? immobilizedMonster.Value.GetComponent<NetworkIdComponent>()
                     : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
 
                 client.BroadcastImmobilize(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff);
@@ -291,7 +292,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entityId!.Value);
+        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : entityId!.Value.GetComponent<NetworkIdComponent>();
 
         if (client.IsMasterClient)
         {
@@ -310,7 +311,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        ref var tamerComp = ref WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entityId!.Value);
+        ref var tamerComp = ref entityId!.Value.GetComponent<LocalTamerComponent>();
 
         if (!tamerComp.RunImmobilizePatches)
         {
@@ -355,8 +356,8 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (entityId.HasValue)
             {
-                var netId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entityId.Value);
-                var pawn = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entityId.Value).Pawn;
+                var netId = entityId.Value.GetComponent<NetworkIdComponent>();
+                var pawn = entityId.Value.GetComponent<LocalTamerComponent>().Pawn;
 
                 client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();

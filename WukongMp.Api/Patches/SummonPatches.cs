@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using b1;
+using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
@@ -89,7 +90,7 @@ namespace WukongMp.Api.Patches
 
             var entity = WukongMP.Instance.CreateRemoteMonster(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
 
-            ref var trans = ref WukongEcs.Instance.GetEntityComponent<TranslationComponent>(entity);
+            ref var trans = ref entity.GetComponent<TranslationComponent>();
             trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();
             trans.Rotation = InServantReq.BornTransform.Rotator().ToVector3();
 

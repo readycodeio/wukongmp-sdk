@@ -5,6 +5,7 @@ using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -262,7 +263,7 @@ namespace WukongMp.Api.Patches
                     if (!entity.HasValue)
                         return; // unsynced entity
 
-                    ref var anim = ref WukongEcs.Instance.GetEntityComponent<AnimationComponent>(entity.Value);
+                    ref var anim = ref entity.Value.GetComponent<AnimationComponent>();
 
                     if (client.IsMasterClient)
                     {
@@ -348,7 +349,7 @@ namespace WukongMp.Api.Patches
                 var entity = client.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
-                    var tamerClass = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value).Tamer?.GetClass();
+                    var tamerClass = entity.Value.GetComponent<LocalTamerComponent>().Tamer?.GetClass();
                     if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
                     {
                         var teamId = ownerCharacter.GetTeamIDInCS();
@@ -412,10 +413,8 @@ namespace WukongMp.Api.Patches
 
             if (entity.HasValue)
             {
-                if (WukongEcs.Instance.World.EntityManager.HasComponent<NetworkIdComponent>(entity.Value))
+                if (entity.Value.TryGetComponent<NetworkIdComponent>(out var networkId))
                 {
-                    var networkId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entity.Value);
-
                     // TODO: send attacker and anim montage
                     client.SendUnitDead(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                 }
@@ -424,7 +423,7 @@ namespace WukongMp.Api.Patches
                 {
                     await Task.Delay(1000);
                     Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
-                    WukongEcs.Instance.World.EntityManager.QueueDestroyEntity(entity.Value);
+                    WukongEcs.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
                 });
             }
         }
@@ -546,8 +545,8 @@ namespace WukongMp.Api.Patches
             }
             else if (newTargetMonsterState.HasValue)
             {
-                newTargetId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(newTargetMonsterState.Value);
-                name = WukongEcs.Instance.GetEntityComponent<NicknameComponent>(newTargetMonsterState.Value).Nickname;
+                newTargetId = newTargetMonsterState.Value.GetComponent<NetworkIdComponent>();
+                name = newTargetMonsterState.Value.GetComponent<NicknameComponent>().Nickname;
                 clearTarget = 0;
             }
 
@@ -568,7 +567,7 @@ namespace WukongMp.Api.Patches
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, name);
 
-                var peerId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entityId.Value);
+                var peerId = entityId.Value.GetComponent<NetworkIdComponent>();
                 client.SendTarget(peerId, newTargetId, clearTarget);
             }
 

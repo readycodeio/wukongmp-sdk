@@ -8,7 +8,6 @@ using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
@@ -21,6 +20,7 @@ using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
+using Entity = Friflo.Engine.ECS.Entity;
 using PlayerState = WukongMp.Api.State.PlayerState;
 
 namespace WukongMp.Api
@@ -346,7 +346,7 @@ namespace WukongMp.Api
             }
 
             // dump synced monsters
-            WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref TamerComponent tamer, ref LocalTamerComponent localTamer, ref HpComponent hp, ref TeamComponent team) =>
+            WukongEcs.Instance.World.Query<TamerComponent, LocalTamerComponent, HpComponent, TeamComponent>().ForEachEntity(( ref tamer, ref localTamer, ref hp, ref team, entity) =>
             {
                 var realTeamId = localTamer.IsTamerValid ? localTamer.Tamer?.GetMonster()?.GetTeamIDInCS() : null;
                 Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={localTamer.IsSynced}, IsTamerValid={localTamer.IsTamerValid}");
@@ -382,7 +382,7 @@ namespace WukongMp.Api
                 Client.RoomState.InCombatRound = true;
 
                 var monsterCount = 0;
-                WukongEcs.Instance.World.Entities.ForEach((EntityId _, ref LocalTamerComponent tamer) =>
+                WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, _) =>
                 {
                     if (tamer.IsSynced)
                     {
@@ -492,7 +492,7 @@ namespace WukongMp.Api
                 {
                     var hasGuid = false;
 
-                    WukongEcs.Instance.World.Entities.ForEach((EntityId _, ref TamerComponent tamer) =>
+                    WukongEcs.Instance.World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
                     {
                         if (tamer.Guid == guid)
                         {
@@ -786,7 +786,7 @@ namespace WukongMp.Api
                 return;
             }
 
-            var tamerComponent = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value);
+            var tamerComponent = entity.Value.GetComponent<LocalTamerComponent>();
 
             var events = BUS_EventCollectionCS.Get(tamerComponent.Pawn);
 
@@ -1035,7 +1035,7 @@ namespace WukongMp.Api
             var entity = Client.GetMonsterByCharacter(pawn);
             if (entity.HasValue)
             {
-                ref var tamerComponent = ref WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value);
+                ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
                 tamerComponent.RunImmobilizePatches = true;
             }
             else
@@ -1361,14 +1361,14 @@ namespace WukongMp.Api
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
             var entity = providedNetId.HasValue ? CreateRemoteMonster(providedNetId.Value, guid, tamerActor, teamId, unitPath) : CreateMonster(guid, tamerActor, teamId, unitPath);
 
-            ref var trans = ref WukongEcs.Instance.GetEntityComponent<TranslationComponent>(entity);
+            ref var trans = ref entity.GetComponent<TranslationComponent>();
             trans.Position = loc.ToVector3();
             trans.Rotation = rot.ToVector3();
 
             UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
             BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
 
-            ref var nameComp = ref WukongEcs.Instance.GetEntityComponent<NicknameComponent>(entity);
+            ref var nameComp = ref entity.GetComponent<NicknameComponent>();
             nameComp.Nickname = "Bot";
 
             CreateMarkerForCharacter(entity); // 3D marker above monster
@@ -1377,40 +1377,40 @@ namespace WukongMp.Api
                 SetMonkeyBotConfig(tamerActor.GetMonster());
             }
 
-            var netId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entity);
+            var netId = entity.GetComponent<NetworkIdComponent>();
             return netId;
         }
 
-        public EntityId CreateRemoteMonster(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
+        public Entity CreateRemoteMonster(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
             var id = WukongEcs.Instance.CreateNetworkedMonster(netId);
 
-            ref var localTamerComp = ref WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(id);
+            ref var localTamerComp = ref id.GetComponent<LocalTamerComponent>();
             localTamerComp.Tamer = tamer;
 
-            ref var tamerComp = ref WukongEcs.Instance.GetEntityComponent<TamerComponent>(id);
+            ref var tamerComp = ref id.GetComponent<TamerComponent>();
             tamerComp.Guid = guid;
             tamerComp.UnitPath = unitName;
 
-            ref var teamComp = ref WukongEcs.Instance.GetEntityComponent<TeamComponent>(id);
+            ref var teamComp = ref id.GetComponent<TeamComponent>();
             teamComp.TeamId = teamId;
 
             Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
             return id;
         }
 
-        public EntityId CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
+        public Entity CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
         {
             var id = WukongEcs.Instance.CreateNetworkedMonster();
 
-            ref var localTamerComp = ref WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(id);
+            ref var localTamerComp = ref id.GetComponent<LocalTamerComponent>();
             localTamerComp.Tamer = tamer;
 
-            ref var tamerComp = ref WukongEcs.Instance.GetEntityComponent<TamerComponent>(id);
+            ref var tamerComp = ref id.GetComponent<TamerComponent>();
             tamerComp.Guid = guid;
             tamerComp.UnitPath = unitName;
 
-            ref var teamComp = ref WukongEcs.Instance.GetEntityComponent<TeamComponent>(id);
+            ref var teamComp = ref id.GetComponent<TeamComponent>();
             teamComp.TeamId = teamId;
 
             Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
@@ -1467,12 +1467,15 @@ namespace WukongMp.Api
 
         public void DestroySyncedMonsters()
         {
-            WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref LocalTamerComponent _) => { WukongEcs.Instance.World.EntityManager.QueueDestroyEntity(entity); });
+            WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) =>
+            {
+                WukongEcs.Instance.CommandBuffer.DeleteEntity(entity.Id);
+            });
         }
 
-        public void DestroyMonster(EntityId entity)
+        public void DestroyMonster(Entity entity)
         {
-            var tamerComp = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity);
+            var tamerComp = entity.GetComponent<LocalTamerComponent>();
 
             if (tamerComp.Tamer == null)
             {
@@ -1492,16 +1495,16 @@ namespace WukongMp.Api
             CleanupMonster(entity);
         }
 
-        public void CleanupMonster(EntityId entity)
+        public void CleanupMonster(Entity entity)
         {
-            var markerComp = WukongEcs.Instance.GetEntityComponent<MarkerComponent>(entity);
+            var markerComp = entity.GetComponent<MarkerComponent>();
 
             if (markerComp.MarkerActor != null)
             {
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
-            WukongEcs.Instance.World.EntityManager.QueueDestroyEntity(entity);
+            WukongEcs.Instance.CommandBuffer.DeleteEntity(entity.Id);
         }
 
         private void OnBeforeJoinedRoomCallback()
@@ -1910,7 +1913,7 @@ namespace WukongMp.Api
             return playerState;
         }
 
-        private void CreateMarkerForCharacter(EntityId entity)
+        private void CreateMarkerForCharacter(Entity entity)
         {
             var world = GameUtils.GetWorld();
             var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
@@ -1925,9 +1928,9 @@ namespace WukongMp.Api
                 return;
             }
 
-            var teamIdComp = WukongEcs.Instance.GetEntityComponent<TeamComponent>(entity);
-            var nameComp = WukongEcs.Instance.GetEntityComponent<NicknameComponent>(entity);
-            ref var markerComp = ref WukongEcs.Instance.GetEntityComponent<MarkerComponent>(entity);
+            var teamIdComp = entity.GetComponent<TeamComponent>();
+            var nameComp = entity.GetComponent<NicknameComponent>();
+            ref var markerComp = ref entity.GetComponent<MarkerComponent>();
 
             var teamName = GameUtils.GetTeamName(teamIdComp.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamName}", true);

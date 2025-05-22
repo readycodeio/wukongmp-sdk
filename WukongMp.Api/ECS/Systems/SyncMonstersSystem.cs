@@ -1,42 +1,37 @@
 ﻿using b1;
 using BtlShare;
-using ReadyM.Relay.Common.ECS;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncMonstersSystem : SystemBase
+public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private static bool IsMasterClient => WukongMP.Instance.Client.IsMasterClient;
 
-    public override void OnUpdate()
+    protected override void OnUpdate()
     {
-        Entities.ForEach((
-            EntityId _,
-            ref HpComponent hpComp,
-            ref TeamComponent teamComp,
-            ref TamerComponent tamer,
-            ref LocalTamerComponent localTamer) =>
+        Query.ForEachEntity((ref hpComp, ref teamComp, ref tamerComp, ref localTamerComp, _) =>
         {
-            if (localTamer.IsMonsterSpawned || !tamer.IsSpawned)
+            if (localTamerComp.IsMonsterSpawned || !tamerComp.IsSpawned)
             {
                 return;
             }
 
-            var monster = localTamer.Tamer?.GetMonster();
+            var monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
-                var bgsEvents = BGS_EventCollectionCS.Get(localTamer.Tamer);
+                var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
                 if (bgsEvents == null)
                 {
                     Logging.LogError("events are null");
                     return;
                 }
 
-                bgsEvents.Evt_TamerBlockingSpawnImmediately.Invoke(tamer.Guid);
+                bgsEvents.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
             }
 
-            monster = localTamer.Tamer?.GetMonster();
+            monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
                 Logging.LogError("monster is null");
@@ -60,18 +55,18 @@ public sealed class SyncMonstersSystem : SystemBase
                     attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
 
                     hpComp.LastMult = hpComp.HpMult;
-                    Logging.LogDebug("Monster {Guid} HP scaling set to {Scaling}x", tamer.Guid, hpComp.HpMult);
+                    Logging.LogDebug("Monster {Guid} HP scaling set to {Scaling}x", tamerComp.Guid, hpComp.HpMult);
                 }
             }
 
-            var events = BUS_EventCollectionCS.Get(localTamer.Tamer);
+            var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
             if (events == null)
             {
                 Logging.LogError("events are null");
                 return;
             }
 
-            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(localTamer.Pawn);
+            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(localTamerComp.Pawn);
             if (mmData != null)
             {
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
@@ -86,8 +81,8 @@ public sealed class SyncMonstersSystem : SystemBase
 
             ClientUtils.RegisterNewPlayerTeam(monster, teamComp.TeamId);
 
-            localTamer.IsMonsterSpawned = true;
-            Logging.LogDebug("Monster {Guid} synced", tamer.Guid);
+            localTamerComp.IsMonsterSpawned = true;
+            Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
         });
     }
 }

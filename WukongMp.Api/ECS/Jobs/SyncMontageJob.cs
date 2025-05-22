@@ -1,13 +1,14 @@
-﻿using ReadyM.Relay.Common.ECS;
+﻿using Friflo.Engine.ECS;
+using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public sealed class SyncMontageJob : JobBase
+public sealed class SyncMontageJob
 {
-    public override void Execute()
+    public void Execute(EntityStore world)
     {
-        Entities.ForEach((EntityId _, ref LocalTamerComponent tamerComponent, ref NetworkIdComponent netId) =>
+        world.Query<LocalTamerComponent, NetworkIdComponent>().ForEachEntity((ref tamerComponent, ref netId, _) =>
         {
             if (tamerComponent.Pawn == null)
                 return;

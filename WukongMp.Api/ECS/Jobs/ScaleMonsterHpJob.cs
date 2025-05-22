@@ -1,15 +1,16 @@
 ﻿using b1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public class ScaleMonsterHpJob(int scaling) : JobBase
+public class ScaleMonsterHpJob(int scaling)
 {
-    public override void Execute()
+    public void Execute(EntityStore world)
     {
-        Entities.ForEach((EntityId entity, ref HpComponent hp, ref LocalTamerComponent tamer) =>
+        world.Query<HpComponent, LocalTamerComponent>().ForEachEntity((ref hp, ref tamer, entity) =>
         {
             hp.HpMult = scaling;
 
@@ -36,7 +37,7 @@ public class ScaleMonsterHpJob(int scaling) : JobBase
                 attrs.SetFloatValue(EBGUAttrFloat.Hp, hp.Hp);
 
                 hp.LastMult = hp.HpMult;
-                Logging.LogDebug("Monster {Entity} HP scaling set to {Scaling}x", entity, hp.HpMult);
+                Logging.LogDebug("Monster {Entity} HP scaling set to {Scaling}x", entity.Id, hp.HpMult);
             }
         });
     }

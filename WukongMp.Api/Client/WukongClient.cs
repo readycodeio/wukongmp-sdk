@@ -9,6 +9,7 @@ using b1;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
+using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
@@ -82,7 +83,7 @@ public sealed partial class WukongClient
             (level, s, args) => Logging.Log(level, s, args.AsSpan())
         );
         RoomState = new RoomStateProxy(RelayClient);
-            
+
         _beforeJoinedRoomCallback = onBeforeJoinedRoom;
         _afterJoinedRoomCallback = onAfterJoinedRoom;
         _playerJoinedCallback = playerJoinedCallback;
@@ -122,15 +123,15 @@ public sealed partial class WukongClient
             : ConnectedPlayers.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
     }
 
-    public EntityId? GetMonsterByActor(AActor? actor)
+    public Entity? GetMonsterByActor(AActor? actor)
     {
         if (actor == null)
             return null;
 
-        EntityId? entityId = null;
-        WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+        Entity? entityId = null;
+        WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
         {
-            if (tamerComponent.Pawn == actor)
+            if (tamer.Pawn == actor)
             {
                 entityId = entity;
             }
@@ -147,15 +148,15 @@ public sealed partial class WukongClient
             : ConnectedPlayers.GetValueOrDefault(playerId);
     }
 
-    public EntityId? GetByTamerActor(BUTamerActor? owner)
+    public Entity? GetByTamerActor(BUTamerActor? owner)
     {
         if (owner == null)
             return null;
 
-        EntityId? entityId = null;
-        WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+        Entity? entityId = null;
+        WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
         {
-            if (tamerComponent.Tamer == owner)
+            if (tamer.Tamer == owner)
             {
                 entityId = entity;
             }
@@ -218,15 +219,15 @@ public sealed partial class WukongClient
         }
     }
 
-    public EntityId? GetMonsterByCharacter(BGUCharacterCS? owner)
+    public Entity? GetMonsterByCharacter(BGUCharacterCS? owner)
     {
         if (owner == null)
             return null;
 
-        EntityId? entityId = null;
-        WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref LocalTamerComponent tamerComponent) =>
+        Entity? entityId = null;
+        WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
         {
-            if (tamerComponent.Pawn == owner)
+            if (tamer.Pawn == owner)
             {
                 entityId = entity;
             }
@@ -367,7 +368,7 @@ public sealed partial class WukongClient
         var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
 
         var aliveMonsters = new List<int>();
-        WukongEcs.Instance.World.Entities.ForEach((EntityId _, ref HpComponent hp, ref TeamComponent team) =>
+        WukongEcs.Instance.World.Query<HpComponent, TeamComponent>().ForEachEntity((ref hp, ref team, _) =>
         {
             if (hp.Hp <= 0)
                 return;
@@ -767,7 +768,7 @@ public sealed partial class WukongClient
         if (!Constants.IsCoop)
         {
             // send current monsters to the new player
-            WukongEcs.Instance.World.Entities.ForEach((EntityId entity, ref TamerComponent tamer, ref NetworkIdComponent netId, ref TeamComponent team, ref TranslationComponent trans) =>
+            WukongEcs.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
             {
                 const byte eventCode = 1;
                 var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);

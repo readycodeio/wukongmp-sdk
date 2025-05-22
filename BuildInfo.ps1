@@ -19,7 +19,11 @@ $modFiles = @(
     "ReadyM.Relay.Common.dll", 
     "ReadyM.Relay.Common.pdb", 
     "ReadyM.Relay.Common.Wukong.dll", 
-    "ReadyM.Relay.Common.Wukong.pdb"
+    "ReadyM.Relay.Common.Wukong.pdb",
+    "Friflo.Engine.ECS.dll",
+    "Friflo.Json.Burst.dll",
+    "Friflo.Json.Fliox.dll",
+    "Friflo.Json.Fliox.Annotation.dll"
 )
 
 # List of culture codes
