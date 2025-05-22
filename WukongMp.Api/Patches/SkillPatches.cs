@@ -814,10 +814,12 @@ public class PatchSpawnAndPossess
         var mainPlayerPawn = GameUtils.GetControlledPawn();
         var mainPlayerController = GameUtils.GetPlayerController();
         bool isNonLocalTransform = false;
+        var cameraRotation = FRotator.ZeroRotator;
         if (controller != mainPlayerController)
         {
             // Set player controller to transforming player
             isNonLocalTransform = true;
+            cameraRotation = mainPlayerController.GetControlRotation();
             mainPlayerController.Possess(newPawn);
             BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
             BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(mainPlayerPawn.ToEntity(), newPawn.ToEntity());
@@ -833,7 +835,7 @@ public class PatchSpawnAndPossess
             mainPlayerController.Possess(mainPlayerPawn);
             BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(mainPlayerPawn);
             BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), mainPlayerPawn.ToEntity());
-            mainPlayerController.SetViewTargetWithBlend(mainPlayerPawn);
+            mainPlayerController.SetControlRotation(cameraRotation);
             controller.Possess(newPawn);
         }
 
