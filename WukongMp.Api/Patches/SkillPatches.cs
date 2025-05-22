@@ -833,6 +833,7 @@ public class PatchSpawnAndPossess
             mainPlayerController.Possess(mainPlayerPawn);
             BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(mainPlayerPawn);
             BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), mainPlayerPawn.ToEntity());
+            mainPlayerController.SetViewTargetWithBlend(mainPlayerPawn);
             controller.Possess(newPawn);
         }
 
