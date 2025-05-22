@@ -34,7 +34,7 @@ public static class PatchTriggerVigorSkill
 {
     public static bool Prefix()
     {
-        return false;
+        return Constants.IsCoop;
     }
 }
 
@@ -93,7 +93,7 @@ public static class PatchFaBaoSkill
 
     public static bool Prefix()
     {
-        return false;
+        return Constants.IsCoop;
     }
 }
 
