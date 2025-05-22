@@ -7,6 +7,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 
 namespace WukongMp.Api.Patches
@@ -299,7 +300,7 @@ namespace WukongMp.Api.Patches
 
             var client = WukongMP.Instance.Client;
 
-            var entity = client.GetMonsterByCharacter(character);
+            var entity = WukongEcs.Instance.GetMonsterByCharacter(character);
             if (entity.HasValue)
             {
                 ref var tamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();

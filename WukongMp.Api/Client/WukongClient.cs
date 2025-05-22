@@ -153,16 +153,12 @@ public sealed partial class WukongClient
         if (owner == null)
             return null;
 
-        Entity? entityId = null;
-        WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
-        {
-            if (tamer.Tamer == owner)
-            {
-                entityId = entity;
-            }
-        });
+        var results = WukongEcs.Instance.World.ComponentIndex<LocalTamerComponent, BUTamerActor?>()[owner];
 
-        return entityId;
+        if (results.Count == 1)
+            return results[0];
+
+        return null;
     }
 
     public void SetMasterClient(string newMasterName)
@@ -217,23 +213,6 @@ public sealed partial class WukongClient
             var teamId = GameUtils.GetOppositeTeam(LocalPlayerState.TeamId);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
         }
-    }
-
-    public Entity? GetMonsterByCharacter(BGUCharacterCS? owner)
-    {
-        if (owner == null)
-            return null;
-
-        Entity? entityId = null;
-        WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
-        {
-            if (tamer.Pawn == owner)
-            {
-                entityId = entity;
-            }
-        });
-
-        return entityId;
     }
 
     private void OnPingUpdated(int ping)

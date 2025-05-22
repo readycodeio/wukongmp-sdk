@@ -159,6 +159,23 @@ public class WukongEcs
 
         return null;
     }
+    
+    public Entity? GetMonsterByCharacter(BGUCharacterCS? owner)
+    {
+        if (owner == null)
+            return null;
+
+        Entity? entityId = null;
+        World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Pawn == owner)
+            {
+                entityId = entity;
+            }
+        });
+
+        return entityId;
+    }
 
     public void SetMonsterHpScaling(int scaling)
     {

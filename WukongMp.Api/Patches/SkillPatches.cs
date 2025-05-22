@@ -285,14 +285,14 @@ public static class PatchRelieveImmobilized
         }
 
         var playerState = client.GetPlayerByActor(owner);
-        var entityId = client.GetMonsterByActor(owner);
+        var entity = client.GetMonsterByActor(owner);
 
-        if (playerState == null && !entityId.HasValue)
+        if (playerState == null && !entity.HasValue)
         {
             return true;
         }
 
-        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : entityId!.Value.GetComponent<NetworkIdComponent>();
+        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : entity!.Value.GetComponent<NetworkIdComponent>();
 
         if (client.IsMasterClient)
         {
@@ -311,7 +311,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        ref var tamerComp = ref entityId!.Value.GetComponent<LocalTamerComponent>();
+        ref var tamerComp = ref entity!.Value.GetComponent<LocalTamerComponent>();
 
         if (!tamerComp.RunImmobilizePatches)
         {
@@ -352,12 +352,12 @@ public static class PatchOnTriggerImmobilizedBreak
                 return false;
             }
 
-            var entityId = client.GetMonsterByActor(owner);
+            var entity = client.GetMonsterByActor(owner);
 
-            if (entityId.HasValue)
+            if (entity.HasValue)
             {
-                var netId = entityId.Value.GetComponent<NetworkIdComponent>();
-                var pawn = entityId.Value.GetComponent<LocalTamerComponent>().Pawn;
+                var netId = entity.Value.GetComponent<NetworkIdComponent>();
+                var pawn = entity.Value.GetComponent<LocalTamerComponent>().Pawn;
 
                 client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();

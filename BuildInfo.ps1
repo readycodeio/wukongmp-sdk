@@ -21,7 +21,7 @@ $modFiles = @(
     "ReadyM.Relay.Common.Wukong.dll", 
     "ReadyM.Relay.Common.Wukong.pdb",
     "Friflo.Engine.ECS.dll",
-    "Friflo.Engine.ECS.Burst.dll",
+    "Friflo.Engine.ECS.Boost.dll",
     "Friflo.Json.Burst.dll",
     "Friflo.Json.Fliox.dll",
     "Friflo.Json.Fliox.Annotation.dll"

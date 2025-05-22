@@ -12,6 +12,7 @@ using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.API;
+using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.State;
 
@@ -258,7 +259,7 @@ namespace WukongMp.Api.Patches
                 }
                 else
                 {
-                    var entity = client.GetMonsterByCharacter(character);
+                    var entity = WukongEcs.Instance.GetMonsterByCharacter(character);
 
                     if (!entity.HasValue)
                         return; // unsynced entity
@@ -562,12 +563,12 @@ namespace WukongMp.Api.Patches
             if (!client.IsMasterClient)
                 return false;
 
-            var entityId = client.GetMonsterByActor(owner);
-            if (entityId.HasValue)
+            var entity = client.GetMonsterByActor(owner);
+            if (entity.HasValue)
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, name);
 
-                var peerId = entityId.Value.GetComponent<NetworkIdComponent>();
+                var peerId = entity.Value.GetComponent<NetworkIdComponent>();
                 client.SendTarget(peerId, newTargetId, clearTarget);
             }
 

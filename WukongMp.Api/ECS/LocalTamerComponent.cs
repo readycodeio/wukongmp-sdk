@@ -1,32 +1,28 @@
 ﻿using System.Runtime.InteropServices;
 using b1;
 using Friflo.Engine.ECS;
+using UnrealEngine.Engine;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LocalTamerComponent : IComponent
+public record struct LocalTamerComponent : IIndexedComponent<BUTamerActor?>
 {
     public bool IsSynced;
     public bool IsMonsterSpawned;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
 
-    private BUTamerActor? _tamer;
+    public LocalTamerComponent(BUTamerActor tamer)
+    {
+        Tamer = tamer;
+    }
 
     public BUTamerActor? Tamer
     {
-        get
-        {
-            if (_tamer.IsNullOrDestroyed())
-            {
-                return null;
-            }
-
-            return _tamer;
-        }
-        set => _tamer = value;
+        get => field.IsNullOrDestroyed() ? null : field;
+        set;
     }
 
     public BGUCharacterCS? Pawn
@@ -38,21 +34,27 @@ public struct LocalTamerComponent : IComponent
                 return null;
             }
 
-            if (_tamer == null || _tamer.IsNullOrDestroyed())
+            var tamer = Tamer;
+            if (tamer == null)
             {
                 Logging.LogWarning("Tamer is null or destroyed in getPawn");
                 return null;
             }
 
-            if (_tamer.GetMonster().IsNullOrDestroyed())
+            if (tamer.GetMonster().IsNullOrDestroyed())
             {
                 Logging.LogWarning("Monster is null or destroyed in getPawn");
                 return null;
             }
 
-            return _tamer.GetMonster();
+            return tamer.GetMonster();
         }
     }
 
     public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
+
+    public BUTamerActor? GetIndexedValue()
+    {
+        return Tamer;
+    }
 }

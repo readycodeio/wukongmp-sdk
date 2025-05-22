@@ -1,6 +1,6 @@
-﻿using b1;
+﻿using System.Linq;
+using b1;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 
@@ -10,24 +10,26 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref tamer, ref localTamer, _) =>
+        var allTamers = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld())
+            ?.Where(x => x != null)
+            .ToDictionary(x => BGU_DataUtil.GetActorGuid(x), x => x);
+
+        if (allTamers is null)
+        {
+            Logging.LogWarning("Failed to find all tamers in the world.");
+            return;
+        }
+
+        Query.ForEachEntity((ref tamer, ref localTamer, entity) =>
         {
             if (!localTamer.IsSynced)
             {
-                bool found = false;
-                var allTamers = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-                foreach (var actor in allTamers)
+                if (allTamers.TryGetValue(tamer.Guid, out var actor))
                 {
-                    if (actor != null && BGU_DataUtil.GetActorGuid(actor) == tamer.Guid)
-                    {
-                        found = true;
-                        localTamer.Tamer = actor;
-                        localTamer.IsSynced = true;
-                        Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
-                    }
+                    CommandBuffer.AddComponent(entity.Id, localTamer with { Tamer = actor, IsSynced = true });
+                    Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
                 }
-
-                if (!found)
+                else
                 {
                     // spawn tamer
                     Logging.LogDebug("Matching tamer not found for guid: {Guid}", tamer.Guid);

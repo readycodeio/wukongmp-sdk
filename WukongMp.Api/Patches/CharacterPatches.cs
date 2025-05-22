@@ -6,6 +6,7 @@ using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.State;
 
@@ -136,7 +137,7 @@ namespace WukongMp.Api.Patches
                 }
                 else
                 {
-                    var entity = client.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+                    var entity = WukongEcs.Instance.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
                     if (!entity.HasValue)
                         return;
 
@@ -222,7 +223,7 @@ namespace WukongMp.Api.Patches
                     }
 
                     // monster was damaged
-                    var entity = client.GetMonsterByCharacter(owner as BGUCharacterCS);
+                    var entity = WukongEcs.Instance.GetMonsterByCharacter(owner as BGUCharacterCS);
                     if (!entity.HasValue || !entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
@@ -383,7 +384,7 @@ namespace WukongMp.Api.Patches
                 else
                 {
                     // maybe it's a monster
-                    var entity = client.GetMonsterByCharacter(character);
+                    var entity = WukongEcs.Instance.GetMonsterByCharacter(character);
 
                     if (entity.HasValue)
                     {
@@ -442,7 +443,7 @@ namespace WukongMp.Api.Patches
 
             if (Actor is BGUCharacterCS character)
             {
-                var entity = client.GetMonsterByCharacter(character);
+                var entity = WukongEcs.Instance.GetMonsterByCharacter(character);
                 if (entity.HasValue)
                 {
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
