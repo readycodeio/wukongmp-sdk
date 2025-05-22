@@ -5,8 +5,12 @@ $zipName = "WukongMp"
 
 # Define the source and destination directories
 $modSourceDir = "WukongMp.$ModVariant/bin/$Configuration/netstandard2.1"
+$reflectionOnlySourceDir = "WukongMp.Api/Game"
+$saveSourceDir = "Deployment"
 
 $modDestDir = "Mods/WukongMpMod"
+$reflectionOnlyDir = "Mods/ReflectionOnly"
+$saveDestDir = "Mods/WukongMpMod"
 
 # Define the files to copy
 $modFiles = @(
@@ -21,13 +25,23 @@ $modFiles = @(
     "ReadyM.Relay.Common.Wukong.dll", 
     "ReadyM.Relay.Common.Wukong.pdb"
 )
+$reflectionOnlyFiles = @(
+    "*"
+)
+$saveFiles = @(
+    "ArchiveSaveFile.0.sav",
+    "ArchiveSaveFile.9.sav"
+)
+
 
 # List of culture codes
 $cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
 
 $allFiles = @(
     @($modFiles, $modSourceDir, $modDestDir),
-    @($cultureFolders, $modSourceDir, $modDestDir)
+    @($cultureFolders, $modSourceDir, $modDestDir),
+    @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDir),
+    @($saveFiles, $saveSourceDir, $saveDestDir)
 )
 
 function CopyFiles($files, $sourceDir, $destDir) {
