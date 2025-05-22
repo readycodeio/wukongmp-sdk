@@ -32,7 +32,10 @@ public static class PatchRequestPlayMovie
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        InRequest.bHidePlayer = true;
-        Logging.LogDebug("Requesting movie with sequenceId {Id}", InRequest.SequenceID);
+        if (WukongMP.Instance.Client.IsMasterClient)
+        {
+            Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", InRequest.SequenceID);
+            WukongMP.Instance.Client.SendPlayMovieRequest(InRequest);
+        }
     }
 }

@@ -590,6 +590,20 @@ namespace WukongMp.Api
             Client.OnRequestSpawnUnits += (playerId, unitName, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnUnitsMaster(playerId, unitName, count, teamId), "SpawnUnitsMaster");
             Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
+            Client.OnPlayMoviewRequest += (playRequest) => GameLoopPatch.QueueOnGameThread(() => OnPlayMoviewRequest(playRequest), "OnPlayMoviewRequest");
+        }
+
+        private void OnPlayMoviewRequest(FPlayMovieRequest playMovieRequest)
+        {
+            BGW_EventCollection bGW_EventCollection = BGW_EventCollection.Get(GameUtils.GetWorld());
+            if (bGW_EventCollection == null)
+            {
+                Logging.LogError("Failed to get BGW_EventCollection");
+                return;
+            }
+
+            Logging.LogTrace("Triggering moview request for local player.");
+            bGW_EventCollection.Evt_RequestPlayMovie.Invoke(playMovieRequest);
         }
 
         private void OnPlayerTransBegin(int playerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)

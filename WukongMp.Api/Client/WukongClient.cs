@@ -472,6 +472,7 @@ public sealed partial class WukongClient
         RelayClient.RegisterType(typeof(UnitSpawnData), UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
         RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
         RelayClient.RegisterType(typeof(UnitSummonData), UnitSummonData.Serialize, UnitSummonData.Deserialize);
+        RelayClient.RegisterType(typeof(PlayMovieData), PlayMovieData.Serialize, PlayMovieData.Deserialize);
         RelayClient.RegisterType(typeof(NetworkIdComponent), (writer, customObject) =>
         {
             var id = (NetworkIdComponent)customObject;

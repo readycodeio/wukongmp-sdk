@@ -45,6 +45,7 @@ public sealed partial class WukongClient
     public event Action<int, string, int, int>? OnRequestSpawnUnits;
     public event Action<int, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
     public event Action<int, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
+    public event Action<FPlayMovieRequest>? OnPlayMoviewRequest;
 
     public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
     {
@@ -187,6 +188,20 @@ public sealed partial class WukongClient
                 // end transform request 
                 var transEndRequestData = RelayClient.DeserializeObject<PlayerTransEndData>(reader);
                 OnPlayerTransEnd?.Invoke(header.Sender, transEndRequestData.UnitResId, transEndRequestData.UnitBornSkillId, transEndRequestData.EnableBlendViewTarget, transEndRequestData.TransEndType);
+                break;
+            case 28:
+                // end transform request 
+                var playMovieData = RelayClient.DeserializeObject<PlayMovieData>(reader);
+                OnPlayMoviewRequest?.Invoke(new FPlayMovieRequest {
+                    SequenceID = playMovieData.SequenceID,
+                    bDisablePlayerControl = playMovieData.DisablePlayerControl,
+                    bDisableMovementInput = playMovieData.DisableMovementInput,
+                    bDisableLookAtInput = playMovieData.DisableLookAtInput,
+                    bHidePlayer = playMovieData.HidePlayer,
+                    bHideHud = playMovieData.HideHud,
+                    OverlapBoxGuid = playMovieData.OverlapBoxGuid,
+                    MatchType = playMovieData.MatchType,
+                });
                 break;
         }
     }
@@ -377,6 +392,21 @@ public sealed partial class WukongClient
     {
         const byte eventCode = 27;
         var evData = new PlayerTransEndData(unitResId, unitSkillId, blendViewTarget, type);
+        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+    }
+    
+    public void SendPlayMovieRequest(FPlayMovieRequest playMovieRequest)
+    {
+        const byte eventCode = 28;
+        var evData = new PlayMovieData(
+            playMovieRequest.SequenceID,
+            playMovieRequest.bDisablePlayerControl,
+            playMovieRequest.bDisableMovementInput,
+            playMovieRequest.bDisableLookAtInput,
+            playMovieRequest.bHidePlayer,
+            playMovieRequest.bHideHud,
+            playMovieRequest.OverlapBoxGuid,
+            playMovieRequest.MatchType);
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 }
