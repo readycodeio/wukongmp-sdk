@@ -20,9 +20,10 @@ namespace WukongMp.Api;
 public class WukongEcs
 {
     public readonly EntityStore World;
-    public readonly CommandBuffer CommandBuffer;
-    public readonly SystemRoot SystemRoot;
+    public CommandBuffer CommandBuffer { get; private set; }
     public readonly NetworkedEntityManager NetManager;
+    
+    private readonly SystemRoot _systemRoot;
     private readonly WukongClient _client;
 
     public static WukongEcs Instance { get; } = new(WukongMP.Instance.Client);
@@ -32,15 +33,16 @@ public class WukongEcs
         _client = client;
         World = new EntityStore();
         CommandBuffer = World.GetCommandBuffer();
-        SystemRoot = new SystemRoot();
-        SystemRoot.AddStore(World);
+        _systemRoot = new SystemRoot();
+        _systemRoot.AddStore(World);
 
         NetManager = new NetworkedEntityManager(World, OnNetworkedEntityCreated, OnNetworkedEntityDestroyed);
 
-        SystemRoot.Add(new SyncTamersSystem());
-        SystemRoot.Add(new UpdateMarkersSystem());
-        SystemRoot.Add(new DestroyDeadMonstersMarkersSystem());
-        SystemRoot.Add(new SendEcsDeltaSystem(_client.RelayClient));
+        _systemRoot.Add(new SyncTamersSystem());
+        _systemRoot.Add(new UpdateMarkersSystem());
+        _systemRoot.Add(new DestroyDeadMonstersMarkersSystem());
+        _systemRoot.Add(new SyncMonstersSystem());
+        _systemRoot.Add(new SendEcsDeltaSystem(_client.RelayClient));
 
         _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
         _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
@@ -81,7 +83,9 @@ public class WukongEcs
     public void RunEcsWorldUpdate()
     {
         WukongMP.Instance.Client.SetCachedPlayerProperties(); // not a system, TODO
-        SystemRoot.Update(new UpdateTick()); // TODO: Delta time
+        CommandBuffer.Playback();
+        CommandBuffer = World.GetCommandBuffer();
+        _systemRoot.Update(new UpdateTick()); // TODO: Delta time
     }
 
     public Entity CreateNetworkedMonster()
