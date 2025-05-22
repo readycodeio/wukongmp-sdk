@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
@@ -108,7 +109,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                new SyncMontageJob().Execute(WukongEcs.Instance.World);
+                WukongEcs.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
             }
         }
 

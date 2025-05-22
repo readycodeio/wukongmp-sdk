@@ -22,7 +22,7 @@ public class WukongEcs
     public readonly EntityStore World;
     public CommandBuffer CommandBuffer { get; private set; }
     public readonly NetworkedEntityManager NetManager;
-    
+
     private readonly SystemRoot _systemRoot;
     private readonly WukongClient _client;
 
@@ -108,7 +108,7 @@ public class WukongEcs
     public Entity CreateNetworkedMonster(NetworkIdComponent netId)
     {
         var entity = NetManager.CreateNetworkedEntity(netId);
-        
+
         entity.AddComponent<MarkerComponent>();
         entity.AddComponent<LocalTamerComponent>();
         entity.AddComponent<TamerComponent>();
@@ -118,7 +118,7 @@ public class WukongEcs
         entity.AddComponent<NicknameComponent>();
         entity.AddComponent<TeamComponent>();
         entity.AddComponent<TranslationComponent>();
-        
+
         return entity;
     }
 
@@ -169,6 +169,6 @@ public class WukongEcs
 
         Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);
 
-        new ScaleMonsterHpJob(scaling).Execute(World);
+        World.Query<HpComponent, LocalTamerComponent>().Each(new ScaleMonsterHpJob(scaling));
     }
 }
