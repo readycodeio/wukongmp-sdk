@@ -865,3 +865,20 @@ public class PatchUpdateTransGuideData
         return true;
     }
 }
+
+[HarmonyPatch(typeof(BUS_TransPlayerDataBindComp), "OnPostTransBindData")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnPostTransBindData
+{
+    public static bool Prefix(BUS_TransPlayerDataBindComp __instance)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        if (__instance.GetOwner() != GameUtils.GetControlledPawn())
+        {
+            return false;
+        }
+        return true;
+    }
+}
