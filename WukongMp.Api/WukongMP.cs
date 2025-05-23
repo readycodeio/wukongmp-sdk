@@ -1031,7 +1031,7 @@ namespace WukongMp.Api
             Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
             var playerEvents = BUS_EventCollectionCS.Get(pawn);
 
-            var entity = WukongEcs.Instance.GetMonsterByCharacter(pawn);
+            var entity = WukongEcs.Instance.GetMonsterByActor(pawn);
             if (entity.HasValue)
             {
                 ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
@@ -1385,7 +1385,6 @@ namespace WukongMp.Api
             var id = WukongEcs.Instance.CreateNetworkedMonster(netId);
 
             id.AddComponent(new LocalTamerComponent(tamer));
-            WukongEcs.Instance.TamerActorIndex[tamer] = id;
 
             ref var tamerComp = ref id.GetComponent<TamerComponent>();
             tamerComp.Guid = guid;
@@ -1402,7 +1401,6 @@ namespace WukongMp.Api
         {
             var id = WukongEcs.Instance.CreateNetworkedMonster();
             id.AddComponent(new LocalTamerComponent(tamer));
-            WukongEcs.Instance.TamerActorIndex[tamer] = id;
 
             ref var tamerComp = ref id.GetComponent<TamerComponent>();
             tamerComp.Guid = guid;

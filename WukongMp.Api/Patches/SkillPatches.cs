@@ -228,7 +228,7 @@ public static class PatchOnCastImmobilize
 
             // broadcast
             var immobilizedPlayer = client.GetPlayerByActor(item);
-            var immobilizedMonster = client.GetMonsterByActor(item);
+            var immobilizedMonster = WukongEcs.Instance.GetMonsterByActor(item);
 
             if ((immobilizedPlayer != null || immobilizedMonster.HasValue) && castingPlayerState != null)
             {
@@ -284,7 +284,7 @@ public static class PatchRelieveImmobilized
         }
 
         var playerState = client.GetPlayerByActor(owner);
-        var entity = client.GetMonsterByActor(owner);
+        var entity = WukongEcs.Instance.GetMonsterByActor(owner);
 
         if (playerState == null && !entity.HasValue)
         {
@@ -351,7 +351,7 @@ public static class PatchOnTriggerImmobilizedBreak
                 return false;
             }
 
-            var entity = client.GetMonsterByActor(owner);
+            var entity = WukongEcs.Instance.GetMonsterByActor(owner);
 
             if (entity.HasValue)
             {

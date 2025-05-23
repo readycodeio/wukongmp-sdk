@@ -122,38 +122,12 @@ public sealed partial class WukongClient
             : ConnectedPlayers.FirstOrDefault(x => x.Value!.Pawn == actor).Value;
     }
 
-    public Entity? GetMonsterByActor(AActor? actor)
-    {
-        if (actor == null)
-            return null;
-
-        Entity? entityId = null;
-        WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
-        {
-            if (tamer.Pawn == actor)
-            {
-                entityId = entity;
-            }
-        });
-
-        return entityId;
-    }
-
     [Obsolete]
     public PlayerState? GetPlayerById(int playerId)
     {
         return playerId == LocalPlayerState.PeerId
             ? LocalPlayerState
             : ConnectedPlayers.GetValueOrDefault(playerId);
-    }
-    
-
-    public Entity? GetByTamerActor(BUTamerActor? owner)
-    {
-        if (owner == null)
-            return null;
-
-        return WukongEcs.Instance.TamerActorIndex.TryGetValue(owner, out var entity) ? entity : null;
     }
 
     public void SetMasterClient(string newMasterName)

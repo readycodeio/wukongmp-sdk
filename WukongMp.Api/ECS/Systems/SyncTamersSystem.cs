@@ -20,7 +20,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
             return;
         }
 
-        Query.ForEachEntity((ref tamer, ref localTamer, entity) =>
+        Query.ForEachEntity((ref tamer, ref localTamer, _) =>
         {
             if (!localTamer.IsSynced)
             {
@@ -28,7 +28,6 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 {
                     localTamer.Tamer = actor;
                     localTamer.IsSynced = true;
-                    WukongEcs.Instance.TamerActorIndex[actor] = entity;
 
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
                 }

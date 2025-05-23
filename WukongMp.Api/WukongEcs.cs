@@ -13,6 +13,7 @@ using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using ReadyM.Relay.Common.Wukong.Jobs;
+using UnrealEngine.Engine;
 using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
@@ -69,7 +70,6 @@ public class WukongEcs
     public readonly NetworkedEntityManager NetManager;
     private readonly SystemRoot _systemRoot;
     private readonly WukongClient _client;
-    public readonly Dictionary<BUTamerActor, Entity> TamerActorIndex = new();
 
     public static WukongEcs Instance { get; } = new(WukongMP.Instance.Client);
 
@@ -215,26 +215,6 @@ public class WukongEcs
         return tamer?.Pawn;
     }
 
-    public Entity? GetMonsterByCharacter(BGUCharacterCS? owner)
-    {
-        if (owner == null)
-            return null;
-
-        Entity? entityId = null;
-
-        var query = World.Query<LocalTamerComponent>();
-        query.ThrowOnStructuralChange = false; // TODO: This is due to the fact this method is called from parallel ThreadTick
-        query.ForEachEntity((ref tamer, entity) =>
-        {
-            if (tamer.Pawn == owner)
-            {
-                entityId = entity;
-            }
-        });
-
-        return entityId;
-    }
-
     public void SetMonsterHpScaling(int scaling)
     {
         if (!WukongMP.Instance.Client.IsMasterClient)
@@ -245,5 +225,45 @@ public class WukongEcs
         Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);
 
         World.Query<HpComponent, LocalTamerComponent>().Each(new ScaleMonsterHpJob(scaling));
+    }
+
+    public Entity? GetMonsterByActor(AActor? actor)
+    {
+        if (actor == null)
+            return null;
+
+        Entity? entityId = null;
+
+        var query = World.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false;
+        query.ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Pawn == actor)
+            {
+                entityId = entity;
+            }
+        });
+
+        return entityId;
+    }
+
+    public Entity? GetByTamerActor(BUTamerActor? owner)
+    {
+        if (owner == null)
+            return null;
+
+        Entity? entityId = null;
+
+        var query = World.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false;
+        query.ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Tamer == owner)
+            {
+                entityId = entity;
+            }
+        });
+
+        return entityId;
     }
 }

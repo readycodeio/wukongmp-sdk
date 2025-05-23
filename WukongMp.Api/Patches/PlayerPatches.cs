@@ -258,7 +258,7 @@ namespace WukongMp.Api.Patches
                 }
                 else
                 {
-                    var entity = WukongEcs.Instance.GetMonsterByCharacter(character);
+                    var entity = WukongEcs.Instance.GetMonsterByActor(character);
 
                     if (!entity.HasValue)
                         return; // unsynced entity
@@ -346,7 +346,7 @@ namespace WukongMp.Api.Patches
                     }
                 }
 
-                var entity = client.GetMonsterByActor(owner);
+                var entity = WukongEcs.Instance.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
                     var tamerClass = entity.Value.GetComponent<LocalTamerComponent>().Tamer?.GetClass();
@@ -406,7 +406,7 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var entity = client.GetMonsterByActor(owner);
+            var entity = WukongEcs.Instance.GetMonsterByActor(owner);
 
             if (entity.HasValue)
             {
@@ -526,7 +526,7 @@ namespace WukongMp.Api.Patches
             string name = string.Empty;
 
             var newTargetPlayerState = client.GetPlayerByActor(NewTargetInfo?.LockTargetActor);
-            var newTargetMonsterState = client.GetMonsterByActor(NewTargetInfo?.LockTargetActor);
+            var newTargetMonsterState = WukongEcs.Instance.GetMonsterByActor(NewTargetInfo?.LockTargetActor);
 
             if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && newTargetPlayerState == null && !newTargetMonsterState.HasValue)
             {
@@ -559,7 +559,7 @@ namespace WukongMp.Api.Patches
             if (!client.IsMasterClient)
                 return false;
 
-            var entity = client.GetMonsterByActor(owner);
+            var entity = WukongEcs.Instance.GetMonsterByActor(owner);
             if (entity.HasValue)
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, name);
