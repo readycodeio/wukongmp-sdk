@@ -1664,14 +1664,6 @@ namespace WukongMp.Api
             return newCharacter;
         }
 
-        public static void BackToOldPawn(ABGPPlayerController oldController, APawn oldPawn, APawn newPawn)
-        {
-            oldController.UnPossess();
-            oldController.Possess(oldPawn);
-            BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(oldPawn);
-            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), oldPawn.ToEntity());
-        }
-
         private void AddPlayer(int playerId)
         {
             var playerState = SpawnCloneForPlayer(playerId);
@@ -1800,6 +1792,7 @@ namespace WukongMp.Api
             }
 
             var oldController = GameUtils.GetPlayerController();
+            var controllerCameraRotation = oldController.GetControlRotation();
             var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
             if (newPawn == null)
@@ -1808,7 +1801,7 @@ namespace WukongMp.Api
                 return null;
             }
 
-            BackToOldPawn(oldController, oldPawn, newPawn);
+            GameUtils.PossesPawnWithViewTarget(oldController, oldPawn, newPawn, controllerCameraRotation);
 
             Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", id, newPawn.GetEntityHash());
 

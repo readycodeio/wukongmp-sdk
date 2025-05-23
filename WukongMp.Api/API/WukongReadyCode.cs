@@ -231,7 +231,7 @@ namespace WukongMp.Api.API
                 return default;
             }
 
-            WukongMP.BackToOldPawn(oldController, oldPawn, newPawn);
+            GameUtils.PossessPawn(oldController, oldPawn, newPawn);
 
             var @class = UClass.GetClass("BGP_AIPlayerControllerB1");
             var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref actualPos, ref rotation);

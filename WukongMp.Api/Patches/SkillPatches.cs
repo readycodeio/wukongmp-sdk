@@ -815,28 +815,22 @@ public class PatchSpawnAndPossess
         var mainPlayerController = GameUtils.GetPlayerController();
         bool isNonLocalTransform = false;
         var cameraRotation = FRotator.ZeroRotator;
-        if (controller != mainPlayerController)
+        if (controller != mainPlayerController && mainPlayerPawn != null)
         {
             // Set player controller to transforming player
             isNonLocalTransform = true;
             cameraRotation = mainPlayerController.GetControlRotation();
-            mainPlayerController.Possess(newPawn);
-            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(newPawn);
-            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(mainPlayerPawn.ToEntity(), newPawn.ToEntity());
+            GameUtils.PossessPawn(mainPlayerController, newPawn, mainPlayerPawn);
         }
 
         actor.CapsuleComponent.SetGenerateOverlapEvents(false);
         actor.CapsuleComponent.SetGenerateOverlapEvents(false);
         BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(controller, newPawn, spawnTransform);
 
-        if (isNonLocalTransform)
+        if (isNonLocalTransform && mainPlayerPawn != null)
         {
             // Set player controller back to main player
-            mainPlayerController.Possess(mainPlayerPawn);
-            BPS_GSEventCollection.Get(mainPlayerController).Evt_BPS_OnControlledPawnChange.Invoke(mainPlayerPawn);
-            BGS_EventCollectionCS.Get(mainPlayerController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), mainPlayerPawn.ToEntity());
-            mainPlayerController.SetViewTargetWithBlend(mainPlayerPawn);
-            mainPlayerController.SetControlRotation(cameraRotation);
+            GameUtils.PossesPawnWithViewTarget(mainPlayerController, mainPlayerPawn, newPawn, cameraRotation);
             controller.Possess(newPawn);
         }
 
