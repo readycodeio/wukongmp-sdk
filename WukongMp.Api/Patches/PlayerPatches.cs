@@ -5,14 +5,12 @@ using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
-using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.API;
-using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.State;
 
@@ -65,7 +63,7 @@ namespace WukongMp.Api.Patches
                     client.CachePlayerProperty(nameof(PlayerState.IsAttacking), client.LocalPlayerState.IsAttacking);
                 }
 
-                if (!Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
                     client.CachePlayerProperty(nameof(PlayerState.TurnInplaceTargetRotation), client.LocalPlayerState.TurnInplaceTargetRotation);

@@ -12,7 +12,6 @@ using CSharpModBase;
 using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;

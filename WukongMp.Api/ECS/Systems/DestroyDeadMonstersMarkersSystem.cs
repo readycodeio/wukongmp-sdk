@@ -1,7 +1,5 @@
 ﻿using b1;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using WukongMp.Api.Patches;
 

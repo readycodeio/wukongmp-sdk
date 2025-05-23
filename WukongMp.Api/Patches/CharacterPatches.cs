@@ -1,12 +1,10 @@
 ﻿using b1;
 using BtlShare;
-using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.State;
 
@@ -314,25 +312,25 @@ namespace WukongMp.Api.Patches
                     client.CachePlayerProperty(nameof(PlayerState.IsLandingMove), client.LocalPlayerState.IsLandingMove);
                 }
 
-                if (!Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.Velocity = __instance.Velocity;
                     client.CachePlayerProperty(nameof(PlayerState.Velocity), client.LocalPlayerState.Velocity);
                 }
 
-                if (!Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
                     client.CachePlayerProperty(nameof(PlayerState.MoveAcceleration), client.LocalPlayerState.MoveAcceleration);
                 }
 
-                if (!Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.Location = __instance.ActorLocation;
                     client.CachePlayerProperty(nameof(PlayerState.Location), client.LocalPlayerState.Location);
                 }
 
-                if (!Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.Rotation = __instance.ActorRotation;
                     client.CachePlayerProperty(nameof(PlayerState.Rotation), client.LocalPlayerState.Rotation);
@@ -374,7 +372,7 @@ namespace WukongMp.Api.Patches
                         playerState.MoveAcceleration = FVector.ZeroVector;
                     }
 
-                    if (!Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                    if (!playerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
                         events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
@@ -418,8 +416,8 @@ namespace WukongMp.Api.Patches
                             var location = trans.Position.ToFVector();
                             var rotation = trans.Rotation.ToFRotator();
 
-                            if (!Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
-                                !Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                            if (!location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
+                                !rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                             {
                                 events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                             }

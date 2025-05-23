@@ -44,8 +44,8 @@ namespace WukongMp.Api.Monitors
                 if (!_properties.TryGetValue(name, out var currentValue) || currentValue == null)
                     continue;
 
-                if ((value is FVector vector && !Equals((FVector)_properties[name], 50)) ||
-                    (value is FRotator rotator && !Equals((FRotator)_properties[name], 10)) ||
+                if ((value is FVector vector && !vector.Equals((FVector)_properties[name], 50)) ||
+                    (value is FRotator rotator && !rotator.Equals((FRotator)_properties[name], 10)) ||
                     (value is float f && !f.Equals((float)_properties[name], 1)) ||
                     (!descriptor.PropertyType.IsAssignableFrom(typeof(FVector)) && !descriptor.PropertyType.IsAssignableFrom(typeof(FRotator)) && !descriptor.PropertyType.IsAssignableFrom(typeof(float)) &&!value.Equals(_properties[name])))
                 {

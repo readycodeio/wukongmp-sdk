@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.ECS.Components;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
