@@ -54,10 +54,14 @@ namespace WukongMp.Api.UI
             string rotateControls, string rotateDescription,
             string upControls, string upDescription)
         {
-            SetDownControlsText(downControls); SetDownDescriptionText(downDescription);
-            SetMoveControlsText(moveControls); SetMoveDescriptionText(moveDescription);
-            SetRotateControlsText(rotateControls); SetRotateDescriptionText(rotateDescription);
-            SetUpControlsText(upControls); SetUpDescriptionText(upDescription);
+            SetDownControlsText(downControls);
+            SetDownDescriptionText(downDescription);
+            SetMoveControlsText(moveControls);
+            SetMoveDescriptionText(moveDescription);
+            SetRotateControlsText(rotateControls);
+            SetRotateDescriptionText(rotateDescription);
+            SetUpControlsText(upControls);
+            SetUpDescriptionText(upDescription);
         }
 
         protected override void PostInitialize()

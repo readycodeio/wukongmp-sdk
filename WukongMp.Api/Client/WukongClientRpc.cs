@@ -9,6 +9,7 @@ using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
+using WukongMp.Api.Patches;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.Client;
@@ -17,7 +18,7 @@ public sealed partial class WukongClient
 {
     public event Action<MontageCallbackData>? OnMontageCallback;
     public event Action<UnitDeadPacket>? OnUnitDead;
-    public event Action<int, NetworkIdComponent, string, string, int, float, float, float>? OnUnitSpawn;
+    public event Action<NetworkIdComponent, string, string, int, float, float, float>? OnUnitSpawn;
     public event Action<NetworkIdComponent, NetworkIdComponent, string, string, int>? OnSummonSpawn;
     public event Action<int>? OnTeleportFinish;
     public event Action<string>? OnMonsterWakeUp;
@@ -45,16 +46,21 @@ public sealed partial class WukongClient
     public event Action<int, string, int, int>? OnRequestSpawnUnits;
     public event Action<int, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
     public event Action<int, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
-    public event Action<FPlayMovieRequest>? OnPlayMoviewRequest;
+    public event Action<FPlayMovieRequest>? OnPlayMovieRequest;
 
-    public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
+    private void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
+    {
+        GameLoopPatch.QueueOnGameThread(() => OnCustomEventImpl(header, reader), "OnCustomEvent");
+    }
+
+    private void OnCustomEventImpl(CustomEventHeader header, NetPacketReader reader)
     {
         switch (header.EventCode)
         {
             case 1:
                 // unit spawn
                 var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
-                OnUnitSpawn?.Invoke(header.Sender, unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
+                OnUnitSpawn?.Invoke(unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
                 break;
             case 2:
                 // montage callback
@@ -162,7 +168,7 @@ public sealed partial class WukongClient
             case 22:
                 // motion matching
                 var mmdata = RelayClient.DeserializeObject<int[]>(reader);
-                OnMotionMatchingChanged?.Invoke(new NetworkIdComponent((short)mmdata[0], (uint)mmdata[1]), (EState_MM)mmdata[1]);
+                OnMotionMatchingChanged?.Invoke(new NetworkIdComponent((short)mmdata[0], (uint)mmdata[1]), (EState_MM)mmdata[2]);
                 break;
             case 23:
                 // chat message received
@@ -192,7 +198,8 @@ public sealed partial class WukongClient
             case 28:
                 // end transform request 
                 var playMovieData = RelayClient.DeserializeObject<PlayMovieData>(reader);
-                OnPlayMoviewRequest?.Invoke(new FPlayMovieRequest {
+                OnPlayMovieRequest?.Invoke(new FPlayMovieRequest
+                {
                     SequenceID = playMovieData.SequenceID,
                     bDisablePlayerControl = playMovieData.DisablePlayerControl,
                     bDisableMovementInput = playMovieData.DisableMovementInput,
@@ -360,6 +367,13 @@ public sealed partial class WukongClient
         var evData = new FsmStateData(netId, eventTag.TagName.ToString());
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
+    
+    public void SendMotionMatchingState(NetworkIdComponent characterId, EState_MM MMState)
+    {
+        const byte eventCode = 22;
+        int[] evData = [characterId.Owner, (int)characterId.Id, (int)MMState];
+        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+    }
 
     public void SendChatMessage(ChatMessage message)
     {
@@ -394,7 +408,7 @@ public sealed partial class WukongClient
         var evData = new PlayerTransEndData(unitResId, unitSkillId, blendViewTarget, type);
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
-    
+
     public void SendPlayMovieRequest(FPlayMovieRequest playMovieRequest)
     {
         const byte eventCode = 28;

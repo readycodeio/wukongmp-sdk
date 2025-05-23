@@ -15,7 +15,7 @@ namespace WukongMp.Coop
     {
         public string Name => "WukongMp co-op";
         public string Version => "1.0.0";
-        
+
         private WukongMP _wukongMp = null!; // initialized in Init
 
         public void Init()
@@ -25,7 +25,7 @@ namespace WukongMp.Coop
                 Logging.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
             }
-            
+
             // register global unhandled exception handlers
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
             TaskScheduler.UnobservedTaskException += UnobservedTaskExceptionHandler;
@@ -58,11 +58,8 @@ namespace WukongMp.Coop
 
             _wukongMp.Patch();
 #if DEBUG
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.B, () =>
-            {
-                Logging.LogDebug("Alt + B: Test");
-            });
-            
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.B, () => { Logging.LogDebug("Alt + B: Test"); });
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
@@ -80,13 +77,13 @@ namespace WukongMp.Coop
                 Logging.LogDebug("Alt + X");
                 WukongMP.ResetLocalPlayerCooldown();
             });
-                        
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
                 WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMP.Instance.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
-            
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
@@ -151,12 +148,12 @@ namespace WukongMp.Coop
         public void DeInit()
         {
             Logging.LogInformation("DeInit");
-            
+
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
             {
                 return;
             }
-            
+
             _wukongMp.Unpatch();
             _wukongMp.DeInit();
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
@@ -167,9 +164,9 @@ namespace WukongMp.Coop
         public object GetReloadContext()
         {
             Logging.LogInformation("GetReloadContext");
-            return (bool?) _wukongMp.Client.ConnectedAndInRoom;
+            return (bool?)_wukongMp.Client.ConnectedAndInRoom;
         }
-        
+
         public void Reload(object? context)
         {
             Logging.LogInformation("Reload");

@@ -9,7 +9,6 @@ using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
 using WukongMp.Api.State;
-using EntityManager = b1.ECS.EntityManager;
 
 namespace WukongMp.Api.Patches
 {

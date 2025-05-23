@@ -437,7 +437,7 @@ namespace WukongMp.Api.Patches
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
-            
+
             if (Actor is BGUCharacterCS character)
             {
                 var entity = WukongEcs.Instance.GetMonsterByCharacter(character);
@@ -531,13 +531,13 @@ namespace WukongMp.Api.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var character = client.GetMonsterByActor(owner);
+                var entity = client.GetMonsterByActor(owner);
 
-                if (character.HasValue)
-                {
-                    ref var monsterAnim = ref character.Value.GetComponent<MonsterAnimationComponent>();
-                    monsterAnim.MotionMatchingState = (byte)MMState;
-                }
+                if (!entity.HasValue)
+                    return;
+
+                var monsterAnim = entity.Value.GetComponent<NetworkIdComponent>();
+                client.SendMotionMatchingState(monsterAnim, MMState);
             }
         }
     }
