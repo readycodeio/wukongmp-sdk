@@ -62,7 +62,7 @@ function CopyFiles($files, $sourceDir, $destDir) {
             Write-Output "Copied $file to $destDir"
         } elseif (Test-Path -Path $sourceFile -PathType Container) {
             Copy-Item -Path $sourceFile -Destination $destFile -Recurse -Force
-            Write-Output "Copied $file to $destDir (recursive)"
+            Write-Output "Copied $file/* to $destDir (recursive)"
         } else {
             Write-Output "[Error] $file does not exist in $sourceDir"
         }
