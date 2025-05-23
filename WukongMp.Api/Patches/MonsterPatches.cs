@@ -55,9 +55,12 @@ namespace WukongMp.Api.Patches
                     var pos = trans.Position.ToFVector();
                     var rot = trans.Rotation.ToFRotator();
 
-                    if (!Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !Equals(tamer.Tamer!.GetActorLocation(), Constants.FloatComparisonTolerance))
+                    if (!pos.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !pos.Equals(tamer.Tamer!.GetActorLocation(), Constants.FloatComparisonTolerance))
                     {
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
+                        GameLoopPatch.QueueOnGameThread(() =>
+                        {
+                            events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        });
                     }
                 });
             }

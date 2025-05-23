@@ -138,7 +138,7 @@ public class WukongEcs
 
     private void ApplyArchetypeDelta(NetDataReader reader)
     {
-        new ApplyDeltaJob(reader, _client.RelayClient, NetManager).Execute();
+        new ApplyDeltaJob(reader, _client.RelayClient, NetManager).Execute(); // TODO: CommandBuffer
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkIdComponent netId)

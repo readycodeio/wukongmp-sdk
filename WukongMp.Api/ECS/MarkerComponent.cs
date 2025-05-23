@@ -8,20 +8,19 @@ namespace WukongMp.Api.ECS;
 public struct MarkerComponent : IComponent
 {
     public bool DestroyQueued;
-    private AActor? _markerActor;
 
     public AActor? MarkerActor
     {
         get
         {
-            if (_markerActor != null && _markerActor.IsNullOrDestroyed())
+            if (field != null && field.IsNullOrDestroyed())
             {
                 Logging.LogTrace("Marker actor is destroyed");
                 return null;
             }
 
-            return _markerActor;
+            return field;
         }
-        set => _markerActor = value;
+        set;
     }
 }
