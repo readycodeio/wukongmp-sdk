@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Threading;
+using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using LiteNetLib;
@@ -20,7 +21,7 @@ namespace WukongMp.Api;
 public class WukongEcs
 {
     public readonly EntityStore World;
-    public CommandBuffer CommandBuffer { get; private set; }
+    public CommandBufferSynced CommandBuffer { get; }
     public readonly NetworkedEntityManager NetManager;
 
     private readonly SystemRoot _systemRoot;
@@ -32,7 +33,11 @@ public class WukongEcs
     {
         _client = client;
         World = new EntityStore();
-        CommandBuffer = World.GetCommandBuffer();
+
+        var cb = World.GetCommandBuffer();
+        cb.ReuseBuffer = true;
+        CommandBuffer = cb.Synced;
+
         _systemRoot = new SystemRoot();
         _systemRoot.AddStore(World);
 
@@ -83,8 +88,12 @@ public class WukongEcs
     public void RunEcsWorldUpdate()
     {
         WukongMP.Instance.Client.SetCachedPlayerProperties(); // not a system, TODO
-        CommandBuffer.Playback();
-        CommandBuffer = World.GetCommandBuffer();
+
+        lock (CommandBuffer)
+        {
+            CommandBuffer.Playback();
+        }
+
         _systemRoot.Update(new UpdateTick()); // TODO: Delta time
     }
 
@@ -92,15 +101,17 @@ public class WukongEcs
     {
         var entity = NetManager.CreateNetworkedEntity((short)_client.RelayClient.LocalPlayer.PeerId).Entity;
 
-        entity.AddComponent<MarkerComponent>();
-        entity.AddComponent<LocalTamerComponent>();
-        entity.AddComponent<TamerComponent>();
-        entity.AddComponent<AnimationComponent>();
-        entity.AddComponent<HpComponent>();
-        entity.AddComponent<MonsterAnimationComponent>();
-        entity.AddComponent<NicknameComponent>();
-        entity.AddComponent<TeamComponent>();
-        entity.AddComponent<TranslationComponent>();
+        entity.Batch()
+            .Add(new MarkerComponent())
+            .Add(new LocalTamerComponent())
+            .Add(new TamerComponent())
+            .Add(new AnimationComponent())
+            .Add(new HpComponent())
+            .Add(new MonsterAnimationComponent())
+            .Add(new NicknameComponent())
+            .Add(new TeamComponent())
+            .Add(new TranslationComponent())
+            .Apply();
 
         return entity;
     }
@@ -109,15 +120,17 @@ public class WukongEcs
     {
         var entity = NetManager.CreateNetworkedEntity(netId);
 
-        entity.AddComponent<MarkerComponent>();
-        entity.AddComponent<LocalTamerComponent>();
-        entity.AddComponent<TamerComponent>();
-        entity.AddComponent<AnimationComponent>();
-        entity.AddComponent<HpComponent>();
-        entity.AddComponent<MonsterAnimationComponent>();
-        entity.AddComponent<NicknameComponent>();
-        entity.AddComponent<TeamComponent>();
-        entity.AddComponent<TranslationComponent>();
+        entity.Batch()
+            .Add(new MarkerComponent())
+            .Add(new LocalTamerComponent())
+            .Add(new TamerComponent())
+            .Add(new AnimationComponent())
+            .Add(new HpComponent())
+            .Add(new MonsterAnimationComponent())
+            .Add(new NicknameComponent())
+            .Add(new TeamComponent())
+            .Add(new TranslationComponent())
+            .Apply();
 
         return entity;
     }
@@ -159,7 +172,7 @@ public class WukongEcs
 
         return null;
     }
-    
+
     public Entity? GetMonsterByCharacter(BGUCharacterCS? owner)
     {
         if (owner == null)

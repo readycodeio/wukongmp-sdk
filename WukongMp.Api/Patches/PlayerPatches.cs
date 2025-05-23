@@ -357,10 +357,7 @@ namespace WukongMp.Api.Patches
                         _ = Task.Run(async () =>
                         {
                             await Task.Delay(5000);
-                            Utils.TryRunOnGameThread(() =>
-                            {
-                                WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId);
-                            });
+                            Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
                         });
                         return;
                     }
@@ -372,7 +369,7 @@ namespace WukongMp.Api.Patches
 
         public static void Postfix(
             BUS_DeadComp __instance,
-            IBUC_SimpleStateData ___SimpleStateData, 
+            IBUC_SimpleStateData ___SimpleStateData,
             IBUC_UnitStateData ___UnitStateData,
             EDeadReason DeadReason,
             AActor Attacker,
@@ -396,7 +393,7 @@ namespace WukongMp.Api.Patches
                 Logging.LogError("Owner is null or destroyed");
                 return;
             }
-            
+
             if (owner is not BGUCharacterCS || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 return;
@@ -588,6 +585,7 @@ namespace WukongMp.Api.Patches
                 InControlData.ArmLength = Constants.CameraArmLength;
                 InControlData.ArmTargetOffset = FVector.ZeroVector;
             }
+
             return true;
         }
     }
