@@ -55,13 +55,20 @@ function CopyFiles($files, $sourceDir, $destDir) {
         $sourceFile = Join-Path -Path $sourceDir -ChildPath $file
         $destFile = Join-Path -Path $destDir -ChildPath $file
         if ($file -eq "*") {
+            if (Test-Path -Path $destDir) {
+                Remove-Item -Path $destDir -Recurse -Force
+            }
+            New-Item -ItemType Directory -Path $destDir -Force
             Copy-Item -Path $sourceFile -Destination $destDir -Recurse -Force
             Write-Output "Copied $file to $destDir (recursive)"
         } elseif (Test-Path -Path $sourceFile -PathType Leaf) {
             Copy-Item -Path $sourceFile -Destination $destFile -Force
             Write-Output "Copied $file to $destDir"
         } elseif (Test-Path -Path $sourceFile -PathType Container) {
-            Copy-Item -Path $sourceFile/* -Destination $destFile -Recurse -Force
+            if (Test-Path -Path $destFile) {
+                Remove-Item -Path $destFile -Recurse -Force
+            }
+            Copy-Item -Path $sourceFile -Destination $destFile -Recurse -Force
             Write-Output "Copied $file to $destDir (recursive)"
         } else {
             Write-Output "[Error] $file does not exist in $sourceDir"
