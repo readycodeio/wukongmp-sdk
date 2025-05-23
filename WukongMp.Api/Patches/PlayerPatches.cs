@@ -204,6 +204,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    // NOTE: Runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPBasicData), nameof(BUC_ABPBasicData.Update_WorkThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBasicData

@@ -264,6 +264,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    // NOTE: Runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchCharacterAnimation
@@ -436,9 +437,7 @@ namespace WukongMp.Api.Patches
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
-
-            var client = WukongMP.Instance.Client;
-
+            
             if (Actor is BGUCharacterCS character)
             {
                 var entity = WukongEcs.Instance.GetMonsterByCharacter(character);

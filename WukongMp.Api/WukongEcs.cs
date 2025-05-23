@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
@@ -14,14 +16,55 @@ using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Systems;
+using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api;
 
 public class WukongEcs
 {
-    public readonly EntityStore World;
-    public CommandBufferSynced CommandBuffer { get; }
+    public EntityStore World
+    {
+        get
+        {
+            var tid = Thread.CurrentThread.ManagedThreadId;
+            if (tid == 1)
+            {
+                var caller = new StackFrame(1).GetMethod();
+                var callerName = $"{caller.DeclaringType?.FullName}.{caller.Name}";
+                Logging.LogDebug("[{Thread}] ECS World access from {Caller}", tid, callerName);
+            }
+            else
+            {
+                Logging.LogDebug("[{Thread}] ECS World access from {Caller}", tid, Environment.StackTrace);
+            }
+
+            return field;
+        }
+        private set;
+    }
+
+    public CommandBufferSynced CommandBuffer
+    {
+        get
+        {
+            var tid = Thread.CurrentThread.ManagedThreadId;
+            if (tid == 1)
+            {
+                var caller = new StackFrame(1).GetMethod();
+                var callerName = $"{caller.DeclaringType?.FullName}.{caller.Name}";
+                Logging.LogDebug("[{Thread}] ECS CommandBuffer access from {Caller}", tid, callerName);
+            }
+            else
+            {
+                Logging.LogDebug("[{Thread}] ECS CommandBuffer access from {Caller}", tid, Environment.StackTrace);
+            }
+
+            return field;
+        }
+        private set;
+    }
+
     public readonly NetworkedEntityManager NetManager;
 
     private readonly SystemRoot _systemRoot;
@@ -151,7 +194,10 @@ public class WukongEcs
 
     private void ApplyArchetypeDelta(NetDataReader reader)
     {
-        new ApplyDeltaJob(reader, _client.RelayClient, NetManager).Execute(); // TODO: CommandBuffer
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            new ApplyDeltaJob(reader, _client.RelayClient, NetManager).Execute(); // TODO: CommandBuffer
+        });
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkIdComponent netId)
@@ -164,13 +210,8 @@ public class WukongEcs
         }
 
         var entity = NetManager.GetEntityByNetworkId(netId);
-        if (entity.HasValue)
-        {
-            ref var tamer = ref entity.Value.GetComponent<LocalTamerComponent>();
-            return tamer.Pawn;
-        }
-
-        return null;
+        var tamer = entity?.GetComponent<LocalTamerComponent>();
+        return tamer?.Pawn;
     }
 
     public Entity? GetMonsterByCharacter(BGUCharacterCS? owner)
@@ -179,7 +220,10 @@ public class WukongEcs
             return null;
 
         Entity? entityId = null;
-        World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, entity) =>
+
+        var query = World.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false; // TODO: This is due to the fact this method is called from parallel ThreadTick
+        query.ForEachEntity((ref tamer, entity) =>
         {
             if (tamer.Pawn == owner)
             {

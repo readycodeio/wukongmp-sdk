@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 using JetBrains.Annotations;
 using ReadyM.Relay.Client;
 
@@ -9,6 +11,7 @@ namespace WukongMp.Api
 {
     public static class Logging
     {
+        private const string ThreadIdPropertyName = "__ThreadId";
         private const string LocationPropertyName = "__Location";
 
         private static readonly Regex PlaceholderRegex = new(@"\{([_\w]+)\}", RegexOptions.Compiled);
@@ -111,22 +114,26 @@ namespace WukongMp.Api
         public static void LogError([StructuredMessageTemplate] string template, params List<object?> args)
         {
             var caller = new StackFrame(1).GetMethod();
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+            args.Add(threadId);
             args.Add($"{caller.DeclaringType?.FullName}.{caller.Name}");
-            Log(LogLevel.Error, template + $" [at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
+            Log(LogLevel.Error, $"{template} [thread {{{ThreadIdPropertyName}}} at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
         }
 
         public static void LogCritical([StructuredMessageTemplate] string template, params List<object?> args)
         {
             var caller = new StackFrame(1).GetMethod();
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+            args.Add(threadId);
             args.Add($"{caller.DeclaringType?.FullName}.{caller.Name}");
-            Log(LogLevel.Critical, template + $" [at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
+            Log(LogLevel.Critical, $"{template} [thread {{{ThreadIdPropertyName}}} at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
         }
 
         public static void LogException(Exception? ex)
         {
             while (ex != null)
             {
-                Log(LogLevel.Error, "Exception: {Message}.\nStack trace:\n{Trace}", ex.Message, ex.StackTrace);
+                Log(LogLevel.Error, "Exception: {Message} | Thread: {ThreadId} | Stack trace: {Trace}", ex.Message, Thread.CurrentThread.ManagedThreadId, ex.StackTrace);
                 ex = ex.InnerException;
             }
         }
@@ -135,7 +142,7 @@ namespace WukongMp.Api
         {
             while (ex != null)
             {
-                Log(LogLevel.Critical, "Exception: {Message}.\nStack trace:\n{Trace}", ex.Message, ex.StackTrace);
+                Log(LogLevel.Critical, "Exception: {Message} | Thread: {ThreadId} | Stack trace: {Trace}", ex.Message, Thread.CurrentThread.ManagedThreadId, ex.StackTrace);
                 ex = ex.InnerException;
             }
         }
