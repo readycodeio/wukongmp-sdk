@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using b1;
@@ -25,47 +24,8 @@ namespace WukongMp.Api;
 
 public class WukongEcs
 {
-    public EntityStore World
-    {
-        get
-        {
-            var tid = Thread.CurrentThread.ManagedThreadId;
-            if (tid == 1)
-            {
-                var caller = new StackFrame(1).GetMethod();
-                var callerName = $"{caller.DeclaringType?.FullName}.{caller.Name}";
-                Logging.LogDebug("[{Thread}] ECS World access from {Caller}", tid, callerName);
-            }
-            else
-            {
-                Logging.LogDebug("[{Thread}] ECS World access from {Caller}", tid, Environment.StackTrace);
-            }
-
-            return field;
-        }
-        private set;
-    }
-
-    public CommandBufferSynced CommandBuffer
-    {
-        get
-        {
-            var tid = Thread.CurrentThread.ManagedThreadId;
-            if (tid == 1)
-            {
-                var caller = new StackFrame(1).GetMethod();
-                var callerName = $"{caller.DeclaringType?.FullName}.{caller.Name}";
-                Logging.LogDebug("[{Thread}] ECS CommandBuffer access from {Caller}", tid, callerName);
-            }
-            else
-            {
-                Logging.LogDebug("[{Thread}] ECS CommandBuffer access from {Caller}", tid, Environment.StackTrace);
-            }
-
-            return field;
-        }
-        private set;
-    }
+    public EntityStore World;
+    public CommandBufferSynced CommandBuffer;
 
     public readonly NetworkedEntityManager NetManager;
     private readonly SystemRoot _systemRoot;
@@ -195,10 +155,8 @@ public class WukongEcs
 
     private void ApplyArchetypeDelta(NetDataReader reader)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
-        {
-            new ApplyDeltaJob(reader, _client.RelayClient, NetManager).Execute(); // TODO: CommandBuffer
-        });
+        Logging.LogDebug("Applying archetype delta");
+        new ApplyDeltaJob(reader, _client.RelayClient, NetManager).Execute();
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkIdComponent netId)
@@ -211,8 +169,12 @@ public class WukongEcs
         }
 
         var entity = NetManager.GetEntityByNetworkId(netId);
-        var tamer = entity?.GetComponent<LocalTamerComponent>();
-        return tamer?.Pawn;
+        if (entity?.TryGetComponent<LocalTamerComponent>(out var tamer) is true)
+        {
+            return tamer.Pawn;
+        }
+
+        return null;
     }
 
     public void SetMonsterHpScaling(int scaling)

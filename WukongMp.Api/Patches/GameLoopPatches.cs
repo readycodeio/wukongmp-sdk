@@ -74,13 +74,13 @@ namespace WukongMp.Api.Patches
         public static void Prefix(int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
-            Logging.LogDebug("[{Thread}] Starting tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
+            Logging.LogTrace("[{Thread}] Starting tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
         }
 
         public static void Postfix(int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
-            Logging.LogDebug("[{Thread}] Finished tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
+            Logging.LogTrace("[{Thread}] Finished tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
 
             RunQueuedActions(mask);
 
