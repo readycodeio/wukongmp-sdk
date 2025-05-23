@@ -26,7 +26,10 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
             {
                 if (allTamers.TryGetValue(tamer.Guid, out var actor))
                 {
-                    CommandBuffer.AddComponent(entity.Id, localTamer with { Tamer = actor, IsSynced = true });
+                    localTamer.Tamer = actor;
+                    localTamer.IsSynced = true;
+                    WukongEcs.Instance.TamerActorIndex[actor] = entity;
+
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
                 }
                 else

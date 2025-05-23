@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using b1;
 using Friflo.Engine.ECS;
 using WukongMp.Api.State;
@@ -6,7 +7,7 @@ using WukongMp.Api.State;
 namespace WukongMp.Api.ECS;
 
 [StructLayout(LayoutKind.Sequential)]
-public record struct LocalTamerComponent : IIndexedComponent<BUTamerActor?>
+public record struct LocalTamerComponent : IComponent
 {
     public bool IsSynced;
     public bool IsMonsterSpawned;
@@ -51,9 +52,4 @@ public record struct LocalTamerComponent : IIndexedComponent<BUTamerActor?>
     }
 
     public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
-
-    public BUTamerActor? GetIndexedValue()
-    {
-        return Tamer;
-    }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using b1;
@@ -66,9 +67,9 @@ public class WukongEcs
     }
 
     public readonly NetworkedEntityManager NetManager;
-
     private readonly SystemRoot _systemRoot;
     private readonly WukongClient _client;
+    public readonly Dictionary<BUTamerActor, Entity> TamerActorIndex = new();
 
     public static WukongEcs Instance { get; } = new(WukongMP.Instance.Client);
 

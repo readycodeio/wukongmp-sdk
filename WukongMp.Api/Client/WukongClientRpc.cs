@@ -50,11 +50,6 @@ public sealed partial class WukongClient
 
     private void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
     {
-        GameLoopPatch.QueueOnGameThread(() => OnCustomEventImpl(header, reader), "OnCustomEvent");
-    }
-
-    private void OnCustomEventImpl(CustomEventHeader header, NetPacketReader reader)
-    {
         switch (header.EventCode)
         {
             case 1:
@@ -367,7 +362,7 @@ public sealed partial class WukongClient
         var evData = new FsmStateData(netId, eventTag.TagName.ToString());
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
-    
+
     public void SendMotionMatchingState(NetworkIdComponent characterId, EState_MM MMState)
     {
         const byte eventCode = 22;

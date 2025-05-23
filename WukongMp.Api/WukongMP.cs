@@ -561,39 +561,39 @@ namespace WukongMp.Api
             }
 
             Client.OnBeforeJoinRoom += SetPlayerProperties;
-            Client.OnUnitSpawn += SpawnRemoteUnit;
-            Client.OnSummonSpawn += SpawnRemoteSummon;
-            Client.OnMontageCallback += ApplyPlayerMontageCallback;
-            Client.OnUnitDead += OnRemoteUnitDead;
-            Client.OnTeleportFinish += OnTeleportFinish;
-            Client.OnMonsterWakeUp += WakeUpMonster;
-            Client.OnEquipmentChange += ChangeEquipment;
-            Client.OnReadinessChange += UpdateReadiness;
-            Client.OnTeamChange += UpdatePlayerTeam;
-            Client.OnPlayerLeft += RemovePlayer;
-            Client.OnDamageNum += OnDamageNum;
-            Client.OnPlayerRebirth += RebirthPlayer;
-            Client.OnKillPlayer += KillPlayer;
-            Client.OnSetPlayerTransform += TeleportLocalPlayer;
-            Client.OnPhantomRush += PerformPhantomRush;
-            Client.OnExitPhantomRush += ExitPhantomRush;
-            Client.OnHandleImmobilize += HandleImmobilize;
-            Client.OnTargetSet += OnTargetSet;
-            Client.OnMatchmakingEnded += OnMatchmakingEnded;
-            Client.OnMotionMatchingChanged += OnMotionMatchingChanged;
-            Client.OnBuffAdded += OnBuffAdded;
-            Client.OnBuffRemoved += OnBuffRemoved;
-            Client.OnBuffAllRemoved += OnBuffAllRemoved;
-            Client.OnStateTriggerSet += OnStateTriggerSet;
-            Client.OnSimpleStateSet += OnSimpleStateSet;
-            Client.OnFsmStateSet += OnFsmStateSet;
-            Client.OnRequestSpawnUnits += SpawnUnitsMaster;
-            Client.OnPlayerTransBegin += OnPlayerTransBegin;
-            Client.OnPlayerTransEnd += OnPlayerTransEnd;
-            Client.OnPlayMovieRequest += OnPlayMovieRequest;
+            Client.OnUnitSpawn += (id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
+            Client.OnSummonSpawn += (summonerId, summonId, guid, name, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteSummon(summonerId, summonId, guid, name, teamId), "SpawnRemoteSummon");
+            Client.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
+            Client.OnUnitDead += (data) => GameLoopPatch.QueueOnGameThread(() => OnRemoteUnitDead(data), "RemoteUnitDead");
+            Client.OnTeleportFinish += (id) => GameLoopPatch.QueueOnGameThread(() => OnTeleportFinish(id), "WakeUpMonster");
+            Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
+            Client.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
+            Client.OnReadinessChange += (name, isReady, readyCount) => GameLoopPatch.QueueOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
+            Client.OnTeamChange += (playerState, teamId) => GameLoopPatch.QueueOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
+            Client.OnPlayerLeft += playerState => GameLoopPatch.QueueOnGameThread(() => RemovePlayer(playerState));
+            Client.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
+            Client.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
+            Client.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
+            Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => TeleportLocalPlayer(loc, rot), "TeleportLocalPlayer");
+            Client.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
+            Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
+            Client.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
+            Client.OnTargetSet += (characterId, targetId, clear) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(characterId, targetId, clear), "OnTargetSet");
+            Client.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
+            Client.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
+            Client.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
+            Client.OnBuffAllRemoved += (playerId, a, b) => GameLoopPatch.QueueOnGameThread(() => OnBuffAllRemoved(playerId, a, b), "OnBuffAllRemoved");
+            Client.OnStateTriggerSet += (characterId, trigger, time, isForce) => GameLoopPatch.QueueOnGameThread(() => OnStateTriggerSet(characterId, trigger, time, isForce), "OnStateTriggerSet");
+            Client.OnSimpleStateSet += (characterId, state, isRemove) => GameLoopPatch.QueueOnGameThread(() => OnSimpleStateSet(characterId, state, isRemove), "OnSimpleStateSet");
+            Client.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet", BGW_TickGroupMask.TG_BeforeStartPhsic);
+            Client.OnMotionMatchingChanged += (characterId, mm) => GameLoopPatch.QueueOnGameThread(() => OnMotionMatchingChanged(characterId, mm), "OnMotionMatchingChanged");
+            Client.OnRequestSpawnUnits += (playerId, unitName, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnUnitsMaster(playerId, unitName, count, teamId), "SpawnUnitsMaster");
+            Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
+            Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
+            Client.OnPlayMovieRequest += playRequest => GameLoopPatch.QueueOnGameThread(() => OnPlayMoviewRequest(playRequest), "OnPlayMovieRequest");
         }
 
-        private static void OnPlayMovieRequest(FPlayMovieRequest playMovieRequest)
+        private void OnPlayMoviewRequest(FPlayMovieRequest playMovieRequest)
         {
             BGW_EventCollection bGW_EventCollection = BGW_EventCollection.Get(GameUtils.GetWorld());
             if (bGW_EventCollection == null)
@@ -1385,6 +1385,7 @@ namespace WukongMp.Api
             var id = WukongEcs.Instance.CreateNetworkedMonster(netId);
 
             id.AddComponent(new LocalTamerComponent(tamer));
+            WukongEcs.Instance.TamerActorIndex[tamer] = id;
 
             ref var tamerComp = ref id.GetComponent<TamerComponent>();
             tamerComp.Guid = guid;
@@ -1401,6 +1402,7 @@ namespace WukongMp.Api
         {
             var id = WukongEcs.Instance.CreateNetworkedMonster();
             id.AddComponent(new LocalTamerComponent(tamer));
+            WukongEcs.Instance.TamerActorIndex[tamer] = id;
 
             ref var tamerComp = ref id.GetComponent<TamerComponent>();
             tamerComp.Guid = guid;

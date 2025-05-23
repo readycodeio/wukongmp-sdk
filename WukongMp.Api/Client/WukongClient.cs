@@ -146,18 +146,14 @@ public sealed partial class WukongClient
             ? LocalPlayerState
             : ConnectedPlayers.GetValueOrDefault(playerId);
     }
+    
 
     public Entity? GetByTamerActor(BUTamerActor? owner)
     {
         if (owner == null)
             return null;
 
-        var results = WukongEcs.Instance.World.ComponentIndex<LocalTamerComponent, BUTamerActor?>()[owner];
-
-        if (results.Count == 1)
-            return results[0];
-
-        return null;
+        return WukongEcs.Instance.TamerActorIndex.TryGetValue(owner, out var entity) ? entity : null;
     }
 
     public void SetMasterClient(string newMasterName)
