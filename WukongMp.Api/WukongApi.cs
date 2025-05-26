@@ -1,6 +1,5 @@
 ﻿using b1;
 using Friflo.Engine.ECS;
-using Friflo.Engine.ECS.Systems;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using ReadyM.Api;
@@ -20,9 +19,9 @@ namespace WukongMp.Api;
 
 public class WukongApi
 {
-    public Store World;
-    public CommandBufferSynced CommandBuffer;
-    private ArchetypeId _monsterArchetype;
+    public readonly Store World;
+    public readonly CommandBufferSynced CommandBuffer;
+    private readonly ArchetypeId _monsterArchetype;
 
     public readonly NetworkedEntityManager NetManager;
     private readonly WukongClient _client;
@@ -33,6 +32,7 @@ public class WukongApi
     {
         _client = client;
         World = ReadyMApp.CreateEntityStore();
+
         _monsterArchetype = World.RegisterArchetype(b =>
             b.Add(new MarkerComponent())
                 .Add(new LocalTamerComponent())
@@ -48,7 +48,7 @@ public class WukongApi
         cb.ReuseBuffer = true;
         CommandBuffer = cb.Synced;
 
-        NetManager = new NetworkedEntityManager(World, _client.LocalPlayerState.PeerId);
+        NetManager = new NetworkedEntityManager(World, ReadyM.Api.Multiplayer.Protocol.Constants.UnsetPeerId);
         NetManager.onEntityDestroyed += OnNetworkedEntityDestroyed;
 
         World.SystemRoot.Add(new SyncTamersSystem());
@@ -57,8 +57,14 @@ public class WukongApi
         World.SystemRoot.Add(new SyncMonstersSystem());
         World.SystemRoot.Add(new SendEcsDeltaSystem(_client.RelayClient));
 
+        _client.RelayClient.OnBeforeJoinedRoom += UpdatePeerId;
         _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
         _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
+    }
+
+    private void UpdatePeerId()
+    {
+        NetManager.PeerId = _client.LocalPlayerState.PeerId;
     }
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
