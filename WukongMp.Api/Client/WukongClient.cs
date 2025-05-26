@@ -853,11 +853,14 @@ public sealed partial class WukongClient
         }
     }
 
+    public event Action<short>? OnMasterClientChanged;
+
     private void OnRoomPropertiesChanged(Dictionary<object, object?> diff)
     {
-        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is int newMasterId)
+        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is short newMasterId)
         {
             Logging.LogInformation("Master client changed to {NewMasterId}", newMasterId);
+            OnMasterClientChanged?.Invoke(newMasterId);
         }
     }
 

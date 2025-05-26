@@ -25,6 +25,7 @@ public class WukongApi
 
     public readonly NetworkedEntityManager NetManager;
     private readonly WukongClient _client;
+    private readonly SendEcsDeltaSystem _sendEcsDeltaSystem;
 
     public static WukongApi Instance { get; } = new(WukongMP.Instance.Client);
 
@@ -51,15 +52,38 @@ public class WukongApi
         NetManager = new NetworkedEntityManager(World, ReadyM.Api.Multiplayer.Protocol.Constants.UnsetPeerId);
         NetManager.onEntityDestroyed += OnNetworkedEntityDestroyed;
 
+        _sendEcsDeltaSystem = new SendEcsDeltaSystem(_client.RelayClient)
+        {
+            Enabled = false // disabled by default until we become the master client
+        };
+
         World.SystemRoot.Add(new SyncTamersSystem());
         World.SystemRoot.Add(new UpdateMarkersSystem());
         World.SystemRoot.Add(new DestroyDeadMonstersMarkersSystem());
         World.SystemRoot.Add(new SyncMonstersSystem());
-        World.SystemRoot.Add(new SendEcsDeltaSystem(_client.RelayClient));
+        World.SystemRoot.Add(_sendEcsDeltaSystem);
 
         _client.RelayClient.OnBeforeJoinedRoom += UpdatePeerId;
         _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
         _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
+
+        _client.OnMasterClientChanged += OnMasterClientChanged;
+    }
+
+    private void OnMasterClientChanged(short obj)
+    {
+        if (obj == _client.RelayClient.LocalPlayer.PeerId)
+        {
+            // we are the new master client, update peer id
+            Logging.LogDebug("We are now the master client");
+            _sendEcsDeltaSystem.Enabled = true;
+        }
+        else
+        {
+            // we are no longer the master client, reset peer id
+            Logging.LogDebug("We are no longer the master client");
+            _sendEcsDeltaSystem.Enabled = false;
+        }
     }
 
     private void UpdatePeerId()
