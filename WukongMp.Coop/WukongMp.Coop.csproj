@@ -10,6 +10,8 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <RootNamespace>WukongMp.Coop</RootNamespace>
         <TargetName>WukongMpMod</TargetName>
+        <Configurations>Debug;Release;NoDisconnect</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <PropertyGroup>

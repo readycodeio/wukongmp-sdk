@@ -11,6 +11,8 @@
         <Nullable>enable</Nullable>
         <WarningsAsErrors>CS8600;CS8602;CS8603;CS8604;CS8618;CS8625;CS8619</WarningsAsErrors>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Debug;Release;NoDisconnect</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
@@ -188,6 +190,10 @@
         <Generator>ResXFileCodeGenerator</Generator>
         <LastGenOutput>Texts.Designer.cs</LastGenOutput>
       </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Game\Symbols\" />
     </ItemGroup>
 
 </Project>
