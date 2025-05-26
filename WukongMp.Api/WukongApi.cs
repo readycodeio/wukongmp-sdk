@@ -107,11 +107,14 @@ public class WukongApi
 
     public Entity CreateNetworkedMonster()
     {
-        return NetManager.CreateNetworkedEntity(_monsterArchetype).Entity;
+        var ids = NetManager.CreateNetworkedEntity(_monsterArchetype);
+        Logging.LogDebug("Creating local networked monster with {NetId}", ids.NetId);
+        return ids.Entity;
     }
 
     public Entity CreateNetworkedMonster(NetworkIdComponent netId)
     {
+        Logging.LogDebug("Creating remote networked monster with {NetId}", netId);
         return NetManager.CreateRemoteNetworkedEntity(_monsterArchetype, netId);
     }
 
