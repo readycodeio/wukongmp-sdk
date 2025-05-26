@@ -66,29 +66,19 @@ public class WukongApi
         _client.RelayClient.OnBeforeJoinedRoom += UpdatePeerId;
         _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
         _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
-
         _client.OnMasterClientChanged += OnMasterClientChanged;
     }
 
     private void OnMasterClientChanged(short obj)
     {
-        if (obj == _client.RelayClient.LocalPlayer.PeerId)
-        {
-            // we are the new master client, update peer id
-            Logging.LogDebug("We are now the master client");
-            _sendEcsDeltaSystem.Enabled = true;
-        }
-        else
-        {
-            // we are no longer the master client, reset peer id
-            Logging.LogDebug("We are no longer the master client");
-            _sendEcsDeltaSystem.Enabled = false;
-        }
+        _sendEcsDeltaSystem.Enabled = _client.IsMasterClient;
     }
 
     private void UpdatePeerId()
     {
+        Logging.LogDebug("Updating NetManager peer id to {PeerId}", _client.LocalPlayerState.PeerId);
         NetManager.PeerId = _client.LocalPlayerState.PeerId;
+        _sendEcsDeltaSystem.Enabled = _client.IsMasterClient;
     }
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
