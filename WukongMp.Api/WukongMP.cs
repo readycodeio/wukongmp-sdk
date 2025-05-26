@@ -785,6 +785,12 @@ namespace WukongMp.Api
             }
 
             var tamerComponent = entity.Value.GetComponent<LocalTamerComponent>();
+            
+            if (tamerComponent.Pawn == null)
+            {
+                LogNullCharacter(netId);
+                return;
+            }
 
             var events = BUS_EventCollectionCS.Get(tamerComponent.Pawn);
 
