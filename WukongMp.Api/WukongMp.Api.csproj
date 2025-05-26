@@ -192,8 +192,4 @@
       </EmbeddedResource>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Game\Symbols\" />
-    </ItemGroup>
-
 </Project>

@@ -6,6 +6,7 @@
         <PlatformTarget>AnyCPU</PlatformTarget>
         <OutputPath>bin\NoDisconnect\</OutputPath>
         <DebugSymbols>true</DebugSymbols>
+        <DebugType>portable</DebugType>
         <IntermediateOutputPath>obj\NoDisconnect\</IntermediateOutputPath>
     </PropertyGroup>
 </Project>
