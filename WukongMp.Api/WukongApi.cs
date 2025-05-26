@@ -72,13 +72,16 @@ public class WukongApi
     private void OnMasterClientChanged(short obj)
     {
         _sendEcsDeltaSystem.Enabled = _client.IsMasterClient;
+        Logging.LogDebug("SendEcsDeltaSystem enabled: {Enabled}", _sendEcsDeltaSystem.Enabled);
     }
 
     private void UpdatePeerId()
     {
         Logging.LogDebug("Updating NetManager peer id to {PeerId}", _client.LocalPlayerState.PeerId);
         NetManager.PeerId = _client.LocalPlayerState.PeerId;
+
         _sendEcsDeltaSystem.Enabled = _client.IsMasterClient;
+        Logging.LogDebug("SendEcsDeltaSystem enabled: {Enabled}", _sendEcsDeltaSystem.Enabled);
     }
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
