@@ -361,6 +361,11 @@ namespace WukongMp.Api
             }
         }
 
+        public bool AreAllPlayersNearby()
+        {
+            return true;
+        }
+
         public void SkipCutscene()
         {
             BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());

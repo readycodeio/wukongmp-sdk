@@ -114,6 +114,14 @@ namespace WukongMp.Api
             });
         }
 
+        public static void HideTip()
+        {
+            Utils.TryRunOnGameThread(() =>
+            {
+                GenAGPage.HidePage(39, nameof(ShowTip));
+            });
+        }
+
         public static void ShowPvPCountDown()
         {
             Utils.TryRunOnGameThread(() =>
