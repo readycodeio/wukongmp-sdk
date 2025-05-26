@@ -2,7 +2,7 @@
 using System.Reflection;
 using b1;
 using HarmonyLib;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;

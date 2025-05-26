@@ -7,7 +7,7 @@ using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Common.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;

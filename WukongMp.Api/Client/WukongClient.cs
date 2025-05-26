@@ -10,10 +10,9 @@ using BtlB1;
 using BtlShare;
 using CSharpModBase;
 using LiteNetLib;
-using ReadyM.Api.Multiplayer;
-using ReadyM.Api.Multiplayer.Extensions;
-using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -29,7 +28,7 @@ namespace WukongMp.Api.Client;
 public sealed partial class WukongClient
 {
     public readonly RelayClient RelayClient;
-    private short PeerId => RelayClient.LocalPlayer.PeerId; // is -1 before joining room
+    private short PeerId => RelayClient.PeerId; // is -1 before joining room
     public bool IsMasterClient => RoomState.MasterClientId == PeerId;
     public bool ConnectedAndInRoom => RelayClient.InRoom;
 

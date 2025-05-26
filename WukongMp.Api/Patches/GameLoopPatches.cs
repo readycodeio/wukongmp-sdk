@@ -4,7 +4,7 @@ using System.Threading;
 using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Common.ECS;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;

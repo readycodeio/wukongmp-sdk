@@ -4,8 +4,8 @@ using LiteNetLib;
 using LiteNetLib.Utils;
 using ReadyM.Api;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Api.Multiplayer.Extensions;
-using ReadyM.Api.Multiplayer.Protocol.Enums;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
 using ReadyM.Relay.Common.Wukong.Components;
 using ReadyM.Relay.Common.Wukong.Jobs;
@@ -46,7 +46,7 @@ public class WukongApi
         cb.ReuseBuffer = true;
         CommandBuffer = cb.Synced;
 
-        NetManager = new NetworkedEntityManager(World, ReadyM.Api.Multiplayer.Protocol.Constants.UnsetPeerId);
+        NetManager = new NetworkedEntityManager(World, ReadyM.Relay.Common.Protocol.Constants.UnsetPeerId);
         NetManager.onEntityDestroyed += OnNetworkedEntityDestroyed;
 
         _sendEcsDeltaSystem = new SendEcsDeltaSystem(_client.RelayClient)

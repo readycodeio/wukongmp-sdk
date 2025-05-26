@@ -1,5 +1,5 @@
 ﻿using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.ECS.Jobs;
 
