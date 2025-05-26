@@ -6,6 +6,7 @@ using ReadyM.Api;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Extensions;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
+using ReadyM.Relay.Common.Wukong;
 using ReadyM.Relay.Common.Wukong.Components;
 using ReadyM.Relay.Common.Wukong.Jobs;
 using UnrealEngine.Engine;
@@ -35,15 +36,11 @@ public class WukongApi
         World = ReadyMApp.CreateEntityStore();
 
         _monsterArchetype = World.RegisterArchetype(b =>
-            b.Add(new MarkerComponent())
-                .Add(new LocalTamerComponent())
-                .Add(new TamerComponent())
-                .Add(new AnimationComponent())
-                .Add(new HpComponent())
-                .Add(new MonsterAnimationComponent())
-                .Add(new NicknameComponent())
-                .Add(new TeamComponent())
-                .Add(new TranslationComponent()));
+        {
+            WukongCoreApi.SetUpMonsterArchetype(b);
+            b.Add<MarkerComponent>()
+                .Add<LocalTamerComponent>();
+        });
 
         var cb = World.GetCommandBuffer();
         cb.ReuseBuffer = true;
@@ -149,13 +146,12 @@ public class WukongApi
 
     private void ApplyArchetypeDelta(NetDataReader reader)
     {
-        Logging.LogDebug("Applying archetype delta");
-
         if (WukongMP.Instance.Client.IsMasterClient)
         {
             return; // ignore echo deltas, TODO: server should only send deltas to other players
         }
 
+        Logging.LogDebug("Applying archetype delta");
         new ApplyDeltaJob(reader, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
     }
 
@@ -199,7 +195,6 @@ public class WukongApi
         Entity? entityId = null;
 
         var query = World.Query<LocalTamerComponent>();
-        query.ThrowOnStructuralChange = false;
         query.ForEachEntity((ref tamer, entity) =>
         {
             if (tamer.Pawn == actor)
@@ -219,7 +214,6 @@ public class WukongApi
         Entity? entityId = null;
 
         var query = World.Query<LocalTamerComponent>();
-        query.ThrowOnStructuralChange = false;
         query.ForEachEntity((ref tamer, entity) =>
         {
             if (tamer.Tamer == owner)

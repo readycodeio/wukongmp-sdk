@@ -6,23 +6,18 @@ using WukongMp.Api.State;
 namespace WukongMp.Api.ECS;
 
 [StructLayout(LayoutKind.Sequential)]
-public record struct LocalTamerComponent : IComponent
+public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
 {
     public bool IsSynced;
     public bool IsMonsterSpawned;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
 
-    public LocalTamerComponent(BUTamerActor tamer)
-    {
-        Tamer = tamer;
-    }
-
     public BUTamerActor? Tamer
     {
         get => field.IsNullOrDestroyed() ? null : field;
         set;
-    }
+    } = tamer;
 
     public BGUCharacterCS? Pawn
     {
