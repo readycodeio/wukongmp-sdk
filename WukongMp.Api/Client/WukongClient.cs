@@ -9,17 +9,15 @@ using b1;
 using BtlB1;
 using BtlShare;
 using CSharpModBase;
-using Friflo.Engine.ECS;
 using LiteNetLib;
+using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Extensions;
+using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.ECS.Components;
-using ReadyM.Relay.Common.Protocol;
-using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -31,13 +29,13 @@ namespace WukongMp.Api.Client;
 public sealed partial class WukongClient
 {
     public readonly RelayClient RelayClient;
-    private int PeerId => RelayClient.LocalPlayer.PeerId; // is -1 before joining room
+    private short PeerId => RelayClient.LocalPlayer.PeerId; // is -1 before joining room
     public bool IsMasterClient => RoomState.MasterClientId == PeerId;
     public bool ConnectedAndInRoom => RelayClient.InRoom;
 
     private readonly Action _beforeJoinedRoomCallback;
     private readonly Action _afterJoinedRoomCallback;
-    private readonly Action<int> _playerJoinedCallback;
+    private readonly Action<short> _playerJoinedCallback;
 
     public WukongChatter WukongChat { get; }
     public LobbyManager LobbyManager { get; }
@@ -60,7 +58,7 @@ public sealed partial class WukongClient
 
     public RoomStateProxy RoomState { get; }
 
-    public readonly Dictionary<int, PlayerState> ConnectedPlayers = new();
+    public readonly Dictionary<short, PlayerState> ConnectedPlayers = new();
 
     public IEnumerable<PlayerState> AllConnectedPlayers
         => ConnectedPlayers.Values.Append(LocalPlayerState);
@@ -71,7 +69,7 @@ public sealed partial class WukongClient
     public IEnumerable<PlayerState> AllPvPPlayers
         => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
-    public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<int> playerJoinedCallback)
+    public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<short> playerJoinedCallback)
     {
         WukongChat = new WukongChatter(this);
         LobbyManager = new LobbyManager(this);
@@ -123,11 +121,11 @@ public sealed partial class WukongClient
     }
 
     [Obsolete]
-    public PlayerState? GetPlayerById(int playerId)
+    public PlayerState? GetPlayerById(short peerId)
     {
-        return playerId == LocalPlayerState.PeerId
+        return peerId == LocalPlayerState.PeerId
             ? LocalPlayerState
-            : ConnectedPlayers.GetValueOrDefault(playerId);
+            : ConnectedPlayers.GetValueOrDefault(peerId);
     }
 
     public void SetMasterClient(string newMasterName)
@@ -316,7 +314,7 @@ public sealed partial class WukongClient
         var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
 
         var aliveMonsters = new List<int>();
-        WukongEcs.Instance.World.Query<HpComponent, TeamComponent>().ForEachEntity((ref hp, ref team, _) =>
+        WukongApi.Instance.World.Query<HpComponent, TeamComponent>().ForEachEntity((ref hp, ref team, _) =>
         {
             if (hp.Hp <= 0)
                 return;
@@ -580,7 +578,7 @@ public sealed partial class WukongClient
         CachePlayerProperty($"{Constants.AttributePrefix}{attr}", value);
     }
 
-    public void SetRemotePlayerProperty(int playerId, string key, object value)
+    public void SetRemotePlayerProperty(short peerId, string key, object value)
     {
         if (!IsMasterClient)
         {
@@ -595,7 +593,7 @@ public sealed partial class WukongClient
 
         Logging.LogDebug("Sending remote player property: {Property} = {Value}", key, value);
 
-        RelayClient.OpSetCustomPropertiesOfActor(playerId, hashtable);
+        RelayClient.OpSetCustomPropertiesOfActor(peerId, hashtable);
     }
 
     private void SubscribeToPlayerEvents()
@@ -707,7 +705,7 @@ public sealed partial class WukongClient
         }
     }
 
-    private void OtherPlayerJoinedRoomHandler(int playerId)
+    private void OtherPlayerJoinedRoomHandler(short playerId)
     {
         Logging.LogInformation("Player {PlayerId} entered the room", playerId);
 
@@ -716,7 +714,7 @@ public sealed partial class WukongClient
         if (!Constants.IsCoop)
         {
             // send current monsters to the new player
-            WukongEcs.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
+            WukongApi.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
             {
                 const byte eventCode = 1;
                 var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
@@ -725,7 +723,7 @@ public sealed partial class WukongClient
         }
     }
 
-    private void OnPlayerLeftRoomHandler(int playerId)
+    private void OnPlayerLeftRoomHandler(short playerId)
     {
         var player = RelayClient.GetPlayerState(playerId)!;
         var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");
@@ -753,11 +751,11 @@ public sealed partial class WukongClient
         }
     }
 
-    private void OnPlayerPropertiesChanged(int playerId, Dictionary<object, object?> changes)
+    private void OnPlayerPropertiesChanged(short peerId, Dictionary<object, object?> changes)
     {
         PlayerState playerState;
 
-        if (playerId == RelayClient.LocalPlayer.PeerId) // local player
+        if (peerId == RelayClient.LocalPlayer.PeerId) // local player
         {
             if (_localPlayerState == null)
             {
@@ -767,9 +765,9 @@ public sealed partial class WukongClient
 
             playerState = LocalPlayerState;
         }
-        else if (!ConnectedPlayers.TryGetValue(playerId, out playerState))
+        else if (!ConnectedPlayers.TryGetValue(peerId, out playerState))
         {
-            Logging.LogDebug("Player {Id} not found.", playerId); // TODO: Investigate why this is spammed
+            Logging.LogDebug("Player {Id} not found.", peerId); // TODO: Investigate why this is spammed
             return;
         }
 
@@ -787,7 +785,7 @@ public sealed partial class WukongClient
             // attributes have special treatment
             if (propertyName.StartsWith(Constants.AttributePrefix))
             {
-                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
+                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, peerId);
 
                 var key = propertyName[Constants.AttributePrefix.Length..];
 
@@ -806,7 +804,7 @@ public sealed partial class WukongClient
 
             if (kvp.Value is not (FVector or FRotator or float))
             {
-                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
+                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, peerId);
             }
 
             setter(playerState, kvp.Value);
@@ -815,14 +813,14 @@ public sealed partial class WukongClient
             switch (propertyName)
             {
                 case nameof(PlayerState.Equipment):
-                    OnEquipmentChange?.Invoke(playerId, (EquipmentState)kvp.Value);
+                    OnEquipmentChange?.Invoke(peerId, (EquipmentState)kvp.Value);
                     break;
                 case nameof(PlayerState.IsReadyForPvP):
-                    var state = RelayClient.GetPlayerState(playerId);
+                    var state = RelayClient.GetPlayerState(peerId);
 
                     if (state == null)
                     {
-                        Logging.LogError("Player {Id} not found.", playerId);
+                        Logging.LogError("Player {Id} not found.", peerId);
                         continue;
                     }
 
@@ -835,7 +833,7 @@ public sealed partial class WukongClient
                 case nameof(PlayerState.IsSpectator):
                 {
                     var isSpectator = (bool)kvp.Value;
-                    Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
+                    Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", peerId, isSpectator);
 
                     Utils.TryRunOnGameThread(() =>
                     {

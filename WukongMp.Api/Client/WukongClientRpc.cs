@@ -3,13 +3,12 @@ using System.Linq;
 using b1;
 using BtlShare;
 using LiteNetLib;
-using ReadyM.Relay.Common.ECS.Components;
-using ReadyM.Relay.Common.Protocol;
-using ReadyM.Relay.Common.Protocol.Enums;
+using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Protocol;
+using ReadyM.Api.Multiplayer.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
-using WukongMp.Api.Patches;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.Client;
@@ -20,32 +19,32 @@ public sealed partial class WukongClient
     public event Action<UnitDeadPacket>? OnUnitDead;
     public event Action<NetworkIdComponent, string, string, int, float, float, float>? OnUnitSpawn;
     public event Action<NetworkIdComponent, NetworkIdComponent, string, string, int>? OnSummonSpawn;
-    public event Action<int>? OnTeleportFinish;
+    public event Action<short>? OnTeleportFinish;
     public event Action<string>? OnMonsterWakeUp;
-    public event Action<int, EquipmentState>? OnEquipmentChange;
+    public event Action<short, EquipmentState>? OnEquipmentChange;
     public event Action<string, bool, int>? OnReadinessChange;
     public event Action<PlayerState, int>? OnTeamChange;
     public event Action<PlayerState>? OnPlayerLeft;
-    public event Action<int>? OnPlayerRebirth;
-    public event Action<int>? OnKillPlayer;
+    public event Action<short>? OnPlayerRebirth;
+    public event Action<short>? OnKillPlayer;
     public event Action<FVector, FRotator>? OnSetPlayerTransform;
     public event Action? OnBeforeJoinRoom;
     public event Action<DamageNumParam>? OnDamageNum;
-    public event Action<int, ESkillDirection>? OnPhantomRush;
-    public event Action<int>? OnExitPhantomRush;
+    public event Action<short, ESkillDirection>? OnPhantomRush;
+    public event Action<short>? OnExitPhantomRush;
     public event Action<NetworkIdComponent, NetworkIdComponent, ImmobilizeActionType, bool>? OnHandleImmobilize;
     public event Action<NetworkIdComponent, NetworkIdComponent, bool>? OnTargetSet;
     public event Action? OnMatchmakingEnded;
-    public event Action<int, int, float>? OnBuffAdded;
-    public event Action<int, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
-    public event Action<int, EBuffEffectTriggerType, bool>? OnBuffAllRemoved;
+    public event Action<short, int, float>? OnBuffAdded;
+    public event Action<short, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
+    public event Action<short, EBuffEffectTriggerType, bool>? OnBuffAllRemoved;
     public event Action<NetworkIdComponent, EBUStateTrigger, float, bool>? OnStateTriggerSet;
     public event Action<NetworkIdComponent, EBGUSimpleState, bool>? OnSimpleStateSet;
     public event Action<NetworkIdComponent, string>? OnFsmStateSet;
     public event Action<NetworkIdComponent, EState_MM>? OnMotionMatchingChanged;
-    public event Action<int, string, int, int>? OnRequestSpawnUnits;
-    public event Action<int, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
-    public event Action<int, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
+    public event Action<short, string, int, int>? OnRequestSpawnUnits;
+    public event Action<short, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
+    public event Action<short, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
     public event Action<FPlayMovieRequest>? OnPlayMovieRequest;
 
     private void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
@@ -84,7 +83,7 @@ public sealed partial class WukongClient
             case 7:
             {
                 // player rebirth
-                var playerId = RelayClient.DeserializeObject<int>(reader);
+                var playerId = RelayClient.DeserializeObject<short>(reader);
                 OnPlayerRebirth?.Invoke(playerId);
                 break;
             }
@@ -95,7 +94,7 @@ public sealed partial class WukongClient
                 break;
             case 9:
                 // kill player
-                var id = RelayClient.DeserializeObject<int>(reader);
+                var id = RelayClient.DeserializeObject<short>(reader);
                 OnKillPlayer?.Invoke(id);
                 break;
             case 10:
@@ -121,7 +120,7 @@ public sealed partial class WukongClient
                 break;
             case 14:
                 // exit phantom rush
-                var phantomRushPlayerId = RelayClient.DeserializeObject<int>(reader);
+                var phantomRushPlayerId = RelayClient.DeserializeObject<short>(reader);
                 OnExitPhantomRush?.Invoke(phantomRushPlayerId);
                 break;
             case 15:

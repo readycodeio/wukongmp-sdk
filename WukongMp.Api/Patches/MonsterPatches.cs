@@ -2,7 +2,7 @@
 using System.Reflection;
 using b1;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;
@@ -28,7 +28,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                WukongEcs.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
+                WukongApi.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
                     if (!tamer.IsSynced || !tamer.IsTamerValid)
                         return;
@@ -39,7 +39,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                WukongEcs.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
+                WukongApi.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
                     if (!tamer.IsTamerValid || !tamer.IsSynced)
                         return;
@@ -79,7 +79,7 @@ namespace WukongMp.Api.Patches
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
-                var entity = WukongEcs.Instance.GetByTamerActor(tamer);
+                var entity = WukongApi.Instance.GetByTamerActor(tamer);
                 if (entity != null)
                 {
                     ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
@@ -253,7 +253,7 @@ namespace WukongMp.Api.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var entity = WukongEcs.Instance.GetMonsterByActor(owner);
+                var entity = WukongApi.Instance.GetMonsterByActor(owner);
                 if (entity != null)
                 {
                     var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
@@ -297,7 +297,7 @@ namespace WukongMp.Api.Patches
 
             var client = WukongMP.Instance.Client;
 
-            var entity = WukongEcs.Instance.GetMonsterByActor(character);
+            var entity = WukongApi.Instance.GetMonsterByActor(character);
             if (entity.HasValue)
             {
                 ref var tamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();

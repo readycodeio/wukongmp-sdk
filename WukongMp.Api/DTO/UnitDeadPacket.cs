@@ -1,8 +1,8 @@
 ﻿using b1;
 using BtlShare;
 using LiteNetLib.Utils;
-using ReadyM.Relay.Common.ECS.Components;
-using ReadyM.Relay.Common.Protocol;
+using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Extensions;
 
 namespace WukongMp.Api.DTO;
 

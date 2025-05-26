@@ -49,7 +49,7 @@ namespace WukongMp.Api.State
         public bool IsSpectator { get; set; }
         public int TeleportFinishFrames { get; set; }
 
-        public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(short peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PeerId = peerId;
             _pawn = pawn;

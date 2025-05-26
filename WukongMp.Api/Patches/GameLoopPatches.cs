@@ -4,7 +4,7 @@ using System.Threading;
 using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Api.Multiplayer;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
@@ -87,7 +87,7 @@ namespace WukongMp.Api.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 RunMontageSync();
-                WukongEcs.Instance.RunEcsWorldUpdate();
+                WukongApi.Instance.RunEcsWorldUpdate();
                 ComponentMonitorManager.Instance.Update();
             }
         }
@@ -122,7 +122,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                WukongEcs.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
+                WukongApi.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
             }
         }
 

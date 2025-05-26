@@ -7,7 +7,7 @@ using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Api.Multiplayer;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;
@@ -228,7 +228,7 @@ public static class PatchOnCastImmobilize
 
             // broadcast
             var immobilizedPlayer = client.GetPlayerByActor(item);
-            var immobilizedMonster = WukongEcs.Instance.GetMonsterByActor(item);
+            var immobilizedMonster = WukongApi.Instance.GetMonsterByActor(item);
 
             if ((immobilizedPlayer != null || immobilizedMonster.HasValue) && castingPlayerState != null)
             {
@@ -284,7 +284,7 @@ public static class PatchRelieveImmobilized
         }
 
         var playerState = client.GetPlayerByActor(owner);
-        var entity = WukongEcs.Instance.GetMonsterByActor(owner);
+        var entity = WukongApi.Instance.GetMonsterByActor(owner);
 
         if (playerState == null && !entity.HasValue)
         {
@@ -351,7 +351,7 @@ public static class PatchOnTriggerImmobilizedBreak
                 return false;
             }
 
-            var entity = WukongEcs.Instance.GetMonsterByActor(owner);
+            var entity = WukongApi.Instance.GetMonsterByActor(owner);
 
             if (entity.HasValue)
             {

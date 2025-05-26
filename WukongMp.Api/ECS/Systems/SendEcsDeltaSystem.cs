@@ -5,7 +5,7 @@ using ReadyM.Relay.Common.Wukong.Systems;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SendEcsDeltaSystem(RelayClient client) : SendEcsDeltaSystemBase(client)
+public sealed class SendEcsDeltaSystem(RelayClient client) : SendEcsDeltaSystemBase
 {
     protected override int GetMaxPacketSize()
     {

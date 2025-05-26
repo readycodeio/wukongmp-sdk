@@ -1,15 +1,12 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using b1;
+﻿using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using ReadyM.Relay.Common.ECS.Components;
-using ReadyM.Relay.Common.Multiplayer;
-using ReadyM.Relay.Common.Protocol;
-using ReadyM.Relay.Common.Protocol.Enums;
+using ReadyM.Api;
+using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Extensions;
+using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using ReadyM.Relay.Common.Wukong.Jobs;
 using UnrealEngine.Engine;
@@ -17,49 +14,51 @@ using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Systems;
-using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api;
 
-public class WukongEcs
+public class WukongApi
 {
-    public EntityStore World;
+    public Store World;
     public CommandBufferSynced CommandBuffer;
+    private ArchetypeId _monsterArchetype;
 
     public readonly NetworkedEntityManager NetManager;
-    private readonly SystemRoot _systemRoot;
     private readonly WukongClient _client;
 
-    public static WukongEcs Instance { get; } = new(WukongMP.Instance.Client);
+    public static WukongApi Instance { get; } = new(WukongMP.Instance.Client);
 
-    private WukongEcs(WukongClient client)
+    private WukongApi(WukongClient client)
     {
         _client = client;
-        World = new EntityStore();
+        World = ReadyMApp.CreateEntityStore();
+        _monsterArchetype = World.RegisterArchetype(b =>
+            b.Add(new MarkerComponent())
+                .Add(new LocalTamerComponent())
+                .Add(new TamerComponent())
+                .Add(new AnimationComponent())
+                .Add(new HpComponent())
+                .Add(new MonsterAnimationComponent())
+                .Add(new NicknameComponent())
+                .Add(new TeamComponent())
+                .Add(new TranslationComponent()));
 
         var cb = World.GetCommandBuffer();
         cb.ReuseBuffer = true;
         CommandBuffer = cb.Synced;
 
-        _systemRoot = new SystemRoot();
-        _systemRoot.AddStore(World);
+        NetManager = new NetworkedEntityManager(World, _client.LocalPlayerState.PeerId);
+        NetManager.onEntityDestroyed += OnNetworkedEntityDestroyed;
 
-        NetManager = new NetworkedEntityManager(World, OnNetworkedEntityCreated, OnNetworkedEntityDestroyed);
-
-        _systemRoot.Add(new SyncTamersSystem());
-        _systemRoot.Add(new UpdateMarkersSystem());
-        _systemRoot.Add(new DestroyDeadMonstersMarkersSystem());
-        _systemRoot.Add(new SyncMonstersSystem());
-        _systemRoot.Add(new SendEcsDeltaSystem(_client.RelayClient));
+        World.SystemRoot.Add(new SyncTamersSystem());
+        World.SystemRoot.Add(new UpdateMarkersSystem());
+        World.SystemRoot.Add(new DestroyDeadMonstersMarkersSystem());
+        World.SystemRoot.Add(new SyncMonstersSystem());
+        World.SystemRoot.Add(new SendEcsDeltaSystem(_client.RelayClient));
 
         _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
         _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
-    }
-
-    private void OnNetworkedEntityCreated(NetworkIdComponent obj)
-    {
-        Logging.LogDebug("Networked entity created: {Id}", obj);
     }
 
     private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
@@ -76,8 +75,7 @@ public class WukongEcs
         else
         {
             // remote entity, dissolve it locally
-            var entity = NetManager.GetEntityByNetworkId(netId);
-            if (entity.HasValue)
+            if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
             {
                 Logging.LogDebug("Queueing remote entity for destruction: {Id}", netId);
                 CommandBuffer.DeleteEntity(entity.Value.Id);
@@ -98,52 +96,22 @@ public class WukongEcs
             CommandBuffer.Playback();
         }
 
-        _systemRoot.Update(new UpdateTick()); // TODO: Delta time
+        World.SystemRoot.Update(default);
     }
 
     public Entity CreateNetworkedMonster()
     {
-        var entity = NetManager.CreateNetworkedEntity((short)_client.RelayClient.LocalPlayer.PeerId).Entity;
-
-        entity.Batch()
-            .Add(new MarkerComponent())
-            .Add(new LocalTamerComponent())
-            .Add(new TamerComponent())
-            .Add(new AnimationComponent())
-            .Add(new HpComponent())
-            .Add(new MonsterAnimationComponent())
-            .Add(new NicknameComponent())
-            .Add(new TeamComponent())
-            .Add(new TranslationComponent())
-            .Apply();
-
-        return entity;
+        return NetManager.CreateNetworkedEntity(_monsterArchetype).Entity;
     }
 
     public Entity CreateNetworkedMonster(NetworkIdComponent netId)
     {
-        var entity = NetManager.CreateNetworkedEntity(netId);
-
-        entity.Batch()
-            .Add(new MarkerComponent())
-            .Add(new LocalTamerComponent())
-            .Add(new TamerComponent())
-            .Add(new AnimationComponent())
-            .Add(new HpComponent())
-            .Add(new MonsterAnimationComponent())
-            .Add(new NicknameComponent())
-            .Add(new TeamComponent())
-            .Add(new TranslationComponent())
-            .Apply();
-
-        return entity;
+        return NetManager.CreateRemoteNetworkedEntity(_monsterArchetype, netId);
     }
 
     private void DestroyRemoteEntity(NetworkIdComponent netId)
     {
-        var entity = NetManager.GetEntityByNetworkId(netId);
-
-        if (entity.HasValue)
+        if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
         {
             CommandBuffer.DeleteEntity(entity.Value.Id);
         }
@@ -156,22 +124,24 @@ public class WukongEcs
     private void ApplyArchetypeDelta(NetDataReader reader)
     {
         Logging.LogDebug("Applying archetype delta");
-        new ApplyDeltaJob(reader, _client.RelayClient, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
+        new ApplyDeltaJob(reader, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkIdComponent netId)
     {
-        if (netId.Owner == -1)
+        if (netId.Id == uint.MaxValue)
         {
-            var player = WukongMP.Instance.Client.GetPlayerById((int)netId.Id);
+            var player = WukongMP.Instance.Client.GetPlayerById(netId.Owner);
             if (player != null)
                 return player.Pawn;
         }
 
-        var entity = NetManager.GetEntityByNetworkId(netId);
-        if (entity?.TryGetComponent<LocalTamerComponent>(out var tamer) is true)
+        if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
         {
-            return tamer.Pawn;
+            if (entity.Value.TryGetComponent<LocalTamerComponent>(out var tamer))
+            {
+                return tamer.Pawn;
+            }
         }
 
         return null;

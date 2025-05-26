@@ -8,7 +8,7 @@ using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -346,7 +346,7 @@ namespace WukongMp.Api
             }
 
             // dump synced monsters
-            WukongEcs.Instance.World.Query<TamerComponent, LocalTamerComponent, HpComponent, TeamComponent>().ForEachEntity((ref tamer, ref localTamer, ref hp, ref team, entity) =>
+            WukongApi.Instance.World.Query<TamerComponent, LocalTamerComponent, HpComponent, TeamComponent>().ForEachEntity((ref tamer, ref localTamer, ref hp, ref team, entity) =>
             {
                 var realTeamId = localTamer.IsTamerValid ? localTamer.Tamer?.GetMonster()?.GetTeamIDInCS() : null;
                 Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={localTamer.IsSynced}, IsTamerValid={localTamer.IsTamerValid}");
@@ -382,7 +382,7 @@ namespace WukongMp.Api
                 Client.RoomState.InCombatRound = true;
 
                 var monsterCount = 0;
-                WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, _) =>
+                WukongApi.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, _) =>
                 {
                     if (tamer.IsSynced)
                     {
@@ -492,7 +492,7 @@ namespace WukongMp.Api
                 {
                     var hasGuid = false;
 
-                    WukongEcs.Instance.World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
+                    WukongApi.Instance.World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
                     {
                         if (tamer.Guid == guid)
                         {
@@ -530,11 +530,11 @@ namespace WukongMp.Api
             // TODO: Spawn if not found
         }
 
-        private void RebirthPlayer(int playerId)
+        private void RebirthPlayer(short peerId)
         {
-            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
+            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
 
-            var player = Client.GetPlayerById(playerId);
+            var player = Client.GetPlayerById(peerId);
             if (player == null)
                 return;
 
@@ -606,12 +606,12 @@ namespace WukongMp.Api
             bGW_EventCollection.Evt_RequestPlayMovie.Invoke(playMovieRequest);
         }
 
-        private void OnPlayerTransBegin(int playerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
+        private void OnPlayerTransBegin(short peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", playerId);
+                Logging.LogError("Player not found: {Id}", peerId);
                 return;
             }
 
@@ -627,12 +627,12 @@ namespace WukongMp.Api
             events.Evt_TransBeginSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transBeginType);
         }
 
-        private void OnPlayerTransEnd(int playerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
+        private void OnPlayerTransEnd(short peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", playerId);
+                Logging.LogError("Player not found: {Id}", peerId);
                 return;
             }
 
@@ -648,12 +648,12 @@ namespace WukongMp.Api
             events.Evt_TransBackSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transEndType);
         }
 
-        private void OnBuffAdded(int playerId, int buffId, float duration)
+        private void OnBuffAdded(short peerId, int buffId, float duration)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", playerId);
+                Logging.LogError("Player not found: {Id}", peerId);
                 return;
             }
 
@@ -669,15 +669,15 @@ namespace WukongMp.Api
             events.Evt_BuffAdd.Invoke(buffId, playerState.Pawn, playerState.Pawn, duration);
         }
 
-        private void OnBuffRemoved(int playerId, int buffId,
+        private void OnBuffRemoved(short peerId, int buffId,
             EBuffEffectTriggerType removeTriggerType,
             int inLayer,
             bool withTriggerRemoveEffect)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", playerId);
+                Logging.LogError("Player not found: {Id}", peerId);
                 return;
             }
 
@@ -693,12 +693,12 @@ namespace WukongMp.Api
             events.Evt_BuffRemove.Invoke(buffId, removeTriggerType, inLayer, withTriggerRemoveEffect);
         }
 
-        private void OnBuffAllRemoved(int playerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
+        private void OnBuffAllRemoved(short peerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", playerId);
+                Logging.LogError("Player not found: {Id}", peerId);
                 return;
             }
 
@@ -716,7 +716,7 @@ namespace WukongMp.Api
 
         private void OnStateTriggerSet(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
         {
-            var pawn = WukongEcs.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -736,7 +736,7 @@ namespace WukongMp.Api
 
         private void OnSimpleStateSet(NetworkIdComponent netId, EBGUSimpleState state, bool isForce)
         {
-            var pawn = WukongEcs.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -757,7 +757,7 @@ namespace WukongMp.Api
 
         private void OnFsmStateSet(NetworkIdComponent netId, string eventName)
         {
-            var pawn = WukongEcs.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -778,8 +778,7 @@ namespace WukongMp.Api
 
         private void OnMotionMatchingChanged(NetworkIdComponent netId, EState_MM motionMatchingState)
         {
-            var entity = WukongEcs.Instance.NetManager.GetEntityByNetworkId(netId);
-            if (!entity.HasValue)
+            if (!WukongApi.Instance.NetManager.TryGetEntityByNetworkId(netId, out var entity))
             {
                 LogNullCharacter(netId);
                 return;
@@ -799,12 +798,12 @@ namespace WukongMp.Api
             events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
         }
 
-        private void ExitPhantomRush(int playerId)
+        private void ExitPhantomRush(short peerId)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", playerId);
+                Logging.LogError("Player not found: {Id}", peerId);
                 return;
             }
 
@@ -816,7 +815,7 @@ namespace WukongMp.Api
 
         private void OnTargetSet(NetworkIdComponent playerId, NetworkIdComponent targetId, bool clearTarget)
         {
-            var pawn = WukongEcs.Instance.GetPawnByNetworkId(playerId);
+            var pawn = WukongApi.Instance.GetPawnByNetworkId(playerId);
             if (pawn == null)
             {
                 LogNullCharacter(targetId);
@@ -831,7 +830,7 @@ namespace WukongMp.Api
                 return;
             }
 
-            var targetPawn = WukongEcs.Instance.GetPawnByNetworkId(targetId);
+            var targetPawn = WukongApi.Instance.GetPawnByNetworkId(targetId);
             if (targetPawn == null)
             {
                 LogNullCharacter(targetId);
@@ -878,9 +877,9 @@ namespace WukongMp.Api
             }
         }
 
-        private void KillPlayer(int playerId)
+        private void KillPlayer(short peerId)
         {
-            var player = Client.GetPlayerById(playerId)?.Pawn;
+            var player = Client.GetPlayerById(peerId)?.Pawn;
             if (player == null)
                 return;
 
@@ -901,12 +900,12 @@ namespace WukongMp.Api
             GameUtils.GetPlayerController().SetControlRotation(rotation);
         }
 
-        private void PerformPhantomRush(int playerId, ESkillDirection direction)
+        private void PerformPhantomRush(short peerId, ESkillDirection direction)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState?.Pawn == null)
             {
-                Logging.LogError("Player not found: {PlayerId}", playerId);
+                Logging.LogError("Player not found: {PlayerId}", peerId);
                 return;
             }
 
@@ -953,7 +952,7 @@ namespace WukongMp.Api
 
         private void HandleImmobilize(NetworkIdComponent netId, NetworkIdComponent otherNetId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            var pawn = WukongEcs.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -967,7 +966,7 @@ namespace WukongMp.Api
                     CastImmobilize(pawn);
                     break;
                 case ImmobilizeActionType.Trigger:
-                    var otherPawn = WukongEcs.Instance.GetPawnByNetworkId(otherNetId);
+                    var otherPawn = WukongApi.Instance.GetPawnByNetworkId(otherNetId);
                     if (otherPawn == null)
                     {
                         Logging.LogError("Target not found: {Id}", otherNetId);
@@ -1031,7 +1030,7 @@ namespace WukongMp.Api
             Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
             var playerEvents = BUS_EventCollectionCS.Get(pawn);
 
-            var entity = WukongEcs.Instance.GetMonsterByActor(pawn);
+            var entity = WukongApi.Instance.GetMonsterByActor(pawn);
             if (entity.HasValue)
             {
                 ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
@@ -1088,14 +1087,14 @@ namespace WukongMp.Api
             Logging.LogDebug("Finished setting initial player properties");
         }
 
-        private void ChangeEquipment(int id, EquipmentState eq)
+        private void ChangeEquipment(short peerId, EquipmentState eq)
         {
-            if (id == Client.LocalPlayerState.PeerId)
+            if (peerId == Client.LocalPlayerState.PeerId)
                 return;
 
-            if (!Client.ConnectedPlayers.TryGetValue(id, out var player))
+            if (!Client.ConnectedPlayers.TryGetValue(peerId, out var player))
             {
-                Logging.LogError("Player not found: {PlayerId}", id);
+                Logging.LogError("Player not found: {PlayerId}", peerId);
                 return;
             }
 
@@ -1180,7 +1179,7 @@ namespace WukongMp.Api
 
         private void OnRemoteUnitDead(UnitDeadPacket data)
         {
-            var pawn = WukongEcs.Instance.GetPawnByNetworkId(data.NetworkId);
+            var pawn = WukongApi.Instance.GetPawnByNetworkId(data.NetworkId);
             if (pawn == null)
             {
                 LogNullCharacter(data.NetworkId);
@@ -1200,7 +1199,7 @@ namespace WukongMp.Api
         public void ApplyPlayerMontageCallback(MontageCallbackData data)
         {
             var id = data.NetId;
-            var pawn = WukongEcs.Instance.GetPawnByNetworkId(id);
+            var pawn = WukongApi.Instance.GetPawnByNetworkId(id);
             if (pawn == null)
             {
                 LogNullCharacter(id);
@@ -1255,12 +1254,12 @@ namespace WukongMp.Api
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }
 
-        public void SpawnUnitsMaster(int spawningPlayerId, string unitName, int count, int teamId)
+        public void SpawnUnitsMaster(short peerId, string unitName, int count, int teamId)
         {
-            var playerState = Client.GetPlayerById(spawningPlayerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null || playerState.Pawn == null)
             {
-                Logging.LogError("Player not found: {PlayerId}", spawningPlayerId);
+                Logging.LogError("Player not found: {PlayerId}", peerId);
                 return;
             }
 
@@ -1382,7 +1381,7 @@ namespace WukongMp.Api
 
         public Entity CreateRemoteMonster(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            var id = WukongEcs.Instance.CreateNetworkedMonster(netId);
+            var id = WukongApi.Instance.CreateNetworkedMonster(netId);
 
             id.AddComponent(new LocalTamerComponent(tamer));
 
@@ -1399,7 +1398,7 @@ namespace WukongMp.Api
 
         public Entity CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            var id = WukongEcs.Instance.CreateNetworkedMonster();
+            var id = WukongApi.Instance.CreateNetworkedMonster();
             id.AddComponent(new LocalTamerComponent(tamer));
 
             ref var tamerComp = ref id.GetComponent<TamerComponent>();
@@ -1463,7 +1462,7 @@ namespace WukongMp.Api
 
         public void DestroySyncedMonsters()
         {
-            WukongEcs.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { WukongEcs.Instance.CommandBuffer.DeleteEntity(entity.Id); });
+            WukongApi.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Id); });
         }
 
         public void DestroyMonster(Entity entity)
@@ -1497,7 +1496,7 @@ namespace WukongMp.Api
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
-            WukongEcs.Instance.CommandBuffer.DeleteEntity(entity.Id);
+            WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Id);
         }
 
         private void OnBeforeJoinedRoomCallback()
@@ -1526,12 +1525,12 @@ namespace WukongMp.Api
             }
         }
 
-        private void OnTeleportFinish(int playerId)
+        private void OnTeleportFinish(short peerId)
         {
-            var playerState = Client.GetPlayerById(playerId);
+            var playerState = Client.GetPlayerById(peerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {PlayerId}", playerId);
+                Logging.LogError("Player not found: {PlayerId}", peerId);
                 return;
             }
 
@@ -1555,17 +1554,17 @@ namespace WukongMp.Api
             }
         }
 
-        private FVector GetSpawnPosition(int playerId)
+        private FVector GetSpawnPosition(short peerId)
         {
             int maxPlayersCount = Client.RoomState.MaxPlayers;
 
-            float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
+            float angle = peerId / (float)maxPlayersCount * 2f * FMath.PI;
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
             float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            return GameUtils.GetFinalLocation(Client.GetPlayerById(playerId)?.Pawn, baseLocation);
+            return GameUtils.GetFinalLocation(Client.GetPlayerById(peerId)?.Pawn, baseLocation);
         }
 
         private void SetUpRoom()
@@ -1668,9 +1667,9 @@ namespace WukongMp.Api
             BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(newPawn.ToEntity(), oldPawn.ToEntity());
         }
 
-        private void AddPlayer(int playerId)
+        private void AddPlayer(short peerId)
         {
-            var playerState = SpawnCloneForPlayer(playerId);
+            var playerState = SpawnCloneForPlayer(peerId);
 
             if (playerState != null)
             {
@@ -1678,7 +1677,7 @@ namespace WukongMp.Api
                 Client.RegisterPlayer(playerState);
                 UpdateConnectedCount();
 
-                var props = Client.RelayClient.GetPlayerState(playerId)?.Properties;
+                var props = Client.RelayClient.GetPlayerState(peerId)?.Properties;
 
                 if (props == null)
                 {
@@ -1697,7 +1696,7 @@ namespace WukongMp.Api
                 // set remote player property - IsSpectator
                 if (Client.IsMasterClient)
                 {
-                    Client.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
+                    Client.SetRemotePlayerProperty(peerId, nameof(PlayerState.IsSpectator), isSpectator);
                 }
 
                 // readiness callback
@@ -1742,11 +1741,11 @@ namespace WukongMp.Api
             playerState.Pawn.SetActorEnableCollision(enabled);
         }
 
-        private PlayerState? SpawnCloneForPlayer(int id)
+        private PlayerState? SpawnCloneForPlayer(short peerId)
         {
-            if (Client.ConnectedPlayers.ContainsKey(id))
+            if (Client.ConnectedPlayers.ContainsKey(peerId))
             {
-                Logging.LogDebug("Player already exists: {Id}", id); // reconnection
+                Logging.LogDebug("Player already exists: {Id}", peerId); // reconnection
                 return null;
             }
 
@@ -1769,7 +1768,7 @@ namespace WukongMp.Api
             FVector loc = default;
             FRotator rot = default;
 
-            var initialProps = Client.RelayClient.GetPlayerState(id)?.Properties;
+            var initialProps = Client.RelayClient.GetPlayerState(peerId)?.Properties;
 
             if (initialProps == null)
             {
@@ -1806,7 +1805,7 @@ namespace WukongMp.Api
 
             BackToOldPawn(oldController, oldPawn, newPawn);
 
-            Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", id, newPawn.GetEntityHash());
+            Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", peerId, newPawn.GetEntityHash());
 
             var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref loc, ref rot);
             if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
@@ -1849,7 +1848,7 @@ namespace WukongMp.Api
                 Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
             }
 
-            var playerState = new PlayerState(id, newPawn, teamId, initialHp, initialHpMaxBase)
+            var playerState = new PlayerState(peerId, newPawn, teamId, initialHp, initialHpMaxBase)
             {
                 Location = loc,
                 Rotation = rot
