@@ -405,7 +405,7 @@ public sealed partial class WukongClient
             playMovieRequest.bDisableLookAtInput,
             playMovieRequest.bHidePlayer,
             playMovieRequest.bHideHud,
-            playMovieRequest.OverlapBoxGuid,
+            "",
             playMovieRequest.MatchType);
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }

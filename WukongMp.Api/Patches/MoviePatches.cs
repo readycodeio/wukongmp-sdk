@@ -3,6 +3,7 @@ using HarmonyLib;
 using System.Linq;
 using System.Reflection;
 using UnrealEngine.Runtime;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Api.Patches;
 
@@ -46,6 +47,7 @@ public static class PatchRequestPlayMovie
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchTickForMovieSystem
 {
+    private static bool isTipVisible = false;
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BGS_MovieSystem:TickForMovieSystem");
@@ -83,17 +85,27 @@ public static class PatchTickForMovieSystem
         {
             MovieData.bAllSeqCantSkip = false;
         }
-        if (GlobalMovieData.PlayMovieRequestQueue.Count > 0 && WukongMP.Instance.AreAllPlayersNearby())
+        if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
-            GameUtils.HideTip();
-            while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
+            if (WukongMP.Instance.ArePlayersCloseToSyncCutscene())
             {
-                RequestPlayMovieMethod?.Invoke(__instance, [GlobalMovieData.PlayMovieRequestQueue.Dequeue()]);
+                BUS_GSEventCollection bUS_GSEventCollection = BUS_EventCollectionCS.Get(GameUtils.GetControlledPawn());
+                bUS_GSEventCollection?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.BanInputButCamera, true);
+                InfoMessageWidget.Instance.SetVisibility(false);
+                isTipVisible = false;
+                while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
+                {
+                    RequestPlayMovieMethod?.Invoke(__instance, [GlobalMovieData.PlayMovieRequestQueue.Dequeue()]);
+                }
             }
-        }
-        else
-        {
-            GameUtils.ShowTip("Wait for other players");
+            else if (!isTipVisible)
+            {
+                isTipVisible = true;
+                InfoMessageWidget.Instance.SetVisibility(true);
+                InfoMessageWidget.Instance.SetText("Wait for other players");
+                BUS_GSEventCollection bUS_GSEventCollection = BUS_EventCollectionCS.Get(GameUtils.GetControlledPawn());
+                bUS_GSEventCollection?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.BanInputButCamera);
+            }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())
         {

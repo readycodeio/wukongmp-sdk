@@ -40,7 +40,6 @@ namespace WukongMp.Api
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
         private readonly CoopStatusWidget _coopStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
-        private readonly InfoMessageWidget _infoMessageWidget = new();
         private readonly CountdownWidget _countdownWidget = new();
 
         public static WukongMP Instance { get; } = new();
@@ -188,7 +187,7 @@ namespace WukongMp.Api
             _coopStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
             _gameMessageWidget.Initialize();
             _countdownWidget.Initialize();
-            _infoMessageWidget.Initialize();
+            InfoMessageWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.SetVisibility(true);
             FreeCameraControlsWidget.Instance.Initialize();
@@ -202,7 +201,7 @@ namespace WukongMp.Api
             _coopStatusWidget.Deinitialize();
             _gameMessageWidget.Deinitialize();
             _countdownWidget.Deinitialize();
-            _infoMessageWidget.Deinitialize();
+            InfoMessageWidget.Instance.Deinitialize();
             PingIndicatorWidget.Instance.Deinitialize();
         }
 
@@ -361,8 +360,21 @@ namespace WukongMp.Api
             }
         }
 
-        public bool AreAllPlayersNearby()
+        public bool ArePlayersCloseToSyncCutscene()
         {
+            var LocalPlayerPosition = Client.LocalPlayerState.Pawn?.GetActorLocation() ?? FVector.ZeroVector;
+            var squaredDistance = Constants.CutsceneSyncDistance * Constants.CutsceneSyncDistance;
+            foreach (var actor in Client.AllConnectedPlayers)
+            {
+                if (actor.Pawn == null)
+                    continue;
+
+                if (actor.Pawn.GetActorLocation().Vector_DistanceSquared(LocalPlayerPosition) > squaredDistance)
+                {
+                    Logging.LogDebug("Player {Name} is too far away from local player", actor.NickName);
+                    return false;
+                }
+            }
             return true;
         }
 
