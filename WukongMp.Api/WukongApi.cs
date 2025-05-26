@@ -150,6 +150,12 @@ public class WukongApi
     private void ApplyArchetypeDelta(NetDataReader reader)
     {
         Logging.LogDebug("Applying archetype delta");
+
+        if (WukongMP.Instance.Client.IsMasterClient)
+        {
+            return; // ignore echo deltas, TODO: server should only send deltas to other players
+        }
+
         new ApplyDeltaJob(reader, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
     }
 
