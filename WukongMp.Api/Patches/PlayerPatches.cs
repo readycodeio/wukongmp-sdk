@@ -315,7 +315,7 @@ namespace WukongMp.Api.Patches
         public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData, out bool __state)
         {
             __state = false;
-            
+
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
@@ -407,6 +407,9 @@ namespace WukongMp.Api.Patches
                 WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
                 return;
             }
+
+            if (!client.IsMasterClient)
+                return;
 
             var entity = WukongApi.Instance.GetMonsterByActor(owner);
 
