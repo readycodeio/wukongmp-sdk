@@ -608,6 +608,16 @@ namespace WukongMp.Api
             Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayMoviewRequest += (playRequest) => GameLoopPatch.QueueOnGameThread(() => OnPlayMoviewRequest(playRequest), "OnPlayMoviewRequest");
+            Client.OnWaitingForMovie += () => GameLoopPatch.QueueOnGameThread(OnWaitingForMovie, "OnWaitingForMovie");
+        }
+
+        private void OnWaitingForMovie()
+        {
+            if (Client.LocalPlayerState.IsWaitingForMovie)
+            {
+                InfoMessageWidget.Instance.SetVisibility(true);
+                InfoMessageWidget.Instance.SetText("Join other players to proceed");
+            }
         }
 
         private void OnPlayMoviewRequest(FPlayMovieRequest playMovieRequest)

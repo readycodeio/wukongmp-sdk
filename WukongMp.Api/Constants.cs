@@ -27,7 +27,9 @@ namespace WukongMp.Api
         public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;
         public const int ReconnectDelayMs = 1000;
-        public const float CutsceneSyncDistance = 1000;
+        public const float CutsceneSyncDistance = 2000f;
+        public const float RestrictedMovementRadius = 500f;
+        public const float RestrictedMovementRadiusSquare = RestrictedMovementRadius * RestrictedMovementRadius;
 
         public static readonly List<int> SkillsWhitelist = [10518, -999];
         public const int GourdSkillId = 10530;

@@ -48,6 +48,9 @@ namespace WukongMp.Api.State
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
         public int TeleportFinishFrames { get; set; }
+        public bool HasRestrictedMovement { get; set; }
+        public bool IsWaitingForMovie { get; set; }
+        public FVector RestrictionPoint { get; set; }
 
         public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {

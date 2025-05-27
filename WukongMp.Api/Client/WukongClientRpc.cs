@@ -46,6 +46,7 @@ public sealed partial class WukongClient
     public event Action<int, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
     public event Action<int, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
     public event Action<FPlayMovieRequest>? OnPlayMoviewRequest;
+    public event Action? OnWaitingForMovie;
 
     public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
     {
@@ -202,6 +203,10 @@ public sealed partial class WukongClient
                     OverlapBoxGuid = playMovieData.OverlapBoxGuid,
                     MatchType = playMovieData.MatchType,
                 });
+                break;
+             case 29:
+                // waiting for movie
+                OnWaitingForMovie?.Invoke();
                 break;
         }
     }
@@ -408,5 +413,11 @@ public sealed partial class WukongClient
             "",
             playMovieRequest.MatchType);
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+    }
+
+    public void SendWaitingForMovie()
+    {
+        const byte eventCode = 29;
+        RelayClient.OpRaiseEvent(eventCode, null, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 }

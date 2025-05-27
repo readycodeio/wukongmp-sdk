@@ -26,19 +26,39 @@ public static class PatchOnPlayMovieInstance
     }
 }
 
-[HarmonyPatch(typeof(BGW_MovieManager), "RequestPlayMovie")]
+[HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchRequestPlayMovie
 {
-    public static void Postfix(ref FPlayMovieRequest InRequest)
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BGS_MovieSystem:RequestPlayMovie");
+    }
+
+    public static bool Prefix(GameStateSystemBase __instance, FPlayMovieRequest Request)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        if (UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID))
+        {
+            return false; // Skip the request if the sequence has already been played
+        }
+        return true;
+    }
+
+    public static void Postfix(GameStateSystemBase __instance, FPlayMovieRequest Request)
     {
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        if (WukongMP.Instance.Client.IsMasterClient)
+        Logging.LogWarning("RequestPlayMovie called with sequenceId {Id}, bDisablePlayerControl {Control}, bDisableMovementInput {Movement}, bDisableLookAtInput {LookAt}, bHidePlayer {HidePlayer}, bHideHud {HideHud}, MatchType {MatchType}",
+    Request.SequenceID, Request.bDisablePlayerControl, Request.bDisableMovementInput, Request.bDisableLookAtInput, Request.bHidePlayer, Request.bHideHud, Request.MatchType);
+
+        if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID))
         {
-            Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", InRequest.SequenceID);
-            WukongMP.Instance.Client.SendPlayMovieRequest(InRequest);
+            Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", Request.SequenceID);
+            WukongMP.Instance.Client.SendPlayMovieRequest(Request);
         }
     }
 }
@@ -47,7 +67,6 @@ public static class PatchRequestPlayMovie
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchTickForMovieSystem
 {
-    private static bool isTipVisible = false;
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BGS_MovieSystem:TickForMovieSystem");
@@ -89,22 +108,22 @@ public static class PatchTickForMovieSystem
         {
             if (WukongMP.Instance.ArePlayersCloseToSyncCutscene())
             {
-                BUS_GSEventCollection bUS_GSEventCollection = BUS_EventCollectionCS.Get(GameUtils.GetControlledPawn());
-                bUS_GSEventCollection?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.BanInputButCamera, true);
                 InfoMessageWidget.Instance.SetVisibility(false);
-                isTipVisible = false;
+                WukongMP.Instance.Client.LocalPlayerState.HasRestrictedMovement = false;
+                WukongMP.Instance.Client.LocalPlayerState.IsWaitingForMovie = false;
+
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
                     RequestPlayMovieMethod?.Invoke(__instance, [GlobalMovieData.PlayMovieRequestQueue.Dequeue()]);
                 }
             }
-            else if (!isTipVisible)
+            else if (!WukongMP.Instance.Client.LocalPlayerState.IsWaitingForMovie)
             {
-                isTipVisible = true;
                 InfoMessageWidget.Instance.SetVisibility(true);
                 InfoMessageWidget.Instance.SetText("Wait for other players");
-                BUS_GSEventCollection bUS_GSEventCollection = BUS_EventCollectionCS.Get(GameUtils.GetControlledPawn());
-                bUS_GSEventCollection?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.BanInputButCamera);
+                WukongMP.Instance.Client.LocalPlayerState.HasRestrictedMovement = true;
+                WukongMP.Instance.Client.LocalPlayerState.IsWaitingForMovie = true;
+                WukongMP.Instance.Client.SendWaitingForMovie();
             }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())
