@@ -124,6 +124,7 @@ public static class PatchTickForMovieSystem
                 InfoMessageWidget.Instance.SetText("Wait for other players");
                 WukongMP.Instance.Client.LocalPlayerState.HasRestrictedMovement = true;
                 WukongMP.Instance.Client.LocalPlayerState.IsWaitingForMovie = true;
+                WukongMP.Instance.Client.LocalPlayerState.RestrictionPoint = WukongMP.Instance.Client.LocalPlayerState.Location;
                 WukongMP.Instance.Client.SendWaitingForMovie();
             }
         }
