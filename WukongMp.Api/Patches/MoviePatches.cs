@@ -55,7 +55,7 @@ public static class PatchRequestPlayMovie
         Logging.LogWarning("RequestPlayMovie called with sequenceId {Id}, bDisablePlayerControl {Control}, bDisableMovementInput {Movement}, bDisableLookAtInput {LookAt}, bHidePlayer {HidePlayer}, bHideHud {HideHud}, MatchType {MatchType}",
     Request.SequenceID, Request.bDisablePlayerControl, Request.bDisableMovementInput, Request.bDisableLookAtInput, Request.bHidePlayer, Request.bHideHud, Request.MatchType);
 
-        if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID))
+        if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID) && Request.bDisablePlayerControl == true)
         {
             Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", Request.SequenceID);
             WukongMP.Instance.Client.SendPlayMovieRequest(Request);
@@ -106,7 +106,8 @@ public static class PatchTickForMovieSystem
         }
         if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
-            if (WukongMP.Instance.ArePlayersCloseToSyncCutscene())
+            var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
+            if (WukongMP.Instance.ArePlayersCloseToSyncCutscene() || peakRequest.bDisablePlayerControl == false)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
                 WukongMP.Instance.Client.LocalPlayerState.HasRestrictedMovement = false;
