@@ -312,8 +312,10 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
-        public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData)
+        public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData, out bool __state)
         {
+            __state = false;
+            
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
@@ -333,6 +335,8 @@ namespace WukongMp.Api.Patches
             {
                 return;
             }
+
+            __state = true;
 
             if (client is { IsMasterClient: true, RoomState.InPvP: true, RoomState.InCombatRound: true })
             {
@@ -370,6 +374,7 @@ namespace WukongMp.Api.Patches
 
         public static void Postfix(
             BUS_DeadComp __instance,
+            bool __state,
             IBUC_SimpleStateData ___SimpleStateData,
             IBUC_UnitStateData ___UnitStateData,
             EDeadReason DeadReason,
@@ -380,11 +385,8 @@ namespace WukongMp.Api.Patches
             bool bIsDotDmg = false,
             EAbnormalStateType AbnormalType = EAbnormalStateType.None)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return;
-
-            if (DeadReason is EDeadReason.PlayerTrans or EDeadReason.OnlyDestroyUnit)
-                return; // TODO: Camera is broken after transformation, stuck in one direction
+            if (!__state)
+                return; // skipped prefix
 
             var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
@@ -395,7 +397,7 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (owner is not BGUCharacterCS || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
+            if (owner is not BGUCharacterCS)
             {
                 return;
             }
