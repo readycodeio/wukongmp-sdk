@@ -51,6 +51,7 @@ namespace WukongMp.Api.State
         public bool HasRestrictedMovement { get; set; }
         public bool IsWaitingForMovie { get; set; }
         public FVector RestrictionPoint { get; set; }
+        public int JoiningSequenceId { get; set; }
 
         public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {

@@ -77,6 +77,8 @@ public static class PatchTickForMovieSystem
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
+        var client = WukongMP.Instance.Client;
+
         // get properties
         var movieSystemType = __instance.GetType();
         MethodInfo getter = AccessTools.PropertyGetter(movieSystemType, "MovieData");
@@ -107,25 +109,26 @@ public static class PatchTickForMovieSystem
         if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
-            if (WukongMP.Instance.ArePlayersCloseToSyncCutscene() || peakRequest.bDisablePlayerControl == false)
+            if (client.LocalPlayerState.JoiningSequenceId == peakRequest.SequenceID || WukongMP.Instance.ArePlayersCloseToSyncCutscene() || peakRequest.bDisablePlayerControl == false)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
-                WukongMP.Instance.Client.LocalPlayerState.HasRestrictedMovement = false;
-                WukongMP.Instance.Client.LocalPlayerState.IsWaitingForMovie = false;
+                client.LocalPlayerState.HasRestrictedMovement = false;
+                client.LocalPlayerState.IsWaitingForMovie = false;
+                client.LocalPlayerState.JoiningSequenceId = 0;
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
                     RequestPlayMovieMethod?.Invoke(__instance, [GlobalMovieData.PlayMovieRequestQueue.Dequeue()]);
                 }
             }
-            else if (!WukongMP.Instance.Client.LocalPlayerState.IsWaitingForMovie)
+            else if (!client.LocalPlayerState.IsWaitingForMovie)
             {
                 InfoMessageWidget.Instance.SetVisibility(true);
                 InfoMessageWidget.Instance.SetText("Wait for other players");
-                WukongMP.Instance.Client.LocalPlayerState.HasRestrictedMovement = true;
-                WukongMP.Instance.Client.LocalPlayerState.IsWaitingForMovie = true;
-                WukongMP.Instance.Client.LocalPlayerState.RestrictionPoint = WukongMP.Instance.Client.LocalPlayerState.Location;
-                WukongMP.Instance.Client.SendWaitingForMovie();
+                client.LocalPlayerState.HasRestrictedMovement = true;
+                client.LocalPlayerState.IsWaitingForMovie = true;
+                client.LocalPlayerState.RestrictionPoint = client.LocalPlayerState.Location;
+                client.SendWaitingForMovie(peakRequest.SequenceID);
             }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())
