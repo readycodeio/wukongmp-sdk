@@ -189,6 +189,7 @@ public class WukongApi
         Entity? entityId = null;
 
         var query = World.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
         query.ForEachEntity((ref tamer, entity) =>
         {
             if (tamer.Pawn == actor)
@@ -208,6 +209,7 @@ public class WukongApi
         Entity? entityId = null;
 
         var query = World.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
         query.ForEachEntity((ref tamer, entity) =>
         {
             if (tamer.Tamer == owner)
