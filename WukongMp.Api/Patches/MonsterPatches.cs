@@ -30,21 +30,21 @@ namespace WukongMp.Api.Patches
             {
                 WukongApi.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
-                    if (!tamer.IsSynced || !tamer.IsTamerValid)
+                    if (!tamer.IsSynced || !tamer.IsTamerValid || tamer.Pawn == null)
                         return;
 
-                    trans.Position = tamer.Tamer!.GetActorLocation().ToVector3();
-                    trans.Rotation = tamer.Tamer.GetActorRotation().ToVector3();
+                    trans.Position = tamer.Pawn.GetActorLocation().ToVector3();
+                    trans.Rotation = tamer.Pawn.GetActorRotation().ToVector3();
                 });
             }
             else
             {
                 WukongApi.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
-                    if (!tamer.IsTamerValid || !tamer.IsSynced)
+                    if (!tamer.IsTamerValid || !tamer.IsSynced || tamer.Pawn == null)
                         return;
 
-                    var events = BUS_EventCollectionCS.Get(tamer.Tamer);
+                    var events = BUS_EventCollectionCS.Get(tamer.Pawn);
 
                     if (events == null)
                         return;
@@ -52,7 +52,10 @@ namespace WukongMp.Api.Patches
                     var pos = trans.Position.ToFVector();
                     var rot = trans.Rotation.ToFRotator();
 
-                    if (!pos.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance) && !pos.Equals(tamer.Tamer!.GetActorLocation(), Constants.FloatComparisonTolerance))
+                    var posChanged = !pos.Equals(tamer.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance);
+                    var rotChanged = !rot.Equals(tamer.Pawn.GetActorRotation(), Constants.FloatComparisonTolerance);
+
+                    if (posChanged || rotChanged)
                     {
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
                     }

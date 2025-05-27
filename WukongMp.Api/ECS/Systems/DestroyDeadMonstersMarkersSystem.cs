@@ -12,7 +12,8 @@ public sealed class DestroyDeadMonstersMarkersSystem : QuerySystem<HpComponent, 
         Query.ForEachEntity((
             ref hpComp,
             ref tamer,
-            ref marker, entity) =>
+            ref marker,
+            entity) =>
         {
             if (tamer.IsMonsterSpawned && hpComp.Hp <= 0 && !marker.DestroyQueued)
             {
