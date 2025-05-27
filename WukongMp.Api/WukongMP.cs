@@ -346,11 +346,7 @@ namespace WukongMp.Api
             }
 
             // dump synced monsters
-            WukongApi.Instance.World.Query<TamerComponent, LocalTamerComponent, HpComponent, TeamComponent>().ForEachEntity((ref tamer, ref localTamer, ref hp, ref team, entity) =>
-            {
-                var realTeamId = localTamer.IsTamerValid ? localTamer.Tamer?.GetMonster()?.GetTeamIDInCS() : null;
-                Logging.LogDebug($"Monster [{entity}]: Guid={tamer.Guid}, TeamId={team.TeamId}, RealTeamId={realTeamId} Hp={hp.Hp}, IsSynced={localTamer.IsSynced}, IsTamerValid={localTamer.IsTamerValid}");
-            });
+            WukongApi.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) => { Logging.LogDebug("Monster: {Json}", entity.DebugJSON); });
 
             // print team hostility info
             var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
@@ -424,7 +420,7 @@ namespace WukongMp.Api
 
         public void ResetRoundState()
         {
-            Utils.TryRunOnGameThread(DestroySyncedMonsters);
+            Utils.TryRunOnGameThread(ClearEcsMonsters);
         }
 
         public void EnablePvP()
@@ -785,7 +781,7 @@ namespace WukongMp.Api
             }
 
             var tamerComponent = entity.Value.GetComponent<LocalTamerComponent>();
-            
+
             if (tamerComponent.Pawn == null)
             {
                 LogNullCharacter(netId);
@@ -1466,7 +1462,7 @@ namespace WukongMp.Api
             }
         }
 
-        public void DestroySyncedMonsters()
+        public void ClearEcsMonsters()
         {
             WukongApi.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Id); });
         }
@@ -1502,6 +1498,7 @@ namespace WukongMp.Api
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
+            Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.ToString());
             WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Id);
         }
 

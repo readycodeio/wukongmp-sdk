@@ -47,7 +47,7 @@ public class WukongApi
         CommandBuffer = cb.Synced;
 
         NetManager = new NetworkedEntityManager(World, ReadyM.Relay.Common.Protocol.Constants.UnsetPeerId);
-        NetManager.onEntityDestroyed += OnNetworkedEntityDestroyed;
+        NetManager.onEntityDeleted += HandleEntityDeleted;
 
         _sendEcsDeltaSystem = new SendEcsDeltaSystem(_client.RelayClient)
         {
@@ -62,7 +62,7 @@ public class WukongApi
 
         _client.RelayClient.OnBeforeJoinedRoom += UpdatePeerId;
         _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
-        _client.RelayClient.OnReceivedDestroyEntity += DestroyRemoteEntity;
+        _client.RelayClient.OnReceivedDestroyEntity += DeleteRemoteEntityFromEcs;
         _client.OnMasterClientChanged += OnMasterClientChanged;
     }
 
@@ -81,7 +81,7 @@ public class WukongApi
         Logging.LogDebug("SendEcsDeltaSystem enabled: {Enabled}", _sendEcsDeltaSystem.Enabled);
     }
 
-    private void OnNetworkedEntityDestroyed(NetworkIdComponent netId)
+    private void HandleEntityDeleted(NetworkIdComponent netId)
     {
         if (netId.Owner == _client.RelayClient.LocalPlayer.PeerId)
         {
@@ -91,10 +91,6 @@ public class WukongApi
             writer.Put((byte)SystemEvent.DestroyEntity);
             writer.Put(netId);
             _client.RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
-        }
-        else
-        {
-            DestroyRemoteEntity(netId);
         }
     }
 
@@ -123,7 +119,7 @@ public class WukongApi
         return NetManager.CreateRemoteNetworkedEntity(_monsterArchetype, netId);
     }
 
-    private void DestroyRemoteEntity(NetworkIdComponent netId)
+    private void DeleteRemoteEntityFromEcs(NetworkIdComponent netId)
     {
         if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
         {

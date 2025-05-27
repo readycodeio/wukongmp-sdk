@@ -429,7 +429,7 @@ namespace WukongMp.Api.Patches
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(1000);
-                    Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
+                    Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.Value.ToString());
                     WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
                 });
             }
