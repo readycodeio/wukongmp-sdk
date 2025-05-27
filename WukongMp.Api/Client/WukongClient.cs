@@ -533,6 +533,7 @@ public sealed partial class WukongClient
 
     private readonly object _playerPropertiesLock = new();
 
+    [Obsolete]
     public void SetCachedPlayerProperties()
     {
         lock (_playerPropertiesLock)

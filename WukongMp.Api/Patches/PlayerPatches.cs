@@ -414,6 +414,11 @@ namespace WukongMp.Api.Patches
                 {
                     // TODO: send attacker and anim montage
                     client.SendUnitDead(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    Logging.LogDebug("Entity {Entity} died, sending UnitDead event", networkId);
+                }
+                else
+                {
+                    Logging.LogError("Entity {Entity} does not have NetworkIdComponent, skipping entity deletion", entity.Value.ToString());
                 }
 
                 _ = Task.Run(async () =>
@@ -422,6 +427,10 @@ namespace WukongMp.Api.Patches
                     Logging.LogDebug("QueueDestroyEntity {Entity}", entity.Value.ToString());
                     WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
                 });
+            }
+            else
+            {
+                Logging.LogWarning("Owner {Owner} is not a monster in ECS, skipping entity deletion", owner.GetName());
             }
         }
     }

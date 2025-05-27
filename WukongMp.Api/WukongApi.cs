@@ -94,24 +94,15 @@ public class WukongApi
         }
         else
         {
-            // remote entity, dissolve it locally
-            if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
-            {
-                Logging.LogDebug("Queueing remote entity for destruction: {Id}", netId);
-                CommandBuffer.DeleteEntity(entity.Value.Id);
-            }
-            else
-            {
-                Logging.LogError("Received destroy event for locally non-existent entity: {Id}", netId);
-            }
+            DestroyRemoteEntity(netId);
         }
     }
 
     public void RunEcsWorldUpdate()
     {
-        WukongMP.Instance.Client.SetCachedPlayerProperties(); // not a system, TODO
+        WukongMP.Instance.Client.SetCachedPlayerProperties();
 
-        lock (CommandBuffer)
+        lock (CommandBuffer) // TODO: Locking version of Playback() as extension method
         {
             CommandBuffer.Playback();
         }
@@ -136,6 +127,9 @@ public class WukongApi
     {
         if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
         {
+            Logging.LogDebug("Queueing remote entity for destruction: {Id}", netId);
+            
+            // TODO: Playback synchronization & locking
             CommandBuffer.DeleteEntity(entity.Value.Id);
         }
         else
