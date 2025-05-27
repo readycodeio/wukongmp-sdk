@@ -119,6 +119,7 @@ public static class PatchTickForMovieSystem
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
                     RequestPlayMovieMethod?.Invoke(__instance, [GlobalMovieData.PlayMovieRequestQueue.Dequeue()]);
+                    BGW_EventCollection.Get(__instance.GetOwner()).Evt_MarkMoviePlayed(peakRequest.SequenceID);
                 }
             }
             else if (!client.LocalPlayerState.IsWaitingForMovie)
