@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.ECS.Components;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
 using WukongMp.Api.State;
-using EntityManager = b1.ECS.EntityManager;
 
 namespace WukongMp.Api.Patches
 {
@@ -18,6 +18,12 @@ namespace WukongMp.Api.Patches
 
         public static void QueueOnGameThread(Action action, string? name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
         {
+            if (tickGroup is BGW_TickGroupMask.TG_LateTick or BGW_TickGroupMask.TG_ThreadTick)
+            {
+                Logging.LogError("Tick group {Mask} is not supported for queued actions", tickGroup);
+                return;
+            }
+
             if (name != null)
             {
                 Logging.LogTrace("Enqueueing action: {Action}", name);
@@ -65,16 +71,29 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public static class ReceiveTickPatch
     {
+        public static void Prefix(int TickGroup)
+        {
+            var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+            Logging.LogTrace("[{Thread}] Starting tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
+        }
+
         public static void Postfix(int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+            Logging.LogTrace("[{Thread}] Finished tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
 
-            if (mask is BGW_TickGroupMask.TG_PreTick
-                or BGW_TickGroupMask.TG_OnTick
-                or BGW_TickGroupMask.TG_LateTick
-                or BGW_TickGroupMask.TG_ThreadTick)
-                return;
+            RunQueuedActions(mask);
 
+            if (mask == BGW_TickGroupMask.TG_OnTick)
+            {
+                RunMontageSync();
+                WukongMpMod.Instance.RunEcsWorldUpdate();
+                ComponentMonitorManager.Instance.Update();
+            }
+        }
+
+        private static void RunQueuedActions(BGW_TickGroupMask mask)
+        {
             if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
                 return;
 
@@ -91,29 +110,24 @@ namespace WukongMp.Api.Patches
                 }
             }
         }
-    }
 
-    [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class MontageSyncPatch
-    {
-        public static void Postfix()
+        private static void RunMontageSync()
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
             var client = WukongMP.Instance.Client;
 
-            SyncMontage(client.LocalPlayerState);
+            SyncPlayerMontage(client.LocalPlayerState);
 
             if (client.IsMasterClient)
             {
-                WukongEcs.Instance.World.RunJob(new SyncMontageJob());
+                WukongMpMod.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
             }
         }
 
-        [Obsolete]
-        private static void SyncMontage(CharacterState characterState)
+        [Obsolete("To be replaced when we integrate players into ECS")]
+        private static void SyncPlayerMontage(CharacterState characterState)
         {
             if (characterState.Pawn == null)
                 return;
@@ -148,50 +162,6 @@ namespace WukongMp.Api.Patches
 
             montageState.LocalMontage = currentMontage;
             characterState.MontageState = montageState;
-        }
-    }
-
-    [HarmonyPatch(typeof(EntityManager), nameof(EntityManager.TickAllComponentsWithGroup), typeof(float), typeof(int), typeof(int), typeof(int))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public static class PatchEntityManagerTick
-    {
-        public static void Postfix(
-            int TickGroup, // this is BGW_TickGroupMask
-            int ThreadIdx,
-            int ThreadCount)
-        {
-            if (ThreadIdx != 0)
-                return;
-
-            var mask = (BGW_TickGroupMask)TickGroup;
-
-            if (mask != BGW_TickGroupMask.TG_PreTick
-                && mask != BGW_TickGroupMask.TG_OnTick
-                && mask != BGW_TickGroupMask.TG_LateTick
-                && mask != BGW_TickGroupMask.TG_ThreadTick)
-                return;
-
-            if (mask == BGW_TickGroupMask.TG_OnTick)
-            {
-                ComponentMonitorManager.Instance.Update();
-                WukongEcs.Instance.RunEcsWorldUpdate();
-            }
-
-            if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
-                return;
-
-            while (queue.TryDequeue(out var item))
-            {
-                try
-                {
-                    Logging.LogTrace("Processing {Action} action for tick group {Mask} (EntityManager)", item.Name, mask);
-                    item.Action();
-                }
-                catch (Exception e)
-                {
-                    Logging.LogException(e);
-                }
-            }
         }
     }
 }

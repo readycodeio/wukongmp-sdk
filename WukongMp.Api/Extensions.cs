@@ -35,9 +35,9 @@ namespace WukongMp.Api
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 ToVector3(this FRotator vector)
         {
-            return new Vector3(vector.Pitch, vector.Roll, vector.Yaw);
+            return new Vector3(vector.Pitch, vector.Yaw, vector.Roll);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FRotator ToFRotator(this Vector3 vector)
         {

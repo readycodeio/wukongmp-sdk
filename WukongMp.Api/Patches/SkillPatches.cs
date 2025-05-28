@@ -7,7 +7,7 @@ using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;
@@ -228,13 +228,13 @@ public static class PatchOnCastImmobilize
 
             // broadcast
             var immobilizedPlayer = client.GetPlayerByActor(item);
-            var immobilizedMonster = client.GetMonsterByActor(item);
+            var immobilizedMonster = WukongMpMod.Instance.GetMonsterByActor(item);
 
             if ((immobilizedPlayer != null || immobilizedMonster.HasValue) && castingPlayerState != null)
             {
                 Logging.LogDebug("Broadcasting trigger immobilize");
                 var netId = immobilizedPlayer == null
-                    ? WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(immobilizedMonster.Value)
+                    ? immobilizedMonster.Value.GetComponent<NetworkIdComponent>()
                     : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
 
                 client.BroadcastImmobilize(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff);
@@ -284,14 +284,14 @@ public static class PatchRelieveImmobilized
         }
 
         var playerState = client.GetPlayerByActor(owner);
-        var entityId = client.GetMonsterByActor(owner);
+        var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
 
-        if (playerState == null && !entityId.HasValue)
+        if (playerState == null && !entity.HasValue)
         {
             return true;
         }
 
-        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entityId!.Value);
+        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : entity!.Value.GetComponent<NetworkIdComponent>();
 
         if (client.IsMasterClient)
         {
@@ -310,7 +310,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        ref var tamerComp = ref WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entityId!.Value);
+        ref var tamerComp = ref entity!.Value.GetComponent<LocalTamerComponent>();
 
         if (!tamerComp.RunImmobilizePatches)
         {
@@ -351,12 +351,12 @@ public static class PatchOnTriggerImmobilizedBreak
                 return false;
             }
 
-            var entityId = client.GetMonsterByActor(owner);
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
 
-            if (entityId.HasValue)
+            if (entity.HasValue)
             {
-                var netId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entityId.Value);
-                var pawn = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entityId.Value).Pawn;
+                var netId = entity.Value.GetComponent<NetworkIdComponent>();
+                var pawn = entity.Value.GetComponent<LocalTamerComponent>().Pawn;
 
                 client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();

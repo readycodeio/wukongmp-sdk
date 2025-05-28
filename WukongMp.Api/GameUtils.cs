@@ -80,8 +80,7 @@ namespace WukongMp.Api
 
         public static BGUPlayerCharacterCS? GetThis()
         {
-            var controlledPawn = GetControlledPawn();
-            return (controlledPawn is BGUPlayerCharacterCS ? controlledPawn : null) as BGUPlayerCharacterCS;
+            return GetControlledPawn();
         }
 
         private static string GetSaveDirectory()
@@ -247,7 +246,7 @@ namespace WukongMp.Api
             int i = 0;
             foreach (FAssetData item6 in assetsInFolder.AssetDataArr)
             {
-                Logging.LogInformation("Asset {Id} path : {Name}", i++, item6.GetFullName().ToString());
+                Logging.LogInformation("Asset {Id} path : {Name}", i++, item6.GetFullName());
             }
         }
 

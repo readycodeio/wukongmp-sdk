@@ -1,17 +1,14 @@
-﻿using ReadyM.Relay.Common.ECS;
+﻿using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class UpdateMarkersSystem : SystemBase
+public sealed class UpdateMarkersSystem : QuerySystem<LocalTamerComponent, MarkerComponent, TranslationComponent>
 {
-    public override void OnUpdate()
+    protected override void OnUpdate()
     {
-        Entities.ForEach((EntityId _,
-            ref LocalTamerComponent tamer,
-            ref MarkerComponent marker,
-            ref TranslationComponent trans) =>
+        Query.ForEachEntity((ref tamer, ref marker, ref trans, _) =>
         {
             if (marker.MarkerActor == null)
                 return;

@@ -1,32 +1,23 @@
 ﻿using System.Runtime.InteropServices;
 using b1;
+using Friflo.Engine.ECS;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LocalTamerComponent
+public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
 {
     public bool IsSynced;
     public bool IsMonsterSpawned;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
 
-    private BUTamerActor? _tamer;
-
     public BUTamerActor? Tamer
     {
-        get
-        {
-            if (_tamer.IsNullOrDestroyed())
-            {
-                return null;
-            }
-
-            return _tamer;
-        }
-        set => _tamer = value;
-    }
+        get => field.IsNullOrDestroyed() ? null : field;
+        set;
+    } = tamer;
 
     public BGUCharacterCS? Pawn
     {
@@ -37,19 +28,20 @@ public struct LocalTamerComponent
                 return null;
             }
 
-            if (_tamer == null || _tamer.IsNullOrDestroyed())
+            var tamer = Tamer;
+            if (tamer == null)
             {
                 Logging.LogWarning("Tamer is null or destroyed in getPawn");
                 return null;
             }
 
-            if (_tamer.GetMonster().IsNullOrDestroyed())
+            if (tamer.GetMonster().IsNullOrDestroyed())
             {
                 Logging.LogWarning("Monster is null or destroyed in getPawn");
                 return null;
             }
 
-            return _tamer.GetMonster();
+            return tamer.GetMonster();
         }
     }
 

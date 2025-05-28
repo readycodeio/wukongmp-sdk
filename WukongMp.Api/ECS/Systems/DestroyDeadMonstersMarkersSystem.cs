@@ -1,23 +1,23 @@
 ﻿using b1;
-using ReadyM.Relay.Common.ECS;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
 using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class DestroyDeadMonstersMarkersSystem : SystemBase
+public sealed class DestroyDeadMonstersMarkersSystem : QuerySystem<HpComponent, LocalTamerComponent, MarkerComponent>
 {
-    public override void OnUpdate()
+    protected override void OnUpdate()
     {
-        Entities.ForEach((
-            EntityId entityId,
-            ref HpComponent hpComp,
-            ref LocalTamerComponent tamer,
-            ref MarkerComponent marker) =>
+        Query.ForEachEntity((
+            ref hpComp,
+            ref tamer,
+            ref marker,
+            entity) =>
         {
             if (tamer.IsMonsterSpawned && hpComp.Hp <= 0 && !marker.DestroyQueued)
             {
-                Logging.LogDebug("Monster {Id} died", entityId);
+                Logging.LogDebug("Monster {Id} died", entity.Id);
                 marker.DestroyQueued = true;
 
                 var markerActor = marker.MarkerActor;

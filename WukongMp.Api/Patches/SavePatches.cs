@@ -18,6 +18,7 @@ namespace WukongMp.Api.Patches
         public static bool ShouldCacheSave;
     }
 
+    /// Replace Steam save folder with ours.
     [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchWindowsSaveGame
@@ -35,6 +36,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    /// When "Load game" (save selector list ) is selected in main menu.
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchUIArchives
@@ -50,6 +52,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    /// Load our custom save on new game.
     [HarmonyPatch(typeof(GSB1UIUtil), nameof(GSB1UIUtil.StartNewGame))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchStartNewGame
@@ -71,6 +74,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    /// Read the world save and character save data, clear spells and set the birth point.
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LoadArchive))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchGameArchive
@@ -158,7 +162,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    //// Disable game saves while multiplayer is enabled
+    /// Disable game saves while multiplayer is enabled
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), "CheckSaveTask")]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriter

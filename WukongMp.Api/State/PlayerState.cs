@@ -52,7 +52,7 @@ namespace WukongMp.Api.State
         public FVector WaitingPoint { get; set; }
         public int WaitingSequenceId { get; set; }
 
-        public PlayerState(int peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(short peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PeerId = peerId;
             _pawn = pawn;

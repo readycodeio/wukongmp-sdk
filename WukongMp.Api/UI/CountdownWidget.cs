@@ -22,7 +22,11 @@ namespace WukongMp.Api.UI
             SetText(seconds);
             SetVisibility(true);
             _countdownTimer.SetTime(0, seconds);
-            _countdownTimer.Start(() => { StopCountdown(); callback(); });
+            _countdownTimer.Start(() =>
+            {
+                StopCountdown();
+                callback();
+            });
         }
 
         public void StopCountdown()

@@ -18,12 +18,22 @@ $modFiles = @(
     "WukongMp.Api.pdb", 
     "WukongMpMod.dll", 
     "WukongMpMod.pdb", 
+    "ReadyM.Api.dll", 
+    "ReadyM.Api.pdb", 
+    "ReadyM.Api.Multiplayer.dll", 
+    "ReadyM.Api.Multiplayer.pdb", 
     "ReadyM.Relay.Client.dll", 
     "ReadyM.Relay.Client.pdb", 
     "ReadyM.Relay.Common.dll", 
     "ReadyM.Relay.Common.pdb", 
     "ReadyM.Relay.Common.Wukong.dll", 
-    "ReadyM.Relay.Common.Wukong.pdb"
+    "ReadyM.Relay.Common.Wukong.pdb",
+    "Friflo.Engine.ECS.dll",
+    "Friflo.Engine.ECS.Boost.dll",
+    "Friflo.Json.Burst.dll",
+    "Friflo.Json.Fliox.dll",
+    "Friflo.Json.Fliox.Annotation.dll",
+    "System.ComponentModel.Annotations.dll"
 )
 $reflectionOnlyFiles = @(
     "*"

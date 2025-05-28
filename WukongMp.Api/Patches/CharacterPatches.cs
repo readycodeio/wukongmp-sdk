@@ -1,7 +1,7 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -135,17 +135,17 @@ namespace WukongMp.Api.Patches
                 }
                 else
                 {
-                    var entity = client.GetMonsterByCharacter(__instance.Owner as BGUCharacterCS);
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
                     if (!entity.HasValue)
                         return;
 
-                    if (!WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value).IsSynced)
+                    if (!entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
                         return;
                     }
 
-                    var hpComp = WukongEcs.Instance.GetEntityComponent<HpComponent>(entity.Value);
+                    var hpComp = entity.Value.GetComponent<HpComponent>();
 
                     if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
                     {
@@ -221,14 +221,14 @@ namespace WukongMp.Api.Patches
                     }
 
                     // monster was damaged
-                    var entity = client.GetMonsterByCharacter(owner as BGUCharacterCS);
-                    if (!entity.HasValue || !WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value).IsSynced)
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(owner as BGUCharacterCS);
+                    if (!entity.HasValue || !entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
                         return;
                     }
 
-                    ref var hpComp = ref WukongEcs.Instance.GetEntityComponent<HpComponent>(entity.Value);
+                    ref var hpComp = ref entity.Value.GetComponent<HpComponent>();
 
                     hpComp.HpMaxBase = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = result;
@@ -264,6 +264,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    // NOTE: Runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchCharacterAnimation
@@ -318,25 +319,25 @@ namespace WukongMp.Api.Patches
                     client.CachePlayerProperty(nameof(PlayerState.IsLandingMove), client.LocalPlayerState.IsLandingMove);
                 }
 
-                if (!Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.Velocity = __instance.Velocity;
                     client.CachePlayerProperty(nameof(PlayerState.Velocity), client.LocalPlayerState.Velocity);
                 }
 
-                if (!Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
                     client.CachePlayerProperty(nameof(PlayerState.MoveAcceleration), client.LocalPlayerState.MoveAcceleration);
                 }
 
-                if (!Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.Location = __instance.ActorLocation;
                     client.CachePlayerProperty(nameof(PlayerState.Location), client.LocalPlayerState.Location);
                 }
 
-                if (!Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                if (!client.LocalPlayerState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                 {
                     client.LocalPlayerState.Rotation = __instance.ActorRotation;
                     client.CachePlayerProperty(nameof(PlayerState.Rotation), client.LocalPlayerState.Rotation);
@@ -378,7 +379,7 @@ namespace WukongMp.Api.Patches
                         playerState.MoveAcceleration = FVector.ZeroVector;
                     }
 
-                    if (!Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                    if (!playerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
                         events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
@@ -388,29 +389,29 @@ namespace WukongMp.Api.Patches
                 else
                 {
                     // maybe it's a monster
-                    var entity = client.GetMonsterByCharacter(character);
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(character);
 
                     if (entity.HasValue)
                     {
-                        if (!WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value).IsSynced)
+                        if (!entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
                         {
                             return;
                         }
 
                         if (client.IsMasterClient)
                         {
-                            ref var anim = ref WukongEcs.Instance.GetEntityComponent<AnimationComponent>(entity.Value);
+                            ref var anim = ref entity.Value.GetComponent<AnimationComponent>();
                             anim.Velocity = __instance.Velocity.ToVector3();
                             anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
 
-                            ref var trans = ref WukongEcs.Instance.GetEntityComponent<TranslationComponent>(entity.Value);
+                            ref var trans = ref entity.Value.GetComponent<TranslationComponent>();
                             trans.Position = __instance.ActorLocation.ToVector3();
                             trans.Rotation = __instance.ActorRotation.ToVector3();
                         }
                         else
                         {
-                            var anim = WukongEcs.Instance.GetEntityComponent<AnimationComponent>(entity.Value);
-                            var tamer = WukongEcs.Instance.GetEntityComponent<LocalTamerComponent>(entity.Value);
+                            var anim = entity.Value.GetComponent<AnimationComponent>();
+                            var tamer = entity.Value.GetComponent<LocalTamerComponent>();
 
                             __instance.Velocity = anim.Velocity.ToFVector();
                             __instance.MoveAcceleration = anim.MoveAcceleration.ToFVector();
@@ -418,12 +419,12 @@ namespace WukongMp.Api.Patches
 
                             var events = BUS_EventCollectionCS.Get(tamer.Pawn);
 
-                            var trans = WukongEcs.Instance.GetEntityComponent<TranslationComponent>(entity.Value);
+                            var trans = entity.Value.GetComponent<TranslationComponent>();
                             var location = trans.Position.ToFVector();
                             var rotation = trans.Rotation.ToFRotator();
 
-                            if (!Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
-                                !Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                            if (!location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
+                                !rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                             {
                                 events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                             }
@@ -453,11 +454,9 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
-
             if (Actor is BGUCharacterCS character)
             {
-                var entity = client.GetMonsterByCharacter(character);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(character);
                 if (entity.HasValue)
                 {
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
@@ -486,13 +485,13 @@ namespace WukongMp.Api.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var entity = client.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
                     if (SimpleState == EBGUSimpleState.Immobilizing)
                         return;
 
-                    var peerId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entity.Value);
+                    var peerId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     client.SendUnitSimpleState(peerId, SimpleState, IsRemove);
                     Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
@@ -514,13 +513,13 @@ namespace WukongMp.Api.Patches
             var owner = __instance.GetOwner();
             if (client.IsMasterClient)
             {
-                var entity = client.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
                     if (Trigger == EBUStateTrigger.Die)
                         return;
 
-                    var peerId = WukongEcs.Instance.GetEntityComponent<NetworkIdComponent>(entity.Value);
+                    var peerId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     client.SendUnitStateTrigger(peerId, Trigger, Time, NeedForceUpdate);
                     Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
@@ -548,13 +547,13 @@ namespace WukongMp.Api.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var character = client.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
 
-                if (character.HasValue)
-                {
-                    ref var monsterAnim = ref WukongEcs.Instance.GetEntityComponent<MonsterAnimationComponent>(character.Value);
-                    monsterAnim.MotionMatchingState = (byte)MMState;
-                }
+                if (!entity.HasValue)
+                    return;
+
+                var monsterAnim = entity.Value.GetComponent<NetworkIdComponent>();
+                client.SendMotionMatchingState(monsterAnim, MMState);
             }
         }
     }
