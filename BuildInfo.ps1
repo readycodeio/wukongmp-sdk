@@ -28,7 +28,8 @@ $modFiles = @(
     "Friflo.Engine.ECS.Boost.dll",
     "Friflo.Json.Burst.dll",
     "Friflo.Json.Fliox.dll",
-    "Friflo.Json.Fliox.Annotation.dll"
+    "Friflo.Json.Fliox.Annotation.dll",
+    "System.ComponentModel.Annotations.dll"
 )
 
 # List of culture codes

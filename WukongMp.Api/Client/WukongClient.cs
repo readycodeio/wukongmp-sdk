@@ -418,7 +418,7 @@ public sealed partial class WukongClient
     public void StartClient()
     {
         OnBeforeJoinRoom?.Invoke();
-        RelayClient.Start();
+        WukongMpMod.Instance.Start();
         Logging.LogInformation("Client started");
     }
 
@@ -431,7 +431,7 @@ public sealed partial class WukongClient
             UnsubscribeFromPlayerEvents();
         }
 
-        RelayClient.Stop();
+        WukongMpMod.Instance.Stop();
 
         // clear the chat window
         ChatWidget.Instance.ClearMessages();

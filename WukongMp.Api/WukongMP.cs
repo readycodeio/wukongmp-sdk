@@ -346,7 +346,7 @@ namespace WukongMp.Api
             }
 
             // dump synced monsters
-            WukongMpMod.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) => { Logging.LogDebug("Monster: {Json}", entity.DebugJSON); });
+            WukongMpMod.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref _, entity) => { Logging.LogDebug("Monster: {Json}", entity.DebugJSON); });
 
             // print team hostility info
             var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
@@ -354,6 +354,17 @@ namespace WukongMp.Api
             foreach (var (teamId, relation) in teamRelationData.TeamHostileInfos)
             {
                 Logging.LogDebug("Team {TeamId} hostility: {HostileTeams}", teamId, string.Join(", ", relation.HostileTeamIDs));
+            }
+
+            // dump perf info
+            var perf = WukongMpMod.Instance.World.SystemRoot.GetPerfLog();
+            if (perf != null)
+            {
+                Logging.LogDebug("Perf log:\n{Log}", perf);
+            }
+            else
+            {
+                Logging.LogDebug("Perf log is null");
             }
         }
 

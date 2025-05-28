@@ -63,7 +63,14 @@ namespace WukongMp.Coop
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
-                _wukongMp.DumpDebugInfo();
+                try
+                {
+                    _wukongMp.DumpDebugInfo();
+                }
+                catch (Exception e)
+                {
+                    Logging.LogException(e);
+                }
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
