@@ -511,58 +511,7 @@ namespace WukongMp.Api.Old
             Logging.LogInformation("End tournament");
             SetupLobbyUi();
         }
-
-        private void WakeUpMonster(string guid)
-        {
-            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            foreach (var actor in allActorsOfClass)
-            {
-                if (BGU_DataUtil.GetActorGuid(actor) != guid)
-                    continue;
-
-                var events = BGS_GSEventCollection.Get(actor);
-                if (events != null)
-                {
-                    var hasGuid = false;
-
-                    WukongMpMod.Instance.World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
-                    {
-                        if (tamer.Guid == guid)
-                        {
-                            hasGuid = true;
-                        }
-                    });
-
-                    if (actor.GetMonster() == null)
-                    {
-                        Logging.LogDebug("Spawning monster for tamer with guid: {Guid}.", guid);
-
-                        if (!hasGuid)
-                        {
-                            Logging.LogError("Not syncing monster");
-                        }
-
-                        Logging.LogDebug("Invoking Evt_TamerBlockingSpawnImmediately.");
-                        events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
-                    }
-                    else if (!hasGuid)
-                    {
-                        Logging.LogDebug("Monster already spawned but not synced: {Guid}.", guid);
-
-                        Logging.LogError("Not syncing monster");
-                    }
-                }
-                else
-                {
-                    Logging.LogDebug("Event is null");
-                }
-
-                return;
-            }
-
-            // TODO: Spawn if not found
-        }
-
+        
         private void RebirthPlayer(short peerId)
         {
             Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
@@ -596,13 +545,10 @@ namespace WukongMp.Api.Old
             Client.OnBeforeJoinRoom += SetPlayerProperties;
             Client.OnUnitSpawn += (id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
             Client.OnSummonSpawn += (summonerId, summonId, guid, name, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteSummon(summonerId, summonId, guid, name, teamId), "SpawnRemoteSummon");
-            Client.OnTeleportFinish += (id) => GameLoopPatch.QueueOnGameThread(() => OnTeleportFinish(id), "WakeUpMonster");
-            Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Client.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Client.OnReadinessChange += (name, isReady, readyCount) => GameLoopPatch.QueueOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
             Client.OnTeamChange += (playerState, teamId) => GameLoopPatch.QueueOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
             Client.OnPlayerLeft += playerState => GameLoopPatch.QueueOnGameThread(() => RemovePlayer(playerState));
-            Client.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
             Client.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
             Client.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
             Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => TeleportLocalPlayer(loc, rot), "TeleportLocalPlayer");
@@ -1225,13 +1171,7 @@ namespace WukongMp.Api.Old
             _coopStatusWidget.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
         }
-
-        private static void OnDamageNum(DamageNumParam damageNum)
-        {
-            var uiEvt = BGW_UIEventCollection.Get(GameUtils.GetWorld());
-            uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
-        }
-
+        
         public void SpawnUnitsMaster(short peerId, string unitName, int count, int teamId)
         {
             var playerState = Client.GetPlayerById(peerId);
@@ -1504,20 +1444,6 @@ namespace WukongMp.Api.Old
             }
         }
 
-        private void OnTeleportFinish(short peerId)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {PlayerId}", peerId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            events?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
-            events?.Evt_TeleportFinish.Invoke();
-        }
-
         public void UpdatePlayer(PlayerState playerState, float deltaTime)
         {
             playerState.UpdateMarkerPosition();
@@ -1526,7 +1452,7 @@ namespace WukongMp.Api.Old
             {
                 if (playerState.TeleportFinishFrames == 0)
                 {
-                    Client.SendTeleportFinish();
+                    WukongMpMod.Instance.SendTeleportFinish();
                 }
 
                 playerState.TeleportFinishFrames--;

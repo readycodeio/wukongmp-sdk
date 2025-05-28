@@ -698,7 +698,7 @@ public sealed partial class WukongClient
             // send current monsters to the new player
             WukongMpMod.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
             {
-                const byte eventCode = 3;
+                const byte eventCode = 150;
                 var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
             });

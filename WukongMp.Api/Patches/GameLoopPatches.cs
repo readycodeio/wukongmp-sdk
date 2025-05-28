@@ -152,14 +152,14 @@ namespace WukongMp.Api.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Client.SendMontageCallback(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId), currentMontage, currentPosition, hasMontageRewound);
+                    WukongMpMod.Instance.SendMontageCallback(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId), currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                WukongMP.Instance.Client.SendMontageCancel(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId));
+                WukongMpMod.Instance.SendMontageCancel(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId));
             }
 
             montageState.LocalMontage = currentMontage;

@@ -18,8 +18,6 @@ public sealed partial class WukongClient
 {
     public event Action<NetworkIdComponent, string, string, int, float, float, float>? OnUnitSpawn;
     public event Action<NetworkIdComponent, NetworkIdComponent, string, string, int>? OnSummonSpawn;
-    public event Action<short>? OnTeleportFinish;
-    public event Action<string>? OnMonsterWakeUp;
     public event Action<short, EquipmentState>? OnEquipmentChange;
     public event Action<string, bool, int>? OnReadinessChange;
     public event Action<PlayerState, int>? OnTeamChange;
@@ -28,7 +26,6 @@ public sealed partial class WukongClient
     public event Action<short>? OnKillPlayer;
     public event Action<FVector, FRotator>? OnSetPlayerTransform;
     public event Action? OnBeforeJoinRoom;
-    public event Action<DamageNumParam>? OnDamageNum;
     public event Action<short, ESkillDirection>? OnPhantomRush;
     public event Action<short>? OnExitPhantomRush;
     public event Action<NetworkIdComponent, NetworkIdComponent, ImmobilizeActionType, bool>? OnHandleImmobilize;
@@ -51,24 +48,10 @@ public sealed partial class WukongClient
     {
         switch (header.EventCode)
         {
-            case 3:
+            case 150:
                 // unit spawn
                 var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
                 OnUnitSpawn?.Invoke(unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
-                break;
-            case 4:
-                // teleport finish
-                OnTeleportFinish?.Invoke(header.Sender);
-                break;
-            case 5:
-                // monster wake up
-                var guid = RelayClient.DeserializeObject<string>(reader);
-                OnMonsterWakeUp?.Invoke(guid);
-                break;
-            case 6:
-                // damage num
-                var damageNumParam = RelayClient.DeserializeObject<DamageNumParam>(reader);
-                OnDamageNum?.Invoke(damageNumParam);
                 break;
             case 7:
             {
@@ -200,47 +183,6 @@ public sealed partial class WukongClient
                 OnWaitingForMovie?.Invoke(header.Sender, sequenceId);
                 break;
         }
-    }
-
-    public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
-    {
-        Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
-        const byte eventCode = 2;
-
-        var shortened = MontageHelpers.CompressMontageName(montage.PathName, out var shortMontagePath);
-        var data = shortened ? shortMontagePath : montage.PathName;
-        var evData = new MontageCallbackData(netId, shortened, data, position, reset);
-
-        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void SendMontageCancel(NetworkIdComponent netId)
-    {
-        Logging.LogDebug("Sending montage cancel");
-        const byte eventCode = 2;
-
-        var evData = new MontageCallbackData(netId, false, "", 0f, false);
-
-        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void SendUnitDead(NetworkIdComponent networkId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType)
-    {
-        const byte eventCode = 3;
-        var payload = new UnitDeadPacket(networkId, deadReason, dmgId, stiffLevel, isDotDmg, abnormalType);
-        RelayClient.OpRaiseEvent(eventCode, payload, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void SendTeleportFinish()
-    {
-        const byte eventCode = 4;
-        RelayClient.OpRaiseEvent(eventCode, null, RelayMode.All, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void SendMonsterWakeUp(string guid)
-    {
-        const byte eventCode = 5;
-        RelayClient.OpRaiseEvent(eventCode, guid, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 
     public void SendDamageNum(DamageNumParam damageNumParam)

@@ -24,7 +24,7 @@ public struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, i
         writer.Put((byte)AbnormalType);
     }
 
-    void INetSerializable.Deserialize(NetDataReader reader)
+    public void Deserialize(NetDataReader reader)
     {
         NetworkId = reader.GetNetworkId();
         DeadReason = (EDeadReason)reader.GetByte();

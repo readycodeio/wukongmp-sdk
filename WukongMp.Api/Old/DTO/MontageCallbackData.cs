@@ -20,7 +20,7 @@ namespace WukongMp.Api.Old.DTO
             writer.Put(Reset);
         }
 
-        void INetSerializable.Deserialize(NetDataReader reader)
+        public void Deserialize(NetDataReader reader)
         {
             NetId = reader.GetNetworkId();
             Compressed = reader.GetBool();

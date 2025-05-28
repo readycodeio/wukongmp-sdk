@@ -15,6 +15,7 @@ using WukongMp.Api.GameApi;
 using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.Old.DTO;
 using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.Patches
@@ -421,7 +422,8 @@ namespace WukongMp.Api.Patches
                 if (entity.Value.TryGetComponent<NetworkIdComponent>(out var networkId))
                 {
                     // TODO: send attacker and anim montage
-                    client.SendUnitDead(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    var payload = new UnitDeadPacket(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    WukongMpMod.Instance.SendUnitDead(payload);
                     Logging.LogDebug("Entity {Entity} died, sending UnitDead event", networkId);
                 }
                 else
