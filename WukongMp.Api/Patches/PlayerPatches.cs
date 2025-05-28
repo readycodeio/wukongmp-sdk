@@ -258,7 +258,7 @@ namespace WukongMp.Api.Patches
                 }
                 else
                 {
-                    var entity = WukongApi.Instance.GetMonsterByActor(character);
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(character);
 
                     if (!entity.HasValue)
                         return; // unsynced entity
@@ -350,7 +350,7 @@ namespace WukongMp.Api.Patches
                     }
                 }
 
-                var entity = WukongApi.Instance.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
                     var tamerClass = entity.Value.GetComponent<LocalTamerComponent>().Tamer?.GetClass();
@@ -411,7 +411,7 @@ namespace WukongMp.Api.Patches
             if (!client.IsMasterClient)
                 return;
 
-            var entity = WukongApi.Instance.GetMonsterByActor(owner);
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
 
             if (entity.HasValue)
             {
@@ -430,7 +430,7 @@ namespace WukongMp.Api.Patches
                 {
                     await Task.Delay(1000);
                     Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.Value.ToString());
-                    WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
+                    WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
                 });
             }
             else
@@ -540,7 +540,7 @@ namespace WukongMp.Api.Patches
             string name = string.Empty;
 
             var newTargetPlayerState = client.GetPlayerByActor(NewTargetInfo?.LockTargetActor);
-            var newTargetMonsterState = WukongApi.Instance.GetMonsterByActor(NewTargetInfo?.LockTargetActor);
+            var newTargetMonsterState = WukongMpMod.Instance.GetMonsterByActor(NewTargetInfo?.LockTargetActor);
 
             if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && newTargetPlayerState == null && !newTargetMonsterState.HasValue)
             {
@@ -573,7 +573,7 @@ namespace WukongMp.Api.Patches
             if (!client.IsMasterClient)
                 return false;
 
-            var entity = WukongApi.Instance.GetMonsterByActor(owner);
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
             if (entity.HasValue)
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, name);

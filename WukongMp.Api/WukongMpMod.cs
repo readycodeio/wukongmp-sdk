@@ -1,40 +1,38 @@
-﻿using b1;
+﻿using System;
+using System.Collections.Generic;
+using b1;
 using Friflo.Engine.ECS;
-using LiteNetLib;
+using JetBrains.Annotations;
 using LiteNetLib.Utils;
 using ReadyM.Api;
 using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
 using ReadyM.Relay.Common.Wukong.Components;
 using ReadyM.Relay.Common.Wukong.Jobs;
 using UnrealEngine.Engine;
-using WukongMp.Api.Client;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Resources;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public class WukongApi
+public class WukongMpMod : ReadyMultiplayerMod
 {
-    public readonly Store World;
-    public readonly CommandBufferSynced CommandBuffer;
     private readonly ArchetypeId _monsterArchetype;
-
-    public readonly NetworkedEntityManager NetManager;
-    private readonly WukongClient _client;
     private readonly SendEcsDeltaSystem _sendEcsDeltaSystem;
 
-    public static WukongApi Instance { get; } = new(WukongMP.Instance.Client);
+    public static WukongMpMod Instance { get; } = new();
 
-    private WukongApi(WukongClient client)
+    private WukongMpMod() : base(
+        CmdLineParams.Instance.UserGuid,
+        CmdLineParams.Instance.ServerIp!,
+        CmdLineParams.Instance.ServerPort!.Value)
     {
-        _client = client;
-        World = ReadyMApp.CreateEntityStore();
-
         _monsterArchetype = World.RegisterArchetype(b =>
         {
             WukongCoreApi.SetUpMonsterArchetype(b);
@@ -42,14 +40,7 @@ public class WukongApi
                 .Add<LocalTamerComponent>();
         });
 
-        var cb = World.GetCommandBuffer();
-        cb.ReuseBuffer = true;
-        CommandBuffer = cb.Synced;
-
-        NetManager = new NetworkedEntityManager(World, ReadyM.Relay.Common.Protocol.Constants.UnsetPeerId);
-        NetManager.onEntityDeleted += HandleEntityDeleted;
-
-        _sendEcsDeltaSystem = new SendEcsDeltaSystem(_client.RelayClient)
+        _sendEcsDeltaSystem = new SendEcsDeltaSystem(RelayClient)
         {
             Enabled = false // disabled by default until we become the master client
         };
@@ -60,50 +51,41 @@ public class WukongApi
         World.SystemRoot.Add(new SyncMonstersSystem());
         World.SystemRoot.Add(_sendEcsDeltaSystem);
 
-        _client.RelayClient.OnBeforeJoinedRoom += UpdatePeerId;
-        _client.RelayClient.OnEcsDelta += ApplyArchetypeDelta;
-        _client.RelayClient.OnReceivedDestroyEntity += DeleteRemoteEntityFromEcs;
-        _client.OnMasterClientChanged += OnMasterClientChanged;
+        RelayClient.OnBeforeJoinedRoom += OnUpdatePeerId;
+        RelayClient.OnEcsDelta += ApplyArchetypeDelta;
+        RelayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
     }
 
-    private void OnMasterClientChanged(short obj)
+    private void OnRoomPropertiesChanged(Dictionary<object, object?> diff)
     {
-        _sendEcsDeltaSystem.Enabled = _client.IsMasterClient;
-        Logging.LogDebug("SendEcsDeltaSystem enabled: {Enabled}", _sendEcsDeltaSystem.Enabled);
-    }
-
-    private void UpdatePeerId()
-    {
-        Logging.LogDebug("Updating NetManager peer id to {PeerId}", _client.LocalPlayerState.PeerId);
-        NetManager.PeerId = _client.LocalPlayerState.PeerId;
-
-        _sendEcsDeltaSystem.Enabled = _client.IsMasterClient;
-        Logging.LogDebug("SendEcsDeltaSystem enabled: {Enabled}", _sendEcsDeltaSystem.Enabled);
-    }
-
-    private void HandleEntityDeleted(NetworkIdComponent netId)
-    {
-        if (netId.Owner == _client.RelayClient.LocalPlayer.PeerId)
+        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is short newMasterId)
         {
-            // our own entity - send destroy event
-            Logging.LogDebug("Networked entity destroyed: {Id} (owned)", netId);
-            var writer = new NetDataWriter();
-            writer.Put((byte)SystemEvent.DestroyEntity);
-            writer.Put(netId);
-            _client.RelayClient.OpRaiseEventRaw(writer, DeliveryMethod.ReliableOrdered);
+            Logging.LogInformation("Master client changed to {NewMasterId}", newMasterId);
+
+            CheckSendDeltaSystem();
         }
+    }
+
+    private void CheckSendDeltaSystem()
+    {
+        _sendEcsDeltaSystem.Enabled = IsMasterClient;
+        Logging.LogDebug("SendEcsDeltaSystem enabled: {Enabled}", _sendEcsDeltaSystem.Enabled);
+    }
+
+    private void OnUpdatePeerId()
+    {
+        CheckSendDeltaSystem();
+    }
+
+    protected override void OnPingUpdated(int ping)
+    {
+        PingIndicatorWidget.Instance.SetPingValue(ping);
     }
 
     public void RunEcsWorldUpdate()
     {
         WukongMP.Instance.Client.SetCachedPlayerProperties();
-
-        lock (CommandBuffer) // TODO: Locking version of Playback() as extension method
-        {
-            CommandBuffer.Playback();
-        }
-
-        World.SystemRoot.Update(default);
+        Tick(default);
     }
 
     public Entity CreateNetworkedMonster()
@@ -117,21 +99,6 @@ public class WukongApi
     {
         Logging.LogDebug("Creating remote networked monster with {NetId}", netId);
         return NetManager.CreateRemoteNetworkedEntity(_monsterArchetype, netId);
-    }
-
-    private void DeleteRemoteEntityFromEcs(NetworkIdComponent netId)
-    {
-        if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
-        {
-            Logging.LogDebug("Queueing remote entity for destruction: {Id}", netId);
-            
-            // TODO: Playback synchronization & locking
-            CommandBuffer.DeleteEntity(entity.Value.Id);
-        }
-        else
-        {
-            Logging.LogError("Received destroy event for locally non-existent entity: {Id}", netId);
-        }
     }
 
     private void ApplyArchetypeDelta(NetDataReader reader)
@@ -164,6 +131,9 @@ public class WukongApi
 
         return null;
     }
+
+    protected override void Log(LogLevel level, [StructuredMessageTemplate] string message, params object?[] args)
+        => Logging.Log(level, message, args.AsSpan());
 
     public void SetMonsterHpScaling(int scaling)
     {

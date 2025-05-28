@@ -135,7 +135,7 @@ namespace WukongMp.Api.Patches
                 }
                 else
                 {
-                    var entity = WukongApi.Instance.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
                     if (!entity.HasValue)
                         return;
 
@@ -221,7 +221,7 @@ namespace WukongMp.Api.Patches
                     }
 
                     // monster was damaged
-                    var entity = WukongApi.Instance.GetMonsterByActor(owner as BGUCharacterCS);
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(owner as BGUCharacterCS);
                     if (!entity.HasValue || !entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
@@ -383,7 +383,7 @@ namespace WukongMp.Api.Patches
                 else
                 {
                     // maybe it's a monster
-                    var entity = WukongApi.Instance.GetMonsterByActor(character);
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(character);
 
                     if (entity.HasValue)
                     {
@@ -440,7 +440,7 @@ namespace WukongMp.Api.Patches
 
             if (Actor is BGUCharacterCS character)
             {
-                var entity = WukongApi.Instance.GetMonsterByActor(character);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(character);
                 if (entity.HasValue)
                 {
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
@@ -469,7 +469,7 @@ namespace WukongMp.Api.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var entity = WukongApi.Instance.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
                     if (SimpleState == EBGUSimpleState.Immobilizing)
@@ -497,7 +497,7 @@ namespace WukongMp.Api.Patches
             var owner = __instance.GetOwner();
             if (client.IsMasterClient)
             {
-                var entity = WukongApi.Instance.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
                 if (entity.HasValue)
                 {
                     if (Trigger == EBUStateTrigger.Die)
@@ -531,7 +531,7 @@ namespace WukongMp.Api.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var entity = WukongApi.Instance.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
 
                 if (!entity.HasValue)
                     return;

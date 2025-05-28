@@ -12,7 +12,6 @@ using CSharpModBase;
 using LiteNetLib;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -27,10 +26,10 @@ namespace WukongMp.Api.Client;
 
 public sealed partial class WukongClient
 {
-    public readonly RelayClient RelayClient;
+    public RelayClient RelayClient => WukongMpMod.Instance.RelayClient;
     private short PeerId => RelayClient.PeerId; // is -1 before joining room
-    public bool IsMasterClient => RoomState.MasterClientId == PeerId;
-    public bool ConnectedAndInRoom => RelayClient.InRoom;
+    public bool IsMasterClient => WukongMpMod.Instance.IsMasterClient;
+    public bool ConnectedAndInRoom => WukongMpMod.Instance.RelayClient.InRoom;
 
     private readonly Action _beforeJoinedRoomCallback;
     private readonly Action _afterJoinedRoomCallback;
@@ -72,12 +71,6 @@ public sealed partial class WukongClient
     {
         WukongChat = new WukongChatter(this);
         LobbyManager = new LobbyManager(this);
-        RelayClient = new RelayClient(
-            CmdLineParams.Instance.UserGuid,
-            CmdLineParams.Instance.ServerIp!,
-            CmdLineParams.Instance.ServerPort!.Value,
-            (level, s, args) => Logging.Log(level, s, args.AsSpan())
-        );
         RoomState = new RoomStateProxy(RelayClient);
 
         _beforeJoinedRoomCallback = onBeforeJoinedRoom;
@@ -92,10 +85,8 @@ public sealed partial class WukongClient
         Logging.LogInformation("WukongClient finalizer called");
         StopRelayClient();
 
-        RelayClient.OnPingUpdated -= OnPingUpdated;
         RelayClient.OnCustomEvent -= OnCustomEvent;
         RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
-        RelayClient.OnRoomPropertiesChanged -= OnRoomPropertiesChanged;
         RelayClient.OnBeforeJoinedRoom -= OnBeforeJoinedRoomHandler;
         RelayClient.OnAfterJoinedRoom -= OnAfterJoinedRoomHandler;
         RelayClient.OnDisconnected -= OnDisconnectedHandler;
@@ -179,11 +170,6 @@ public sealed partial class WukongClient
             var teamId = GameUtils.GetOppositeTeam(LocalPlayerState.TeamId);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
         }
-    }
-
-    private void OnPingUpdated(int ping)
-    {
-        PingIndicatorWidget.Instance.SetPingValue(ping);
     }
 
     private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
@@ -313,7 +299,7 @@ public sealed partial class WukongClient
         var aliveTeamIds = players.Where(p => !p.IsDead).Select(x => x.TeamId).ToList();
 
         var aliveMonsters = new List<int>();
-        WukongApi.Instance.World.Query<HpComponent, TeamComponent>().ForEachEntity((ref hp, ref team, _) =>
+        WukongMpMod.Instance.World.Query<HpComponent, TeamComponent>().ForEachEntity((ref hp, ref team, _) =>
         {
             if (hp.Hp <= 0)
                 return;
@@ -419,11 +405,6 @@ public sealed partial class WukongClient
         RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
         RelayClient.RegisterType(typeof(UnitSummonData), UnitSummonData.Serialize, UnitSummonData.Deserialize);
         RelayClient.RegisterType(typeof(PlayMovieData), PlayMovieData.Serialize, PlayMovieData.Deserialize);
-        RelayClient.RegisterType(typeof(NetworkIdComponent), (writer, customObject) =>
-        {
-            var id = (NetworkIdComponent)customObject;
-            writer.Put(id.Id);
-        }, reader => reader.GetNetworkId());
 
         RelayClient.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
         RelayClient.OnBeforeJoinedRoom += OnBeforeJoinedRoomHandler;
@@ -431,9 +412,7 @@ public sealed partial class WukongClient
         RelayClient.OnDisconnected += OnDisconnectedHandler;
         RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
         RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
-        RelayClient.OnPingUpdated += OnPingUpdated;
         RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
-        RelayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
     }
 
     public void StartClient()
@@ -714,7 +693,7 @@ public sealed partial class WukongClient
         if (!Constants.IsCoop)
         {
             // send current monsters to the new player
-            WukongApi.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
+            WukongMpMod.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
             {
                 const byte eventCode = 1;
                 var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
@@ -850,17 +829,6 @@ public sealed partial class WukongClient
                     break;
                 }
             }
-        }
-    }
-
-    public event Action<short>? OnMasterClientChanged;
-
-    private void OnRoomPropertiesChanged(Dictionary<object, object?> diff)
-    {
-        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is short newMasterId)
-        {
-            Logging.LogInformation("Master client changed to {NewMasterId}", newMasterId);
-            OnMasterClientChanged?.Invoke(newMasterId);
         }
     }
 

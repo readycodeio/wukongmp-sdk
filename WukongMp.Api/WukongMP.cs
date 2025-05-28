@@ -346,7 +346,7 @@ namespace WukongMp.Api
             }
 
             // dump synced monsters
-            WukongApi.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) => { Logging.LogDebug("Monster: {Json}", entity.DebugJSON); });
+            WukongMpMod.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) => { Logging.LogDebug("Monster: {Json}", entity.DebugJSON); });
 
             // print team hostility info
             var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
@@ -378,7 +378,7 @@ namespace WukongMp.Api
                 Client.RoomState.InCombatRound = true;
 
                 var monsterCount = 0;
-                WukongApi.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, _) =>
+                WukongMpMod.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, _) =>
                 {
                     if (tamer.IsSynced)
                     {
@@ -488,7 +488,7 @@ namespace WukongMp.Api
                 {
                     var hasGuid = false;
 
-                    WukongApi.Instance.World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
+                    WukongMpMod.Instance.World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
                     {
                         if (tamer.Guid == guid)
                         {
@@ -712,7 +712,7 @@ namespace WukongMp.Api
 
         private void OnStateTriggerSet(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
         {
-            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -732,7 +732,7 @@ namespace WukongMp.Api
 
         private void OnSimpleStateSet(NetworkIdComponent netId, EBGUSimpleState state, bool isForce)
         {
-            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -753,7 +753,7 @@ namespace WukongMp.Api
 
         private void OnFsmStateSet(NetworkIdComponent netId, string eventName)
         {
-            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -774,7 +774,7 @@ namespace WukongMp.Api
 
         private void OnMotionMatchingChanged(NetworkIdComponent netId, EState_MM motionMatchingState)
         {
-            if (!WukongApi.Instance.NetManager.TryGetEntityByNetworkId(netId, out var entity))
+            if (!WukongMpMod.Instance.NetManager.TryGetEntityByNetworkId(netId, out var entity))
             {
                 LogNullCharacter(netId);
                 return;
@@ -817,7 +817,7 @@ namespace WukongMp.Api
 
         private void OnTargetSet(NetworkIdComponent playerId, NetworkIdComponent targetId, bool clearTarget)
         {
-            var pawn = WukongApi.Instance.GetPawnByNetworkId(playerId);
+            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(playerId);
             if (pawn == null)
             {
                 LogNullCharacter(targetId);
@@ -832,7 +832,7 @@ namespace WukongMp.Api
                 return;
             }
 
-            var targetPawn = WukongApi.Instance.GetPawnByNetworkId(targetId);
+            var targetPawn = WukongMpMod.Instance.GetPawnByNetworkId(targetId);
             if (targetPawn == null)
             {
                 LogNullCharacter(targetId);
@@ -954,7 +954,7 @@ namespace WukongMp.Api
 
         private void HandleImmobilize(NetworkIdComponent netId, NetworkIdComponent otherNetId, ImmobilizeActionType immobilizeAction, bool hasBuff)
         {
-            var pawn = WukongApi.Instance.GetPawnByNetworkId(netId);
+            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
             if (pawn == null)
             {
                 LogNullCharacter(netId);
@@ -968,7 +968,7 @@ namespace WukongMp.Api
                     CastImmobilize(pawn);
                     break;
                 case ImmobilizeActionType.Trigger:
-                    var otherPawn = WukongApi.Instance.GetPawnByNetworkId(otherNetId);
+                    var otherPawn = WukongMpMod.Instance.GetPawnByNetworkId(otherNetId);
                     if (otherPawn == null)
                     {
                         Logging.LogError("Target not found: {Id}", otherNetId);
@@ -1032,7 +1032,7 @@ namespace WukongMp.Api
             Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
             var playerEvents = BUS_EventCollectionCS.Get(pawn);
 
-            var entity = WukongApi.Instance.GetMonsterByActor(pawn);
+            var entity = WukongMpMod.Instance.GetMonsterByActor(pawn);
             if (entity.HasValue)
             {
                 ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
@@ -1181,7 +1181,7 @@ namespace WukongMp.Api
 
         private void OnRemoteUnitDead(UnitDeadPacket data)
         {
-            var pawn = WukongApi.Instance.GetPawnByNetworkId(data.NetworkId);
+            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(data.NetworkId);
             if (pawn == null)
             {
                 LogNullCharacter(data.NetworkId);
@@ -1201,7 +1201,7 @@ namespace WukongMp.Api
         public void ApplyPlayerMontageCallback(MontageCallbackData data)
         {
             var id = data.NetId;
-            var pawn = WukongApi.Instance.GetPawnByNetworkId(id);
+            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(id);
             if (pawn == null)
             {
                 LogNullCharacter(id);
@@ -1383,7 +1383,7 @@ namespace WukongMp.Api
 
         public Entity CreateRemoteMonster(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            var id = WukongApi.Instance.CreateNetworkedMonster(netId);
+            var id = WukongMpMod.Instance.CreateNetworkedMonster(netId);
 
             id.AddComponent(new LocalTamerComponent(tamer));
 
@@ -1400,7 +1400,7 @@ namespace WukongMp.Api
 
         public Entity CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
         {
-            var id = WukongApi.Instance.CreateNetworkedMonster();
+            var id = WukongMpMod.Instance.CreateNetworkedMonster();
             id.AddComponent(new LocalTamerComponent(tamer));
 
             ref var tamerComp = ref id.GetComponent<TamerComponent>();
@@ -1464,7 +1464,7 @@ namespace WukongMp.Api
 
         public void ClearEcsMonsters()
         {
-            WukongApi.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Id); });
+            WukongMpMod.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id); });
         }
 
         public void DestroyMonster(Entity entity)
@@ -1499,7 +1499,7 @@ namespace WukongMp.Api
             }
 
             Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.ToString());
-            WukongApi.Instance.CommandBuffer.DeleteEntity(entity.Id);
+            WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
         }
 
         private void OnBeforeJoinedRoomCallback()

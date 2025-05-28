@@ -87,7 +87,7 @@ namespace WukongMp.Api.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 RunMontageSync();
-                WukongApi.Instance.RunEcsWorldUpdate();
+                WukongMpMod.Instance.RunEcsWorldUpdate();
                 ComponentMonitorManager.Instance.Update();
             }
         }
@@ -122,7 +122,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                WukongApi.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
+                WukongMpMod.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
             }
         }
 

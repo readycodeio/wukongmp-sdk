@@ -28,7 +28,7 @@ namespace WukongMp.Api.Patches
 
             if (client.IsMasterClient)
             {
-                WukongApi.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
+                WukongMpMod.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
                     if (!tamer.IsSynced || !tamer.IsTamerValid || tamer.Pawn == null)
                         return;
@@ -39,7 +39,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                WukongApi.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
+                WukongMpMod.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
                     if (!tamer.IsTamerValid || !tamer.IsSynced || tamer.Pawn == null)
                         return;
@@ -82,7 +82,7 @@ namespace WukongMp.Api.Patches
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
-                var entity = WukongApi.Instance.GetByTamerActor(tamer);
+                var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
                 if (entity != null)
                 {
                     ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
@@ -256,7 +256,7 @@ namespace WukongMp.Api.Patches
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
-                var entity = WukongApi.Instance.GetMonsterByActor(owner);
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
                 if (entity != null)
                 {
                     var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
@@ -300,7 +300,7 @@ namespace WukongMp.Api.Patches
 
             var client = WukongMP.Instance.Client;
 
-            var entity = WukongApi.Instance.GetMonsterByActor(character);
+            var entity = WukongMpMod.Instance.GetMonsterByActor(character);
             if (entity.HasValue)
             {
                 ref var tamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
