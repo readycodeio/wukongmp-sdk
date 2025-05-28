@@ -1,19 +1,241 @@
-﻿using b1;
+﻿using System;
+using System.Threading.Tasks;
+using b1;
 using b1.BGW;
+using BtlShare;
+using CSharpModBase;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
+using WukongMp.Api.DTO;
+using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.DTO;
+using WukongMp.Api.Old.Client;
+using WukongMp.Api.Old.Enums;
+using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
+using WukongMp.Api.Resources;
 
 namespace WukongMp.Api;
 
 public partial class WukongMpMod
 {
+    private static WukongClient Client => WukongMP.Instance.Client; // TODO: Remove
+
+    #region Callbacks
+
+    [RpcEvent(RelayMode.All, EventCaching.AddToRoomCacheGlobal)]
+    private static void OnChatMessage(ChatMessage message)
+    {
+        WukongChatter.OnGetMessage(message);
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    private void OnPhantomRush(short __sender, ESkillDirection direction)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            var playerState = Client.GetPlayerById(__sender);
+            if (playerState?.Pawn == null)
+            {
+                Logging.LogError("Player not found: {PlayerId}", __sender);
+                return;
+            }
+
+            Logging.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", playerState.NickName, direction);
+            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            events?.Evt_TriggerPhantomRush.Invoke(direction);
+
+            WukongMP.ResetCooldown(playerState.Pawn);
+            WukongMP.ResetMana(playerState.Pawn);
+        }, nameof(OnPhantomRush));
+    }
+
+    [RpcEvent(RelayMode.All)]
+    public void OnBroadcastPlayerTransform(PlayerTransformData data)
+    {
+        // TODO: Use targeted RPC mode (select which peers to send to)
+        if (data.PlayerId != RelayClient.PeerId)
+            return;
+
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            var playerState = Client.LocalPlayerState;
+            BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
+            playerState.TeleportFinishFrames = 5;
+            GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(data.Rotation, data.Location), false, out _, true);
+            GameUtils.GetPlayerController().SetControlRotation(data.Rotation);
+        }, nameof(OnBroadcastPlayerTransform));
+    }
+
+    [RpcEvent(RelayMode.All)]
+    private void OnPvpEvent(int[] data)
+    {
+        // TODO: Not QueueOnGameThread, why?
+        var ev = (PvPEvent)data[0];
+        var winnerTeamId = data[1];
+
+        Logging.LogDebug("Received PvP event: {Event}", ev);
+
+        switch (ev)
+        {
+            case PvPEvent.RoundStart:
+                Task.Run(GameUtils.ShowPvPCountDown);
+                WukongMP.Instance.StartRound();
+                WukongMP.Instance.EnablePvP();
+                Client.EnterPvP();
+                break;
+            case PvPEvent.RoundEnd:
+                WukongMP.Instance.DisablePvP();
+                WukongMP.Instance.EndRound();
+
+                if (winnerTeamId == Constants.DrawTeamId)
+                {
+                    GameUtils.ShowTip(Texts.RoundDraw);
+                }
+                else
+                {
+                    GameUtils.ShowTip(string.Format(Texts.RoundEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
+                }
+
+                if (winnerTeamId == Constants.DrawTeamId)
+                    return;
+
+                if (winnerTeamId == Client.LocalPlayerState.TeamId)
+                {
+                    GameUtils.PlayBossDefeatedSound();
+                }
+
+                break;
+            case PvPEvent.TournamentEnd:
+            {
+                if (winnerTeamId == Constants.DrawTeamId)
+                {
+                    GameUtils.ShowTip(Texts.TournamentDraw);
+                }
+                else
+                {
+                    GameUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
+                }
+
+                Task.Run(async () =>
+                {
+                    if (IsMasterClient)
+                    {
+                        foreach (var playerState in WukongMP.Instance.Client.SpectatingPlayers)
+                        {
+                            Client.SetRemotePlayerProperty(playerState.PeerId, nameof(PlayerState.IsSpectator), false);
+                        }
+                    }
+
+                    await Task.Delay(2000);
+                    WukongMP.Instance.EndTournament(winnerTeamId);
+                    Client.ExitPvP();
+                    Client.LocalPlayerState.IsReadyForPvP = false;
+                    Client.SetReadyState(false);
+                });
+
+                break;
+            }
+            case PvPEvent.ResetStats:
+                WukongMP.Instance.ResetRoundState();
+
+                if (!Client.LocalPlayerState.IsDead)
+                {
+                    Utils.TryRunOnGameThread(() =>
+                    {
+                        GameUtils.DestroyAllTamers();
+                        var events = BUS_EventCollectionCS.Get(Client.LocalPlayerState.Pawn!);
+
+                        if (events == null)
+                        {
+                            Logging.LogError("events are null");
+                            return;
+                        }
+
+                        events.Evt_TriggerTeleportResetPlayer!.Invoke();
+                    });
+                }
+
+                if (IsMasterClient)
+                {
+                    // reset other players' Hp to HpMax if they are not dead
+                    foreach (var (key, state) in Client.ConnectedPlayers)
+                    {
+                        if (!state.IsDead)
+                        {
+                            if (state.Pawn == null)
+                            {
+                                Logging.LogError("Pawn is null in {Patch}", nameof(OnPvpEvent));
+                                return;
+                            }
+
+                            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Pawn);
+                            if (attrContainer != null)
+                            {
+                                var hpMax = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
+                                attrContainer.SetFloatValue(EBGUAttrFloat.Hp, hpMax);
+                                state.Hp = hpMax;
+                                Client.SetRemotePlayerProperty(key, nameof(PlayerState.Hp), state.Hp);
+                            }
+                        }
+                    }
+                }
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ev));
+        }
+    }
+
+    [RpcEvent(RelayMode.Master)]
+    private void OnSuicide(short __sender)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            var player = Client.GetPlayerById(__sender)?.Pawn;
+            if (player == null)
+                return;
+
+            var events = BUS_EventCollectionCS.Get(player);
+            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
+            if (IsMasterClient)
+            {
+                events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
+            }
+        }, nameof(OnSuicide));
+    }
+
+    [RpcEvent(RelayMode.All)]
+    private static void OnRebirthPlayer(short peerId)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
+
+            var player = WukongMP.Instance.Client.GetPlayerById(peerId);
+            if (player == null)
+                return;
+
+            if (player.PeerId == WukongMP.Instance.Client.LocalPlayerState.PeerId)
+            {
+                FreeCameraManager.Instance.LeaveFreeCameraMode();
+            }
+
+            var events = BUS_EventCollectionCS.Get(player.Pawn);
+            if (events != null)
+            {
+                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
+                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
+                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
+            }
+        }, nameof(OnRebirthPlayer));
+    }
+
     [RpcEvent(RelayMode.Others)]
     private static void OnDamageNum(DamageNumParam damageNum)
     {
@@ -43,7 +265,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void WakeUpMonster(string guid)
+    private void OnWakeUpMonster(string guid)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -94,7 +316,7 @@ public partial class WukongMpMod
             }
 
             // TODO: Spawn if not found
-        }, nameof(WakeUpMonster));
+        }, nameof(OnWakeUpMonster));
     }
 
     [RpcEvent(RelayMode.Others)]
@@ -182,6 +404,10 @@ public partial class WukongMpMod
         }, nameof(OnUnitDead));
     }
 
+    #endregion
+
+    #region Helpers
+
     public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
     {
         Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
@@ -198,6 +424,19 @@ public partial class WukongMpMod
         SendMontageCallback(evData);
     }
 
+    public void SendPvPEvent(PvPEvent ev, int data = 0)
+    {
+        if (!IsMasterClient)
+        {
+            Logging.LogError("Only room owner can send start countdown.");
+            return;
+        }
+
+        Logging.LogInformation("Sending PvP event: {Event}", ev);
+
+        SendPvpEvent([(int)ev, data]);
+    }
+
     private static void LogNullCharacter(NetworkIdComponent characterId)
     {
         if (characterId.Id != uint.MaxValue)
@@ -205,4 +444,6 @@ public partial class WukongMpMod
         else
             Logging.LogError("Player not found: {Id}", characterId); // player not found
     }
+
+    #endregion
 }

@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.Old.Enums
 {
-    public enum PvPEvent : byte
+    public enum PvPEvent
     {
         RoundStart,
         RoundEnd,

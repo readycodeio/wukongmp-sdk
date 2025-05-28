@@ -5,7 +5,7 @@ using LiteNetLib.Utils;
 
 namespace WukongMp.Api.Old.State
 {
-    public class EquipmentState
+    public struct EquipmentState
     {
         private readonly int[] equipments = [0, 0, 0, 0, 0, 0, 0, 0];
 

@@ -4,7 +4,7 @@ using WukongMp.Api.Old.Enums;
 
 namespace WukongMp.Api.Old.DTO
 {
-    public class ImmobilizeData(NetworkIdComponent playerId, NetworkIdComponent otherPlayerId, ImmobilizeActionType immobilizeActionType, bool greatSageTalentActiveBuff)
+    public struct ImmobilizeData(NetworkIdComponent playerId, NetworkIdComponent otherPlayerId, ImmobilizeActionType immobilizeActionType, bool greatSageTalentActiveBuff)
     {
         public NetworkIdComponent PlayerId { get; } = playerId;
         public NetworkIdComponent OtherPlayerId { get; } = otherPlayerId;

@@ -547,7 +547,7 @@ public static class PatchOnUnitCastSkillTry
             if (owner == client.LocalPlayerState.Pawn)
             {
                 Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
-                client.SendPhantomRush(CSI.SkillDirection);
+                WukongMpMod.Instance.SendPhantomRush(CSI.SkillDirection);
             }
         }
     }
@@ -671,6 +671,7 @@ public class PatchLogs4
             IsDisabled = false;
             return true;
         }
+
         if (__instance.OwnerCharacter?.GetName() != GameUtils.GetControlledPawn()?.GetName())
         {
             __result = true;
@@ -808,6 +809,7 @@ public class PatchSpawnAndPossess
             Logging.LogDebug("New pawn is null, cannot transform");
             return null;
         }
+
         if (blendParam.NeedBlend && playerController != null)
             playerController.OnPossessWithViewTargetBlend(newPawn, blendParam.PossessBlendTime, (EViewTargetBlendFunction)blendParam.PossessBlendFunc, blendParam.PossessBlendExp, true, blendParam.EnableBlendViewTarget);
         else
@@ -864,6 +866,7 @@ public class PatchUpdateTransGuideData
         {
             return false;
         }
+
         return true;
     }
 }
@@ -881,6 +884,7 @@ public class PatchOnPostTransBindData
         {
             return false;
         }
+
         return true;
     }
 }

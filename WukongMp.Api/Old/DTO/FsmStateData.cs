@@ -3,7 +3,7 @@ using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.Old.DTO
 {
-    public class FsmStateData(NetworkIdComponent netId, string fsmStateName)
+    public struct FsmStateData(NetworkIdComponent netId, string fsmStateName)
     {
         public NetworkIdComponent NetId { get; } = netId;
         public string FsmStateName { get; } = fsmStateName;

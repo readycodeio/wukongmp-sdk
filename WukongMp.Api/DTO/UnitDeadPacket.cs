@@ -3,7 +3,7 @@ using BtlShare;
 using LiteNetLib.Utils;
 using ReadyM.Relay.Common.ECS;
 
-namespace WukongMp.Api.Old.DTO;
+namespace WukongMp.Api.DTO;
 
 public struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType) : INetSerializable
 {

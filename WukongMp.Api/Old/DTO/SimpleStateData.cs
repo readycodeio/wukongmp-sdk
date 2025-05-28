@@ -4,7 +4,7 @@ using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.Old.DTO
 {
-    public class SimpleStateData(NetworkIdComponent netId, EBGUSimpleState simpleState, bool isRemove)
+    public struct SimpleStateData(NetworkIdComponent netId, EBGUSimpleState simpleState, bool isRemove)
     {
         public NetworkIdComponent NetId { get; } = netId;
         public EBGUSimpleState SimpleState { get; } = simpleState;

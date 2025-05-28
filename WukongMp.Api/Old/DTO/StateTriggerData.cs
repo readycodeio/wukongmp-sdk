@@ -4,7 +4,7 @@ using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.Old.DTO
 {
-    public class StateTriggerData(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
+    public struct StateTriggerData(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
     {
         public NetworkIdComponent NetId { get; } = netId;
         public EBUStateTrigger Trigger { get; } = trigger;

@@ -12,6 +12,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.GameApi;
 using WukongMp.Api.GameApi.Configuration;
@@ -31,8 +32,6 @@ namespace WukongMp.Api.Old
     // ReSharper disable once InconsistentNaming
     public class WukongMP
     {
-        public FreeCameraManager FreeCameraManager { get; } = new();
-
         private readonly Harmony _harmony = new("WukongMP");
 
         public WukongClient Client { get; }
@@ -244,7 +243,7 @@ namespace WukongMp.Api.Old
 
             if (isMyself)
             {
-                FreeCameraManager.EnterFreeCameraMode();
+                FreeCameraManager.Instance.EnterFreeCameraMode();
                 SetupSpectatorUi();
             }
 
@@ -262,7 +261,7 @@ namespace WukongMp.Api.Old
 
             if (isMyself)
             {
-                FreeCameraManager.LeaveFreeCameraMode();
+                FreeCameraManager.Instance.LeaveFreeCameraMode();
                 if (Client.RoomState.InMatchmaking)
                 {
                     SetupMatchmakingUi();
@@ -511,28 +510,6 @@ namespace WukongMp.Api.Old
             Logging.LogInformation("End tournament");
             SetupLobbyUi();
         }
-        
-        private void RebirthPlayer(short peerId)
-        {
-            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
-
-            var player = Client.GetPlayerById(peerId);
-            if (player == null)
-                return;
-
-            if (player.PeerId == Client.LocalPlayerState.PeerId)
-            {
-                FreeCameraManager.LeaveFreeCameraMode();
-            }
-
-            var events = BUS_EventCollectionCS.Get(player.Pawn);
-            if (events != null)
-            {
-                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
-                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
-                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
-            }
-        }
 
         private void ConfigureEventCallbacks()
         {
@@ -549,10 +526,6 @@ namespace WukongMp.Api.Old
             Client.OnReadinessChange += (name, isReady, readyCount) => GameLoopPatch.QueueOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
             Client.OnTeamChange += (playerState, teamId) => GameLoopPatch.QueueOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
             Client.OnPlayerLeft += playerState => GameLoopPatch.QueueOnGameThread(() => RemovePlayer(playerState));
-            Client.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
-            Client.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
-            Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => TeleportLocalPlayer(loc, rot), "TeleportLocalPlayer");
-            Client.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
             Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
             Client.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Client.OnTargetSet += (characterId, targetId, clear) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(characterId, targetId, clear), "OnTargetSet");
@@ -878,46 +851,6 @@ namespace WukongMp.Api.Old
             }
         }
 
-        private void KillPlayer(short peerId)
-        {
-            var player = Client.GetPlayerById(peerId)?.Pawn;
-            if (player == null)
-                return;
-
-            var events = BUS_EventCollectionCS.Get(player);
-            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            if (Client.IsMasterClient)
-            {
-                events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
-            }
-        }
-
-        private void TeleportLocalPlayer(FVector location, FRotator rotation)
-        {
-            var playerState = Client.LocalPlayerState;
-            BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
-            playerState.TeleportFinishFrames = 5;
-            GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
-            GameUtils.GetPlayerController().SetControlRotation(rotation);
-        }
-
-        private void PerformPhantomRush(short peerId, ESkillDirection direction)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState?.Pawn == null)
-            {
-                Logging.LogError("Player not found: {PlayerId}", peerId);
-                return;
-            }
-
-            Logging.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", playerState.NickName, direction);
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            events?.Evt_TriggerPhantomRush.Invoke(direction);
-
-            ResetCooldown(playerState.Pawn);
-            ResetMana(playerState.Pawn);
-        }
-
         public static void ResetLocalPlayerCooldown()
         {
             var player = GameUtils.GetControlledPawn();
@@ -937,13 +870,13 @@ namespace WukongMp.Api.Old
             GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
         }
 
-        private static void ResetCooldown(APawn playerPawn)
+        public static void ResetCooldown(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_ResetSkillCD.Invoke();
         }
 
-        private static void ResetMana(APawn playerPawn)
+        public static void ResetMana(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(playerPawn);
@@ -1171,7 +1104,7 @@ namespace WukongMp.Api.Old
             _coopStatusWidget.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
             _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
         }
-        
+
         public void SpawnUnitsMaster(short peerId, string unitName, int count, int teamId)
         {
             var playerState = Client.GetPlayerById(peerId);
@@ -1433,10 +1366,11 @@ namespace WukongMp.Api.Old
 
         private void OnAfterJoinedRoomCallback()
         {
-            var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PeerId);
             if (!Constants.IsCoop)
             {
-                TeleportLocalPlayer(spawnPosition, FRotator.ZeroRotator);
+                var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PeerId);
+                var data = new PlayerTransformData(Client.LocalPlayerState.PeerId, spawnPosition, FRotator.ZeroRotator);
+                WukongMpMod.Instance.OnBroadcastPlayerTransform(data);
             }
             else
             {

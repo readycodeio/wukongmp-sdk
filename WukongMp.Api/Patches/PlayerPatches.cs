@@ -10,6 +10,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.GameApi;
 using WukongMp.Api.GameApi.Configuration;
@@ -408,7 +409,7 @@ namespace WukongMp.Api.Patches
 
             if (owner == client.LocalPlayerState.Pawn)
             {
-                WukongMP.Instance.FreeCameraManager.EnterFreeCameraMode();
+                FreeCameraManager.Instance.EnterFreeCameraMode();
                 return;
             }
 

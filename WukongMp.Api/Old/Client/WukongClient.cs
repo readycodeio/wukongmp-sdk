@@ -15,6 +15,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.DTO;
 using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.DTO;
@@ -72,8 +73,9 @@ public sealed partial class WukongClient
 
     public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<short> playerJoinedCallback)
     {
-        WukongChat = new WukongChatter(this);
-        LobbyManager = new LobbyManager(this);
+        // TODO: Figure out ownership
+        WukongChat = new WukongChatter(this, WukongMpMod.Instance);
+        LobbyManager = new LobbyManager(this, WukongMpMod.Instance);
         RoomState = new RoomStateProxy(RelayClient);
 
         _beforeJoinedRoomCallback = onBeforeJoinedRoom;
@@ -138,7 +140,7 @@ public sealed partial class WukongClient
         }
     }
 
-    private void SetReadyState(bool isReady)
+    public void SetReadyState(bool isReady)
     {
         CachePlayerProperty(nameof(PlayerState.IsReadyForPvP), isReady);
     }
@@ -172,121 +174,6 @@ public sealed partial class WukongClient
         {
             var teamId = GameUtils.GetOppositeTeam(LocalPlayerState.TeamId);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
-        }
-    }
-
-    private void HandlePvPEvent(PvPEvent ev, int winnerTeamId)
-    {
-        Logging.LogDebug("Received PvP event: {Event}", ev);
-
-        switch (ev)
-        {
-            case PvPEvent.RoundStart:
-                Task.Run(GameUtils.ShowPvPCountDown);
-                WukongMP.Instance.StartRound();
-                WukongMP.Instance.EnablePvP();
-                EnterPvP();
-                break;
-            case PvPEvent.RoundEnd:
-                WukongMP.Instance.DisablePvP();
-                WukongMP.Instance.EndRound();
-
-                if (winnerTeamId == Constants.DrawTeamId)
-                {
-                    GameUtils.ShowTip(Texts.RoundDraw);
-                }
-                else
-                {
-                    GameUtils.ShowTip(string.Format(Texts.RoundEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
-                }
-
-                if (winnerTeamId == Constants.DrawTeamId)
-                    return;
-
-                if (winnerTeamId == LocalPlayerState.TeamId)
-                {
-                    GameUtils.PlayBossDefeatedSound();
-                }
-
-                break;
-            case PvPEvent.TournamentEnd:
-            {
-                if (winnerTeamId == Constants.DrawTeamId)
-                {
-                    GameUtils.ShowTip(Texts.TournamentDraw);
-                }
-                else
-                {
-                    GameUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
-                }
-
-                Task.Run(async () =>
-                {
-                    if (IsMasterClient)
-                    {
-                        foreach (var playerState in WukongMP.Instance.Client.SpectatingPlayers)
-                        {
-                            SetRemotePlayerProperty(playerState.PeerId, nameof(PlayerState.IsSpectator), false);
-                        }
-                    }
-
-                    await Task.Delay(2000);
-                    WukongMP.Instance.EndTournament(winnerTeamId);
-                    ExitPvP();
-                    LocalPlayerState.IsReadyForPvP = false;
-                    SetReadyState(false);
-                });
-
-                break;
-            }
-            case PvPEvent.ResetStats:
-                WukongMP.Instance.ResetRoundState();
-
-                if (!LocalPlayerState.IsDead)
-                {
-                    Utils.TryRunOnGameThread(() =>
-                    {
-                        GameUtils.DestroyAllTamers();
-                        var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn!);
-
-                        if (events == null)
-                        {
-                            Logging.LogError("events are null");
-                            return;
-                        }
-
-                        events.Evt_TriggerTeleportResetPlayer!.Invoke();
-                    });
-                }
-
-                if (IsMasterClient)
-                {
-                    // reset other players' Hp to HpMax if they are not dead
-                    foreach (var (key, state) in ConnectedPlayers)
-                    {
-                        if (!state.IsDead)
-                        {
-                            if (state.Pawn == null)
-                            {
-                                Logging.LogError("Pawn is null in {Patch}", nameof(HandlePvPEvent));
-                                return;
-                            }
-
-                            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Pawn);
-                            if (attrContainer != null)
-                            {
-                                var hpMax = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
-                                attrContainer.SetFloatValue(EBGUAttrFloat.Hp, hpMax);
-                                state.Hp = hpMax;
-                                SetRemotePlayerProperty(key, nameof(PlayerState.Hp), state.Hp);
-                            }
-                        }
-                    }
-                }
-
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ev));
         }
     }
 
@@ -343,7 +230,7 @@ public sealed partial class WukongClient
         }
     }
 
-    private void EnterPvP()
+    public void EnterPvP()
     {
         if (!IsMasterClient)
             return;
@@ -357,7 +244,7 @@ public sealed partial class WukongClient
         RoomState.InPvP = true;
     }
 
-    private void ExitPvP()
+    public void ExitPvP()
     {
         if (!IsMasterClient)
             return;
@@ -390,20 +277,16 @@ public sealed partial class WukongClient
 
     private void ConfigureRelay()
     {
-        RelayClient.RegisterType(typeof(ChatMessage), ChatMessage.Serialize, ChatMessage.Deserialize);
         RelayClient.RegisterType(typeof(DamageNumParam), SerializationHelpers.SerializeDamageNumParam, SerializationHelpers.DeserializeDamageNumParam);
         RelayClient.RegisterType(typeof(EquipmentState), EquipmentState.Serialize, EquipmentState.Deserialize);
         RelayClient.RegisterType(typeof(FRotator), SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
         RelayClient.RegisterType(typeof(FVector), SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
         RelayClient.RegisterType(typeof(FsmStateData), FsmStateData.Serialize, FsmStateData.Deserialize);
         RelayClient.RegisterType(typeof(ImmobilizeData), ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
-        RelayClient.RegisterType<MontageCallbackData>();
         RelayClient.RegisterType(typeof(PlayerTransBeginData), PlayerTransBeginData.Serialize, PlayerTransBeginData.Deserialize);
         RelayClient.RegisterType(typeof(PlayerTransEndData), PlayerTransEndData.Serialize, PlayerTransEndData.Deserialize);
-        RelayClient.RegisterType(typeof(PlayerTransformData), PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
         RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
         RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
-        RelayClient.RegisterType<UnitDeadPacket>();
         RelayClient.RegisterType(typeof(UnitSpawnData), UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
         RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
         RelayClient.RegisterType(typeof(UnitSummonData), UnitSummonData.Serialize, UnitSummonData.Deserialize);

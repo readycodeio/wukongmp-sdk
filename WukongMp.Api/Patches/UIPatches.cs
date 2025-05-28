@@ -48,12 +48,12 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var client = WukongMP.Instance.Client;
+            var mod = WukongMpMod.Instance;
 
-            if (!client.IsMasterClient)
+            if (!mod.IsMasterClient)
                 return false;
 
-            client.SendDamageNum(Param);
+            mod.SendDamageNum(Param);
             return true;
         }
     }

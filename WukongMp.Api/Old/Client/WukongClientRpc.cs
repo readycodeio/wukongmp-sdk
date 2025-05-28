@@ -8,6 +8,7 @@ using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.DTO;
 using WukongMp.Api.Old.DTO;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
@@ -22,11 +23,7 @@ public sealed partial class WukongClient
     public event Action<string, bool, int>? OnReadinessChange;
     public event Action<PlayerState, int>? OnTeamChange;
     public event Action<PlayerState>? OnPlayerLeft;
-    public event Action<short>? OnPlayerRebirth;
-    public event Action<short>? OnKillPlayer;
-    public event Action<FVector, FRotator>? OnSetPlayerTransform;
     public event Action? OnBeforeJoinRoom;
-    public event Action<short, ESkillDirection>? OnPhantomRush;
     public event Action<short>? OnExitPhantomRush;
     public event Action<NetworkIdComponent, NetworkIdComponent, ImmobilizeActionType, bool>? OnHandleImmobilize;
     public event Action<NetworkIdComponent, NetworkIdComponent, bool>? OnTargetSet;
@@ -52,34 +49,6 @@ public sealed partial class WukongClient
                 // unit spawn
                 var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
                 OnUnitSpawn?.Invoke(unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
-                break;
-            case 7:
-            {
-                // player rebirth
-                var playerId = RelayClient.DeserializeObject<short>(reader);
-                OnPlayerRebirth?.Invoke(playerId);
-                break;
-            }
-            case 8:
-                // PvP event
-                var ev = RelayClient.DeserializeObject<int[]>(reader);
-                HandlePvPEvent((PvPEvent)ev[0], ev[1]);
-                break;
-            case 9:
-                // kill player
-                var id = RelayClient.DeserializeObject<short>(reader);
-                OnKillPlayer?.Invoke(id);
-                break;
-            case 10:
-                // player transform
-                var playerData = RelayClient.DeserializeObject<PlayerTransformData>(reader);
-                if (playerData.PlayerId == LocalPlayerState.PeerId)
-                    OnSetPlayerTransform?.Invoke(playerData.Location, playerData.Rotation);
-                break;
-            case 11:
-                // start phantom rush
-                var direction = RelayClient.DeserializeObject<ESkillDirection>(reader);
-                OnPhantomRush?.Invoke(header.Sender, direction);
                 break;
             case 12:
                 // immobilize
@@ -137,11 +106,6 @@ public sealed partial class WukongClient
                 var mmdata = RelayClient.DeserializeObject<int[]>(reader);
                 OnMotionMatchingChanged?.Invoke(new NetworkIdComponent((short)mmdata[0], (uint)mmdata[1]), (EState_MM)mmdata[2]);
                 break;
-            case 23:
-                // chat message received
-                var chatMessage = RelayClient.DeserializeObject<ChatMessage>(reader);
-                WukongChatter.OnGetMessage(chatMessage);
-                break;
             case 24:
                 // spawn summon
                 var summonData = RelayClient.DeserializeObject<UnitSummonData>(reader);
@@ -183,52 +147,6 @@ public sealed partial class WukongClient
                 OnWaitingForMovie?.Invoke(header.Sender, sequenceId);
                 break;
         }
-    }
-
-    public void SendDamageNum(DamageNumParam damageNumParam)
-    {
-        const byte eventCode = 6;
-        RelayClient.OpRaiseEvent(eventCode, damageNumParam, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void BroadcastPlayerRebirth(int playerId)
-    {
-        const byte eventCode = 7;
-        RelayClient.OpRaiseEvent(eventCode, playerId, RelayMode.All, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void SendPvPEvent(PvPEvent ev, int data = 0)
-    {
-        if (!IsMasterClient)
-        {
-            Logging.LogError("Only room owner can send start countdown.");
-            return;
-        }
-
-        Logging.LogInformation("Sending PvP event: {Event}", ev);
-
-        const byte eventCode = 8;
-        var evData = new[] { (int)ev, data };
-        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.All, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void KillCurrentPlayer()
-    {
-        const byte eventCode = 9;
-        RelayClient.OpRaiseEvent(eventCode, PeerId, RelayMode.Master, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void BroadcastPlayerTransform(int playerId, FVector location, FRotator rotation)
-    {
-        const byte eventCode = 10;
-        var evData = new PlayerTransformData(playerId, location, rotation);
-        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.All, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void SendPhantomRush(ESkillDirection phantomRushDir)
-    {
-        const byte eventCode = 11;
-        RelayClient.OpRaiseEvent(eventCode, phantomRushDir, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 
     public void BroadcastImmobilize(NetworkIdComponent playerId, NetworkIdComponent otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
@@ -304,12 +222,6 @@ public sealed partial class WukongClient
         const byte eventCode = 22;
         int[] evData = [characterId.Owner, (int)characterId.Id, (int)MMState];
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
-    }
-
-    public void SendChatMessage(ChatMessage message)
-    {
-        const byte eventCode = 23;
-        RelayClient.OpRaiseEvent(eventCode, message, EventCaching.AddToRoomCacheGlobal);
     }
 
     public void SpawnSummon(NetworkIdComponent summonerId, NetworkIdComponent id, string guid, string unitName, int teamId)

@@ -1,7 +1,7 @@
 ﻿using LiteNetLib.Utils;
 using ReadyM.Relay.Common.ECS;
 
-namespace WukongMp.Api.Old.DTO
+namespace WukongMp.Api.DTO
 {
     public struct MontageCallbackData(NetworkIdComponent netId, bool compressed, string montagePath, float position, bool reset) : INetSerializable
     {

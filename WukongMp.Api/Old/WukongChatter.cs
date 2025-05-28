@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using WukongMp.Api.DTO;
 using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Client;
@@ -20,14 +21,16 @@ namespace WukongMp.Api.Old
     public class WukongChatter
     {
         private readonly WukongClient _wukongClient;
+        private readonly WukongMpMod _mod;
 
         private string NickName => _wukongClient.LocalPlayerState.NickName;
         private const char Separator = ' ';
         private readonly Dictionary<string, Command> _commands = new();
 
-        public WukongChatter(WukongClient owner)
+        public WukongChatter(WukongClient owner, WukongMpMod mod)
         {
             _wukongClient = owner;
+            _mod = mod;
             SetupCommands();
         }
 
@@ -88,14 +91,14 @@ namespace WukongMp.Api.Old
 
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
-            GameLoopPatch.QueueOnGameThread(() => _wukongClient.BroadcastPlayerRebirth(_wukongClient.LocalPlayerState.PeerId), "HandleRebirth");
+            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PeerId);
             SendServerMessage("PlayerRequestedRebirth", NickName);
         }
 
         private void RequestGiveUp(ReadOnlyMemory<string> _)
         {
             SendServerMessage("PlayerGaveUp", NickName);
-            _wukongClient.KillCurrentPlayer();
+            WukongMpMod.Instance.SendSuicide();
         }
 
         private void RequestReconnect(ReadOnlyMemory<string> _)
@@ -173,13 +176,13 @@ namespace WukongMp.Api.Old
         private void SendChatMessage(string nickname, string message)
         {
             Logging.LogDebug("Sending message {Message}", message);
-            _wukongClient.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
+            _mod.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
         }
 
-        public void SendServerMessage(string message, params List<string> args)
+        public void SendServerMessage(string message, params string[] args)
         {
             Logging.LogDebug("Sending server message {Message}", message);
-            _wukongClient.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
+            _mod.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
         }
 
         public static void OnGetMessage(ChatMessage message)
