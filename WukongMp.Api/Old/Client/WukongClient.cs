@@ -397,13 +397,13 @@ public sealed partial class WukongClient
         RelayClient.RegisterType(typeof(FVector), SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
         RelayClient.RegisterType(typeof(FsmStateData), FsmStateData.Serialize, FsmStateData.Deserialize);
         RelayClient.RegisterType(typeof(ImmobilizeData), ImmobilizeData.Serialize, ImmobilizeData.Deserialize);
-        RelayClient.RegisterType(typeof(MontageCallbackData), MontageCallbackData.Serialize, MontageCallbackData.Deserialize);
+        RelayClient.RegisterType<MontageCallbackData>();
         RelayClient.RegisterType(typeof(PlayerTransBeginData), PlayerTransBeginData.Serialize, PlayerTransBeginData.Deserialize);
         RelayClient.RegisterType(typeof(PlayerTransEndData), PlayerTransEndData.Serialize, PlayerTransEndData.Deserialize);
         RelayClient.RegisterType(typeof(PlayerTransformData), PlayerTransformData.Serialize, PlayerTransformData.Deserialize);
         RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
         RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
-        RelayClient.RegisterType(typeof(UnitDeadPacket), UnitDeadPacket.Serialize, UnitDeadPacket.Deserialize);
+        RelayClient.RegisterType<UnitDeadPacket>();
         RelayClient.RegisterType(typeof(UnitSpawnData), UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
         RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
         RelayClient.RegisterType(typeof(UnitSummonData), UnitSummonData.Serialize, UnitSummonData.Deserialize);
@@ -693,12 +693,12 @@ public sealed partial class WukongClient
 
         _playerJoinedCallback.Invoke(playerId);
 
-        if (!Constants.IsCoop)
+        if (!Constants.IsCoop) // TODO: Add a system that spawns unsynced monsters if they are not found by SyncTamers
         {
             // send current monsters to the new player
             WukongMpMod.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
             {
-                const byte eventCode = 1;
+                const byte eventCode = 3;
                 var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
             });

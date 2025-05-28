@@ -16,8 +16,6 @@ namespace WukongMp.Api.Old.Client;
 
 public sealed partial class WukongClient
 {
-    public event Action<MontageCallbackData>? OnMontageCallback;
-    public event Action<UnitDeadPacket>? OnUnitDead;
     public event Action<NetworkIdComponent, string, string, int, float, float, float>? OnUnitSpawn;
     public event Action<NetworkIdComponent, NetworkIdComponent, string, string, int>? OnSummonSpawn;
     public event Action<short>? OnTeleportFinish;
@@ -53,20 +51,10 @@ public sealed partial class WukongClient
     {
         switch (header.EventCode)
         {
-            case 1:
+            case 3:
                 // unit spawn
                 var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
                 OnUnitSpawn?.Invoke(unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
-                break;
-            case 2:
-                // montage callback
-                var montData = RelayClient.DeserializeObject<MontageCallbackData>(reader);
-                OnMontageCallback?.Invoke(montData);
-                break;
-            case 3:
-                // unit dead
-                var unitDeadData = RelayClient.DeserializeObject<UnitDeadPacket>(reader);
-                OnUnitDead?.Invoke(unitDeadData);
                 break;
             case 4:
                 // teleport finish

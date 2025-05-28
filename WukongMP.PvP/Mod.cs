@@ -81,13 +81,13 @@ namespace WukongMp.PvP
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
-                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMP.Instance.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                WukongMpMod.Instance.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMP.Instance.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
             
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
-                WukongMP.Instance.ApplyPlayerMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMP.Instance.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                WukongMpMod.Instance.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMP.Instance.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>

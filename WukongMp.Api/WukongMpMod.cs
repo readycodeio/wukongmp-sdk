@@ -23,7 +23,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public class WukongMpMod : ReadyMultiplayerMod
+public partial class WukongMpMod : ReadyMultiplayerMod
 {
     private readonly ArchetypeId _monsterArchetype;
     private readonly SendEcsDeltaSystem _sendEcsDeltaSystem;

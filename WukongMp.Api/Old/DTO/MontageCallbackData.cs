@@ -3,34 +3,30 @@ using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.Old.DTO
 {
-    public class MontageCallbackData(NetworkIdComponent netId, bool compressed, string montagePath, float position, bool reset)
+    public struct MontageCallbackData(NetworkIdComponent netId, bool compressed, string montagePath, float position, bool reset) : INetSerializable
     {
-        public NetworkIdComponent NetId { get; } = netId;
-        public bool Compressed { get; } = compressed;
-        public string MontagePath { get; } = montagePath;
-        public float Position { get; } = position;
-        public bool Reset { get; } = reset;
+        public NetworkIdComponent NetId = netId;
+        public bool Compressed = compressed;
+        public string MontagePath = montagePath;
+        public float Position = position;
+        public bool Reset = reset;
 
-        public static void Serialize(NetDataWriter outStream, object customObject)
+        public void Serialize(NetDataWriter writer)
         {
-            var data = (MontageCallbackData)customObject;
-            outStream.Put(data.NetId.Owner);
-            outStream.Put(data.NetId.Id);
-            outStream.Put(data.Compressed);
-            outStream.Put(data.MontagePath);
-            outStream.Put(data.Position);
-            outStream.Put(data.Reset);
+            writer.Put(NetId);
+            writer.Put(Compressed);
+            writer.Put(MontagePath);
+            writer.Put(Position);
+            writer.Put(Reset);
         }
 
-        public static object Deserialize(NetDataReader inStream)
+        void INetSerializable.Deserialize(NetDataReader reader)
         {
-            var owner = inStream.GetShort();
-            var id = inStream.GetUInt();
-            var compressed = inStream.GetBool();
-            var montagePath = inStream.GetString();
-            var offset = inStream.GetFloat();
-            var reset = inStream.GetBool();
-            return new MontageCallbackData(new NetworkIdComponent(owner, id), compressed, montagePath, offset, reset);
+            NetId = reader.GetNetworkId();
+            Compressed = reader.GetBool();
+            MontagePath = reader.GetString();
+            Position = reader.GetFloat();
+            Reset = reader.GetBool();
         }
     }
 }
