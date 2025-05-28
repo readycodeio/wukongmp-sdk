@@ -382,6 +382,7 @@ namespace WukongMp.Api
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -619,7 +620,7 @@ namespace WukongMp.Api
             Client.OnRequestSpawnUnits += (playerId, unitName, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnUnitsMaster(playerId, unitName, count, teamId), "SpawnUnitsMaster");
             Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
-            Client.OnPlayMoviewRequest += (playRequest) => GameLoopPatch.QueueOnGameThread(() => OnPlayMoviewRequest(playRequest), "OnPlayMoviewRequest");
+            Client.OnPlayMovieRequest += playRequest => GameLoopPatch.QueueOnGameThread(() => OnPlayMovieRequest(playRequest), "OnPlayMovieRequest");
             Client.OnWaitingForMovie += (playerId, sequenceId) => GameLoopPatch.QueueOnGameThread(() => OnWaitingForMovie(playerId, sequenceId), "OnWaitingForMovie");
         }
 
@@ -631,6 +632,7 @@ namespace WukongMp.Api
                 Logging.LogError("Player not found: {Id}", playerId);
                 return;
             }
+
             player.WaitingSequenceId = sequenceId;
             if (!Client.LocalPlayerState.IsWaitingForMovie)
             {
@@ -639,7 +641,7 @@ namespace WukongMp.Api
             }
         }
 
-        private void OnPlayMoviewRequest(FPlayMovieRequest playMovieRequest)
+        private void OnPlayMovieRequest(FPlayMovieRequest playMovieRequest)
         {
             BGW_EventCollection bGW_EventCollection = BGW_EventCollection.Get(GameUtils.GetWorld());
             if (bGW_EventCollection == null)
