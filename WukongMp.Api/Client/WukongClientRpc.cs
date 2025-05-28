@@ -46,7 +46,7 @@ public sealed partial class WukongClient
     public event Action<int, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
     public event Action<int, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
     public event Action<FPlayMovieRequest>? OnPlayMoviewRequest;
-    public event Action<int>? OnWaitingForMovie;
+    public event Action<int, int>? OnWaitingForMovie;
 
     public void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
     {
@@ -207,7 +207,7 @@ public sealed partial class WukongClient
              case 29:
                 // waiting for movie
                 var sequenceId = RelayClient.DeserializeObject<int>(reader);
-                OnWaitingForMovie?.Invoke(sequenceId);
+                OnWaitingForMovie?.Invoke(header.Sender, sequenceId);
                 break;
         }
     }

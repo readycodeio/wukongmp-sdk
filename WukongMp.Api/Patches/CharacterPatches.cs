@@ -294,7 +294,7 @@ namespace WukongMp.Api.Patches
             {
                 var localState = client.LocalPlayerState;
 
-                if (localState.HasRestrictedMovement)
+                if (localState.IsWaitingForMovie)
                 {
                     // update local player location
                     RestrictPlayerLocation(localState, __instance);
@@ -435,10 +435,10 @@ namespace WukongMp.Api.Patches
 
         private static void RestrictPlayerLocation(PlayerState localState, BUC_ABPCharacterData characterData)
         {
-            var distanceSq = localState.RestrictionPoint.Vector_DistanceSquared(characterData.ActorLocation);
+            var distanceSq = localState.WaitingPoint.Vector_DistanceSquared(characterData.ActorLocation);
             if (distanceSq > Constants.RestrictedMovementRadiusSquare)
             {
-                characterData.ActorLocation = localState.RestrictionPoint + Constants.RestrictedMovementRadius * (characterData.ActorLocation - localState.RestrictionPoint).GetSafeNormal(); // cast from above
+                characterData.ActorLocation = localState.WaitingPoint + Constants.RestrictedMovementRadius * (characterData.ActorLocation - localState.WaitingPoint).GetSafeNormal(); // cast from above
                 localState.Pawn?.SetActorLocation(characterData.ActorLocation, false, out _, true);
             }
         }

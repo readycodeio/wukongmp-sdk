@@ -378,6 +378,11 @@ namespace WukongMp.Api
             return true;
         }
 
+        public bool AreAllPlayersWaitingForMovie(int sequenceId)
+        {
+            return Client.AllConnectedPlayers.All(p => p.WaitingSequenceId == sequenceId);
+        }
+
         public void SkipCutscene()
         {
             BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());
@@ -608,15 +613,21 @@ namespace WukongMp.Api
             Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayMoviewRequest += (playRequest) => GameLoopPatch.QueueOnGameThread(() => OnPlayMoviewRequest(playRequest), "OnPlayMoviewRequest");
-            Client.OnWaitingForMovie += (sequenceId) => GameLoopPatch.QueueOnGameThread(() => OnWaitingForMovie(sequenceId), "OnWaitingForMovie");
+            Client.OnWaitingForMovie += (playerId, sequenceId) => GameLoopPatch.QueueOnGameThread(() => OnWaitingForMovie(playerId, sequenceId), "OnWaitingForMovie");
         }
 
-        private void OnWaitingForMovie(int sequenceId)
+        private void OnWaitingForMovie(int playerId, int sequenceId)
         {
+            var player = Client.GetPlayerById(playerId);
+            if (player == null)
+            {
+                Logging.LogError("Player not found: {Id}", playerId);
+                return;
+            }
+            player.WaitingSequenceId = sequenceId;
             if (!Client.LocalPlayerState.IsWaitingForMovie)
             {
                 InfoMessageWidget.Instance.SetVisibility(true);
-                Client.LocalPlayerState.JoiningSequenceId = sequenceId;
                 InfoMessageWidget.Instance.SetText("Join other players to proceed");
             }
         }

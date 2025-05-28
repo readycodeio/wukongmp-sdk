@@ -55,11 +55,11 @@ public static class PatchRequestPlayMovie
         Logging.LogDebug("RequestPlayMovie called with sequenceId {Id}, bDisablePlayerControl {Control}, bDisableMovementInput {Movement}, bDisableLookAtInput {LookAt}, bHidePlayer {HidePlayer}, bHideHud {HideHud}, MatchType {MatchType}",
             Request.SequenceID, Request.bDisablePlayerControl, Request.bDisableMovementInput, Request.bDisableLookAtInput, Request.bHidePlayer, Request.bHideHud, Request.MatchType);
 
-        if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID) && Request.bDisablePlayerControl == true)
-        {
-            Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", Request.SequenceID);
-            WukongMP.Instance.Client.SendPlayMovieRequest(Request);
-        }
+        //if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID) && Request.bDisablePlayerControl == true)
+        //{
+        //    Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", Request.SequenceID);
+        //    WukongMP.Instance.Client.SendPlayMovieRequest(Request);
+        //}
     }
 }
 
@@ -109,12 +109,11 @@ public static class PatchTickForMovieSystem
         if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
-            if (client.LocalPlayerState.JoiningSequenceId == peakRequest.SequenceID || WukongMP.Instance.ArePlayersCloseToSyncCutscene() || peakRequest.bDisablePlayerControl == false)
+            if (WukongMP.Instance.AreAllPlayersWaitingForMovie(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
-                client.LocalPlayerState.HasRestrictedMovement = false;
                 client.LocalPlayerState.IsWaitingForMovie = false;
-                client.LocalPlayerState.JoiningSequenceId = 0;
+                client.LocalPlayerState.WaitingSequenceId = 0;
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
@@ -126,9 +125,9 @@ public static class PatchTickForMovieSystem
             {
                 InfoMessageWidget.Instance.SetVisibility(true);
                 InfoMessageWidget.Instance.SetText("Wait for other players");
-                client.LocalPlayerState.HasRestrictedMovement = true;
                 client.LocalPlayerState.IsWaitingForMovie = true;
-                client.LocalPlayerState.RestrictionPoint = client.LocalPlayerState.Location;
+                client.LocalPlayerState.WaitingPoint = client.LocalPlayerState.Location;
+                client.LocalPlayerState.WaitingSequenceId = peakRequest.SequenceID;
                 client.SendWaitingForMovie(peakRequest.SequenceID);
             }
         }
