@@ -1,7 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using b1;
 using Friflo.Engine.ECS;
-using WukongMp.Api.State;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.ECS;
 

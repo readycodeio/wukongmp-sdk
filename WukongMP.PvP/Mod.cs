@@ -6,6 +6,8 @@ using CSharpModBase;
 using CSharpModBase.Input;
 using ReadyM.Relay.Common.ECS;
 using WukongMp.Api;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.DTO;
 using WukongMp.Api.UI;
 
 namespace WukongMp.PvP

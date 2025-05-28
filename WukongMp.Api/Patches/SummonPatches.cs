@@ -5,6 +5,8 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.Api;
 
 namespace WukongMp.Api.Patches
 {

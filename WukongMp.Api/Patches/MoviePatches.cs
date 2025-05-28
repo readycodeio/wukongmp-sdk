@@ -3,6 +3,8 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using UnrealEngine.Runtime;
+using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Old;
 using WukongMp.Api.UI;
 
 namespace WukongMp.Api.Patches;

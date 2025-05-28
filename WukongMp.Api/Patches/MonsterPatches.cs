@@ -6,6 +6,8 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;
+using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Old;
 
 namespace WukongMp.Api.Patches
 {
@@ -292,7 +294,7 @@ namespace WukongMp.Api.Patches
             if (owner is not BGUCharacterCS character)
                 return;
 
-            if (owner.IsNullOrDestroyed())
+            if (Extensions.IsNullOrDestroyed(owner))
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;

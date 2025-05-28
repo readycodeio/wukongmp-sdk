@@ -11,6 +11,10 @@ using ReadyM.Relay.Common.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;
+using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.Api;
+using WukongMp.Api.Old.Enums;
 
 namespace WukongMp.Api.Patches;
 
@@ -118,7 +122,7 @@ public static class PatchOnCastImmobilize
 
         AActor castingCharacter = __instance.GetOwner();
 
-        if (castingCharacter.IsNullOrDestroyed())
+        if (Extensions.IsNullOrDestroyed(castingCharacter))
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -169,7 +173,7 @@ public static class PatchOnCastImmobilize
             List<int> list = [cachedImmobilizeConfigDesc.RangeRadius];
             AActor owner2 = __instance.GetOwner();
 
-            if (owner2.IsNullOrDestroyed())
+            if (Extensions.IsNullOrDestroyed(owner2))
             {
                 Logging.LogError("Owner is null or destroyed");
                 return false;
@@ -277,7 +281,7 @@ public static class PatchRelieveImmobilized
 
         var owner = __instance.GetOwner();
 
-        if (owner.IsNullOrDestroyed())
+        if (Extensions.IsNullOrDestroyed(owner))
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -334,7 +338,7 @@ public static class PatchOnTriggerImmobilizedBreak
         var client = WukongMP.Instance.Client;
         var owner = __instance.GetOwner();
 
-        if (owner.IsNullOrDestroyed())
+        if (Extensions.IsNullOrDestroyed(owner))
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -394,7 +398,7 @@ public static class PatchOnTriggerPhantomRush
 
         AActor owner = __instance.GetOwner();
 
-        if (owner.IsNullOrDestroyed())
+        if (Extensions.IsNullOrDestroyed(owner))
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -506,7 +510,7 @@ public static class PatchOnTriggerPhantomRush
         var client = WukongMP.Instance.Client;
         var owner = __instance.GetOwner();
 
-        if (owner.IsNullOrDestroyed())
+        if (Extensions.IsNullOrDestroyed(owner))
         {
             Logging.LogError("Owner is null or destroyed");
             return;
@@ -561,7 +565,7 @@ public static class PatchExitPhantomRush
         var client = WukongMP.Instance.Client;
         var owner = __instance.GetOwner();
 
-        if (owner.IsNullOrDestroyed())
+        if (Extensions.IsNullOrDestroyed(owner))
         {
             Logging.LogError("Owner is null or destroyed");
             return;

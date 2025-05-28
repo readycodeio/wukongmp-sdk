@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using b1;
-using WukongMp.Api.State;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.ECS;
 

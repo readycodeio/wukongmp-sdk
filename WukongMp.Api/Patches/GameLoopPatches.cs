@@ -6,8 +6,10 @@ using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
+using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Monitors;
-using WukongMp.Api.State;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.State;
 using static Friflo.Engine.ECS.QueryExtensions;
 
 namespace WukongMp.Api.Patches

@@ -16,6 +16,8 @@ using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Systems;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.Api;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 

@@ -6,7 +6,9 @@ using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS;
-using WukongMp.Api.State;
+using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Old;
+using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.Patches
 {
@@ -21,7 +23,7 @@ namespace WukongMp.Api.Patches
 
             var client = WukongMP.Instance.Client;
 
-            if (__instance.Owner.IsNullOrDestroyed())
+            if (Extensions.IsNullOrDestroyed(__instance.Owner))
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;
@@ -182,7 +184,7 @@ namespace WukongMp.Api.Patches
             var client = WukongMP.Instance.Client;
             var owner = __instance.GetOwner();
 
-            if (owner.IsNullOrDestroyed())
+            if (Extensions.IsNullOrDestroyed(owner))
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;
@@ -283,7 +285,7 @@ namespace WukongMp.Api.Patches
             if (Owner is not BGUCharacterCS character)
                 return;
 
-            if (Owner.IsNullOrDestroyed())
+            if (Extensions.IsNullOrDestroyed(Owner))
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;

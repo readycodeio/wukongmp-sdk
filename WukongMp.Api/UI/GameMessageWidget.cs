@@ -1,4 +1,7 @@
-﻿namespace WukongMp.Api.UI
+﻿using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Old;
+
+namespace WukongMp.Api.UI
 {
     public class GameMessageWidget() : GameWidgetBase(Constants.GameMessageWidgetName)
     {
