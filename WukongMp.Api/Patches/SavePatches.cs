@@ -138,7 +138,7 @@ namespace WukongMp.Api.Patches
             {
                 OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = 10;
                 OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = 1;
-                OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = 1001;
+                OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = 1004;
             }
 
             SavePatchesData.CustomSaveEnabled = false;
