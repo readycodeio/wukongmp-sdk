@@ -8,9 +8,7 @@ using ReadyM.Relay.Common.Protocol;
 using ReadyM.Relay.Common.Protocol.Enums;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.DTO;
 using WukongMp.Api.Old.DTO;
-using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.Old.Client;
@@ -25,7 +23,6 @@ public sealed partial class WukongClient
     public event Action<PlayerState>? OnPlayerLeft;
     public event Action? OnBeforeJoinRoom;
     public event Action<short>? OnExitPhantomRush;
-    public event Action<NetworkIdComponent, NetworkIdComponent, ImmobilizeActionType, bool>? OnHandleImmobilize;
     public event Action<NetworkIdComponent, NetworkIdComponent, bool>? OnTargetSet;
     public event Action? OnMatchmakingEnded;
     public event Action<short, int, float>? OnBuffAdded;
@@ -49,11 +46,6 @@ public sealed partial class WukongClient
                 // unit spawn
                 var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
                 OnUnitSpawn?.Invoke(unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
-                break;
-            case 12:
-                // immobilize
-                var immobilizeData = RelayClient.DeserializeObject<ImmobilizeData>(reader);
-                OnHandleImmobilize?.Invoke(immobilizeData.PlayerId, immobilizeData.OtherPlayerId, immobilizeData.ImmobilizeActionType, immobilizeData.GreatSageTalentActiveBuff);
                 break;
             case 13:
                 // target
@@ -147,13 +139,6 @@ public sealed partial class WukongClient
                 OnWaitingForMovie?.Invoke(header.Sender, sequenceId);
                 break;
         }
-    }
-
-    public void BroadcastImmobilize(NetworkIdComponent playerId, NetworkIdComponent otherPlayerId, ImmobilizeActionType immobilizeActionType, bool hasBuff)
-    {
-        const byte eventCode = 12;
-        var evData = new ImmobilizeData(playerId, otherPlayerId, immobilizeActionType, hasBuff);
-        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 
     public void SendTarget(NetworkIdComponent characterId, NetworkIdComponent targetId, int clearTarget)

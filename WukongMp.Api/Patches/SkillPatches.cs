@@ -10,8 +10,9 @@ using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Enums;
@@ -136,7 +137,7 @@ public static class PatchOnCastImmobilize
             if (castingPlayerState != null && castingPlayerState.PeerId == client.LocalPlayerState.PeerId)
             {
                 // target doesn't matter, not evaluated
-                client.BroadcastImmobilize(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), default, ImmobilizeActionType.Cast, false);
+                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), default, ImmobilizeActionType.Cast, false));
             }
 
             return false;
@@ -241,7 +242,7 @@ public static class PatchOnCastImmobilize
                     ? immobilizedMonster.Value.GetComponent<NetworkIdComponent>()
                     : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
 
-                client.BroadcastImmobilize(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff);
+                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff));
             }
         }
 
@@ -299,7 +300,7 @@ public static class PatchRelieveImmobilized
 
         if (client.IsMasterClient)
         {
-            client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
+            WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(netId, default, ImmobilizeActionType.Relieve, false));
             return true;
         }
 
@@ -350,7 +351,7 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (playerState != null)
             {
-                client.BroadcastImmobilize(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId), default, ImmobilizeActionType.Relieve, false);
+                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId), default, ImmobilizeActionType.Relieve, false));
                 BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 return false;
             }
@@ -362,7 +363,7 @@ public static class PatchOnTriggerImmobilizedBreak
                 var netId = entity.Value.GetComponent<NetworkIdComponent>();
                 var pawn = entity.Value.GetComponent<LocalTamerComponent>().Pawn;
 
-                client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
+                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(netId, default, ImmobilizeActionType.Relieve, false));
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();
             }
 

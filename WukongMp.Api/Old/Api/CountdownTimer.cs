@@ -7,7 +7,7 @@ namespace WukongMp.Api.Old.Api
     {
         private int _remainingSeconds;
         private int _totalSeconds;
-        private readonly System.Timers.Timer _timer;
+        private readonly Timer _timer;
         private Action? _callback;
 
         public event Action<int, int>? OnTick;
@@ -16,7 +16,7 @@ namespace WukongMp.Api.Old.Api
         {
             _totalSeconds = minutes * 60 + seconds;
             _remainingSeconds = _totalSeconds;
-            _timer = new System.Timers.Timer(1000);
+            _timer = new Timer(1000);
             _timer.Elapsed += TimerElapsed;
         }
 

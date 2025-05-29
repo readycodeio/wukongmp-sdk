@@ -2,7 +2,7 @@
 using UnrealEngine.Runtime;
 using WukongMp.Api.Old;
 
-namespace WukongMp.Api.GameApi.Configuration
+namespace WukongMp.Api.Configuration
 {
     internal static class LevelSpawnConfig
     {

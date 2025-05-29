@@ -8,7 +8,6 @@ using ReadyM.Relay.Common.ECS;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.DTO;
 using WukongMp.Api.UI;
 
 namespace WukongMp.Coop

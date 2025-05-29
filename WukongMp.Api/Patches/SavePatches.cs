@@ -9,7 +9,7 @@ using BtlB1;
 using CommB1;
 using HarmonyLib;
 using UnrealEngine.Runtime;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 

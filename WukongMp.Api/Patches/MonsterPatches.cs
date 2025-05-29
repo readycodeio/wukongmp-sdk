@@ -5,8 +5,8 @@ using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old;
 
 namespace WukongMp.Api.Patches

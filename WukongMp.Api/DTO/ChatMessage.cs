@@ -27,22 +27,6 @@ public struct ChatMessage : INetSerializable
     public string Message;
     public string[] Placeholders;
 
-    public static void Serialize(NetDataWriter writer, object customObject)
-    {
-        var chatMessage = (ChatMessage)customObject;
-        writer.Put(chatMessage.IsServer);
-        writer.Put(chatMessage.Message);
-
-        if (!chatMessage.IsServer)
-        {
-            writer.Put(chatMessage.Nickname);
-        }
-        else
-        {
-            writer.PutArray(chatMessage.Placeholders);
-        }
-    }
-
     public void Serialize(NetDataWriter writer)
     {
         writer.Put(IsServer);

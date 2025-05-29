@@ -12,7 +12,7 @@ using HarmonyLib;
 using ResB1;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Resources;

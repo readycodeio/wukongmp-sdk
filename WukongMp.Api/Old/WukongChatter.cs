@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Client;
-using WukongMp.Api.Old.DTO;
 using WukongMp.Api.Old.State;
-using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 

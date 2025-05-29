@@ -9,7 +9,7 @@ using HarmonyLib;
 using UnrealEngine.AssetRegistry;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.Old.Api

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
-using b1.ECS;
 using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
@@ -12,13 +11,12 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.GameApi;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Client;
-using WukongMp.Api.Old.DTO;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
@@ -527,7 +525,6 @@ namespace WukongMp.Api.Old
             Client.OnTeamChange += (playerState, teamId) => GameLoopPatch.QueueOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
             Client.OnPlayerLeft += playerState => GameLoopPatch.QueueOnGameThread(() => RemovePlayer(playerState));
             Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
-            Client.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
             Client.OnTargetSet += (characterId, targetId, clear) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(characterId, targetId, clear), "OnTargetSet");
             Client.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
             Client.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
@@ -882,104 +879,6 @@ namespace WukongMp.Api.Old
             var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(playerPawn);
             float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
-        }
-
-        private void HandleImmobilize(NetworkIdComponent netId, NetworkIdComponent otherNetId, ImmobilizeActionType immobilizeAction, bool hasBuff)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
-            if (pawn == null)
-            {
-                LogNullCharacter(netId);
-                return;
-            }
-
-
-            switch (immobilizeAction)
-            {
-                case ImmobilizeActionType.Cast:
-                    CastImmobilize(pawn);
-                    break;
-                case ImmobilizeActionType.Trigger:
-                    var otherPawn = WukongMpMod.Instance.GetPawnByNetworkId(otherNetId);
-                    if (otherPawn == null)
-                    {
-                        Logging.LogError("Target not found: {Id}", otherNetId);
-                        return;
-                    }
-
-                    TriggerImmobilize(pawn, otherPawn, hasBuff);
-                    break;
-                case ImmobilizeActionType.Relieve:
-                    RelieveImmobilize(pawn);
-                    break;
-                case ImmobilizeActionType.Break:
-                // Currently not supported
-                default:
-                    Logging.LogError("Unknown ImmobilizeActionType: {Action}", immobilizeAction);
-                    break;
-            }
-        }
-
-        private void CastImmobilize(BGUCharacterCS castingCharacterState)
-        {
-            if (Client.IsMasterClient)
-            {
-                Logging.LogDebug("Received cast immobilize for character {Nickname}", castingCharacterState.GetName());
-                var playerEvents = BUS_EventCollectionCS.Get(castingCharacterState);
-                playerEvents.Evt_CastImmobilize.Invoke(0);
-            }
-        }
-
-        private static void TriggerImmobilize(BGUCharacterCS? pawn, BGUCharacterCS? caster, bool hasBuff)
-        {
-            Logging.LogDebug("Received trigger immobilize for character {Pawn}", pawn?.GetName());
-
-            if (pawn == null)
-            {
-                Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
-                return;
-            }
-
-            if (caster == null)
-            {
-                Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
-                return;
-            }
-
-            var castImmobilizeData = (BUC_CastImmobilizeData)caster.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
-
-            var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
-            if (cachedImmobilizeConfigDesc == null)
-            {
-                Logging.LogError("cachedImmobilizeConfigDesc is null");
-                return;
-            }
-
-            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
-            BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
-        }
-
-        private void RelieveImmobilize(BGUCharacterCS pawn)
-        {
-            Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
-            var playerEvents = BUS_EventCollectionCS.Get(pawn);
-
-            var entity = WukongMpMod.Instance.GetMonsterByActor(pawn);
-            if (entity.HasValue)
-            {
-                ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
-                tamerComponent.RunImmobilizePatches = true;
-            }
-            else
-            {
-                var player = Client.GetPlayerByActor(pawn);
-                if (player != null)
-                {
-                    player.RunImmobilizePatches = true;
-                }
-            }
-
-            playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
         private void SetPlayerProperties()

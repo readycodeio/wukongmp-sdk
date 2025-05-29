@@ -7,7 +7,7 @@ using BtlShare;
 using CSharpModBase;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 
