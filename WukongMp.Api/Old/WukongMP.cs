@@ -624,10 +624,10 @@ namespace WukongMp.Api.Old
             Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
             Client.OnPlayMovieRequest += playRequest => GameLoopPatch.QueueOnGameThread(() => OnPlayMovieRequest(playRequest), "OnPlayMovieRequest");
-            Client.OnWaitingForMovie += (playerId, sequenceId) => GameLoopPatch.QueueOnGameThread(() => OnWaitingForMovie(playerId, sequenceId), "OnWaitingForMovie");
+            Client.OnWaitingForMovie += (playerId, sequenceId, sequenceLocation) => GameLoopPatch.QueueOnGameThread(() => OnWaitingForMovie(playerId, sequenceId, sequenceLocation), "OnWaitingForMovie");
         }
 
-        private void OnWaitingForMovie(short playerId, int sequenceId)
+        private void OnWaitingForMovie(short playerId, int sequenceId, FVector sequenceLocation)
         {
             var player = Client.GetPlayerById(playerId);
             if (player == null)
@@ -636,12 +636,20 @@ namespace WukongMp.Api.Old
                 return;
             }
 
-            player.WaitingSequenceId = sequenceId;
-            if (!Client.LocalPlayerState.IsWaitingForMovie)
+            if (!Client.LocalPlayerState.IsWaitingForSequence)
             {
+                player.WaitingSequenceId = sequenceId;
+                Client.LocalPlayerState.SequenceLocation = sequenceLocation;
+                Client.LocalPlayerState.IsJoiningSequence = true;
                 InfoMessageWidget.Instance.SetVisibility(true);
-                InfoMessageWidget.Instance.SetText("Join other players to proceed");
+                InfoMessageWidget.Instance.SetText("Join other players to proceed (J to teleport)");
             }
+        }
+
+        public void TeleportLocalPlayerToSequenceLocation()
+        {
+            if (Client.LocalPlayerState.IsJoiningSequence)
+                TeleportLocalPlayer(Client.LocalPlayerState.SequenceLocation, Client.LocalPlayerState.Rotation, true);
         }
 
         private void OnPlayMovieRequest(FPlayMovieRequest playMovieRequest)
@@ -948,12 +956,12 @@ namespace WukongMp.Api.Old
             }
         }
 
-        private void TeleportLocalPlayer(FVector location, FRotator rotation)
+        private void TeleportLocalPlayer(FVector location, FRotator rotation, bool sweep = false)
         {
             var playerState = Client.LocalPlayerState;
             BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
             playerState.TeleportFinishFrames = 5;
-            GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
+            GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);
             GameUtils.GetPlayerController().SetControlRotation(rotation);
         }
 

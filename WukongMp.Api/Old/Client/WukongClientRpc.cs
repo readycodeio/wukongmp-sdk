@@ -47,7 +47,7 @@ public sealed partial class WukongClient
     public event Action<short, int, int, bool, EPlayerTransBeginType>? OnPlayerTransBegin;
     public event Action<short, int, int, bool, EPlayerTransEndType>? OnPlayerTransEnd;
     public event Action<FPlayMovieRequest>? OnPlayMovieRequest;
-    public event Action<short, int>? OnWaitingForMovie;
+    public event Action<short, int, FVector>? OnWaitingForMovie;
 
     private void OnCustomEvent(CustomEventHeader header, NetPacketReader reader)
     {
@@ -208,8 +208,8 @@ public sealed partial class WukongClient
                 break;
              case 29:
                 // waiting for movie
-                var sequenceId = RelayClient.DeserializeObject<int>(reader);
-                OnWaitingForMovie?.Invoke(header.Sender, sequenceId);
+                var sequenceData = RelayClient.DeserializeObject<SequenceWaitingData>(reader);
+                OnWaitingForMovie?.Invoke(header.Sender, sequenceData.SequenceID, sequenceData.SequenceLocation);
                 break;
         }
     }
@@ -425,9 +425,10 @@ public sealed partial class WukongClient
         RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 
-    public void SendWaitingForMovie(int sequenceId)
+    public void SendWaitingForSequence(int sequenceId, FVector sequenceLocation)
     {
         const byte eventCode = 29;
-        RelayClient.OpRaiseEvent(eventCode, sequenceId, RelayMode.Others, DeliveryMethod.ReliableOrdered);
+        var evData = new SequenceWaitingData(sequenceId, sequenceLocation);
+        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 }

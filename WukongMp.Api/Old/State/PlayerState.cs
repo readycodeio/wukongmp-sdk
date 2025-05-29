@@ -49,8 +49,9 @@ namespace WukongMp.Api.Old.State
         public bool ReceivedPhantomRushExit { get; set; }
         public bool IsSpectator { get; set; }
         public int TeleportFinishFrames { get; set; }
-        public bool IsWaitingForMovie { get; set; }
-        public FVector WaitingPoint { get; set; }
+        public bool IsWaitingForSequence { get; set; }
+        public bool IsJoiningSequence { get; set; }
+        public FVector SequenceLocation { get; set; }
         public int WaitingSequenceId { get; set; }
 
         public PlayerState(short peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)

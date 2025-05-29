@@ -103,7 +103,7 @@ namespace WukongMp.Coop
             {
                 Logging.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Client.SwitchReadyStateMulti();
+                    _wukongMp.TeleportLocalPlayerToSequenceLocation();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
