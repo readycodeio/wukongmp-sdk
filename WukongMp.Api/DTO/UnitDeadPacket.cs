@@ -1,11 +1,13 @@
 ﻿using b1;
 using BtlShare;
 using LiteNetLib.Utils;
+using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.DTO;
 
-public struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType) : INetSerializable
+[DeriveINetSerializable]
+public partial struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType)
 {
     public NetworkIdComponent NetworkId = netId;
     public EDeadReason DeadReason = deadReason;
@@ -13,24 +15,4 @@ public struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, i
     public int StiffLevel = stiffLevel;
     public bool IsDotDmg = isDotDmg;
     public EAbnormalStateType AbnormalType = abnormalType;
-
-    public void Serialize(NetDataWriter writer)
-    {
-        writer.Put(NetworkId);
-        writer.Put((byte)DeadReason);
-        writer.Put(DmgId);
-        writer.Put(StiffLevel);
-        writer.Put(IsDotDmg);
-        writer.Put((byte)AbnormalType);
-    }
-
-    public void Deserialize(NetDataReader reader)
-    {
-        NetworkId = reader.GetNetworkId();
-        DeadReason = (EDeadReason)reader.GetByte();
-        DmgId = reader.GetInt();
-        StiffLevel = reader.GetInt();
-        IsDotDmg = reader.GetBool();
-        AbnormalType = (EAbnormalStateType)reader.GetByte();
-    }
 }
