@@ -28,7 +28,7 @@ public static class PatchTriggerMagicSkill
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         return GameUtils.IsSkillWhitelisted(SkillID) && client.IsSkillEnabled(SkillID);
     }
 }
@@ -52,7 +52,7 @@ public static class PatchTriggerItemSkill
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
 
         if (!client.RoomState.GourdAllowed && !client.RoomState.ConsumablesAllowed)
@@ -82,7 +82,7 @@ public static class PatchDoPoleDrink
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         return client.RoomState.GourdAllowed;
     }
 }
@@ -111,7 +111,7 @@ public static class PatchOnCastImmobilize
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         // get properties
         MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
@@ -123,7 +123,7 @@ public static class PatchOnCastImmobilize
 
         AActor castingCharacter = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(castingCharacter))
+        if (castingCharacter.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -174,7 +174,7 @@ public static class PatchOnCastImmobilize
             List<int> list = [cachedImmobilizeConfigDesc.RangeRadius];
             AActor owner2 = __instance.GetOwner();
 
-            if (Extensions.IsNullOrDestroyed(owner2))
+            if (owner2.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
                 return false;
@@ -259,7 +259,7 @@ public static class PatchImmobilizeOnTickWithGroup
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         if (client.IsMasterClient)
         {
             return true;
@@ -278,11 +278,11 @@ public static class PatchRelieveImmobilized
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -336,10 +336,10 @@ public static class PatchOnTriggerImmobilizedBreak
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -390,7 +390,7 @@ public static class PatchOnTriggerPhantomRush
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         if (!client.RoomState.PhantomRushAllowed)
         {
@@ -399,7 +399,7 @@ public static class PatchOnTriggerPhantomRush
 
         AActor owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -508,10 +508,10 @@ public static class PatchOnTriggerPhantomRush
             return;
         }
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return;
@@ -534,7 +534,7 @@ public static class PatchOnUnitCastSkillTry
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
         if (___SkillInstsData.GetLastSkillCastResult() != 0)
@@ -563,10 +563,10 @@ public static class PatchExitPhantomRush
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return;
@@ -643,7 +643,7 @@ public static class TransformationPatch
             return;
         }
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var playerState = client.GetPlayerByActor(oldOwner);
 
         if (playerState == null)
@@ -703,7 +703,7 @@ public class PatchOnTransBeginSpawnNewOne
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
             Logging.LogError("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
@@ -730,7 +730,7 @@ public class PatchOnTransBackSpawnNewOne
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
             Logging.LogError("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);

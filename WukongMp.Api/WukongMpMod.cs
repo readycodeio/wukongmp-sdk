@@ -18,6 +18,7 @@ using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.Old.Client;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 
@@ -30,6 +31,9 @@ public partial class WukongMpMod : ReadyMultiplayerMod
 
     public static WukongMpMod Instance { get; } = new();
 
+    [Obsolete]
+    public static WukongClient Client => WukongMP.Instance.Client;
+    
     private WukongMpMod() : base(
         CmdLineParams.Instance.UserGuid,
         CmdLineParams.Instance.ServerIp!,
@@ -86,7 +90,7 @@ public partial class WukongMpMod : ReadyMultiplayerMod
 
     public void RunEcsWorldUpdate()
     {
-        WukongMP.Instance.Client.SetCachedPlayerProperties();
+        WukongMpMod.Client.SetCachedPlayerProperties();
         Tick(default);
     }
 
@@ -105,7 +109,7 @@ public partial class WukongMpMod : ReadyMultiplayerMod
 
     private void ApplyArchetypeDelta(NetDataReader reader)
     {
-        if (WukongMP.Instance.Client.IsMasterClient)
+        if (IsMasterClient)
         {
             return; // ignore echo deltas, TODO: server should only send deltas to other players
         }
@@ -118,7 +122,7 @@ public partial class WukongMpMod : ReadyMultiplayerMod
     {
         if (netId.Id == uint.MaxValue)
         {
-            var player = WukongMP.Instance.Client.GetPlayerById(netId.Owner);
+            var player = WukongMpMod.Client.GetPlayerById(netId.Owner);
             if (player != null)
                 return player.Pawn;
         }
@@ -139,7 +143,7 @@ public partial class WukongMpMod : ReadyMultiplayerMod
 
     public void SetMonsterHpScaling(int scaling)
     {
-        if (!WukongMP.Instance.Client.IsMasterClient)
+        if (!IsMasterClient)
         {
             GameUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
         }

@@ -60,7 +60,7 @@ public static class PatchRequestPlayMovie
         //if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID) && Request.bDisablePlayerControl == true)
         //{
         //    Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", Request.SequenceID);
-        //    WukongMP.Instance.Client.SendPlayMovieRequest(Request);
+        //    WukongMpMod.Client.SendPlayMovieRequest(Request);
         //}
     }
 }
@@ -79,7 +79,7 @@ public static class PatchTickForMovieSystem
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         // get properties
         var movieSystemType = __instance.GetType();

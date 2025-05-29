@@ -118,7 +118,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
             SyncPlayerMontage(client.LocalPlayerState);
 

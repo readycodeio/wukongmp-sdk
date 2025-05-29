@@ -126,7 +126,7 @@ namespace WukongMp.Api.Old.Api
         {
             Utils.TryRunOnGameThread(() =>
             {
-                var client = WukongMP.Instance.Client;
+                var client = WukongMpMod.Client;
                 var current = client.RoomState.CurrentRound;
                 var total = client.RoomState.TournamentRounds;
                 ShowTip(string.Format(Texts.RoundCount, current, total));

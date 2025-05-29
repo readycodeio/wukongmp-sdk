@@ -8,14 +8,11 @@ namespace WukongMp.Api;
 
 public static class ImmobilizeApi
 {
-    public static void CastImmobilize(BGUCharacterCS castingCharacterState)
+    public static void CastImmobilize(BGUCharacterCS caster)
     {
-        if (WukongMP.Instance.Client.IsMasterClient)
-        {
-            Logging.LogDebug("Received cast immobilize for character {Nickname}", castingCharacterState.GetName());
-            var playerEvents = BUS_EventCollectionCS.Get(castingCharacterState);
-            playerEvents.Evt_CastImmobilize.Invoke(0);
-        }
+        Logging.LogDebug("Received cast immobilize for character {Nickname}", caster.GetName());
+        var playerEvents = BUS_EventCollectionCS.Get(caster);
+        playerEvents.Evt_CastImmobilize.Invoke(0);
     }
 
     public static void TriggerImmobilize(BGUCharacterCS? pawn, BGUCharacterCS? caster, bool hasBuff)
@@ -60,7 +57,7 @@ public static class ImmobilizeApi
         }
         else
         {
-            var player = WukongMP.Instance.Client.GetPlayerByActor(pawn);
+            var player = WukongMpMod.Client.GetPlayerByActor(pawn);
             if (player != null)
             {
                 player.RunImmobilizePatches = true;

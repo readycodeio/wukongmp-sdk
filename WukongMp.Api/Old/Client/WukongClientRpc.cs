@@ -23,7 +23,6 @@ public sealed partial class WukongClient
     public event Action<PlayerState>? OnPlayerLeft;
     public event Action? OnBeforeJoinRoom;
     public event Action<short>? OnExitPhantomRush;
-    public event Action<NetworkIdComponent, NetworkIdComponent, bool>? OnTargetSet;
     public event Action? OnMatchmakingEnded;
     public event Action<short, int, float>? OnBuffAdded;
     public event Action<short, int, EBuffEffectTriggerType, int, bool>? OnBuffRemoved;
@@ -46,11 +45,6 @@ public sealed partial class WukongClient
                 // unit spawn
                 var unitData = RelayClient.DeserializeObject<UnitSpawnData>(reader);
                 OnUnitSpawn?.Invoke(unitData.Id, unitData.Guid, unitData.Name, unitData.TeamId, unitData.X, unitData.Y, unitData.Z);
-                break;
-            case 13:
-                // target
-                var targetData = RelayClient.DeserializeObject<int[]>(reader);
-                OnTargetSet?.Invoke(new NetworkIdComponent((short)targetData[0], (uint)targetData[1]), new NetworkIdComponent((short)targetData[2], (uint)targetData[3]), targetData[4] != 0);
                 break;
             case 14:
                 // exit phantom rush
@@ -139,13 +133,6 @@ public sealed partial class WukongClient
                 OnWaitingForMovie?.Invoke(header.Sender, sequenceId);
                 break;
         }
-    }
-
-    public void SendTarget(NetworkIdComponent characterId, NetworkIdComponent targetId, int clearTarget)
-    {
-        const byte eventCode = 13;
-        int[] evData = [characterId.Owner, (int)characterId.Id, targetId.Owner, (int)targetId.Id, clearTarget];
-        RelayClient.OpRaiseEvent(eventCode, evData, RelayMode.Others, DeliveryMethod.ReliableOrdered);
     }
 
     public void ExitPhantomRush(int playerId)

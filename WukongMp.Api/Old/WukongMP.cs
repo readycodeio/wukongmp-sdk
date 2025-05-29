@@ -525,7 +525,6 @@ namespace WukongMp.Api.Old
             Client.OnTeamChange += (playerState, teamId) => GameLoopPatch.QueueOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
             Client.OnPlayerLeft += playerState => GameLoopPatch.QueueOnGameThread(() => RemovePlayer(playerState));
             Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
-            Client.OnTargetSet += (characterId, targetId, clear) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(characterId, targetId, clear), "OnTargetSet");
             Client.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
             Client.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
             Client.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
@@ -782,34 +781,6 @@ namespace WukongMp.Api.Old
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             playerState.ReceivedPhantomRushExit = true;
             events?.Evt_RelievePhantomRush.Invoke();
-        }
-
-        private void OnTargetSet(NetworkIdComponent playerId, NetworkIdComponent targetId, bool clearTarget)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(playerId);
-            if (pawn == null)
-            {
-                LogNullCharacter(targetId);
-                return;
-            }
-
-            var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
-            if (clearTarget)
-            {
-                Logging.LogDebug("Updating target for pawn {Pawn} to null", pawn.PathName);
-                targetInfoData.SetTargetInfo(new UnitLockTargetInfo());
-                return;
-            }
-
-            var targetPawn = WukongMpMod.Instance.GetPawnByNetworkId(targetId);
-            if (targetPawn == null)
-            {
-                LogNullCharacter(targetId);
-                return;
-            }
-
-            Logging.LogDebug("Updating target for pawn {Pawn} to pawn {Pawn}", pawn.PathName, targetPawn.PathName);
-            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPawn, ETargetSourceType.SkillBase_NormalUse));
         }
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)

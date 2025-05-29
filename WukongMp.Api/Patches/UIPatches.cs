@@ -166,7 +166,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
             if (client.RoomState.InPvP)
             {

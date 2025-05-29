@@ -21,9 +21,9 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
-            if (Extensions.IsNullOrDestroyed(__instance.Owner))
+            if (__instance.Owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;
@@ -173,7 +173,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            return AttrID != EBGUAttrFloat.Hp || WukongMP.Instance.Client.IsMasterClient;
+            return AttrID != EBGUAttrFloat.Hp || WukongMpMod.Instance.IsMasterClient;
         }
 
         public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
@@ -181,10 +181,10 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
             var owner = __instance.GetOwner();
 
-            if (Extensions.IsNullOrDestroyed(owner))
+            if (owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;
@@ -210,7 +210,7 @@ namespace WukongMp.Api.Patches
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = WukongMP.Instance.Client.GetPlayerByActor(owner);
+                    var remotePlayer = WukongMpMod.Client.GetPlayerByActor(owner);
                     if (remotePlayer != null)
                     {
                         if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
@@ -285,13 +285,13 @@ namespace WukongMp.Api.Patches
             if (Owner is not BGUCharacterCS character)
                 return;
 
-            if (Extensions.IsNullOrDestroyed(Owner))
+            if (Owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;
             }
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
             if (character == client.LocalPlayerState.Pawn)
             {
@@ -483,7 +483,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
@@ -511,7 +511,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
             var owner = __instance.GetOwner();
             if (client.IsMasterClient)
             {
@@ -545,7 +545,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
             if (client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();

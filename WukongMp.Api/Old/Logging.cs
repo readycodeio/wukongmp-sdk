@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using JetBrains.Annotations;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.Old
 {
@@ -144,6 +145,19 @@ namespace WukongMp.Api.Old
                 Log(LogLevel.Critical, "Exception: {Message} | Thread: {ThreadId} | Stack trace: {Trace}", ex.Message, Thread.CurrentThread.ManagedThreadId, ex.StackTrace);
                 ex = ex.InnerException;
             }
+        }
+
+        public static void LogNull(string propertyName)
+        {
+            var caller = new StackFrame(1).GetMethod();
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+            var args = new List<object?>
+            {
+                propertyName,
+                threadId,
+                $"{caller.DeclaringType?.FullName}.{caller.Name}"
+            };
+            Log(LogLevel.Error, $"{{Value}} is null [thread {{{ThreadIdPropertyName}}} at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
         }
     }
 }

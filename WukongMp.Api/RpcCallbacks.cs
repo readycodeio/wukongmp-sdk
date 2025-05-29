@@ -14,7 +14,6 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.Client;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
@@ -24,8 +23,6 @@ namespace WukongMp.Api;
 
 public partial class WukongMpMod
 {
-    private static WukongClient Client => WukongMP.Instance.Client; // TODO: Remove
-
     public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
     {
         Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
@@ -56,6 +53,33 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
+    private void OnSetTarget(TargetData data)
+    {
+        var pawn = GetPawnByNetworkId(data.Character);
+        if (pawn == null)
+        {
+            Logging.LogNull(nameof(data.Character));
+            return;
+        }
+
+        if (data.ClearTarget)
+        {
+            TargetingApi.ClearTarget(pawn);
+            return;
+        }
+
+        var target = GetPawnByNetworkId(data.Target);
+
+        if (target == null)
+        {
+            Logging.LogNull(nameof(data.Target));
+            return;
+        }
+
+        TargetingApi.SetTarget(pawn, target);
+    }
+
+    [RpcEvent(RelayMode.Others)]
     private void OnImmobilize(ImmobilizeData data)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -70,7 +94,11 @@ public partial class WukongMpMod
             switch (data.ImmobilizeActionType)
             {
                 case ImmobilizeActionType.Cast:
-                    ImmobilizeApi.CastImmobilize(pawn);
+                    if (IsMasterClient)
+                    {
+                        ImmobilizeApi.CastImmobilize(pawn);
+                    }
+
                     break;
                 case ImmobilizeActionType.Trigger:
                     var otherPawn = GetPawnByNetworkId(data.OtherPlayerId);
@@ -192,7 +220,7 @@ public partial class WukongMpMod
                 {
                     if (IsMasterClient)
                     {
-                        foreach (var playerState in WukongMP.Instance.Client.SpectatingPlayers)
+                        foreach (var playerState in WukongMpMod.Client.SpectatingPlayers)
                         {
                             Client.SetRemotePlayerProperty(playerState.PeerId, nameof(PlayerState.IsSpectator), false);
                         }
@@ -283,11 +311,11 @@ public partial class WukongMpMod
         {
             Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
 
-            var player = WukongMP.Instance.Client.GetPlayerById(peerId);
+            var player = WukongMpMod.Client.GetPlayerById(peerId);
             if (player == null)
                 return;
 
-            if (player.PeerId == WukongMP.Instance.Client.LocalPlayerState.PeerId)
+            if (player.PeerId == WukongMpMod.Client.LocalPlayerState.PeerId)
             {
                 FreeCameraManager.Instance.LeaveFreeCameraMode();
             }
@@ -317,7 +345,7 @@ public partial class WukongMpMod
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var playerState = WukongMP.Instance.Client.GetPlayerById(__sender);
+            var playerState = WukongMpMod.Client.GetPlayerById(__sender);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", __sender);
