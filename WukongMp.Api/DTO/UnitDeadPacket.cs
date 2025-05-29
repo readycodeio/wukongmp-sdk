@@ -7,7 +7,7 @@ using ReadyM.Relay.Common.ECS;
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
-public partial struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType)
+public partial struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType) : INetSerializable
 {
     public NetworkIdComponent NetworkId = netId;
     public EDeadReason DeadReason = deadReason;

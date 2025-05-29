@@ -149,19 +149,22 @@ public static class SpawningUtils
 
     public static Entity AddRemoteMonsterToEcs(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
     {
-        var id = WukongMpMod.Instance.CreateNetworkedMonster(netId);
+        if (!WukongMpMod.Instance.NetManager.TryGetEntityByNetworkId(netId, out var id))
+        {
+            id = WukongMpMod.Instance.CreateNetworkedMonster(netId);
+        }
 
-        id.AddComponent(new LocalTamerComponent(tamer));
+        id.Value.AddComponent(new LocalTamerComponent(tamer));
 
-        ref var tamerComp = ref id.GetComponent<TamerComponent>();
+        ref var tamerComp = ref id.Value.GetComponent<TamerComponent>();
         tamerComp.Guid = guid;
         tamerComp.UnitPath = unitName;
 
-        ref var teamComp = ref id.GetComponent<TeamComponent>();
+        ref var teamComp = ref id.Value.GetComponent<TeamComponent>();
         teamComp.TeamId = teamId;
 
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
-        return id;
+        return id.Value;
     }
 
     public static Entity CreateMonsterInEcs(string guid, BUTamerActor tamer, int teamId, string unitName)

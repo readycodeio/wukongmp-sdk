@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using JetBrains.Annotations;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.Old
 {
@@ -19,7 +18,7 @@ namespace WukongMp.Api.Old
         public static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object?> values)
         {
             var propertyNames = ExtractPropertyNames(messageTemplate);
-            var properties = new Dictionary<string, object?>();
+            var properties = new Dictionary<string, string?>();
 
             for (var i = 0; i < propertyNames.Count && i < values.Length; i++)
             {
@@ -30,7 +29,7 @@ namespace WukongMp.Api.Old
                 }
                 else
                 {
-                    properties[propertyNames[i]] = values[i];
+                    properties[propertyNames[i]] = values[i]?.ToString();
                 }
             }
 
@@ -48,7 +47,7 @@ namespace WukongMp.Api.Old
                         continue;
                     }
 #endif
-                interpolatedMessage = interpolatedMessage.Replace($"{{{prop}}}", val?.ToString() ?? "null");
+                interpolatedMessage = interpolatedMessage.Replace($"{{{prop}}}", val ?? "null");
             }
 
 #if !DEBUG

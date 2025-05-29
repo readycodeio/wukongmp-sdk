@@ -239,7 +239,7 @@ public static class PatchOnCastImmobilize
             {
                 Logging.LogDebug("Broadcasting trigger immobilize");
                 var netId = immobilizedPlayer == null
-                    ? immobilizedMonster.Value.GetComponent<NetworkIdComponent>()
+                    ? immobilizedMonster!.Value.GetComponent<NetworkIdComponent>()
                     : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
 
                 WukongMpMod.Instance.SendTriggerImmobilize(new TriggerImmobilizeData(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), hasBuff));

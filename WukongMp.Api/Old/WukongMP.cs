@@ -281,7 +281,12 @@ namespace WukongMp.Api.Old
             }
 
             // dump synced monsters
-            WukongMpMod.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref _, entity) => { Logging.LogDebug("Monster: {Json}", entity.DebugJSON); });
+            WukongMpMod.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) =>
+            {
+                Logging.LogDebug("Monster {Entity}: {NetId}", entity, netId);
+                // TODO: Dump all monster info without using .DebugJson (throws due to some internal errors,
+                // probably the same reason why JsonSerializer sometimes fails.
+            });
 
             // print team hostility info
             var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
@@ -644,11 +649,6 @@ namespace WukongMp.Api.Old
             LobbyStatusWidget.Instance.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
             CoopStatusWidget.Instance.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
             GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
-        }
-
-        private void SpawnRemoteUnit(NetworkIdComponent netId, string guid, string unitName, int teamId, float x, float y, float z)
-        {
-            SpawningUtils.SpawnUnitLocally(netId, guid, unitName, teamId, x, y, z);
         }
 
         public void DiscoverMonsters()
