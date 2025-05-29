@@ -5,7 +5,9 @@ namespace WukongMp.Api.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
     {
-        public LobbyStatusWidget() : base(Constants.LobbyStatusWidgetName) { }
+        public static LobbyStatusWidget Instance { get; } = new();
+        
+        private LobbyStatusWidget() : base(Constants.LobbyStatusWidgetName) { }
 
         public void SetConnectedCount(int count)
         {

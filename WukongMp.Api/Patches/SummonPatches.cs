@@ -7,6 +7,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
@@ -89,7 +90,7 @@ namespace WukongMp.Api.Patches
 
             Logging.LogDebug("Spawned servant: {TamerName}, with Guid {Guid}", bUTamerActor.GetName(), guid);
 
-            var entity = WukongMP.Instance.CreateRemoteMonster(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
+            var entity = SpawningUtils.AddRemoteMonsterToEcs(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
 
             ref var trans = ref entity.GetComponent<TranslationComponent>();
             trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();

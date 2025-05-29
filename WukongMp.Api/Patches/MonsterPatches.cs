@@ -6,9 +6,9 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.Client;
 
 namespace WukongMp.Api.Patches
 {
@@ -255,7 +255,7 @@ namespace WukongMp.Api.Patches
                 return false;
             }
 
-            if (WukongMpMod.Client.IsMasterClient)
+            if (WukongMpModBase.Client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
                 var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
@@ -266,7 +266,7 @@ namespace WukongMp.Api.Patches
                     {
                         Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
                         var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
-                        WukongMpMod.Client.SendTriggerFsmState(netPeer, EventTag);
+                        WukongMpMod.Instance.SendTriggerFsmState(new FsmStateData(netPeer, EventTag.TagName.ToString()));
                     }
                 }
             }
@@ -309,7 +309,7 @@ namespace WukongMp.Api.Patches
                     return;
 
                 ref var anim = ref entity.Value.GetComponent<MonsterAnimationComponent>();
-                if (WukongMpMod.Client.IsMasterClient)
+                if (WukongMpModBase.Client.IsMasterClient)
                 {
                     anim.MoveAiType = (byte)___MovementData.MoveAIType;
                 }

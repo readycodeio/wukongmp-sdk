@@ -17,6 +17,7 @@ using WukongMp.Api.GameApi;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
@@ -366,7 +367,7 @@ namespace WukongMp.Api.Patches
                         _ = Task.Run(async () =>
                         {
                             await Task.Delay(5000);
-                            Utils.TryRunOnGameThread(() => { WukongMP.Instance.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
+                            Utils.TryRunOnGameThread(() => { SpawningUtils.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
                         });
                         return;
                     }

@@ -6,7 +6,9 @@ namespace WukongMp.Api.UI
 {
     public class CountdownWidget : GameWidgetBase
     {
-        public CountdownWidget() : base(Constants.CountdownWidgetName)
+        public static CountdownWidget Instance { get; } = new();
+        
+        private CountdownWidget() : base(Constants.CountdownWidgetName)
         {
             _countdownTimer.OnTick += (int _, int seconds) => SetText(seconds);
         }

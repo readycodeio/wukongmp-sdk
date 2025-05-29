@@ -18,6 +18,7 @@ namespace WukongMp.Api.Patches
     {
         public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string? Name)>> CustomTickGroupActionQueues = new();
 
+        /// OBSOLETE: Should be replaced by some ECS command queue
         public static void QueueOnGameThread(Action action, string? name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
         {
             if (tickGroup is BGW_TickGroupMask.TG_LateTick or BGW_TickGroupMask.TG_ThreadTick)

@@ -9,7 +9,7 @@ namespace WukongMp.Api.ECS.Systems;
 
 public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
-    private static bool IsMasterClient => IsMasterClient;
+    private static bool IsMasterClient => WukongMpMod.Instance.IsMasterClient;
 
     protected override void OnUpdate()
     {

@@ -137,7 +137,7 @@ public static class PatchOnCastImmobilize
             if (castingPlayerState != null && castingPlayerState.PeerId == client.LocalPlayerState.PeerId)
             {
                 // target doesn't matter, not evaluated
-                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), default, ImmobilizeActionType.Cast, false));
+                WukongMpMod.Instance.SendCastImmobilize(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId));
             }
 
             return false;
@@ -242,7 +242,7 @@ public static class PatchOnCastImmobilize
                     ? immobilizedMonster.Value.GetComponent<NetworkIdComponent>()
                     : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
 
-                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff));
+                WukongMpMod.Instance.SendTriggerImmobilize(new TriggerImmobilizeData(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), hasBuff));
             }
         }
 
@@ -300,7 +300,7 @@ public static class PatchRelieveImmobilized
 
         if (client.IsMasterClient)
         {
-            WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(netId, default, ImmobilizeActionType.Relieve, false));
+            WukongMpMod.Instance.SendRelieveImmobilize(netId);
             return true;
         }
 
@@ -351,7 +351,7 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (playerState != null)
             {
-                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId), default, ImmobilizeActionType.Relieve, false));
+                WukongMpMod.Instance.SendRelieveImmobilize(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId));
                 BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 return false;
             }
@@ -363,7 +363,7 @@ public static class PatchOnTriggerImmobilizedBreak
                 var netId = entity.Value.GetComponent<NetworkIdComponent>();
                 var pawn = entity.Value.GetComponent<LocalTamerComponent>().Pawn;
 
-                WukongMpMod.Instance.SendImmobilize(new ImmobilizeData(netId, default, ImmobilizeActionType.Relieve, false));
+                WukongMpMod.Instance.SendRelieveImmobilize(netId);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();
             }
 
@@ -580,7 +580,7 @@ public static class PatchExitPhantomRush
         if ((client.IsMasterClient || owner == client.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
         {
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
-            client.ExitPhantomRush(playerState.PeerId);
+            WukongMpMod.Instance.SendExitPhantomRush(playerState.PeerId);
             playerState.ReceivedPhantomRushExit = false;
         }
 
@@ -707,7 +707,7 @@ public class PatchOnTransBeginSpawnNewOne
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
             Logging.LogError("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
-            client.SendPlayerTransBegin(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType);
+            WukongMpMod.Instance.SendPlayerTransBegin(new PlayerTransBeginData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
         }
     }
 }
@@ -734,7 +734,7 @@ public class PatchOnTransBackSpawnNewOne
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
             Logging.LogError("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
-            client.SendPlayerTransEnd(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType);
+            WukongMpMod.Instance.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
         }
     }
 }

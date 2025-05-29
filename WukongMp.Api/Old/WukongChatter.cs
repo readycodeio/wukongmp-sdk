@@ -4,7 +4,6 @@ using System.Linq;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.Client;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
@@ -69,13 +68,13 @@ namespace WukongMp.Api.Old
             switch (args.Length)
             {
                 case 1:
-                    _wukongClient.RequestSpawnUnits(args.Span[0], 1, teamId);
+                    WukongMpMod.Instance.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], 1, teamId));
                     break;
                 case 2:
                 {
                     if (int.TryParse(args.Span[1], out var count))
                     {
-                        _wukongClient.RequestSpawnUnits(args.Span[0], count, teamId);
+                        WukongMpMod.Instance.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], count, teamId));
                     }
                     else
                     {

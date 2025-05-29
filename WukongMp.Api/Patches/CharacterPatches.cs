@@ -6,6 +6,7 @@ using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;
@@ -210,7 +211,7 @@ namespace WukongMp.Api.Patches
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = WukongMpMod.Client.GetPlayerByActor(owner);
+                    var remotePlayer = WukongMpModBase.Client.GetPlayerByActor(owner);
                     if (remotePlayer != null)
                     {
                         if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
@@ -483,8 +484,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMpMod.Client;
-            if (client.IsMasterClient)
+            if (WukongMpModBase.Client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
                 var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
@@ -493,9 +493,9 @@ namespace WukongMp.Api.Patches
                     if (SimpleState == EBGUSimpleState.Immobilizing)
                         return;
 
-                    var peerId = entity.Value.GetComponent<NetworkIdComponent>();
+                    var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
-                    client.SendUnitSimpleState(peerId, SimpleState, IsRemove);
+                    WukongMpMod.Instance.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
                     Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
                 }
             }
@@ -523,14 +523,14 @@ namespace WukongMp.Api.Patches
 
                     var peerId = entity.Value.GetComponent<NetworkIdComponent>();
 
-                    client.SendUnitStateTrigger(peerId, Trigger, Time, NeedForceUpdate);
+                    WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(peerId, Trigger, Time, NeedForceUpdate));
                     Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
 
             if (owner == client.LocalPlayerState.Pawn)
             {
-                client.SendUnitStateTrigger(NetworkIdComponent.FromPlayerPeerId(client.LocalPlayerState.PeerId), Trigger, Time, NeedForceUpdate);
+                WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(NetworkIdComponent.FromPlayerPeerId(client.LocalPlayerState.PeerId), Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }
@@ -554,8 +554,8 @@ namespace WukongMp.Api.Patches
                 if (!entity.HasValue)
                     return;
 
-                var monsterAnim = entity.Value.GetComponent<NetworkIdComponent>();
-                client.SendMotionMatchingState(monsterAnim, MMState);
+                var netId = entity.Value.GetComponent<NetworkIdComponent>();
+                WukongMpMod.Instance.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
             }
         }
     }

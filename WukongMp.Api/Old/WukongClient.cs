@@ -17,16 +17,13 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.DTO;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.UI;
-using Player = ReadyM.Relay.Client.Player;
-using PlayerState = WukongMp.Api.Old.State.PlayerState;
 
-namespace WukongMp.Api.Old.Client;
+namespace WukongMp.Api.Old;
 
-public sealed partial class WukongClient
+public sealed class WukongClient
 {
     public RelayClient RelayClient => WukongMpMod.Instance.RelayClient;
     private short PeerId => RelayClient.PeerId; // is -1 before joining room
@@ -69,6 +66,12 @@ public sealed partial class WukongClient
     public IEnumerable<PlayerState> AllPvPPlayers
         => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
+    public event Action<short, EquipmentState>? OnEquipmentChange;
+    public event Action<string, bool, int>? OnReadinessChange;
+    public event Action<PlayerState, int>? OnTeamChange;
+    public event Action<PlayerState>? OnPlayerLeft;
+    public event Action? OnBeforeJoinRoom;
+
     public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<short> playerJoinedCallback)
     {
         // TODO: Figure out ownership
@@ -88,7 +91,6 @@ public sealed partial class WukongClient
         Logging.LogInformation("WukongClient finalizer called");
         StopRelayClient();
 
-        RelayClient.OnCustomEvent -= OnCustomEvent;
         RelayClient.OnPlayerPropertiesChanged -= OnPlayerPropertiesChanged;
         RelayClient.OnBeforeJoinedRoom -= OnBeforeJoinedRoomHandler;
         RelayClient.OnAfterJoinedRoom -= OnAfterJoinedRoomHandler;
@@ -279,19 +281,9 @@ public sealed partial class WukongClient
         RelayClient.RegisterType(typeof(EquipmentState), EquipmentState.Serialize, EquipmentState.Deserialize);
         RelayClient.RegisterType(typeof(FRotator), SerializationHelpers.SerializeFRotator, SerializationHelpers.DeserializeFRotator);
         RelayClient.RegisterType(typeof(FVector), SerializationHelpers.SerializeFVector, SerializationHelpers.DeserializeFVector);
-        RelayClient.RegisterType(typeof(FsmStateData), FsmStateData.Serialize, FsmStateData.Deserialize);
-        RelayClient.RegisterType(typeof(PlayerTransBeginData), PlayerTransBeginData.Serialize, PlayerTransBeginData.Deserialize);
-        RelayClient.RegisterType(typeof(PlayerTransEndData), PlayerTransEndData.Serialize, PlayerTransEndData.Deserialize);
-        RelayClient.RegisterType(typeof(SimpleStateData), SimpleStateData.Serialize, SimpleStateData.Deserialize);
-        RelayClient.RegisterType(typeof(StateTriggerData), StateTriggerData.Serialize, StateTriggerData.Deserialize);
-        RelayClient.RegisterType(typeof(UnitSpawnData), UnitSpawnData.Serialize, UnitSpawnData.Deserialize);
-        RelayClient.RegisterType(typeof(UnitSpawnRequestData), UnitSpawnRequestData.Serialize, UnitSpawnRequestData.Deserialize);
-        RelayClient.RegisterType(typeof(UnitSummonData), UnitSummonData.Serialize, UnitSummonData.Deserialize);
-        RelayClient.RegisterType(typeof(PlayMovieData), PlayMovieData.Serialize, PlayMovieData.Deserialize);
 
         RelayClient.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
         RelayClient.OnBeforeJoinedRoom += OnBeforeJoinedRoomHandler;
-        RelayClient.OnCustomEvent += OnCustomEvent;
         RelayClient.OnDisconnected += OnDisconnectedHandler;
         RelayClient.OnOtherPlayerJoined += OtherPlayerJoinedRoomHandler;
         RelayClient.OnOtherPlayerLeft += OnPlayerLeftRoomHandler;
@@ -461,10 +453,10 @@ public sealed partial class WukongClient
     private void SubscribeToPlayerEvents()
     {
         var events = BUS_EventCollectionCS.Get(LocalPlayerState.Pawn);
-        events.Evt_BuffAdd += HandleBuffAdd;
-        events.Evt_BuffRemove += HandleBuffRemove;
-        events.Evt_BuffRemoveImmediately += HandleBuffRemoveImmediately;
-        events.Evt_BuffAllRemove += HandleBuffAllRemove;
+        events.Evt_BuffAdd += WukongMpMod.Instance.SendAddBuffHandler;
+        events.Evt_BuffRemove += WukongMpMod.Instance.SendRemoveBuffHandler;
+        events.Evt_BuffRemoveImmediately += WukongMpMod.Instance.HandleBuffRemoveImmediately;
+        events.Evt_BuffAllRemove += WukongMpMod.Instance.SendRemoveAllBuffsHandler;
     }
 
     private void UnsubscribeFromPlayerEvents()
@@ -478,15 +470,12 @@ public sealed partial class WukongClient
 
         if (events != null)
         {
-            events.Evt_BuffAdd -= HandleBuffAdd;
-            events.Evt_BuffRemove -= HandleBuffRemove;
-            events.Evt_BuffRemoveImmediately -= HandleBuffRemoveImmediately;
-            events.Evt_BuffAllRemove -= HandleBuffAllRemove;
+            events.Evt_BuffAdd -= WukongMpMod.Instance.SendAddBuffHandler;
+            events.Evt_BuffRemove -= WukongMpMod.Instance.SendRemoveBuffHandler;
+            events.Evt_BuffRemoveImmediately -= WukongMpMod.Instance.HandleBuffRemoveImmediately;
+            events.Evt_BuffAllRemove -= WukongMpMod.Instance.SendRemoveAllBuffsHandler;
         }
     }
-
-    private void HandleBuffRemoveImmediately(int buffid, EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
-        => HandleBuffRemove(buffid, removetriggertype, -1, withtriggerremmoveeffect);
 
     private int GetSmallerTeamId()
     {
@@ -570,19 +559,7 @@ public sealed partial class WukongClient
     private void OtherPlayerJoinedRoomHandler(short playerId)
     {
         Logging.LogInformation("Player {PlayerId} entered the room", playerId);
-
         _playerJoinedCallback.Invoke(playerId);
-
-        if (!Constants.IsCoop) // TODO: Add a system that spawns unsynced monsters if they are not found by SyncTamers
-        {
-            // send current monsters to the new player
-            WukongMpMod.Instance.World.Query<TamerComponent, NetworkIdComponent, TeamComponent, TranslationComponent>().ForEachEntity((ref tamer, ref netId, ref team, ref trans, entity) =>
-            {
-                const byte eventCode = 150;
-                var evData = new UnitSpawnData(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
-                RelayClient.OpRaiseEvent(eventCode, evData, [playerId], DeliveryMethod.ReliableOrdered);
-            });
-        }
     }
 
     private void OnPlayerLeftRoomHandler(short playerId)
