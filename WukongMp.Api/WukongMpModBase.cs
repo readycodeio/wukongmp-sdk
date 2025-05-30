@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using b1;
 using Friflo.Engine.ECS;
@@ -163,12 +164,17 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
         }
 
         Logging.LogDebug("Received archetype delta");
-        var copy = new NetDataReader(reader.RawData, reader.UserDataOffset, reader.UserDataSize);
+
+        var buffer = ArrayPool<byte>.Shared.Rent(reader.UserDataSize);
+        Array.Copy(reader.RawData, reader.UserDataOffset, buffer, 0, reader.UserDataSize);
+
+        var readerCopy = new NetDataReader(buffer, 0, reader.UserDataSize);
 
         GameLoopPatch.QueueOnGameThread(() =>
         {
             Logging.LogDebug("Applying archetype delta");
-            new ApplyDeltaJob(copy, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
+            new ApplyDeltaJob(readerCopy, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
+            ArrayPool<byte>.Shared.Return(buffer);
         }, nameof(ApplyDeltaJob));
     }
 }
