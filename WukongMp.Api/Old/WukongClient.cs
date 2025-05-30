@@ -318,7 +318,7 @@ public sealed class WukongClient
 
         // clear state
         ConnectedPlayers.Clear();
-        Utils.TryRunOnGameThread(WukongMP.Instance.ClearEcsMonsters);
+        Utils.TryRunOnGameThread(TamerUtils.ClearEcsMonsters);
         _localPlayerState = null;
 
         Logging.LogInformation("Stopped client.");

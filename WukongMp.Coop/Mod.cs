@@ -85,7 +85,7 @@ namespace WukongMp.Coop
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 Logging.LogDebug("Alt + X");
-                WukongMP.ResetLocalPlayerCooldown();
+                PlayerUtils.ResetLocalPlayerCooldown();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>

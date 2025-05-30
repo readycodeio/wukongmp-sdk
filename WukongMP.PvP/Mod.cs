@@ -1,14 +1,15 @@
-﻿using System;
+﻿using CSharpModBase;
+using CSharpModBase.Input;
+using ReadyM.Relay.Common.ECS;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
-using CSharpModBase;
-using CSharpModBase.Input;
-using ReadyM.Relay.Common.ECS;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.PvP
 {
@@ -66,16 +67,10 @@ namespace WukongMp.PvP
                 _wukongMp.DumpDebugInfo();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
-            {
-                Logging.LogDebug("Alt + S");
-                _wukongMp.SkipCutscene();
-            });
-
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 Logging.LogDebug("Alt + X");
-                WukongMP.ResetLocalPlayerCooldown();
+                PlayerUtils.ResetLocalPlayerCooldown();
             });
                         
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>

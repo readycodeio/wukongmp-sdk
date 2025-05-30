@@ -30,11 +30,6 @@ namespace WukongMp.Api.WukongUtils
             return (BGP_PlayerControllerB1)UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld());
         }
 
-        public static BUS_GSEventCollection GetBUS_GSEventCollection(AActor actor)
-        {
-            return BUS_EventCollectionCS.Get(actor);
-        }
-
         public static bool IsGameInstanceValid() => BGWGameInstanceCS.Get(null) != null;
 
         public static bool IsWorldValid() => GetWorld() != null;

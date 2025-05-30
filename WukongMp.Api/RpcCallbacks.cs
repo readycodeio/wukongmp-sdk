@@ -268,8 +268,8 @@ public partial class WukongMpMod
             var events = BUS_EventCollectionCS.Get(playerState.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction);
 
-            WukongMP.ResetCooldown(playerState.Pawn);
-            WukongMP.ResetMana(playerState.Pawn);
+            PlayerUtils.ResetCooldown(playerState.Pawn);
+            PlayerUtils.ResetMana(playerState.Pawn);
         }, nameof(OnPhantomRush));
     }
 

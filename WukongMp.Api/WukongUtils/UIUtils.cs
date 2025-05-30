@@ -24,5 +24,10 @@ namespace WukongMp.Api.WukongUtils
                 GenAGPage.HidePage(39, nameof(ShowTip));
             });
         }
+
+        public static void SetHudVisibility(bool visible)
+        {
+            GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
+        }
     }
 }

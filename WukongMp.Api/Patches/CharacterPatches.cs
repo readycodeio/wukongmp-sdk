@@ -10,6 +10,7 @@ using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
@@ -474,7 +475,7 @@ namespace WukongMp.Api.Patches
                     }
 
                     Logging.LogWarning("Cleaning up monster: {Name}", Actor.GetFullName());
-                    WukongMP.CleanupMonster(entity.Value);
+                    TamerUtils.CleanupMonster(entity.Value);
                 }
 
                 var tamer = character.GetTamerOwner();

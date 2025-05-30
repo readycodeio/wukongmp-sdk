@@ -224,7 +224,7 @@ namespace WukongMp.Api.Old
             var isMyself = playerState.PeerId == Client.LocalPlayerState.PeerId;
 
             if (isMyself)
-                SetHudVisibility(false);
+                UIUtils.SetHudVisibility(false);
 
             SetPlayerVisibility(playerState, false);
 
@@ -242,7 +242,7 @@ namespace WukongMp.Api.Old
             var isMyself = playerState.PeerId == Client.LocalPlayerState.PeerId;
 
             if (isMyself)
-                SetHudVisibility(true);
+                UIUtils.SetHudVisibility(true);
 
             SetPlayerVisibility(playerState, true);
 
@@ -366,7 +366,7 @@ namespace WukongMp.Api.Old
 
         public void ResetRoundState()
         {
-            Utils.TryRunOnGameThread(ClearEcsMonsters);
+            Utils.TryRunOnGameThread(TamerUtils.ClearEcsMonsters);
         }
 
         public void EnablePvP()
@@ -464,39 +464,6 @@ namespace WukongMp.Api.Old
             {
                 LobbyStatusWidget.Instance.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, playerState.IsSpectator);
             }
-        }
-
-        public static void ResetLocalPlayerCooldown()
-        {
-            var player = GameUtils.GetControlledPawn();
-
-            if (player == null)
-            {
-                Logging.LogError("Failed to get player");
-                return;
-            }
-
-            ResetCooldown(player);
-            ResetMana(player);
-        }
-
-        public static void SetHudVisibility(bool visible)
-        {
-            GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
-        }
-
-        public static void ResetCooldown(APawn playerPawn)
-        {
-            var events = BUS_EventCollectionCS.Get(playerPawn);
-            events?.Evt_ResetSkillCD.Invoke();
-        }
-
-        public static void ResetMana(APawn playerPawn)
-        {
-            var events = BUS_EventCollectionCS.Get(playerPawn);
-            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(playerPawn);
-            float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
 
         private void SetPlayerProperties()
@@ -622,69 +589,17 @@ namespace WukongMp.Api.Old
             GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
         }
 
-        public void DiscoverMonsters()
-        {
-            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            if (Client.IsMasterClient)
-            {
-                foreach (var actor in allActorsOfClass)
-                {
-                    var tamerRef = actor.CurrentRef;
-                    Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, BGU_DataUtil.GetActorGuid(actor));
-                    if (tamerRef.Phase != ETamerPhase.Dead)
-                    {
-                        SpawningUtils.CreateMonsterInEcs(BGU_DataUtil.GetActorGuid(actor), actor, 2, actor.PathName);
-                    }
-                }
-            }
-        }
-
-        public void ClearEcsMonsters()
-        {
-            WukongMpMod.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id); });
-        }
-
-        public void DestroyMonster(Entity entity)
-        {
-            var tamerComp = entity.GetComponent<LocalTamerComponent>();
-
-            if (tamerComp.Tamer == null)
-            {
-                return;
-            }
-
-            var monsterPawn = tamerComp.Tamer.GetMonster();
-            if (monsterPawn != null)
-            {
-                var events = BUS_EventCollectionCS.Get(monsterPawn);
-                events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
-                BGU_UnrealWorldUtil.DestroyActor(tamerComp.Pawn);
-            }
-
-            BGU_UnrealWorldUtil.DestroyActor(tamerComp.Tamer);
-
-            CleanupMonster(entity);
-        }
-
-        public static void CleanupMonster(Entity entity)
-        {
-            var markerComp = entity.GetComponent<MarkerComponent>();
-
-            if (markerComp.MarkerActor != null)
-            {
-                BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
-            }
-
-            Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.ToString());
-            WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
-        }
-
         private void OnBeforeJoinedRoomCallback()
         {
             SetUpRoom();
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
-            DisablePlayerSkills();
+            if (!Constants.IsCoop)
+            {
+                var player = GameUtils.GetControlledPawn();
+                SkillsUtils.DisableVigorSkill(player);
+                SkillsUtils.DisableFaBaoSkill(player);
+            }
             LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             CoopStatusWidget.Instance.SetConnectedCount(Client.AllConnectedPlayers.Count());
             LobbyStatusWidget.Instance.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
@@ -702,7 +617,7 @@ namespace WukongMp.Api.Old
             }
             else
             {
-                Utils.TryRunOnGameThread(DiscoverMonsters);
+                Utils.TryRunOnGameThread(TamerUtils.DiscoverTamers);
             }
         }
 
@@ -763,27 +678,6 @@ namespace WukongMp.Api.Old
             }
 
             TimerWidget.Instance.StopCountdown();
-        }
-
-        private static void DisablePlayerSkills()
-        {
-            var player = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(player);
-            if (events != null)
-            {
-                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInVigorSkill);
-                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantCastFaBao);
-            }
-        }
-
-        private void DisablePlayerInteraction()
-        {
-            var player = GameUtils.GetControlledPawn();
-            var events = BUS_EventCollectionCS.Get(player);
-            if (events != null)
-            {
-                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract);
-            }
         }
 
         private void SpawnPlayersAlreadyInRoom()
@@ -854,19 +748,6 @@ namespace WukongMp.Api.Old
 
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
-        }
-
-        private static void SetPlayerCollision(PlayerState playerState, bool enabled)
-        {
-            Logging.LogDebug("Setting player {PlayerName} collision to: {Enabled}", playerState.NickName, enabled);
-
-            if (playerState.Pawn == null)
-            {
-                Logging.LogError("Player pawn is null");
-                return;
-            }
-
-            playerState.Pawn.SetActorEnableCollision(enabled);
         }
     }
 }
