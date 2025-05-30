@@ -463,7 +463,18 @@ namespace WukongMp.Api.Patches
                 if (entity.HasValue)
                 {
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
-                    WukongMP.Instance.CleanupMonster(entity.Value);
+
+                    var netId = entity.Value.GetComponent<NetworkIdComponent>();
+
+                    // only clean up own monsters
+                    if (netId.Owner != WukongMpMod.Instance.RelayClient.PeerId)
+                    {
+                        Logging.LogWarning("Skipping cleanup for remote monster");
+                        return;
+                    }
+
+                    Logging.LogWarning("Cleaning up monster: {Name}", Actor.GetFullName());
+                    WukongMP.CleanupMonster(entity.Value);
                 }
 
                 var tamer = character.GetTamerOwner();

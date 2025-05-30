@@ -695,7 +695,7 @@ namespace WukongMp.Api.Old
             CleanupMonster(entity);
         }
 
-        public void CleanupMonster(Entity entity)
+        public static void CleanupMonster(Entity entity)
         {
             var markerComp = entity.GetComponent<MarkerComponent>();
 
