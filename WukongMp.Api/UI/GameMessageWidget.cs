@@ -1,10 +1,13 @@
-﻿using WukongMp.Api.GameApi.Configuration;
-using WukongMp.Api.Old;
+﻿using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.UI
 {
-    public class GameMessageWidget() : GameWidgetBase(Constants.GameMessageWidgetName)
+    public class GameMessageWidget : GameWidgetBase
     {
+        public static GameMessageWidget Instance { get; } = new();
+        
+        private GameMessageWidget() : base(Constants.GameMessageWidgetName) { }
+
         public void SetMainText(string message)
         {
             GameWidget?.CallFunctionByNameWithArguments($"SetMainText {message}", true);

@@ -12,6 +12,7 @@
         <WarningsAsErrors>CS8600;CS8602;CS8603;CS8604;CS8618;CS8625;CS8619</WarningsAsErrors>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Configurations>Debug;Release;NoDisconnect</Configurations>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
@@ -161,6 +162,7 @@
     <ItemGroup>
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj" />
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Wukong\ReadyM.Relay.Common.Wukong.csproj" />
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Generators\ReadyM.Relay.Common.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer"/>
     </ItemGroup>
 
     <ItemGroup>

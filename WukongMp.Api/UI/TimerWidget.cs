@@ -1,14 +1,14 @@
 ﻿using System;
-using WukongMp.Api.GameApi;
-using WukongMp.Api.GameApi.Configuration;
-using WukongMp.Api.Old;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old.Api;
 
 namespace WukongMp.Api.UI
 {
     public class TimerWidget : GameWidgetBase
     {
-        public TimerWidget() : base(Constants.TimerWidgetName)
+        public static TimerWidget Instance { get; } = new();
+        
+        private TimerWidget() : base(Constants.TimerWidgetName)
         {
             _countdownTimer.OnTick += SetText;
         }

@@ -2,27 +2,23 @@
 using System.Linq;
 using System.Threading.Tasks;
 using b1;
-using b1.BGW;
-using b1.ECS;
 using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
-using WukongMp.Api.GameApi;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.Client;
-using WukongMp.Api.Old.DTO;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 using Entity = Friflo.Engine.ECS.Entity;
 using PlayerState = WukongMp.Api.Old.State.PlayerState;
 
@@ -31,19 +27,9 @@ namespace WukongMp.Api.Old
     // ReSharper disable once InconsistentNaming
     public class WukongMP
     {
-        public FreeCameraManager FreeCameraManager { get; } = new();
-
         private readonly Harmony _harmony = new("WukongMP");
 
         public WukongClient Client { get; }
-
-        private bool _isAfterLoadingScreen;
-
-        private readonly TimerWidget _timerWidget = new();
-        private readonly LobbyStatusWidget _lobbyStatusWidget = new();
-        private readonly CoopStatusWidget _coopStatusWidget = new();
-        private readonly GameMessageWidget _gameMessageWidget = new();
-        private readonly CountdownWidget _countdownWidget = new();
 
         public static WukongMP Instance { get; } = new();
 
@@ -183,13 +169,13 @@ namespace WukongMp.Api.Old
         {
             ChatWidget.Instance.Initialize();
             ChatWidget.Instance.SetVisibility(false);
-            _timerWidget.Initialize();
-            _lobbyStatusWidget.Initialize();
-            _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
-            _coopStatusWidget.Initialize();
-            _coopStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
-            _gameMessageWidget.Initialize();
-            _countdownWidget.Initialize();
+            TimerWidget.Instance.Initialize();
+            LobbyStatusWidget.Instance.Initialize();
+            LobbyStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+            CoopStatusWidget.Instance.Initialize();
+            CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+            GameMessageWidget.Instance.Initialize();
+            CountdownWidget.Instance.Initialize();
             InfoMessageWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.SetVisibility(true);
@@ -199,11 +185,11 @@ namespace WukongMp.Api.Old
         private void DeinitializeWidgets()
         {
             ChatWidget.Instance.Deinitialize();
-            _timerWidget.Deinitialize();
-            _lobbyStatusWidget.Deinitialize();
-            _coopStatusWidget.Deinitialize();
-            _gameMessageWidget.Deinitialize();
-            _countdownWidget.Deinitialize();
+            TimerWidget.Instance.Deinitialize();
+            LobbyStatusWidget.Instance.Deinitialize();
+            CoopStatusWidget.Instance.Deinitialize();
+            GameMessageWidget.Instance.Deinitialize();
+            CountdownWidget.Instance.Deinitialize();
             InfoMessageWidget.Instance.Deinitialize();
             PingIndicatorWidget.Instance.Deinitialize();
         }
@@ -213,12 +199,12 @@ namespace WukongMp.Api.Old
             if (Client is { RelayClient.InRoom: true })
             {
                 ChatWidget.Instance.SetVisibility(true);
-                _isAfterLoadingScreen = true;
+                PvPUtils.IsAfterLoadingScreen = true;
                 if (Client.RoomState.InMatchmaking)
                 {
                     var timeDifference = new DateTime(Client.RoomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
-                    _timerWidget.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
-                    SetupMatchmakingUi();
+                    TimerWidget.Instance.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
+                    PvPUtils.SetupMatchmakingUi();
                 }
                 else if (Client.LocalPlayerState.IsSpectator)
                 {
@@ -226,7 +212,7 @@ namespace WukongMp.Api.Old
                 }
                 else
                 {
-                    SetupLobbyUi();
+                    PvPUtils.SetupLobbyUi();
                 }
 
                 UpdatePlayerTeamUi(Client.LocalPlayerState);
@@ -244,8 +230,8 @@ namespace WukongMp.Api.Old
 
             if (isMyself)
             {
-                FreeCameraManager.EnterFreeCameraMode();
-                SetupSpectatorUi();
+                FreeCameraManager.Instance.EnterFreeCameraMode();
+                PvPUtils.SetupSpectatorUi();
             }
 
             UpdatePlayerTeamUi(playerState);
@@ -262,76 +248,23 @@ namespace WukongMp.Api.Old
 
             if (isMyself)
             {
-                FreeCameraManager.LeaveFreeCameraMode();
+                FreeCameraManager.Instance.LeaveFreeCameraMode();
                 if (Client.RoomState.InMatchmaking)
                 {
-                    SetupMatchmakingUi();
+                    PvPUtils.SetupMatchmakingUi();
                 }
                 else if (!Client.RoomState.InPvP)
                 {
-                    SetupLobbyUi();
+                    PvPUtils.SetupLobbyUi();
                 }
                 else
                 {
-                    _lobbyStatusWidget.SetVisibility(false);
-                    _coopStatusWidget.SetVisibility(false);
+                    LobbyStatusWidget.Instance.SetVisibility(false);
+                    CoopStatusWidget.Instance.SetVisibility(false);
                 }
             }
 
             UpdatePlayerTeamUi(playerState);
-        }
-
-        private void SetupLobbyUi()
-        {
-            if (!_isAfterLoadingScreen)
-                return;
-
-            if (!Constants.IsCoop)
-            {
-                _gameMessageWidget.SetVisibility(true);
-                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-                _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
-                _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
-                _lobbyStatusWidget.SetVisibility(true);
-            }
-            else
-            {
-                _coopStatusWidget.SetVisibility(true);
-            }
-        }
-
-        private void SetupMatchmakingUi()
-        {
-            if (!_isAfterLoadingScreen)
-                return;
-
-            _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Texts.MatchmakingInProgress);
-            _gameMessageWidget.SetThirdText("");
-            if (!Constants.IsCoop)
-            {
-                _lobbyStatusWidget.SetVisibility(true);
-            }
-            else
-            {
-                _coopStatusWidget.SetVisibility(true);
-            }
-        }
-
-        private void SetupSpectatorUi()
-        {
-            if (!_isAfterLoadingScreen)
-                return;
-
-            if (!Constants.IsCoop)
-            {
-                _gameMessageWidget.SetVisibility(true);
-                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-                _gameMessageWidget.SetSecondText(Texts.WaitForEnd);
-                _gameMessageWidget.SetThirdText("");
-                _lobbyStatusWidget.SetVisibility(true);
-            }
         }
 
         public void DumpDebugInfo()
@@ -348,7 +281,12 @@ namespace WukongMp.Api.Old
             }
 
             // dump synced monsters
-            WukongMpMod.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref _, entity) => { Logging.LogDebug("Monster: {Json}", entity.DebugJSON); });
+            WukongMpMod.Instance.World.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) =>
+            {
+                Logging.LogDebug("Monster {Entity}: {NetId}", entity, netId);
+                // TODO: Dump all monster info without using .DebugJson (throws due to some internal errors,
+                // probably the same reason why JsonSerializer sometimes fails.
+            });
 
             // print team hostility info
             var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
@@ -406,10 +344,10 @@ namespace WukongMp.Api.Old
 
         public void StartRound()
         {
-            _timerWidget.StopCountdown();
-            _gameMessageWidget.SetVisibility(false);
-            _countdownWidget.StopCountdown();
-            _timerWidget.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
+            TimerWidget.Instance.StopCountdown();
+            GameMessageWidget.Instance.SetVisibility(false);
+            CountdownWidget.Instance.StopCountdown();
+            TimerWidget.Instance.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, OnRoundEnded);
             if (Client.IsMasterClient)
             {
                 Client.RoomState.InCombatRound = true;
@@ -425,7 +363,7 @@ namespace WukongMp.Api.Old
 
                 if (Client.RoomState.BotsEnabled && Client.ConnectedPlayers.Count == 0 && monsterCount == 0)
                 {
-                    GameLoopPatch.QueueOnGameThread(SpawnBots, "SpawnBots");
+                    GameLoopPatch.QueueOnGameThread(SpawningUtils.SpawnBots, "SpawnBots");
                 }
             }
         }
@@ -441,7 +379,7 @@ namespace WukongMp.Api.Old
 
         public void EndRound()
         {
-            _timerWidget.StopCountdown();
+            TimerWidget.Instance.StopCountdown();
 
             if (Client.IsMasterClient)
             {
@@ -506,85 +444,6 @@ namespace WukongMp.Api.Old
             }, "Register team hostility");
         }
 
-        public void EndTournament(int winnerTeamId)
-        {
-            Logging.LogInformation("End tournament");
-            SetupLobbyUi();
-        }
-
-        private void WakeUpMonster(string guid)
-        {
-            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            foreach (var actor in allActorsOfClass)
-            {
-                if (BGU_DataUtil.GetActorGuid(actor) != guid)
-                    continue;
-
-                var events = BGS_GSEventCollection.Get(actor);
-                if (events != null)
-                {
-                    var hasGuid = false;
-
-                    WukongMpMod.Instance.World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
-                    {
-                        if (tamer.Guid == guid)
-                        {
-                            hasGuid = true;
-                        }
-                    });
-
-                    if (actor.GetMonster() == null)
-                    {
-                        Logging.LogDebug("Spawning monster for tamer with guid: {Guid}.", guid);
-
-                        if (!hasGuid)
-                        {
-                            Logging.LogError("Not syncing monster");
-                        }
-
-                        Logging.LogDebug("Invoking Evt_TamerBlockingSpawnImmediately.");
-                        events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
-                    }
-                    else if (!hasGuid)
-                    {
-                        Logging.LogDebug("Monster already spawned but not synced: {Guid}.", guid);
-
-                        Logging.LogError("Not syncing monster");
-                    }
-                }
-                else
-                {
-                    Logging.LogDebug("Event is null");
-                }
-
-                return;
-            }
-
-            // TODO: Spawn if not found
-        }
-
-        private void RebirthPlayer(short peerId)
-        {
-            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
-
-            var player = Client.GetPlayerById(peerId);
-            if (player == null)
-                return;
-
-            if (player.PeerId == Client.LocalPlayerState.PeerId)
-            {
-                FreeCameraManager.LeaveFreeCameraMode();
-            }
-
-            var events = BUS_EventCollectionCS.Get(player.Pawn);
-            if (events != null)
-            {
-                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
-                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
-                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
-            }
-        }
-
         private void ConfigureEventCallbacks()
         {
             if (Client.ConnectedAndInRoom)
@@ -594,316 +453,10 @@ namespace WukongMp.Api.Old
             }
 
             Client.OnBeforeJoinRoom += SetPlayerProperties;
-            Client.OnUnitSpawn += (id, guid, name, teamId, x, y, z) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteUnit(id, guid, name, teamId, x, y, z), "SpawnRemoteUnit");
-            Client.OnSummonSpawn += (summonerId, summonId, guid, name, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnRemoteSummon(summonerId, summonId, guid, name, teamId), "SpawnRemoteSummon");
-            Client.OnMontageCallback += (data) => GameLoopPatch.QueueOnGameThread(() => ApplyPlayerMontageCallback(data), "ApplyPlayerMontageCallback");
-            Client.OnUnitDead += (data) => GameLoopPatch.QueueOnGameThread(() => OnRemoteUnitDead(data), "RemoteUnitDead");
-            Client.OnTeleportFinish += (id) => GameLoopPatch.QueueOnGameThread(() => OnTeleportFinish(id), "WakeUpMonster");
-            Client.OnMonsterWakeUp += guid => GameLoopPatch.QueueOnGameThread(() => WakeUpMonster(guid), "WakeUpMonster");
             Client.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Client.OnReadinessChange += (name, isReady, readyCount) => GameLoopPatch.QueueOnGameThread(() => UpdateReadiness(name, isReady, readyCount));
             Client.OnTeamChange += (playerState, teamId) => GameLoopPatch.QueueOnGameThread(() => UpdatePlayerTeam(playerState, teamId));
             Client.OnPlayerLeft += playerState => GameLoopPatch.QueueOnGameThread(() => RemovePlayer(playerState));
-            Client.OnDamageNum += damageNum => GameLoopPatch.QueueOnGameThread(() => OnDamageNum(damageNum), "OnDamageNum", BGW_TickGroupMask.TG_PreAnim);
-            Client.OnPlayerRebirth += id => GameLoopPatch.QueueOnGameThread(() => RebirthPlayer(id), "RebirthPlayer");
-            Client.OnKillPlayer += id => GameLoopPatch.QueueOnGameThread(() => KillPlayer(id), "KillPlayer");
-            Client.OnSetPlayerTransform += (loc, rot) => GameLoopPatch.QueueOnGameThread(() => TeleportLocalPlayer(loc, rot), "TeleportLocalPlayer");
-            Client.OnPhantomRush += (id, direction) => GameLoopPatch.QueueOnGameThread(() => PerformPhantomRush(id, direction), "PerformPhantomRush");
-            Client.OnExitPhantomRush += (id) => GameLoopPatch.QueueOnGameThread(() => ExitPhantomRush(id), "ExitPhantomRush");
-            Client.OnHandleImmobilize += (id, otherId, type, hasBuff) => GameLoopPatch.QueueOnGameThread(() => HandleImmobilize(id, otherId, type, hasBuff), "HandleImmobilize");
-            Client.OnTargetSet += (characterId, targetId, clear) => GameLoopPatch.QueueOnGameThread(() => OnTargetSet(characterId, targetId, clear), "OnTargetSet");
-            Client.OnMatchmakingEnded += () => GameLoopPatch.QueueOnGameThread(OnMatchmakingEnded, "OnMatchmakingEnded");
-            Client.OnBuffAdded += (playerId, buffId, duration) => GameLoopPatch.QueueOnGameThread(() => OnBuffAdded(playerId, buffId, duration), "OnBuffAdded");
-            Client.OnBuffRemoved += (playerId, a, b, c, d) => GameLoopPatch.QueueOnGameThread(() => OnBuffRemoved(playerId, a, b, c, d), "OnBuffRemoved");
-            Client.OnBuffAllRemoved += (playerId, a, b) => GameLoopPatch.QueueOnGameThread(() => OnBuffAllRemoved(playerId, a, b), "OnBuffAllRemoved");
-            Client.OnStateTriggerSet += (characterId, trigger, time, isForce) => GameLoopPatch.QueueOnGameThread(() => OnStateTriggerSet(characterId, trigger, time, isForce), "OnStateTriggerSet");
-            Client.OnSimpleStateSet += (characterId, state, isRemove) => GameLoopPatch.QueueOnGameThread(() => OnSimpleStateSet(characterId, state, isRemove), "OnSimpleStateSet");
-            Client.OnFsmStateSet += (characterId, eventName) => GameLoopPatch.QueueOnGameThread(() => OnFsmStateSet(characterId, eventName), "OnFsmStateSet", BGW_TickGroupMask.TG_BeforeStartPhsic);
-            Client.OnMotionMatchingChanged += (characterId, mm) => GameLoopPatch.QueueOnGameThread(() => OnMotionMatchingChanged(characterId, mm), "OnMotionMatchingChanged");
-            Client.OnRequestSpawnUnits += (playerId, unitName, count, teamId) => GameLoopPatch.QueueOnGameThread(() => SpawnUnitsMaster(playerId, unitName, count, teamId), "SpawnUnitsMaster");
-            Client.OnPlayerTransBegin += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransBegin(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
-            Client.OnPlayerTransEnd += (playerId, unitResId, unitBornSkillId, blendViewTarget, type) => GameLoopPatch.QueueOnGameThread(() => OnPlayerTransEnd(playerId, unitResId, unitBornSkillId, blendViewTarget, type), "OnPlayerTransform");
-            Client.OnPlayMovieRequest += playRequest => GameLoopPatch.QueueOnGameThread(() => OnPlayMovieRequest(playRequest), "OnPlayMovieRequest");
-            Client.OnWaitingForMovie += (playerId, sequenceId, sequenceLocation) => GameLoopPatch.QueueOnGameThread(() => OnWaitingForMovie(playerId, sequenceId, sequenceLocation), "OnWaitingForMovie");
-        }
-
-        private void OnWaitingForMovie(short playerId, int sequenceId, FVector sequenceLocation)
-        {
-            var player = Client.GetPlayerById(playerId);
-            if (player == null)
-            {
-                Logging.LogError("Player not found: {Id}", playerId);
-                return;
-            }
-
-            if (!Client.LocalPlayerState.IsWaitingForSequence)
-            {
-                player.WaitingSequenceId = sequenceId;
-                Client.LocalPlayerState.SequenceLocation = sequenceLocation;
-                Client.LocalPlayerState.IsJoiningSequence = true;
-                InfoMessageWidget.Instance.SetVisibility(true);
-                InfoMessageWidget.Instance.SetText("Join other players to proceed (J to teleport)");
-            }
-        }
-
-        public void TeleportLocalPlayerToSequenceLocation()
-        {
-            if (Client.LocalPlayerState.IsJoiningSequence)
-                TeleportLocalPlayer(Client.LocalPlayerState.SequenceLocation, Client.LocalPlayerState.Rotation, true);
-        }
-
-        private void OnPlayMovieRequest(FPlayMovieRequest playMovieRequest)
-        {
-            BGW_EventCollection bGW_EventCollection = BGW_EventCollection.Get(GameUtils.GetWorld());
-            if (bGW_EventCollection == null)
-            {
-                Logging.LogError("Failed to get BGW_EventCollection");
-                return;
-            }
-
-            Logging.LogTrace("Triggering moview request for local player.");
-            bGW_EventCollection.Evt_RequestPlayMovie.Invoke(playMovieRequest);
-        }
-
-        private void OnPlayerTransBegin(short peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {Id}", peerId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
-                return;
-            }
-
-            Logging.LogTrace("Transforming player {Nickname} to unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transBeginType);
-            events.Evt_TransBeginSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transBeginType);
-        }
-
-        private void OnPlayerTransEnd(short peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {Id}", peerId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
-                return;
-            }
-
-            Logging.LogTrace("Transforming player {Nickname} from unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transEndType);
-            events.Evt_TransBackSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transEndType);
-        }
-
-        private void OnBuffAdded(short peerId, int buffId, float duration)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {Id}", peerId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
-                return;
-            }
-
-            Logging.LogTrace("Adding buff {BuffId} to player {Nickname} with duration {Duration}", buffId, playerState.NickName, duration);
-            events.Evt_BuffAdd.Invoke(buffId, playerState.Pawn, playerState.Pawn, duration);
-        }
-
-        private void OnBuffRemoved(short peerId, int buffId,
-            EBuffEffectTriggerType removeTriggerType,
-            int inLayer,
-            bool withTriggerRemoveEffect)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {Id}", peerId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
-                return;
-            }
-
-            Logging.LogTrace("Removing buff {BuffId} from player {Nickname}, type: {Type}", buffId, playerState.NickName, removeTriggerType);
-            events.Evt_BuffRemove.Invoke(buffId, removeTriggerType, inLayer, withTriggerRemoveEffect);
-        }
-
-        private void OnBuffAllRemoved(short peerId, EBuffEffectTriggerType removeTriggerType, bool withTriggerRemoveEffect)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {Id}", peerId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for player {Nickname}", playerState.NickName);
-                return;
-            }
-
-            Logging.LogTrace("Removing all buffs from player {Nickname}, type: {Type}", playerState.NickName, removeTriggerType);
-            events.Evt_BuffAllRemove.Invoke(removeTriggerType, withTriggerRemoveEffect);
-        }
-
-        private void OnStateTriggerSet(NetworkIdComponent netId, EBUStateTrigger trigger, float time, bool needForceUpdate)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
-            if (pawn == null)
-            {
-                LogNullCharacter(netId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for pawn {PathName}", pawn.PathName);
-                return;
-            }
-
-            events.Evt_UnitStateTrigger.Invoke(trigger, time, needForceUpdate);
-        }
-
-        private void OnSimpleStateSet(NetworkIdComponent netId, EBGUSimpleState state, bool isForce)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
-            if (pawn == null)
-            {
-                LogNullCharacter(netId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for pawn {PathName}", pawn.PathName);
-                return;
-            }
-
-            Logging.LogTrace("Setting simple state: {State}, with isRemove {Remove} for pawn {PathName}", state, isForce, pawn.PathName);
-            events.Evt_UnitSetSimpleState.Invoke(state, isForce);
-        }
-
-        private void OnFsmStateSet(NetworkIdComponent netId, string eventName)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
-            if (pawn == null)
-            {
-                LogNullCharacter(netId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for character {Pawn}", pawn.PathName);
-                return;
-            }
-
-            Logging.LogTrace("Triggering fsm event: {Event}, for player {Player}", eventName, pawn.PathName);
-            events.Evt_TriggerFsmEvent.Invoke(eventName.MakeGameplayTag());
-        }
-
-        private void OnMotionMatchingChanged(NetworkIdComponent netId, EState_MM motionMatchingState)
-        {
-            if (!WukongMpMod.Instance.NetManager.TryGetEntityByNetworkId(netId, out var entity))
-            {
-                LogNullCharacter(netId);
-                return;
-            }
-
-            var tamerComponent = entity.Value.GetComponent<LocalTamerComponent>();
-
-            if (tamerComponent.Pawn == null)
-            {
-                LogNullCharacter(netId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(tamerComponent.Pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for pawn {PathName}", tamerComponent.Pawn!.PathName);
-                return;
-            }
-
-            Logging.LogTrace("Changing motion matching to: {State}, for monster {Monster}", motionMatchingState, tamerComponent.Pawn!.PathName);
-            events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
-        }
-
-        private void ExitPhantomRush(short peerId)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {Id}", peerId);
-                return;
-            }
-
-            Logging.LogDebug("Received exit phantom rush for player {Nickname}", playerState.NickName);
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            playerState.ReceivedPhantomRushExit = true;
-            events?.Evt_RelievePhantomRush.Invoke();
-        }
-
-        private void OnTargetSet(NetworkIdComponent playerId, NetworkIdComponent targetId, bool clearTarget)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(playerId);
-            if (pawn == null)
-            {
-                LogNullCharacter(targetId);
-                return;
-            }
-
-            var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
-            if (clearTarget)
-            {
-                Logging.LogDebug("Updating target for pawn {Pawn} to null", pawn.PathName);
-                targetInfoData.SetTargetInfo(new UnitLockTargetInfo());
-                return;
-            }
-
-            var targetPawn = WukongMpMod.Instance.GetPawnByNetworkId(targetId);
-            if (targetPawn == null)
-            {
-                LogNullCharacter(targetId);
-                return;
-            }
-
-            Logging.LogDebug("Updating target for pawn {Pawn} to pawn {Pawn}", pawn.PathName, targetPawn.PathName);
-            targetInfoData.SetTargetInfo(new UnitLockTargetInfo(targetPawn, ETargetSourceType.SkillBase_NormalUse));
         }
 
         private void UpdatePlayerTeam(PlayerState playerState, int teamId)
@@ -933,53 +486,13 @@ namespace WukongMp.Api.Old
         {
             if (Constants.IsCoop)
             {
-                _coopStatusWidget.RemovePlayer(playerState.NickName);
-                _coopStatusWidget.AddPlayer(playerState.NickName);
+                CoopStatusWidget.Instance.RemovePlayer(playerState.NickName);
+                CoopStatusWidget.Instance.AddPlayer(playerState.NickName);
             }
             else
             {
-                _lobbyStatusWidget.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, playerState.IsSpectator);
+                LobbyStatusWidget.Instance.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, playerState.IsSpectator);
             }
-        }
-
-        private void KillPlayer(short peerId)
-        {
-            var player = Client.GetPlayerById(peerId)?.Pawn;
-            if (player == null)
-                return;
-
-            var events = BUS_EventCollectionCS.Get(player);
-            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            if (Client.IsMasterClient)
-            {
-                events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
-            }
-        }
-
-        private void TeleportLocalPlayer(FVector location, FRotator rotation, bool sweep = false)
-        {
-            var playerState = Client.LocalPlayerState;
-            BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
-            playerState.TeleportFinishFrames = 5;
-            GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);
-            GameUtils.GetPlayerController().SetControlRotation(rotation);
-        }
-
-        private void PerformPhantomRush(short peerId, ESkillDirection direction)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState?.Pawn == null)
-            {
-                Logging.LogError("Player not found: {PlayerId}", peerId);
-                return;
-            }
-
-            Logging.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", playerState.NickName, direction);
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            events?.Evt_TriggerPhantomRush.Invoke(direction);
-
-            ResetCooldown(playerState.Pawn);
-            ResetMana(playerState.Pawn);
         }
 
         public static void ResetLocalPlayerCooldown()
@@ -1001,116 +514,18 @@ namespace WukongMp.Api.Old
             GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
         }
 
-        private static void ResetCooldown(APawn playerPawn)
+        public static void ResetCooldown(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_ResetSkillCD.Invoke();
         }
 
-        private static void ResetMana(APawn playerPawn)
+        public static void ResetMana(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(playerPawn);
             float maxMana = attrContainer.GetFloatValue(EBGUAttrFloat.MpMax);
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
-        }
-
-        private void HandleImmobilize(NetworkIdComponent netId, NetworkIdComponent otherNetId, ImmobilizeActionType immobilizeAction, bool hasBuff)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(netId);
-            if (pawn == null)
-            {
-                LogNullCharacter(netId);
-                return;
-            }
-
-
-            switch (immobilizeAction)
-            {
-                case ImmobilizeActionType.Cast:
-                    CastImmobilize(pawn);
-                    break;
-                case ImmobilizeActionType.Trigger:
-                    var otherPawn = WukongMpMod.Instance.GetPawnByNetworkId(otherNetId);
-                    if (otherPawn == null)
-                    {
-                        Logging.LogError("Target not found: {Id}", otherNetId);
-                        return;
-                    }
-
-                    TriggerImmobilize(pawn, otherPawn, hasBuff);
-                    break;
-                case ImmobilizeActionType.Relieve:
-                    RelieveImmobilize(pawn);
-                    break;
-                case ImmobilizeActionType.Break:
-                // Currently not supported
-                default:
-                    Logging.LogError("Unknown ImmobilizeActionType: {Action}", immobilizeAction);
-                    break;
-            }
-        }
-
-        private void CastImmobilize(BGUCharacterCS castingCharacterState)
-        {
-            if (Client.IsMasterClient)
-            {
-                Logging.LogDebug("Received cast immobilize for character {Nickname}", castingCharacterState.GetName());
-                var playerEvents = BUS_EventCollectionCS.Get(castingCharacterState);
-                playerEvents.Evt_CastImmobilize.Invoke(0);
-            }
-        }
-
-        private static void TriggerImmobilize(BGUCharacterCS? pawn, BGUCharacterCS? caster, bool hasBuff)
-        {
-            Logging.LogDebug("Received trigger immobilize for character {Pawn}", pawn?.GetName());
-
-            if (pawn == null)
-            {
-                Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
-                return;
-            }
-
-            if (caster == null)
-            {
-                Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
-                return;
-            }
-
-            var castImmobilizeData = (BUC_CastImmobilizeData)caster.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
-
-            var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
-            if (cachedImmobilizeConfigDesc == null)
-            {
-                Logging.LogError("cachedImmobilizeConfigDesc is null");
-                return;
-            }
-
-            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
-            BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
-        }
-
-        private void RelieveImmobilize(BGUCharacterCS pawn)
-        {
-            Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
-            var playerEvents = BUS_EventCollectionCS.Get(pawn);
-
-            var entity = WukongMpMod.Instance.GetMonsterByActor(pawn);
-            if (entity.HasValue)
-            {
-                ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
-                tamerComponent.RunImmobilizePatches = true;
-            }
-            else
-            {
-                var player = Client.GetPlayerByActor(pawn);
-                if (player != null)
-                {
-                    player.RunImmobilizePatches = true;
-                }
-            }
-
-            playerEvents?.Evt_RelieveImmobilized.Invoke();
         }
 
         private void SetPlayerProperties()
@@ -1191,24 +606,24 @@ namespace WukongMp.Api.Old
                 if ((Client.ConnectedPlayers.Count > 0 || Client.RoomState.BotsEnabled) && readyCount == Client.ConnectedPlayers.Count + 1)
                 {
                     // all players are ready
-                    _gameMessageWidget.SetMainText(Texts.StartingGame);
-                    _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, Client.StartPvP);
+                    GameMessageWidget.Instance.SetMainText(Texts.StartingGame);
+                    CountdownWidget.Instance.StartLobbyCountdown(Constants.CountdownSeconds, Client.StartPvP);
                 }
 
-                _lobbyStatusWidget.SetReadyCount(readyCount);
+                LobbyStatusWidget.Instance.SetReadyCount(readyCount);
             }
             else
             {
-                _countdownWidget.StopCountdown();
-                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-                _lobbyStatusWidget.SetReadyCount(readyCount);
+                CountdownWidget.Instance.StopCountdown();
+                GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
+                LobbyStatusWidget.Instance.SetReadyCount(readyCount);
             }
         }
 
         public void SwitchReadyState(bool isReady)
         {
-            _gameMessageWidget.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, isReady));
+            GameMessageWidget.Instance.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
+            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, isReady));
         }
 
         public void RemovePlayer(PlayerState playerState)
@@ -1223,289 +638,17 @@ namespace WukongMp.Api.Old
                 BGU_UnrealWorldUtil.DestroyActor(playerState.Pawn);
             }
 
-            _lobbyStatusWidget.RemovePlayerFromTeams(playerState.NickName);
+            LobbyStatusWidget.Instance.RemovePlayerFromTeams(playerState.NickName);
             UpdateConnectedCount();
-            _lobbyStatusWidget.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
-            _coopStatusWidget.RemovePlayer(playerState.NickName);
+            LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
+            CoopStatusWidget.Instance.RemovePlayer(playerState.NickName);
         }
 
         private void UpdateConnectedCount()
         {
-            _lobbyStatusWidget.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
-            _coopStatusWidget.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
-        }
-
-        private static void OnDamageNum(DamageNumParam damageNum)
-        {
-            var uiEvt = BGW_UIEventCollection.Get(GameUtils.GetWorld());
-            uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
-        }
-
-        private void OnRemoteUnitDead(UnitDeadPacket data)
-        {
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(data.NetworkId);
-            if (pawn == null)
-            {
-                LogNullCharacter(data.NetworkId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(pawn);
-            if (events == null)
-            {
-                Logging.LogError("Failed to get event collection for unit {Unit}", pawn.GetName());
-                return;
-            }
-
-            events.Evt_UnitDead.Invoke(null, data.DeadReason, data.DmgId, data.StiffLevel, null, default, data.IsDotDmg, data.AbnormalType);
-        }
-
-        public void ApplyPlayerMontageCallback(MontageCallbackData data)
-        {
-            var id = data.NetId;
-            var pawn = WukongMpMod.Instance.GetPawnByNetworkId(id);
-            if (pawn == null)
-            {
-                LogNullCharacter(id);
-                return;
-            }
-
-            if (string.IsNullOrEmpty(data.MontagePath))
-            {
-                Logging.LogDebug("Stopping montage playback for character {CharacterId}", id);
-                pawn.StopAnimMontage(null);
-                return;
-            }
-
-            var fullMontagePath = data.Compressed ? MontageHelpers.DecompressMontageName(data.MontagePath) : data.MontagePath;
-            Logging.LogDebug("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
-
-            var animInstance = pawn.Mesh.GetAnimInstance();
-            if (animInstance == null)
-            {
-                Logging.LogError("AnimInstance is null");
-                return;
-            }
-
-            var currentMontage = animInstance.GetCurrentActiveMontage();
-            Logging.LogDebug("Current montage: {Montage}", currentMontage?.PathName);
-
-            // if the same montage is currently playing an no reset flag is given, do not play new montage
-            if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data.Reset)
-            {
-                Logging.LogDebug("Skipping montage playback: {Montage}, is reset: {Reset}", fullMontagePath, data.Reset);
-                return;
-            }
-
-            var montage = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
-
-            if (montage == null)
-            {
-                Logging.LogWarning("Montage not found: {Montage}", fullMontagePath);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(pawn);
-
-            if (events == null)
-            {
-                Logging.LogError("events are null");
-                return;
-            }
-
-            Logging.LogDebug("Applying montage callback for character {CharacterId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
-            animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
-            events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
-        }
-
-        public void SpawnUnitsMaster(short peerId, string unitName, int count, int teamId)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null || playerState.Pawn == null)
-            {
-                Logging.LogError("Player not found: {PlayerId}", peerId);
-                return;
-            }
-
-            var spawnLoc = playerState.Pawn.GetActorLocation() + playerState.Pawn.GetActorForwardVector() * Constants.MonsterSpawnDistance;
-            var startLoc = spawnLoc + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
-            var endLoc = spawnLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
-
-            // trace vertically for spawn height
-            var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), startLoc, endLoc, out var hitResultSimple);
-            if (hit)
-            {
-                spawnLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
-            }
-
-            // spawn in a grid around center point, separated by 200 units
-            int cols = (int)Math.Ceiling(Math.Sqrt(count));
-            int rows = (int)Math.Ceiling((float)count / cols);
-
-            float startX = -((cols - 1) * Constants.MonsterSpawnSpread) / 2f;
-            float startY = -((rows - 1) * Constants.MonsterSpawnSpread) / 2f;
-
-            int placed = 0;
-            for (int row = 0; row < rows; row++)
-            {
-                for (int col = 0; col < cols; col++)
-                {
-                    float x = startX + col * Constants.MonsterSpawnSpread;
-                    float y = startY + row * Constants.MonsterSpawnSpread;
-                    var loc = spawnLoc + new FVector(x, y, 0);
-
-                    var localI = placed;
-                    Task.Run(async () =>
-                    {
-                        // wait for i * 200ms
-                        await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                        GameLoopPatch.QueueOnGameThread(() => { SpawnUnitMaster(unitName, loc, teamId); }, "SpawnUnitMaster");
-                    });
-                    placed++;
-                    if (placed == count)
-                        goto Notify;
-                }
-            }
-
-            Notify:
-            Client.WukongChat.SendServerMessage("PlayerSpawned", Client.LocalPlayerState.NickName, count.ToString(), unitName);
-        }
-
-        public void SpawnUnitMaster(string unitName, FVector loc, int teamId)
-        {
-            var unitPath = UnitPathsConfig.GetUnitPath(unitName);
-
-            var guid = Guid.NewGuid().ToString();
-
-            Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
-
-            SpawnUnitLocally(null, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
-        }
-
-        private void SpawnRemoteUnit(NetworkIdComponent netId, string guid, string unitName, int teamId, float x, float y, float z)
-        {
-            SpawnUnitLocally(netId, guid, unitName, teamId, x, y, z);
-        }
-
-        private void SpawnRemoteSummon(NetworkIdComponent summonerId, NetworkIdComponent summonId, string guid, string unitName, int teamId)
-        {
-            SummonPatch.ExecuteSummon(summonerId, summonId, guid, unitName, teamId);
-        }
-
-        private NetworkIdComponent? SpawnUnitLocally(NetworkIdComponent? providedNetId, string guid, string unitPath, int teamId, float x, float y, float z)
-        {
-            Logging.LogDebug("Spawn unit called for {UnitPath}", unitPath);
-
-            if (string.IsNullOrEmpty(unitPath))
-                return null;
-
-            var loc = new FVector(x, y, z);
-            var rot = new FRotator();
-
-            var world = GameUtils.GetWorld();
-
-            var unitClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
-            var transform = new FTransform(rot, loc);
-            var tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)unitClass, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
-            if (tamerActor == null)
-            {
-                Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
-                return null;
-            }
-
-            tamerActor.MarkAsSpawnedTamer(null);
-            tamerActor.ExtendConfigComp.ActorResetType = EBGUResetType.Destroy;
-
-            tamerActor.SpawnedTamerGuid = guid;
-            // Update final guid
-            tamerActor.GetFinalGuid(true);
-
-            Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
-            var entity = providedNetId.HasValue ? CreateRemoteMonster(providedNetId.Value, guid, tamerActor, teamId, unitPath) : CreateMonster(guid, tamerActor, teamId, unitPath);
-
-            ref var trans = ref entity.GetComponent<TranslationComponent>();
-            trans.Position = loc.ToVector3();
-            trans.Rotation = rot.ToVector3();
-
-            UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
-            BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
-
-            ref var nameComp = ref entity.GetComponent<NicknameComponent>();
-            nameComp.Nickname = "Bot";
-
-            CreateMarkerForCharacter(entity); // 3D marker above monster
-            if (unitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
-            {
-                SetMonkeyBotConfig(tamerActor.GetMonster());
-            }
-
-            var netId = entity.GetComponent<NetworkIdComponent>();
-            return netId;
-        }
-
-        public Entity CreateRemoteMonster(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
-        {
-            var id = WukongMpMod.Instance.CreateNetworkedMonster(netId);
-
-            id.AddComponent(new LocalTamerComponent(tamer));
-
-            ref var tamerComp = ref id.GetComponent<TamerComponent>();
-            tamerComp.Guid = guid;
-            tamerComp.UnitPath = unitName;
-
-            ref var teamComp = ref id.GetComponent<TeamComponent>();
-            teamComp.TeamId = teamId;
-
-            Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
-            return id;
-        }
-
-        public Entity CreateMonster(string guid, BUTamerActor tamer, int teamId, string unitName)
-        {
-            var id = WukongMpMod.Instance.CreateNetworkedMonster();
-            id.AddComponent(new LocalTamerComponent(tamer));
-
-            ref var tamerComp = ref id.GetComponent<TamerComponent>();
-            tamerComp.Guid = guid;
-            tamerComp.UnitPath = unitName;
-
-            ref var teamComp = ref id.GetComponent<TeamComponent>();
-            teamComp.TeamId = teamId;
-
-            Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
-            return id;
-        }
-
-        private void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
-        {
-            var events = BUS_EventCollectionCS.Get(bGUCharacter);
-            if (events != null)
-            {
-                foreach (var attr in MonkeyBotConfig.Attribues)
-                {
-                    events.Evt_SetAttrFloat.Invoke(attr.Key, attr.Value);
-                }
-
-                foreach (var eq in MonkeyBotConfig.Equipment)
-                {
-                    events.Evt_InitDaShenEquipData.Invoke(eq.Key, eq.Value);
-                }
-            }
-        }
-
-        private void SpawnBots()
-        {
-            for (int i = 0; i < Constants.BotCount; i++)
-            {
-                float angle = i / (float)Constants.BotCount * 2f * FMath.PI;
-                float x = FMath.Cos(angle) * Constants.PvpMonsterRadius;
-                float y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
-
-                var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-                FVector spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-                SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(Client.LocalPlayerState.TeamId));
-            }
+            LobbyStatusWidget.Instance.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
+            CoopStatusWidget.Instance.SetConnectedCount(Client.ConnectedPlayers.Count + 1);
+            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(Client.ConnectedPlayers.Count, Client.LocalPlayerState.IsReadyForPvP));
         }
 
         public void DiscoverMonsters()
@@ -1519,7 +662,7 @@ namespace WukongMp.Api.Old
                     Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, BGU_DataUtil.GetActorGuid(actor));
                     if (tamerRef.Phase != ETamerPhase.Dead)
                     {
-                        CreateMonster(BGU_DataUtil.GetActorGuid(actor), actor, 2, actor.PathName);
+                        SpawningUtils.CreateMonsterInEcs(BGU_DataUtil.GetActorGuid(actor), actor, 2, actor.PathName);
                     }
                 }
             }
@@ -1552,7 +695,7 @@ namespace WukongMp.Api.Old
             CleanupMonster(entity);
         }
 
-        public void CleanupMonster(Entity entity)
+        public static void CleanupMonster(Entity entity)
         {
             var markerComp = entity.GetComponent<MarkerComponent>();
 
@@ -1571,38 +714,25 @@ namespace WukongMp.Api.Old
             SpawnPlayersAlreadyInRoom();
             UpdateConnectedCount();
             DisablePlayerSkills();
-            _lobbyStatusWidget.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
-            _coopStatusWidget.SetConnectedCount(Client.AllConnectedPlayers.Count());
-            _lobbyStatusWidget.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
-            _coopStatusWidget.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
+            LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
+            CoopStatusWidget.Instance.SetConnectedCount(Client.AllConnectedPlayers.Count());
+            LobbyStatusWidget.Instance.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
+            CoopStatusWidget.Instance.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
             SetupMatchmaking();
         }
 
         private void OnAfterJoinedRoomCallback()
         {
-            var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PeerId);
             if (!Constants.IsCoop)
             {
-                TeleportLocalPlayer(spawnPosition, FRotator.ZeroRotator);
+                var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PeerId);
+                var data = new PlayerTransformData(Client.LocalPlayerState.PeerId, spawnPosition, FRotator.ZeroRotator);
+                WukongMpMod.Instance.OnBroadcastPlayerTransform(data);
             }
             else
             {
                 Utils.TryRunOnGameThread(DiscoverMonsters);
             }
-        }
-
-        private void OnTeleportFinish(short peerId)
-        {
-            var playerState = Client.GetPlayerById(peerId);
-            if (playerState == null)
-            {
-                Logging.LogError("Player not found: {PlayerId}", peerId);
-                return;
-            }
-
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            events?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
-            events?.Evt_TeleportFinish.Invoke();
         }
 
         public void UpdatePlayer(PlayerState playerState, float deltaTime)
@@ -1613,7 +743,7 @@ namespace WukongMp.Api.Old
             {
                 if (playerState.TeleportFinishFrames == 0)
                 {
-                    Client.SendTeleportFinish();
+                    WukongMpMod.Instance.SendTeleportFinish();
                 }
 
                 playerState.TeleportFinishFrames--;
@@ -1658,19 +788,10 @@ namespace WukongMp.Api.Old
             if (Client.IsMasterClient)
             {
                 Client.RoomState.InMatchmaking = false;
-                Client.SendEndMatchmaking();
+                WukongMpMod.Instance.SendEndMatchmaking();
             }
 
-            _timerWidget.StopCountdown();
-        }
-
-        private void OnMatchmakingEnded()
-        {
-            _timerWidget.StopCountdown();
-            if (_isAfterLoadingScreen)
-            {
-                SetupLobbyUi();
-            }
+            TimerWidget.Instance.StopCountdown();
         }
 
         private static void DisablePlayerSkills()
@@ -1703,35 +824,13 @@ namespace WukongMp.Api.Old
             }
         }
 
-        public static BGUCharacterCS? SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
-        {
-            var newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(oldController.World, pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
-            oldController.Possess(newPawn);
-
-            if (newPawn is not BGUCharacterCS newCharacter)
-            {
-                Logging.LogError("Failed to cast pawn to ACharacter");
-                return null;
-            }
-
-            newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
-            newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
-            BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, newCharacter, spawnTransform);
-            BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(newCharacter);
-            BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(oldPawn.ToEntity(), newCharacter.ToEntity());
-            newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
-            newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
-            UGSE_ActorFuncLib.UpdateActorOverlaps(newCharacter);
-            return newCharacter;
-        }
-
         private void AddPlayer(short peerId)
         {
-            var playerState = SpawnCloneForPlayer(peerId);
+            var playerState = SpawningUtils.SpawnCloneForPlayer(peerId);
 
             if (playerState != null)
             {
-                CreateMarkerForCharacter(playerState); // 3D marker above player
+                MarkerUtils.CreateMarkerForCharacter(playerState); // 3D marker above player
                 Client.RegisterPlayer(playerState);
                 UpdateConnectedCount();
 
@@ -1797,234 +896,6 @@ namespace WukongMp.Api.Old
             }
 
             playerState.Pawn.SetActorEnableCollision(enabled);
-        }
-
-        private PlayerState? SpawnCloneForPlayer(short peerId)
-        {
-            if (Client.ConnectedPlayers.ContainsKey(peerId))
-            {
-                Logging.LogDebug("Player already exists: {Id}", peerId); // reconnection
-                return null;
-            }
-
-            var playerPawnClass = GameUtils.GetControlledPawn()?.GetClass();
-
-            if (playerPawnClass == null)
-            {
-                Logging.LogError("Player pawn class is null");
-                return null;
-            }
-
-            var oldPawn = GameUtils.GetControlledPawn();
-
-            if (oldPawn == null)
-            {
-                Logging.LogError("Old pawn is null");
-                return null;
-            }
-
-            FVector loc = default;
-            FRotator rot = default;
-
-            var initialProps = Client.RelayClient.GetPlayerState(peerId)?.Properties;
-
-            if (initialProps == null)
-            {
-                Logging.LogError("Player properties are null at player joining");
-                return null;
-            }
-
-            if (initialProps.TryGetValue(nameof(PlayerState.Location), out var playerLoc))
-            {
-                loc = (FVector)playerLoc;
-            }
-
-            if (initialProps.TryGetValue(nameof(PlayerState.Rotation), out var playerRot))
-            {
-                rot = (FRotator)playerRot;
-            }
-
-            var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
-
-            if (@class == null)
-            {
-                Logging.LogError("Class is null");
-                return null;
-            }
-
-            var oldController = GameUtils.GetPlayerController();
-            var controllerCameraRotation = oldController.GetControlRotation();
-            var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
-
-            if (newPawn == null)
-            {
-                Logging.LogError("Failed to spawn new pawn");
-                return null;
-            }
-
-            GameUtils.PossesPawnWithViewTarget(oldController, oldPawn, newPawn, controllerCameraRotation);
-
-            Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", peerId, newPawn.GetEntityHash());
-
-            var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref loc, ref rot);
-            if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
-            {
-                Logging.LogDebug("Spawned new controller");
-                newController.Possess(newPawn);
-            }
-
-            // Reset falling timer.
-            var events = BUS_EventCollectionCS.Get(newPawn);
-            events.Evt_OnLeaveFalling.Invoke();
-            events = BUS_EventCollectionCS.Get(oldPawn);
-            events.Evt_OnLeaveFalling.Invoke();
-
-            // get teamId
-            var teamId = Constants.AvailableTeamIds.First();
-            if (initialProps.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
-            {
-                teamId = (int)assignedTeamId;
-            }
-
-            // get initial Hp and HpMax
-            if (!initialProps.TryGetValue(nameof(PlayerState.Hp), out var initialHpObj) || initialHpObj is not float initialHp)
-            {
-                Logging.LogWarning("Joining player did not set initial HP");
-                initialHp = 1000f;
-            }
-            else
-            {
-                Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
-            }
-
-            if (!initialProps.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMaxBase}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMaxBase)
-            {
-                Logging.LogWarning("Joining player did not set initial HPMax");
-                initialHpMaxBase = 1000f;
-            }
-            else
-            {
-                Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
-            }
-
-            var playerState = new PlayerState(peerId, newPawn, teamId, initialHp, initialHpMaxBase)
-            {
-                Location = loc,
-                Rotation = rot
-            };
-
-            // set nickname
-            if (initialProps.TryGetValue(nameof(PlayerState.NickName), out var nickName))
-            {
-                playerState.NickName = (string)nickName;
-                Logging.LogDebug("Setting initial Nickname to {Nickname}", playerState.NickName);
-            }
-            else
-            {
-                Logging.LogWarning("Initial nickname not provided");
-            }
-
-            // set IsReadyForPvP and IsSpectator
-            if (initialProps.TryGetValue(nameof(PlayerState.IsReadyForPvP), out var isReady))
-            {
-                playerState.IsReadyForPvP = (bool)isReady;
-                Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", playerState.IsReadyForPvP);
-            }
-
-            if (initialProps.TryGetValue(nameof(PlayerState.IsSpectator), out var isSpectator))
-            {
-                playerState.IsSpectator = (bool)isSpectator;
-                Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", playerState.IsSpectator);
-            }
-
-            // set attributes
-            foreach (var attr in Constants.SyncedAttributes)
-            {
-                if (initialProps.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
-                {
-                    Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
-                    playerState.Attributes[attr] = (float)value;
-                }
-            }
-
-            // update equipment
-            if (initialProps.TryGetValue(nameof(PlayerState.Equipment), out var eq))
-            {
-                playerState.Equipment = (EquipmentState)eq;
-                EquipmentHelpers.SetRemoteActorEquipment(newPawn, playerState.Equipment);
-            }
-
-            // set lock distance
-            FUStUnitCommDesc unitCommDesc = BGW_GameDB.GetUnitCommDesc(newPawn.GetResID());
-            if (unitCommDesc != null)
-            {
-                unitCommDesc.CameraLockDist = 10000;
-            }
-
-            return playerState;
-        }
-
-        private void CreateMarkerForCharacter(Entity entity)
-        {
-            var world = GameUtils.GetWorld();
-            var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
-            var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
-            if (playerMarkerActor != null)
-            {
-                Logging.LogDebug("Player marker actor spawned successfully");
-            }
-            else
-            {
-                Logging.LogError("Cannot spawn player marker actor");
-                return;
-            }
-
-            var teamIdComp = entity.GetComponent<TeamComponent>();
-            var nameComp = entity.GetComponent<NicknameComponent>();
-            ref var markerComp = ref entity.GetComponent<MarkerComponent>();
-
-            var teamName = GameUtils.GetTeamName(teamIdComp.TeamId);
-            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamName}", true);
-            markerComp.MarkerActor = playerMarkerActor;
-        }
-
-        [Obsolete]
-        private void CreateMarkerForCharacter(CharacterState characterState)
-        {
-            var world = GameUtils.GetWorld();
-            var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
-            var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
-            if (playerMarkerActor != null)
-            {
-                Logging.LogDebug("Player marker actor spawned successfully");
-            }
-            else
-            {
-                Logging.LogError("Cannot spawn player marker actor");
-                return;
-            }
-
-            var teamName = GameUtils.GetTeamName(characterState.TeamId);
-            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {characterState.NickName} {teamName}", true);
-            characterState.MarkerActor = playerMarkerActor;
-        }
-
-        // TODO: This should always be error, make sure that creation and destruction of monsters is synchronized
-        [Obsolete]
-        private void LogNullCharacter(int characterId)
-        {
-            if (characterId < 0)
-                Logging.LogWarning("Character not found: {Id}", characterId); // monster not found
-            else
-                Logging.LogError("Character not found: {Id}", characterId); // player not found
-        }
-
-        private void LogNullCharacter(NetworkIdComponent characterId)
-        {
-            if (characterId.Owner >= 0)
-                Logging.LogWarning("Monster not found: {Id}", characterId); // monster not found
-            else
-                Logging.LogError("Player not found: {Id}", characterId); // player not found
         }
     }
 }

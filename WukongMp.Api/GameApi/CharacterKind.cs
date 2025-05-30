@@ -1,5 +1,4 @@
-﻿using WukongMp.Api.Old;
-using WukongMp.Api.Old.Api;
+﻿using WukongMp.Api.Old.Api;
 
 namespace WukongMp.Api.GameApi
 {

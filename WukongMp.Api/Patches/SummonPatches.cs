@@ -7,6 +7,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
@@ -49,7 +50,7 @@ namespace WukongMp.Api.Patches
         {
             Logging.LogDebug("Spawning servant: {TamerName}, with Guid {Guid}", TamerClass.Value.GetPathName(), guid);
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
             var world = GameUtils.GetWorld();
             if (world == null || TamerClass.Value == null)
@@ -70,7 +71,7 @@ namespace WukongMp.Api.Patches
 
             if (SafeClampToLand)
             {
-                FVector fVector = BGUFuncLibActorTransformCS.BGUGetActorLocation(bUTamerActor);
+                FVector fVector = bUTamerActor.BGUGetActorLocation();
                 float scaledCapsuleHalfHeight = bUTamerActor.CapsuleComponent.GetScaledCapsuleHalfHeight();
                 float scaledCapsuleRadius = bUTamerActor.CapsuleComponent.GetScaledCapsuleRadius();
                 FVector start = fVector + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
@@ -79,7 +80,7 @@ namespace WukongMp.Api.Patches
                 if (USystemLibrary.CapsuleTraceSingleByProfile(world, start, end, scaledCapsuleRadius, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, list, EDrawDebugTrace.None, out var OutHit, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 3f))
                 {
                     FVector newLocation = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(in OutHit.ImpactPoint) + FVector.UpVector * scaledCapsuleHalfHeight;
-                    BGUFuncLibActorTransformCS.BGUSetActorLocation(bUTamerActor, newLocation, bSweep: false, bTeleport: false);
+                    bUTamerActor.BGUSetActorLocation(newLocation, bSweep: false, bTeleport: false);
                 }
             }
 
@@ -89,7 +90,7 @@ namespace WukongMp.Api.Patches
 
             Logging.LogDebug("Spawned servant: {TamerName}, with Guid {Guid}", bUTamerActor.GetName(), guid);
 
-            var entity = WukongMP.Instance.CreateRemoteMonster(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
+            var entity = SpawningUtils.AddRemoteMonsterToEcs(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
 
             ref var trans = ref entity.GetComponent<TranslationComponent>();
             trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();
@@ -113,7 +114,7 @@ namespace WukongMp.Api.Patches
     //        if (!WukongMP.Instance.ShouldRunConnectedPatches())
     //            return;
 
-    //        var client = WukongMP.Instance.Client;
+    //        var client = WukongMpMod.Client;
     //        if (!client.IsMasterClient)
     //        {
     //            for (int i = 0; i < InSummonInstance.ServantReqList.Count; i++)
@@ -138,7 +139,7 @@ namespace WukongMp.Api.Patches
     //        if (!WukongMP.Instance.ShouldRunConnectedPatches())
     //            return true;
 
-    //        var client = WukongMP.Instance.Client;
+    //        var client = WukongMpMod.Client;
     //        if (!client.IsMasterClient)
     //        {
     //            __result = null;

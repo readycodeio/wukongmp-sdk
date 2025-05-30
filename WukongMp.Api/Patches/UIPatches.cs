@@ -12,7 +12,7 @@ using HarmonyLib;
 using ResB1;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Resources;
@@ -48,12 +48,12 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var client = WukongMP.Instance.Client;
+            var mod = WukongMpMod.Instance;
 
-            if (!client.IsMasterClient)
+            if (!mod.IsMasterClient)
                 return false;
 
-            client.SendDamageNum(Param);
+            mod.SendDamageNum(Param);
             return true;
         }
     }
@@ -166,7 +166,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
             if (client.RoomState.InPvP)
             {

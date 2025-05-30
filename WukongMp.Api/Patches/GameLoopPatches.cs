@@ -4,9 +4,9 @@ using System.Threading;
 using b1;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Monitors;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;
@@ -18,6 +18,7 @@ namespace WukongMp.Api.Patches
     {
         public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string? Name)>> CustomTickGroupActionQueues = new();
 
+        /// OBSOLETE: Should be replaced by some ECS command queue
         public static void QueueOnGameThread(Action action, string? name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
         {
             if (tickGroup is BGW_TickGroupMask.TG_LateTick or BGW_TickGroupMask.TG_ThreadTick)
@@ -118,7 +119,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
             SyncPlayerMontage(client.LocalPlayerState);
 
@@ -152,14 +153,14 @@ namespace WukongMp.Api.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMP.Instance.Client.SendMontageCallback(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId), currentMontage, currentPosition, hasMontageRewound);
+                    WukongMpMod.Instance.SendMontageCallback(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId), currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                WukongMP.Instance.Client.SendMontageCancel(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId));
+                WukongMpMod.Instance.SendMontageCancel(NetworkIdComponent.FromPlayerPeerId(characterState.PeerId));
             }
 
             montageState.LocalMontage = currentMontage;

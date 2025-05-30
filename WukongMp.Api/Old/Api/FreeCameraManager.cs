@@ -14,6 +14,9 @@ namespace WukongMp.Api.Old.Api
         private float _gameFov;
         private AActor? _cacheCameraViewTarget;
         private const string FreeCameraActorPath = "/Game/Mods/CustomLuaMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
+        
+        public static FreeCameraManager Instance { get; } = new();
+        private FreeCameraManager() {}
 
         public void EnterFreeCameraMode()
         {

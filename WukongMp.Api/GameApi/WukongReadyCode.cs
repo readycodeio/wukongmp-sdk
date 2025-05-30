@@ -7,9 +7,10 @@ using BtlShare;
 using CSharpModBase;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.GameApi
 {
@@ -226,7 +227,7 @@ namespace WukongMp.Api.GameApi
             }
 
             var oldController = GameUtils.GetPlayerController();
-            var newPawn = WukongMP.SpawnWukong(oldController, playerPawnClass, new FTransform(rotation, actualPos), oldPawn);
+            var newPawn = SpawningUtils.SpawnWukong(oldController, playerPawnClass, new FTransform(rotation, actualPos), oldPawn);
             
             if (newPawn == null)
             {

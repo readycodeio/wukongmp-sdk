@@ -9,7 +9,7 @@ using HarmonyLib;
 using UnrealEngine.AssetRegistry;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.Old.Api
@@ -126,7 +126,7 @@ namespace WukongMp.Api.Old.Api
         {
             Utils.TryRunOnGameThread(() =>
             {
-                var client = WukongMP.Instance.Client;
+                var client = WukongMpMod.Client;
                 var current = client.RoomState.CurrentRound;
                 var total = client.RoomState.TournamentRounds;
                 ShowTip(string.Format(Texts.RoundCount, current, total));

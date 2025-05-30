@@ -2,7 +2,7 @@
 using BtlShare;
 using WukongMp.Api.Helpers;
 
-namespace WukongMp.Api.GameApi.Configuration
+namespace WukongMp.Api.Configuration
 {
     public static class Constants
     {

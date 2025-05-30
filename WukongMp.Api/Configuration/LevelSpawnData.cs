@@ -1,6 +1,6 @@
 ﻿using UnrealEngine.Runtime;
 
-namespace WukongMp.Api.GameApi.Configuration;
+namespace WukongMp.Api.Configuration;
 
 public struct LevelSpawnData(int mapId, int mapAreaId, int birthPointID, FVector pvpStartingLocation, float pvpRadius = 4000)
 {

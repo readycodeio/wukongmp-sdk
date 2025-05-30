@@ -1,14 +1,16 @@
 ﻿using System.Linq;
 using b1;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
+public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, NetworkIdComponent, TranslationComponent, TeamComponent>
 {
     protected override void OnUpdate()
     {
@@ -22,7 +24,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
             return;
         }
 
-        Query.ForEachEntity((ref tamer, ref localTamer, _) =>
+        Query.ForEachEntity((ref tamer, ref localTamer, ref netId, ref trans, ref team, _) =>
         {
             if (!localTamer.IsSynced)
             {
@@ -36,7 +38,8 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 else
                 {
                     // spawn tamer
-                    Logging.LogDebug("Matching tamer not found for guid: {Guid}", tamer.Guid);
+                    Logging.LogDebug("Matching tamer not found for guid: {Guid}, spawning...", tamer.Guid);
+                    SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 }
             }
         });

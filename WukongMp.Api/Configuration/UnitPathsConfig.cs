@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using WukongMp.Api.GameApi;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 
-namespace WukongMp.Api.GameApi.Configuration
+namespace WukongMp.Api.Configuration
 {
     internal static class UnitPathsConfig
     {

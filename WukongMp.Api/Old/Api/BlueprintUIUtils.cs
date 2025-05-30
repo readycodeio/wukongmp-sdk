@@ -4,7 +4,7 @@ using b1;
 using b1.BGW;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Old.Api
 {

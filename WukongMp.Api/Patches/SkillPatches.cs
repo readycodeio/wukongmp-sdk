@@ -10,8 +10,9 @@ using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Enums;
@@ -27,7 +28,7 @@ public static class PatchTriggerMagicSkill
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         return GameUtils.IsSkillWhitelisted(SkillID) && client.IsSkillEnabled(SkillID);
     }
 }
@@ -51,7 +52,7 @@ public static class PatchTriggerItemSkill
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
 
         if (!client.RoomState.GourdAllowed && !client.RoomState.ConsumablesAllowed)
@@ -81,7 +82,7 @@ public static class PatchDoPoleDrink
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         return client.RoomState.GourdAllowed;
     }
 }
@@ -110,7 +111,7 @@ public static class PatchOnCastImmobilize
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         // get properties
         MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
@@ -122,7 +123,7 @@ public static class PatchOnCastImmobilize
 
         AActor castingCharacter = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(castingCharacter))
+        if (castingCharacter.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -136,7 +137,7 @@ public static class PatchOnCastImmobilize
             if (castingPlayerState != null && castingPlayerState.PeerId == client.LocalPlayerState.PeerId)
             {
                 // target doesn't matter, not evaluated
-                client.BroadcastImmobilize(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), default, ImmobilizeActionType.Cast, false);
+                WukongMpMod.Instance.SendCastImmobilize(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId));
             }
 
             return false;
@@ -173,7 +174,7 @@ public static class PatchOnCastImmobilize
             List<int> list = [cachedImmobilizeConfigDesc.RangeRadius];
             AActor owner2 = __instance.GetOwner();
 
-            if (Extensions.IsNullOrDestroyed(owner2))
+            if (owner2.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
                 return false;
@@ -238,10 +239,10 @@ public static class PatchOnCastImmobilize
             {
                 Logging.LogDebug("Broadcasting trigger immobilize");
                 var netId = immobilizedPlayer == null
-                    ? immobilizedMonster.Value.GetComponent<NetworkIdComponent>()
+                    ? immobilizedMonster!.Value.GetComponent<NetworkIdComponent>()
                     : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
 
-                client.BroadcastImmobilize(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), ImmobilizeActionType.Trigger, hasBuff);
+                WukongMpMod.Instance.SendTriggerImmobilize(new TriggerImmobilizeData(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), hasBuff));
             }
         }
 
@@ -258,7 +259,7 @@ public static class PatchImmobilizeOnTickWithGroup
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         if (client.IsMasterClient)
         {
             return true;
@@ -277,11 +278,11 @@ public static class PatchRelieveImmobilized
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -299,7 +300,7 @@ public static class PatchRelieveImmobilized
 
         if (client.IsMasterClient)
         {
-            client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
+            WukongMpMod.Instance.SendRelieveImmobilize(netId);
             return true;
         }
 
@@ -335,10 +336,10 @@ public static class PatchOnTriggerImmobilizedBreak
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -350,7 +351,7 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (playerState != null)
             {
-                client.BroadcastImmobilize(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId), default, ImmobilizeActionType.Relieve, false);
+                WukongMpMod.Instance.SendRelieveImmobilize(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId));
                 BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 return false;
             }
@@ -362,7 +363,7 @@ public static class PatchOnTriggerImmobilizedBreak
                 var netId = entity.Value.GetComponent<NetworkIdComponent>();
                 var pawn = entity.Value.GetComponent<LocalTamerComponent>().Pawn;
 
-                client.BroadcastImmobilize(netId, default, ImmobilizeActionType.Relieve, false);
+                WukongMpMod.Instance.SendRelieveImmobilize(netId);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();
             }
 
@@ -389,7 +390,7 @@ public static class PatchOnTriggerPhantomRush
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         if (!client.RoomState.PhantomRushAllowed)
         {
@@ -398,7 +399,7 @@ public static class PatchOnTriggerPhantomRush
 
         AActor owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return false;
@@ -507,10 +508,10 @@ public static class PatchOnTriggerPhantomRush
             return;
         }
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return;
@@ -533,7 +534,7 @@ public static class PatchOnUnitCastSkillTry
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
         if (___SkillInstsData.GetLastSkillCastResult() != 0)
@@ -547,7 +548,7 @@ public static class PatchOnUnitCastSkillTry
             if (owner == client.LocalPlayerState.Pawn)
             {
                 Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
-                client.SendPhantomRush(CSI.SkillDirection);
+                WukongMpMod.Instance.SendPhantomRush(CSI.SkillDirection);
             }
         }
     }
@@ -562,10 +563,10 @@ public static class PatchExitPhantomRush
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var owner = __instance.GetOwner();
 
-        if (Extensions.IsNullOrDestroyed(owner))
+        if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return;
@@ -579,7 +580,7 @@ public static class PatchExitPhantomRush
         if ((client.IsMasterClient || owner == client.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
         {
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
-            client.ExitPhantomRush(playerState.PeerId);
+            WukongMpMod.Instance.SendExitPhantomRush(playerState.PeerId);
             playerState.ReceivedPhantomRushExit = false;
         }
 
@@ -642,7 +643,7 @@ public static class TransformationPatch
             return;
         }
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         var playerState = client.GetPlayerByActor(oldOwner);
 
         if (playerState == null)
@@ -671,6 +672,7 @@ public class PatchLogs4
             IsDisabled = false;
             return true;
         }
+
         if (__instance.OwnerCharacter?.GetName() != GameUtils.GetControlledPawn()?.GetName())
         {
             __result = true;
@@ -701,11 +703,11 @@ public class PatchOnTransBeginSpawnNewOne
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
             Logging.LogError("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
-            client.SendPlayerTransBegin(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType);
+            WukongMpMod.Instance.SendPlayerTransBegin(new PlayerTransBeginData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
         }
     }
 }
@@ -728,11 +730,11 @@ public class PatchOnTransBackSpawnNewOne
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
             Logging.LogError("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
-            client.SendPlayerTransEnd(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType);
+            WukongMpMod.Instance.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
         }
     }
 }
@@ -808,6 +810,7 @@ public class PatchSpawnAndPossess
             Logging.LogDebug("New pawn is null, cannot transform");
             return null;
         }
+
         if (blendParam.NeedBlend && playerController != null)
             playerController.OnPossessWithViewTargetBlend(newPawn, blendParam.PossessBlendTime, (EViewTargetBlendFunction)blendParam.PossessBlendFunc, blendParam.PossessBlendExp, true, blendParam.EnableBlendViewTarget);
         else
@@ -864,6 +867,7 @@ public class PatchUpdateTransGuideData
         {
             return false;
         }
+
         return true;
     }
 }
@@ -881,6 +885,7 @@ public class PatchOnPostTransBindData
         {
             return false;
         }
+
         return true;
     }
 }

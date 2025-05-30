@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ReadyM.Relay.Client;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old.Enums;
 
 namespace WukongMp.Api.Old.State

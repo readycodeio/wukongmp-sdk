@@ -5,8 +5,9 @@ using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
-using WukongMp.Api.GameApi.Configuration;
 using WukongMp.Api.Old;
 
 namespace WukongMp.Api.Patches
@@ -26,7 +27,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             // send updates for each monster
-            var client = WukongMP.Instance.Client;
+            var client = WukongMpMod.Client;
 
             if (client.IsMasterClient)
             {
@@ -80,7 +81,7 @@ namespace WukongMp.Api.Patches
                 if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                     return;
 
-                var client = WukongMP.Instance.Client;
+                var client = WukongMpMod.Client;
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
@@ -125,7 +126,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Client.IsMasterClient)
+            if (WukongMpMod.Instance.IsMasterClient)
                 return true;
 
             return !bEnable;
@@ -141,7 +142,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Client.IsMasterClient)
+            if (WukongMpMod.Instance.IsMasterClient)
                 return true;
 
             return IsPause;
@@ -158,7 +159,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Client.IsMasterClient)
+            if (WukongMpMod.Instance.IsMasterClient)
                 return true;
 
             return !bEnable;
@@ -174,7 +175,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Client.IsMasterClient)
+            if (WukongMpMod.Instance.IsMasterClient)
                 return true;
 
             return IsPause;
@@ -195,7 +196,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            if (WukongMP.Instance.Client.IsMasterClient)
+            if (WukongMpMod.Instance.IsMasterClient)
                 return true;
 
             return !bEnable;
@@ -254,8 +255,7 @@ namespace WukongMp.Api.Patches
                 return false;
             }
 
-            var client = WukongMP.Instance.Client;
-            if (client.IsMasterClient)
+            if (WukongMpModBase.Client.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
                 var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
@@ -266,7 +266,7 @@ namespace WukongMp.Api.Patches
                     {
                         Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
                         var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
-                        client.SendTriggerFsmState(netPeer, EventTag);
+                        WukongMpMod.Instance.SendTriggerFsmState(new FsmStateData(netPeer, EventTag.TagName.ToString()));
                     }
                 }
             }
@@ -294,13 +294,11 @@ namespace WukongMp.Api.Patches
             if (owner is not BGUCharacterCS character)
                 return;
 
-            if (Extensions.IsNullOrDestroyed(owner))
+            if (owner.IsNullOrDestroyed())
             {
                 Logging.LogError("Owner is null or destroyed");
                 return;
             }
-
-            var client = WukongMP.Instance.Client;
 
             var entity = WukongMpMod.Instance.GetMonsterByActor(character);
             if (entity.HasValue)
@@ -311,7 +309,7 @@ namespace WukongMp.Api.Patches
                     return;
 
                 ref var anim = ref entity.Value.GetComponent<MonsterAnimationComponent>();
-                if (client.IsMasterClient)
+                if (WukongMpModBase.Client.IsMasterClient)
                 {
                     anim.MoveAiType = (byte)___MovementData.MoveAIType;
                 }

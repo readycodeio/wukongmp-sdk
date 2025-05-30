@@ -3,7 +3,7 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using UnrealEngine.Runtime;
-using WukongMp.Api.GameApi.Configuration;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.UI;
 
@@ -60,7 +60,7 @@ public static class PatchRequestPlayMovie
         //if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID) && Request.bDisablePlayerControl == true)
         //{
         //    Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", Request.SequenceID);
-        //    WukongMP.Instance.Client.SendPlayMovieRequest(Request);
+        //    WukongMpModBase.Client.SendPlayMovieRequest(Request);
         //}
     }
 }
@@ -79,7 +79,7 @@ public static class PatchTickForMovieSystem
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return true;
 
-        var client = WukongMP.Instance.Client;
+        var client = WukongMpMod.Client;
 
         // get properties
         var movieSystemType = __instance.GetType();
@@ -131,7 +131,7 @@ public static class PatchTickForMovieSystem
                 client.LocalPlayerState.IsWaitingForSequence = true;
                 client.LocalPlayerState.SequenceLocation = client.LocalPlayerState.Location;
                 client.LocalPlayerState.WaitingSequenceId = peakRequest.SequenceID;
-                client.SendWaitingForSequence(peakRequest.SequenceID, client.LocalPlayerState.Location);
+                WukongMpMod.Instance.SendWaitingForSequence(peakRequest.SequenceID, client.LocalPlayerState.Location);
             }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())

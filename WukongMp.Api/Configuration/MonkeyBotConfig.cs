@@ -2,7 +2,7 @@
 using BtlB1;
 using BtlShare;
 
-namespace WukongMp.Api.GameApi.Configuration
+namespace WukongMp.Api.Configuration
 {
     public static class MonkeyBotConfig
     {

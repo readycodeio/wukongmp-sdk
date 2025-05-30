@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BtlShare;
+using WukongMp.Api.GameApi;
 using WukongMp.Api.Old;
 
-namespace WukongMp.Api.GameApi.Configuration
+namespace WukongMp.Api.Configuration
 {
     internal static class SkillsConfig
     {

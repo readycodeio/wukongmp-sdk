@@ -1,6 +1,5 @@
 ﻿using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.ECS;
-using WukongMp.Api.Old;
 
 namespace WukongMp.Api.ECS.Jobs;
 
@@ -30,14 +29,14 @@ public readonly struct SyncMontageJob : IEach<LocalTamerComponent, NetworkIdComp
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
                 // TODO: Replace by system
-                WukongMP.Instance.Client.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
+                WukongMpMod.Instance.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            WukongMP.Instance.Client.SendMontageCancel(netId);
+            WukongMpMod.Instance.SendMontageCancel(netId);
         }
 
         montageState.LocalMontage = currentMontage;
