@@ -33,8 +33,7 @@ $modFiles = @(
     "Friflo.Json.Burst.dll",
     "Friflo.Json.Fliox.dll",
     "Friflo.Json.Fliox.Annotation.dll",
-    "System.ComponentModel.Annotations.dll",
-    "System.Runtime.CompilerServices.Unsafe.dll"
+    "System.ComponentModel.Annotations.dll"
 )
 $reflectionOnlyFiles = @(
     "*"

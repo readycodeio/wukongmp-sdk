@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -13,12 +14,200 @@ using WukongMp.Api.ECS;
 using WukongMp.Api.GameApi;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.WukongUtils;
 
 public static class SpawningUtils
 {
+    public static PlayerState? SpawnCloneForPlayer(short peerId)
+    {
+        if (WukongMpMod.Client.ConnectedPlayers.ContainsKey(peerId))
+        {
+            Logging.LogDebug("Player already exists: {Id}", peerId); // reconnection
+            return null;
+        }
+
+        var playerPawnClass = GameUtils.GetControlledPawn()?.GetClass();
+
+        if (playerPawnClass == null)
+        {
+            Logging.LogError("Player pawn class is null");
+            return null;
+        }
+
+        var oldPawn = GameUtils.GetControlledPawn();
+
+        if (oldPawn == null)
+        {
+            Logging.LogError("Old pawn is null");
+            return null;
+        }
+
+        FVector loc = default;
+        FRotator rot = default;
+
+        var initialProps = WukongMpMod.Client.RelayClient.GetPlayerState(peerId)?.Properties;
+
+        if (initialProps == null)
+        {
+            Logging.LogError("Player properties are null at player joining");
+            return null;
+        }
+
+        if (initialProps.TryGetValue(nameof(PlayerState.Location), out var playerLoc))
+        {
+            loc = (FVector)playerLoc;
+        }
+
+        if (initialProps.TryGetValue(nameof(PlayerState.Rotation), out var playerRot))
+        {
+            rot = (FRotator)playerRot;
+        }
+
+        var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
+
+        if (@class == null)
+        {
+            Logging.LogError("Class is null");
+            return null;
+        }
+
+        var oldController = GameUtils.GetPlayerController();
+        var controllerCameraRotation = oldController.GetControlRotation();
+        var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
+
+        if (newPawn == null)
+        {
+            Logging.LogError("Failed to spawn new pawn");
+            return null;
+        }
+
+        GameUtils.PossesPawnWithViewTarget(oldController, oldPawn, newPawn, controllerCameraRotation);
+
+        Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", peerId, newPawn.GetEntityHash());
+
+        var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref loc, ref rot);
+        if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
+        {
+            Logging.LogDebug("Spawned new controller");
+            newController.Possess(newPawn);
+        }
+
+        // Reset falling timer.
+        var events = BUS_EventCollectionCS.Get(newPawn);
+        events.Evt_OnLeaveFalling.Invoke();
+        events = BUS_EventCollectionCS.Get(oldPawn);
+        events.Evt_OnLeaveFalling.Invoke();
+
+        // get teamId
+        var teamId = Constants.AvailableTeamIds.First();
+        if (initialProps.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
+        {
+            teamId = (int)assignedTeamId;
+        }
+
+        // get initial Hp and HpMax
+        if (!initialProps.TryGetValue(nameof(PlayerState.Hp), out var initialHpObj) || initialHpObj is not float initialHp)
+        {
+            Logging.LogWarning("Joining player did not set initial HP");
+            initialHp = 1000f;
+        }
+        else
+        {
+            Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
+        }
+
+        if (!initialProps.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMaxBase}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMaxBase)
+        {
+            Logging.LogWarning("Joining player did not set initial HPMax");
+            initialHpMaxBase = 1000f;
+        }
+        else
+        {
+            Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
+        }
+
+        var playerState = new PlayerState(peerId, newPawn, teamId, initialHp, initialHpMaxBase)
+        {
+            Location = loc,
+            Rotation = rot
+        };
+
+        // set nickname
+        if (initialProps.TryGetValue(nameof(PlayerState.NickName), out var nickName))
+        {
+            playerState.NickName = (string)nickName;
+            Logging.LogDebug("Setting initial Nickname to {Nickname}", playerState.NickName);
+        }
+        else
+        {
+            Logging.LogWarning("Initial nickname not provided");
+        }
+
+        // set IsReadyForPvP and IsSpectator
+        if (initialProps.TryGetValue(nameof(PlayerState.IsReadyForPvP), out var isReady))
+        {
+            playerState.IsReadyForPvP = (bool)isReady;
+            Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", playerState.IsReadyForPvP);
+        }
+
+        if (initialProps.TryGetValue(nameof(PlayerState.IsSpectator), out var isSpectator))
+        {
+            playerState.IsSpectator = (bool)isSpectator;
+            Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", playerState.IsSpectator);
+        }
+
+        // set attributes
+        foreach (var attr in Constants.SyncedAttributes)
+        {
+            if (initialProps.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
+            {
+                Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
+                playerState.Attributes[attr] = (float)value;
+            }
+        }
+
+        // update equipment
+        if (initialProps.TryGetValue(nameof(PlayerState.Equipment), out var eq))
+        {
+            playerState.Equipment = (EquipmentState)eq;
+            EquipmentHelpers.SetRemoteActorEquipment(newPawn, playerState.Equipment);
+        }
+
+        // set lock distance
+        FUStUnitCommDesc unitCommDesc = BGW_GameDB.GetUnitCommDesc(newPawn.GetResID());
+        if (unitCommDesc != null)
+        {
+            unitCommDesc.CameraLockDist = 10000;
+        }
+
+        return playerState;
+    }
+
+    public static BGUCharacterCS? SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
+    {
+        var newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(oldController.World, pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
+        oldController.Possess(newPawn);
+
+        if (newPawn is not BGUCharacterCS newCharacter)
+        {
+            Logging.LogError("Failed to cast pawn to ACharacter");
+            return null;
+        }
+
+        newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+        newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
+        BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, newCharacter, spawnTransform);
+        BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(newCharacter);
+        BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(oldPawn.ToEntity(), newCharacter.ToEntity());
+        newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+        newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
+        UGSE_ActorFuncLib.UpdateActorOverlaps(newCharacter);
+        return newCharacter;
+    }
+
     public static void SpawnUnitsMaster(short peerId, string unitName, int count, int teamId)
     {
         var playerState = WukongMpModBase.Client.GetPlayerById(peerId);

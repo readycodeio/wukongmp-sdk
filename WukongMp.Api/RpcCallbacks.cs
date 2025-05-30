@@ -546,7 +546,7 @@ public partial class WukongMpMod
             var pawn = GetPawnByNetworkId(id);
             if (pawn == null)
             {
-                LogNullCharacter(id);
+                Logging.LogNull(nameof(data.NetId));
                 return;
             }
 
@@ -607,7 +607,7 @@ public partial class WukongMpMod
             var pawn = GetPawnByNetworkId(data.NetworkId);
             if (pawn == null)
             {
-                LogNullCharacter(data.NetworkId);
+                Logging.LogNull(nameof(data.NetworkId));
                 return;
             }
 
@@ -620,13 +620,5 @@ public partial class WukongMpMod
 
             events.Evt_UnitDead.Invoke(null, data.DeadReason, data.DmgId, data.StiffLevel, null, default, data.IsDotDmg, data.AbnormalType);
         }, nameof(OnUnitDead));
-    }
-
-    private static void LogNullCharacter(NetworkIdComponent characterId)
-    {
-        if (characterId.Id != uint.MaxValue)
-            Logging.LogWarning("Monster not found: {Id}", characterId); // monster not found
-        else
-            Logging.LogError("Player not found: {Id}", characterId); // player not found
     }
 }
