@@ -435,8 +435,11 @@ namespace WukongMp.Api.Patches
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(1000);
-                    Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.Value.ToString());
-                    WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
+                    Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead after delay)", entity.Value.ToString());
+                    if (!entity.Value.IsNull)
+                    {
+                        WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
+                    }
                 });
             }
             else
