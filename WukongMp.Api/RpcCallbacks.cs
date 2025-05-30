@@ -156,31 +156,31 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Master)]
-    private void OnSpawnUnits(short __sender, UnitSpawnRequestData data)
+    private static void OnSpawnUnits(short __sender, UnitSpawnRequestData data)
     {
         SpawningUtils.SpawnUnitsMaster(__sender, data.UnitName, data.Count, data.TeamId);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnPlayerTransBegin(short __sender, PlayerTransBeginData data)
+    private static void OnPlayerTransBegin(short __sender, PlayerTransBeginData data)
     {
         TransformationUtils.TransformPlayer(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransBeginType);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnPlayerTransEnd(short __sender, PlayerTransEndData data)
+    private static void OnPlayerTransEnd(short __sender, PlayerTransEndData data)
     {
         TransformationUtils.TransformPlayerBack(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransEndType);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnWaitingForMovie(short __sender, int sequenceId)
+    private static void OnWaitingForMovie(short __sender, int sequenceId)
     {
         CutsceneUtils.SetWaitingForCutsceneStatus(__sender, sequenceId);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnPlayMovieRequest(PlayMovieData data)
+    private static void OnPlayMovieRequest(PlayMovieData data)
     {
         CutsceneUtils.PlayCutscene(data);
     }
