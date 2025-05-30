@@ -9,6 +9,7 @@ using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop
 {
@@ -78,7 +79,7 @@ namespace WukongMp.Coop
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
             {
                 Logging.LogDebug("Alt + S");
-                _wukongMp.SkipCutscene();
+                CutsceneUtils.SkipCurrentCutscene();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
@@ -103,7 +104,7 @@ namespace WukongMp.Coop
             {
                 Logging.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.TeleportLocalPlayerToSequenceLocation();
+                    CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>

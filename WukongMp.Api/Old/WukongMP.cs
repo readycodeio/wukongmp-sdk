@@ -308,35 +308,6 @@ namespace WukongMp.Api.Old
             }
         }
 
-        public bool ArePlayersCloseToSyncCutscene()
-        {
-            var LocalPlayerPosition = Client.LocalPlayerState.Pawn?.GetActorLocation() ?? FVector.ZeroVector;
-            var squaredDistance = Constants.CutsceneSyncDistance * Constants.CutsceneSyncDistance;
-            foreach (var actor in Client.AllConnectedPlayers)
-            {
-                if (actor.Pawn == null)
-                    continue;
-
-                if (actor.Pawn.GetActorLocation().Vector_DistanceSquared(LocalPlayerPosition) > squaredDistance)
-                {
-                    Logging.LogDebug("Player {Name} is too far away from local player", actor.NickName);
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public bool AreAllPlayersWaitingForMovie(int sequenceId)
-        {
-            return Client.AllConnectedPlayers.All(p => p.WaitingSequenceId == sequenceId);
-        }
-
-        public void SkipCutscene()
-        {
-            BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());
-        }
-
         public bool ShouldRunConnectedPatches()
         {
             return Client is { ConnectedAndInRoom: true };

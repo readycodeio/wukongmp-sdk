@@ -1,4 +1,5 @@
 ﻿using b1;
+using System.Linq;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
@@ -44,10 +45,27 @@ public static class CutsceneUtils
         }
 
         player.WaitingSequenceId = sequenceId;
-        if (!WukongMpModBase.Client.LocalPlayerState.IsWaitingForMovie)
+        if (!WukongMpModBase.Client.LocalPlayerState.IsWaitingForSequence)
         {
             InfoMessageWidget.Instance.SetVisibility(true);
             InfoMessageWidget.Instance.SetText("Join other players to proceed");
         }
+    }
+
+    public static void SkipCurrentCutscene()
+    {
+        BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());
+    }
+
+    public static bool CheckAllPlayersWaitingForCutscene(int sequenceId)
+    {
+        return WukongMpModBase.Client.AllConnectedPlayers.All(p => p.WaitingSequenceId == sequenceId);
+    }
+
+    public static void TeleportLocalPlayerToCutsceneLocation()
+    {
+        var playerState = WukongMpModBase.Client.LocalPlayerState;
+        if (playerState.IsJoiningSequence)
+            PlayerUtils.TeleportLocalPlayer(playerState.SequenceLocation, playerState.Rotation, true);
     }
 }

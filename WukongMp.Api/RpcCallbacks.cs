@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using b1;
+﻿using b1;
 using b1.BGW;
 using BtlShare;
 using CSharpModBase;
@@ -8,8 +6,9 @@ using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
+using System;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
@@ -18,6 +17,7 @@ using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
@@ -280,14 +280,7 @@ public partial class WukongMpMod
         if (data.PlayerId != RelayClient.PeerId)
             return;
 
-        GameLoopPatch.QueueOnGameThread(() =>
-        {
-            var playerState = Client.LocalPlayerState;
-            BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
-            playerState.TeleportFinishFrames = 5;
-            GameUtils.GetControlledPawn()?.SetActorTransform(new FTransform(data.Rotation, data.Location), false, out _, true);
-            GameUtils.GetPlayerController().SetControlRotation(data.Rotation);
-        }, nameof(OnBroadcastPlayerTransform));
+        PlayerUtils.TeleportLocalPlayer(data.Location, data.Rotation, false);
     }
 
     [RpcEvent(RelayMode.All)]
@@ -620,5 +613,25 @@ public partial class WukongMpMod
 
             events.Evt_UnitDead.Invoke(null, data.DeadReason, data.DmgId, data.StiffLevel, null, default, data.IsDotDmg, data.AbnormalType);
         }, nameof(OnUnitDead));
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    private void OnWaitingForSequence(short __sender, SequenceWaitingData data)
+    {
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+
+        if (!Client.LocalPlayerState.IsWaitingForSequence)
+        {
+            player.WaitingSequenceId = data.SequenceID;
+            Client.LocalPlayerState.SequenceLocation = data.SequenceLocation;
+            Client.LocalPlayerState.IsJoiningSequence = true;
+            InfoMessageWidget.Instance.SetVisibility(true);
+            InfoMessageWidget.Instance.SetText("Join other players to proceed (J to teleport)");
+        }
     }
 }

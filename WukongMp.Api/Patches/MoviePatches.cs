@@ -4,8 +4,10 @@ using b1;
 using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
@@ -111,7 +113,7 @@ public static class PatchTickForMovieSystem
         if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
-            if (WukongMP.Instance.AreAllPlayersWaitingForMovie(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false)
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
                 client.LocalPlayerState.IsWaitingForSequence = false;
@@ -131,7 +133,7 @@ public static class PatchTickForMovieSystem
                 client.LocalPlayerState.IsWaitingForSequence = true;
                 client.LocalPlayerState.SequenceLocation = client.LocalPlayerState.Location;
                 client.LocalPlayerState.WaitingSequenceId = peakRequest.SequenceID;
-                WukongMpMod.Instance.SendWaitingForSequence(peakRequest.SequenceID, client.LocalPlayerState.Location);
+                WukongMpMod.Instance.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, client.LocalPlayerState.Location));
             }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())
