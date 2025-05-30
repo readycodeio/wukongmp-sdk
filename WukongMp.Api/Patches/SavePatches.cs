@@ -12,6 +12,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
@@ -34,7 +35,7 @@ namespace WukongMp.Api.Patches
             if (!SlotName.StartsWith("ArchiveSaveFile"))
                 return true;
 
-            __result = GameUtils.GetSaveFileFullName(SlotName);
+            __result = GameSaveUtils.GetSaveFileFullName(SlotName);
             return false;
         }
     }

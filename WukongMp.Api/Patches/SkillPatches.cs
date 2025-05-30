@@ -15,7 +15,7 @@ using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.Enums;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
@@ -29,7 +29,7 @@ public static class PatchTriggerMagicSkill
             return true;
 
         var client = WukongMpMod.Client;
-        return GameUtils.IsSkillWhitelisted(SkillID) && client.IsSkillEnabled(SkillID);
+        return SkillsUtils.IsSkillWhitelisted(SkillID) && client.IsSkillEnabled(SkillID);
     }
 }
 
@@ -211,7 +211,7 @@ public static class PatchOnCastImmobilize
             if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.ImmueImmobilizing))
             {
                 int actorResID = BGU_DataUtil.GetActorResID(item);
-                UBGWDataAsset? fXAssetByResID = GameUtils.GetFxAssetByResId(castingCharacter, cachedImmobilizeConfigDesc.FailedFXs, actorResID, CastImmobilizeData.ResId);
+                UBGWDataAsset? fXAssetByResID = AssetUtils.GetFxAssetByResId(castingCharacter, cachedImmobilizeConfigDesc.FailedFXs, actorResID, CastImmobilizeData.ResId);
                 if (fXAssetByResID != null)
                 {
                     BUS_EventCollectionCS.Get(item)?.Evt_RequestSpawnFXByDispConfigDA.Invoke(fXAssetByResID, out var _);
@@ -228,7 +228,7 @@ public static class PatchOnCastImmobilize
             }
 
             var hasBuff = BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
-            ImmobilizeConfigInstance immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
+            ImmobilizeConfigInstance immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
             BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
 
             // broadcast

@@ -15,10 +15,10 @@ using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old;
 
@@ -171,7 +171,7 @@ public sealed class WukongClient
     {
         if (force || (ConnectedAndInRoom && !LocalPlayerState.IsReadyForPvP && RoomState is { InPvP: false, InMatchmaking: false }))
         {
-            var teamId = GameUtils.GetOppositeTeam(LocalPlayerState.TeamId);
+            var teamId = PvPUtils.GetOppositeTeam(LocalPlayerState.TeamId);
             CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
         }
     }
@@ -211,7 +211,7 @@ public sealed class WukongClient
             var aliveTeamId = aliveTeamPlayers.Count > 0 ? aliveTeamPlayers[0].TeamId : Constants.DrawTeamId;
             if (alivePlayersTeams.Count == 0)
             {
-                Task.Run(async () => await LobbyManager.EndRoundAsync(GameUtils.GetOppositeTeam(aliveTeamId)));
+                Task.Run(async () => await LobbyManager.EndRoundAsync(PvPUtils.GetOppositeTeam(aliveTeamId)));
             }
             else
             {

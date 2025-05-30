@@ -295,7 +295,7 @@ public partial class WukongMpMod
         switch (ev)
         {
             case PvPEvent.RoundStart:
-                Task.Run(GameUtils.ShowPvPCountDown);
+                Task.Run(PvPUtils.ShowPvPCountDown);
                 WukongMP.Instance.StartRound();
                 WukongMP.Instance.EnablePvP();
                 Client.EnterPvP();
@@ -306,11 +306,11 @@ public partial class WukongMpMod
 
                 if (winnerTeamId == Constants.DrawTeamId)
                 {
-                    GameUtils.ShowTip(Texts.RoundDraw);
+                    UIUtils.ShowTip(Texts.RoundDraw);
                 }
                 else
                 {
-                    GameUtils.ShowTip(string.Format(Texts.RoundEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
+                    UIUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)));
                 }
 
                 if (winnerTeamId == Constants.DrawTeamId)
@@ -318,7 +318,7 @@ public partial class WukongMpMod
 
                 if (winnerTeamId == Client.LocalPlayerState.TeamId)
                 {
-                    GameUtils.PlayBossDefeatedSound();
+                    AssetUtils.PlayBossDefeatedSound();
                 }
 
                 break;
@@ -326,11 +326,11 @@ public partial class WukongMpMod
             {
                 if (winnerTeamId == Constants.DrawTeamId)
                 {
-                    GameUtils.ShowTip(Texts.TournamentDraw);
+                    UIUtils.ShowTip(Texts.TournamentDraw);
                 }
                 else
                 {
-                    GameUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, GameUtils.GetLocalizedTeamName(winnerTeamId)));
+                    UIUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)));
                 }
 
                 Task.Run(async () =>
@@ -359,7 +359,7 @@ public partial class WukongMpMod
                 {
                     Utils.TryRunOnGameThread(() =>
                     {
-                        GameUtils.DestroyAllTamers();
+                        TamerUtils.DestroyAllTamers();
                         var events = BUS_EventCollectionCS.Get(Client.LocalPlayerState.Pawn!);
 
                         if (events == null)

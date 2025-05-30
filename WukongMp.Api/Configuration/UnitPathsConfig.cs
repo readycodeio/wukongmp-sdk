@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using WukongMp.Api.GameApi;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Configuration
 {
@@ -100,7 +100,7 @@ namespace WukongMp.Api.Configuration
 
         public static string GetUnitPath(string unitName)
         {
-            if (Configurations.TryGetValue(GameUtils.UnifyUnitName(unitName), out var value))
+            if (Configurations.TryGetValue(TamerUtils.UnifyUnitName(unitName), out var value))
             {
                 return value;
             }
@@ -111,7 +111,7 @@ namespace WukongMp.Api.Configuration
 
         public static bool IsValidMonsterName(string enemyName)
         {
-            return Configurations.ContainsKey(GameUtils.UnifyUnitName(enemyName));
+            return Configurations.ContainsKey(TamerUtils.UnifyUnitName(enemyName));
         }
     }
 }

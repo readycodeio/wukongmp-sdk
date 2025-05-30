@@ -16,6 +16,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Resources;
+using WukongMp.Api.WukongUtils;
 using CultureInfo = System.Globalization.CultureInfo;
 
 namespace WukongMp.Api.Patches
@@ -78,7 +79,7 @@ namespace WukongMp.Api.Patches
                 if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
                 {
                     Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
-                    if (File.Exists(GameUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+                    if (File.Exists(GameSaveUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                     {
                         ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
                     }

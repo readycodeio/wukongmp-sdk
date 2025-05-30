@@ -1,5 +1,7 @@
 ﻿using b1;
 using b1.ECS;
+using BtlB1;
+using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
@@ -46,7 +48,7 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
                 return;
             }
 
-            var immobilizeConfigInstance = GameUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
+            var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
             BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
         }, nameof(TriggerImmobilize));
     }
@@ -75,5 +77,44 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
 
             playerEvents?.Evt_RelieveImmobilized.Invoke();
         }, nameof(RelieveImmobilize));
+    }
+
+    public static ImmobilizeConfigInstance CreateImmobilizeConfig(AActor character, AActor casterActor, FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc, int castImmobilizeDataResId, bool hasBuff)
+    {
+        var immobilizeConfigInstance = new ImmobilizeConfigInstance();
+        var actorResID3 = BGU_DataUtil.GetActorResID(character);
+        immobilizeConfigInstance.DurationSecond = cachedImmobilizeConfigDesc.DurationMs * 0.001f;
+        immobilizeConfigInstance.AlmostEndAheadTimeSecond = cachedImmobilizeConfigDesc.AlmostEndAheadTimeMs * 0.001f;
+        immobilizeConfigInstance.MinDurationSecond = cachedImmobilizeConfigDesc.MinimalDurationMs * 0.001f;
+        immobilizeConfigInstance.RepeatedImmobilizedDef = cachedImmobilizeConfigDesc.RepeatedImmobilizedDef * 0.0001f;
+        immobilizeConfigInstance.CasterActor = casterActor;
+        immobilizeConfigInstance.bEnableGreatSageTalent = cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff > 0 && hasBuff;
+        immobilizeConfigInstance.BeginFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, castImmobilizeDataResId);
+        immobilizeConfigInstance.AlmostEndFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, castImmobilizeDataResId);
+        immobilizeConfigInstance.EndFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, castImmobilizeDataResId);
+        immobilizeConfigInstance.QuickFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, castImmobilizeDataResId);
+        immobilizeConfigInstance.BreakingFXsTriggerRatio = cachedImmobilizeConfigDesc.BreakingFXsTriggerRatio * 0.0001f;
+        immobilizeConfigInstance.BreakingFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, castImmobilizeDataResId);
+        foreach (var beginEffect in cachedImmobilizeConfigDesc.BeginEffects)
+        {
+            immobilizeConfigInstance.BeginEffects.Add(new FSpellEffectForData(beginEffect));
+        }
+
+        foreach (var endEffect in cachedImmobilizeConfigDesc.EndEffects)
+        {
+            immobilizeConfigInstance.EndEffects.Add(new FSpellEffectForData(endEffect));
+        }
+
+        foreach (var breakEffect in cachedImmobilizeConfigDesc.BreakEffects)
+        {
+            immobilizeConfigInstance.BreakEffects.Add(new FSpellEffectForData(breakEffect));
+        }
+
+        foreach (var deadEffect in cachedImmobilizeConfigDesc.DeadEffects)
+        {
+            immobilizeConfigInstance.DeadEffects.Add(new FSpellEffectForData(deadEffect));
+        }
+
+        return immobilizeConfigInstance;
     }
 }

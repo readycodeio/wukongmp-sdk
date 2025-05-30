@@ -6,6 +6,7 @@ using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
@@ -31,7 +32,7 @@ public partial class WukongMpMod : WukongMpModBase
     {
         if (!IsMasterClient)
         {
-            GameUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
+            UIUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
         }
 
         Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);

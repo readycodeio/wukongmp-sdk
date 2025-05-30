@@ -1,4 +1,5 @@
-﻿using WukongMp.Api.Configuration;
+﻿using CSharpModBase;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
@@ -69,6 +70,42 @@ public class PvPUtils
             GameMessageWidget.Instance.SetThirdText("");
             LobbyStatusWidget.Instance.SetVisibility(true);
         }
+    }
+
+    public static void ShowPvPCountDown()
+    {
+        Utils.TryRunOnGameThread(() =>
+        {
+            var client = WukongMpMod.Client;
+            var current = client.RoomState.CurrentRound;
+            var total = client.RoomState.TournamentRounds;
+            UIUtils.ShowTip(string.Format(Texts.RoundCount, current, total));
+        });
+    }
+
+    public static string GetTeamName(int teamId)
+    {
+        if (teamId == Constants.AvailableTeamIds[0])
+            return "Red";
+        if (teamId == Constants.AvailableTeamIds[1])
+            return "Blue";
+        return "";
+    }
+
+    public static string GetLocalizedTeamName(int teamId)
+    {
+        if (teamId == Constants.AvailableTeamIds[0])
+            return Texts.RedTeam;
+        if (teamId == Constants.AvailableTeamIds[1])
+            return Texts.BlueTeam;
+        return "";
+    }
+
+    public static int GetOppositeTeam(int teamId)
+    {
+        if (teamId == Constants.DrawTeamId)
+            return teamId;
+        return teamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
     }
 
     public static void EndTournament()

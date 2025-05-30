@@ -8,6 +8,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Enums;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old
 {
@@ -63,7 +64,7 @@ namespace WukongMp.Api.Old
                 var y = center.Y + radius * MathF.Sin(angle);
 
                 teamMemberIndex[playerState.TeamId]++;
-                var newPlayerLocation = GameUtils.GetFinalLocation(playerState.Pawn, new FVector(x, y, center.Z));
+                var newPlayerLocation = SpawningUtils.AdjustSpawnLocation(playerState.Pawn, new FVector(x, y, center.Z));
                 var payload = new PlayerTransformData(playerState.PeerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
                 mod.SendBroadcastPlayerTransform(payload);
             }

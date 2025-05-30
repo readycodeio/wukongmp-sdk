@@ -142,7 +142,7 @@ namespace WukongMp.Api.Old
             {
                 if (!Constants.IsCoop)
                 {
-                    GameUtils.DestroyAllTamers();
+                    TamerUtils.DestroyAllTamers();
                 }
 
                 BlueprintUiUtils.SpawnUiManagerActor();
@@ -446,7 +446,7 @@ namespace WukongMp.Api.Old
 
             if (playerState.MarkerActor != null)
             {
-                var teamName = GameUtils.GetTeamName(playerState.TeamId);
+                var teamName = PvPUtils.GetTeamName(playerState.TeamId);
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
             }
 
@@ -731,7 +731,7 @@ namespace WukongMp.Api.Old
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            return GameUtils.GetFinalLocation(Client.GetPlayerById(peerId)?.Pawn, baseLocation);
+            return SpawningUtils.AdjustSpawnLocation(Client.GetPlayerById(peerId)?.Pawn, baseLocation);
         }
 
         private void SetUpRoom()

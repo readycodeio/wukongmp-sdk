@@ -332,7 +332,7 @@ public static class SpawningUtils
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             var spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, GameUtils.GetOppositeTeam(WukongMpModBase.Client.LocalPlayerState.TeamId));
+            SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, PvPUtils.GetOppositeTeam(WukongMpModBase.Client.LocalPlayerState.TeamId));
         }
     }
 
@@ -370,6 +370,39 @@ public static class SpawningUtils
 
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
         return id;
+    }
+
+    public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
+    {
+        // TODO: For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
+        if (CmdLineParams.Instance.LevelId == 0)
+        {
+            return InTargetLocation;
+        }
+
+        FVector result = InTargetLocation;
+        if (CharacterCS == null)
+        {
+            return result;
+        }
+
+        UCapsuleComponent? uCapsuleComponent = CharacterCS.GetRootComponent() as UCapsuleComponent;
+        if (uCapsuleComponent == null)
+        {
+            return result;
+        }
+
+        float scaledCapsuleHalfHeight = uCapsuleComponent.GetScaledCapsuleHalfHeight();
+        float scaledCapsuleHalfHeight2 = uCapsuleComponent.GetScaledCapsuleHalfHeight();
+        float num = 2.4f;
+        FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+        FVector end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+        if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GameUtils.GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
+        {
+            result = OutHitLocation + num + FVector.UpVector * scaledCapsuleHalfHeight;
+        }
+
+        return result;
     }
 
     private static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)

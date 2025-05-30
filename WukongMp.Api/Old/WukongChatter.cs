@@ -7,6 +7,7 @@ using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old
 {
@@ -63,7 +64,7 @@ namespace WukongMp.Api.Old
                 return;
             }
 
-            var teamId = GameUtils.GetOppositeTeam(_wukongClient.LocalPlayerState.TeamId);
+            var teamId = PvPUtils.GetOppositeTeam(_wukongClient.LocalPlayerState.TeamId);
 
             switch (args.Length)
             {

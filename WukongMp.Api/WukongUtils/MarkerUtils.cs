@@ -36,7 +36,7 @@ public static class MarkerUtils
             var nameComp = entity.GetComponent<NicknameComponent>();
             ref var markerComp = ref entity.GetComponent<MarkerComponent>();
 
-            var teamName = GameUtils.GetTeamName(teamIdComp.TeamId);
+            var teamName = PvPUtils.GetTeamName(teamIdComp.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamName}", true);
             markerComp.MarkerActor = playerMarkerActor;
         }, nameof(CreateMarkerForCharacter));
@@ -60,7 +60,7 @@ public static class MarkerUtils
                 return;
             }
 
-            var teamName = GameUtils.GetTeamName(characterState.TeamId);
+            var teamName = PvPUtils.GetTeamName(characterState.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {characterState.NickName} {teamName}", true);
             characterState.MarkerActor = playerMarkerActor;
         }, nameof(CreateMarkerForCharacter));
