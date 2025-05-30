@@ -15,6 +15,7 @@ using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Old;
+using WukongMp.Api.Patches;
 
 namespace WukongMp.Api;
 
@@ -161,7 +162,13 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
             return; // ignore echo deltas, TODO: server should only send deltas to other players
         }
 
-        Logging.LogDebug("Applying archetype delta");
-        new ApplyDeltaJob(reader, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
+        Logging.LogDebug("Received archetype delta");
+        var copy = new NetDataReader(reader.RawData, reader.UserDataOffset, reader.UserDataSize);
+
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            Logging.LogDebug("Applying archetype delta");
+            new ApplyDeltaJob(copy, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
+        }, nameof(ApplyDeltaJob));
     }
 }
