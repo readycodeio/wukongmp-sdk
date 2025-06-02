@@ -111,7 +111,7 @@ namespace WukongMp.Coop
             {
                 Logging.LogDebug("L");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Client.SwitchTeam();
+                    _wukongMp.TestLevelTeleport();
             });
 
             Utils.RegisterKeyBind(Key.K, () =>

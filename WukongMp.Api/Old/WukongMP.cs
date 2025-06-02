@@ -1,12 +1,12 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using b1;
-using B1UI.GSUI;
+﻿using b1;
+using b1.Plugins.AsyncLoadingScreen;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -322,6 +322,24 @@ namespace WukongMp.Api.Old
             {
                 Logging.LogDebug("Perf log is null");
             }
+        }
+
+        public void TestLevelTeleport()
+        {
+            var playerCharacter = GameUtils.GetControlledPawn();
+            var teleportParam = new TeleportParam_Dream
+            {
+                LevelId = 20,
+                TeleportPointName = new FName(""),
+                RebirthPointId = 2004,
+                LoadingScreenType = EGSLoadingScreenType.Unknown
+            };
+
+            BPS_EventCollectionCS.GetLocal(playerCharacter)?.Evt_BPS_TeleportTo.Invoke(
+                ETeleportTypeV2.Dream,
+                teleportParam,
+                EPlayerTeleportReason.Dream
+            );
         }
 
         public bool ShouldRunConnectedPatches()
