@@ -34,8 +34,9 @@ public static class CutsceneUtils
         }, nameof(PlayCutscene));
     }
 
-    public static void SetWaitingForCutsceneStatus(short playerId, int sequenceId)
+    public static void SetWaitingForCutsceneStatus(short playerId, SequenceWaitingData sequenceWaitingData)
     {
+        Logging.LogDebug("Setting WaitingForCutsceneStatus for player: {Id}, sequenceId {SequenceId}", playerId, sequenceWaitingData.SequenceID);
         var player = WukongMpModBase.Client.GetPlayerById(playerId);
         if (player == null)
         {
@@ -43,11 +44,14 @@ public static class CutsceneUtils
             return;
         }
 
-        player.WaitingSequenceId = sequenceId;
-        if (!WukongMpModBase.Client.LocalPlayerState.IsWaitingForSequence)
+        player.WaitingSequenceId = sequenceWaitingData.SequenceID;
+        var localPlayer = WukongMpModBase.Client.LocalPlayerState;
+        if (!localPlayer.IsWaitingForSequence)
         {
+            localPlayer.SequenceLocation = sequenceWaitingData.SequenceLocation;
+            localPlayer.IsJoiningSequence = true;
             InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText("Join other players to proceed");
+            InfoMessageWidget.Instance.SetText("Join other players to proceed (J to teleport)");
         }
     }
 

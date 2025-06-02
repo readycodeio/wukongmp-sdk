@@ -133,6 +133,7 @@ public static class PatchTickForMovieSystem
                 client.LocalPlayerState.IsWaitingForSequence = true;
                 client.LocalPlayerState.SequenceLocation = client.LocalPlayerState.Location;
                 client.LocalPlayerState.WaitingSequenceId = peakRequest.SequenceID;
+                Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 WukongMpMod.Instance.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, client.LocalPlayerState.Location));
             }
         }

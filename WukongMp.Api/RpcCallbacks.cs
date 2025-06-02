@@ -174,12 +174,6 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnWaitingForMovie(short __sender, int sequenceId)
-    {
-        CutsceneUtils.SetWaitingForCutsceneStatus(__sender, sequenceId);
-    }
-
-    [RpcEvent(RelayMode.Others)]
     private static void OnPlayMovieRequest(PlayMovieData data)
     {
         CutsceneUtils.PlayCutscene(data);
@@ -618,20 +612,6 @@ public partial class WukongMpMod
     [RpcEvent(RelayMode.Others)]
     private void OnWaitingForSequence(short __sender, SequenceWaitingData data)
     {
-        var player = Client.GetPlayerById(__sender);
-        if (player == null)
-        {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-
-        if (!Client.LocalPlayerState.IsWaitingForSequence)
-        {
-            player.WaitingSequenceId = data.SequenceID;
-            Client.LocalPlayerState.SequenceLocation = data.SequenceLocation;
-            Client.LocalPlayerState.IsJoiningSequence = true;
-            InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText("Join other players to proceed (J to teleport)");
-        }
+        CutsceneUtils.SetWaitingForCutsceneStatus(__sender, data);
     }
 }
