@@ -50,7 +50,9 @@ public struct ChatMessage : INetSerializable
         {
             Nickname = reader.GetString();
         }
-
-        Placeholders = reader.GetStringArray();
+        else
+        {
+            Placeholders = reader.GetStringArray();
+        }
     }
 }
