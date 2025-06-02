@@ -165,10 +165,14 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
 
         Logging.LogDebug("Received archetype delta");
 
-        var buffer = ArrayPool<byte>.Shared.Rent(reader.UserDataSize);
-        Array.Copy(reader.RawData, reader.UserDataOffset, buffer, 0, reader.UserDataSize);
+        var bytesToCopy = reader.UserDataSize - 1; // first byte is the event code
+        var offset = reader.UserDataOffset + 1; // skip the first byte which is the event code
+        
+        var buffer = ArrayPool<byte>.Shared.Rent(bytesToCopy);
+        // offset 1 to skip the first byte which is the event code
+        Array.Copy(reader.RawData, offset, buffer, 0, bytesToCopy);
 
-        var readerCopy = new NetDataReader(buffer, 0, reader.UserDataSize);
+        var readerCopy = new NetDataReader(buffer, 0, bytesToCopy);
 
         GameLoopPatch.QueueOnGameThread(() =>
         {

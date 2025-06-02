@@ -104,14 +104,11 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchTurnBack2Loaded
     {
         static bool Prefix(ref bool __result)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return true;
-
             __result = false;
             return false;
         }

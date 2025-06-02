@@ -36,13 +36,8 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
                 return null;
             }
 
-            if (tamer.GetMonster().IsNullOrDestroyed())
-            {
-                Logging.LogWarning("Monster is null or destroyed in getPawn");
-                return null;
-            }
-
-            return tamer.GetMonster();
+            var monster = tamer.GetMonster();
+            return monster.IsNullOrDestroyed() ? null : monster;
         }
     }
 
