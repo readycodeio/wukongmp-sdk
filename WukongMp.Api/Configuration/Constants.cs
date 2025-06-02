@@ -11,6 +11,8 @@ namespace WukongMp.Api.Configuration
         public const float FloatComparisonTolerance = 0.1f;
         public const string ConnectedPatches = "Connected";
         public const string GlobalPatches = "Global";
+        public const string CoopPatches = "Coop";
+        public const string PvpPatches = "PvP";
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;

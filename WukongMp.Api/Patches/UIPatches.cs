@@ -210,7 +210,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenMapUI")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
     public class PatchOnClickOpenMapUI
     {
         public static bool Prefix()
@@ -223,7 +223,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
     public class PatchShrineRegisterFunc
     {
         public static MethodBase TargetMethod()
@@ -245,7 +245,7 @@ namespace WukongMp.Api.Patches
     }
     
     [HarmonyPatch(typeof(GSEUtil), "GetCanTeleportGroupMapList")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
     public class PatchGetCanTeleportGroupMapList
     {
         public static bool Prefix(ref List<int> __result)

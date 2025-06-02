@@ -47,6 +47,14 @@ namespace WukongMp.Api.Old
             {
                 _harmony.PatchCategory(Constants.GlobalPatches);
                 _harmony.PatchCategory(Constants.ConnectedPatches);
+                if (!Constants.IsCoop)
+                {
+                    _harmony.PatchCategory(Constants.PvpPatches);
+                }
+                else
+                {
+                    _harmony.PatchCategory(Constants.CoopPatches);
+                }
                 Logging.LogInformation("Patched with Harmony");
             });
         }
@@ -57,6 +65,14 @@ namespace WukongMp.Api.Old
             {
                 _harmony.UnpatchCategory(Constants.ConnectedPatches);
                 _harmony.UnpatchCategory(Constants.GlobalPatches);
+                if (!Constants.IsCoop)
+                {
+                    _harmony.UnpatchCategory(Constants.PvpPatches);
+                }
+                else
+                {
+                    _harmony.UnpatchCategory(Constants.CoopPatches);
+                }
                 Logging.LogInformation("Unpatched with Harmony");
             });
         }
