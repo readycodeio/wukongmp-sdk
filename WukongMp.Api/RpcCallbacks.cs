@@ -209,28 +209,36 @@ public partial class WukongMpMod
     [RpcEvent(RelayMode.Others)]
     private void OnCastImmobilize(NetworkIdComponent caster)
     {
-        if (IsMasterClient && NetManager.TryGetEntityByNetworkId(caster, out var entity))
+        if (IsMasterClient)
         {
-            ImmobilizeApi.CastImmobilize(entity.Value);
+            var character = GetPawnByNetworkId(caster);
+            if (character == null)
+            {
+                Logging.LogNull(nameof(caster));
+                return;
+            }
+            ImmobilizeUtils.CastImmobilize(character);
         }
     }
 
     [RpcEvent(RelayMode.Others)]
     private void OnTriggerImmobilize(TriggerImmobilizeData data)
     {
-        if (NetManager.TryGetEntityByNetworkId(data.PlayerId, out var caster) && NetManager.TryGetEntityByNetworkId(data.Target, out var target))
-        {
-            ImmobilizeApi.TriggerImmobilize(caster.Value, target.Value, data.GreatSageTalentActiveBuff);
-        }
+        var caster = GetPawnByNetworkId(data.PlayerId);
+        var target = GetPawnByNetworkId(data.Target);
+        ImmobilizeUtils.TriggerImmobilize(caster, target, data.GreatSageTalentActiveBuff);
     }
 
     [RpcEvent(RelayMode.Others)]
     private void OnRelieveImmobilize(NetworkIdComponent affected)
     {
-        if (NetManager.TryGetEntityByNetworkId(affected, out var entity))
+        var character = GetPawnByNetworkId(affected);
+        if (character == null)
         {
-            ImmobilizeApi.RelieveImmobilize(entity.Value);
+            Logging.LogNull(nameof(affected));
+            return;
         }
+        ImmobilizeUtils.RelieveImmobilize(character);
     }
 
     [RpcEvent(RelayMode.Others)]
