@@ -18,7 +18,7 @@ public sealed class DestroyDeadMonstersMarkersSystem : QuerySystem<HpComponent, 
         {
             if (tamer.IsMonsterSpawned && hpComp.Hp <= 0 && !marker.DestroyQueued)
             {
-                Logging.LogDebug("Monster {Id} died", entity.Id);
+                Logging.LogDebug("Monster {Id} died, destroying marker", entity.Id);
                 marker.DestroyQueued = true;
 
                 var markerActor = marker.MarkerActor;

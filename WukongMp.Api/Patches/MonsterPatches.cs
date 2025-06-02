@@ -81,7 +81,6 @@ namespace WukongMp.Api.Patches
                 if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                     return;
 
-                var client = WukongMpMod.Client;
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
