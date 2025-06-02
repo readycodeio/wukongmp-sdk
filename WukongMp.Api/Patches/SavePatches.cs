@@ -143,9 +143,9 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = 10;
-                OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = 1;
-                OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = 1004;
+                //OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = 10;
+                //OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = 1;
+                //OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = 1004;
             }
 
             SavePatchesData.CustomSaveEnabled = false;
