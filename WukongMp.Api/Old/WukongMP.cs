@@ -107,6 +107,9 @@ namespace WukongMp.Api.Old
                     TamerUtils.DestroyAllTamers();
                 }
 
+                Logging.LogInformation("Initializing widgets");
+                ModWidgetsUtils.SpawnWidgetManagerActor();
+                ModWidgetsUtils.InitializeWidgets();
                 Client.StartClient();
             }
         }
@@ -114,14 +117,14 @@ namespace WukongMp.Api.Old
         public void Reload()
         {
             OnDelayBeginPlay();
-            ModWidgetsUtils.SpawnWidgetManagerActor();
-            ModWidgetsUtils.InitializeWidgets();
             OnLoadingScreenClose();
         }
 
         public void OnEndPlay()
         {
             Client.StopRelayClient();
+            Logging.LogInformation("Deinitializing widgets");
+            ModWidgetsUtils.DeinitializeWidgets();
         }
 
         public void OnLoadingScreenClose()
@@ -549,7 +552,6 @@ namespace WukongMp.Api.Old
                 SkillsUtils.DisableFaBaoSkill(player);
             }
             LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
-            CoopStatusWidget.Instance.SetConnectedCount(Client.AllConnectedPlayers.Count());
             LobbyStatusWidget.Instance.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
             CoopStatusWidget.Instance.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
             SetupMatchmaking();

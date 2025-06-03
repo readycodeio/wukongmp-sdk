@@ -35,9 +35,6 @@ public class PatchOnEnterLevel
         {
             Logging.LogInformation("On enter level: {LevelName}", world.GetCurrentLevelName());
         }
-        Logging.LogInformation("Initializing widgets");
-        ModWidgetsUtils.SpawnWidgetManagerActor();
-        ModWidgetsUtils.InitializeWidgets();
     }
 }
 
@@ -52,8 +49,6 @@ public class PatchOnLevelExit
         {
             Logging.LogInformation("On exit level: {LevelName}", world.GetCurrentLevelName());
         }
-        Logging.LogInformation("Deinitializing widgets");
-        ModWidgetsUtils.DeinitializeWidgets();
     }
 }
 
