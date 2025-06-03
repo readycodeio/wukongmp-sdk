@@ -37,6 +37,7 @@ namespace WukongMp.Api.Configuration
         public const int GourdSkillId = 10530;
         public const int ImmobilizeSkillId = 10518;
         public const int ConsumableBuffSkillId = 10913;
+        public const int IronBodySkillId = 10505;
 
         public const int CountdownSeconds = 5;
         public const int MatchmakingSeconds = 45;

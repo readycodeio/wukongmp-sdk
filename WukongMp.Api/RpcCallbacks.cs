@@ -622,4 +622,21 @@ public partial class WukongMpMod
     {
         CutsceneUtils.SetWaitingForCutsceneStatus(__sender, data);
     }
+
+    [RpcEvent(RelayMode.Others)]
+    private void OnIronBodyStart(short __sender)
+    {
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+        IronBodyUtils.TriggerIronBody(player.Pawn);
+    }
 }

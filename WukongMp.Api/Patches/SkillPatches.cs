@@ -889,3 +889,21 @@ public class PatchOnPostTransBindData
         return true;
     }
 }
+
+[HarmonyPatch(typeof(BUS_IronBodyComp), "OnIronBodyStart")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchOnIronBodyStart
+{
+    public static void Postfix(BUS_IronBodyComp __instance)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        var client = WukongMpMod.Client;
+        if (client.LocalPlayerState.Pawn == __instance.GetOwner())
+        {
+            // Send iron body trigger to others
+            WukongMpMod.Instance.SendIronBodyStart();
+        }
+    }
+}
