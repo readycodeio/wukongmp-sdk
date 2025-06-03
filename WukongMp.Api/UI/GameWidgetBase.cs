@@ -1,6 +1,6 @@
 ﻿using UnrealEngine.UMG;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI
 {
@@ -10,7 +10,7 @@ namespace WukongMp.Api.UI
 
         public void Initialize()
         {
-            GameWidget = BlueprintUiUtils.GetWidget(name);
+            GameWidget = ModWidgetsUtils.GetWidget(name);
             if (GameWidget != null)
             {
                 Logging.LogDebug("{Name} widget initialized!", name);

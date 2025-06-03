@@ -89,7 +89,6 @@ namespace WukongMp.Api.Old
                 return;
 
             ConfigureEventCallbacks();
-            InitGameInstanceAsync();
         }
 
         public void DeInit()
@@ -98,61 +97,8 @@ namespace WukongMp.Api.Old
             IsInitialized = false;
         }
 
-        private void InitGameInstanceAsync()
+        public void OnDelayBeginPlay()
         {
-            Logging.LogInformation("Waiting for the game instance to be initialized.");
-            Task.Run(async () =>
-            {
-                try
-                {
-                    while (true)
-                    {
-                        if (GameUtils.IsGameInstanceValid())
-                        {
-                            Logging.LogInformation("Found valid GameInstance");
-                            Utils.TryRunOnGameThread(InitWorldCallbacks);
-                            break; // Exit the task
-                        }
-
-                        await Task.Delay(500);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logging.LogException(e);
-                }
-            });
-        }
-
-        private void InitWorldCallbacks()
-        {
-            var gameInstance = BGWGameInstanceCS.Get(null);
-            if (gameInstance != null)
-            {
-                BGW_EventCollection.Get(gameInstance).Evt_PostLoadMapWithWorld += OnMapLoaded;
-                BGW_EventCollection.Get(gameInstance).Evt_PlayerDelayBeginPlayFinished += OnDelayBeginPlay;
-                BGW_EventCollection.Get(gameInstance).Evt_PostPlayerControllerEndPlay += OnEndPlay;
-                BGW_EventCollection.Get(gameInstance).Evt_PostLoadingScreenClose += OnLoadingScreenClose;
-            }
-            else
-            {
-                Logging.LogError("GameInstance is not valid.");
-            }
-        }
-
-        private static void OnMapLoaded()
-        {
-            var world = GameUtils.GetWorld();
-            if (world != null)
-            {
-                Logging.LogInformation("New level loaded: {LevelName}", world.GetCurrentLevelName());
-            }
-        }
-
-        private void OnDelayBeginPlay()
-        {
-            Logging.LogInformation("Delay begin play for player.");
-
             // this is triggered for every player controller, but we want to apply the logic once
             if (!Client.ConnectedAndInRoom)
             {
@@ -161,56 +107,24 @@ namespace WukongMp.Api.Old
                     TamerUtils.DestroyAllTamers();
                 }
 
-                BlueprintUiUtils.SpawnUiManagerActor();
-                InitializeWidgets();
                 Client.StartClient();
             }
         }
 
         public void Reload()
         {
-            OnMapLoaded();
             OnDelayBeginPlay();
+            ModWidgetsUtils.SpawnWidgetManagerActor();
+            ModWidgetsUtils.InitializeWidgets();
             OnLoadingScreenClose();
         }
 
-        private void OnEndPlay()
+        public void OnEndPlay()
         {
-            Logging.LogInformation("End play for player.");
-            DeinitializeWidgets();
             Client.StopRelayClient();
         }
 
-        private void InitializeWidgets()
-        {
-            ChatWidget.Instance.Initialize();
-            ChatWidget.Instance.SetVisibility(false);
-            TimerWidget.Instance.Initialize();
-            LobbyStatusWidget.Instance.Initialize();
-            LobbyStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-            CoopStatusWidget.Instance.Initialize();
-            CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-            GameMessageWidget.Instance.Initialize();
-            CountdownWidget.Instance.Initialize();
-            InfoMessageWidget.Instance.Initialize();
-            PingIndicatorWidget.Instance.Initialize();
-            PingIndicatorWidget.Instance.SetVisibility(true);
-            FreeCameraControlsWidget.Instance.Initialize();
-        }
-
-        private void DeinitializeWidgets()
-        {
-            ChatWidget.Instance.Deinitialize();
-            TimerWidget.Instance.Deinitialize();
-            LobbyStatusWidget.Instance.Deinitialize();
-            CoopStatusWidget.Instance.Deinitialize();
-            GameMessageWidget.Instance.Deinitialize();
-            CountdownWidget.Instance.Deinitialize();
-            InfoMessageWidget.Instance.Deinitialize();
-            PingIndicatorWidget.Instance.Deinitialize();
-        }
-
-        private void OnLoadingScreenClose()
+        public void OnLoadingScreenClose()
         {
             if (Client is { RelayClient.InRoom: true })
             {
