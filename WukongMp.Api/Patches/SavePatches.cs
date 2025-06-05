@@ -295,9 +295,9 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnTransitionToState
     {
-        public static bool Prefix(FGameplayTag EventTag)
+        public static bool Prefix(FGameplayTag TargetState)
         {
-            Logging.LogWarning("PsmSubMachine.OnTransitionToState called with: {EventTag}", EventTag.ToString());
+            Logging.LogWarning("PsmSubMachine.OnTransitionToState called with: {EventTag}", TargetState.ToString());
             return true;
         }
     }
