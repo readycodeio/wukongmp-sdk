@@ -60,6 +60,9 @@ namespace WukongMp.Api.Configuration
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
         public const string CoopStatusWidgetName = "WBP_CoopStatus_C";
 
+        public const string DebugCubeActorPath = "/Game/Mods/DebugMod/BP_DebugCube.BP_DebugCube_C";
+        public const string DebugSphereActorPath = "/Game/Mods/DebugMod/BP_DebugShpere.BP_DebugShpere_C";
+        
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             #region Calculated Attributes
 

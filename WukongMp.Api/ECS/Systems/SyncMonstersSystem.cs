@@ -47,6 +47,13 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
             {
                 hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                 hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+#if TESTING
+                hpComp.Hp = 10;
+                attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
+                attrs.SetFloatValue(EBGUAttrFloat.Shield, 1);
+                attrs.SetFloatValue(EBGUAttrFloat.SkillSuperArmor, 1);
+                attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
+#endif
 
                 if (IsMasterClient && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
                 {

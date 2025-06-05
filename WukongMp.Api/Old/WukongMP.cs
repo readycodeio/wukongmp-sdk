@@ -5,6 +5,7 @@ using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnrealEngine.Engine;
@@ -35,6 +36,8 @@ namespace WukongMp.Api.Old
 
         public bool DisableArchiveSave { get; set; }
         public bool IsInitialized { get; private set; }
+
+        private List<AActor> _debugActors = new();
 
         private WukongMP()
         {
@@ -551,6 +554,10 @@ namespace WukongMp.Api.Old
                 SkillsUtils.DisableVigorSkill(player);
                 SkillsUtils.DisableFaBaoSkill(player);
             }
+#if TESTING
+            BUC_SpeedCtrlData? speedCtrlData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_SpeedCtrlData, BUC_SpeedCtrlData>(GameUtils.GetControlledPawn()) as BUC_SpeedCtrlData;
+            speedCtrlData?.SetSpeedInfo(10000, 10000, 10000);
+#endif
             LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             LobbyStatusWidget.Instance.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
             CoopStatusWidget.Instance.SetMaxConnectedCount(Client.RoomState.MaxPlayers);
@@ -698,6 +705,77 @@ namespace WukongMp.Api.Old
 
             playerState.Pawn.SetActorHiddenInGame(!visible);
             playerState.MarkerActor?.SetActorHiddenInGame(!visible);
+        }
+
+        public void TestPsm()
+        {
+            Logging.LogDebug("########################## PsmInstance ######################################");
+
+            var world = GameUtils.GetWorld();
+            BIC_StateMachineData? stateMachineData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_StateMachineData, BIC_StateMachineData>(world) as BIC_StateMachineData;
+            BIC_TaskData? gameInstanceReadonlyData2 = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_TaskData, BIC_TaskData>(world) as BIC_TaskData;
+            BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_GlobalActorData, BIC_GlobalActorData>(world).GetAllInteractorSet(out var OutInteractorSet);
+
+            if (stateMachineData == null)
+            {
+                Logging.LogError("State machine data is null");
+                return;
+            }
+
+            stateMachineData.GetAllSceneObjState(out var OutSceneObjState);
+            stateMachineData.GetAllSceneObjTransientState(out var OutSceneObjTransientState);
+
+
+            foreach (var psmGuid in stateMachineData.PsmInstances.Keys)
+            {
+                Logging.LogDebug("PsmInstance: {PsmGuid}", psmGuid);
+                PsmInstance psmInstance = stateMachineData.PsmInstances[psmGuid];
+
+                foreach (var node in psmInstance.ActivedNodeInstances)
+                {
+                    if (node.ActivationState == ArchiveB1.ActivationState.Active)
+                    {
+                        Logging.LogDebug("Active node class: {NodeClass}, Tag: {TagName}", node.Node.NodeClass, node.Node.NodeGuid);
+                    }
+                }
+            }
+
+            foreach (var OutSceneObj in OutSceneObjState)
+            {
+                OutSceneObj.Value.GetAllTagStrList(out var tagStrList);
+                Logging.LogDebug("SceneObj: {SceneObjGuid}, State: {State}", OutSceneObj.Key);
+                Logging.LogDebug("Tags: {Tags}", string.Join(", ", tagStrList));
+            }
+
+            Logging.LogDebug("########################## PsmInstance ######################################");
+
+        }
+
+        public void DrawDebugTamers()
+        {
+            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
+            var debugCubeClass = DebugUtils.GetDebugCubeActorClass();
+            if (debugCubeClass != null)
+            {
+                foreach (var actor in allActorsOfClass)
+                {
+                    var spawnedActor = DebugUtils.SpawnActor(debugCubeClass, actor.GetActorLocation(), actor.GetActorRotation());
+                    if (spawnedActor != null)
+                        _debugActors.Add(spawnedActor);
+                }
+            }
+        }
+
+        public void ClearDebugTamers()
+        {
+            foreach (var actor in _debugActors)
+            {
+                if (actor != null && !actor.IsPendingKill)
+                {
+                    BGU_UnrealWorldUtil.DestroyActor(actor);
+                }
+            }
+            _debugActors.Clear();
         }
     }
 }

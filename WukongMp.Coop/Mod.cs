@@ -100,6 +100,25 @@ namespace WukongMp.Coop
                 WukongMpMod.Instance.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerPeerId(WukongMpModBase.Client.LocalPlayerState.PeerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
+#if TESTING
+            Utils.RegisterKeyBind(Key.NUMPAD1, () =>
+            {
+                Logging.LogDebug("Num1");
+                _wukongMp.DrawDebugTamers();
+            });
+
+            Utils.RegisterKeyBind(Key.NUMPAD2, () =>
+            {
+                Logging.LogDebug("Num2");
+                _wukongMp.ClearDebugTamers();
+            });
+
+            Utils.RegisterKeyBind(Key.NUMPAD3, () =>
+            {
+                Logging.LogDebug("Num3");
+                _wukongMp.TestPsm();
+            });
+#endif
             Utils.RegisterKeyBind(Key.J, () =>
             {
                 Logging.LogDebug("J");
