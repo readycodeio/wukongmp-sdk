@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Old;
 
@@ -74,17 +75,20 @@ public class CmdLineParams
             return;
         }
 
-        // REQUIRED: Level ID
-        var mapMatch = Regex.Match(cmd, """-level "?(\d+)"?""");
-        if (mapMatch.Success)
+        if (!Constants.IsCoop)
         {
-            LevelId = int.Parse(mapMatch.Groups[1].Value);
-            Logging.LogDebug("Level ID: {LevelId}", LevelId);
-        }
-        else
-        {
-            Logging.LogError("Level ID not provided, launch the game from the ReadyM Launcher.");
-            return;
+            // REQUIRED: Level ID
+            var mapMatch = Regex.Match(cmd, """-level "?(\d+)"?""");
+            if (mapMatch.Success)
+            {
+                LevelId = int.Parse(mapMatch.Groups[1].Value);
+                Logging.LogDebug("Level ID: {LevelId}", LevelId);
+            }
+            else
+            {
+                Logging.LogError("Level ID not provided, launch the game from the ReadyM Launcher.");
+                return;
+            }
         }
 
         // OPTIONAL: custom mod folder
