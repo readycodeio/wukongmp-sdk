@@ -14,14 +14,17 @@ public sealed class UpdateMarkersSystem : QuerySystem<LocalTamerComponent, Marke
             if (marker.MarkerActor == null)
                 return;
 
-            if (tamer.Pawn == null)
+            var markerHeight = 0f;
+            if (tamer.Pawn != null)
             {
-                Logging.LogError("Pawn is null");
-                return;
+                markerHeight = tamer.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
+                marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
             }
-
-            var markerHeight = tamer.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-            marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+            else if (tamer.Tamer != null)
+            {
+                markerHeight = tamer.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
+                marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+            }
         });
     }
 }

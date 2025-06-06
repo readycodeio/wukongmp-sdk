@@ -23,7 +23,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
             return;
         }
 
-        Query.ForEachEntity((ref tamer, ref localTamer, ref netId, ref trans, ref team, _) =>
+        Query.ForEachEntity((ref tamer, ref localTamer, ref netId, ref trans, ref team, entity) =>
         {
             if (!localTamer.IsSynced)
             {
@@ -31,6 +31,10 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 {
                     localTamer.Tamer = actor;
                     localTamer.IsSynced = true;
+
+                    ref var nameComp = ref entity.GetComponent<NicknameComponent>();
+                    nameComp.Nickname = actor.GetClass().GetName();
+                    MarkerUtils.CreateMarkerForCharacter(entity);
 
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
                 }
