@@ -263,7 +263,7 @@ namespace WukongMp.Api.Patches
 
             if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGoHome)
             {
-                Logging.LogDebug("Trying change state to {State}", EventTag.ToString());
+                Logging.LogTrace("Trying change state to {State}", EventTag.ToString());
                 return false;
             }
 
