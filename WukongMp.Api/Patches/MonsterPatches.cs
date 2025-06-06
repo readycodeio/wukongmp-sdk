@@ -87,9 +87,8 @@ namespace WukongMp.Api.Patches
                 var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
                 if (entity != null)
                 {
-                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
-                    tamerComp.IsSpawned = true;
-                    Logging.LogDebug("Setting IsSpawned to {Value}", tamerComp.IsSpawned);
+                    ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
+                    WukongMpMod.Instance.SendWakeUpMonster(netComp);
                 }
                 else
                 {

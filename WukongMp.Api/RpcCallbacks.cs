@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Enums;
@@ -639,5 +640,20 @@ public partial class WukongMpMod
             return;
         }
         IronBodyUtils.TriggerIronBody(player.Pawn);
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    private void OnWakeUpMonster(NetworkIdComponent netEntity)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+            {
+                if (entity.Value.TryGetComponent<LocalTamerComponent>(out var tamer) && tamer.Tamer != null)
+                {
+                    TamerUtils.WakeUpMonster(tamer.Tamer);
+                }
+            }
+        }, nameof(OnWakeUpMonster));
     }
 }

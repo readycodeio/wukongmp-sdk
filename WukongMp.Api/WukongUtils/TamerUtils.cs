@@ -49,6 +49,17 @@ namespace WukongMp.Api.WukongUtils
             return unitName.ToLower().Replace("-", "").Replace("_", "");
         }
 
+        public static void WakeUpMonster(BUTamerActor tamerActor)
+        {
+            Logging.LogWarning("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(tamerActor));
+            var monster = tamerActor.GetMonster();
+            if (monster == null)
+            {
+                var bgsEvents = BGS_EventCollectionCS.Get(tamerActor);
+                bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(BGU_DataUtil.GetActorGuid(tamerActor));
+            }
+        }
+
         public static void DiscoverTamers()
         {
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());

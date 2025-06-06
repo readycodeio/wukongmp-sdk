@@ -23,20 +23,6 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
             var monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
-                var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
-                if (bgsEvents == null)
-                {
-                    Logging.LogError("events are null");
-                    return;
-                }
-
-                Logging.LogWarning("Monster {Guid} forced to spawn", tamerComp.Guid);
-                bgsEvents.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
-            }
-
-            monster = localTamerComp.Tamer?.GetMonster();
-            if (monster == null)
-            {
                 Logging.LogError("monster is null");
                 return;
             }
