@@ -30,6 +30,7 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
                     return;
                 }
 
+                Logging.LogWarning("Monster {Guid} forced to spawn", tamerComp.Guid);
                 bgsEvents.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
             }
 

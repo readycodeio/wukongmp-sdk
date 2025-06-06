@@ -83,12 +83,13 @@ namespace WukongMp.Api.Patches
 
                 var tamer = __instance.InstancePtr.Get();
 
-                Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
+                Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
                 var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
                 if (entity != null)
                 {
                     ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
                     tamerComp.IsSpawned = true;
+                    Logging.LogDebug("Setting IsSpawned to {Value}", tamerComp.IsSpawned);
                 }
                 else
                 {
