@@ -101,21 +101,21 @@ namespace WukongMp.Coop
             });
 #endif
 #if TESTING
-            Utils.RegisterKeyBind(Key.NUMPAD1, () =>
+            Utils.RegisterKeyBind(Key.D8, () =>
             {
-                Logging.LogDebug("Num1");
+                Logging.LogDebug("8");
                 _wukongMp.DrawDebugTamers();
             });
 
-            Utils.RegisterKeyBind(Key.NUMPAD2, () =>
+            Utils.RegisterKeyBind(Key.D9, () =>
             {
-                Logging.LogDebug("Num2");
+                Logging.LogDebug("9");
                 _wukongMp.ClearDebugTamers();
             });
 
-            Utils.RegisterKeyBind(Key.NUMPAD3, () =>
+            Utils.RegisterKeyBind(Key.D0, () =>
             {
-                Logging.LogDebug("Num3");
+                Logging.LogDebug("0");
                 _wukongMp.TestPsm();
             });
 #endif
