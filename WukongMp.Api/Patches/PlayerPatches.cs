@@ -413,13 +413,23 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (!client.IsMasterClient)
-                return;
-
             var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
-
             if (entity.HasValue)
             {
+                if (entity.Value.HasComponent<LocalTamerComponent>())
+                {
+                    ref var localTamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
+                    localTamerComp.IsMonsterSpawned = false;
+                }
+                if (entity.Value.HasComponent<TamerComponent>())
+                {
+                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
+                    tamerComp.IsSpawned = false;
+                }
+
+                if (!client.IsMasterClient)
+                    return;
+
                 if (entity.Value.TryGetComponent<NetworkIdComponent>(out var networkId))
                 {
                     // TODO: send attacker and anim montage
@@ -431,20 +441,6 @@ namespace WukongMp.Api.Patches
                 {
                     Logging.LogError("Entity {Entity} does not have NetworkIdComponent, skipping entity deletion", entity.Value.ToString());
                 }
-
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(1000);
-                    Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead after delay)", entity.Value.ToString());
-                    if (!entity.Value.IsNull)
-                    {
-                        WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Value.Id);
-                    }
-                });
-            }
-            else
-            {
-                Logging.LogWarning("Owner {Owner} is not a monster in ECS, skipping entity deletion", owner.GetName());
             }
         }
     }

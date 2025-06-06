@@ -450,7 +450,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BGU_UnrealWorldUtil), "DestroyActor")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
     public class PatchDestroyActor
     {
         public static void Postfix(AActor Actor)
