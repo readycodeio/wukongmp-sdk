@@ -1,6 +1,7 @@
 ﻿using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
+using ReadyM.Relay.Common.Wukong.Components;
 using System.Collections.Generic;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
@@ -49,14 +50,20 @@ namespace WukongMp.Api.WukongUtils
             return unitName.ToLower().Replace("-", "").Replace("_", "");
         }
 
-        public static void WakeUpMonster(BUTamerActor tamerActor)
+        public static void WakeUpMonster(Entity tamerEntity)
         {
-            Logging.LogWarning("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(tamerActor));
-            var monster = tamerActor.GetMonster();
+            var localTamerComp = tamerEntity.GetComponent<LocalTamerComponent>();
+            Logging.LogWarning("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+
+            var tamerComp = tamerEntity.GetComponent<TamerComponent>();
+            tamerComp.IsSpawned = true;
+
+            var monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
-                var bgsEvents = BGS_EventCollectionCS.Get(tamerActor);
-                bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(BGU_DataUtil.GetActorGuid(tamerActor));
+                var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
+                Logging.LogWarning("Monster {Guid} forced to spawn", tamerComp.Guid);
+                bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
             }
         }
 

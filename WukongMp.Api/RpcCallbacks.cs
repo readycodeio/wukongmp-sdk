@@ -649,9 +649,9 @@ public partial class WukongMpMod
         {
             if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
             {
-                if (entity.Value.TryGetComponent<LocalTamerComponent>(out var tamer) && tamer.Tamer != null)
+                if (entity.HasValue)
                 {
-                    TamerUtils.WakeUpMonster(tamer.Tamer);
+                    TamerUtils.WakeUpMonster(entity.Value);
                 }
             }
         }, nameof(OnWakeUpMonster));

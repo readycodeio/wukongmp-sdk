@@ -85,10 +85,15 @@ namespace WukongMp.Api.Patches
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
                 var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
-                if (entity != null)
+                if (entity.HasValue)
                 {
-                    ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                    WukongMpMod.Instance.SendWakeUpMonster(netComp);
+                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
+                    if (!tamerComp.IsSpawned)
+                    {
+                        tamerComp.IsSpawned = true;
+                        ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
+                        WukongMpMod.Instance.SendWakeUpMonster(netComp);
+                    }
                 }
                 else
                 {
