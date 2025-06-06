@@ -104,11 +104,22 @@ namespace WukongMp.Api.Patches
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public class PatchTurnBack2Loaded
+    public class PatchCanTurnBack2Loaded
     {
         static bool Prefix(ref bool __result)
         {
             __result = false;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.TurnBack2Loaded))]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    public class PatchTurnBack2Loaded
+    {
+        static bool Prefix()
+        {
+            //TODO: Allow this if monster can be unloaded for each player
             return false;
         }
     }
