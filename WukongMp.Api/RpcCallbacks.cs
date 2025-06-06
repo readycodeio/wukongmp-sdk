@@ -613,7 +613,8 @@ public partial class WukongMpMod
                 return;
             }
 
-            events.Evt_UnitDead.Invoke(null, data.DeadReason, data.DmgId, data.StiffLevel, null, default, data.IsDotDmg, data.AbnormalType);
+            Logging.LogDebug("OnUnitDead for unit {Unit}", pawn.GetName());
+            events.Evt_UnitDead.Invoke(GameUtils.GetControlledPawn(), data.DeadReason, data.DmgId, data.StiffLevel, null, default, data.IsDotDmg, data.AbnormalType);
         }, nameof(OnUnitDead));
     }
 
