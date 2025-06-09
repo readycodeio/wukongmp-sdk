@@ -112,6 +112,7 @@ namespace WukongMp.Api.Patches
                 else
                 {
                     SavePatchesData.CustomSaveEnabled = true;
+                    // TODO: Pull save from the cloud
                     var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var characterGameArchiveData, out var characterArchiveCanBeRepaired);
                     if (characterReadArchiveResult == ReadArchiveResult.Success)
                     {
@@ -182,6 +183,8 @@ namespace WukongMp.Api.Patches
                 WukongMP.Instance.DisableArchiveSave = true;
                 return false;
             }
+            
+            // TODO: else, Upload save
 
             return true;
         }
@@ -195,6 +198,7 @@ namespace WukongMp.Api.Patches
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
         {
             return false;
+            // TODO: Upload save
         }
     }
 
