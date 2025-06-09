@@ -14,7 +14,7 @@ public sealed class UpdateMarkersSystem : QuerySystem<LocalTamerComponent, Marke
             if (marker.MarkerActor == null)
                 return;
 
-            string title = $"ShouldBeSpawned:{tam.ShouldBeSpawned}|IsLocallySpawned:{tamer.IsLocallySpawned}|IsMonsterSynced:{tamer.IsMonsterSynced}";
+            string title = $"ShouldBeSpawned:{tam.ShouldBeSpawned}__IsLocallySpawned:{tamer.IsLocallySpawned}__IsMonsterSynced:{tamer.IsMonsterSynced}";
 
             var markerHeight = 0f;
             if (tamer.Pawn != null)
