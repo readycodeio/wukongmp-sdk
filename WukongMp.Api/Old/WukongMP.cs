@@ -280,7 +280,7 @@ namespace WukongMp.Api.Old
                 var monsterCount = 0;
                 WukongMpMod.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref tamer, _) =>
                 {
-                    if (tamer.IsSynced)
+                    if (tamer.IsTamerSynced)
                     {
                         monsterCount++;
                     }
