@@ -31,6 +31,8 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
     [Obsolete]
     public static WukongClient Client => WukongMP.Instance.Client;
 
+    public IBlobClient Blobs => RelayClient;
+
     protected WukongMpModBase() : base(
         CmdLineParams.Instance.UserGuid,
         CmdLineParams.Instance.ServerIp!,
@@ -167,7 +169,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
 
         var bytesToCopy = reader.UserDataSize - 1; // first byte is the event code
         var offset = reader.UserDataOffset + 1; // skip the first byte which is the event code
-        
+
         var buffer = ArrayPool<byte>.Shared.Rent(bytesToCopy);
         // offset 1 to skip the first byte which is the event code
         Array.Copy(reader.RawData, offset, buffer, 0, bytesToCopy);
