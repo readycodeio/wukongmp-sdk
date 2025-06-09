@@ -26,6 +26,7 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
             {
                 TamerUtils.WakeUpMonster(entity);
             }
+            monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
                 Logging.LogError("monster is null");
