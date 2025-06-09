@@ -280,7 +280,7 @@ namespace WukongMp.Api.Patches
                 return true;
 
             Logging.LogDebug("Tamer on reset called for tamer {Tamer} with reason {Reason}", __instance.TamerName, ResetReason);
-            return ResetReason != EResetActorReason.ReturnHome;
+            return ResetReason != EResetActorReason.ReturnHome && ResetReason != EResetActorReason.InteractRebirthPoint;
         }
     }
 
