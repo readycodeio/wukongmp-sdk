@@ -124,14 +124,16 @@ namespace WukongMp.Api.WukongUtils
 
         public static void AddSpawnedUnit(Entity entity)
         {
+            Logging.LogWarning("Adding spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
-            localTamerComp.SpawnedCounter += 1;
+            localTamerComp.SpawnedCounter++;
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
             tamerComp.ShouldBeSpawned = true;
         }
 
         public static void SubtractSpawnedUnit(Entity entity)
         {
+            Logging.LogWarning("Subtracting spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
             localTamerComp.SpawnedCounter -= 1;
             if (localTamerComp.SpawnedCounter <= 0)
@@ -144,6 +146,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void ClearSpawnedUnit(Entity entity)
         {
+            Logging.LogWarning("Clearing spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
             localTamerComp.SpawnedCounter = 0;
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();

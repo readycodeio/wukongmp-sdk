@@ -26,7 +26,7 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     {
         get
         {
-            if (!IsLocallySpawned)
+            if (!IsMonsterSynced)
             {
                 return null;
             }
