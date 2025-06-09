@@ -143,7 +143,7 @@ namespace WukongMp.Api.Patches
                     if (!entity.HasValue)
                         return;
 
-                    if (!entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
+                    if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
                         return;
@@ -226,7 +226,7 @@ namespace WukongMp.Api.Patches
 
                     // monster was damaged
                     var entity = WukongMpMod.Instance.GetMonsterByActor(owner as BGUCharacterCS);
-                    if (!entity.HasValue || !entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
+                    if (!entity.HasValue || !entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
                         return;
@@ -397,7 +397,7 @@ namespace WukongMp.Api.Patches
 
                     if (entity.HasValue)
                     {
-                        if (!entity.Value.GetComponent<LocalTamerComponent>().IsSynced)
+                        if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
                         {
                             return;
                         }

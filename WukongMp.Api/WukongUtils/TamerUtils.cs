@@ -55,12 +55,10 @@ namespace WukongMp.Api.WukongUtils
             var localTamerComp = tamerEntity.GetComponent<LocalTamerComponent>();
             Logging.LogWarning("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
 
-            var tamerComp = tamerEntity.GetComponent<TamerComponent>();
-            tamerComp.IsSpawned = true;
-
             var monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
+                ref var tamerComp = ref tamerEntity.GetComponent<TamerComponent>();
                 var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
                 Logging.LogWarning("Monster {Guid} forced to spawn", tamerComp.Guid);
                 bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
@@ -122,6 +120,34 @@ namespace WukongMp.Api.WukongUtils
 
             Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.ToString());
             WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
+        }
+
+        public static void AddSpawnedUnit(Entity entity)
+        {
+            ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
+            localTamerComp.SpawnedCounter += 1;
+            ref var tamerComp = ref entity.GetComponent<TamerComponent>();
+            tamerComp.ShouldBeSpawned = true;
+        }
+
+        public static void SubtractSpawnedUnit(Entity entity)
+        {
+            ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
+            localTamerComp.SpawnedCounter -= 1;
+            if (localTamerComp.SpawnedCounter <= 0)
+            {
+                localTamerComp.SpawnedCounter = 0;
+                ref var tamerComp = ref entity.GetComponent<TamerComponent>();
+                tamerComp.ShouldBeSpawned = false;
+            }
+        }
+
+        public static void ClearSpawnedUnit(Entity entity)
+        {
+            ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
+            localTamerComp.SpawnedCounter = 0;
+            ref var tamerComp = ref entity.GetComponent<TamerComponent>();
+            tamerComp.ShouldBeSpawned = false;
         }
     }
 }

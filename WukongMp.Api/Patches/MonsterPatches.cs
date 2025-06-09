@@ -33,7 +33,7 @@ namespace WukongMp.Api.Patches
             {
                 WukongMpMod.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
-                    if (!tamer.IsSynced || !tamer.IsTamerValid || tamer.Pawn == null)
+                    if (!tamer.IsTamerSynced || !tamer.IsTamerValid || tamer.Pawn == null)
                         return;
 
                     trans.Position = tamer.Pawn.GetActorLocation().ToVector3();
@@ -44,7 +44,7 @@ namespace WukongMp.Api.Patches
             {
                 WukongMpMod.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
                 {
-                    if (!tamer.IsTamerValid || !tamer.IsSynced || tamer.Pawn == null)
+                    if (!tamer.IsTamerValid || !tamer.IsTamerSynced || tamer.Pawn == null)
                         return;
 
                     var events = BUS_EventCollectionCS.Get(tamer.Pawn);
@@ -87,12 +87,12 @@ namespace WukongMp.Api.Patches
                 var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
                 if (entity.HasValue)
                 {
-                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
-                    if (!tamerComp.IsSpawned)
+                    ref var localTamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
+                    if (!localTamerComp.IsLocallySpawned)
                     {
-                        tamerComp.IsSpawned = true;
+                        localTamerComp.IsLocallySpawned = true;
                         ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                        WukongMpMod.Instance.SendWakeUpMonster(netComp);
+                        WukongMpMod.Instance.SendUnitSpawned(netComp);
                     }
                 }
                 else
@@ -108,7 +108,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
     public class PatchCanTurnBack2Loaded
     {
         static bool Prefix(ref bool __result)
@@ -119,13 +119,43 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.TurnBack2Loaded))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.CoopPatches)]
     public class PatchTurnBack2Loaded
     {
-        static bool Prefix()
+        static bool Prefix(FTamerRef __instance)
         {
-            //TODO: Allow this if monster can be unloaded for each player
-            return false;
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
+                return true;
+
+            var tamer = __instance.InstancePtr.Get();
+
+            Logging.LogDebug("Monster {Guid} can be unloaded locally", BGU_DataUtil.GetActorGuid(tamer));
+            var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
+            if (entity.HasValue)
+            {
+                ref var localTamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
+                if (localTamerComp.IsLocallySpawned)
+                {
+                    localTamerComp.IsLocallySpawned = false;
+                    ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
+                    WukongMpMod.Instance.SendUnitDespawn(netComp);
+                }
+
+                ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
+                if (!tamerComp.ShouldBeSpawned)
+                {
+                    Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamer));
+                }
+                return !tamerComp.ShouldBeSpawned;
+            }
+            else
+            {
+                Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
+                return true;
+            }
         }
     }
 

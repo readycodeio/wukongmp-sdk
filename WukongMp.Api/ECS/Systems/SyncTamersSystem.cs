@@ -25,12 +25,12 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 
         Query.ForEachEntity((ref tamer, ref localTamer, ref netId, ref trans, ref team, entity) =>
         {
-            if (!localTamer.IsSynced)
+            if (!localTamer.IsTamerSynced)
             {
                 if (allTamers.TryGetValue(tamer.Guid, out var actor))
                 {
                     localTamer.Tamer = actor;
-                    localTamer.IsSynced = true;
+                    localTamer.IsTamerSynced = true;
 
                     ref var nameComp = ref entity.GetComponent<NicknameComponent>();
                     nameComp.Nickname = actor.GetClass().GetName();

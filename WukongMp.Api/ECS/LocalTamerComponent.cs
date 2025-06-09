@@ -9,10 +9,12 @@ namespace WukongMp.Api.ECS;
 [StructLayout(LayoutKind.Sequential)]
 public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
 {
-    public bool IsSynced;
-    public bool IsMonsterSpawned;
+    public bool IsTamerSynced;
+    public bool IsMonsterSynced;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
+    public int SpawnedCounter;
+    public bool IsLocallySpawned;
 
     public BUTamerActor? Tamer
     {
@@ -24,7 +26,7 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     {
         get
         {
-            if (!IsMonsterSpawned)
+            if (!IsLocallySpawned)
             {
                 return null;
             }

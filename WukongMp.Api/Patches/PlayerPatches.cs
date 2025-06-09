@@ -419,16 +419,18 @@ namespace WukongMp.Api.Patches
                 if (entity.Value.HasComponent<LocalTamerComponent>())
                 {
                     ref var localTamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
-                    localTamerComp.IsMonsterSpawned = false;
-                }
-                if (entity.Value.HasComponent<TamerComponent>())
-                {
-                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
-                    tamerComp.IsSpawned = false;
+                    localTamerComp.IsMonsterSynced = false;
+                    localTamerComp.IsLocallySpawned = false;
                 }
 
                 if (!client.IsMasterClient)
                     return;
+
+                if (entity.Value.HasComponent<TamerComponent>())
+                {
+                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
+                    TamerUtils.ClearSpawnedUnit(entity.Value);
+                }
 
                 if (entity.Value.TryGetComponent<NetworkIdComponent>(out var networkId))
                 {

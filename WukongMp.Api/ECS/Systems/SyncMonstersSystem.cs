@@ -4,6 +4,7 @@ using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
@@ -13,14 +14,18 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
 
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref hpComp, ref teamComp, ref tamerComp, ref localTamerComp, _) =>
+        Query.ForEachEntity((ref hpComp, ref teamComp, ref tamerComp, ref localTamerComp, entity) =>
         {
-            if (localTamerComp.IsMonsterSpawned || !tamerComp.IsSpawned)
+            if (localTamerComp.IsMonsterSynced || !tamerComp.ShouldBeSpawned)
             {
                 return;
             }
 
             var monster = localTamerComp.Tamer?.GetMonster();
+            if (monster == null)
+            {
+                TamerUtils.WakeUpMonster(entity);
+            }
             if (monster == null)
             {
                 Logging.LogError("monster is null");
@@ -77,7 +82,7 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
 
             ClientUtils.RegisterNewPlayerTeam(monster, teamComp.TeamId);
 
-            localTamerComp.IsMonsterSpawned = true;
+            localTamerComp.IsMonsterSynced = true;
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
         });
     }

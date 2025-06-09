@@ -656,4 +656,34 @@ public partial class WukongMpMod
             }
         }, nameof(OnWakeUpMonster));
     }
+
+    [RpcEvent(RelayMode.Master)]
+    void OnUnitSpawned(NetworkIdComponent netEntity)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+            {
+                if (entity.HasValue)
+                {
+                    TamerUtils.AddSpawnedUnit(entity.Value);
+                }
+            }
+        }, nameof(OnUnitSpawned));
+    }
+
+    [RpcEvent(RelayMode.Master)]
+    void OnUnitDespawn(NetworkIdComponent netEntity)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+            {
+                if (entity.HasValue)
+                {
+                    TamerUtils.SubtractSpawnedUnit(entity.Value);
+                }
+            }
+        }, nameof(OnUnitDespawn));
+    }
 }
