@@ -282,39 +282,4 @@ namespace WukongMp.Api.Patches
             }
         }
     }
-
-    [HarmonyPatch(typeof(PsmSubMachine), nameof(PsmSubMachine.OnEvent))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchOnPsmEvent
-    {
-        public static bool Prefix(FGameplayTag EventTag)
-        {
-            Logging.LogWarning("PsmSubMachine.OnEvent called with: {EventTag}", EventTag.ToString());
-            return true;
-        }
-    }
-
-
-    [HarmonyPatch(typeof(PsmSubMachine), nameof(PsmSubMachine.OnTransitionToState))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchOnTransitionToState
-    {
-        public static bool Prefix(FGameplayTag TargetState)
-        {
-            Logging.LogWarning("PsmSubMachine.OnTransitionToState called with: {EventTag}", TargetState.ToString());
-            return true;
-        }
-    }
-
-
-    [HarmonyPatch(typeof(BUS_StateMachineCompBase), "OnEvent")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchOnEvent
-    {
-        public static bool Prefix(FGameplayTag EventTag)
-        {
-            Logging.LogWarning("BUS_StateMachineCompBase.OnEvent called with: {EventTag}", EventTag.ToString());
-            return true;
-        }
-    }
 }
