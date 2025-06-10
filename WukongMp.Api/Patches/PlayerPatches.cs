@@ -701,4 +701,23 @@ namespace WukongMp.Api.Patches
             return !(client.LocalPlayerState.Pawn == __instance.GetOwner() && client.LocalPlayerState.IsSpectator);
         }
     }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchSetAllUnitCannotDead
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BIS_DeathManager:SetAllUnitCannotDead");
+        }
+
+        public static bool Prefix(bool bInCanUnitDead)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return !bInCanUnitDead; 
+        }
+    }
+
 }
