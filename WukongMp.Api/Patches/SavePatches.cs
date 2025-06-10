@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
@@ -8,6 +9,7 @@ using B1UI.GSUI;
 using BtlB1;
 using CommB1;
 using HarmonyLib;
+using ReadyM.Relay.Common;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -183,7 +185,7 @@ namespace WukongMp.Api.Patches
                 WukongMP.Instance.DisableArchiveSave = true;
                 return false;
             }
-            
+
             // TODO: else, Upload save
 
             return true;
@@ -191,14 +193,34 @@ namespace WukongMp.Api.Patches
     }
 
     //// Disable adding save game requests
-    [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), new[] { typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>) })]
+    [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public class PatchArchiveReadWriterAppendArchive1
+    public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
         {
+            var data = ArchiveWriteContainer.GameArchiveFile.GameArchivesDataBytes.ToByteArray();
+
+            if (data == null)
+                return false;
+
+            Logging.LogInformation("Will upload save to the cloud, ArchiveId: {ArchiveId}, Size: {Size} Mb", ArchiveId, (data.Length / (1024.0 * 1024.0)).ToString("F2"));
+            const string name = "world.sav"; // TODO
+
+            Task.Run(async () =>
+            {
+                var success = await WukongMpMod.Instance.Blobs.UploadBlob(new BlobInfo(name, data));
+                if (success)
+                {
+                    Logging.LogInformation("Blob uploaded successfully: {Name}", name);
+                }
+                else
+                {
+                    Logging.LogError("Failed to upload blob: {Name}", name);
+                }
+            });
+
             return false;
-            // TODO: Upload save
         }
     }
 
