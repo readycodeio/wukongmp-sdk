@@ -194,11 +194,17 @@ namespace WukongMp.Api.Patches
 
     //// Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>))]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            if (!WukongMpMod.Instance.IsMasterClient)
+                return false;
+
             var data = ArchiveWriteContainer.GameArchiveFile.GameArchivesDataBytes.ToByteArray();
 
             if (data == null)
