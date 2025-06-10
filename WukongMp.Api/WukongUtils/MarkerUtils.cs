@@ -35,7 +35,7 @@ public static class MarkerUtils
             var nameComp = entity.GetComponent<NicknameComponent>();
             ref var markerComp = ref entity.GetComponent<MarkerComponent>();
 
-            var teamColor = PvPUtils.GetTeamColorString(Constants.AvailableTeamIds[0]);
+            var teamColor = PvPUtils.GetTeamColorString(teamIdComp.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamColor}", true);
             markerComp.MarkerActor = playerMarkerActor;
         }, nameof(CreateMarkerForCharacter));

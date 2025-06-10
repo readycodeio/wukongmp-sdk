@@ -11,14 +11,12 @@ using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
@@ -479,61 +477,6 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnWakeUpMonster(string guid)
-    {
-        GameLoopPatch.QueueOnGameThread(() =>
-        {
-            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            foreach (var actor in allActorsOfClass)
-            {
-                if (BGU_DataUtil.GetActorGuid(actor) != guid)
-                    continue;
-
-                var events = BGS_GSEventCollection.Get(actor);
-                if (events != null)
-                {
-                    var hasGuid = false;
-
-                    World.Query<TamerComponent>().ForEachEntity((ref tamer, _) =>
-                    {
-                        if (tamer.Guid == guid)
-                        {
-                            hasGuid = true;
-                        }
-                    });
-
-                    if (actor.GetMonster() == null)
-                    {
-                        Logging.LogDebug("Spawning monster for tamer with guid: {Guid}.", guid);
-
-                        if (!hasGuid)
-                        {
-                            Logging.LogError("Not syncing monster");
-                        }
-
-                        Logging.LogDebug("Invoking Evt_TamerBlockingSpawnImmediately.");
-                        events.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
-                    }
-                    else if (!hasGuid)
-                    {
-                        Logging.LogDebug("Monster already spawned but not synced: {Guid}.", guid);
-
-                        Logging.LogError("Not syncing monster");
-                    }
-                }
-                else
-                {
-                    Logging.LogDebug("Event is null");
-                }
-
-                return;
-            }
-
-            // TODO: Spawn if not found
-        }, nameof(OnWakeUpMonster));
-    }
-
-    [RpcEvent(RelayMode.Others)]
     public void OnMontageCallback(MontageCallbackData data)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -640,21 +583,6 @@ public partial class WukongMpMod
             return;
         }
         IronBodyUtils.TriggerIronBody(player.Pawn);
-    }
-
-    [RpcEvent(RelayMode.Others)]
-    private void OnWakeUpMonster(NetworkIdComponent netEntity)
-    {
-        GameLoopPatch.QueueOnGameThread(() =>
-        {
-            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
-            {
-                if (entity.HasValue)
-                {
-                    TamerUtils.WakeUpMonster(entity.Value);
-                }
-            }
-        }, nameof(OnWakeUpMonster));
     }
 
     [RpcEvent(RelayMode.Master)]
