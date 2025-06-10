@@ -35,8 +35,8 @@ public static class MarkerUtils
             var nameComp = entity.GetComponent<NicknameComponent>();
             ref var markerComp = ref entity.GetComponent<MarkerComponent>();
 
-            var teamName = PvPUtils.GetTeamName(Constants.AvailableTeamIds[0]);
-            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamName}", true);
+            var teamColor = PvPUtils.GetTeamColorString(Constants.AvailableTeamIds[0]);
+            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamColor}", true);
             markerComp.MarkerActor = playerMarkerActor;
         }, nameof(CreateMarkerForCharacter));
     }
@@ -59,8 +59,8 @@ public static class MarkerUtils
                 return;
             }
 
-            var teamName = PvPUtils.GetTeamName(characterState.TeamId);
-            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {characterState.NickName} {teamName}", true);
+            var teamColor = PvPUtils.GetTeamColorString(characterState.TeamId);
+            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {characterState.NickName} {teamColor}", true);
             characterState.MarkerActor = playerMarkerActor;
         }, nameof(CreateMarkerForCharacter));
     }

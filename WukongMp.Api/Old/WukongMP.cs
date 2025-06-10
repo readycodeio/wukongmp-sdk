@@ -400,8 +400,8 @@ namespace WukongMp.Api.Old
 
             if (playerState.MarkerActor != null)
             {
-                var teamName = PvPUtils.GetTeamName(playerState.TeamId);
-                playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamName}", true);
+                var teamColor = PvPUtils.GetTeamColorString(playerState.TeamId);
+                playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamColor}", true);
             }
 
             UpdatePlayerTeamUi(playerState);

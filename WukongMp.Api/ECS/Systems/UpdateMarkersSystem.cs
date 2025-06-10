@@ -1,6 +1,7 @@
 ﻿using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 
 namespace WukongMp.Api.ECS.Systems;
@@ -14,21 +15,22 @@ public sealed class UpdateMarkersSystem : QuerySystem<LocalTamerComponent, Marke
             if (marker.MarkerActor == null)
                 return;
 
-            string title = $"ShouldBeSpawned:{tam.ShouldBeSpawned}__IsLocallySpawned:{tamer.IsLocallySpawned}__IsMonsterSynced:{tamer.IsMonsterSynced}";
-
-            var markerHeight = 0f;
+            if (tamer.Tamer != null)
+            {
+                var markerHeight = tamer.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
+                marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+            }
+#if TESTING
+            string title = tamer.Tamer?.GetClass().GetName() ?? "";
             if (tamer.Pawn != null)
             {
-                markerHeight = tamer.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-                marker.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} Blue", true);
-                marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+                marker.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.BlueTeamColor}", true);
             }
             else if (tamer.Tamer != null)
             {
-                markerHeight = tamer.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-                marker.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} Red", true);
-                marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+                marker.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.RedTeamColor}", true);
             }
+#endif
         });
     }
 }

@@ -28,6 +28,8 @@ namespace WukongMp.Api.Configuration
         public const int MaxPlayers = 20;
         public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;
+        public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
+        public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
         public const int ReconnectDelayMs = 1000;
         public const float CutsceneSyncDistance = 2000f;
         public const float RestrictedMovementRadius = 500f;

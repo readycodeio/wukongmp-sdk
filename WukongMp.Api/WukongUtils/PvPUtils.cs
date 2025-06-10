@@ -83,12 +83,12 @@ public class PvPUtils
         });
     }
 
-    public static string GetTeamName(int teamId)
+    public static string GetTeamColorString(int teamId)
     {
         if (teamId == Constants.AvailableTeamIds[0])
-            return "Red";
+            return Constants.RedTeamColor;
         if (teamId == Constants.AvailableTeamIds[1])
-            return "Blue";
+            return Constants.BlueTeamColor;
         return "";
     }
 
