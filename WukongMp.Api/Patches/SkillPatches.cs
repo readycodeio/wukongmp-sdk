@@ -166,7 +166,7 @@ public static class PatchOnCastImmobilize
             return false;
         }
 
-        Debug.Assert(aBGUCharacter != null, "CurrentTarget As BGUCharacter is null");
+        DebugHelper.AssertNotNull(aBGUCharacter, "CurrentTarget As BGUCharacter is null");
         int num = cachedImmobilizeConfigDesc.TargetCount <= 0 ? 1 : cachedImmobilizeConfigDesc.TargetCount;
         List<AActor> outActors = [];
         if (num > 1)
