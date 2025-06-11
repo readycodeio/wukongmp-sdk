@@ -1,5 +1,10 @@
-﻿using Friflo.Engine.ECS;
+﻿using System.Reflection.Metadata;
+using System.Threading;
+using System.Threading.Tasks;
+using Friflo.Engine.ECS;
+using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Wukong.Components;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Old;
@@ -38,4 +43,16 @@ public partial class WukongMpMod : WukongMpModBase
 
         World.Query<HpComponent, LocalTamerComponent>().Each(new ScaleMonsterHpJob(scaling));
     }
+
+    public Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
+        => Blobs.UploadBlobAsync(new BlobInfo(Constants.CoopWorldArchiveName, content), ct);
+
+    public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default) => Blobs.DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
+
+    public Task<bool> UploadPlayerSaveAsync(byte[] content, CancellationToken ct = default)
+        => Blobs.UploadBlobAsync(new BlobInfo(PlayerSaveName, content), ct);
+
+    public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default) => Blobs.DownloadBlobAsync(PlayerSaveName, ct);
+
+    private static string PlayerSaveName => $"player_{CmdLineParams.Instance.UserGuid:N}.sav";
 }

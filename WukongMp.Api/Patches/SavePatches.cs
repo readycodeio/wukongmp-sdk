@@ -147,14 +147,10 @@ namespace WukongMp.Api.Patches
             else
             {
                 // Read archive with our co-op save.
-                var worldDownloadTask = WukongMpMod.Instance.Blobs.DownloadBlob("world.sav");
-                var playerDownloadTask = WukongMpMod.Instance.Blobs.DownloadBlob("player.sav"); // TODO
+                var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
+                var playerDownloadTask = WukongMpMod.Instance.DownloadPlayerSaveAsync();
 
-                // spinlock until the download is complete
-                while (!worldDownloadTask.IsCompleted && !playerDownloadTask.IsCompleted)
-                {
-                    Thread.Sleep(100);
-                }
+                Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
 
                 if (worldDownloadTask.Result is null)
                 {
@@ -254,31 +250,38 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return false;
 
-            if (!WukongMpMod.Instance.IsMasterClient)
-                return false;
-
             var data = ArchiveWriteContainer.GameArchiveFile.GameArchivesDataBytes.ToByteArray();
 
             if (data == null)
                 return false;
 
             Logging.LogInformation("Will upload save to the cloud, ArchiveId: {ArchiveId}, Size: {Size} Mb", ArchiveId, (data.Length / (1024.0 * 1024.0)).ToString("F2"));
-            const string name = "world.sav"; // TODO
 
             Task.Run(async () =>
             {
-                var success = await WukongMpMod.Instance.Blobs.UploadBlob(new BlobInfo(name, data));
-                if (success)
+                if (WukongMpMod.Instance.IsMasterClient)
                 {
-                    Logging.LogInformation("Blob uploaded successfully: {Name}", name);
+                    var uploadedWorld = await WukongMpMod.Instance.UploadWorldSaveAsync(data);
+                    LogSuccess(uploadedWorld, "world save");
                 }
-                else
-                {
-                    Logging.LogError("Failed to upload blob: {Name}", name);
-                }
+
+                var uploadedPlayer = await WukongMpMod.Instance.UploadPlayerSaveAsync(data);
+                LogSuccess(uploadedPlayer, "player save");
             });
 
             return false;
+        }
+
+        private static void LogSuccess(bool success, string name)
+        {
+            if (success)
+            {
+                Logging.LogInformation("Blob uploaded successfully: {Name}", name);
+            }
+            else
+            {
+                Logging.LogError("Failed to upload blob: {Name}", name);
+            }
         }
     }
 
