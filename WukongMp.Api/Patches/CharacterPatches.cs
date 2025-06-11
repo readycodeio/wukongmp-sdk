@@ -474,7 +474,7 @@ namespace WukongMp.Api.Patches
                         return;
                     }
 
-                    Logging.LogWarning("Cleaning up monster: {Name}", Actor.GetFullName());
+                    Logging.LogDebug("Cleaning up monster: {Name}", Actor.GetFullName());
                     TamerUtils.CleanupMonster(entity.Value);
                 }
 

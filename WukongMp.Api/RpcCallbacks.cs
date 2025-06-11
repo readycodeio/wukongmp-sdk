@@ -6,7 +6,6 @@ using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
-using ReadyM.Relay.Common.Wukong.Components;
 using System;
 using System.Threading.Tasks;
 using UnrealEngine.Engine;

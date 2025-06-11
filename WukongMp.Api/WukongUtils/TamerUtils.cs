@@ -53,14 +53,14 @@ namespace WukongMp.Api.WukongUtils
         public static void WakeUpMonster(Entity tamerEntity)
         {
             var localTamerComp = tamerEntity.GetComponent<LocalTamerComponent>();
-            Logging.LogWarning("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+            Logging.LogDebug("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
 
             var monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
                 ref var tamerComp = ref tamerEntity.GetComponent<TamerComponent>();
                 var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
-                Logging.LogWarning("Monster {Guid} forced to spawn", tamerComp.Guid);
+                Logging.LogDebug("Monster {Guid} forced to spawn", tamerComp.Guid);
                 bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
             }
         }
@@ -124,7 +124,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void AddSpawnedUnit(int playerId, Entity entity)
         {
-            Logging.LogWarning("Adding spawned unit counter for entity: {Entity}", entity.ToString());
+            Logging.LogDebug("Adding spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
             localTamerComp.HoldingPeers.Add(playerId);
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
@@ -133,7 +133,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SubtractSpawnedUnit(int playerId, Entity entity)
         {
-            Logging.LogWarning("Subtracting spawned unit counter for entity: {Entity}", entity.ToString());
+            Logging.LogDebug("Subtracting spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
             SubtractSpawnedUnit(playerId, ref localTamerComp, ref tamerComp);
@@ -150,7 +150,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void ClearSpawnedUnit(Entity entity)
         {
-            Logging.LogWarning("Clearing spawned unit counter for entity: {Entity}", entity.ToString());
+            Logging.LogDebug("Clearing spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
             localTamerComp.HoldingPeers.Clear();
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
