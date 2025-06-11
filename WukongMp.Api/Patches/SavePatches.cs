@@ -144,7 +144,7 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
                 OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
             }
-            else
+            else if (false) // TODO: Enable this after we refactor the client to be always on for co-op
             {
                 // Read archive with our co-op save.
                 var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
