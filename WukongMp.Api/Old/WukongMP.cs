@@ -2,8 +2,10 @@
 using b1.Plugins.AsyncLoadingScreen;
 using BtlShare;
 using CSharpModBase;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Wukong.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +15,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
+using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Old.Enums;
 using WukongMp.Api.Old.State;
@@ -534,6 +537,8 @@ namespace WukongMp.Api.Old
             UpdateConnectedCount();
             LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             CoopStatusWidget.Instance.RemovePlayer(playerState.NickName);
+
+            WukongMpMod.Instance.World.Query<TamerComponent, LocalTamerComponent>().Each(new ClearPlayerTamersJob(playerState.PeerId));
         }
 
         private void UpdateConnectedCount()

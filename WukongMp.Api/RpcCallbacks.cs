@@ -3,6 +3,7 @@ using b1.BGW;
 using BtlShare;
 using CSharpModBase;
 using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -585,33 +586,41 @@ public partial class WukongMpMod
         IronBodyUtils.TriggerIronBody(player.Pawn);
     }
 
-    [RpcEvent(RelayMode.Master)]
-    void OnUnitSpawned(NetworkIdComponent netEntity)
+    [RpcEvent(RelayMode.All)]
+    void OnUnitSpawned(short __sender, NetworkIdComponent netEntity)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
         {
-            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+
+        if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+        {
+            if (entity.HasValue)
             {
-                if (entity.HasValue)
-                {
-                    TamerUtils.AddSpawnedUnit(entity.Value);
-                }
+                TamerUtils.AddSpawnedUnit(player.PeerId, entity.Value);
             }
-        }, nameof(OnUnitSpawned));
+        }
     }
 
-    [RpcEvent(RelayMode.Master)]
-    void OnUnitDespawn(NetworkIdComponent netEntity)
+    [RpcEvent(RelayMode.All)]
+    void OnUnitDespawn(short __sender, NetworkIdComponent netEntity)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
         {
-            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+
+        if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+        {
+            if (entity.HasValue)
             {
-                if (entity.HasValue)
-                {
-                    TamerUtils.SubtractSpawnedUnit(entity.Value);
-                }
+                TamerUtils.SubtractSpawnedUnit(player.PeerId, entity.Value);
             }
-        }, nameof(OnUnitDespawn));
+        }
     }
 }

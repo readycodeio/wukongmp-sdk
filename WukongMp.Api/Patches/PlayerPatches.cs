@@ -423,14 +423,14 @@ namespace WukongMp.Api.Patches
                     localTamerComp.IsLocallySpawned = false;
                 }
 
-                if (!client.IsMasterClient)
-                    return;
-
                 if (entity.Value.HasComponent<TamerComponent>())
                 {
                     ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
                     TamerUtils.ClearSpawnedUnit(entity.Value);
                 }
+
+                if (!client.IsMasterClient)
+                    return;
 
                 if (entity.Value.TryGetComponent<NetworkIdComponent>(out var networkId))
                 {
