@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
@@ -8,6 +10,7 @@ using B1UI.GSUI;
 using BtlB1;
 using CommB1;
 using HarmonyLib;
+using ReadyM.Relay.Common;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -17,7 +20,7 @@ namespace WukongMp.Api.Patches
 {
     internal static class SavePatchesData
     {
-        public static bool CustomSaveEnabled;
+        public static bool RedirectSaveFiles = Constants.IsCoop;
         public static bool ShouldCacheSave;
     }
 
@@ -28,7 +31,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(ref string __result, string SlotName, string UserId)
         {
-            if (!SavePatchesData.CustomSaveEnabled)
+            if (!SavePatchesData.RedirectSaveFiles)
                 return true;
 
             if (!SlotName.StartsWith("ArchiveSaveFile"))
@@ -62,7 +65,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(UObject WorldContext)
         {
-            SavePatchesData.CustomSaveEnabled = true;
+            SavePatchesData.RedirectSaveFiles = true;
             GSGMSvc.ClearAllAutoRunTag();
             if (BGW_GameLifeTimeMgr.Get(WorldContext).IsInFSMState(SGI_Global.MainMenu))
             {
@@ -96,7 +99,7 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (!SavePatchesData.CustomSaveEnabled)
+            if (!SavePatchesData.RedirectSaveFiles)
             {
                 if (SavePatchesData.ShouldCacheSave)
                 {
@@ -104,15 +107,14 @@ namespace WukongMp.Api.Patches
                     var characterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, ArchiveId);
                     var characterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(characterArchiveSlotName, __instance.ArchiveWorker.UserId);
 
-                    SavePatchesData.CustomSaveEnabled = true;
+                    SavePatchesData.RedirectSaveFiles = true;
                     var newCharacterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId);
                     var newCharacterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(newCharacterArchiveSlotName, __instance.ArchiveWorker.UserId);
                     File.Copy(characterArchiveFullName, newCharacterArchiveFullName, true);
                 }
                 else
                 {
-                    SavePatchesData.CustomSaveEnabled = true;
-                    // TODO: Pull save from the cloud
+                    SavePatchesData.RedirectSaveFiles = true;
                     var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var characterGameArchiveData, out var characterArchiveCanBeRepaired);
                     if (characterReadArchiveResult == ReadArchiveResult.Success)
                     {
@@ -142,14 +144,64 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
                 OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
             }
-            else
+            else if (false) // TODO: Enable this after we refactor the client to be always on for co-op
             {
-                //OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapId = 10;
-                //OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = 1;
-                //OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = 1004;
+                // Read archive with our co-op save.
+                var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
+                var playerDownloadTask = WukongMpMod.Instance.DownloadPlayerSaveAsync();
+
+                Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
+
+                if (worldDownloadTask.Result is null)
+                {
+                    Logging.LogError("Failed to download world save file from the cloud");
+                    return;
+                }
+
+                if (playerDownloadTask.Result is null)
+                {
+                    Logging.LogError("Failed to download player save file from the cloud");
+                    return;
+                }
+
+                var worldData = worldDownloadTask.Result.Content;
+                var playerData = playerDownloadTask.Result.Content;
+
+                // we need to write the data as file to read it
+                var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
+                var worldSavePath = GSWindowsPlatformSaveGame.GetFileFullName(worldSaveName, __instance.ArchiveWorker.UserId);
+                File.WriteAllBytes(worldSavePath, worldData);
+
+                var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopPlayerArchiveId);
+                var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
+                File.WriteAllBytes(playerSavePath, playerData);
+
+                var readWorldResult = __instance.ReadArchiveData(Constants.CoopWorldArchiveId, out var worldArchiveData, out var archiveCanBeRepaired);
+                if (readWorldResult != ReadArchiveResult.Success)
+                {
+                    Logging.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
+                    return;
+                }
+
+                var readPlayerResult = __instance.ReadArchiveData(Constants.CoopPlayerArchiveId, out var playerArchiveData, out archiveCanBeRepaired);
+                if (readPlayerResult != ReadArchiveResult.Success)
+                {
+                    Logging.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);
+                    return;
+                }
+
+                OutArchiveData = playerArchiveData.GameArchiveData;
+
+                // Keep only RoleData with player state
+
+                // World data:
+                OutArchiveData.LevelArchiveData = worldArchiveData.GameArchiveData.LevelArchiveData;
+                OutArchiveData.PersistentECSData = worldArchiveData.GameArchiveData.PersistentECSData;
+                OutArchiveData.StateMachineArchiveData = worldArchiveData.GameArchiveData.StateMachineArchiveData;
+                OutArchiveData.TaskArchiveData = worldArchiveData.GameArchiveData.TaskArchiveData;
             }
 
-            SavePatchesData.CustomSaveEnabled = false;
+            SavePatchesData.RedirectSaveFiles = false;
 
             if (!Constants.IsCoop)
             {
@@ -183,22 +235,53 @@ namespace WukongMp.Api.Patches
                 WukongMP.Instance.DisableArchiveSave = true;
                 return false;
             }
-            
-            // TODO: else, Upload save
 
             return true;
         }
     }
 
     //// Disable adding save game requests
-    [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), new[] { typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>) })]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public class PatchArchiveReadWriterAppendArchive1
+    [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
         {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return false;
+
+            var data = ArchiveWriteContainer.GameArchiveFile.GameArchivesDataBytes.ToByteArray();
+
+            if (data == null)
+                return false;
+
+            Logging.LogInformation("Will upload save to the cloud, ArchiveId: {ArchiveId}, Size: {Size} Mb", ArchiveId, (data.Length / (1024.0 * 1024.0)).ToString("F2"));
+
+            Task.Run(async () =>
+            {
+                if (WukongMpMod.Instance.IsMasterClient)
+                {
+                    var uploadedWorld = await WukongMpMod.Instance.UploadWorldSaveAsync(data);
+                    LogSuccess(uploadedWorld, "world save");
+                }
+
+                var uploadedPlayer = await WukongMpMod.Instance.UploadPlayerSaveAsync(data);
+                LogSuccess(uploadedPlayer, "player save");
+            });
+
             return false;
-            // TODO: Upload save
+        }
+
+        private static void LogSuccess(bool success, string name)
+        {
+            if (success)
+            {
+                Logging.LogInformation("Blob uploaded successfully: {Name}", name);
+            }
+            else
+            {
+                Logging.LogError("Failed to upload blob: {Name}", name);
+            }
         }
     }
 

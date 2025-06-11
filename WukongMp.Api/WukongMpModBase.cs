@@ -31,7 +31,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
     [Obsolete]
     public static WukongClient Client => WukongMP.Instance.Client;
 
-    public IBlobClient Blobs => RelayClient;
+    protected IBlobClient Blobs => RelayClient;
 
     protected WukongMpModBase() : base(
         CmdLineParams.Instance.UserGuid,

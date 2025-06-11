@@ -22,6 +22,8 @@ namespace WukongMp.Api.Configuration
         public const float PvpStartingRadius = 500;
         public const float PvpMonsterRadius = 1000;
         public const float CameraArmLength = 720;
+        public const int CoopWorldArchiveId = 7;
+        public const int CoopPlayerArchiveId = 8;
         public const int CharacterArchiveId = 10;
         public const int NewCharacterArchiveId = 9;
         public const int WorldArchiveId = 0;
@@ -64,7 +66,8 @@ namespace WukongMp.Api.Configuration
 
         public const string DebugCubeActorPath = "/Game/Mods/DebugMod/BP_DebugCube.BP_DebugCube_C";
         public const string DebugSphereActorPath = "/Game/Mods/DebugMod/BP_DebugShpere.BP_DebugShpere_C";
-        
+        public const string CoopWorldArchiveName = "world.sav";
+
         public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
             #region Calculated Attributes
 

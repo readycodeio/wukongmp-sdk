@@ -64,7 +64,7 @@ namespace WukongMp.Api.Patches
                 case 151:
                     return BGW_TickGroupMask.TG_BeforePostUpdateWork;
                 default:
-                    Logging.LogError("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
+                    Logging.LogWarning("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
                     return BGW_TickGroupMask.TG_None;
             }
         }
@@ -74,10 +74,15 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public static class ReceiveTickPatch
     {
-        public static void Prefix(int TickGroup)
+        public static void Prefix(ref int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
             Logging.LogTrace("[{Thread}] Starting tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
+
+            if (mask == BGW_TickGroupMask.TG_None)
+            {
+                TickGroup = 3;
+            }
         }
 
         public static void Postfix(int TickGroup)
