@@ -720,4 +720,19 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "EnableCollision")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchEnableCollision
+    {
+        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
+            Logging.LogWarning("BUS_QuestDynamicObstacleComp.EnableCollision called for {Guid}", guid);
+
+            return !DisabledCollidersData.IsDisabled(guid);
+        }
+    }
 }
