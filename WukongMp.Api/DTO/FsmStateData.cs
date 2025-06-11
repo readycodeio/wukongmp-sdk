@@ -7,6 +7,6 @@ namespace WukongMp.Api.DTO;
 [DeriveINetSerializable]
 public partial struct FsmStateData(NetworkIdComponent netId, string fsmStateName) : INetSerializable
 {
-    public NetworkIdComponent NetId { get; } = netId;
-    public string FsmStateName { get; } = fsmStateName;
+    public NetworkIdComponent NetId= netId;
+    public string FsmStateName = fsmStateName;
 }
