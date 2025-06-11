@@ -42,7 +42,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
         {
             WukongCoreApi.SetUpMonsterArchetype(b);
             b.Add<MarkerComponent>()
-                .Add<LocalTamerComponent>();
+                .Add(new LocalTamerComponent { HoldingPeers = [] });
         });
 
         _sendEcsDeltaSystem = new SendEcsDeltaSystem(RelayClient)
