@@ -5,6 +5,7 @@ using b1;
 using b1.BGW;
 using BtlShare;
 using Friflo.Engine.ECS;
+using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
@@ -21,7 +22,7 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class SpawningUtils
 {
-    public static PlayerState? SpawnCloneForPlayer(short peerId)
+    public static PlayerState? SpawnCloneForPlayer(UserId peerId)
     {
         if (WukongMpMod.Client.ConnectedPlayers.ContainsKey(peerId))
         {
@@ -208,7 +209,7 @@ public static class SpawningUtils
         return newCharacter;
     }
 
-    public static void SpawnUnitsMaster(short peerId, string unitName, int count, int teamId)
+    public static void SpawnUnitsMaster(UserId peerId, string unitName, int count, int teamId)
     {
         var playerState = WukongMpModBase.Client.GetPlayerById(peerId);
         if (playerState == null || playerState.Pawn == null)

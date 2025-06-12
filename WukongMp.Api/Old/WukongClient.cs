@@ -11,6 +11,7 @@ using BtlShare;
 using CSharpModBase;
 using LiteNetLib;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -25,13 +26,13 @@ namespace WukongMp.Api.Old;
 public sealed class WukongClient
 {
     public RelayClient RelayClient => WukongMpMod.Instance.RelayClient;
-    private short PeerId => RelayClient.PeerId; // is -1 before joining room
+    private UserId PeerId => RelayClient.PeerId; // is -1 before joining room
     public bool IsMasterClient => WukongMpMod.Instance.IsMasterClient;
     public bool ConnectedAndInRoom => WukongMpMod.Instance.RelayClient.InRoom;
 
     private readonly Action _beforeJoinedRoomCallback;
     private readonly Action _afterJoinedRoomCallback;
-    private readonly Action<short> _playerJoinedCallback;
+    private readonly Action<UserId> _playerJoinedCallback;
 
     public WukongChatter WukongChat { get; }
     public LobbyManager LobbyManager { get; }
@@ -54,7 +55,7 @@ public sealed class WukongClient
 
     public RoomStateProxy RoomState { get; }
 
-    public readonly Dictionary<short, PlayerState> ConnectedPlayers = new();
+    public readonly Dictionary<UserId, PlayerState> ConnectedPlayers = new();
 
     public IEnumerable<PlayerState> AllConnectedPlayers
         => ConnectedPlayers.Values.Append(LocalPlayerState);
@@ -65,13 +66,13 @@ public sealed class WukongClient
     public IEnumerable<PlayerState> AllPvPPlayers
         => ConnectedPlayers.Values.Where(p => !p.IsSpectator).Concat(LocalPlayerState.IsSpectator ? [] : [LocalPlayerState]);
 
-    public event Action<short, EquipmentState>? OnEquipmentChange;
+    public event Action<UserId, EquipmentState>? OnEquipmentChange;
     public event Action<string, bool, int>? OnReadinessChange;
     public event Action<PlayerState, int>? OnTeamChange;
     public event Action<PlayerState>? OnPlayerLeft;
     public event Action? OnBeforeJoinRoom;
 
-    public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<short> playerJoinedCallback)
+    public WukongClient(Action onBeforeJoinedRoom, Action onAfterJoinedRoom, Action<UserId> playerJoinedCallback)
     {
         // TODO: Figure out ownership
         WukongChat = new WukongChatter(this, WukongMpMod.Instance);
@@ -115,11 +116,11 @@ public sealed class WukongClient
     }
 
     [Obsolete]
-    public PlayerState? GetPlayerById(short peerId)
+    public PlayerState? GetPlayerById(UserId userId)
     {
-        return peerId == LocalPlayerState.PeerId
+        return userId == LocalPlayerState.PeerId
             ? LocalPlayerState
-            : ConnectedPlayers.GetValueOrDefault(peerId);
+            : ConnectedPlayers.GetValueOrDefault(userId);
     }
 
     public void SetMasterClient(string newMasterName)
@@ -431,7 +432,7 @@ public sealed class WukongClient
         CachePlayerProperty($"{Constants.AttributePrefix}{attr}", value);
     }
 
-    public void SetRemotePlayerProperty(short peerId, string key, object value)
+    public void SetRemotePlayerProperty(UserId peerId, string key, object value)
     {
         if (!IsMasterClient)
         {
@@ -555,13 +556,13 @@ public sealed class WukongClient
         }
     }
 
-    private void OtherPlayerJoinedRoomHandler(short playerId)
+    private void OtherPlayerJoinedRoomHandler(UserId playerId)
     {
         Logging.LogInformation("Player {PlayerId} entered the room", playerId);
         _playerJoinedCallback.Invoke(playerId);
     }
 
-    private void OnPlayerLeftRoomHandler(short playerId)
+    private void OnPlayerLeftRoomHandler(UserId playerId)
     {
         var player = RelayClient.GetPlayerState(playerId)!;
         var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");
@@ -589,7 +590,7 @@ public sealed class WukongClient
         }
     }
 
-    private void OnPlayerPropertiesChanged(short peerId, Dictionary<object, object?> changes)
+    private void OnPlayerPropertiesChanged(UserId peerId, Dictionary<object, object?> changes)
     {
         PlayerState playerState;
 

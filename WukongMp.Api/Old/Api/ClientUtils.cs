@@ -22,8 +22,6 @@ namespace WukongMp.Api.Old.Api
             {
                 team2RelationInfo.HostileTeamIDs.Add(team1);
             }
-
-            // TODO: set damage reduction ratio
         }
 
         public static void UnregisterTeamHostility(int team1, int team2)
@@ -35,8 +33,6 @@ namespace WukongMp.Api.Old.Api
 
             team1RelationInfo.HostileTeamIDs.Remove(team2);
             team2RelationInfo.HostileTeamIDs.Remove(team1);
-
-            // TODO: unset damage reduction ratio
         }
 
         public static void RegisterNewPlayerTeam(BGUCharacterCS actor, int newTeamId)

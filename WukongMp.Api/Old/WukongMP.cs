@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -462,7 +463,7 @@ namespace WukongMp.Api.Old
             Logging.LogDebug("Finished setting initial player properties");
         }
 
-        private void ChangeEquipment(short peerId, EquipmentState eq)
+        private void ChangeEquipment(UserId peerId, EquipmentState eq)
         {
             if (peerId == Client.LocalPlayerState.PeerId)
                 return;
@@ -598,11 +599,11 @@ namespace WukongMp.Api.Old
             }
         }
 
-        private FVector GetSpawnPosition(short peerId)
+        private FVector GetSpawnPosition(UserId peerId)
         {
             int maxPlayersCount = Client.RoomState.MaxPlayers;
 
-            float angle = peerId / (float)maxPlayersCount * 2f * FMath.PI;
+            float angle = peerId.RawValue / (float)maxPlayersCount * 2f * FMath.PI;
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
             float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
@@ -651,7 +652,7 @@ namespace WukongMp.Api.Old
             }
         }
 
-        private void AddPlayer(short peerId)
+        private void AddPlayer(UserId peerId)
         {
             var playerState = SpawningUtils.SpawnCloneForPlayer(peerId);
 

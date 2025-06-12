@@ -1,4 +1,5 @@
 ﻿using b1;
+using ReadyM.Relay.Common;
 using WukongMp.Api.Old;
 using WukongMp.Api.Patches;
 
@@ -6,7 +7,7 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class TransformationUtils
 {
-    public static void TransformPlayer(short peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
+    public static void TransformPlayer(UserId peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -30,7 +31,7 @@ public static class TransformationUtils
         }, nameof(TransformPlayer));
     }
 
-    public static void TransformPlayerBack(short peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
+    public static void TransformPlayerBack(UserId peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {

@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using b1;
 using Friflo.Engine.ECS;
+using ReadyM.Relay.Common;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;
 
@@ -14,7 +15,7 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     public bool IsMonsterSynced;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
-    public HashSet<int> HoldingPeers = [];
+    public HashSet<UserId> HoldingPeers = [];
     public bool IsLocallySpawned;
 
     public BUTamerActor? Tamer

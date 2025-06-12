@@ -8,6 +8,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using System;
 using System.Threading.Tasks;
+using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -78,7 +79,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnExitPhantomRush(short playerId)
+    private static void OnExitPhantomRush(UserId playerId)
     {
         var playerState = Client.GetPlayerById(playerId);
         if (playerState == null)
@@ -100,21 +101,21 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnAddBuff(short __sender, BuffAddData data)
+    private static void OnAddBuff(UserId __sender, BuffAddData data)
     {
         var playerState = Client.GetPlayerById(__sender);
         BuffUtils.AddBuff(playerState?.Pawn, data.BuffId, data.Duration);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnRemoveBuff(short __sender, BuffRemoveData data)
+    private static void OnRemoveBuff(UserId __sender, BuffRemoveData data)
     {
         var state = Client.GetPlayerById(__sender);
         BuffUtils.RemoveBuff(state?.Pawn, data.BuffId, data.TriggerType, data.Layer, data.WithTriggerRemoveEffect);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnRemoveAllBuffs(short __sender, BuffRemoveAllData data)
+    private static void OnRemoveAllBuffs(UserId __sender, BuffRemoveAllData data)
     {
         var playerState = Client.GetPlayerById(__sender);
         BuffUtils.RemoveAllBuffs(playerState?.Pawn, data.TriggerType, data.WithTriggerRemoveEffect);
@@ -155,19 +156,19 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Master)]
-    private static void OnSpawnUnits(short __sender, UnitSpawnRequestData data)
+    private static void OnSpawnUnits(UserId __sender, UnitSpawnRequestData data)
     {
         SpawningUtils.SpawnUnitsMaster(__sender, data.UnitName, data.Count, data.TeamId);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnPlayerTransBegin(short __sender, PlayerTransBeginData data)
+    private static void OnPlayerTransBegin(UserId __sender, PlayerTransBeginData data)
     {
         TransformationUtils.TransformPlayer(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransBeginType);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnPlayerTransEnd(short __sender, PlayerTransEndData data)
+    private static void OnPlayerTransEnd(UserId __sender, PlayerTransEndData data)
     {
         TransformationUtils.TransformPlayerBack(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransEndType);
     }
@@ -254,7 +255,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnPhantomRush(short __sender, ESkillDirection direction)
+    private void OnPhantomRush(UserId __sender, ESkillDirection direction)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -405,7 +406,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Master)]
-    private void OnSuicide(short __sender)
+    private void OnSuicide(UserId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -423,13 +424,13 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    private static void OnRebirthPlayer(short peerId)
+    private static void OnRebirthPlayer(UserId userId)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
+            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", userId);
 
-            var player = Client.GetPlayerById(peerId);
+            var player = Client.GetPlayerById(userId);
             if (player == null)
                 return;
 
@@ -459,7 +460,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    private static void OnTeleportFinish(short __sender)
+    private static void OnTeleportFinish(UserId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -563,13 +564,13 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnWaitingForSequence(short __sender, SequenceWaitingData data)
+    private void OnWaitingForSequence(UserId __sender, SequenceWaitingData data)
     {
         CutsceneUtils.SetWaitingForCutsceneStatus(__sender, data);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnIronBodyStart(short __sender)
+    private void OnIronBodyStart(UserId __sender)
     {
         var player = Client.GetPlayerById(__sender);
         if (player == null)
@@ -586,7 +587,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    void OnUnitSpawned(short __sender, NetworkIdComponent netEntity)
+    void OnUnitSpawned(UserId __sender, NetworkIdComponent netEntity)
     {
         var player = Client.GetPlayerById(__sender);
         if (player == null)
@@ -605,7 +606,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    void OnUnitDespawn(short __sender, NetworkIdComponent netEntity)
+    void OnUnitDespawn(UserId __sender, NetworkIdComponent netEntity)
     {
         var player = Client.GetPlayerById(__sender);
         if (player == null)

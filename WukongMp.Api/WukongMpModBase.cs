@@ -8,6 +8,7 @@ using LiteNetLib.Utils;
 using ReadyM.Api;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
@@ -81,7 +82,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
     {
         if (netId.Id == uint.MaxValue)
         {
-            var player = Client.GetPlayerById(netId.Owner);
+            var player = Client.GetPlayerById(netId.Creator);
             if (player != null)
                 return player.Pawn;
         }
@@ -139,7 +140,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
 
     private void OnRoomPropertiesChanged(Dictionary<object, object?> diff)
     {
-        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is short newMasterId)
+        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is UserId newMasterId)
         {
             Logging.LogInformation("Master client changed to {NewMasterId}", newMasterId);
 

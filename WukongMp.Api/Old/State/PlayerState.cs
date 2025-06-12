@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using b1;
 using BtlShare;
+using ReadyM.Relay.Common;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Old.Api;
 
@@ -54,7 +55,7 @@ namespace WukongMp.Api.Old.State
         public FVector SequenceLocation { get; set; }
         public int WaitingSequenceId { get; set; }
 
-        public PlayerState(short peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(UserId peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PeerId = peerId;
             _pawn = pawn;

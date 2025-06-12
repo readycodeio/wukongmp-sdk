@@ -468,7 +468,7 @@ namespace WukongMp.Api.Patches
                     var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     // only clean up own monsters
-                    if (netId.Owner != WukongMpMod.Instance.RelayClient.PeerId)
+                    if (netId.Creator != WukongMpMod.Instance.RelayClient.PeerId)
                     {
                         Logging.LogWarning("Skipping cleanup for remote monster");
                         return;

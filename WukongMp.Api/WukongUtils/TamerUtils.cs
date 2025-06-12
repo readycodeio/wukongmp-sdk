@@ -3,6 +3,7 @@ using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using System.Collections.Generic;
+using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
@@ -122,7 +123,7 @@ namespace WukongMp.Api.WukongUtils
             WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
         }
 
-        public static void AddSpawnedUnit(int playerId, Entity entity)
+        public static void AddSpawnedUnit(UserId playerId, Entity entity)
         {
             Logging.LogDebug("Adding spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
@@ -131,7 +132,7 @@ namespace WukongMp.Api.WukongUtils
             tamerComp.ShouldBeSpawned = true;
         }
 
-        public static void SubtractSpawnedUnit(int playerId, Entity entity)
+        public static void SubtractSpawnedUnit(UserId playerId, Entity entity)
         {
             Logging.LogDebug("Subtracting spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
@@ -139,7 +140,7 @@ namespace WukongMp.Api.WukongUtils
             SubtractSpawnedUnit(playerId, ref localTamerComp, ref tamerComp);
         }
 
-        public static void SubtractSpawnedUnit(int playerId, ref LocalTamerComponent localTamerComp, ref TamerComponent tamerComp)
+        public static void SubtractSpawnedUnit(UserId playerId, ref LocalTamerComponent localTamerComp, ref TamerComponent tamerComp)
         {
             localTamerComp.HoldingPeers.Remove(playerId);
             if (localTamerComp.HoldingPeers.Count == 0)
