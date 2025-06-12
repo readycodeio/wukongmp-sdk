@@ -161,7 +161,7 @@ namespace WukongMp.Api.Old
 
         public void HandleBecameSpectator(PlayerState playerState)
         {
-            var isMyself = playerState.PeerId == Client.LocalPlayerState.PeerId;
+            var isMyself = playerState.PlayerId == Client.LocalPlayerState.PlayerId;
 
             if (isMyself)
                 UIUtils.SetHudVisibility(false);
@@ -179,7 +179,7 @@ namespace WukongMp.Api.Old
 
         public void HandleStoppedBeingSpectator(PlayerState playerState)
         {
-            var isMyself = playerState.PeerId == Client.LocalPlayerState.PeerId;
+            var isMyself = playerState.PlayerId == Client.LocalPlayerState.PlayerId;
 
             if (isMyself)
                 UIUtils.SetHudVisibility(true);
@@ -463,14 +463,14 @@ namespace WukongMp.Api.Old
             Logging.LogDebug("Finished setting initial player properties");
         }
 
-        private void ChangeEquipment(UserId peerId, EquipmentState eq)
+        private void ChangeEquipment(PlayerId playerId, EquipmentState eq)
         {
-            if (peerId == Client.LocalPlayerState.PeerId)
+            if (playerId == Client.LocalPlayerState.PlayerId)
                 return;
 
-            if (!Client.ConnectedPlayers.TryGetValue(peerId, out var player))
+            if (!Client.ConnectedPlayers.TryGetValue(playerId, out var player))
             {
-                Logging.LogError("Player not found: {PlayerId}", peerId);
+                Logging.LogError("Player not found: {PlayerId}", playerId);
                 return;
             }
 
@@ -539,7 +539,7 @@ namespace WukongMp.Api.Old
             LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             CoopStatusWidget.Instance.RemovePlayer(playerState.NickName);
 
-            WukongMpMod.Instance.World.Query<TamerComponent, LocalTamerComponent>().Each(new ClearPlayerTamersJob(playerState.PeerId));
+            WukongMpMod.Instance.World.Query<TamerComponent, LocalTamerComponent>().Each(new ClearPlayerTamersJob(playerState.PlayerId));
         }
 
         private void UpdateConnectedCount()
@@ -574,8 +574,8 @@ namespace WukongMp.Api.Old
         {
             if (!Constants.IsCoop)
             {
-                var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PeerId);
-                var data = new PlayerTransformData(Client.LocalPlayerState.PeerId, spawnPosition, FRotator.ZeroRotator);
+                var spawnPosition = GetSpawnPosition(Client.LocalPlayerState.PlayerId);
+                var data = new PlayerTransformData(Client.LocalPlayerState.PlayerId, spawnPosition, FRotator.ZeroRotator);
                 WukongMpMod.Instance.OnBroadcastPlayerTransform(data);
             }
             else
@@ -599,17 +599,17 @@ namespace WukongMp.Api.Old
             }
         }
 
-        private FVector GetSpawnPosition(UserId peerId)
+        private FVector GetSpawnPosition(PlayerId playerId)
         {
             int maxPlayersCount = Client.RoomState.MaxPlayers;
 
-            float angle = peerId.RawValue / (float)maxPlayersCount * 2f * FMath.PI;
+            float angle = playerId.RawValue / (float)maxPlayersCount * 2f * FMath.PI;
             float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
             float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            return SpawningUtils.AdjustSpawnLocation(Client.GetPlayerById(peerId)?.Pawn, baseLocation);
+            return SpawningUtils.AdjustSpawnLocation(Client.GetPlayerById(playerId)?.Pawn, baseLocation);
         }
 
         private void SetUpRoom()
@@ -648,13 +648,13 @@ namespace WukongMp.Api.Old
             // when joining game, spawn all players already in room
             foreach (var player in Client.GetOtherPlayersInRoom())
             {
-                GameLoopPatch.QueueOnGameThread(() => AddPlayer(player.PeerId), "AddPlayer");
+                GameLoopPatch.QueueOnGameThread(() => AddPlayer(player.PlayerId), "AddPlayer");
             }
         }
 
-        private void AddPlayer(UserId peerId)
+        private void AddPlayer(PlayerId playerId)
         {
-            var playerState = SpawningUtils.SpawnCloneForPlayer(peerId);
+            var playerState = SpawningUtils.SpawnCloneForPlayer(playerId);
 
             if (playerState != null)
             {
@@ -662,7 +662,7 @@ namespace WukongMp.Api.Old
                 Client.RegisterPlayer(playerState);
                 UpdateConnectedCount();
 
-                var props = Client.RelayClient.GetPlayerState(peerId)?.Properties;
+                var props = Client.RelayClient.GetPlayerState(playerId)?.Properties;
 
                 if (props == null)
                 {
@@ -681,7 +681,7 @@ namespace WukongMp.Api.Old
                 // set remote player property - IsSpectator
                 if (Client.IsMasterClient)
                 {
-                    Client.SetRemotePlayerProperty(peerId, nameof(PlayerState.IsSpectator), isSpectator);
+                    Client.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
                 }
 
                 // readiness callback

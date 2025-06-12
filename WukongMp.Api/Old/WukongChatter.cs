@@ -89,7 +89,7 @@ namespace WukongMp.Api.Old
 
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
-            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PeerId);
+            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PlayerId);
             SendServerMessage("PlayerRequestedRebirth", NickName);
         }
 
@@ -97,7 +97,7 @@ namespace WukongMp.Api.Old
         {
             
             PlayerUtils.TeleportLocalPlayerToRebirthPoint();
-            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PeerId);
+            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PlayerId);
             SendServerMessage("PlayerRequestedRebirth", NickName);
         }
 
@@ -140,7 +140,7 @@ namespace WukongMp.Api.Old
                 if (player == null)
                     return;
 
-                _wukongClient.SetRemotePlayerProperty(player.PeerId, nameof(PlayerState.IsSpectator), isSpectator);
+                _wukongClient.SetRemotePlayerProperty(player.PlayerId, nameof(PlayerState.IsSpectator), isSpectator);
             }
         }
 

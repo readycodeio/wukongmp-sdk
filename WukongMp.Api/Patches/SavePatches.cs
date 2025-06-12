@@ -29,7 +29,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchWindowsSaveGame
     {
-        public static bool Prefix(ref string __result, string SlotName, string UserId)
+        public static bool Prefix(ref string __result, string SlotName, string PlayerId)
         {
             if (!SavePatchesData.RedirectSaveFiles)
                 return true;

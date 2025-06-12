@@ -7,14 +7,14 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class TransformationUtils
 {
-    public static void TransformPlayer(UserId peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
+    public static void TransformPlayer(PlayerId playerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var playerState = WukongMpModBase.Client.GetPlayerById(peerId);
+            var playerState = WukongMpModBase.Client.GetPlayerById(playerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", peerId);
+                Logging.LogError("Player not found: {Id}", playerId);
                 return;
             }
 
@@ -31,14 +31,14 @@ public static class TransformationUtils
         }, nameof(TransformPlayer));
     }
 
-    public static void TransformPlayerBack(UserId peerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
+    public static void TransformPlayerBack(PlayerId playerId, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var playerState = WukongMpModBase.Client.GetPlayerById(peerId);
+            var playerState = WukongMpModBase.Client.GetPlayerById(playerId);
             if (playerState == null)
             {
-                Logging.LogError("Player not found: {Id}", peerId);
+                Logging.LogError("Player not found: {Id}", playerId);
                 return;
             }
 

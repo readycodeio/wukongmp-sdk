@@ -123,16 +123,16 @@ namespace WukongMp.Api.WukongUtils
             WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
         }
 
-        public static void AddSpawnedUnit(UserId playerId, Entity entity)
+        public static void AddSpawnedUnit(PlayerId playerId, Entity entity)
         {
             Logging.LogDebug("Adding spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
-            localTamerComp.HoldingPeers.Add(playerId);
+            localTamerComp.HoldingPlayers.Add(playerId);
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
             tamerComp.ShouldBeSpawned = true;
         }
 
-        public static void SubtractSpawnedUnit(UserId playerId, Entity entity)
+        public static void SubtractSpawnedUnit(PlayerId playerId, Entity entity)
         {
             Logging.LogDebug("Subtracting spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
@@ -140,10 +140,10 @@ namespace WukongMp.Api.WukongUtils
             SubtractSpawnedUnit(playerId, ref localTamerComp, ref tamerComp);
         }
 
-        public static void SubtractSpawnedUnit(UserId playerId, ref LocalTamerComponent localTamerComp, ref TamerComponent tamerComp)
+        public static void SubtractSpawnedUnit(PlayerId playerId, ref LocalTamerComponent localTamerComp, ref TamerComponent tamerComp)
         {
-            localTamerComp.HoldingPeers.Remove(playerId);
-            if (localTamerComp.HoldingPeers.Count == 0)
+            localTamerComp.HoldingPlayers.Remove(playerId);
+            if (localTamerComp.HoldingPlayers.Count == 0)
             {
                 tamerComp.ShouldBeSpawned = false;
             }
@@ -153,7 +153,7 @@ namespace WukongMp.Api.WukongUtils
         {
             Logging.LogDebug("Clearing spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
-            localTamerComp.HoldingPeers.Clear();
+            localTamerComp.HoldingPlayers.Clear();
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
             tamerComp.ShouldBeSpawned = false;
         }

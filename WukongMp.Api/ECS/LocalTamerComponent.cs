@@ -15,7 +15,7 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     public bool IsMonsterSynced;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
-    public HashSet<UserId> HoldingPeers = [];
+    public HashSet<PlayerId> HoldingPlayers = [];
     public bool IsLocallySpawned;
 
     public BUTamerActor? Tamer

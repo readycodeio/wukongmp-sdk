@@ -55,9 +55,9 @@ namespace WukongMp.Api.Old.State
         public FVector SequenceLocation { get; set; }
         public int WaitingSequenceId { get; set; }
 
-        public PlayerState(UserId peerId, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(PlayerId id, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
-            PeerId = peerId;
+            PlayerId = id;
             _pawn = pawn;
             TeamId = teamId;
             Hp = initialHp;

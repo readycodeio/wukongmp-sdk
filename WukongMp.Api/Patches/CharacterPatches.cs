@@ -86,7 +86,7 @@ namespace WukongMp.Api.Patches
                         return;
                     }
 
-                    Logging.LogDebug("Applying unit dead for player {PlayerId}", client.LocalPlayerState.PeerId);
+                    Logging.LogDebug("Applying unit dead for player {PlayerId}", client.LocalPlayerState.PlayerId);
 
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
@@ -133,7 +133,7 @@ namespace WukongMp.Api.Patches
                             return;
                         }
 
-                        Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PeerId);
+                        Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PlayerId);
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
@@ -218,7 +218,7 @@ namespace WukongMp.Api.Patches
                         if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
                             remotePlayer.Hp = result;
-                            client.SetRemotePlayerProperty(remotePlayer.PeerId, nameof(PlayerState.Hp), result);
+                            client.SetRemotePlayerProperty(remotePlayer.PlayerId, nameof(PlayerState.Hp), result);
                         }
 
                         return;
@@ -468,7 +468,7 @@ namespace WukongMp.Api.Patches
                     var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     // only clean up own monsters
-                    if (netId.Creator != WukongMpMod.Instance.RelayClient.PeerId)
+                    if (netId.Creator != WukongMpMod.Instance.RelayClient.PlayerId)
                     {
                         Logging.LogWarning("Skipping cleanup for remote monster");
                         return;
@@ -533,16 +533,16 @@ namespace WukongMp.Api.Patches
                     if (Trigger == EBUStateTrigger.Die)
                         return;
 
-                    var peerId = entity.Value.GetComponent<NetworkIdComponent>();
+                    var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
-                    WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(peerId, Trigger, Time, NeedForceUpdate));
+                    WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
                     Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
 
             if (owner == client.LocalPlayerState.Pawn)
             {
-                WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(NetworkIdComponent.FromPlayerPeerId(client.LocalPlayerState.PeerId), Trigger, Time, NeedForceUpdate));
+                WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(NetworkIdComponent.FromPlayerId(client.LocalPlayerState.PlayerId), Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }

@@ -4,9 +4,9 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.DTO;
 
-public struct PlayerTransformData(UserId playerId, FVector location, FRotator rotation) : INetSerializable
+public struct PlayerTransformData(PlayerId playerId, FVector location, FRotator rotation) : INetSerializable
 {
-    public UserId PlayerId = playerId;
+    public PlayerId PlayerId = playerId;
     public FVector Location = location;
     public FRotator Rotation = rotation;
 
@@ -19,7 +19,7 @@ public struct PlayerTransformData(UserId playerId, FVector location, FRotator ro
 
     public void Deserialize(NetDataReader reader)
     {
-        PlayerId = reader.Get<UserId>();
+        PlayerId = reader.Get<PlayerId>();
         Location = (FVector)SerializationHelpers.DeserializeFVector(reader);
         Rotation = (FRotator)SerializationHelpers.DeserializeFRotator(reader);
     }

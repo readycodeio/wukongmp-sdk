@@ -35,7 +35,7 @@ public static class CutsceneUtils
         }, nameof(PlayCutscene));
     }
 
-    public static void SetWaitingForCutsceneStatus(UserId playerId, SequenceWaitingData sequenceWaitingData)
+    public static void SetWaitingForCutsceneStatus(PlayerId playerId, SequenceWaitingData sequenceWaitingData)
     {
         Logging.LogDebug("Setting WaitingForCutsceneStatus for player: {Id}, sequenceId {SequenceId}", playerId, sequenceWaitingData.SequenceID);
         var player = WukongMpModBase.Client.GetPlayerById(playerId);

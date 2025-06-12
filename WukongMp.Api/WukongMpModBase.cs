@@ -43,7 +43,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
         {
             WukongCoreApi.SetUpMonsterArchetype(b);
             b.Add<MarkerComponent>()
-                .Add(new LocalTamerComponent { HoldingPeers = [] });
+                .Add(new LocalTamerComponent { HoldingPlayers = [] });
         });
 
         _sendEcsDeltaSystem = new SendEcsDeltaSystem(RelayClient)
@@ -140,7 +140,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
 
     private void OnRoomPropertiesChanged(Dictionary<object, object?> diff)
     {
-        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is UserId newMasterId)
+        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is PlayerId newMasterId)
         {
             Logging.LogInformation("Master client changed to {NewMasterId}", newMasterId);
 

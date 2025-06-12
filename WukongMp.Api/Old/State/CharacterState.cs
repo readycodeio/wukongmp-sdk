@@ -8,7 +8,7 @@ namespace WukongMp.Api.Old.State
     public abstract class CharacterState
     {
         public abstract BGUCharacterCS? Pawn { get; set; }
-        public UserId PeerId { get; protected set; }
+        public PlayerId PlayerId { get; protected set; }
 
         public FVector Location { get; set; }
         public FRotator Rotation { get; set; }

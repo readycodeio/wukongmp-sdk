@@ -65,7 +65,7 @@ namespace WukongMp.Api.Old
 
                 teamMemberIndex[playerState.TeamId]++;
                 var newPlayerLocation = SpawningUtils.AdjustSpawnLocation(playerState.Pawn, new FVector(x, y, center.Z));
-                var payload = new PlayerTransformData(playerState.PeerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
+                var payload = new PlayerTransformData(playerState.PlayerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
                 mod.SendBroadcastPlayerTransform(payload);
             }
         }
@@ -169,7 +169,7 @@ namespace WukongMp.Api.Old
             {
                 if (player.IsDead)
                 {
-                    WukongMpMod.Instance.SendRebirthPlayer(player.PeerId);
+                    WukongMpMod.Instance.SendRebirthPlayer(player.PlayerId);
                 }
             }
 
