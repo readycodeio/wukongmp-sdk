@@ -74,10 +74,16 @@ namespace WukongMp.Api.WukongUtils
                 foreach (var actor in allActorsOfClass)
                 {
                     var tamerRef = actor.CurrentRef;
-                    Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, BGU_DataUtil.GetActorGuid(actor));
-                    if (tamerRef.Phase != ETamerPhase.Dead)
+                    var guid = BGU_DataUtil.GetActorGuid(actor);
+                    Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
+                    var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
+                    if (entity == null)
                     {
-                        SpawningUtils.CreateMonsterInEcs(BGU_DataUtil.GetActorGuid(actor), actor, 2, actor.PathName);
+                        SpawningUtils.CreateMonsterInEcs(guid, actor, 2, actor.PathName);
+                    }
+                    else
+                    {
+                        Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
                     }
                 }
             }

@@ -12,6 +12,7 @@ using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
+using ReadyM.Relay.Common.Wukong.Components;
 using ReadyM.Relay.Common.Wukong.Jobs;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
@@ -110,6 +111,23 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
         query.ForEachEntity((ref tamer, entity) =>
         {
             if (tamer.Pawn == actor)
+            {
+                entityId = entity;
+            }
+        });
+
+        return entityId;
+    }
+
+    public Entity? GetMonsterByGuid(string guid)
+    {
+        Entity? entityId = null;
+
+        var query = World.Query<TamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Guid == guid)
             {
                 entityId = entity;
             }
