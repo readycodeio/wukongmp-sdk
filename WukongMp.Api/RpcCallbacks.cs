@@ -3,11 +3,12 @@ using b1.BGW;
 using BtlShare;
 using CSharpModBase;
 using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
-using ReadyM.Relay.Common.Wukong.Components;
 using System;
 using System.Threading.Tasks;
+using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -78,7 +79,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnExitPhantomRush(short playerId)
+    private static void OnExitPhantomRush(PlayerId playerId)
     {
         var playerState = Client.GetPlayerById(playerId);
         if (playerState == null)
@@ -100,21 +101,21 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnAddBuff(short __sender, BuffAddData data)
+    private static void OnAddBuff(PlayerId __sender, BuffAddData data)
     {
         var playerState = Client.GetPlayerById(__sender);
         BuffUtils.AddBuff(playerState?.Pawn, data.BuffId, data.Duration);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnRemoveBuff(short __sender, BuffRemoveData data)
+    private static void OnRemoveBuff(PlayerId __sender, BuffRemoveData data)
     {
         var state = Client.GetPlayerById(__sender);
         BuffUtils.RemoveBuff(state?.Pawn, data.BuffId, data.TriggerType, data.Layer, data.WithTriggerRemoveEffect);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnRemoveAllBuffs(short __sender, BuffRemoveAllData data)
+    private static void OnRemoveAllBuffs(PlayerId __sender, BuffRemoveAllData data)
     {
         var playerState = Client.GetPlayerById(__sender);
         BuffUtils.RemoveAllBuffs(playerState?.Pawn, data.TriggerType, data.WithTriggerRemoveEffect);
@@ -155,19 +156,19 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Master)]
-    private static void OnSpawnUnits(short __sender, UnitSpawnRequestData data)
+    private static void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
     {
         SpawningUtils.SpawnUnitsMaster(__sender, data.UnitName, data.Count, data.TeamId);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnPlayerTransBegin(short __sender, PlayerTransBeginData data)
+    private static void OnPlayerTransBegin(PlayerId __sender, PlayerTransBeginData data)
     {
         TransformationUtils.TransformPlayer(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransBeginType);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnPlayerTransEnd(short __sender, PlayerTransEndData data)
+    private static void OnPlayerTransEnd(PlayerId __sender, PlayerTransEndData data)
     {
         TransformationUtils.TransformPlayerBack(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransEndType);
     }
@@ -254,7 +255,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnPhantomRush(short __sender, ESkillDirection direction)
+    private void OnPhantomRush(PlayerId __sender, ESkillDirection direction)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -278,7 +279,7 @@ public partial class WukongMpMod
     public void OnBroadcastPlayerTransform(PlayerTransformData data)
     {
         // TODO: Use targeted RPC mode (select which peers to send to)
-        if (data.PlayerId != RelayClient.PeerId)
+        if (data.PlayerId != RelayClient.PlayerId)
             return;
 
         PlayerUtils.TeleportLocalPlayer(data.Location, data.Rotation, false);
@@ -340,7 +341,7 @@ public partial class WukongMpMod
                     {
                         foreach (var playerState in Client.SpectatingPlayers)
                         {
-                            Client.SetRemotePlayerProperty(playerState.PeerId, nameof(PlayerState.IsSpectator), false);
+                            Client.SetRemotePlayerProperty(playerState.PlayerId, nameof(PlayerState.IsSpectator), false);
                         }
                     }
 
@@ -405,7 +406,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Master)]
-    private void OnSuicide(short __sender)
+    private void OnSuicide(PlayerId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -423,17 +424,17 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    private static void OnRebirthPlayer(short peerId)
+    private static void OnRebirthPlayer(PlayerId playerId)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", peerId);
+            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
 
-            var player = Client.GetPlayerById(peerId);
+            var player = Client.GetPlayerById(playerId);
             if (player == null)
                 return;
 
-            if (player.PeerId == Client.LocalPlayerState.PeerId)
+            if (player.PlayerId == Client.LocalPlayerState.PlayerId)
             {
                 FreeCameraManager.Instance.LeaveFreeCameraMode();
             }
@@ -459,7 +460,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    private static void OnTeleportFinish(short __sender)
+    private static void OnTeleportFinish(PlayerId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -563,13 +564,13 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnWaitingForSequence(short __sender, SequenceWaitingData data)
+    private void OnWaitingForSequence(PlayerId __sender, SequenceWaitingData data)
     {
         CutsceneUtils.SetWaitingForCutsceneStatus(__sender, data);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnIronBodyStart(short __sender)
+    private void OnIronBodyStart(PlayerId __sender)
     {
         var player = Client.GetPlayerById(__sender);
         if (player == null)
@@ -585,33 +586,41 @@ public partial class WukongMpMod
         IronBodyUtils.TriggerIronBody(player.Pawn);
     }
 
-    [RpcEvent(RelayMode.Master)]
-    void OnUnitSpawned(NetworkIdComponent netEntity)
+    [RpcEvent(RelayMode.All)]
+    void OnUnitSpawned(PlayerId __sender, NetworkIdComponent netEntity)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
         {
-            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+
+        if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+        {
+            if (entity.HasValue)
             {
-                if (entity.HasValue)
-                {
-                    TamerUtils.AddSpawnedUnit(entity.Value);
-                }
+                TamerUtils.AddSpawnedUnit(player.PlayerId, entity.Value);
             }
-        }, nameof(OnUnitSpawned));
+        }
     }
 
-    [RpcEvent(RelayMode.Master)]
-    void OnUnitDespawn(NetworkIdComponent netEntity)
+    [RpcEvent(RelayMode.All)]
+    void OnUnitDespawn(PlayerId __sender, NetworkIdComponent netEntity)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
         {
-            if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+
+        if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+        {
+            if (entity.HasValue)
             {
-                if (entity.HasValue)
-                {
-                    TamerUtils.SubtractSpawnedUnit(entity.Value);
-                }
+                TamerUtils.SubtractSpawnedUnit(player.PlayerId, entity.Value);
             }
-        }, nameof(OnUnitDespawn));
+        }
     }
 }

@@ -3,6 +3,7 @@ using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using System.Collections.Generic;
+using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
@@ -53,14 +54,14 @@ namespace WukongMp.Api.WukongUtils
         public static void WakeUpMonster(Entity tamerEntity)
         {
             var localTamerComp = tamerEntity.GetComponent<LocalTamerComponent>();
-            Logging.LogWarning("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+            Logging.LogDebug("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
 
             var monster = localTamerComp.Tamer?.GetMonster();
             if (monster == null)
             {
                 ref var tamerComp = ref tamerEntity.GetComponent<TamerComponent>();
                 var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
-                Logging.LogWarning("Monster {Guid} forced to spawn", tamerComp.Guid);
+                Logging.LogDebug("Monster {Guid} forced to spawn", tamerComp.Guid);
                 bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
             }
         }
@@ -122,33 +123,37 @@ namespace WukongMp.Api.WukongUtils
             WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
         }
 
-        public static void AddSpawnedUnit(Entity entity)
+        public static void AddSpawnedUnit(PlayerId playerId, Entity entity)
         {
-            Logging.LogWarning("Adding spawned unit counter for entity: {Entity}", entity.ToString());
+            Logging.LogDebug("Adding spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
-            localTamerComp.SpawnedCounter++;
+            localTamerComp.HoldingPlayers.Add(playerId);
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
             tamerComp.ShouldBeSpawned = true;
         }
 
-        public static void SubtractSpawnedUnit(Entity entity)
+        public static void SubtractSpawnedUnit(PlayerId playerId, Entity entity)
         {
-            Logging.LogWarning("Subtracting spawned unit counter for entity: {Entity}", entity.ToString());
+            Logging.LogDebug("Subtracting spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
-            localTamerComp.SpawnedCounter -= 1;
-            if (localTamerComp.SpawnedCounter <= 0)
+            ref var tamerComp = ref entity.GetComponent<TamerComponent>();
+            SubtractSpawnedUnit(playerId, ref localTamerComp, ref tamerComp);
+        }
+
+        public static void SubtractSpawnedUnit(PlayerId playerId, ref LocalTamerComponent localTamerComp, ref TamerComponent tamerComp)
+        {
+            localTamerComp.HoldingPlayers.Remove(playerId);
+            if (localTamerComp.HoldingPlayers.Count == 0)
             {
-                localTamerComp.SpawnedCounter = 0;
-                ref var tamerComp = ref entity.GetComponent<TamerComponent>();
                 tamerComp.ShouldBeSpawned = false;
             }
         }
 
         public static void ClearSpawnedUnit(Entity entity)
         {
-            Logging.LogWarning("Clearing spawned unit counter for entity: {Entity}", entity.ToString());
+            Logging.LogDebug("Clearing spawned unit counter for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
-            localTamerComp.SpawnedCounter = 0;
+            localTamerComp.HoldingPlayers.Clear();
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
             tamerComp.ShouldBeSpawned = false;
         }

@@ -5,6 +5,7 @@ using b1;
 using b1.BGW;
 using BtlShare;
 using Friflo.Engine.ECS;
+using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
@@ -21,11 +22,11 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class SpawningUtils
 {
-    public static PlayerState? SpawnCloneForPlayer(short peerId)
+    public static PlayerState? SpawnCloneForPlayer(PlayerId playerId)
     {
-        if (WukongMpMod.Client.ConnectedPlayers.ContainsKey(peerId))
+        if (WukongMpMod.Client.ConnectedPlayers.ContainsKey(playerId))
         {
-            Logging.LogDebug("Player already exists: {Id}", peerId); // reconnection
+            Logging.LogDebug("Player already exists: {Id}", playerId); // reconnection
             return null;
         }
 
@@ -48,7 +49,7 @@ public static class SpawningUtils
         FVector loc = default;
         FRotator rot = default;
 
-        var initialProps = WukongMpMod.Client.RelayClient.GetPlayerState(peerId)?.Properties;
+        var initialProps = WukongMpMod.Client.RelayClient.GetPlayerState(playerId)?.Properties;
 
         if (initialProps == null)
         {
@@ -86,7 +87,7 @@ public static class SpawningUtils
 
         GameUtils.PossesPawnWithViewTarget(oldController, oldPawn, newPawn, controllerCameraRotation);
 
-        Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", peerId, newPawn.GetEntityHash());
+        Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", playerId, newPawn.GetEntityHash());
 
         var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref loc, ref rot);
         if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
@@ -129,7 +130,7 @@ public static class SpawningUtils
             Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
         }
 
-        var playerState = new PlayerState(peerId, newPawn, teamId, initialHp, initialHpMaxBase)
+        var playerState = new PlayerState(playerId, newPawn, teamId, initialHp, initialHpMaxBase)
         {
             Location = loc,
             Rotation = rot
@@ -208,12 +209,12 @@ public static class SpawningUtils
         return newCharacter;
     }
 
-    public static void SpawnUnitsMaster(short peerId, string unitName, int count, int teamId)
+    public static void SpawnUnitsMaster(PlayerId playerId, string unitName, int count, int teamId)
     {
-        var playerState = WukongMpModBase.Client.GetPlayerById(peerId);
+        var playerState = WukongMpModBase.Client.GetPlayerById(playerId);
         if (playerState == null || playerState.Pawn == null)
         {
-            Logging.LogError("Player not found: {PlayerId}", peerId);
+            Logging.LogError("Player not found: {PlayerId}", playerId);
             return;
         }
 

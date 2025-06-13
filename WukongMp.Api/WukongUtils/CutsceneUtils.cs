@@ -1,5 +1,6 @@
 ﻿using b1;
 using System.Linq;
+using ReadyM.Relay.Common;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
 using WukongMp.Api.Patches;
@@ -34,7 +35,7 @@ public static class CutsceneUtils
         }, nameof(PlayCutscene));
     }
 
-    public static void SetWaitingForCutsceneStatus(short playerId, SequenceWaitingData sequenceWaitingData)
+    public static void SetWaitingForCutsceneStatus(PlayerId playerId, SequenceWaitingData sequenceWaitingData)
     {
         Logging.LogDebug("Setting WaitingForCutsceneStatus for player: {Id}, sequenceId {SequenceId}", playerId, sequenceWaitingData.SequenceID);
         var player = WukongMpModBase.Client.GetPlayerById(playerId);

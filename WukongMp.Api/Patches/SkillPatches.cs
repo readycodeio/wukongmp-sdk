@@ -134,10 +134,10 @@ public static class PatchOnCastImmobilize
         if (!client.IsMasterClient)
         {
             // Broadcast that you have cast a spell
-            if (castingPlayerState != null && castingPlayerState.PeerId == client.LocalPlayerState.PeerId)
+            if (castingPlayerState != null && castingPlayerState.PlayerId == client.LocalPlayerState.PlayerId)
             {
                 // target doesn't matter, not evaluated
-                WukongMpMod.Instance.SendCastImmobilize(NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId));
+                WukongMpMod.Instance.SendCastImmobilize(NetworkIdComponent.FromPlayerId(castingPlayerState.PlayerId));
             }
 
             return false;
@@ -240,9 +240,9 @@ public static class PatchOnCastImmobilize
                 Logging.LogDebug("Broadcasting trigger immobilize");
                 var netId = immobilizedPlayer == null
                     ? immobilizedMonster!.Value.GetComponent<NetworkIdComponent>()
-                    : NetworkIdComponent.FromPlayerPeerId(immobilizedPlayer.PeerId);
+                    : NetworkIdComponent.FromPlayerId(immobilizedPlayer.PlayerId);
 
-                WukongMpMod.Instance.SendTriggerImmobilize(new TriggerImmobilizeData(netId, NetworkIdComponent.FromPlayerPeerId(castingPlayerState.PeerId), hasBuff));
+                WukongMpMod.Instance.SendTriggerImmobilize(new TriggerImmobilizeData(netId, NetworkIdComponent.FromPlayerId(castingPlayerState.PlayerId), hasBuff));
             }
         }
 
@@ -296,7 +296,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        var netId = playerState != null ? NetworkIdComponent.FromPlayerPeerId(playerState.PeerId) : entity!.Value.GetComponent<NetworkIdComponent>();
+        var netId = playerState != null ? NetworkIdComponent.FromPlayerId(playerState.PlayerId) : entity!.Value.GetComponent<NetworkIdComponent>();
 
         if (client.IsMasterClient)
         {
@@ -351,7 +351,7 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (playerState != null)
             {
-                WukongMpMod.Instance.SendRelieveImmobilize(NetworkIdComponent.FromPlayerPeerId(playerState.PeerId));
+                WukongMpMod.Instance.SendRelieveImmobilize(NetworkIdComponent.FromPlayerId(playerState.PlayerId));
                 BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 return false;
             }
@@ -580,7 +580,7 @@ public static class PatchExitPhantomRush
         if ((client.IsMasterClient || owner == client.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
         {
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
-            WukongMpMod.Instance.SendExitPhantomRush(playerState.PeerId);
+            WukongMpMod.Instance.SendExitPhantomRush(playerState.PlayerId);
             playerState.ReceivedPhantomRushExit = false;
         }
 

@@ -20,6 +20,6 @@ public sealed class SendEcsDeltaSystem(RelayClient client) : SendEcsDeltaSystemB
     
     protected override bool OwnsEntity(NetworkIdComponent netId)
     {
-        return netId.Owner == client.PeerId;
+        return netId.Creator == client.PlayerId;
     }
 }

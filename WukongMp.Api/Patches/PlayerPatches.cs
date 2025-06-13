@@ -423,14 +423,14 @@ namespace WukongMp.Api.Patches
                     localTamerComp.IsLocallySpawned = false;
                 }
 
-                if (!client.IsMasterClient)
-                    return;
-
                 if (entity.Value.HasComponent<TamerComponent>())
                 {
                     ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
                     TamerUtils.ClearSpawnedUnit(entity.Value);
                 }
+
+                if (!client.IsMasterClient)
+                    return;
 
                 if (entity.Value.TryGetComponent<NetworkIdComponent>(out var networkId))
                 {
@@ -557,7 +557,7 @@ namespace WukongMp.Api.Patches
 
             if (newTargetPlayerState != null)
             {
-                newTargetId = NetworkIdComponent.FromPlayerPeerId(newTargetPlayerState.PeerId);
+                newTargetId = NetworkIdComponent.FromPlayerId(newTargetPlayerState.PlayerId);
                 name = newTargetPlayerState.NickName;
                 clearTarget = false;
             }
@@ -572,7 +572,7 @@ namespace WukongMp.Api.Patches
             if (owner == client.LocalPlayerState.Pawn)
             {
                 Logging.LogDebug("New target sent for {Subject} as: {Target}", client.LocalPlayerState.NickName, name);
-                WukongMpMod.Instance.SendSetTarget(new TargetData(NetworkIdComponent.FromPlayerPeerId(client.LocalPlayerState.PeerId), newTargetId, clearTarget));
+                WukongMpMod.Instance.SendSetTarget(new TargetData(NetworkIdComponent.FromPlayerId(client.LocalPlayerState.PlayerId), newTargetId, clearTarget));
                 return true;
             }
 
@@ -585,8 +585,8 @@ namespace WukongMp.Api.Patches
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", client.LocalPlayerState.NickName, name);
 
-                var peerId = entity.Value.GetComponent<NetworkIdComponent>();
-                WukongMpMod.Instance.SendSetTarget(new TargetData(peerId, newTargetId, clearTarget));
+                var netId = entity.Value.GetComponent<NetworkIdComponent>();
+                WukongMpMod.Instance.SendSetTarget(new TargetData(netId, newTargetId, clearTarget));
             }
 
             return true;
@@ -720,4 +720,19 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "EnableCollision")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchEnableCollision
+    {
+        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
+            Logging.LogWarning("BUS_QuestDynamicObstacleComp.EnableCollision called for {Guid}", guid);
+
+            return !DisabledCollidersData.IsDisabled(guid);
+        }
+    }
 }

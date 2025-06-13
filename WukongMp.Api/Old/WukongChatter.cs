@@ -49,6 +49,7 @@ namespace WukongMp.Api.Old
             _commands.Add("/reconnect", new Command(RequestReconnect));
             _commands.Add("/disconnect", new Command(RequestDisconnect));
             _commands.Add("/rebirth", new Command(RequestRebirth));
+            _commands.Add("/rebirth_point", new Command(RequestPointRebirth));
             _commands.Add("/giveup", new Command(RequestGiveUp));
             _commands.Add("/master", new Command(RequestNewMasterClient));
             _commands.Add("/spectator", new Command(SetSpectatorStatus));
@@ -88,7 +89,15 @@ namespace WukongMp.Api.Old
 
         private void RequestRebirth(ReadOnlyMemory<string> _)
         {
-            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PeerId);
+            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PlayerId);
+            SendServerMessage("PlayerRequestedRebirth", NickName);
+        }
+
+        private void RequestPointRebirth(ReadOnlyMemory<string> _)
+        {
+            
+            PlayerUtils.TeleportLocalPlayerToRebirthPoint();
+            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PlayerId);
             SendServerMessage("PlayerRequestedRebirth", NickName);
         }
 
@@ -131,7 +140,7 @@ namespace WukongMp.Api.Old
                 if (player == null)
                     return;
 
-                _wukongClient.SetRemotePlayerProperty(player.PeerId, nameof(PlayerState.IsSpectator), isSpectator);
+                _wukongClient.SetRemotePlayerProperty(player.PlayerId, nameof(PlayerState.IsSpectator), isSpectator);
             }
         }
 
