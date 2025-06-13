@@ -10,7 +10,6 @@ using B1UI.GSUI;
 using BtlB1;
 using CommB1;
 using HarmonyLib;
-using ReadyM.Relay.Common;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -158,14 +157,18 @@ namespace WukongMp.Api.Patches
                     return;
                 }
 
+                var worldData = worldDownloadTask.Result.Content;
+                byte[] playerData;
+
                 if (playerDownloadTask.Result is null)
                 {
-                    Logging.LogError("Failed to download player save file from the cloud");
-                    return;
+                    Logging.LogWarning("Player has no save file in the cloud, using default world save");
+                    playerData = worldData;
                 }
-
-                var worldData = worldDownloadTask.Result.Content;
-                var playerData = playerDownloadTask.Result.Content;
+                else
+                {
+                    playerData = playerDownloadTask.Result.Content;
+                }
 
                 // we need to write the data as file to read it
                 var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
