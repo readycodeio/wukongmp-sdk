@@ -34,15 +34,16 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 
                     ref var nameComp = ref entity.GetComponent<NicknameComponent>();
                     nameComp.Nickname = actor.GetClass().GetName();
+#if TESTING
                     MarkerUtils.CreateMarkerForCharacter(entity);
-
+#endif
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
                 }
                 else
                 {
                     // spawn tamer
                     Logging.LogDebug("Matching tamer not found for guid: {Guid}, spawning...", tamer.Guid);
-                    SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
+                    // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 }
             }
         });

@@ -1,14 +1,15 @@
-﻿using System;
-using System.Reflection;
-using b1;
+﻿using b1;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
+using System;
+using System.Reflection;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
@@ -63,6 +64,49 @@ namespace WukongMp.Api.Patches
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
                     }
                 });
+            }
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnRegisterTamer
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BGS_TamerManagerSystem:OnRegisterTamer");
+        }
+
+        public static void Postfix(FTamerRef InTamer)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            Logging.LogDebug("Tamer {Tamer} registered by game", InTamer.TamerName);
+        }
+    }
+
+    [HarmonyPatch(typeof(BUTamerActor), "BeginPlayCS_Implementation")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTamerBeginPlayCS_Implementation
+    {
+        public static void Postfix(BUTamerActor __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            if (__instance.TamerType != ETamerType.Summoned)
+            {
+                var guid = BGU_DataUtil.GetActorGuid(__instance);
+                var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
+                if (entity == null)
+                {
+                    SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
+                }
+                else
+                {
+                    Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
+                }
             }
         }
     }

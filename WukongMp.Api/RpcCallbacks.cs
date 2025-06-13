@@ -38,7 +38,7 @@ public partial class WukongMpMod
 
     public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
     {
-        Logging.LogDebug("Sending montage callback: {Montage} {Position}", montage.PathName, position);
+        Logging.LogTrace("Sending montage callback: {Montage} {Position}", montage.PathName, position);
         var shortened = MontageHelpers.CompressMontageName(montage.PathName, out var shortMontagePath);
         var data = shortened ? shortMontagePath : montage.PathName;
         var evData = new MontageCallbackData(netId, shortened, data, position, reset);
@@ -492,13 +492,13 @@ public partial class WukongMpMod
 
             if (string.IsNullOrEmpty(data.MontagePath))
             {
-                Logging.LogDebug("Stopping montage playback for character {CharacterId}", id);
+                Logging.LogTrace("Stopping montage playback for character {CharacterId}", id);
                 pawn.StopAnimMontage(null);
                 return;
             }
 
             var fullMontagePath = data.Compressed ? MontageHelpers.DecompressMontageName(data.MontagePath) : data.MontagePath;
-            Logging.LogDebug("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
+            Logging.LogTrace("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
 
             var animInstance = pawn.Mesh.GetAnimInstance();
             if (animInstance == null)
@@ -508,12 +508,12 @@ public partial class WukongMpMod
             }
 
             var currentMontage = animInstance.GetCurrentActiveMontage();
-            Logging.LogDebug("Current montage: {Montage}", currentMontage?.PathName);
+            Logging.LogTrace("Current montage: {Montage}", currentMontage?.PathName);
 
             // if the same montage is currently playing an no reset flag is given, do not play new montage
             if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data.Reset)
             {
-                Logging.LogDebug("Skipping montage playback: {Montage}, is reset: {Reset}", fullMontagePath, data.Reset);
+                Logging.LogTrace("Skipping montage playback: {Montage}, is reset: {Reset}", fullMontagePath, data.Reset);
                 return;
             }
 
@@ -533,7 +533,7 @@ public partial class WukongMpMod
                 return;
             }
 
-            Logging.LogDebug("Applying montage callback for character {CharacterId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
+            Logging.LogTrace("Applying montage callback for character {CharacterId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
             animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }, nameof(OnMontageCallback));
