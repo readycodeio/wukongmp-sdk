@@ -17,6 +17,11 @@ namespace WukongMp.Api.Old
 
         public static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object?> values)
         {
+#if !TRACE_LOGS
+            if (level == LogLevel.Trace)
+                return;
+#endif
+
             var propertyNames = ExtractPropertyNames(messageTemplate);
             var properties = new Dictionary<string, string?>();
 
