@@ -225,6 +225,9 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(Dictionary<string, ArchiveAsyncRequest> ___PendingRequests)
         {
+            if (Constants.IsCoop)
+                return true;
+
             if (WukongMP.Instance.DisableArchiveSave)
             {
                 return false;
@@ -240,22 +243,29 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    //// Disable adding save game requests
+    // Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return false;
+            return Constants.IsCoop; // Only allow saving in co-op mode
+        }
+    }
 
-            var data = ArchiveWriteContainer.GameArchiveFile.GameArchivesDataBytes.ToByteArray();
+    [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.SaveDataToSlot))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchGSWindowsPlatformSaveGame
+    {
+        private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches() || !Constants.IsCoop)
+                return true;
 
-            if (data == null)
-                return false;
+            Logging.LogInformation("Will upload save to the cloud, Slot: {SlotName}, Size: {Size} Mb", SlotName, (InSaveData.Count / (1024.0 * 1024.0)).ToString("F2"));
 
-            Logging.LogInformation("Will upload save to the cloud, ArchiveId: {ArchiveId}, Size: {Size} Mb", ArchiveId, (data.Length / (1024.0 * 1024.0)).ToString("F2"));
+            var data = InSaveData.ToArray();
 
             Task.Run(async () =>
             {
@@ -269,6 +279,7 @@ namespace WukongMp.Api.Patches
                 LogSuccess(uploadedPlayer, "player save");
             });
 
+            __result = true;
             return false;
         }
 

@@ -11,6 +11,7 @@ $saveSourceDir = "Deployment"
 $modDestDir = "Mods/WukongMpMod"
 $reflectionOnlyDir = "Mods/ReflectionOnly"
 $saveDestDir = "Mods/WukongMpMod"
+$overrideDestDir = "Mods/Overrides"
 
 # Define the files to copy
 $modFiles = @(
@@ -42,7 +43,9 @@ $saveFiles = @(
     "ArchiveSaveFile.0.sav",
     "ArchiveSaveFile.9.sav"
 )
-
+$overrideFiles = @(
+    "LiteNetLib.dll"
+)
 
 # List of culture codes
 $cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
@@ -51,7 +54,8 @@ $allFiles = @(
     @($modFiles, $modSourceDir, $modDestDir),
     @($cultureFolders, $modSourceDir, $modDestDir),
     @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDir),
-    @($saveFiles, $saveSourceDir, $saveDestDir)
+    @($saveFiles, $saveSourceDir, $saveDestDir),
+    @($overrideFiles, $modSourceDir, $overrideDestDir)
 )
 
 function CopyFiles($files, $sourceDir, $destDir) {
