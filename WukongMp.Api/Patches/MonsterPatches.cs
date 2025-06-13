@@ -95,15 +95,18 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            var guid = BGU_DataUtil.GetActorGuid(__instance);
-            var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
-            if (entity == null)
+            if (__instance.TamerType != ETamerType.Summoned)
             {
-                SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
-            }
-            else
-            {
-                Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
+                var guid = BGU_DataUtil.GetActorGuid(__instance);
+                var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
+                if (entity == null)
+                {
+                    SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
+                }
+                else
+                {
+                    Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
+                }
             }
         }
     }
