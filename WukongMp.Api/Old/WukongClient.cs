@@ -271,7 +271,7 @@ public sealed class WukongClient
         {
             StopRelayClient();
             await Task.Delay(Constants.ReconnectDelayMs);
-            StartClient();
+            EnterRoom();
         });
     }
 
@@ -290,10 +290,10 @@ public sealed class WukongClient
         RelayClient.OnPlayerPropertiesChanged += OnPlayerPropertiesChanged;
     }
 
-    public void StartClient()
+    public void EnterRoom()
     {
         OnBeforeJoinRoom?.Invoke();
-        WukongMpMod.Instance.Start();
+        WukongMpMod.Instance.EnterRoom();
         Logging.LogInformation("Client started");
     }
 
@@ -306,7 +306,7 @@ public sealed class WukongClient
             UnsubscribeFromPlayerEvents();
         }
 
-        WukongMpMod.Instance.Stop();
+        WukongMpMod.Instance.ExitRoom();
 
         // clear the chat window
         ChatWidget.Instance.ClearMessages();

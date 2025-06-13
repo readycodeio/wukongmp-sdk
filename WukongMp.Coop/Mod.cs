@@ -19,7 +19,7 @@ namespace WukongMp.Coop
         public string Name => "WukongMp co-op";
         public string Version => "1.0.0";
 
-        private WukongMP _wukongMp = null!; // initialized in Init
+        private WukongMpMod _modInstance = null!; // initialized in Init
 
         public void Init()
         {
@@ -43,7 +43,7 @@ namespace WukongMp.Coop
 
             try
             {
-                _wukongMp = WukongMP.Instance;
+                _modInstance = WukongMpMod.Instance;
             }
             catch (Exception e)
             {
@@ -51,15 +51,13 @@ namespace WukongMp.Coop
                 return;
             }
 
-            if (_wukongMp.IsInitialized)
+            if (_modInstance.IsInitialized)
             {
                 Logging.LogInformation("WukongMP is already initialized");
                 return;
             }
 
-            _wukongMp.Init();
-
-            _wukongMp.Patch();
+            _modInstance.Initialize();
 #if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.B, () => { Logging.LogDebug("Alt + B: Test"); });
 
@@ -68,7 +66,7 @@ namespace WukongMp.Coop
                 Logging.LogDebug("Alt + C");
                 try
                 {
-                    _wukongMp.DumpDebugInfo();
+                    WukongMP.Instance.DumpDebugInfo();
                 }
                 catch (Exception e)
                 {
@@ -107,13 +105,6 @@ namespace WukongMp.Coop
                     CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             });
 
-            Utils.RegisterKeyBind(Key.L, () =>
-            {
-                Logging.LogDebug("L");
-                if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.TestLevelTeleport();
-            });
-
             Utils.RegisterKeyBind(Key.K, () =>
             {
                 Logging.LogDebug("K");
@@ -125,7 +116,7 @@ namespace WukongMp.Coop
             {
                 Logging.LogDebug("I");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Client.SwitchReadyStateSingle();
+                    WukongMP.Instance.Client.SwitchReadyStateSingle();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>
@@ -150,7 +141,7 @@ namespace WukongMp.Coop
                 else
                 {
                     var message = ChatWidget.Instance.CommitMessage();
-                    _wukongMp.Client.WukongChat.ProcessMessage(message);
+                    WukongMP.Instance.Client.WukongChat.ProcessMessage(message);
                 }
             });
         }
@@ -164,8 +155,8 @@ namespace WukongMp.Coop
                 return;
             }
 
-            _wukongMp.Unpatch();
-            _wukongMp.DeInit();
+            _modInstance.Deinitialize();
+
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
             TaskScheduler.UnobservedTaskException -= UnobservedTaskExceptionHandler;
             Logger.Instance.Dispose();
@@ -174,7 +165,7 @@ namespace WukongMp.Coop
         public object GetReloadContext()
         {
             Logging.LogInformation("GetReloadContext");
-            return (bool?)_wukongMp.Client.ConnectedAndInRoom;
+            return (bool?)_modInstance.RelayClient.InRoom;
         }
 
         public void Reload(object? context)
@@ -185,7 +176,7 @@ namespace WukongMp.Coop
             if (connectedAndInRoom == true)
             {
                 Logging.LogInformation("Reconnecting after a reload");
-                _wukongMp.Reload();
+                WukongMP.Instance.Reload();
             }
         }
 

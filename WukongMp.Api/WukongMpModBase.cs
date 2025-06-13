@@ -2,7 +2,9 @@
 using System.Buffers;
 using System.Collections.Generic;
 using b1;
+using CSharpModBase;
 using Friflo.Engine.ECS;
+using HarmonyLib;
 using JetBrains.Annotations;
 using LiteNetLib.Utils;
 using ReadyM.Api;
@@ -15,6 +17,7 @@ using ReadyM.Relay.Common.Wukong;
 using ReadyM.Relay.Common.Wukong.Components;
 using ReadyM.Relay.Common.Wukong.Jobs;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Old;
@@ -27,6 +30,7 @@ namespace WukongMp.Api;
 /// </summary>
 public partial class WukongMpModBase : ReadyMultiplayerMod
 {
+    protected readonly Harmony Harmony = new("ReadyM.WukongMp");
     private readonly ArchetypeId _monsterArchetype;
     private readonly SendEcsDeltaSystem _sendEcsDeltaSystem;
 
@@ -61,6 +65,50 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
         RelayClient.OnBeforeJoinedRoom += OnUpdatePeerId;
         RelayClient.OnEcsDelta += ApplyArchetypeDelta;
         RelayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
+    }
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Utils.TryRunOnGameThread(() =>
+        {
+            Harmony.PatchCategory(Constants.GlobalPatches);
+            Logging.LogInformation("Patched Harmony category: {Category}", Constants.GlobalPatches);
+        });
+    }
+
+    public override void Deinitialize()
+    {
+        base.Deinitialize();
+
+        Utils.TryRunOnGameThread(() =>
+        {
+            Harmony.UnpatchCategory(Constants.GlobalPatches);
+            Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.GlobalPatches);
+        });
+    }
+
+    public override void EnterRoom()
+    {
+        base.EnterRoom();
+
+        Utils.TryRunOnGameThread(() =>
+        {
+            Harmony.PatchCategory(Constants.ConnectedPatches);
+            Logging.LogInformation("Patched Harmony category: {Category}", Constants.ConnectedPatches);
+        });
+    }
+
+    public override void ExitRoom()
+    {
+        Utils.TryRunOnGameThread(() =>
+        {
+            Harmony.UnpatchCategory(Constants.ConnectedPatches);
+            Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.ConnectedPatches);
+        });
+
+        base.ExitRoom();
     }
 
     protected override void Log(LogLevel level, [StructuredMessageTemplate] string message, params object?[] args)

@@ -144,7 +144,7 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
                 OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
             }
-            else if (false) // TODO: Enable this after we refactor the client to be always on for co-op
+            else
             {
                 // Read archive with our co-op save.
                 var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
@@ -262,6 +262,9 @@ namespace WukongMp.Api.Patches
         {
             if (!WukongMP.Instance.ShouldRunConnectedPatches() || !Constants.IsCoop)
                 return true;
+
+            if (!SlotName.StartsWith("ArchiveSaveFile"))
+                return true; // only handle game save, not settings etc.
 
             Logging.LogInformation("Will upload save to the cloud, Slot: {SlotName}, Size: {Size} Mb", SlotName, (InSaveData.Count / (1024.0 * 1024.0)).ToString("F2"));
 
