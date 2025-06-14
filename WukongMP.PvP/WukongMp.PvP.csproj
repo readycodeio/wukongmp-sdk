@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
-        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <LangVersion>latest</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
@@ -12,6 +10,7 @@
         <TargetName>WukongMpMod</TargetName>
         <Configurations>Debug;Release;NoDisconnect;Testing</Configurations>
         <Platforms>AnyCPU</Platforms>
+        <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup>
