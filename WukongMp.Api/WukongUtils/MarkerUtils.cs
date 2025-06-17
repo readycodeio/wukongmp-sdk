@@ -33,6 +33,11 @@ public static class MarkerUtils
 
             var teamIdComp = entity.GetComponent<TeamComponent>();
             var nameComp = entity.GetComponent<NicknameComponent>();
+
+            // TODO: Should be created by the archetype, but it is not due to dynamic delta entity creation
+            if (!entity.HasComponent<MarkerComponent>())
+                entity.AddComponent<MarkerComponent>();
+
             ref var markerComp = ref entity.GetComponent<MarkerComponent>();
 
             var teamColor = PvPUtils.GetTeamColorString(teamIdComp.TeamId);
