@@ -48,22 +48,16 @@ namespace WukongApi
 
         public void Patch()
         {
-            Utils.TryRunOnGameThread(() =>
-            {
-                _harmony.PatchCategory(Constants.GlobalPatches);
-                _harmony.PatchCategory(Constants.ConnectedPatches);
-                Logging.LogInformation("Patched with Harmony");
-            });
+            _harmony.PatchCategory(Constants.GlobalPatches);
+            _harmony.PatchCategory(Constants.ConnectedPatches);
+            Logging.LogInformation("Patched with Harmony");
         }
 
         public void Unpatch()
         {
-            Utils.TryRunOnGameThread(() =>
-            {
-                _harmony.UnpatchCategory(Constants.ConnectedPatches);
-                _harmony.UnpatchCategory(Constants.GlobalPatches);
-                Logging.LogInformation("Unpatched with Harmony");
-            });
+            _harmony.UnpatchCategory(Constants.ConnectedPatches);
+            _harmony.UnpatchCategory(Constants.GlobalPatches);
+            Logging.LogInformation("Unpatched with Harmony");
         }
 
         public void Init()
@@ -448,7 +442,7 @@ namespace WukongApi
                 if (events != null)
                 {
                     var hasGuid = Client.SyncedMonsters.Values.FirstOrDefault(x => x.Guid == guid) != null;
-                    
+
                     if (actor.GetMonster() == null)
                     {
                         Logging.LogDebug("Spawning monster for tamer with guid: {Guid}.", guid);
