@@ -220,7 +220,7 @@ namespace WukongMp.Api.Patches
 
     /// Disable game saves while multiplayer is enabled
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), "CheckSaveTask")]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriter
     {
         public static bool Prefix(Dictionary<string, ArchiveAsyncRequest> ___PendingRequests)
@@ -242,7 +242,7 @@ namespace WukongMp.Api.Patches
 
     //// Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>))]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
@@ -286,7 +286,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.MarkSaveSetting))]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriterAppendArchive2
     {
         public static bool Prefix(UISettingArchiveData UISettingArchiveData)
