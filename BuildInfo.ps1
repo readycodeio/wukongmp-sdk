@@ -4,12 +4,14 @@ $solutionName = "WukongCSharpMod"
 $zipName = "WukongMp"
 
 # Define the source and destination directories
-$modSourceDir = "WukongMp.$ModVariant/bin/$Configuration/netstandard2.1"
+$modSourceDir = "WukongMp.$ModVariant/bin/$Configuration/netstandard2.0"
 $reflectionOnlySourceDir = "WukongMp.Api/Game"
+$overridesSourceDir = "WukongMp.Api/Game"
 $saveSourceDir = "Deployment"
 
 $modDestDir = "Mods/WukongMpMod"
-$reflectionOnlyDir = "Mods/ReflectionOnly"
+$reflectionOnlyDestDir = "Mods/ReflectionOnly"
+$overridesDestDir = "Mods/Overrides"
 $saveDestDir = "Mods/WukongMpMod"
 $overrideDestDir = "Mods/Overrides"
 
@@ -30,14 +32,29 @@ $modFiles = @(
     "ReadyM.Relay.Common.Wukong.dll", 
     "ReadyM.Relay.Common.Wukong.pdb",
     "Friflo.Engine.ECS.dll",
+    "Friflo.Engine.ECS.pdb",
     "Friflo.Engine.ECS.Boost.dll",
+    "Friflo.Engine.ECS.Boost.pdb",
     "Friflo.Json.Burst.dll",
     "Friflo.Json.Fliox.dll",
     "Friflo.Json.Fliox.Annotation.dll",
+    "JetBrains.Annotations.dll",
+    "Microsoft.Bcl.Memory.dll",
+    "Microsoft.Bcl.Numerics.dll",
+    "System.Reflection.Emit.dll",
     "System.ComponentModel.Annotations.dll"
 )
 $reflectionOnlyFiles = @(
     "*"
+)
+$overridesFiles = @(
+    "System.Runtime.CompilerServices.Unsafe.dll",
+    "System.Text.Encodings.Web.dll",
+    "System.Text.Encodings.Web.pdb",
+    "System.Text.Json.dll",
+    "System.Text.Json.pdb",
+    "System.Numerics.Vectors.dll",
+    "System.Numerics.Vectors.pdb"
 )
 $saveFiles = @(
     "ArchiveSaveFile.0.sav",
@@ -53,9 +70,9 @@ $cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
 $allFiles = @(
     @($modFiles, $modSourceDir, $modDestDir),
     @($cultureFolders, $modSourceDir, $modDestDir),
-    @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDir),
-    @($saveFiles, $saveSourceDir, $saveDestDir),
-    @($overrideFiles, $modSourceDir, $overrideDestDir)
+    @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir),
+    @($overridesFiles, $overridesSourceDir, $overridesDestDir),
+    @($saveFiles, $saveSourceDir, $saveDestDir)
 )
 
 function CopyFiles($files, $sourceDir, $destDir) {

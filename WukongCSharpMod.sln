@@ -21,6 +21,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Api", "readym-gamese
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Api.Multiplayer", "readym-gameserver\src\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj", "{05E8BF63-0C2D-4103-B575-4667764B485D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Friflo.Engine.ECS", "readym-gameserver\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj", "{0916E113-402D-4A9E-A040-4B0E68DC8726}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Friflo.Engine.ECS.Boost", "readym-gameserver\src\Friflo.Engine.ECS\src\ECS.Boost\Friflo.Engine.ECS.Boost.csproj", "{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +105,18 @@ Global
 		{05E8BF63-0C2D-4103-B575-4667764B485D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{05E8BF63-0C2D-4103-B575-4667764B485D}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
 		{05E8BF63-0C2D-4103-B575-4667764B485D}.Testing|Any CPU.Build.0 = Testing|Any CPU
+		{0916E113-402D-4A9E-A040-4B0E68DC8726}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0916E113-402D-4A9E-A040-4B0E68DC8726}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0916E113-402D-4A9E-A040-4B0E68DC8726}.NoDisconnect|Any CPU.ActiveCfg = Debug|Any CPU
+		{0916E113-402D-4A9E-A040-4B0E68DC8726}.NoDisconnect|Any CPU.Build.0 = Debug|Any CPU
+		{0916E113-402D-4A9E-A040-4B0E68DC8726}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0916E113-402D-4A9E-A040-4B0E68DC8726}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.NoDisconnect|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.NoDisconnect|Any CPU.Build.0 = Debug|Any CPU
+		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
