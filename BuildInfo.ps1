@@ -54,14 +54,12 @@ $overridesFiles = @(
     "System.Text.Json.dll",
     "System.Text.Json.pdb",
     "System.Numerics.Vectors.dll",
-    "System.Numerics.Vectors.pdb"
+    "System.Numerics.Vectors.pdb",
+    "LiteNetLib.dll"
 )
 $saveFiles = @(
     "ArchiveSaveFile.0.sav",
     "ArchiveSaveFile.9.sav"
-)
-$overrideFiles = @(
-    "LiteNetLib.dll"
 )
 
 # List of culture codes
