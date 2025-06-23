@@ -202,6 +202,9 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData = worldArchiveData.GameArchiveData.PersistentECSData;
                 OutArchiveData.StateMachineArchiveData = worldArchiveData.GameArchiveData.StateMachineArchiveData;
                 OutArchiveData.TaskArchiveData = worldArchiveData.GameArchiveData.TaskArchiveData;
+                // Add spells and talents from the world save to the player save
+                OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.AddRange(worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.SpellList);
+                OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.AddRange(worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.TalenList);
             }
 
             SavePatchesData.RedirectSaveFiles = false;
