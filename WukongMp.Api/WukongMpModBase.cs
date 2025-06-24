@@ -64,26 +64,26 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
         WukongCoreApi.MarkNetworkedComponents(config);
     }
 
-    public override void Initialize()
+    protected override void Patch()
     {
-        base.Initialize();
+        base.Patch();
 
-        Utils.TryRunOnGameThread(() =>
-        {
-            Harmony.PatchCategory(Constants.GlobalPatches);
-            Logging.LogInformation("Patched Harmony category: {Category}", Constants.GlobalPatches);
-        });
+        Harmony.PatchCategory(Constants.GlobalPatches);
+        Logging.LogInformation("Patched Harmony category: {Category}", Constants.GlobalPatches);
+        
+        Harmony.PatchCategory(Constants.ConnectedPatches);
+        Logging.LogInformation("Patched Harmony category: {Category}", Constants.ConnectedPatches);
     }
 
-    public override void Deinitialize()
+    protected override void Unpatch()
     {
-        base.Deinitialize();
+        Harmony.UnpatchCategory(Constants.ConnectedPatches);
+        Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.ConnectedPatches);
 
-        Utils.TryRunOnGameThread(() =>
-        {
-            Harmony.UnpatchCategory(Constants.GlobalPatches);
-            Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.GlobalPatches);
-        });
+        Harmony.UnpatchCategory(Constants.GlobalPatches);
+        Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.GlobalPatches);
+        
+        base.Unpatch();
     }
 
     public override void EnterRoom()
@@ -92,8 +92,6 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
 
         Utils.TryRunOnGameThread(() =>
         {
-            Harmony.PatchCategory(Constants.ConnectedPatches);
-            Logging.LogInformation("Patched Harmony category: {Category}", Constants.ConnectedPatches);
         });
     }
 
@@ -101,8 +99,6 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
     {
         Utils.TryRunOnGameThread(() =>
         {
-            Harmony.UnpatchCategory(Constants.ConnectedPatches);
-            Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.ConnectedPatches);
         });
 
         base.ExitRoom();
