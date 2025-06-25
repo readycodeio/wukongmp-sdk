@@ -15,7 +15,7 @@
         <Platforms>AnyCPU</Platforms>
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
-
+    
     <ItemGroup>
         <Reference Include="b1.Managed">
             <HintPath>Game\b1.Managed.dll</HintPath>

@@ -13,12 +13,6 @@
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <BuildTimestamp>$([System.DateTime]::UtcNow.ToString("yyyyMMdd.HHmm"))</BuildTimestamp>
-        <FileVersion>1.0.0.$(BuildTimestamp)</FileVersion>
-        <InformationalVersion>1.0.0.$(BuildTimestamp)</InformationalVersion>
-    </PropertyGroup>
-
     <Target Name="PrintBuildVersion" AfterTargets="AfterBuild">
         <Message Importance="High" Text="Build Version: $(InformationalVersion)" />
     </Target>
