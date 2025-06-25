@@ -203,8 +203,20 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.StateMachineArchiveData = worldArchiveData.GameArchiveData.StateMachineArchiveData;
                 OutArchiveData.TaskArchiveData = worldArchiveData.GameArchiveData.TaskArchiveData;
                 // Add spells and talents from the world save to the player save
-                OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.AddRange(worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.SpellList);
-                OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.AddRange(worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.TalenList);
+                foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.SpellList)
+                {
+                    if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Contains(spell))
+                    {
+                        OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(spell);
+                    }
+                }
+                foreach (var talent in worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.TalenList)
+                {
+                    if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.Contains(talent))
+                    {
+                        OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.Add(talent);
+                    }
+                }
             }
 
             SavePatchesData.RedirectSaveFiles = false;
