@@ -268,10 +268,10 @@ public static class SpawningUtils
         var guid = Guid.NewGuid().ToString();
 
         Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
-        SpawnUnitLocally(null, guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
+        SpawnUnitLocally(guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
     }
 
-    public static void SpawnUnitLocally(NetworkIdComponent? providedNetId, string guid, string unitPath, int teamId, float x, float y, float z)
+    public static void SpawnUnitLocally(string guid, string unitPath, int teamId, float x, float y, float z)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -302,7 +302,7 @@ public static class SpawningUtils
             tamerActor.GetFinalGuid(true);
 
             Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
-            var entity = providedNetId.HasValue ? AddRemoteMonsterToEcs(providedNetId.Value, guid, tamerActor, teamId, unitPath) : CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
+            var entity = CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
 
             ref var trans = ref entity.GetComponent<TranslationComponent>();
             trans.Position = loc.ToVector3();
@@ -336,40 +336,20 @@ public static class SpawningUtils
         }
     }
 
-    public static Entity AddRemoteMonsterToEcs(NetworkIdComponent netId, string guid, BUTamerActor tamer, int teamId, string unitName)
-    {
-        if (!WukongMpMod.Instance.NetManager.TryGetEntityByNetworkId(netId, out var id))
-        {
-            id = WukongMpMod.Instance.CreateNetworkedMonster(netId);
-        }
-
-        id.Value.AddComponent(new LocalTamerComponent(tamer));
-
-        ref var tamerComp = ref id.Value.GetComponent<TamerComponent>();
-        tamerComp.Guid = guid;
-        tamerComp.UnitPath = unitName;
-
-        ref var teamComp = ref id.Value.GetComponent<TeamComponent>();
-        teamComp.TeamId = teamId;
-
-        Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
-        return id.Value;
-    }
-
     public static Entity CreateMonsterInEcs(string guid, BUTamerActor tamer, int teamId, string unitName)
     {
-        var id = WukongMpMod.Instance.CreateNetworkedMonster();
-        id.AddComponent(new LocalTamerComponent(tamer));
-
-        ref var tamerComp = ref id.GetComponent<TamerComponent>();
-        tamerComp.Guid = guid;
-        tamerComp.UnitPath = unitName;
-
-        ref var teamComp = ref id.GetComponent<TeamComponent>();
-        teamComp.TeamId = teamId;
-
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
-        return id;
+
+        return WukongMpMod.Instance.CreateNetworkedMonster(
+            new LocalTamerComponent(tamer),
+            new TamerComponent
+            {
+                Guid = guid,
+                UnitPath = unitName
+            }, new TeamComponent
+            {
+                TeamId = teamId
+            });
     }
 
     public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)

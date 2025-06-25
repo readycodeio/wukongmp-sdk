@@ -217,6 +217,7 @@ public partial class WukongMpMod
                 Logging.LogNull(nameof(caster));
                 return;
             }
+
             ImmobilizeUtils.CastImmobilize(character);
         }
     }
@@ -238,6 +239,7 @@ public partial class WukongMpMod
             Logging.LogNull(nameof(affected));
             return;
         }
+
         ImmobilizeUtils.RelieveImmobilize(character);
     }
 
@@ -578,11 +580,13 @@ public partial class WukongMpMod
             Logging.LogError("Player not found: {Id}", __sender);
             return;
         }
+
         if (player.Pawn == null)
         {
             Logging.LogError("Player pawn is null for player {Id}", __sender);
             return;
         }
+
         IronBodyUtils.TriggerIronBody(player.Pawn);
     }
 
@@ -596,12 +600,9 @@ public partial class WukongMpMod
             return;
         }
 
-        if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+        if (TryGetEntityByNetworkId(netEntity, out var entity))
         {
-            if (entity.HasValue)
-            {
-                TamerUtils.AddSpawnedUnit(player.PlayerId, entity.Value);
-            }
+            TamerUtils.AddSpawnedUnit(player.PlayerId, entity.Value);
         }
     }
 
@@ -615,12 +616,9 @@ public partial class WukongMpMod
             return;
         }
 
-        if (NetManager.TryGetEntityByNetworkId(netEntity, out var entity))
+        if (TryGetEntityByNetworkId(netEntity, out var entity))
         {
-            if (entity.HasValue)
-            {
-                TamerUtils.SubtractSpawnedUnit(player.PlayerId, entity.Value);
-            }
+            TamerUtils.SubtractSpawnedUnit(player.PlayerId, entity.Value);
         }
     }
 }

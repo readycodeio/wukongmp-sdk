@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using b1;
+using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
@@ -89,7 +90,8 @@ namespace WukongMp.Api.Patches
 
             Logging.LogDebug("Spawned servant: {TamerName}, with Guid {Guid}", bUTamerActor.GetName(), guid);
 
-            var entity = SpawningUtils.AddRemoteMonsterToEcs(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
+            var entity = default(Entity); // TODO: The SendSummon event is never sent
+            // var entity = SpawningUtils.AddRemoteMonsterToEcs(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
 
             ref var trans = ref entity.GetComponent<TranslationComponent>();
             trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();

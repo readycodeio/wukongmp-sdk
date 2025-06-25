@@ -24,26 +24,25 @@ public partial class WukongMpMod : WukongMpModBase
     {
         base.Initialize();
 
-        Utils.TryRunOnGameThread(() =>
-        {
-            const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-            Harmony.PatchCategory(category);
-            Logging.LogInformation("Patched Harmony (WukongMpMod)");
-        });
-
         WukongMP.Instance.ConfigureEventCallbacks();
     }
 
-    public override void Deinitialize()
+    protected override void Patch()
     {
-        base.Deinitialize();
+        base.Patch();
 
-        Utils.TryRunOnGameThread(() =>
-        {
-            const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-            Harmony.UnpatchCategory(category);
-            Logging.LogInformation("Unpatched Harmony (WukongMpMod)");
-        });
+        const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
+        Harmony.PatchCategory(category);
+        Logging.LogInformation("Patched Harmony WukongMpMod {Patch}", category);
+    }
+    
+    protected override void Unpatch()
+    {
+        base.Unpatch();
+
+        const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
+        Harmony.UnpatchCategory(category);
+        Logging.LogInformation("Unpatched Harmony WukongMpMod {Patch}", category);
     }
 
     protected override void OnPingUpdated(int ping)
