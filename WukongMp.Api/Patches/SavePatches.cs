@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using ArchiveB1;
+﻿using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlB1;
 using CommB1;
 using HarmonyLib;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -215,6 +214,20 @@ namespace WukongMp.Api.Patches
                     if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.Contains(talent))
                     {
                         OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.Add(talent);
+                    }
+                }
+                foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.RedPoint.SpellList)
+                {
+                    if (!OutArchiveData.RoleData.RoleCs.RedPoint.SpellList.Contains(spell))
+                    {
+                        OutArchiveData.RoleData.RoleCs.RedPoint.SpellList.Add(spell);
+                    }
+                }
+                foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.RedPoint.ShrineSpellList)
+                {
+                    if (!OutArchiveData.RoleData.RoleCs.RedPoint.ShrineSpellList.Contains(spell))
+                    {
+                        OutArchiveData.RoleData.RoleCs.RedPoint.ShrineSpellList.Add(spell);
                     }
                 }
             }
