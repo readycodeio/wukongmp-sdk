@@ -24,7 +24,6 @@ using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
-using Entity = Friflo.Engine.ECS.Entity;
 using PlayerState = WukongMp.Api.Old.State.PlayerState;
 
 namespace WukongMp.Api.Old
@@ -32,76 +31,17 @@ namespace WukongMp.Api.Old
     // ReSharper disable once InconsistentNaming
     public class WukongMP
     {
-        private readonly Harmony _harmony = new("WukongMP");
-
         public WukongClient Client { get; }
 
         public static WukongMP Instance { get; } = new();
 
         public bool DisableArchiveSave { get; set; }
-        public bool IsInitialized { get; private set; }
 
-        private List<AActor> _debugActors = new();
+        private List<AActor> _debugActors = [];
 
         private WukongMP()
         {
             Client = new WukongClient(OnBeforeJoinedRoomCallback, OnAfterJoinedRoomCallback, p => { GameLoopPatch.QueueOnGameThread(() => AddPlayer(p), "AddPlayer"); });
-        }
-
-        public void Patch()
-        {
-            Utils.TryRunOnGameThread(() =>
-            {
-                _harmony.PatchCategory(Constants.GlobalPatches);
-                _harmony.PatchCategory(Constants.ConnectedPatches);
-                if (!Constants.IsCoop)
-                {
-                    _harmony.PatchCategory(Constants.PvpPatches);
-                }
-                else
-                {
-                    _harmony.PatchCategory(Constants.CoopPatches);
-                }
-                Logging.LogInformation("Patched with Harmony");
-            });
-        }
-
-        public void Unpatch()
-        {
-            Utils.TryRunOnGameThread(() =>
-            {
-                _harmony.UnpatchCategory(Constants.ConnectedPatches);
-                _harmony.UnpatchCategory(Constants.GlobalPatches);
-                if (!Constants.IsCoop)
-                {
-                    _harmony.UnpatchCategory(Constants.PvpPatches);
-                }
-                else
-                {
-                    _harmony.UnpatchCategory(Constants.CoopPatches);
-                }
-                Logging.LogInformation("Unpatched with Harmony");
-            });
-        }
-
-        public void Init()
-        {
-            // prevent double initialization bug in CSharpLoader
-            if (IsInitialized)
-                return;
-
-            IsInitialized = true;
-
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
-                return;
-
-            ConfigureEventCallbacks();
-        }
-
-        public void DeInit()
-        {
-            Client.StopRelayClient();
-            IsInitialized = false;
         }
 
         public void OnDelayBeginPlay()
@@ -117,7 +57,7 @@ namespace WukongMp.Api.Old
                 Logging.LogInformation("Initializing widgets");
                 ModWidgetsUtils.SpawnWidgetManagerActor();
                 ModWidgetsUtils.InitializeWidgets();
-                Client.StartClient();
+                Client.EnterRoom();
             }
         }
 
@@ -248,24 +188,6 @@ namespace WukongMp.Api.Old
             }
         }
 
-        public void TestLevelTeleport()
-        {
-            var playerCharacter = GameUtils.GetControlledPawn();
-            var teleportParam = new TeleportParam_Dream
-            {
-                LevelId = 20,
-                TeleportPointName = new FName(""),
-                RebirthPointId = 2004,
-                LoadingScreenType = EGSLoadingScreenType.Unknown
-            };
-
-            BPS_EventCollectionCS.GetLocal(playerCharacter)?.Evt_BPS_TeleportTo.Invoke(
-                ETeleportTypeV2.Dream,
-                teleportParam,
-                EPlayerTeleportReason.Dream
-            );
-        }
-
         public bool ShouldRunConnectedPatches()
         {
             return Client is { ConnectedAndInRoom: true };
@@ -373,14 +295,9 @@ namespace WukongMp.Api.Old
             }, "Register team hostility");
         }
 
-        private void ConfigureEventCallbacks()
+        [Obsolete]
+        public void ConfigureEventCallbacks()
         {
-            if (Client.ConnectedAndInRoom)
-            {
-                Logging.LogError("Relay client is already connected and ready");
-                return;
-            }
-
             Client.OnBeforeJoinRoom += SetPlayerProperties;
             Client.OnEquipmentChange += (id, eq) => GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(id, eq), "ChangeEquipment");
             Client.OnReadinessChange += (name, isReady, readyCount) => GameLoopPatch.QueueOnGameThread(() => UpdateReadiness(name, isReady, readyCount));

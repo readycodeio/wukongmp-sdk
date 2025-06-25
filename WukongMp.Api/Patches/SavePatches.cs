@@ -10,7 +10,6 @@ using B1UI.GSUI;
 using BtlB1;
 using CommB1;
 using HarmonyLib;
-using ReadyM.Relay.Common;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -144,7 +143,7 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData.BPCData.BPCPlayerRoleData.MapAreaId = levelConfig.MapAreaId;
                 OutArchiveData.PersistentECSData.BPCData.BPCRebirthPointData.CurrentBirthPoint.PointID = levelConfig.BirthPointID;
             }
-            else if (false) // TODO: Enable this after we refactor the client to be always on for co-op
+            else
             {
                 // Read archive with our co-op save.
                 var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
@@ -158,14 +157,18 @@ namespace WukongMp.Api.Patches
                     return;
                 }
 
+                var worldData = worldDownloadTask.Result.Content;
+                byte[] playerData;
+
                 if (playerDownloadTask.Result is null)
                 {
-                    Logging.LogError("Failed to download player save file from the cloud");
-                    return;
+                    Logging.LogWarning("Player has no save file in the cloud, using default world save");
+                    playerData = worldData;
                 }
-
-                var worldData = worldDownloadTask.Result.Content;
-                var playerData = playerDownloadTask.Result.Content;
+                else
+                {
+                    playerData = playerDownloadTask.Result.Content;
+                }
 
                 // we need to write the data as file to read it
                 var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
@@ -225,6 +228,9 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(Dictionary<string, ArchiveAsyncRequest> ___PendingRequests)
         {
+            if (Constants.IsCoop)
+                return true;
+
             if (WukongMP.Instance.DisableArchiveSave)
             {
                 return false;
@@ -240,22 +246,32 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    //// Disable adding save game requests
+    // Disable adding save game requests
     [HarmonyPatch(typeof(BGW_ArchiveReadWriteWorker), nameof(BGW_ArchiveReadWriteWorker.AppendArchiveSaveRequest), typeof(int), typeof(GSArchiveFileContainer), typeof(List<ArchiveSaveRequestOne>))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
     {
         public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
-                return false;
+            return Constants.IsCoop; // Only allow saving in co-op mode
+        }
+    }
 
-            var data = ArchiveWriteContainer.GameArchiveFile.GameArchivesDataBytes.ToByteArray();
+    [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.SaveDataToSlot))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchGSWindowsPlatformSaveGame
+    {
+        private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches() || !Constants.IsCoop)
+                return true;
 
-            if (data == null)
-                return false;
+            if (!SlotName.StartsWith("ArchiveSaveFile"))
+                return true; // only handle game save, not settings etc.
 
-            Logging.LogInformation("Will upload save to the cloud, ArchiveId: {ArchiveId}, Size: {Size} Mb", ArchiveId, (data.Length / (1024.0 * 1024.0)).ToString("F2"));
+            Logging.LogInformation("Will upload save to the cloud, Slot: {SlotName}, Size: {Size} Mb", SlotName, (InSaveData.Count / (1024.0 * 1024.0)).ToString("F2"));
+
+            var data = InSaveData.ToArray();
 
             Task.Run(async () =>
             {
@@ -269,6 +285,7 @@ namespace WukongMp.Api.Patches
                 LogSuccess(uploadedPlayer, "player save");
             });
 
+            __result = true;
             return false;
         }
 

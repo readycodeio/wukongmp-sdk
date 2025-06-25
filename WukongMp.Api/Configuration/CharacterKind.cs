@@ -1,6 +1,6 @@
 ﻿using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.GameApi
+namespace WukongMp.Api.Configuration
 {
     public static class CharacterKind
     {

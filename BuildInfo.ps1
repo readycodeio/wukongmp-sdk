@@ -13,6 +13,7 @@ $modDestDir = "Mods/WukongMpMod"
 $reflectionOnlyDestDir = "Mods/ReflectionOnly"
 $overridesDestDir = "Mods/Overrides"
 $saveDestDir = "Mods/WukongMpMod"
+$overrideDestDir = "Mods/Overrides"
 
 # Define the files to copy
 $modFiles = @(
@@ -53,13 +54,13 @@ $overridesFiles = @(
     "System.Text.Json.dll",
     "System.Text.Json.pdb",
     "System.Numerics.Vectors.dll",
-    "System.Numerics.Vectors.pdb"
+    "System.Numerics.Vectors.pdb",
+    "LiteNetLib.dll"
 )
 $saveFiles = @(
     "ArchiveSaveFile.0.sav",
     "ArchiveSaveFile.9.sav"
 )
-
 
 # List of culture codes
 $cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")

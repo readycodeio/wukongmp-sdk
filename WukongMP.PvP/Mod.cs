@@ -19,7 +19,7 @@ namespace WukongMp.PvP
         public string Name => "WukongMp PvP";
         public string Version => "1.0.0";
 
-        private WukongMP _wukongMp = null!; // initialized in Init
+        private WukongMpMod _modInstance = null!; // initialized in Init
 
         public void Init()
         {
@@ -28,7 +28,7 @@ namespace WukongMp.PvP
                 Logging.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
             }
-            
+
             // register global unhandled exception handlers
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
             TaskScheduler.UnobservedTaskException += UnobservedTaskExceptionHandler;
@@ -43,7 +43,7 @@ namespace WukongMp.PvP
 
             try
             {
-                _wukongMp = WukongMP.Instance;
+                _modInstance = WukongMpMod.Instance;
             }
             catch (Exception e)
             {
@@ -51,20 +51,19 @@ namespace WukongMp.PvP
                 return;
             }
 
-            if (_wukongMp.IsInitialized)
+            if (_modInstance.IsInitialized)
             {
                 Logging.LogInformation("WukongMP is already initialized");
                 return;
             }
 
-            _wukongMp.Init();
+            _modInstance.Initialize();
 
-            _wukongMp.Patch();
 #if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
-                _wukongMp.DumpDebugInfo();
+                WukongMP.Instance.DumpDebugInfo();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
@@ -72,13 +71,13 @@ namespace WukongMp.PvP
                 Logging.LogDebug("Alt + X");
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
-                        
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 Logging.LogDebug("Alt + J");
                 WukongMpMod.Instance.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerId(WukongMpModBase.Client.LocalPlayerState.PlayerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
-            
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 Logging.LogDebug("Alt + K");
@@ -89,14 +88,14 @@ namespace WukongMp.PvP
             {
                 Logging.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Client.SwitchReadyStateMulti();
+                    WukongMP.Instance.Client.SwitchReadyStateMulti();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
             {
                 Logging.LogDebug("L");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Client.SwitchTeam();
+                    WukongMP.Instance.Client.SwitchTeam();
             });
 
             Utils.RegisterKeyBind(Key.K, () =>
@@ -110,7 +109,7 @@ namespace WukongMp.PvP
             {
                 Logging.LogDebug("I");
                 if (!ChatWidget.Instance.HasFocus())
-                    _wukongMp.Client.SwitchReadyStateSingle();
+                    WukongMP.Instance.Client.SwitchReadyStateSingle();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>
@@ -135,23 +134,22 @@ namespace WukongMp.PvP
                 else
                 {
                     var message = ChatWidget.Instance.CommitMessage();
-                    _wukongMp.Client.WukongChat.ProcessMessage(message);
+                    WukongMP.Instance.Client.WukongChat.ProcessMessage(message);
                 }
-
             });
         }
 
         public void DeInit()
         {
             Logging.LogInformation("DeInit");
-            
+
             if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
             {
                 return;
             }
-            
-            _wukongMp.Unpatch();
-            _wukongMp.DeInit();
+
+            _modInstance.Deinitialize();
+
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionHandler;
             TaskScheduler.UnobservedTaskException -= UnobservedTaskExceptionHandler;
             Logger.Instance.Dispose();

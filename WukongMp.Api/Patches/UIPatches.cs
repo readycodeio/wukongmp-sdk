@@ -147,7 +147,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchOnChangeSaveTipsStat
     {
         public static bool Prefix(UWidget ___RootCon)

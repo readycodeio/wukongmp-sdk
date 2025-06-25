@@ -1,6 +1,6 @@
-﻿using System.Reflection.Metadata;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using CSharpModBase;
 using Friflo.Engine.ECS;
 using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -19,6 +19,31 @@ public partial class WukongMpMod : WukongMpModBase
     public static WukongMpMod Instance { get; } = new();
 
     private WukongMpMod() { }
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        WukongMP.Instance.ConfigureEventCallbacks();
+    }
+
+    protected override void Patch()
+    {
+        base.Patch();
+
+        const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
+        Harmony.PatchCategory(category);
+        Logging.LogInformation("Patched Harmony WukongMpMod {Patch}", category);
+    }
+    
+    protected override void Unpatch()
+    {
+        base.Unpatch();
+
+        const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
+        Harmony.UnpatchCategory(category);
+        Logging.LogInformation("Unpatched Harmony WukongMpMod {Patch}", category);
+    }
 
     protected override void OnPingUpdated(int ping)
     {

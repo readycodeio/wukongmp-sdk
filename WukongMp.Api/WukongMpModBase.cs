@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using b1;
+using CSharpModBase;
 using Friflo.Engine.ECS;
+using HarmonyLib;
 using JetBrains.Annotations;
-using LiteNetLib.Utils;
 using ReadyM.Api;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Client;
@@ -13,8 +13,8 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Common.Wukong;
 using ReadyM.Relay.Common.Wukong.Components;
-using ReadyM.Relay.Common.Wukong.Jobs;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Old;
@@ -25,13 +25,18 @@ namespace WukongMp.Api;
 /// <summary>
 /// The common denominator of all multiplayer Wukong mods based on ReadyM's API.
 /// </summary>
-public partial class WukongMpModBase : ReadyMultiplayerMod
+public abstract class WukongMpModBase : ReadyMultiplayerMod
 {
-    private readonly ArchetypeId _monsterArchetype;
-    private readonly SendEcsDeltaSystem _sendEcsDeltaSystem;
+    protected readonly Harmony Harmony = new("ReadyM.WukongMp");
+    private ArchetypeId _monsterArchetype;
+    private ArchetypeId _roomConfigArchetype;
 
     [Obsolete]
     public static WukongClient Client => WukongMP.Instance.Client;
+
+    public bool IsMasterClient =>
+        RelayClient.LocalPlayer.PlayerId ==
+        (PlayerId)RelayClient.RoomState.GetValueOrDefault(RoomProperties.MasterClientId, PlayerId.Invalid);
 
     protected IBlobClient Blobs => RelayClient;
 
@@ -40,43 +45,78 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
         CmdLineParams.Instance.ServerIp!,
         CmdLineParams.Instance.ServerPort!.Value)
     {
-        _monsterArchetype = World.RegisterArchetype(b =>
+        RelayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
+    }
+
+    protected override void ConfigureMod(IModConfig config)
+    {
+        _monsterArchetype = config.RegisterArchetype(WukongCoreApi.RegisterMonsterArchetype);
+        _roomConfigArchetype = config.RegisterArchetype(WukongCoreApi.RegisterRoomConfigArchetype);
+
+        config.AddSystem<SyncTamersSystem>();
+        config.AddSystem<UpdateMarkersSystem>();
+        config.AddSystem<DestroyDeadMonstersMarkersSystem>();
+        config.AddSystem<SyncMonstersSystem>();
+    }
+
+    protected override void ConfigureNetworking(INetworkedComponentConfig config)
+    {
+        WukongCoreApi.MarkNetworkedComponents(config);
+    }
+
+    protected override void Patch()
+    {
+        base.Patch();
+
+        Harmony.PatchCategory(Constants.GlobalPatches);
+        Logging.LogInformation("Patched Harmony category: {Category}", Constants.GlobalPatches);
+        
+        Harmony.PatchCategory(Constants.ConnectedPatches);
+        Logging.LogInformation("Patched Harmony category: {Category}", Constants.ConnectedPatches);
+    }
+
+    protected override void Unpatch()
+    {
+        Harmony.UnpatchCategory(Constants.ConnectedPatches);
+        Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.ConnectedPatches);
+
+        Harmony.UnpatchCategory(Constants.GlobalPatches);
+        Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.GlobalPatches);
+        
+        base.Unpatch();
+    }
+
+    public override void EnterRoom()
+    {
+        base.EnterRoom();
+
+        Utils.TryRunOnGameThread(() =>
         {
-            WukongCoreApi.SetUpMonsterArchetype(b);
-            b.Add<MarkerComponent>()
-                .Add(new LocalTamerComponent { HoldingPlayers = [] });
+        });
+    }
+
+    public override void ExitRoom()
+    {
+        Utils.TryRunOnGameThread(() =>
+        {
         });
 
-        _sendEcsDeltaSystem = new SendEcsDeltaSystem(RelayClient)
-        {
-            Enabled = false // disabled by default until we become the master client
-        };
-
-        World.SystemRoot.Add(new SyncTamersSystem());
-        World.SystemRoot.Add(new UpdateMarkersSystem());
-        World.SystemRoot.Add(new DestroyDeadMonstersMarkersSystem());
-        World.SystemRoot.Add(new SyncMonstersSystem());
-        World.SystemRoot.Add(_sendEcsDeltaSystem);
-
-        RelayClient.OnBeforeJoinedRoom += OnUpdatePeerId;
-        RelayClient.OnEcsDelta += ApplyArchetypeDelta;
-        RelayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
+        base.ExitRoom();
     }
 
     protected override void Log(LogLevel level, [StructuredMessageTemplate] string message, params object?[] args)
         => Logging.Log(level, message, args.AsSpan());
 
-    public Entity CreateNetworkedMonster()
+    public Entity CreateNetworkedMonster(LocalTamerComponent localTamer, TamerComponent tamer, TeamComponent team)
     {
-        var ids = NetManager.CreateNetworkedEntity(_monsterArchetype);
-        Logging.LogDebug("Creating local networked monster with {NetId}", ids.NetId);
-        return ids.Entity;
-    }
-
-    public Entity CreateNetworkedMonster(NetworkIdComponent netId)
-    {
-        Logging.LogDebug("Creating remote networked monster with {NetId}", netId);
-        return NetManager.CreateRemoteNetworkedEntity(_monsterArchetype, netId);
+        var (entity, netId) = CreateNetworkedEntity(_monsterArchetype, b =>
+        {
+            b.Add(localTamer);
+            b.Add(tamer);
+            b.Add(team);
+        });
+        Logging.LogDebug("Creating local networked monster with {NetId}", netId);
+        return entity;
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkIdComponent netId)
@@ -88,7 +128,7 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
                 return player.Pawn;
         }
 
-        if (NetManager.TryGetEntityByNetworkId(netId, out var entity))
+        if (TryGetEntityByNetworkId(netId, out var entity))
         {
             if (entity.Value.TryGetComponent<LocalTamerComponent>(out var tamer))
             {
@@ -161,45 +201,11 @@ public partial class WukongMpModBase : ReadyMultiplayerMod
         if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is PlayerId newMasterId)
         {
             Logging.LogInformation("Master client changed to {NewMasterId}", newMasterId);
-
-            CheckSendDeltaSystem();
         }
     }
 
-    private void CheckSendDeltaSystem()
+    protected override void RunOnGameThread(Action action)
     {
-        _sendEcsDeltaSystem.Enabled = IsMasterClient;
-        Logging.LogDebug("SendEcsDeltaSystem enabled: {Enabled}", _sendEcsDeltaSystem.Enabled);
-    }
-
-    private void OnUpdatePeerId()
-    {
-        CheckSendDeltaSystem();
-    }
-
-    private void ApplyArchetypeDelta(NetDataReader reader)
-    {
-        if (IsMasterClient)
-        {
-            return; // ignore echo deltas, TODO: server should only send deltas to other players
-        }
-
-        Logging.LogDebug("Received archetype delta");
-
-        var bytesToCopy = reader.UserDataSize - 1; // first byte is the event code
-        var offset = reader.UserDataOffset + 1; // skip the first byte which is the event code
-
-        var buffer = ArrayPool<byte>.Shared.Rent(bytesToCopy);
-        // offset 1 to skip the first byte which is the event code
-        Array.Copy(reader.RawData, offset, buffer, 0, bytesToCopy);
-
-        var readerCopy = new NetDataReader(buffer, 0, bytesToCopy);
-
-        GameLoopPatch.QueueOnGameThread(() =>
-        {
-            Logging.LogDebug("Applying archetype delta");
-            new ApplyDeltaJob(readerCopy, NetManager, CreateNetworkedMonster).Execute(); // TODO: Command buffer
-            ArrayPool<byte>.Shared.Return(buffer);
-        }, nameof(ApplyDeltaJob));
+        GameLoopPatch.QueueOnGameThread(action);
     }
 }

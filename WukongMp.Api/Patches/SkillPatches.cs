@@ -706,7 +706,7 @@ public class PatchOnTransBeginSpawnNewOne
         var client = WukongMpMod.Client;
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
-            Logging.LogError("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
+            Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
             WukongMpMod.Instance.SendPlayerTransBegin(new PlayerTransBeginData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
         }
     }
@@ -733,7 +733,7 @@ public class PatchOnTransBackSpawnNewOne
         var client = WukongMpMod.Client;
         if (__instance.GetOwner() == client.LocalPlayerState.Pawn)
         {
-            Logging.LogError("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
+            Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", client.LocalPlayerState.NickName, ToReplaceUnitResID);
             WukongMpMod.Instance.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
         }
     }

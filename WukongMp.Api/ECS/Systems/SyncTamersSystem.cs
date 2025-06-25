@@ -15,7 +15,8 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
     {
         var allTamers = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld())
             ?.Where(x => x != null)
-            .ToDictionary(x => BGU_DataUtil.GetActorGuid(x), x => x);
+            .GroupBy(x => BGU_DataUtil.GetActorGuid(x))
+            .ToDictionary(g => g.Key, g => g.Last());
 
         if (allTamers is null)
         {
