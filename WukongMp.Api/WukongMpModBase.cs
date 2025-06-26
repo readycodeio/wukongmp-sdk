@@ -50,7 +50,15 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
 
     protected override void ConfigureMod(IModConfig config)
     {
-        _monsterArchetype = config.RegisterArchetype(WukongCoreApi.RegisterMonsterArchetype);
+        _monsterArchetype = config.RegisterArchetype(b =>
+        {
+            WukongCoreApi.RegisterMonsterArchetype(b);
+            b.Add(new LocalTamerComponent
+            {
+                HoldingPlayers = []
+            });
+            b.Add<MarkerComponent>();
+        });
         _roomConfigArchetype = config.RegisterArchetype(WukongCoreApi.RegisterRoomConfigArchetype);
 
         config.AddSystem<SyncTamersSystem>();
