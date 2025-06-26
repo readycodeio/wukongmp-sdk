@@ -64,7 +64,7 @@ public class PatchOnLateBeginPlay
     public static void Postfix()
     {
         Logging.LogInformation("Late begin play");
-        WukongMP.Instance.OnDelayBeginPlay();
+        DI.Instance.EventBus.TryInvokeBeginGameplayLevel();
     }
 }
 
@@ -75,7 +75,7 @@ public class PatchOnEndPlay
     public static void Postfix()
     {
         Logging.LogInformation("End play");
-        WukongMP.Instance.OnEndPlay();
+        DI.Instance.EventBus.TryInvokeEndPlayGameplayLevel();
     }
 }
 
@@ -92,6 +92,6 @@ public class PatchOnLoadingScreenClose
     public static void Postfix()
     {
         Logging.LogInformation("Loading screen close");
-        WukongMP.Instance.OnLoadingScreenClose();
+        DI.Instance.EventBus.InvokeLoadingScreenClose();
     }
 }

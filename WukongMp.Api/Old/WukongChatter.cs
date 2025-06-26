@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ReadyM.Relay.Common;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old.State;
@@ -8,200 +9,246 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.Old
+namespace WukongMp.Api.Old;
+
+public class WukongChatter : IDisposable
 {
-    internal class Command(Action<ReadOnlyMemory<string>> handler)
+    private readonly WukongConnectionManager _connection;
+    private readonly WukongPlayerRegistry _playerRegistry;
+    private readonly WukongPlayerPropertyManager _playerProperty;
+    private readonly WukongSynchronizer _synchronizer;
+    private readonly WukongRpcCallbacks _rpc;
+    private readonly WukongGameplaySettings _gameplaySettings;
+
+    private string NickName => _playerRegistry.LocalPlayerState.NickName;
+    private const char Separator = ' ';
+    private readonly Dictionary<string, WukongChatterCommand> _commands = new();
+
+    public WukongChatter(
+        WukongConnectionManager connection,
+        WukongPlayerRegistry playerRegistry,
+        WukongPlayerPropertyManager playerProperty,
+        WukongSynchronizer synchronizer,
+        WukongRpcCallbacks rpc,
+        WukongGameplaySettings gameplaySettings
+    )
     {
-        public Action<ReadOnlyMemory<string>> Handler { get; } = handler;
+        Logging.LogDebug("Initializing WukongChatter");
+        
+        _connection = connection;
+        _playerRegistry = playerRegistry;
+        _playerProperty = playerProperty;
+        _synchronizer = synchronizer;
+        _rpc = rpc;
+        _gameplaySettings = gameplaySettings;
+
+        _connection.OnMasterClientChanged += OnMasterClientChanged;
+        _synchronizer.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
+        _synchronizer.OnOtherPlayerLeft += OnOtherPlayerLeftHandler;
+        
+        SetupCommands();
     }
 
-    public class WukongChatter
+    public void Dispose()
     {
-        private readonly WukongClient _wukongClient;
-        private readonly WukongMpMod _mod;
+        Logging.LogDebug("Disposing WukongChatter");
+        
+        _synchronizer.OnOtherPlayerLeft -= OnOtherPlayerLeftHandler;
+        _synchronizer.OnAfterJoinedRoom -= OnAfterJoinedRoomHandler;
+        _connection.OnMasterClientChanged -= OnMasterClientChanged;
+    }
 
-        private string NickName => _wukongClient.LocalPlayerState.NickName;
-        private const char Separator = ' ';
-        private readonly Dictionary<string, Command> _commands = new();
+    private void OnMasterClientChanged(string newMasterName)
+    {
+        SendServerMessage("MasterClient", newMasterName);
+    }
 
-        public WukongChatter(WukongClient owner, WukongMpMod mod)
+    public void ProcessMessage(string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
         {
-            _wukongClient = owner;
-            _mod = mod;
-            SetupCommands();
+            message = message.Trim();
+            if (!TryHandleCommand(message))
+            {
+                SendChatMessage(NickName, message);
+            }
+        }
+    }
+
+    private void SetupCommands()
+    {
+        _commands.Add("/spawn", new WukongChatterCommand(RequestSpawn));
+        _commands.Add("/reconnect", new WukongChatterCommand(RequestReconnect));
+        _commands.Add("/disconnect", new WukongChatterCommand(RequestDisconnect));
+        _commands.Add("/rebirth", new WukongChatterCommand(RequestRebirth));
+        _commands.Add("/rebirth_point", new WukongChatterCommand(RequestPointRebirth));
+        _commands.Add("/giveup", new WukongChatterCommand(RequestGiveUp));
+        _commands.Add("/master", new WukongChatterCommand(RequestNewMasterClient));
+        _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
+        _commands.Add("/hp_scaling", new WukongChatterCommand(SetMonsterHpScaling));
+    }
+
+    private void RequestSpawn(ReadOnlyMemory<string> args)
+    {
+        if (!UnitPathsConfig.IsValidMonsterName(args.Span[0]))
+        {
+            ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[0]}\"");
+            return;
         }
 
-        public void ProcessMessage(string message)
+        var teamId = PvPUtils.GetOppositeTeam(_playerRegistry.LocalPlayerState.TeamId);
+
+        switch (args.Length)
         {
-            if (!string.IsNullOrWhiteSpace(message))
+            case 1:
+                _rpc.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], 1, teamId));
+                break;
+            case 2:
             {
-                message = message.Trim();
-                if (!TryHandleCommand(message))
+                if (int.TryParse(args.Span[1], out var count))
                 {
-                    SendChatMessage(NickName, message);
-                }
-            }
-        }
-
-        private void SetupCommands()
-        {
-            _commands.Add("/spawn", new Command(RequestSpawn));
-            _commands.Add("/reconnect", new Command(RequestReconnect));
-            _commands.Add("/disconnect", new Command(RequestDisconnect));
-            _commands.Add("/rebirth", new Command(RequestRebirth));
-            _commands.Add("/rebirth_point", new Command(RequestPointRebirth));
-            _commands.Add("/giveup", new Command(RequestGiveUp));
-            _commands.Add("/master", new Command(RequestNewMasterClient));
-            _commands.Add("/spectator", new Command(SetSpectatorStatus));
-            _commands.Add("/hp_scaling", new Command(SetMonsterHpScaling));
-        }
-
-        private void RequestSpawn(ReadOnlyMemory<string> args)
-        {
-            if (!UnitPathsConfig.IsValidMonsterName(args.Span[0]))
-            {
-                ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[0]}\"");
-                return;
-            }
-
-            var teamId = PvPUtils.GetOppositeTeam(_wukongClient.LocalPlayerState.TeamId);
-
-            switch (args.Length)
-            {
-                case 1:
-                    WukongMpMod.Instance.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], 1, teamId));
-                    break;
-                case 2:
-                {
-                    if (int.TryParse(args.Span[1], out var count))
-                    {
-                        WukongMpMod.Instance.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], count, teamId));
-                    }
-                    else
-                    {
-                        ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        private void RequestRebirth(ReadOnlyMemory<string> _)
-        {
-            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PlayerId);
-            SendServerMessage("PlayerRequestedRebirth", NickName);
-        }
-
-        private void RequestPointRebirth(ReadOnlyMemory<string> _)
-        {
-            
-            PlayerUtils.TeleportLocalPlayerToRebirthPoint();
-            WukongMpMod.Instance.SendRebirthPlayer(WukongMpMod.Instance.RelayClient.PlayerId);
-            SendServerMessage("PlayerRequestedRebirth", NickName);
-        }
-
-        private void RequestGiveUp(ReadOnlyMemory<string> _)
-        {
-            SendServerMessage("PlayerGaveUp", NickName);
-            WukongMpMod.Instance.SendSuicide();
-        }
-
-        private void RequestReconnect(ReadOnlyMemory<string> _)
-        {
-            _wukongClient.Reconnect();
-        }
-
-        private void RequestDisconnect(ReadOnlyMemory<string> _)
-        {
-            if (_wukongClient.ConnectedAndInRoom)
-            {
-                SendServerMessage("PlayerLeft", NickName);
-                _wukongClient.StopRelayClient();
-            }
-        }
-
-        private void RequestNewMasterClient(ReadOnlyMemory<string> args)
-        {
-            if (args.Length == 1)
-            {
-                _wukongClient.SetMasterClient(args.Span[0]);
-            }
-        }
-
-        private void SetSpectatorStatus(ReadOnlyMemory<string> args)
-        {
-            if (args.Length == 2)
-            {
-                var username = args.Span[0];
-                var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
-
-                var player = _wukongClient.AllConnectedPlayers.FirstOrDefault(x => x.NickName == username);
-                if (player == null)
-                    return;
-
-                _wukongClient.SetRemotePlayerProperty(player.PlayerId, nameof(PlayerState.IsSpectator), isSpectator);
-            }
-        }
-
-        private void SetMonsterHpScaling(ReadOnlyMemory<string> args)
-        {
-            if (args.Length == 1)
-            {
-                var hpScaling = args.Span[0];
-
-                if (int.TryParse(hpScaling, out var scaling))
-                {
-                    WukongMpMod.Instance.SetMonsterHpScaling(scaling);
-                    SendServerMessage(nameof(Texts.SetMonsterHpScaling), scaling.ToString());
+                    _rpc.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], count, teamId));
                 }
                 else
                 {
-                    ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidCommand}: \"{hpScaling}\"");
+                    ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
                 }
+
+                break;
             }
         }
+    }
 
-        private bool TryHandleCommand(string message)
+    private void RequestRebirth(ReadOnlyMemory<string> _)
+    {
+        _rpc.SendRebirthPlayer(_connection.RelayClient.PlayerId);
+        SendServerMessage("PlayerRequestedRebirth", NickName);
+    }
+
+    private void RequestPointRebirth(ReadOnlyMemory<string> _)
+    {
+        
+        PlayerUtils.TeleportLocalPlayerToRebirthPoint();
+        _rpc.SendRebirthPlayer(_connection.RelayClient.PlayerId);
+        SendServerMessage("PlayerRequestedRebirth", NickName);
+    }
+
+    private void RequestGiveUp(ReadOnlyMemory<string> _)
+    {
+        SendServerMessage("PlayerGaveUp", NickName);
+        _rpc.SendSuicide();
+    }
+
+    private void RequestReconnect(ReadOnlyMemory<string> _)
+    {
+        _connection.Reconnect();
+    }
+
+    private void RequestDisconnect(ReadOnlyMemory<string> _)
+    {
+        if (_connection.RelayClient.InRoom)
         {
-            var commandParts = message.Split(Separator);
-            if (commandParts.Length > 0)
+            SendServerMessage("PlayerLeft", NickName);
+            _connection.Disconnect();
+        }
+    }
+
+    private void RequestNewMasterClient(ReadOnlyMemory<string> args)
+    {
+        if (args.Length == 1)
+        {
+            _connection.SetMasterClient(args.Span[0]);
+        }
+    }
+
+    private void SetSpectatorStatus(ReadOnlyMemory<string> args)
+    {
+        if (args.Length == 2)
+        {
+            var username = args.Span[0];
+            var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
+
+            var player = _playerRegistry.AllConnectedPlayers.FirstOrDefault(x => x.NickName == username);
+            if (player == null)
+                return;
+
+            _playerProperty.SetRemotePlayerProperty(player.PlayerId, nameof(PlayerState.IsSpectator), isSpectator);
+        }
+    }
+
+    private void SetMonsterHpScaling(ReadOnlyMemory<string> args)
+    {
+        if (args.Length == 1)
+        {
+            var hpScaling = args.Span[0];
+
+            if (int.TryParse(hpScaling, out var scaling))
             {
-                if (_commands.ContainsKey(commandParts[0]))
-                {
-                    var cmd = _commands[commandParts[0]];
-                    var rest = commandParts.Skip(1).ToArray();
-                    cmd.Handler(rest);
-                    return true;
-                }
+                _gameplaySettings.SetMonsterHpScaling(scaling);
+                SendServerMessage(nameof(Texts.SetMonsterHpScaling), scaling.ToString());
             }
-
-            return false;
-        }
-
-        private void SendChatMessage(string nickname, string message)
-        {
-            Logging.LogDebug("Sending message {Message}", message);
-            _mod.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
-        }
-
-        public void SendServerMessage(string message, params string[] args)
-        {
-            Logging.LogDebug("Sending server message {Message}", message);
-            _mod.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
-        }
-
-        public static void OnGetMessage(ChatMessage message)
-        {
-            var senderNickname = message.IsServer ? "Server" : message.Nickname!;
-            var translatedMessage = message.Message;
-            if (message.IsServer)
+            else
             {
-                translatedMessage = string.Format(Texts.ResourceManager.GetString(message.Message, Texts.Culture)!, [.. message.Placeholders]);
+                ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidCommand}: \"{hpScaling}\"");
             }
+        }
+    }
 
-            Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
-            ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
+    private bool TryHandleCommand(string message)
+    {
+        var commandParts = message.Split(Separator);
+        if (commandParts.Length > 0)
+        {
+            if (_commands.ContainsKey(commandParts[0]))
+            {
+                var cmd = _commands[commandParts[0]];
+                var rest = commandParts.Skip(1).ToArray();
+                cmd.Handler(rest);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void SendChatMessage(string nickname, string message)
+    {
+        Logging.LogDebug("Sending message {Message}", message);
+        _rpc.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
+    }
+
+    public void SendServerMessage(string message, params string[] args)
+    {
+        Logging.LogDebug("Sending server message {Message}", message);
+        _rpc.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
+    }
+
+    public static void OnGetMessage(ChatMessage message)
+    {
+        var senderNickname = message.IsServer ? "Server" : message.Nickname!;
+        var translatedMessage = message.Message;
+        if (message.IsServer)
+        {
+            translatedMessage = string.Format(Texts.ResourceManager.GetString(message.Message, Texts.Culture)!, [.. message.Placeholders]);
+        }
+
+        Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
+        ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
+    }
+    
+    private void OnAfterJoinedRoomHandler()
+    {
+        Logging.LogDebug("Player {PlayerName} joined the room", _playerRegistry.LocalPlayerState.NickName);
+        SendServerMessage("PlayerJoined", _playerRegistry.LocalPlayerState.NickName);
+    }
+
+    private void OnOtherPlayerLeftHandler(PlayerId playerId)
+    {
+        if (_connection.RelayClient.IsMasterClient)
+        {
+            var player = _connection.RelayClient.GetPlayerState(playerId)!;
+            var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");
+            SendServerMessage("PlayerLeft", nickname);
         }
     }
 }

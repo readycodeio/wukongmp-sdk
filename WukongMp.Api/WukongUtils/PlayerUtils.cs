@@ -13,7 +13,7 @@ namespace WukongMp.Api.WukongUtils
         {
             GameLoopPatch.QueueOnGameThread(() =>
             {
-                var playerState = WukongMpModBase.Client.LocalPlayerState;
+                var playerState = DI.Instance.Players.LocalPlayerState;
                 BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
                 playerState.TeleportFinishFrames = 5;
                 playerState.Pawn?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);

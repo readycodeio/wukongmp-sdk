@@ -58,6 +58,7 @@ namespace WukongMp.Api.Old.State
             set => SetProperty(nameof(ConsumablesAllowed), value);
         }
 
+        // Is the skill enabled in PVP
         public bool ImmobilizeAllowed
         {
             get => Constants.IsCoop || GetProperty<bool>(nameof(ImmobilizeAllowed));

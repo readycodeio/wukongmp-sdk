@@ -50,8 +50,6 @@ namespace WukongMp.Api.Patches
         {
             Logging.LogDebug("Spawning servant: {TamerName}, with Guid {Guid}", TamerClass.Value.GetPathName(), guid);
 
-            var client = WukongMpMod.Client;
-
             var world = GameUtils.GetWorld();
             if (world == null || TamerClass.Value == null)
             {

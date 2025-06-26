@@ -3,7 +3,7 @@ using ReadyM.Relay.Common.ECS;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob : IEach<LocalTamerComponent, NetworkIdComponent>
+public readonly struct SyncMontageJob(WukongRpcCallbacks rpc) : IEach<LocalTamerComponent, NetworkIdComponent>
 {
     public void Execute(ref LocalTamerComponent tamerComponent, ref NetworkIdComponent netId)
     {
@@ -29,14 +29,14 @@ public readonly struct SyncMontageJob : IEach<LocalTamerComponent, NetworkIdComp
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
                 // TODO: Replace by system
-                WukongMpMod.Instance.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
+                rpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            WukongMpMod.Instance.SendMontageCancel(netId);
+            rpc.SendMontageCancel(netId);
         }
 
         montageState.LocalMontage = currentMontage;
