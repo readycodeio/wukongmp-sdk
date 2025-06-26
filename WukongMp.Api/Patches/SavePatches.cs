@@ -201,7 +201,7 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData = worldArchiveData.GameArchiveData.PersistentECSData;
                 OutArchiveData.StateMachineArchiveData = worldArchiveData.GameArchiveData.StateMachineArchiveData;
                 OutArchiveData.TaskArchiveData = worldArchiveData.GameArchiveData.TaskArchiveData;
-                // Add spells and talents from the world save to the player save
+                // Add spells and interactions recieved during player absence
                 foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.SpellList)
                 {
                     if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Contains(spell))
@@ -209,25 +209,11 @@ namespace WukongMp.Api.Patches
                         OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(spell);
                     }
                 }
-                foreach (var talent in worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.TalenList)
+                foreach (var interaction in worldArchiveData.GameArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList)
                 {
-                    if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.Contains(talent))
+                    if (!OutArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList.Contains(interaction))
                     {
-                        OutArchiveData.RoleData.RoleCs.Actor.Progress.TalenList.Add(talent);
-                    }
-                }
-                foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.RedPoint.SpellList)
-                {
-                    if (!OutArchiveData.RoleData.RoleCs.RedPoint.SpellList.Contains(spell))
-                    {
-                        OutArchiveData.RoleData.RoleCs.RedPoint.SpellList.Add(spell);
-                    }
-                }
-                foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.RedPoint.ShrineSpellList)
-                {
-                    if (!OutArchiveData.RoleData.RoleCs.RedPoint.ShrineSpellList.Contains(spell))
-                    {
-                        OutArchiveData.RoleData.RoleCs.RedPoint.ShrineSpellList.Add(spell);
+                        OutArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList.Add(interaction);
                     }
                 }
             }
