@@ -621,4 +621,16 @@ public partial class WukongMpMod
             TamerUtils.SubtractSpawnedUnit(player.PlayerId, entity.Value);
         }
     }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnTamerSkillInteract(SkillInteractData interactData)
+    {
+        if (TryGetEntityByNetworkId(interactData.InteractiveId, out var entity))
+        {
+            if (entity.HasValue)
+            {
+                TamerUtils.TriggerSkillInteract(entity.Value, interactData.SkillId);
+            }
+        }
+    }
 }
