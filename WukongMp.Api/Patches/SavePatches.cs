@@ -7,6 +7,7 @@ using CommB1;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using UnrealEngine.Runtime;
@@ -201,7 +202,7 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData = worldArchiveData.GameArchiveData.PersistentECSData;
                 OutArchiveData.StateMachineArchiveData = worldArchiveData.GameArchiveData.StateMachineArchiveData;
                 OutArchiveData.TaskArchiveData = worldArchiveData.GameArchiveData.TaskArchiveData;
-                // Add spells and interactions recieved during player absence
+                // Add spells recieved during player absence
                 foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.SpellList)
                 {
                     if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Contains(spell))
@@ -209,14 +210,29 @@ namespace WukongMp.Api.Patches
                         OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(spell);
                     }
                 }
-                foreach (var spell in OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList)
+                // Set spells from world archive if they are not set in player archive
+                var worldSpellItemDict = new Dictionary<SpellType, int>(worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.ToDictionary(spell => spell.Type, spell => spell.SpellId));
+                var spellItemDict = new Dictionary<SpellType, int>(OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.ToDictionary(spell => spell.Type, spell => spell.SpellId));
+                foreach (var (worldSpellType, worldSpellId) in worldSpellItemDict)
                 {
-                    var type = GameDBRuntime.GetSpellType(spell);
-                    if (!HasSpellActive(OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList, type))
+                    if (worldSpellId == 0)
                     {
-                        OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = spell, Type = type });
+                        continue;
+                    }
+                    if (spellItemDict.TryGetValue(worldSpellType, out var existingSpellId) && existingSpellId == 0)
+                    {
+                        Logging.LogDebug("Assigning spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
+                        spellItemDict[worldSpellType] = worldSpellId;
+                    }
+                    else if (!spellItemDict.ContainsKey(worldSpellType))
+                    {
+                        Logging.LogDebug("Adding spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
+                        spellItemDict.Add(worldSpellType, worldSpellId);
                     }
                 }
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.AddRange([.. spellItemDict.Select(kvp => new SpellItem { SpellId = kvp.Value, Type = kvp.Key })]);
+                // Add interactions recieved during player absence
                 foreach (var interaction in worldArchiveData.GameArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList)
                 {
                     if (!OutArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList.Contains(interaction))
@@ -240,18 +256,6 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5103); // Spell binder
                 OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5202); // Rock solid
             }
-        }
-
-        public static bool HasSpellActive(IEnumerable<SpellItem>spells, SpellType spellType)
-        {
-            foreach (var spell in spells)
-            {
-                if (spell.Type == spellType && spell.SpellId != 0)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 
