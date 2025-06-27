@@ -10,7 +10,7 @@ using WukongApi.UI;
 namespace WukongMPMod
 {
     // ReSharper disable once UnusedType.Global
-    public class Mod : ICSharpMod
+    public class Mod : ICSharpModEx
     {
         public string Name => "WukongMP";
         public string Version => "1.0.0";
@@ -163,5 +163,8 @@ namespace WukongMPMod
             Logging.LogCriticalException(args.Exception);
             args.SetObserved();
         }
+
+        public object? GetReloadContext() => null;
+        public void Reload(object? context) { }
     }
 }
