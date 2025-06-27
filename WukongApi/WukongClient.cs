@@ -1170,10 +1170,18 @@ namespace WukongApi
 
         private void OnPlayerLeftRoomHandler(int playerId)
         {
-            var player = RelayClient.GetPlayerState(playerId)!;
-            var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");
+            var player = RelayClient.GetPlayerState(playerId);
 
-            Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", nickname, playerId);
+            if (player != null)
+            {
+                var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");
+                Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", nickname, playerId);
+
+                if (IsMasterClient)
+                {
+                    WukongChat.SendServerMessage("PlayerLeft", nickname);
+                }
+            }
 
             if (ConnectedPlayers.Remove(playerId, out var playerState))
             {
@@ -1186,8 +1194,6 @@ namespace WukongApi
 
             if (IsMasterClient)
             {
-                WukongChat.SendServerMessage("PlayerLeft", nickname);
-
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(Constants.PlayerTtlMs);
