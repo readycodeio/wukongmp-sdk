@@ -209,6 +209,14 @@ namespace WukongMp.Api.Patches
                         OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(spell);
                     }
                 }
+                foreach (var spell in OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList)
+                {
+                    var type = GameDBRuntime.GetSpellType(spell);
+                    if (!HasSpellActive(OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList, type))
+                    {
+                        OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = spell, Type = type });
+                    }
+                }
                 foreach (var interaction in worldArchiveData.GameArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList)
                 {
                     if (!OutArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList.Contains(interaction))
@@ -232,6 +240,18 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5103); // Spell binder
                 OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5202); // Rock solid
             }
+        }
+
+        public static bool HasSpellActive(IEnumerable<SpellItem>spells, SpellType spellType)
+        {
+            foreach (var spell in spells)
+            {
+                if (spell.Type == spellType && spell.SpellId != 0)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
