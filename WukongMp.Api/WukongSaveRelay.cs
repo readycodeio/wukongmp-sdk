@@ -7,19 +7,19 @@ using WukongMp.Api.Old;
 
 namespace WukongMp.Api;
 
-public class WukongSaveRelay(IRelayClient relayClient)
+public class WukongSaveRelay(IBlobClient blobClient)
 {
     public Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
-        => relayClient.UploadBlobAsync(new BlobInfo(Constants.CoopWorldArchiveName, content), ct);
+        => blobClient.UploadBlobAsync(new BlobInfo(Constants.CoopWorldArchiveName, content), ct);
 
     public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default) 
-        => relayClient.DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
+        => blobClient.DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
 
     public Task<bool> UploadPlayerSaveAsync(byte[] content, CancellationToken ct = default)
-        => relayClient.UploadBlobAsync(new BlobInfo(PlayerSaveName, content), ct);
+        => blobClient.UploadBlobAsync(new BlobInfo(PlayerSaveName, content), ct);
 
     public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default) 
-        => relayClient.DownloadBlobAsync(PlayerSaveName, ct);
+        => blobClient.DownloadBlobAsync(PlayerSaveName, ct);
 
     private static string PlayerSaveName => $"player_{CmdLineParams.Instance.UserGuid:N}.sav";
 }

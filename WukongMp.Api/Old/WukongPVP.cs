@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 using b1;
 using BtlShare;
 using CSharpModBase;
-using ReadyM.Api;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Relay.Client;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.Protocol.Enums;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -789,7 +790,7 @@ public partial class WukongPVP : IDisposable
         SendPvpEvent([(int)ev, data]);
     }
     
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnPvpEvent(int[] data)
     {
         // TODO: Not QueueOnGameThread, why?

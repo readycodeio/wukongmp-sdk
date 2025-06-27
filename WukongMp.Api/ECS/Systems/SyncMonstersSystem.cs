@@ -1,20 +1,20 @@
-﻿using b1;
+﻿using System;
+using b1;
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SyncMonstersSystem(Lazy<PlayerId> player) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
-    private bool IsMasterClient => relayClient.IsMasterClient;
-
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref hpComp, ref teamComp, ref tamerComp, ref localTamerComp, entity) =>
+        Query.ForEachEntity((ref meta, ref hpComp, ref teamComp, ref tamerComp, ref localTamerComp, entity) =>
         {
             if (localTamerComp.IsMonsterSynced || !tamerComp.ShouldBeSpawned)
             {
@@ -50,7 +50,7 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
 #endif
 
-                if (IsMasterClient && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
+                if (meta.Owner == player.Value && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
                 {
                     hpComp.HpMaxBase *= hpComp.HpMult;
                     hpComp.Hp *= hpComp.HpMult;
@@ -76,7 +76,7 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
             }
 
-            if (!IsMasterClient)
+            if (meta.Owner != player.Value)
             {
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);

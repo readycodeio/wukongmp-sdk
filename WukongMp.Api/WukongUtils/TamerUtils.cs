@@ -1,12 +1,11 @@
 ﻿using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
-using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.Wukong.Components;
 using System.Collections.Generic;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
-using WukongMp.Api.Old;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -66,29 +65,29 @@ namespace WukongMp.Api.WukongUtils
             Logging.LogDebug("Discovering tamers...");
             
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            if (DI.Instance.RelayClient.IsMasterClient)
+            foreach (var actor in allActorsOfClass)
             {
-                foreach (var actor in allActorsOfClass)
+                var tamerRef = actor.CurrentRef;
+                var guid = BGU_DataUtil.GetActorGuid(actor);
+                Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
+                var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
+                if (entity == null)
                 {
-                    var tamerRef = actor.CurrentRef;
-                    var guid = BGU_DataUtil.GetActorGuid(actor);
-                    Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByGuid(guid);
-                    if (entity == null)
-                    {
-                        SpawningUtils.CreateMonsterInEcs(guid, actor, 2, actor.PathName);
-                    }
-                    else
-                    {
-                        Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
-                    }
+                    SpawningUtils.CreateMonsterInEcs(guid, actor, 2, actor.PathName);
+                }
+                else
+                {
+                    Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
                 }
             }
         }
 
         public static void ClearEcsMonsters()
         {
-            DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { DI.Instance.UpdateLoop.CommandBuffer.DeleteEntity(entity.Id); });
+            WukongMpMod.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) =>
+            {
+                WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
+            });
         }
 
         public static void DestroyMonster(Entity entity)

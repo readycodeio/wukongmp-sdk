@@ -6,6 +6,7 @@ using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -236,7 +237,7 @@ public static class PatchOnCastImmobilize
             {
                 Logging.LogDebug("Broadcasting trigger immobilize");
                 var netId = immobilizedPlayer == null
-                    ? immobilizedMonster!.Value.GetComponent<NetworkIdComponent>()
+                    ? immobilizedMonster!.Value.GetComponent<MetadataComponent>().NetId
                     : NetworkIdComponent.FromPlayerId(immobilizedPlayer.PlayerId);
 
                 DI.Instance.Rpc.SendTriggerImmobilize(new TriggerImmobilizeData(netId, NetworkIdComponent.FromPlayerId(castingPlayerState.PlayerId), hasBuff));
@@ -292,7 +293,7 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        var netId = playerState != null ? NetworkIdComponent.FromPlayerId(playerState.PlayerId) : entity!.Value.GetComponent<NetworkIdComponent>();
+        var netId = playerState != null ? NetworkIdComponent.FromPlayerId(playerState.PlayerId) : entity!.Value.GetComponent<MetadataComponent>().NetId;
 
         if (DI.Instance.RelayClient.IsMasterClient)
         {
@@ -356,10 +357,10 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (entity.HasValue)
             {
-                var netId = entity.Value.GetComponent<NetworkIdComponent>();
+                var meta = entity.Value.GetComponent<MetadataComponent>();
                 var pawn = entity.Value.GetComponent<LocalTamerComponent>().Pawn;
 
-                DI.Instance.Rpc.SendRelieveImmobilize(netId);
+                WukongMpMod.Instance.SendRelieveImmobilize(meta.NetId);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();
             }
 

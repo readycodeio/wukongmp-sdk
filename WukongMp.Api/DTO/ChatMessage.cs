@@ -2,8 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LiteNetLib.Utils;
-using ReadyM.Relay.Common.Serialization;
-using ReadyM.Relay.Common.Shim;
+using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.DTO;
 

@@ -1,10 +1,9 @@
  using System.Linq;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api;
-using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.Wukong.Components;
-using WukongMp.Api.ECS;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;

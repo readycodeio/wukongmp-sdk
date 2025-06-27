@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LiteNetLib;
 using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -14,7 +15,7 @@ public class WukongConnectionManager : IDisposable
 {
     private readonly WukongPlayerRegistry _playerRegistry;
     private readonly RoomStateProxy _roomState;
-    private readonly NetworkedStateSynchronizer _synchronizer;
+    private readonly ClientNetworkedStateSynchronizer _synchronizer;
 
     public IRelayClient RelayClient { get; }
     
@@ -25,7 +26,7 @@ public class WukongConnectionManager : IDisposable
 
     public WukongConnectionManager(IRelayClient relayClient,
         WukongPlayerRegistry playerRegistry,
-        NetworkedStateSynchronizer synchronizer,
+        ClientNetworkedStateSynchronizer synchronizer,
         RoomStateProxy roomState)
     {
         _playerRegistry = playerRegistry;

@@ -1,9 +1,9 @@
 ﻿using b1;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
 using System;
 using System.Reflection;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -26,25 +26,20 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.RelayClient.InRoom)
                 return;
 
-            // send updates for each monster
-            if (DI.Instance.RelayClient.IsMasterClient)
+            WukongMpMod.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((ref meta, ref tamer, ref trans, _) =>
             {
-                DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
-                {
-                    if (!tamer.IsTamerSynced || !tamer.IsTamerValid || tamer.Pawn == null)
-                        return;
+                if (!tamer.IsTamerSynced || !tamer.IsTamerValid || tamer.Pawn == null)
+                    return;
 
+                if (WukongMpMod.Instance.OwnsEntity(meta.Owner))
+                {
+                    // send updates for owned monsters
                     trans.Position = tamer.Pawn.GetActorLocation().ToVector3();
                     trans.Rotation = tamer.Pawn.GetActorRotation().ToVector3();
-                });
-            }
-            else
-            {
-                DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((ref tamer, ref trans, _) =>
+                }
+                else
                 {
-                    if (!tamer.IsTamerValid || !tamer.IsTamerSynced || tamer.Pawn == null)
-                        return;
-
+                    // apply updates for monsters owned by other players
                     var events = BUS_EventCollectionCS.Get(tamer.Pawn);
 
                     if (events == null)
@@ -60,8 +55,8 @@ namespace WukongMp.Api.Patches
                     {
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
                     }
-                });
-            }
+                }
+            });
         }
     }
 
@@ -135,9 +130,8 @@ namespace WukongMp.Api.Patches
                     if (!localTamerComp.IsLocallySpawned)
                     {
                         localTamerComp.IsLocallySpawned = true;
-                        ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                        Logging.LogDebug("Sending spawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
-                        DI.Instance.Rpc.SendUnitSpawned(netComp);
+                        var meta = entity.Value.GetComponent<MetadataComponent>();
+                        WukongMpMod.Instance.SendUnitSpawned(meta.NetId);
                     }
                 }
                 else
@@ -184,9 +178,8 @@ namespace WukongMp.Api.Patches
                 if (localTamerComp.IsLocallySpawned)
                 {
                     localTamerComp.IsLocallySpawned = false;
-                    ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                    Logging.LogDebug("Sending despawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
-                    DI.Instance.Rpc.SendUnitDespawn(netComp);
+                    var meta = entity.Value.GetComponent<MetadataComponent>();
+                    WukongMpMod.Instance.SendUnitDespawn(meta.NetId);
                 }
 
                 ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
@@ -196,6 +189,7 @@ namespace WukongMp.Api.Patches
                     localTamerComp.IsMonsterSynced = false;
                     return true;
                 }
+
                 return false;
             }
             else
@@ -210,13 +204,19 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnAIPerceptionSetting
     {
-        public static bool Prefix(bool bEnable)
+        public static bool Prefix(BUS_AIComp __instance, bool bEnable)
         {
             if (!DI.Instance.RelayClient.InRoom)
                 return true;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-                return true;
+            var owner = __instance.GetOwner();
+            if (owner != null)
+            {
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+
+                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    return true;
+            }
 
             return !bEnable;
         }
@@ -226,13 +226,19 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnAIPauseBT
     {
-        public static bool Prefix(bool IsPause)
+        public static bool Prefix(BUS_AIComp __instance, bool IsPause)
         {
             if (!DI.Instance.RelayClient.InRoom)
                 return true;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-                return true;
+            var owner = __instance.GetOwner();
+            if (owner != null)
+            {
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+
+                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    return true;
+            }
 
             return IsPause;
         }
@@ -243,13 +249,19 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnEnableCanSetBT
     {
-        public static bool Prefix(bool bEnable)
+        public static bool Prefix(BUS_AIComp __instance, bool bEnable)
         {
             if (!DI.Instance.RelayClient.InRoom)
                 return true;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-                return true;
+            var owner = __instance.GetOwner();
+            if (owner != null)
+            {
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+
+                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    return true;
+            }
 
             return !bEnable;
         }
@@ -259,13 +271,19 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnAIPauseFsm
     {
-        public static bool Prefix(bool IsPause)
+        public static bool Prefix(BUS_FsmComp __instance, bool IsPause)
         {
             if (!DI.Instance.RelayClient.InRoom)
                 return true;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-                return true;
+            var owner = __instance.GetOwner();
+            if (owner != null)
+            {
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+
+                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    return true;
+            }
 
             return IsPause;
         }
@@ -280,13 +298,19 @@ namespace WukongMp.Api.Patches
             return AccessTools.Method("b1.BUS_BattleStateComp:OnEnableCanUpdateHatred");
         }
 
-        public static bool Prefix(bool bEnable)
+        public static bool Prefix(UActorCompBaseCS __instance, bool bEnable)
         {
             if (!DI.Instance.RelayClient.InRoom)
                 return true;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-                return true;
+            var owner = __instance.GetOwner();
+            if (owner != null)
+            {
+                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+
+                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    return true;
+            }
 
             return !bEnable;
         }
@@ -344,19 +368,16 @@ namespace WukongMp.Api.Patches
                 return false;
             }
 
-            if (DI.Instance.RelayClient.IsMasterClient)
+            var owner = __instance.GetOwner();
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
             {
-                var owner = __instance.GetOwner();
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
-                if (entity != null)
+                var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
+                if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
                 {
-                    var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
-                    if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
-                    {
-                        Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
-                        var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
-                        DI.Instance.Rpc.SendTriggerFsmState(new FsmStateData(netPeer, EventTag.TagName.ToString()));
-                    }
+                    Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
+                    var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
+                    WukongMpMod.Instance.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
                 }
             }
 
@@ -398,7 +419,7 @@ namespace WukongMp.Api.Patches
                     return;
 
                 ref var anim = ref entity.Value.GetComponent<MonsterAnimationComponent>();
-                if (DI.Instance.RelayClient.IsMasterClient)
+                if (WukongMpMod.Instance.OwnsEntity(entity.Value))
                 {
                     anim.MoveAiType = (byte)___MovementData.MoveAIType;
                 }

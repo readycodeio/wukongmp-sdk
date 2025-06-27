@@ -1,12 +1,16 @@
 ﻿using Friflo.Engine.ECS;
-using ReadyM.Relay.Common.ECS;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.Multiplayer.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob(WukongRpcCallbacks rpc) : IEach<LocalTamerComponent, NetworkIdComponent>
+public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayer) : IEach<LocalTamerComponent, MetadataComponent>
 {
-    public void Execute(ref LocalTamerComponent tamerComponent, ref NetworkIdComponent netId)
+    public void Execute(ref LocalTamerComponent tamerComponent, ref MetadataComponent meta)
     {
+        if (meta.Owner != ownerPlayer)
+            return;
+
         if (tamerComponent.Pawn == null)
             return;
 
@@ -29,14 +33,14 @@ public readonly struct SyncMontageJob(WukongRpcCallbacks rpc) : IEach<LocalTamer
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
                 // TODO: Replace by system
-                rpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
+                rpc.SendMontageCallback(meta.NetId, currentMontage, currentPosition, hasMontageRewound);
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            rpc.SendMontageCancel(netId);
+            WukongMpMod.Instance.SendMontageCancel(meta.NetId);
         }
 
         montageState.LocalMontage = currentMontage;

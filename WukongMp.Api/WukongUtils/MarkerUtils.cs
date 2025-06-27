@@ -2,11 +2,10 @@
 using b1;
 using b1.BGW;
 using Friflo.Engine.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS;
-using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
 

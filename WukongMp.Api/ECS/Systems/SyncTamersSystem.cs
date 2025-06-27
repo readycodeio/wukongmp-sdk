@@ -1,15 +1,13 @@
 ﻿using System.Linq;
 using b1;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
-using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, NetworkIdComponent, TranslationComponent, TeamComponent>
+public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
@@ -24,10 +22,16 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
             return;
         }
 
-        Query.ForEachEntity((ref tamer, ref localTamer, ref netId, ref trans, ref team, entity) =>
+        Query.ForEachEntity((ref tamer, ref localTamer, entity) =>
         {
             if (!localTamer.IsTamerSynced)
             {
+                if (tamer.Guid is null)
+                {
+                    Logging.LogWarning("Entity {EntityId} has a TamerComponent with a null Guid. Cannot sync tamer.", entity.Id);
+                    return;
+                }
+
                 if (allTamers.TryGetValue(tamer.Guid, out var actor))
                 {
                     localTamer.Tamer = actor;

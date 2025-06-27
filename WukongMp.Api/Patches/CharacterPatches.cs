@@ -1,23 +1,21 @@
-﻿using System.Reflection;
-using b1;
+﻿using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
-using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
     [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchAttrs
+    [HarmonyPatchCategory(Constants.CoopPatches)]
+    public static class CoopPatchAttrs
     {
         public static void Postfix(BUC_AttrContainer __instance)
         {
@@ -32,52 +30,43 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (DI.Instance.RelayClient.IsMasterClient)
+            if (__instance.Owner == client.LocalPlayerState.Pawn)
             {
-                // master client always has the latest data for himself, but may need to apply it for others
-                if (__instance.Owner == players.LocalPlayerState.Pawn)
-                    return;
-
-                var playerState = players.GetPlayerByActor(__instance.Owner);
-                if (playerState != null)
-                {
-                    foreach (var (attr, value) in playerState.Attributes)
-                    {
-                        __instance.SetFloatValue(attr, value);
-                    }
-                }
-
-                return;
+                return; // players own their characters
             }
 
-            // for clients, their own attributes are already set by them, and they do not care about attributes of other clients / monsters
-            // because it's the master client that ultimately calculates damage in combat
+            var playerState = client.GetPlayerByActor(__instance.Owner);
 
-            if (__instance.Owner == players.LocalPlayerState.Pawn)
+            // remote player - sync properties and HP
+
+            if (playerState != null)
             {
-                // local player (client)
-                if (players.LocalPlayerState.Hp <= -80000)
+                // set their attributes
+                foreach (var (attr, value) in playerState.Attributes)
                 {
-                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", players.LocalPlayerState.Hp);
+                    __instance.SetFloatValue(attr, value);
+                }
+
+                if (playerState.Hp <= -80000)
+                {
+                    Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", playerState.Hp);
                     return;
                 }
 
-                var currentHp = __instance.GetFloatValue(EBGUAttrFloat.Hp);
-
-                if (players.LocalPlayerState.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
+                if (playerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                 {
                     return; // do not reapply the same value
                 }
 
-                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, players.LocalPlayerState.Hp);
+                Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
+                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
-                if (!set.Equals(players.LocalPlayerState.Hp, Constants.FloatComparisonTolerance))
+                if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
                 {
-                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", players.LocalPlayerState.NickName, players.LocalPlayerState.Hp, set);
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.Hp), set);
+                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", playerState.NickName, playerState.Hp, set);
                 }
 
-                if (players.LocalPlayerState.IsDead)
+                if (playerState.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
@@ -87,98 +76,47 @@ namespace WukongMp.Api.Patches
                         return;
                     }
 
-                    Logging.LogDebug("Applying unit dead for player {PlayerId}", players.LocalPlayerState.PlayerId);
-
+                    Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PlayerId);
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
+
+                return;
             }
-            else
+
+            // remote monster - sync HP
+
+            var entity = WukongMpMod.Instance.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
+            if (!entity.HasValue)
+                return;
+
+            // owned, skip
+            if (WukongMpMod.Instance.OwnsEntity(entity.Value))
+                return;
+
+            if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
             {
-                var playerState = players.GetPlayerByActor(__instance.Owner);
+                Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
+                return;
+            }
 
-                // remote player
-                if (playerState != null)
-                {
-                    // set their attributes
-                    foreach (var (attr, value) in playerState.Attributes)
-                    {
-                        __instance.SetFloatValue(attr, value);
-                    }
+            var hpComp = entity.Value.GetComponent<HpComponent>();
 
-                    if (playerState.Hp <= -80000)
-                    {
-                        Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", playerState.Hp);
-                        return;
-                    }
+            if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
+            {
+                __instance.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
+            }
 
-                    if (playerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
-                    {
-                        return; // do not reapply the same value
-                    }
-
-                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
-                    var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
-
-                    if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
-                    {
-                        Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", playerState.NickName, playerState.Hp, set);
-                    }
-
-                    if (playerState.IsDead)
-                    {
-                        var events = BUS_EventCollectionCS.Get(__instance.Owner);
-
-                        if (events == null)
-                        {
-                            Logging.LogError("events are null");
-                            return;
-                        }
-
-                        Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PlayerId);
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
-                    }
-                }
-                else
-                {
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
-                    if (!entity.HasValue)
-                        return;
-
-                    if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
-                    {
-                        Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
-                        return;
-                    }
-
-                    var hpComp = entity.Value.GetComponent<HpComponent>();
-
-                    if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
-                    {
-                        __instance.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
-                    }
-
-                    if (!hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
-                    {
-                        __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-                    }
-                }
+            if (!hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+            {
+                __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
             }
         }
     }
 
-
     [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchHp
+    [HarmonyPatchCategory(Constants.CoopPatches)]
+    public static class CoopPatchHp
     {
-        public static bool Prefix(EBGUAttrFloat AttrID)
-        {
-            if (!DI.Instance.RelayClient.InRoom)
-                return true;
-
-            return AttrID != EBGUAttrFloat.Hp || DI.Instance.RelayClient.IsMasterClient;
-        }
-
         public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
         {
             if (!DI.Instance.RelayClient.InRoom)
@@ -197,54 +135,35 @@ namespace WukongMp.Api.Patches
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
-                // I am a server
-                if (DI.Instance.RelayClient.IsMasterClient)
+                if (owner == client.LocalPlayerState.Pawn)
                 {
-                    // I was damaged, set my Hp
-                    if (owner == players.LocalPlayerState.Pawn)
+                    if (!client.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
                     {
-                        if (!players.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
-                        {
-                            players.LocalPlayerState.Hp = result;
-                            DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.Hp), result);
-                        }
-
-                        return;
+                        client.LocalPlayerState.Hp = result;
+                        client.CachePlayerProperty(nameof(PlayerState.Hp), result);
                     }
+                }
+                else
+                {
+                    var entity = WukongMpMod.Instance.GetMonsterByActor(owner as BGUCharacterCS);
 
-                    // remote player was damaged, set his properties
-                    var remotePlayer = players.GetPlayerByActor(owner);
-                    if (remotePlayer != null)
-                    {
-                        if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
-                        {
-                            remotePlayer.Hp = result;
-                            DI.Instance.PlayerProperty.SetRemotePlayerProperty(remotePlayer.PlayerId, nameof(PlayerState.Hp), result);
-                        }
+                    if (!entity.HasValue)
+                        return; // not found
 
-                        return;
-                    }
+                    if (!WukongMpMod.Instance.OwnsEntity(entity.Value))
+                        return; // not owned
 
-                    // monster was damaged
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner as BGUCharacterCS);
-                    if (!entity.HasValue || !entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
-                    {
-                        Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
-                        return;
-                    }
+                    if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
+                        return; // not synced
 
                     ref var hpComp = ref entity.Value.GetComponent<HpComponent>();
 
                     hpComp.HpMaxBase = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = result;
                 }
-
-                // I am a client
-                return;
             }
 
-            // only sync attributes that influence combat and are client-authoritative
-            if (Constants.SyncedAttributes.Contains(AttrID) && owner == players.LocalPlayerState.Pawn)
+            if (Constants.SyncedAttributes.Contains(AttrID) && owner == client.LocalPlayerState.Pawn)
             {
                 if (players.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
@@ -403,7 +322,7 @@ namespace WukongMp.Api.Patches
                             return;
                         }
 
-                        if (DI.Instance.RelayClient.IsMasterClient)
+                        if (WukongMpMod.Instance.OwnsEntity(entity.Value))
                         {
                             ref var anim = ref entity.Value.GetComponent<AnimationComponent>();
                             anim.Velocity = __instance.Velocity.ToVector3();
@@ -466,10 +385,8 @@ namespace WukongMp.Api.Patches
                 {
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
-                    var netId = entity.Value.GetComponent<NetworkIdComponent>();
-
                     // only clean up own monsters
-                    if (netId.Creator != DI.Instance.RelayClient.PlayerId)
+                    if (!WukongMpMod.Instance.OwnsEntity(entity.Value))
                     {
                         Logging.LogWarning("Skipping cleanup for remote monster");
                         return;
@@ -497,20 +414,17 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.RelayClient.InRoom)
                 return;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
+            var owner = __instance.GetOwner();
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
             {
-                var owner = __instance.GetOwner();
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
-                if (entity.HasValue)
-                {
-                    if (SimpleState == EBGUSimpleState.Immobilizing)
-                        return;
+                if (SimpleState == EBGUSimpleState.Immobilizing)
+                    return;
 
-                    var netId = entity.Value.GetComponent<NetworkIdComponent>();
+                var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
 
-                    DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
-                    Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
-                }
+                WukongMpMod.Instance.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
+                Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
             }
         }
     }
@@ -526,22 +440,21 @@ namespace WukongMp.Api.Patches
 
             var players = DI.Instance.Players;
             var owner = __instance.GetOwner();
-            if (DI.Instance.RelayClient.IsMasterClient)
+
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
-                if (entity.HasValue)
-                {
-                    if (Trigger == EBUStateTrigger.Die)
-                        return;
+                if (Trigger == EBUStateTrigger.Die)
+                    return;
 
-                    var netId = entity.Value.GetComponent<NetworkIdComponent>();
+                var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
 
-                    DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
-                    Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
-                }
+                WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
+                Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
             }
 
-            if (owner == players.LocalPlayerState.Pawn)
+
+            if (owner == client.LocalPlayerState.Pawn)
             {
                 DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(NetworkIdComponent.FromPlayerId(players.LocalPlayerState.PlayerId), Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
@@ -558,144 +471,16 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.RelayClient.InRoom)
                 return;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-            {
-                var owner = __instance.GetOwner();
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+            var client = WukongMpMod.Client;
 
-                if (!entity.HasValue)
-                    return;
+            var owner = __instance.GetOwner();
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
 
-                var netId = entity.Value.GetComponent<NetworkIdComponent>();
-                DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
-            }
-        }
-    }
-    
-    [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchBuffBegin
-    {
-        private static MethodBase TargetMethod()
-        {
-            return AccessTools.Method("b1.BUS_BuffComp:BuffBegin");
-        }
-
-        public static void Postfix(UActorCompBaseCS __instance, int BuffID, float Duration)
-        {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!entity.HasValue || !WukongMpMod.Instance.OwnsEntity(entity.Value))
                 return;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-            {
-                var character = __instance.GetOwner();
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
-                if (entity != null)
-                {
-                    Logging.LogDebug("BuffBegin called for {Actor} with BuffID={BuffId}, Duration={Duration}", character.GetName(), BuffID, Duration);
-                    var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
-                    // DI.Instance.Rpc.SendUnitAddBuff(new BuffAddData(netPeer, BuffID, Duration));
-                }
-            }
-            else if (GameUtils.GetControlledPawn() == __instance.GetOwner())
-            {
-                DI.Instance.Rpc.SendAddBuff(new BuffAddData(BuffID, Duration));
-            }
-        }
-    }
-
-    [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchBuffRemove
-    {
-        private static MethodBase TargetMethod()
-        {
-            return AccessTools.Method("b1.BUS_BuffComp:BuffRemove");
-        }
-
-        public static void Postfix(UActorCompBaseCS __instance, int BuffID, EBuffEffectTriggerType RemoveTriggerType, int InLayer, bool WithTriggerRemoveEffect)
-        {
-            if (!DI.Instance.RelayClient.InRoom)
-                return;
-
-            if (DI.Instance.RelayClient.IsMasterClient)
-            {
-                var character = __instance.GetOwner();
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
-                if (entity != null)
-                {
-                    Logging.LogDebug("BuffRemove called for {Actor} with BuffID={BuffId}, RemoveTriggerType={TriggerType}, InLayer={Layer}, WithTriggerRemoveEffect={WithEffect}",
-                        character.GetName(), BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect);
-                    var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
-                    // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
-                }
-                else if (GameUtils.GetControlledPawn() == __instance.GetOwner())
-                {
-                    DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
-                }
-            }
-        }
-    }
-
-    [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchBuffRemoveImmediately
-    {
-        private static MethodBase TargetMethod()
-        {
-            return AccessTools.Method("b1.BUS_BuffComp:BuffRemoveImmediately");
-        }
-
-        public static void Postfix(UActorCompBaseCS __instance, int BuffID, EBuffEffectTriggerType RemoveTriggerType, bool WithTriggerRemoveEffect)
-        {
-            if (!DI.Instance.RelayClient.InRoom)
-                return;
-
-            if (DI.Instance.RelayClient.IsMasterClient)
-            {
-                var character = __instance.GetOwner();
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
-                if (entity != null)
-                {
-                    var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
-                    // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
-                }
-                else if (GameUtils.GetControlledPawn() == __instance.GetOwner())
-                {
-                    DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
-                }
-            }
-        }
-    }
-
-    [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchBuffAllRemove
-    {
-        private static MethodBase TargetMethod()
-        {
-            return AccessTools.Method("b1.BUS_BuffComp:BuffAllRemove");
-        }
-
-        public static void Postfix(UActorCompBaseCS __instance, EBuffEffectTriggerType RemoveTriggerType, bool WithTriggerRemoveEffect)
-        {
-            if (!DI.Instance.RelayClient.InRoom)
-                return;
-
-            if (DI.Instance.RelayClient.IsMasterClient)
-            {
-                var character = __instance.GetOwner();
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
-                if (entity != null)
-                {
-                    var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
-                    // DI.Instance.Rpc.SendUnitRemoveAllBuffs(new BuffRemoveAllData(netPeer, RemoveTriggerType, WithTriggerRemoveEffect));
-                }
-                else if (GameUtils.GetControlledPawn() == __instance.GetOwner())
-                {
-                    DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(RemoveTriggerType, WithTriggerRemoveEffect));
-                }
-            }
+            var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
+            WukongMpMod.Instance.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
         }
     }
 }

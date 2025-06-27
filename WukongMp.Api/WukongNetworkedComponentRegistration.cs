@@ -1,4 +1,4 @@
-using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Common.Wukong;
 
 namespace WukongMp.Api;

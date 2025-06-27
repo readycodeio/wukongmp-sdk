@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using b1;
 using HarmonyLib;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.ECS;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS;
@@ -126,10 +127,7 @@ namespace WukongMp.Api.Patches
 
             SyncPlayerMontage(DI.Instance.Players.LocalPlayerState);
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-            {
-                DI.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob(DI.Instance.Rpc));
-            }
+            DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Players.LocalPlayerState.PlayerId));
         }
 
         [Obsolete("To be replaced when we integrate players into ECS")]

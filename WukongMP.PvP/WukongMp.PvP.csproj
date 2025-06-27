@@ -20,7 +20,7 @@
     </Target>
 
     <ItemGroup>
-        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Generators\ReadyM.Relay.Common.Generators.csproj" />
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" />
         <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
     </ItemGroup>
 

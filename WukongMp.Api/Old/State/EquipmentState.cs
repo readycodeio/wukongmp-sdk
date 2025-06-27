@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BtlB1;
 using LiteNetLib.Utils;
-using ReadyM.Relay.Common.Serialization;
+using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.Old.State
 {

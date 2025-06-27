@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Shim;

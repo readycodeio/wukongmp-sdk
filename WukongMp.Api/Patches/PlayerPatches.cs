@@ -5,10 +5,10 @@ using BtlB1;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
 using System.Reflection;
 using System.Threading.Tasks;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -269,7 +269,7 @@ namespace WukongMp.Api.Patches
 
                     ref var anim = ref entity.Value.GetComponent<AnimationComponent>();
 
-                    if (DI.Instance.RelayClient.IsMasterClient)
+                    if (WukongMpMod.Instance.OwnsEntity(entity.Value))
                     {
                         anim.MoveSpeedLevel = (byte)__instance.MoveSpeedLevel;
                         anim.MoveSpeedState = (byte)__instance.MoveSpeedState;
@@ -451,19 +451,18 @@ namespace WukongMp.Api.Patches
 
                 if (entity.Value.HasComponent<TamerComponent>())
                 {
-                    ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
                     TamerUtils.ClearSpawnedUnit(entity.Value);
                 }
 
-                if (!DI.Instance.RelayClient.IsMasterClient)
+                if (!WukongMpMod.Instance.OwnsEntity(entity.Value))
                     return;
 
-                if (entity.Value.TryGetComponent<NetworkIdComponent>(out var networkId))
+                if (entity.Value.TryGetComponent<MetadataComponent>(out var meta))
                 {
                     // TODO: send attacker and anim montage
-                    var payload = new UnitDeadPacket(networkId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
-                    DI.Instance.Rpc.SendUnitDead(payload);
-                    Logging.LogDebug("Entity {Entity} died, sending UnitDead event", networkId);
+                    var payload = new UnitDeadPacket(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    WukongMpMod.Instance.SendUnitDead(payload);
+                    Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
                 }
                 else
                 {
@@ -589,7 +588,7 @@ namespace WukongMp.Api.Patches
             }
             else if (newTargetMonsterState.HasValue)
             {
-                newTargetId = newTargetMonsterState.Value.GetComponent<NetworkIdComponent>();
+                newTargetId = newTargetMonsterState.Value.GetComponent<MetadataComponent>().NetId;
                 name = newTargetMonsterState.Value.GetComponent<NicknameComponent>().Nickname;
                 clearTarget = false;
             }
@@ -602,17 +601,13 @@ namespace WukongMp.Api.Patches
                 return true;
             }
 
-            // master sends targets for monsters
-            if (!DI.Instance.RelayClient.IsMasterClient)
-                return false;
-
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
-            if (entity.HasValue)
+            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", players.LocalPlayerState.NickName, name);
 
-                var netId = entity.Value.GetComponent<NetworkIdComponent>();
-                DI.Instance.Rpc.SendSetTarget(new TargetData(netId, newTargetId, clearTarget));
+                var meta = entity.Value.GetComponent<MetadataComponent>();
+                WukongMpMod.Instance.SendSetTarget(new TargetData(meta.NetId, newTargetId, clearTarget));
             }
 
             return true;

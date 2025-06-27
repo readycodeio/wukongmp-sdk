@@ -4,6 +4,7 @@ using System.Reflection;
 using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using WukongMp.Api;

@@ -6,10 +6,14 @@ using b1;
 using BtlShare;
 using CSharpModBase;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.ECS.Systems;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Managers;
+using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Wukong;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -23,7 +27,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
+public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
 {
     private readonly RoomStateProxy _roomState;
     private readonly WukongPlayerRegistry _playerRegistry;

@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches

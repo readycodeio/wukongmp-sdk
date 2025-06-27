@@ -2,10 +2,11 @@
 using b1;
 using b1.BGW;
 using BtlShare;
+using ReadyM.Api.ECS.Idents;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Protocol.Enums;
-using ReadyM.Relay.Client;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
@@ -84,7 +85,7 @@ public partial class WukongRpcCallbacks : IDisposable
             playMovieRequest.MatchType));
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnExitPhantomRush(PlayerId playerId)
     {
         var playerState = _playerRegistry.GetPlayerById(playerId);
@@ -100,92 +101,92 @@ public partial class WukongRpcCallbacks : IDisposable
         events?.Evt_RelievePhantomRush.Invoke();
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnEndMatchmaking()
     {
         PvPUtils.OnMatchmakingEnded();
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnAddBuff(PlayerId __sender, BuffAddData data)
     {
         var playerState = _playerRegistry.GetPlayerById(__sender);
         BuffUtils.AddBuff(playerState?.Pawn, data.BuffId, data.Duration);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRemoveBuff(PlayerId __sender, BuffRemoveData data)
     {
         var state = _playerRegistry.GetPlayerById(__sender);
         BuffUtils.RemoveBuff(state?.Pawn, data.BuffId, data.TriggerType, data.Layer, data.WithTriggerRemoveEffect);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRemoveAllBuffs(PlayerId __sender, BuffRemoveAllData data)
     {
         var playerState = _playerRegistry.GetPlayerById(__sender);
         BuffUtils.RemoveAllBuffs(playerState?.Pawn, data.TriggerType, data.WithTriggerRemoveEffect);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitStateTrigger(StateTriggerData data)
     {
         var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetStateTrigger(character, data.Trigger, data.Time, data.NeedForceUpdate);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitSimpleState(SimpleStateData data)
     {
         var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetSimpleState(character, data.SimpleState, data.IsRemove);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnTriggerFsmState(FsmStateData data)
     {
         var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetFsmState(character, data.FsmStateName);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnMotionMatchingState(MotionMatchingStateData data)
     {
         var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetMotionMatchingState(character, data.State);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnSummon(UnitSummonData data)
     {
         GameLoopPatch.QueueOnGameThread(() => { SummonPatch.ExecuteSummon(data.SummonerId, data.SummonId, data.Guid, data.Name, data.TeamId); }, nameof(OnSpawnSummon));
     }
 
-    [RpcEvent(RelayMode.Master)]
+    [RpcEvent(RelayMode.EntityOwner)]
     internal void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
     {
         SpawningUtils.SpawnUnitsMaster(__sender, data.UnitName, data.Count, data.TeamId);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayerTransBegin(PlayerId __sender, PlayerTransBeginData data)
     {
         TransformationUtils.TransformPlayer(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransBeginType);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayerTransEnd(PlayerId __sender, PlayerTransEndData data)
     {
         TransformationUtils.TransformPlayerBack(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransEndType);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayMovieRequest(PlayMovieData data)
     {
         CutsceneUtils.PlayCutscene(data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSetTarget(TargetData data)
     {
         var pawn = _pawnRegistry.GetPawnByNetworkId(data.Character);
@@ -212,7 +213,7 @@ public partial class WukongRpcCallbacks : IDisposable
         TargetingApi.SetTarget(pawn, target);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnCastImmobilize(NetworkIdComponent caster)
     {
         if (RelayClient.IsMasterClient)
@@ -228,7 +229,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnTriggerImmobilize(TriggerImmobilizeData data)
     {
         var caster = _pawnRegistry.GetPawnByNetworkId(data.PlayerId);
@@ -236,7 +237,7 @@ public partial class WukongRpcCallbacks : IDisposable
         ImmobilizeUtils.TriggerImmobilize(caster, target, data.GreatSageTalentActiveBuff);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRelieveImmobilize(NetworkIdComponent affected)
     {
         var character = _pawnRegistry.GetPawnByNetworkId(affected);
@@ -249,20 +250,20 @@ public partial class WukongRpcCallbacks : IDisposable
         ImmobilizeUtils.RelieveImmobilize(character);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnBreakImmobilize(NetworkIdComponent entity)
     {
         // TODO
         Logging.LogWarning("BreakImmobilize not implemented");
     }
 
-    [RpcEvent(RelayMode.All, EventCaching.AddToRoomCacheGlobal)]
+    [RpcEvent(RelayMode.AreaOfInterestAll, EventCaching.AddToRoomCacheGlobal)]
     internal void OnChatMessage(ChatMessage message)
     {
         WukongChatter.OnGetMessage(message);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPhantomRush(PlayerId __sender, ESkillDirection direction)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -283,7 +284,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }, nameof(OnPhantomRush));
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     public void OnBroadcastPlayerTransform(PlayerTransformData data)
     {
         // TODO: Use targeted RPC mode (select which peers to send to)
@@ -293,7 +294,7 @@ public partial class WukongRpcCallbacks : IDisposable
         PlayerUtils.TeleportLocalPlayer(data.Location, data.Rotation, false);
     }
 
-    [RpcEvent(RelayMode.Master)]
+    [RpcEvent(RelayMode.EntityOwner)]
     internal void OnSuicide(PlayerId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -311,7 +312,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }, nameof(OnSuicide));
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnRebirthPlayer(PlayerId playerId)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -337,7 +338,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }, nameof(OnRebirthPlayer));
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnDamageNum(DamageNumParam damageNum)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -347,7 +348,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }, nameof(OnDamageNum), BGW_TickGroupMask.TG_PreAnim);
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnTeleportFinish(PlayerId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -365,7 +366,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }, nameof(OnTeleportFinish));
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     public void OnMontageCallback(MontageCallbackData data)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -427,7 +428,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }, nameof(OnMontageCallback));
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitDead(UnitDeadPacket data)
     {
         GameLoopPatch.QueueOnGameThread(() =>
@@ -451,13 +452,13 @@ public partial class WukongRpcCallbacks : IDisposable
         }, nameof(OnUnitDead));
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnWaitingForSequence(PlayerId __sender, SequenceWaitingData data)
     {
         CutsceneUtils.SetWaitingForCutsceneStatus(__sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnIronBodyStart(PlayerId __sender)
     {
         var player = _playerRegistry.GetPlayerById(__sender);
@@ -476,7 +477,7 @@ public partial class WukongRpcCallbacks : IDisposable
         IronBodyUtils.TriggerIronBody(player.Pawn);
     }
 
-    [RpcEvent(RelayMode.Master)]
+    [RpcEvent(RelayMode.EntityOwner)]
     void OnUnitSpawned(PlayerId __sender, NetworkIdComponent netEntity)
     {
         Logging.LogDebug("OnUnitSpawned called for player {PlayerId} with entity {Entity}", __sender, netEntity);
@@ -493,7 +494,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }
     }
 
-    [RpcEvent(RelayMode.Master)]
+    [RpcEvent(RelayMode.EntityOwner)]
     void OnUnitDespawn(PlayerId __sender, NetworkIdComponent netEntity)
     {
         Logging.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", __sender, netEntity);
@@ -510,7 +511,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnTamerSkillInteract(SkillInteractData interactData)
     {
         if (DI.Instance.NetManager.TryGetEntityByNetworkId(interactData.InteractiveId, out var entity))
@@ -522,7 +523,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnTriggerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
     {
         var player = DI.Instance.Players.GetPlayerById(__sender);
@@ -542,7 +543,7 @@ public partial class WukongRpcCallbacks : IDisposable
         MagicallyChangeUtils.TriggerMagicallyChange(player.Pawn, fullConfigPath, data.SkillID, data.RecoverSkillID);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnResetMagicallyChange(PlayerId __sender, EResetReason_MagicallyChange reason)
     {
         var player = DI.Instance.Players.GetPlayerById(__sender);

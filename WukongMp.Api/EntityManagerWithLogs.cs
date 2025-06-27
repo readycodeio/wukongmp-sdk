@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using Friflo.Engine.ECS;
-using ReadyM.Api;
-using ReadyM.Api.Multiplayer;
-using ReadyM.Relay.Common.ECS;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Managers;
 
 namespace WukongMp.Api;
 

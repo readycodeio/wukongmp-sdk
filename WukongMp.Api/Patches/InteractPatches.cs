@@ -1,11 +1,10 @@
 ﻿using b1;
 using BtlB1;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
 using System.Reflection;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 
 namespace WukongMp.Api.Patches;
 
@@ -28,9 +27,9 @@ public static class PatchComplexSkillDoInteractAction
             var entity = DI.Instance.PawnRegistry.GetMonsterByActor(InteractiveActor);
             if (entity.HasValue)
             {
-                ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                Logging.LogDebug("Sending skill interact for {ActorName} with ID {NetId}.", InteractiveActor.GetName(), netComp.Id);
-                DI.Instance.Rpc.SendTamerSkillInteract(new DTO.SkillInteractData(netComp, Action.ParamsInt[1]));
+                ref var meta = ref entity.Value.GetComponent<MetadataComponent>();
+                Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
+                WukongMpMod.Instance.SendTamerSkillInteract(new DTO.SkillInteractData(meta.NetId, Action.ParamsInt[1]));
             }
         }
     }

@@ -1,11 +1,13 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Api.ECS.Systems;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.ECS.Managers;
+using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Serialization;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -35,7 +37,6 @@ public class DI
     public ShimRelayClient ShimRelayClient { get; private set; } = null!;
     public ShimAutoStarter ShimAuto { get; set; } = null!;
     
-    public RoomStateProxy RoomState { get; private set; } = null!;
     public WukongPlayerRegistry Players { get; private set; } = null!;
     public WukongPlayerPropertyManager PlayerProperty { get; private set; } = null!;
 
@@ -92,7 +93,6 @@ public class DI
         ShimRelayClient = new ShimRelayClient(LoggerFactory.CreateLogger("Play Shim"));
         ShimAuto = new ShimAutoStarter(ShimRelayClient, ShimRecorder, EventBus, LoggerFactory);
         
-        RoomState = new RoomStateProxy(RelayClient);
         Players = new WukongPlayerRegistry();
         PlayerProperty = new WukongPlayerPropertyManager(RelayClient, Players);
         UpdateLoop = new WukongUpdateLoop(World, PlayerProperty);

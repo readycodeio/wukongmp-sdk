@@ -1,6 +1,6 @@
 ﻿using System;
 using CSharpModBase;
-using ReadyM.Relay.Client;
+using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Common;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;

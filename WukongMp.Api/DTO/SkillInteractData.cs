@@ -1,6 +1,6 @@
 ﻿using LiteNetLib.Utils;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Relay.Common.ECS;
+using ReadyM.Api.Multiplayer.ECS.Components;
 
 namespace WukongMp.Api.DTO;
 

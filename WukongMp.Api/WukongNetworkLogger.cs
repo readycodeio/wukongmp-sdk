@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using b1;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Protocol.Enums;
+using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
 

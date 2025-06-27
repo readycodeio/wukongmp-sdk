@@ -1,6 +1,5 @@
 ﻿using b1;
-using ReadyM.Relay.Common;
-using WukongMp.Api.Old;
+using ReadyM.Api.ECS.Idents;
 using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.WukongUtils;
