@@ -907,3 +907,54 @@ public static class PatchOnIronBodyStart
         }
     }
 }
+
+[HarmonyPatch(typeof(BPS_BattleMainInfoComp), "OnPossessed")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchBattleMainInfoCompOnPossessed
+{
+    public static bool Prefix(AActor OldActor, AActor CurActor)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
+            return true;
+
+        Logging.LogWarning("BPS_BattleMainInfoComp OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(BPS_InputSystem), "OnPossessed")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchInputSystemOnPossessed
+{
+    public static bool Prefix(AActor OldActor, AActor CurActor)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
+            return true;
+
+        Logging.LogWarning("BPS_InputSystem OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "OnPossessed")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchMultiTargetOnPossessed
+{
+    public static bool Prefix(AActor OldActor, AActor CurActor)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return true;
+
+        if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
+            return true;
+
+        Logging.LogWarning("BPS_MultiTargetProjectileCtrComp OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
+        return false;
+    }
+}

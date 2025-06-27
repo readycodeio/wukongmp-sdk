@@ -34,9 +34,14 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
     [Obsolete]
     public static WukongClient Client => WukongMP.Instance.Client;
 
-    public bool IsMasterClient =>
-        RelayClient.LocalPlayer.PlayerId ==
-        (PlayerId)RelayClient.RoomState.GetValueOrDefault(RoomProperties.MasterClientId, PlayerId.Invalid);
+    public bool IsMasterClient
+    {
+        get
+        {
+            var masterId = (PlayerId)RelayClient.RoomState.GetValueOrDefault(RoomProperties.MasterClientId, PlayerId.Invalid);
+            return masterId != PlayerId.Invalid && RelayClient.LocalPlayer.PlayerId == masterId;
+        }
+    }
 
     protected IBlobClient Blobs => RelayClient;
 
@@ -78,7 +83,7 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
 
         Harmony.PatchCategory(Constants.GlobalPatches);
         Logging.LogInformation("Patched Harmony category: {Category}", Constants.GlobalPatches);
-        
+
         Harmony.PatchCategory(Constants.ConnectedPatches);
         Logging.LogInformation("Patched Harmony category: {Category}", Constants.ConnectedPatches);
     }
@@ -90,7 +95,7 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
 
         Harmony.UnpatchCategory(Constants.GlobalPatches);
         Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.GlobalPatches);
-        
+
         base.Unpatch();
     }
 
@@ -98,16 +103,12 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
     {
         base.EnterRoom();
 
-        Utils.TryRunOnGameThread(() =>
-        {
-        });
+        Utils.TryRunOnGameThread(() => { });
     }
 
     public override void ExitRoom()
     {
-        Utils.TryRunOnGameThread(() =>
-        {
-        });
+        Utils.TryRunOnGameThread(() => { });
 
         base.ExitRoom();
     }

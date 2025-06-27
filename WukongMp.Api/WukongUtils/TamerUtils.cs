@@ -1,9 +1,9 @@
 ﻿using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
+using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Wukong.Components;
 using System.Collections.Generic;
-using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS;
 using WukongMp.Api.Old;
@@ -162,6 +162,13 @@ namespace WukongMp.Api.WukongUtils
             localTamerComp.HoldingPlayers.Clear();
             ref var tamerComp = ref entity.GetComponent<TamerComponent>();
             tamerComp.ShouldBeSpawned = false;
+        }
+
+        public static void TriggerSkillInteract(Entity entity, int skillId)
+        {
+            Logging.LogDebug("TriggerInteract for entity: {Entity}", entity.ToString());
+            ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
+            BUS_EventCollectionCS.Get(localTamerComp.Pawn).Evt_UnitCastSkillTryCMultiCast.Invoke(new FCastSkillInfo(skillId, ECastSkillSourceType.Interact));
         }
     }
 }

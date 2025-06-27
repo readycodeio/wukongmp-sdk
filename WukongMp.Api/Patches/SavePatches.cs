@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using ArchiveB1;
+﻿using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlB1;
 using CommB1;
 using HarmonyLib;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -202,6 +202,44 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData = worldArchiveData.GameArchiveData.PersistentECSData;
                 OutArchiveData.StateMachineArchiveData = worldArchiveData.GameArchiveData.StateMachineArchiveData;
                 OutArchiveData.TaskArchiveData = worldArchiveData.GameArchiveData.TaskArchiveData;
+                // Add spells recieved during player absence
+                foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.SpellList)
+                {
+                    if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Contains(spell))
+                    {
+                        OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(spell);
+                    }
+                }
+                // Set spells from world archive if they are not set in player archive
+                var worldSpellItemDict = new Dictionary<SpellType, int>(worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.ToDictionary(spell => spell.Type, spell => spell.SpellId));
+                var spellItemDict = new Dictionary<SpellType, int>(OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.ToDictionary(spell => spell.Type, spell => spell.SpellId));
+                foreach (var (worldSpellType, worldSpellId) in worldSpellItemDict)
+                {
+                    if (worldSpellId == 0)
+                    {
+                        continue;
+                    }
+                    if (spellItemDict.TryGetValue(worldSpellType, out var existingSpellId) && existingSpellId == 0)
+                    {
+                        Logging.LogDebug("Assigning spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
+                        spellItemDict[worldSpellType] = worldSpellId;
+                    }
+                    else if (!spellItemDict.ContainsKey(worldSpellType))
+                    {
+                        Logging.LogDebug("Adding spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
+                        spellItemDict.Add(worldSpellType, worldSpellId);
+                    }
+                }
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
+                OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.AddRange([.. spellItemDict.Select(kvp => new SpellItem { SpellId = kvp.Value, Type = kvp.Key })]);
+                // Add interactions recieved during player absence
+                foreach (var interaction in worldArchiveData.GameArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList)
+                {
+                    if (!OutArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList.Contains(interaction))
+                    {
+                        OutArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList.Add(interaction);
+                    }
+                }
             }
 
             SavePatchesData.RedirectSaveFiles = false;
