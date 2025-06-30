@@ -19,6 +19,7 @@ using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
+using WukongMp.Api.NameCompressors;
 
 namespace WukongMp.Api;
 
@@ -39,7 +40,7 @@ public partial class WukongMpMod
     public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
     {
         Logging.LogTrace("Sending montage callback: {Montage} {Position}", montage.PathName, position);
-        var shortened = MontageHelpers.CompressMontageName(montage.PathName, out var shortMontagePath);
+        var shortened = Compressors.MontageNameCompressor.Compress(montage.PathName, out var shortMontagePath);
         var data = shortened ? shortMontagePath : montage.PathName;
         var evData = new MontageCallbackData(netId, shortened, data, position, reset);
         SendMontageCallback(evData);
@@ -499,7 +500,7 @@ public partial class WukongMpMod
                 return;
             }
 
-            var fullMontagePath = data.Compressed ? MontageHelpers.DecompressMontageName(data.MontagePath) : data.MontagePath;
+            var fullMontagePath = data.Compressed ? Compressors.MontageNameCompressor.Decompress(data.MontagePath) : data.MontagePath;
             Logging.LogTrace("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
 
             var animInstance = pawn.Mesh.GetAnimInstance();
