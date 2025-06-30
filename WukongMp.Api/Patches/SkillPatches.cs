@@ -989,7 +989,7 @@ public static class PatchPendingReset
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}", _Config.PathName, _SkillID, _RecoverSkillID);
+        Logging.LogDebug("BUS_MagicallyChangeComp PendingReset called with reason: {Reason}", Reason);
         var client = WukongMpModBase.Client;
         if (client.LocalPlayerState.Pawn == __instance.GetOwner())
         {
