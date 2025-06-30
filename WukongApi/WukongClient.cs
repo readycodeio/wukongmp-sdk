@@ -587,7 +587,7 @@ namespace WukongApi
 
         public void OnPlayerReadinessChanged(string playerNickname, bool isReady)
         {
-            var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (LocalPlayerState.IsReadyForPvP ? 1 : 0);
+            var playersReady = ConnectedPlayers.Values.Count(x => x.IsReadyForPvP) + (_localPlayerState?.IsReadyForPvP ?? false ? 1 : 0);
             OnReadinessChange?.Invoke(playerNickname, isReady, playersReady);
         }
 
