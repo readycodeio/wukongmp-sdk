@@ -968,12 +968,14 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}", _Config.PathName, _SkillID, _RecoverSkillID);
-
-        var client = WukongMpModBase.Client;
-        if (client.LocalPlayerState.Pawn == __instance.GetOwner())
+        if (_Config != null)
         {
-            WukongMpMod.Instance.SendPlayerMagicallyChange(client.LocalPlayerState.PlayerId, _Config, _SkillID, _RecoverSkillID);
+            Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}", _Config.PathName, _SkillID, _RecoverSkillID);
+            var client = WukongMpModBase.Client;
+            if (client.LocalPlayerState.Pawn == __instance.GetOwner())
+            {
+                WukongMpMod.Instance.SendPlayerMagicallyChange(client.LocalPlayerState.PlayerId, _Config, _SkillID, _RecoverSkillID);
+            }
         }
     }
 }
