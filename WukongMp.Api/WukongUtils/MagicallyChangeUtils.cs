@@ -18,6 +18,7 @@ public static class MagicallyChangeUtils
                 Logging.LogError("Failed to load MagicallyChangeConfig from path: {Path}", configAssetPath);
                 return;
             }
+            Logging.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", pawn.GetName(), configAssetPath, skillID, recoverSkillID);
             BUC_MagicallyChangeData magicallyChangeData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_MagicallyChangeData, BUC_MagicallyChangeData>(pawn);
             magicallyChangeData.bIsPendingCast = true;
             magicallyChangeData.bIsPendingReset = false;
