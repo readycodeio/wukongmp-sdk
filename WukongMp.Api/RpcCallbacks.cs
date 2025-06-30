@@ -53,6 +53,15 @@ public partial class WukongMpMod
         SendMontageCallback(evData);
     }
 
+    public void SendPlayerMagicallyChange(PlayerId player, UBGWDataAsset config, int skillID, int recoverSkillID)
+    {
+        var shortened = Compressors.VigorNameCompressor.Compress(config.PathName, out var shortMontagePath);
+        var configName = shortened ? shortMontagePath : config.PathName;
+        Logging.LogTrace("Sending magically change for player {PlayerId} with config {Config} and skillID {SkillID}", player, configName, skillID);
+        var evData = new MagicallyChangeData(configName, shortened, skillID, recoverSkillID);
+        SendPlayerMagicallyChange(evData);
+    }
+
     public void SendPvPEvent(PvPEvent ev, int data = 0)
     {
         if (!IsMasterClient)
@@ -633,5 +642,25 @@ public partial class WukongMpMod
                 TamerUtils.TriggerSkillInteract(entity.Value, interactData.SkillId);
             }
         }
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnPlayerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
+    {
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        var fullConfigPath = data.Compressed ? Compressors.VigorNameCompressor.Decompress(data.ConfigAssetName) : data.ConfigAssetName;
+        Logging.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", player.NickName, fullConfigPath, data.SkillID, data.RecoverSkillID);
+        MagicallyChangeUtils.TriggerMagicallyChange(player.Pawn, fullConfigPath, data.SkillID, data.RecoverSkillID);
     }
 }

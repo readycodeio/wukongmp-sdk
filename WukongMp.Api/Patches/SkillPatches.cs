@@ -958,3 +958,22 @@ public static class PatchMultiTargetOnPossessed
         return false;
     }
 }
+
+[HarmonyPatch(typeof(BUS_MagicallyChangeComp), "DoCastMagicallyChangeSkill_PendingCast")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchDoCastMagicallyChangeSkill_PendingCast
+{
+    public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset _Config, int _SkillID, int _RecoverSkillID)
+    {
+        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            return;
+
+        Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}", _Config.PathName, _SkillID, _RecoverSkillID);
+
+        var client = WukongMpModBase.Client;
+        if (client.LocalPlayerState.Pawn == __instance.GetOwner())
+        {
+            WukongMpMod.Instance.SendPlayerMagicallyChange(client.LocalPlayerState.PlayerId, _Config, _SkillID, _RecoverSkillID);
+        }
+    }
+}
