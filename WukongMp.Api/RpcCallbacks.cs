@@ -19,6 +19,7 @@ using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
+using WukongMp.Api.NameCompressors;
 
 namespace WukongMp.Api;
 
@@ -39,7 +40,7 @@ public partial class WukongMpMod
     public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
     {
         Logging.LogTrace("Sending montage callback: {Montage} {Position}", montage.PathName, position);
-        var shortened = MontageHelpers.CompressMontageName(montage.PathName, out var shortMontagePath);
+        var shortened = Compressors.MontageNameCompressor.Compress(montage.PathName, out var shortMontagePath);
         var data = shortened ? shortMontagePath : montage.PathName;
         var evData = new MontageCallbackData(netId, shortened, data, position, reset);
         SendMontageCallback(evData);
@@ -50,6 +51,15 @@ public partial class WukongMpMod
         Logging.LogDebug("Sending montage cancel");
         var evData = new MontageCallbackData(netId, false, "", 0f, false);
         SendMontageCallback(evData);
+    }
+
+    public void SendTriggerMagicallyChange(PlayerId player, UBGWDataAsset config, int skillID, int recoverSkillID)
+    {
+        var shortened = Compressors.VigorNameCompressor.Compress(config.PathName, out var shortMontagePath);
+        var configName = shortened ? shortMontagePath : config.PathName;
+        Logging.LogTrace("Sending magically change for player {PlayerId} with config {Config} and skillID {SkillID}", player, configName, skillID);
+        var evData = new MagicallyChangeData(configName, shortened, skillID, recoverSkillID);
+        SendTriggerMagicallyChange(evData);
     }
 
     public void SendPvPEvent(PvPEvent ev, int data = 0)
@@ -499,7 +509,7 @@ public partial class WukongMpMod
                 return;
             }
 
-            var fullMontagePath = data.Compressed ? MontageHelpers.DecompressMontageName(data.MontagePath) : data.MontagePath;
+            var fullMontagePath = data.Compressed ? Compressors.MontageNameCompressor.Decompress(data.MontagePath) : data.MontagePath;
             Logging.LogTrace("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
 
             var animInstance = pawn.Mesh.GetAnimInstance();
@@ -632,5 +642,44 @@ public partial class WukongMpMod
                 TamerUtils.TriggerSkillInteract(entity.Value, interactData.SkillId);
             }
         }
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnTriggerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
+    {
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        var fullConfigPath = data.Compressed ? Compressors.VigorNameCompressor.Decompress(data.ConfigAssetName) : data.ConfigAssetName;
+        Logging.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", player.NickName, fullConfigPath, data.SkillID, data.RecoverSkillID);
+        MagicallyChangeUtils.TriggerMagicallyChange(player.Pawn, fullConfigPath, data.SkillID, data.RecoverSkillID);
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnResetMagicallyChange(PlayerId __sender, EResetReason_MagicallyChange reason)
+    {
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        Logging.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", player.NickName, reason);
+        MagicallyChangeUtils.ResetMagicallyChange(player.Pawn, reason);
     }
 }
