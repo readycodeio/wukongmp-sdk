@@ -18,7 +18,13 @@ public static class MagicallyChangeUtils
                 Logging.LogError("Failed to load MagicallyChangeConfig from path: {Path}", configAssetPath);
                 return;
             }
-            BUS_EventCollectionCS.Get(pawn)?.Evt_OnCastMagicallyChangeSkill.Invoke(config, skillID, recoverSkillID);
+            BUC_MagicallyChangeData magicallyChangeData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_MagicallyChangeData, BUC_MagicallyChangeData>(pawn);
+            magicallyChangeData.bIsPendingCast = true;
+            magicallyChangeData.bIsPendingReset = false;
+            magicallyChangeData.PendingConfig = config;
+            magicallyChangeData.MagicallyChangeSkillID = skillID;
+            magicallyChangeData.RecoverSkillID = recoverSkillID;
+
         }, nameof(TriggerMagicallyChange));
     }
 }
