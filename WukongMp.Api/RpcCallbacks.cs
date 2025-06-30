@@ -53,13 +53,13 @@ public partial class WukongMpMod
         SendMontageCallback(evData);
     }
 
-    public void SendPlayerMagicallyChange(PlayerId player, UBGWDataAsset config, int skillID, int recoverSkillID)
+    public void SendTriggerMagicallyChange(PlayerId player, UBGWDataAsset config, int skillID, int recoverSkillID)
     {
         var shortened = Compressors.VigorNameCompressor.Compress(config.PathName, out var shortMontagePath);
         var configName = shortened ? shortMontagePath : config.PathName;
         Logging.LogTrace("Sending magically change for player {PlayerId} with config {Config} and skillID {SkillID}", player, configName, skillID);
         var evData = new MagicallyChangeData(configName, shortened, skillID, recoverSkillID);
-        SendPlayerMagicallyChange(evData);
+        SendTriggerMagicallyChange(evData);
     }
 
     public void SendPvPEvent(PvPEvent ev, int data = 0)
@@ -645,7 +645,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    void OnPlayerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
+    void OnTriggerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
     {
         var player = Client.GetPlayerById(__sender);
         if (player == null)
@@ -662,5 +662,24 @@ public partial class WukongMpMod
         var fullConfigPath = data.Compressed ? Compressors.VigorNameCompressor.Decompress(data.ConfigAssetName) : data.ConfigAssetName;
         Logging.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", player.NickName, fullConfigPath, data.SkillID, data.RecoverSkillID);
         MagicallyChangeUtils.TriggerMagicallyChange(player.Pawn, fullConfigPath, data.SkillID, data.RecoverSkillID);
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnResetMagicallyChange(PlayerId __sender, EResetReason_MagicallyChange reason)
+    {
+        var player = Client.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        Logging.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", player.NickName, reason);
+        MagicallyChangeUtils.ResetMagicallyChange(player.Pawn, reason);
     }
 }

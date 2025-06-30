@@ -28,4 +28,17 @@ public static class MagicallyChangeUtils
 
         }, nameof(TriggerMagicallyChange));
     }
+
+    public static void ResetMagicallyChange(BGUCharacterCS pawn, EResetReason_MagicallyChange reason)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            Logging.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", pawn.GetName(), reason);
+            BUC_MagicallyChangeData magicallyChangeData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_MagicallyChangeData, BUC_MagicallyChangeData>(pawn);
+            magicallyChangeData.bIsPendingReset = true;
+            magicallyChangeData.bIsPendingCast = false;
+            magicallyChangeData.ResetReason = reason;
+
+        }, nameof(TriggerMagicallyChange));
+    }
 }
