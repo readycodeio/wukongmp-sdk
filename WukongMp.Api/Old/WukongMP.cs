@@ -456,7 +456,7 @@ namespace WukongMp.Api.Old
             LobbyStatusWidget.Instance.SetReadyCount(Client.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
             CoopStatusWidget.Instance.RemovePlayer(playerState.NickName);
 
-            WukongMpMod.Instance.World.Query<TamerComponent, LocalTamerComponent>().Each(new ClearPlayerTamersJob(playerState.PlayerId));
+            WukongMpMod.Instance.World.Query<TamerComponent>().Each(new ClearPlayerTamersJob(playerState.PlayerId));
         }
 
         private void UpdateConnectedCount()
