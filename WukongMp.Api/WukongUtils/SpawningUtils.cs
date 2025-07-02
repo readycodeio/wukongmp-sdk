@@ -29,7 +29,7 @@ public static class SpawningUtils
             return null;
         }
 
-        var playerPawnClass = GameUtils.GetControlledPawn()?.GetClass();
+        var playerPawnClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WukongClassPath, ELoadResourceType.SyncLoadAndCache);
 
         if (playerPawnClass == null)
         {

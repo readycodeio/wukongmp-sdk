@@ -53,6 +53,8 @@ namespace WukongMp.Api.Configuration
 
         public const bool IsCoop = true;
 
+        public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";
+
         public const string WidgetManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
         public const string ChatWidgetName = "WBP_MultiplayerChat_C";
