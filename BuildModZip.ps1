@@ -12,6 +12,12 @@ if (-not $ModVariant -or -not $Configuration) {
 
 . ./BuildInfo.ps1
 
+$allFiles = if ($Configuration -eq 'Debug') {
+    $devFiles
+} else {
+    $modFiles
+}
+
 # 1. Build solution
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $solutionPath = Join-Path $scriptDir "$solutionName.sln"
@@ -44,17 +50,16 @@ if (-not (Test-Path $outputRoot)) {
 $destRoot = Join-Path $outputRoot "$zipName-$version"
 New-Item -ItemType Directory -Path $destRoot -Force | Out-Null
 
-foreach ($item in $modFiles) {
+foreach ($item in $allFiles) {
     $destDir = Join-Path $destRoot $item[2]
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
 }
 
 # 4. Perform copies
-foreach ($item in $modFiles) {
+foreach ($item in $allFiles) {
     $files = $item[0]
     $sourceDir = $item[1]
     $destDir = Join-Path $destRoot $item[2]
-
     CopyFiles $files $sourceDir $destDir
 }
 

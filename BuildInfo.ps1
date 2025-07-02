@@ -82,8 +82,7 @@ $modFiles = @(
     @($saveFiles, $saveSourceDir, $saveDestDir)
 )
 
-$devFiles = @(
-    $modFiles,
+$devFiles = $modFiles + @(
     @($modFilesDebug, $modSourceDir, $modDestDir),
     @($overridesFilesDebug, $overridesSourceDir, $overridesDestDir),
     @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
