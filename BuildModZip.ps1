@@ -24,7 +24,7 @@ Write-Output "Building solution $solutionPath in configuration $Configuration...
 $buildOutput = dotnet build $solutionPath -c $Configuration -v minimal /t:Rebuild | Tee-Object -FilePath 'build.log'
 
 # 2. Extract version number from build output
-$pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){4})'
+$pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){3})'
 $match   = $buildOutput | Select-String -Pattern $pattern -AllMatches
 
 if (-not $match) { 
@@ -44,13 +44,13 @@ if (-not (Test-Path $outputRoot)) {
 $destRoot = Join-Path $outputRoot "$zipName-$version"
 New-Item -ItemType Directory -Path $destRoot -Force | Out-Null
 
-foreach ($item in $allFiles) {
+foreach ($item in $modFiles) {
     $destDir = Join-Path $destRoot $item[2]
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
 }
 
 # 4. Perform copies
-foreach ($item in $allFiles) {
+foreach ($item in $modFiles) {
     $files = $item[0]
     $sourceDir = $item[1]
     $destDir = Join-Path $destRoot $item[2]

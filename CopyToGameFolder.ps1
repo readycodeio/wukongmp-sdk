@@ -16,7 +16,7 @@ $steamDir = Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam" -Nam
 $destRoot = "$steamDir/steamapps/common/BlackMythWukong/b1/Binaries/Win64/CSharpLoader"
 
 # Perform copies
-foreach ($item in $allFiles) {
+foreach ($item in $devFiles) {
     $files = $item[0]
     $sourceDir = $item[1]
     $destDir = Join-Path $destRoot $item[2]
