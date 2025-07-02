@@ -58,10 +58,7 @@ public abstract class WukongMpModBase : ReadyMultiplayerMod
         _monsterArchetype = config.RegisterArchetype(b =>
         {
             WukongCoreApi.RegisterMonsterArchetype(b);
-            b.Add(new LocalTamerComponent
-            {
-                HoldingPlayers = []
-            });
+            b.Add<LocalTamerComponent>();
             b.Add<MarkerComponent>();
         });
         _roomConfigArchetype = config.RegisterArchetype(WukongCoreApi.RegisterRoomConfigArchetype);

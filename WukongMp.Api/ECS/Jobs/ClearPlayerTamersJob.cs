@@ -9,10 +9,10 @@ namespace WukongMp.Api.ECS.Jobs;
 /// This job is used to clear tamers for a specific player, typically when they leave the game or the room.
 /// </summary>
 /// <param name="playerId"></param>
-public readonly struct ClearPlayerTamersJob(PlayerId playerId) : IEach<TamerComponent, LocalTamerComponent>
+public readonly struct ClearPlayerTamersJob(PlayerId playerId) : IEach<TamerComponent>
 {
-    public void Execute(ref TamerComponent tamer, ref LocalTamerComponent localTamer)
+    public void Execute(ref TamerComponent tamer)
     {
-        TamerUtils.SubtractSpawnedUnit(playerId, ref localTamer, ref tamer);
+        TamerUtils.SubtractSpawnedUnit(playerId, ref tamer);
     }
 }

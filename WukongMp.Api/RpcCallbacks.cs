@@ -600,7 +600,7 @@ public partial class WukongMpMod
         IronBodyUtils.TriggerIronBody(player.Pawn);
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.Master)]
     void OnUnitSpawned(PlayerId __sender, NetworkIdComponent netEntity)
     {
         Logging.LogWarning("OnUnitSpawned called for player {PlayerId} with entity {Entity}", __sender, netEntity);
@@ -617,7 +617,7 @@ public partial class WukongMpMod
         }
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.Master)]
     void OnUnitDespawn(PlayerId __sender, NetworkIdComponent netEntity)
     {
         Logging.LogWarning("OnUnitDespawn called for player {PlayerId} with entity {Entity}", __sender, netEntity);
