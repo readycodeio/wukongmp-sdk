@@ -61,6 +61,18 @@ namespace WukongMp.Coop
 #if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.B, () => { Logging.LogDebug("Alt + B: Test"); });
 
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () => 
+            { 
+                Logging.LogWarning("Alt + Y: Disable threading");
+                GameUtils.DisableThreading();
+            });
+
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () => 
+            {
+                Logging.LogWarning("Alt + U: Enable threading");
+                GameUtils.EnableThreading();
+            });
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 Logging.LogDebug("Alt + C");
