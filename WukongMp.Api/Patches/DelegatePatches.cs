@@ -1,6 +1,7 @@
 ﻿using b1;
 using b1.EventDelDefine;
 using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using WukongMp.Api.Configuration;
@@ -39,8 +40,12 @@ public class PatchGSDel_Void_BoolBoolBoolIntInvoke
 
         return true;
     }
-}
 
+    static void Finalizer(Exception __exception)
+    {
+        Logging.LogWarning("GSDel_Void_BoolBoolBoolInt.Invoke encountered an exception: {ExceptionMessage}", __exception?.Message ?? "Unknown exception");
+    }
+}
 
 [HarmonyPatch]
 [HarmonyPatchCategory(Constants.GlobalPatches)]
