@@ -43,7 +43,10 @@ public class PatchGSDel_Void_BoolBoolBoolIntInvoke
 
     static void Finalizer(Exception __exception)
     {
-        Logging.LogWarning("GSDel_Void_BoolBoolBoolInt.Invoke encountered an exception: {ExceptionMessage}", __exception?.Message ?? "Unknown exception");
+        if (__exception != null)
+        {
+            Logging.LogError("GSDel_Void_BoolBoolBoolInt.Invoke encountered an exception: {ExceptionMessage}", __exception.Message);
+        }
     }
 }
 
