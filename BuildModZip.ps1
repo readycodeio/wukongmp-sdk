@@ -12,6 +12,12 @@ if (-not $ModVariant -or -not $Configuration) {
 
 . ./BuildInfo.ps1
 
+$allFiles = if ($Configuration -eq 'Debug') {
+    $devFiles
+} else {
+    $modFiles
+}
+
 # 1. Build solution
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $solutionPath = Join-Path $scriptDir "$solutionName.sln"
@@ -24,7 +30,7 @@ Write-Output "Building solution $solutionPath in configuration $Configuration...
 $buildOutput = dotnet build $solutionPath -c $Configuration -v minimal /t:Rebuild | Tee-Object -FilePath 'build.log'
 
 # 2. Extract version number from build output
-$pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){4})'
+$pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){3})'
 $match   = $buildOutput | Select-String -Pattern $pattern -AllMatches
 
 if (-not $match) { 
@@ -54,7 +60,6 @@ foreach ($item in $allFiles) {
     $files = $item[0]
     $sourceDir = $item[1]
     $destDir = Join-Path $destRoot $item[2]
-
     CopyFiles $files $sourceDir $destDir
 }
 
