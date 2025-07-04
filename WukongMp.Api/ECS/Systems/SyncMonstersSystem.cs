@@ -21,15 +21,22 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
                 return;
             }
 
+            var currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             var monster = localTamerComp.Tamer?.GetMonster();
-            if (monster == null)
+            if (monster != null && currentPhase != ETamerPhase.Spawned)
             {
-                TamerUtils.WakeUpMonster(entity);
+                Logging.LogError("Monster {Guid} is not null but is not yet fully spawned (previously crash)", tamerComp.Guid);
+            }
+
+            if (currentPhase != ETamerPhase.Spawned || monster == null)
+            {
+                TamerUtils.SpawnMonsterLocally(entity);
             }
             monster = localTamerComp.Tamer?.GetMonster();
-            if (monster == null)
+            currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
+            if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
-                Logging.LogError("monster is null");
+                Logging.LogError("Monster not yet spawned");
                 return;
             }
 
