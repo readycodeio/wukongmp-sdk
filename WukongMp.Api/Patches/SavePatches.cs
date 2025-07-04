@@ -151,14 +151,19 @@ namespace WukongMp.Api.Patches
 
                 Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
 
+                bool startNewGame = false;
+                byte[] worldData = [];
+                byte[] playerData;
+
                 if (worldDownloadTask.Result is null)
                 {
-                    Logging.LogError("Failed to download world save file from the cloud");
-                    return;
+                    Logging.LogWarning("Failed to download world save file from the cloud, will start new game");
+                    startNewGame = true;
                 }
-
-                var worldData = worldDownloadTask.Result.Content;
-                byte[] playerData;
+                else
+                {
+                    worldData = worldDownloadTask.Result.Content;
+                }
 
                 if (playerDownloadTask.Result is null)
                 {
@@ -170,27 +175,44 @@ namespace WukongMp.Api.Patches
                     playerData = playerDownloadTask.Result.Content;
                 }
 
-                // we need to write the data as file to read it
-                var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
-                var worldSavePath = GSWindowsPlatformSaveGame.GetFileFullName(worldSaveName, __instance.ArchiveWorker.UserId);
-                File.WriteAllBytes(worldSavePath, worldData);
-
-                var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopPlayerArchiveId);
-                var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
-                File.WriteAllBytes(playerSavePath, playerData);
-
-                var readWorldResult = __instance.ReadArchiveData(Constants.CoopWorldArchiveId, out var worldArchiveData, out var archiveCanBeRepaired);
-                if (readWorldResult != ReadArchiveResult.Success)
+                ArchiveFileUnpacked? worldArchiveData;
+                ArchiveFileUnpacked? playerArchiveData;
+                
+                if (startNewGame)
                 {
-                    Logging.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
-                    return;
+                    var readWorldResult = __instance.ReadArchiveData(Constants.NewCharacterArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
+                    if (readWorldResult != ReadArchiveResult.Success)
+                    {
+                        Logging.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
+                        return;
+                    }
+                    
+                    playerArchiveData = worldArchiveData;
                 }
-
-                var readPlayerResult = __instance.ReadArchiveData(Constants.CoopPlayerArchiveId, out var playerArchiveData, out archiveCanBeRepaired);
-                if (readPlayerResult != ReadArchiveResult.Success)
+                else
                 {
-                    Logging.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);
-                    return;
+                    // we need to write the data as file to read it
+                    var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
+                    var worldSavePath = GSWindowsPlatformSaveGame.GetFileFullName(worldSaveName, __instance.ArchiveWorker.UserId);
+                    File.WriteAllBytes(worldSavePath, worldData);
+
+                    var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopPlayerArchiveId);
+                    var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
+                    File.WriteAllBytes(playerSavePath, playerData);
+
+                    var readWorldResult = __instance.ReadArchiveData(Constants.CoopWorldArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
+                    if (readWorldResult != ReadArchiveResult.Success)
+                    {
+                        Logging.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
+                        return;
+                    }
+
+                    var readPlayerResult = __instance.ReadArchiveData(Constants.CoopPlayerArchiveId, out playerArchiveData, out archiveCanBeRepaired);
+                    if (readPlayerResult != ReadArchiveResult.Success)
+                    {
+                        Logging.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);
+                        return;
+                    }
                 }
 
                 OutArchiveData = playerArchiveData.GameArchiveData;
@@ -202,7 +224,7 @@ namespace WukongMp.Api.Patches
                 OutArchiveData.PersistentECSData = worldArchiveData.GameArchiveData.PersistentECSData;
                 OutArchiveData.StateMachineArchiveData = worldArchiveData.GameArchiveData.StateMachineArchiveData;
                 OutArchiveData.TaskArchiveData = worldArchiveData.GameArchiveData.TaskArchiveData;
-                // Add spells recieved during player absence
+                // Add spells received during player absence
                 foreach (var spell in worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Progress.SpellList)
                 {
                     if (!OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Contains(spell))
@@ -210,6 +232,7 @@ namespace WukongMp.Api.Patches
                         OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Add(spell);
                     }
                 }
+
                 // Set spells from world archive if they are not set in player archive
                 var worldSpellItemDict = new Dictionary<SpellType, int>(worldArchiveData.GameArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.ToDictionary(spell => spell.Type, spell => spell.SpellId));
                 var spellItemDict = new Dictionary<SpellType, int>(OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.ToDictionary(spell => spell.Type, spell => spell.SpellId));
@@ -219,6 +242,7 @@ namespace WukongMp.Api.Patches
                     {
                         continue;
                     }
+
                     if (spellItemDict.TryGetValue(worldSpellType, out var existingSpellId) && existingSpellId == 0)
                     {
                         Logging.LogDebug("Assigning spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
@@ -230,9 +254,10 @@ namespace WukongMp.Api.Patches
                         spellItemDict.Add(worldSpellType, worldSpellId);
                     }
                 }
+
                 OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
                 OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.AddRange([.. spellItemDict.Select(kvp => new SpellItem { SpellId = kvp.Value, Type = kvp.Key })]);
-                // Add interactions recieved during player absence
+                // Add interactions received during player absence
                 foreach (var interaction in worldArchiveData.GameArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList)
                 {
                     if (!OutArchiveData.RoleData.RoleCs.Interaction.InteractionFuncList.Contains(interaction))

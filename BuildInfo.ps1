@@ -68,8 +68,7 @@ $overridesFilesDebug = @(
 )
 
 $saveFiles = @(
-#    "ArchiveSaveFile.0.sav",
-    "ArchiveSaveFile.9.sav"
+    "ArchiveSaveFile.9.sav" # new game save
 ) # at least one file is required (temporarily) so that the game deson't think we are starting the game from Prologue
 
 # List of culture codes
