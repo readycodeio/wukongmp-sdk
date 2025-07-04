@@ -95,17 +95,20 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return;
 
-            if (__instance.TamerType != ETamerType.Summoned)
+            if (WukongMpModBase.Client.IsMasterClient)
             {
-                var guid = BGU_DataUtil.GetActorGuid(__instance);
-                var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
-                if (entity == null)
+                if (__instance.TamerType != ETamerType.Summoned)
                 {
-                    SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
-                }
-                else
-                {
-                    Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
+                    var guid = BGU_DataUtil.GetActorGuid(__instance);
+                    var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
+                    if (entity == null)
+                    {
+                        SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
+                    }
+                    else
+                    {
+                        Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
+                    }
                 }
             }
         }
@@ -136,6 +139,7 @@ namespace WukongMp.Api.Patches
                     {
                         localTamerComp.IsLocallySpawned = true;
                         ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
+                        Logging.LogDebug("Sending spawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
                         WukongMpMod.Instance.SendUnitSpawned(netComp);
                     }
                 }
@@ -176,7 +180,6 @@ namespace WukongMp.Api.Patches
 
             var tamer = __instance.InstancePtr.Get();
 
-            Logging.LogDebug("Monster {Guid} can be unloaded locally", BGU_DataUtil.GetActorGuid(tamer));
             var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
             if (entity.HasValue)
             {
@@ -185,6 +188,7 @@ namespace WukongMp.Api.Patches
                 {
                     localTamerComp.IsLocallySpawned = false;
                     ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
+                    Logging.LogDebug("Sending despawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
                     WukongMpMod.Instance.SendUnitDespawn(netComp);
                 }
 

@@ -26,6 +26,6 @@ public static class PatchOnPlayerTeleportTo
     public static void Postfix(ETeleportTypeV2 TeleportType, ValueType UserData, EPlayerTeleportReason Reason)
     {
         Logging.LogDebug("OnPlayerTeleportTo called with TeleportType {TeleportType}, UserData {UserData}, Reason {Reason}",
-            TeleportType, UserData.ToString(), Reason);
+            TeleportType, UserData?.ToString() ?? "Empty", Reason);
     }
 }

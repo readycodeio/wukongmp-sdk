@@ -54,6 +54,7 @@ $reflectionOnlyFiles = @(
 )
 
 $overridesFiles = @(
+    "System.Collections.Immutable.dll",
     "System.Runtime.CompilerServices.Unsafe.dll",
     "System.Text.Encodings.Web.dll",
     "System.Text.Json.dll",

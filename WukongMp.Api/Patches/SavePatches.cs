@@ -404,12 +404,12 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(UActorCompBaseCS __instance, int RebirthPointID)
         {
-            Logging.LogWarning("BirthPointID updated: {Id}", RebirthPointID);
+            Logging.LogDebug("BirthPointID updated: {Id}", RebirthPointID);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointID);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
-                Logging.LogWarning("MapId: {Id}", fUStRebirthPointDesc.MapID);
-                Logging.LogWarning("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+                Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
             }
         }
     }
