@@ -1,6 +1,7 @@
 ﻿using b1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Old;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -46,6 +47,18 @@ namespace WukongMp.Api.WukongUtils
             controller.Possess(possessPawn);
             BPS_GSEventCollection.Get(controller).Evt_BPS_OnControlledPawnChange.Invoke(possessPawn);
             BGS_EventCollectionCS.Get(controller)?.Evt_NotifyPossessEntityChanged.Invoke(unpossessPawn.ToEntity(), possessPawn.ToEntity());
+        }
+
+        public static void EnableThreading()
+        {
+            Logging.LogDebug("Enabling threading for ECSWorld");
+            BGW_ECSWorld.ThreadCount = 4;
+        }
+
+        public static void DisableThreading()
+        {
+            Logging.LogDebug("Disabling threading for ECSWorld");
+            BGW_ECSWorld.ThreadCount = 0;
         }
     }
 }

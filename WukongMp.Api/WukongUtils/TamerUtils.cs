@@ -51,19 +51,14 @@ namespace WukongMp.Api.WukongUtils
             return unitName.ToLower().Replace("-", "").Replace("_", "");
         }
 
-        public static void WakeUpMonster(Entity tamerEntity)
+        public static void SpawnMonsterLocally(Entity tamerEntity)
         {
             var localTamerComp = tamerEntity.GetComponent<LocalTamerComponent>();
-            Logging.LogDebug("WakeUpMonster for tamer: {Guid}", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+            ref var tamerComp = ref tamerEntity.GetComponent<TamerComponent>();
 
-            var monster = localTamerComp.Tamer?.GetMonster();
-            if (monster == null)
-            {
-                ref var tamerComp = ref tamerEntity.GetComponent<TamerComponent>();
-                var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
-                Logging.LogDebug("Monster {Guid} forced to spawn", tamerComp.Guid);
-                bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
-            }
+            Logging.LogDebug("Spawn monster immediately for tamer: {Guid}", tamerComp.Guid);
+            var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
+            bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
         }
 
         public static void DiscoverTamers()
