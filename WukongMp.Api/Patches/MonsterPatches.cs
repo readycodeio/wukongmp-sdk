@@ -130,7 +130,7 @@ namespace WukongMp.Api.Patches
 
                 var tamer = __instance.InstancePtr.Get();
 
-                Logging.LogWarning("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
+                Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
                 var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
                 if (entity.HasValue)
                 {
@@ -139,7 +139,7 @@ namespace WukongMp.Api.Patches
                     {
                         localTamerComp.IsLocallySpawned = true;
                         ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                        Logging.LogWarning("Sending spawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
+                        Logging.LogDebug("Sending spawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
                         WukongMpMod.Instance.SendUnitSpawned(netComp);
                     }
                 }
@@ -180,7 +180,6 @@ namespace WukongMp.Api.Patches
 
             var tamer = __instance.InstancePtr.Get();
 
-            Logging.LogWarning("Monster {Guid} can be unloaded locally", BGU_DataUtil.GetActorGuid(tamer));
             var entity = WukongMpMod.Instance.GetByTamerActor(tamer);
             if (entity.HasValue)
             {
@@ -189,14 +188,14 @@ namespace WukongMp.Api.Patches
                 {
                     localTamerComp.IsLocallySpawned = false;
                     ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                    Logging.LogWarning("Sending despawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
+                    Logging.LogDebug("Sending despawn for monster {Guid}", BGU_DataUtil.GetActorGuid(tamer));
                     WukongMpMod.Instance.SendUnitDespawn(netComp);
                 }
 
                 ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
                 if (!tamerComp.ShouldBeSpawned)
                 {
-                    Logging.LogWarning("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamer));
+                    Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamer));
                     localTamerComp.IsMonsterSynced = false;
                     return true;
                 }

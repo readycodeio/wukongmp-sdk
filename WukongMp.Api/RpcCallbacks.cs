@@ -603,7 +603,7 @@ public partial class WukongMpMod
     [RpcEvent(RelayMode.Master)]
     void OnUnitSpawned(PlayerId __sender, NetworkIdComponent netEntity)
     {
-        Logging.LogWarning("OnUnitSpawned called for player {PlayerId} with entity {Entity}", __sender, netEntity);
+        Logging.LogDebug("OnUnitSpawned called for player {PlayerId} with entity {Entity}", __sender, netEntity);
         var player = Client.GetPlayerById(__sender);
         if (player == null)
         {
@@ -620,7 +620,7 @@ public partial class WukongMpMod
     [RpcEvent(RelayMode.Master)]
     void OnUnitDespawn(PlayerId __sender, NetworkIdComponent netEntity)
     {
-        Logging.LogWarning("OnUnitDespawn called for player {PlayerId} with entity {Entity}", __sender, netEntity);
+        Logging.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", __sender, netEntity);
         var player = Client.GetPlayerById(__sender);
         if (player == null)
         {
