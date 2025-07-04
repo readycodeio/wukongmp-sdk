@@ -23,11 +23,6 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
 
             var currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             var monster = localTamerComp.Tamer?.GetMonster();
-            if (monster != null && currentPhase != ETamerPhase.Spawned)
-            {
-                Logging.LogError("Monster {Guid} is not null but is not yet fully spawned (previously crash)", tamerComp.Guid);
-            }
-
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 TamerUtils.SpawnMonsterLocally(entity);
@@ -85,7 +80,7 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
             {
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);
-                Logging.LogDebug("Tamer actor disabled.");
+                Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
 
             ClientUtils.RegisterNewPlayerTeam(monster, teamComp.TeamId);
