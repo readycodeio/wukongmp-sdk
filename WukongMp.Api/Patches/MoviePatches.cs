@@ -1,7 +1,8 @@
-﻿using System.Linq;
-using System.Reflection;
-using b1;
+﻿using b1;
 using HarmonyLib;
+using System;
+using System.Linq;
+using System.Reflection;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -20,13 +21,29 @@ public static class PatchOnPlayMovieInstance
         return AccessTools.Method("b1.BGS_MovieSystem:OnPlayMovieInstance");
     }
 
-    public static void Postfix(int SequenceId, MovieInstance Instance)
+    public static void Prefix(int SequenceId, MovieInstance Instance)
     {
         if (!WukongMP.Instance.ShouldRunConnectedPatches())
             return;
 
-        Instance.MarkCanBeSkipped(true);
         Logging.LogDebug("Playing movie {Name} with sequenceId {Id}", Instance.GetName(), SequenceId);
+
+        if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
+        {
+            Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
+            foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+            {
+                player.Pawn?.SetActorHiddenInGame(true);
+            }
+            Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
+            {
+                Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
+                foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+                {
+                    player.Pawn?.SetActorHiddenInGame(false);
+                }
+            });
+        }
     }
 }
 
@@ -58,12 +75,6 @@ public static class PatchRequestPlayMovie
 
         Logging.LogDebug("RequestPlayMovie called with sequenceId {Id}, bDisablePlayerControl {Control}, bDisableMovementInput {Movement}, bDisableLookAtInput {LookAt}, bHidePlayer {HidePlayer}, bHideHud {HideHud}, MatchType {MatchType}",
             Request.SequenceID, Request.bDisablePlayerControl, Request.bDisableMovementInput, Request.bDisableLookAtInput, Request.bHidePlayer, Request.bHideHud, Request.MatchType);
-
-        //if (!UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID) && Request.bDisablePlayerControl == true)
-        //{
-        //    Logging.LogDebug("BroadRequesting movie with sequenceId {Id}", Request.SequenceID);
-        //    WukongMpModBase.Client.SendPlayMovieRequest(Request);
-        //}
     }
 }
 
