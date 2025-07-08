@@ -16,41 +16,6 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
-//[HarmonyPatch]
-//[HarmonyPatchCategory(Constants.ConnectedPatches)]
-//public static class PatchOnPlayMovieInstance
-//{
-//    private static MethodBase TargetMethod()
-//    {
-//        return AccessTools.Method("b1.BGS_MovieSystem:OnPlayMovieInstance");
-//    }
-
-//    public static void Prefix(int SequenceId, MovieInstance Instance)
-//    {
-//        if (!WukongMP.Instance.ShouldRunConnectedPatches())
-//            return;
-
-//        Logging.LogDebug("Playing movie {Name} with sequenceId {Id}", Instance.GetName(), SequenceId);
-
-//        if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
-//        {
-//            Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
-//            foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
-//            {
-//                player.Pawn?.SetActorHiddenInGame(true);
-//            }
-//            Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
-//            {
-//                Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
-//                foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
-//                {
-//                    player.Pawn?.SetActorHiddenInGame(false);
-//                }
-//            });
-//        }
-//    }
-//}
-
 [HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchRequestPlayMovie
@@ -141,15 +106,6 @@ public static class PatchRequestPlayMovie
         return false;
     }
 
-    //public static void Postfix(GameStateSystemBase __instance, FPlayMovieRequest Request)
-    //{
-    //    if (!WukongMP.Instance.ShouldRunConnectedPatches())
-    //        return;
-
-    //    Logging.LogDebug("RequestPlayMovie called with sequenceId {Id}, bDisablePlayerControl {Control}, bDisableMovementInput {Movement}, bDisableLookAtInput {LookAt}, bHidePlayer {HidePlayer}, bHideHud {HideHud}, MatchType {MatchType}",
-    //        Request.SequenceID, Request.bDisablePlayerControl, Request.bDisableMovementInput, Request.bDisableLookAtInput, Request.bHidePlayer, Request.bHideHud, Request.MatchType);
-    //}
-
     private static void SetCallbacks(int SequenceId, MovieInstance Instance)
     {
         Logging.LogDebug("Playing movie {Name} with sequenceId {Id}", Instance.GetName(), SequenceId);
@@ -160,6 +116,7 @@ public static class PatchRequestPlayMovie
             foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
             {
                 player.Pawn?.SetActorHiddenInGame(true);
+                player.MarkerActor?.SetActorHiddenInGame(true);
             }
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
@@ -167,6 +124,7 @@ public static class PatchRequestPlayMovie
                 foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
                 {
                     player.Pawn?.SetActorHiddenInGame(false);
+                    player.MarkerActor?.SetActorHiddenInGame(false);
                 }
             });
         }
