@@ -736,7 +736,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUS_PlayerMovementSystem), "TickInputMoving")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchTickInputMoving
     {
         public static void Postfix(float DeltaTime, BUS_PlayerMovementSystem __instance, BUC_MovementData ___MovementData, IBUC_ABPCharacterData ___ChrData)
