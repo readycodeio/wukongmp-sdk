@@ -747,9 +747,9 @@ namespace WukongMp.Api.Patches
             if (__instance.GetOwner() == GameUtils.GetControlledPawn() && ___MovementData.GetMoveType() == EBGUMoveMode.AIPathMove)
             {
                 var localPlayerState = WukongMpModBase.Client.LocalPlayerState;
-                if (___ChrData.LastVelocity.IsNearlyZero() && ___ChrData.Velocity.IsNearlyZero())
+                if (___ChrData.RealWorldVelocity.IsNearlyZero())
                 {
-                    Logging.LogWarning("LastVelocity and Velocity are nearly zero");
+                    Logging.LogWarning("RealWorldVelocity is nearly zero");
                     localPlayerState.AIPathMoveStuckTimer += DeltaTime;
                     if (localPlayerState.AIPathMoveStuckTimer > Constants.AIPathMoveStuckTimeout)
                     {
