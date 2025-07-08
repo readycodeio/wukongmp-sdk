@@ -33,6 +33,7 @@ namespace WukongMp.Api.Configuration
         public const int DrawTeamId = 9999;
         public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
         public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
+        public const string WhiteTeamColor = "(R=0.9,G=0.9,B=0.9)";
         public const int ReconnectDelayMs = 1000;
         public const float CutsceneSyncDistance = 2000f;
         public const float RestrictedMovementRadius = 500f;

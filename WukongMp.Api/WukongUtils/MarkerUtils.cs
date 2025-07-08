@@ -64,7 +64,7 @@ public static class MarkerUtils
                 return;
             }
 
-            var teamColor = PvPUtils.GetTeamColorString(characterState.TeamId);
+            var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(characterState.TeamId);
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {characterState.NickName} {teamColor}", true);
             characterState.MarkerActor = playerMarkerActor;
         }, nameof(CreateMarkerForCharacter));
