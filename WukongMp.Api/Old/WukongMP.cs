@@ -321,7 +321,7 @@ namespace WukongMp.Api.Old
 
             if (playerState.MarkerActor != null)
             {
-                var teamColor = PvPUtils.GetTeamColorString(playerState.TeamId);
+                var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(playerState.TeamId);
                 playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamColor}", true);
             }
 
