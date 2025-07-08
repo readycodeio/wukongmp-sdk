@@ -1,8 +1,12 @@
 ﻿using b1;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnrealEngine.Engine;
+using UnrealEngine.LevelSequence;
+using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -12,40 +16,40 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnPlayMovieInstance
-{
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BGS_MovieSystem:OnPlayMovieInstance");
-    }
+//[HarmonyPatch]
+//[HarmonyPatchCategory(Constants.ConnectedPatches)]
+//public static class PatchOnPlayMovieInstance
+//{
+//    private static MethodBase TargetMethod()
+//    {
+//        return AccessTools.Method("b1.BGS_MovieSystem:OnPlayMovieInstance");
+//    }
 
-    public static void Prefix(int SequenceId, MovieInstance Instance)
-    {
-        if (!WukongMP.Instance.ShouldRunConnectedPatches())
-            return;
+//    public static void Prefix(int SequenceId, MovieInstance Instance)
+//    {
+//        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+//            return;
 
-        Logging.LogDebug("Playing movie {Name} with sequenceId {Id}", Instance.GetName(), SequenceId);
+//        Logging.LogDebug("Playing movie {Name} with sequenceId {Id}", Instance.GetName(), SequenceId);
 
-        if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
-        {
-            Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
-            foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
-            {
-                player.Pawn?.SetActorHiddenInGame(true);
-            }
-            Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
-            {
-                Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
-                foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
-                {
-                    player.Pawn?.SetActorHiddenInGame(false);
-                }
-            });
-        }
-    }
-}
+//        if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
+//        {
+//            Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
+//            foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+//            {
+//                player.Pawn?.SetActorHiddenInGame(true);
+//            }
+//            Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
+//            {
+//                Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
+//                foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+//                {
+//                    player.Pawn?.SetActorHiddenInGame(false);
+//                }
+//            });
+//        }
+//    }
+//}
 
 [HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
@@ -65,16 +69,107 @@ public static class PatchRequestPlayMovie
         {
             return false; // Skip the request if the sequence has already been played
         }
-        return true;
+
+        var Owner = __instance.GetOwner();
+        // get methods
+        var movieSystemType = __instance.GetType();
+        MethodInfo OnPlayMovieInstance = AccessTools.Method(movieSystemType, "OnPlayMovieInstance");
+
+        FMovieSceneSequencePlaybackSettings fMovieSceneSequencePlaybackSettings = default(FMovieSceneSequencePlaybackSettings);
+        fMovieSceneSequencePlaybackSettings.AutoPlay = false;
+        fMovieSceneSequencePlaybackSettings.PlayRate = 1f;
+        fMovieSceneSequencePlaybackSettings.StartTime = 0f;
+        fMovieSceneSequencePlaybackSettings.RandomStartTime = false;
+        fMovieSceneSequencePlaybackSettings.RestoreState = false;
+        fMovieSceneSequencePlaybackSettings.DisableMovementInput = true;
+        fMovieSceneSequencePlaybackSettings.DisableLookAtInput = Request.bDisableLookAtInput;
+        fMovieSceneSequencePlaybackSettings.HidePlayer = Request.bHidePlayer;
+        fMovieSceneSequencePlaybackSettings.HideHud = Request.bHideHud;
+        fMovieSceneSequencePlaybackSettings.DisableCameraCuts = !Request.bDisablePlayerControl;
+        fMovieSceneSequencePlaybackSettings.PauseAtEnd = false;
+        FMovieSceneSequencePlaybackSettings playbackSettings = fMovieSceneSequencePlaybackSettings;
+        FLevelSequenceCameraSettings fLevelSequenceCameraSettings = default(FLevelSequenceCameraSettings);
+        fLevelSequenceCameraSettings.AspectRatioAxisConstraint = EAspectRatioAxisConstraint.AspectRatio_MaintainXFOV;
+        fLevelSequenceCameraSettings.OverrideAspectRatioAxisConstraint = false;
+        FLevelSequenceCameraSettings cameraSettings = fLevelSequenceCameraSettings;
+        FMovieGraphPlaySettings fMovieGraphPlaySettings = default(FMovieGraphPlaySettings);
+        fMovieGraphPlaySettings.PlaybackSettings = playbackSettings;
+        fMovieGraphPlaySettings.CameraSettings = cameraSettings;
+        fMovieGraphPlaySettings.bUsePlayerCamera = !Request.bDisablePlayerControl;
+        fMovieGraphPlaySettings.bTriggerMonsterGoHome = false;
+        FMovieGraphPlaySettings inPlaySettings = fMovieGraphPlaySettings;
+        MovieInstance movieInstance = MovieInstance.Create(Owner, Request.SequenceID, inPlaySettings);
+        if (movieInstance == null)
+        {
+            Request.BeforePlayFinishCallback?.Invoke();
+            Request.MovieFinishCallback?.Invoke();
+            return false;
+        }
+        AActor actorByGuid = BGU_DataUtil.GetActorByGuid(Owner, Request.OverlapBoxGuid);
+        if (actorByGuid != null)
+        {
+            movieInstance.OverlapGuid = Request.OverlapBoxGuid;
+            List<UActorComponent> componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass(typeof(USceneComponent)), B1GlobalFNames.MatchPointA);
+            if (componentsByTag.Count > 0)
+            {
+                movieInstance.PointAPos = ((USceneComponent)componentsByTag[0]).GetWorldTransform();
+            }
+            componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass(typeof(USceneComponent)), B1GlobalFNames.MatchPointB);
+            if (componentsByTag.Count > 0)
+            {
+                movieInstance.PointBPos = ((USceneComponent)componentsByTag[0]).GetWorldTransform();
+            }
+            movieInstance.MatchingPosType = Request.MatchType;
+        }
+        else
+        {
+            movieInstance.OverlapGuid = "";
+        }
+        if (Request.BeforePlayFinishCallback != null)
+        {
+            movieInstance.BeforePlayFinishCallBack = (Action)Delegate.Combine(movieInstance.BeforePlayFinishCallBack, Request.BeforePlayFinishCallback);
+        }
+        if (Request.MovieFinishCallback != null)
+        {
+            movieInstance.MovieFinishCallBack = (Action)Delegate.Combine(movieInstance.MovieFinishCallBack, Request.MovieFinishCallback);
+        }
+
+        SetCallbacks(Request.SequenceID, movieInstance);
+
+        OnPlayMovieInstance?.Invoke(__instance, [Request.SequenceID, movieInstance]);
+
+        return false;
     }
 
-    public static void Postfix(GameStateSystemBase __instance, FPlayMovieRequest Request)
-    {
-        if (!WukongMP.Instance.ShouldRunConnectedPatches())
-            return;
+    //public static void Postfix(GameStateSystemBase __instance, FPlayMovieRequest Request)
+    //{
+    //    if (!WukongMP.Instance.ShouldRunConnectedPatches())
+    //        return;
 
-        Logging.LogDebug("RequestPlayMovie called with sequenceId {Id}, bDisablePlayerControl {Control}, bDisableMovementInput {Movement}, bDisableLookAtInput {LookAt}, bHidePlayer {HidePlayer}, bHideHud {HideHud}, MatchType {MatchType}",
-            Request.SequenceID, Request.bDisablePlayerControl, Request.bDisableMovementInput, Request.bDisableLookAtInput, Request.bHidePlayer, Request.bHideHud, Request.MatchType);
+    //    Logging.LogDebug("RequestPlayMovie called with sequenceId {Id}, bDisablePlayerControl {Control}, bDisableMovementInput {Movement}, bDisableLookAtInput {LookAt}, bHidePlayer {HidePlayer}, bHideHud {HideHud}, MatchType {MatchType}",
+    //        Request.SequenceID, Request.bDisablePlayerControl, Request.bDisableMovementInput, Request.bDisableLookAtInput, Request.bHidePlayer, Request.bHideHud, Request.MatchType);
+    //}
+
+    private static void SetCallbacks(int SequenceId, MovieInstance Instance)
+    {
+        Logging.LogDebug("Playing movie {Name} with sequenceId {Id}", Instance.GetName(), SequenceId);
+
+        if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
+        {
+            Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
+            foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+            {
+                player.Pawn?.SetActorHiddenInGame(true);
+            }
+            Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
+            {
+                Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
+                foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+                {
+                    player.Pawn?.SetActorHiddenInGame(false);
+                }
+            });
+        }
     }
 }
 
