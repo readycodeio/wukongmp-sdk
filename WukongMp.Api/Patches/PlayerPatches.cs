@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using b1;
 using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
@@ -316,6 +317,9 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
+        private static int _pendingDaSheng;
+        private static readonly HashSet<NetworkIdComponent> SpawnedDaSheng2 = [];
+
         public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData, out bool __state)
         {
             __state = false;
@@ -358,21 +362,38 @@ namespace WukongMp.Api.Patches
                 if (entity.HasValue)
                 {
                     var tamerClass = entity.Value.GetComponent<LocalTamerComponent>().Tamer?.GetClass();
+                    var netId = entity.Value.GetComponent<NetworkIdComponent>();
                     if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
                     {
                         var teamId = ownerCharacter.GetTeamIDInCS();
                         var location = ownerCharacter.GetActorLocation();
 
-                        _ = Task.Run(async () =>
+                        if (SpawnedDaSheng2.Add(netId))
                         {
-                            await Task.Delay(5000);
-                            Utils.TryRunOnGameThread(() => { SpawningUtils.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId); });
-                        });
+                            _pendingDaSheng++;
+                            _ = Task.Run(async () =>
+                            {
+                                await Task.Delay(5000);
+                                Utils.TryRunOnGameThread(() =>
+                                {
+                                    SpawningUtils.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId);
+                                    _pendingDaSheng--;
+                                });
+                            });
+                        }
+                        else
+                        {
+                            Logging.LogWarning("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
+                        }
+
                         return;
                     }
                 }
 
-                client.CheckRoundEndCondition();
+                if (_pendingDaSheng == 0)
+                {
+                    client.CheckRoundEndCondition();
+                }
             }
         }
 
@@ -701,6 +722,20 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    // Disable slowing down time
+    [HarmonyPatch(typeof(BUS_TimeScaleComp), "OnTriggerScaleTime")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchOnTriggerScaleTime
+    {
+        public static bool Prefix()
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            return false;
+        }
+    }
+
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchSetAllUnitCannotDead
@@ -715,7 +750,7 @@ namespace WukongMp.Api.Patches
             if (!WukongMP.Instance.ShouldRunConnectedPatches())
                 return true;
 
-            return !bInCanUnitDead; 
+            return !bInCanUnitDead;
         }
     }
 
@@ -785,6 +820,7 @@ namespace WukongMp.Api.Patches
                 __instance.StepFinish();
                 return false;
             }
+
             return true;
         }
     }
