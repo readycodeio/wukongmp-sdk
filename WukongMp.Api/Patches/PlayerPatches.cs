@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Threading.Tasks;
-using b1;
+﻿using b1;
 using B1UI.GSUI;
 using BtlB1;
 using BtlShare;
@@ -8,6 +6,8 @@ using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
+using System.Reflection;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -732,6 +732,60 @@ namespace WukongMp.Api.Patches
             Logging.LogWarning("BUS_QuestDynamicObstacleComp.EnableCollision called for {Guid}", guid);
 
             return !DisabledCollidersData.IsDisabled(guid);
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_PlayerMovementSystem), "TickInputMoving")]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
+    public class PatchTickInputMoving
+    {
+        public static void Postfix(float DeltaTime, BUS_PlayerMovementSystem __instance, BUC_MovementData ___MovementData, IBUC_ABPCharacterData ___ChrData)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return;
+
+            if (__instance.GetOwner() == GameUtils.GetControlledPawn() && ___MovementData.GetMoveType() == EBGUMoveMode.AIPathMove)
+            {
+                var localPlayerState = WukongMpModBase.Client.LocalPlayerState;
+                if (___ChrData.RealWorldVelocity.IsNearlyZero())
+                {
+                    Logging.LogWarning("RealWorldVelocity is nearly zero");
+                    localPlayerState.AIPathMoveStuckTimer += DeltaTime;
+                    if (localPlayerState.AIPathMoveStuckTimer > Constants.AIPathMoveStuckTimeout)
+                    {
+                        Logging.LogWarning("AIPathMove stuck detected, resetting timer");
+                        localPlayerState.AIPathMoveStuckTimer = 0f;
+                        localPlayerState.IsAIPathMoveStuck = true;
+                        var events = BUS_EventCollectionCS.Get(__instance.GetOwner());
+                        events.Evt_MovementForceStop.Invoke();
+                    }
+                }
+                else
+                {
+                    localPlayerState.AIPathMoveStuckTimer = 0f;
+                    localPlayerState.IsAIPathMoveStuck = false;
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractStepMatchPos), "OnInteractMatchingPosFinish")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnInteractMatchingPosFinish
+    {
+        public static bool Prefix(InteractStepMatchPos __instance)
+        {
+            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+                return true;
+
+            var localPlayerState = WukongMpModBase.Client.LocalPlayerState;
+            if (localPlayerState.IsAIPathMoveStuck)
+            {
+                localPlayerState.IsAIPathMoveStuck = false;
+                __instance.StepFinish();
+                return false;
+            }
+            return true;
         }
     }
 }
