@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CSharpModBase;
 using Friflo.Engine.ECS;
@@ -35,7 +36,7 @@ public partial class WukongMpMod : WukongMpModBase
         Harmony.PatchCategory(category);
         Logging.LogInformation("Patched Harmony WukongMpMod {Patch}", category);
     }
-    
+
     protected override void Unpatch()
     {
         base.Unpatch();
@@ -72,10 +73,21 @@ public partial class WukongMpMod : WukongMpModBase
     public Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
         => Blobs.UploadBlobAsync(new BlobInfo(Constants.CoopWorldArchiveName, content), ct);
 
-    public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default) => Blobs.DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
+    public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default)
+    {
+        // add a default timeout of 5 seconds
+        var nestedCt = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        nestedCt.CancelAfter(TimeSpan.FromSeconds(10));
+        return Blobs.DownloadBlobAsync(Constants.CoopWorldArchiveName, nestedCt.Token);
+    }
 
     public Task<bool> UploadPlayerSaveAsync(byte[] content, CancellationToken ct = default)
-        => Blobs.UploadBlobAsync(new BlobInfo(PlayerSaveName, content), ct);
+    {
+        // add a default timeout of 10 seconds
+        var nestedCt = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        nestedCt.CancelAfter(TimeSpan.FromSeconds(15));
+        return Blobs.UploadBlobAsync(new BlobInfo(PlayerSaveName, content), nestedCt.Token);
+    }
 
     public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default) => Blobs.DownloadBlobAsync(PlayerSaveName, ct);
 
