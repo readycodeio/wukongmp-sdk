@@ -84,7 +84,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchGameArchive
     {
-        public static void Postfix(BGW_GameArchiveMgr __instance, ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData? OutArchiveData)
+        public static void Postfix(BGW_GameArchiveMgr __instance, ref ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData? OutArchiveData)
         {
             if (__result != ReadArchiveResult.Success)
             {
@@ -146,38 +146,47 @@ namespace WukongMp.Api.Patches
             else
             {
                 // Read archive with our co-op save.
-                var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
-                var playerDownloadTask = WukongMpMod.Instance.DownloadPlayerSaveAsync();
-
-                Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
-
                 bool startNewGame = false;
                 byte[] worldData = [];
                 byte[] playerData;
 
-                if (worldDownloadTask.Result is null)
+                try
                 {
-                    Logging.LogWarning("Failed to download world save file from the cloud, will start new game");
-                    startNewGame = true;
-                }
-                else
-                {
-                    worldData = worldDownloadTask.Result.Content;
-                }
+                    var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
+                    var playerDownloadTask = WukongMpMod.Instance.DownloadPlayerSaveAsync();
 
-                if (playerDownloadTask.Result is null)
-                {
-                    Logging.LogWarning("Player has no save file in the cloud, using default world save");
-                    playerData = worldData;
+                    Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
+
+                    if (worldDownloadTask.Result is null)
+                    {
+                        Logging.LogWarning("Failed to download world save file from the cloud, will start new game");
+                        startNewGame = true;
+                    }
+                    else
+                    {
+                        worldData = worldDownloadTask.Result.Content;
+                    }
+
+                    if (playerDownloadTask.Result is null)
+                    {
+                        Logging.LogWarning("Player has no save file in the cloud, using default world save");
+                        playerData = worldData;
+                    }
+                    else
+                    {
+                        playerData = playerDownloadTask.Result.Content;
+                    }
                 }
-                else
+                catch (TaskCanceledException)
                 {
-                    playerData = playerDownloadTask.Result.Content;
+                    __result = ReadArchiveResult.FileNotExist;
+                    OutArchiveData = null;
+                    return;
                 }
 
                 ArchiveFileUnpacked? worldArchiveData;
                 ArchiveFileUnpacked? playerArchiveData;
-                
+
                 if (startNewGame)
                 {
                     var readWorldResult = __instance.ReadArchiveData(Constants.NewCharacterArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
@@ -186,7 +195,7 @@ namespace WukongMp.Api.Patches
                         Logging.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
                         return;
                     }
-                    
+
                     playerArchiveData = worldArchiveData;
                 }
                 else
