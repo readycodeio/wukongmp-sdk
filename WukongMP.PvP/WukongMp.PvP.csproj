@@ -4,6 +4,7 @@
         <LangVersion>latest</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <Nullable>enable</Nullable>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <RootNamespace>WukongMp.PvP</RootNamespace>

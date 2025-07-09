@@ -7,7 +7,8 @@ namespace WukongMp.Api.UI
 {
     public class ChatWidget : GameWidgetBase
     {
-        public static ChatWidget Instance { get; } = new();
+        private static ChatWidget? _instance;
+        public static ChatWidget Instance => _instance ??= new();
 
         private ChatWidget() : base(Constants.ChatWidgetName) { }
 

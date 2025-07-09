@@ -1,11 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using WukongMp.Api.Old;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongLevelTransitionConnectionController
+public class WukongLevelTransitionConnectionController : IDisposable
 {
     private readonly WukongEventBus _eventBus;
     private readonly WukongConnectionManager _connection;
@@ -24,6 +25,13 @@ public class WukongLevelTransitionConnectionController
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
         _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
         _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
+    }
+    
+    public void Dispose()
+    {
+        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
+        _eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevel;
+        _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
     }
     
     private void OnBeginPlayGameplayLevel()

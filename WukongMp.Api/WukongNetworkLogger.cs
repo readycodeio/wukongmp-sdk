@@ -49,8 +49,16 @@ public class WukongNetworkLogger : IDisposable
         // dump room state
         Logging.LogDebug("Room state: {State}", _roomState.ToString());
 
-        // dump player state to console for me
-        Logging.LogDebug("Local player state: {State}", _playerRegistry.LocalPlayerState.ToString());
+        if (_playerRegistry.HasLocalPlayerState)
+        {
+            // dump player state to console for me
+            Logging.LogDebug("Local player state: {State}", _playerRegistry.LocalPlayerState.ToString());
+        }
+        else
+        {
+            Logging.LogDebug("No local player state found.");
+        }
+        
         // dump player state to console for each connected player
         foreach (var (id, state) in _playerRegistry.ConnectedPlayers)
         {

@@ -42,7 +42,14 @@ namespace WukongMp.Api.Old.Api
             if (!teamRelationData.TeamHostileInfos.ContainsKey(newTeamId))
             {
                 var oldTeamId = actor.GetTeamIDInCS();
-                var oldRelationInfo = teamRelationData.TeamHostileInfos[oldTeamId];
+                if (!teamRelationData.TeamHostileInfos.TryGetValue(oldTeamId, out var oldRelationInfo))
+                {
+                    oldRelationInfo = new TeamRelationInfo
+                    {
+                        HostileTeamIDs = [],
+                        TeamDamageReductionRatios = new Dictionary<int, int>()
+                    };
+                }
 
                 var newRelationInfo = new TeamRelationInfo
                 {

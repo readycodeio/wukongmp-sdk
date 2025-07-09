@@ -20,7 +20,7 @@ public class DI
     public ILogger Logger { get; private set; } = null!;
 
     public Store World { get; private set; } = null!;
-    public SystemUpdateLoop UpdateLoop { get; private set; } = null!;
+    public WukongUpdateLoop UpdateLoop { get; private set; } = null!;
     public ISystemRegistry SystemRegistry { get; private set; } = null!;
     public EntityManagerWithLogs EntityManager { get; private set; } = null!;
     
@@ -63,7 +63,6 @@ public class DI
         Logger.LogDebug("Initializing DI...");
         
         World = new Store(new EntityStore());
-        UpdateLoop = new SystemUpdateLoop(World);
         SystemRegistry = new SystemRegistry(World);
         EntityManager = new EntityManagerWithLogs(NetManager);
 
@@ -73,11 +72,15 @@ public class DI
         ]);
         var relayLogger = LoggerFactory.CreateLogger("RelayClient");
         RelayClient = new RelayClient(userGuid, host, port, Serializer, relayLogger);
+        
+        EventBus = new WukongEventBus();
+        
         NetManager = new NetworkedEntityManager(World, () => RelayClient.PlayerId);
         
         RoomState = new RoomStateProxy(RelayClient);
         Players = new WukongPlayerRegistry();
         PlayerProperty = new WukongPlayerPropertyManager(RelayClient, Players);
+        UpdateLoop = new WukongUpdateLoop(World, PlayerProperty);
 
         PawnRegistry = new WukongPawnRegistry(Players, World, EntityManager, SystemRegistry);
         ModeManager = new WukongPlayerModeManager(Players, RoomState);
@@ -86,7 +89,6 @@ public class DI
         
         Rpc = new WukongRpcCallbacks(Serializer, RelayClient, EntityManager, Players, PawnRegistry);
         SaveRelay = new WukongSaveRelay(RelayClient);
-        EventBus = new WukongEventBus();
 
         NetLogger = new WukongNetworkLogger(Logger, World, RoomState, Players, RelayClient);
         NetComponents = new NetworkedComponentRegistry([
@@ -101,7 +103,7 @@ public class DI
         Patcher = new WukongPatcher();
         
         if (Constants.IsCoop)
-            Coop = new WukongCoop(RelayClient, Players, PlayerProperty, Synchronizer);
+            Coop = new WukongCoop(Serializer, RelayClient, Players, PlayerProperty, Synchronizer);
         else
             PVP = new WukongPVP(World, Serializer, RelayClient, RoomState, Players, PlayerProperty, EventBus, Synchronizer, Rpc, Chatter);
 

@@ -6,8 +6,8 @@ namespace WukongMp.Api.Old;
 public class CmdLineParams
 {
     private static CmdLineParams? _instance;
+    public static CmdLineParams Instance => _instance ??= new ();
 
-    public static CmdLineParams Instance => _instance ??= new CmdLineParams();
     public bool ShouldEnableMultiplayer => ServerIp is not null && ServerPort is not null;
 
     public string? ModFolderOverride { get; }

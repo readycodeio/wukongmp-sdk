@@ -98,6 +98,8 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
+            DI.Instance.EventBus.TryInvokeBeginLoadGameplayLevel();
+
             if (!SavePatchesData.RedirectSaveFiles)
             {
                 if (SavePatchesData.ShouldCacheSave)

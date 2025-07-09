@@ -5,7 +5,8 @@ namespace WukongMp.Api.UI
 {
     public class PingIndicatorWidget : GameWidgetBase
     {
-        public static PingIndicatorWidget Instance { get; } = new();
+        private static PingIndicatorWidget? _instance;
+        public static PingIndicatorWidget Instance => _instance ??= new();
 
         private PingIndicatorWidget() : base(Constants.PingWidgetName) { }
 
