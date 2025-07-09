@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Old;
@@ -17,6 +18,21 @@ public class CmdLineParams
     public string Nickname { get; } = "Player";
     public int LevelId { get; }
 
+    public string? ShimDbName { get; }
+    public string? ShimDbDir { get; }
+    
+    public bool RecordShimOnStart
+        => RecordShimName != null;
+    
+    public string? RecordShimName { get; }
+    public string? RecordShimFile { get; }
+
+    public bool PlayShimOnStart
+        => PlayShimName != null;
+    
+    public string? PlayShimName { get; }
+    public string? PlayShimFile { get; }
+    
     private CmdLineParams()
     {
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
@@ -83,6 +99,41 @@ public class CmdLineParams
         {
             ModFolderOverride = modFolder;
             Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
+        }
+        
+        // OPTIONAL: record shim test
+        var shimDb = data.GetValueOrDefault("SHIM_DB");
+
+        if (!string.IsNullOrWhiteSpace(shimDb))
+        {
+            ShimDbName = shimDb;
+            Logging.LogDebug("Shim DB: {ShimDbName}", ShimDbName);
+        }
+        else
+        {
+            ShimDbName = "Default";
+            Logging.LogDebug("Shim DB not provided, using: Default");
+        }
+        
+        ShimDbDir = Path.GetFullPath($"{Constants.ShimFolder}/{ShimDbName}");
+        
+        // OPTIONAL: record shim test
+        var recordShim = data.GetValueOrDefault("RECORD_SHIM");
+
+        if (!string.IsNullOrWhiteSpace(recordShim))
+        {
+            RecordShimName = recordShim;
+            RecordShimFile = Path.GetFullPath($"{ShimDbDir}/{RecordShimName}.shim");
+            Logging.LogDebug("Record Shim: {RecordShimFile}", RecordShimFile);
+        }
+        
+        // OPTIONAL: play shim test
+        var playShim = data.GetValueOrDefault("PLAY_SHIM");
+        if (!string.IsNullOrWhiteSpace(playShim))
+        {
+            PlayShimName = playShim;
+            PlayShimFile = Path.GetFullPath($"{ShimDbDir}/{PlayShimName}.shim");
+            Logging.LogDebug("Play Shim: {PlayShimFile}", PlayShimFile);
         }
     }
 }

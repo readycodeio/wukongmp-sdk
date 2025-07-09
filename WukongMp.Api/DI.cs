@@ -1,10 +1,11 @@
-﻿using System;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Common;
+using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -25,9 +26,15 @@ public class DI
     public EntityManagerWithLogs EntityManager { get; private set; } = null!;
     
     public RelaySerializer Serializer { get; private set; } = null!;
-    public RelayClient RelayClient { get; private set; } = null!;
+    public HotSwappableRelayClient RelayClient { get; private set; } = null!;
     public NetworkedEntityManager NetManager { get; private set; } = null!;
 
+    public TextRelaySerializer TextSerializer { get; private set; } = null!;
+    public ShimRelayRecorder ShimRecorder { get; private set; } = null!;
+    public ShimController ShimController { get; private set; } = null!;
+    public ShimRelayClient ShimRelayClient { get; private set; } = null!;
+    public ShimAutoStarter ShimAuto { get; set; } = null!;
+    
     public RoomStateProxy RoomState { get; private set; } = null!;
     public WukongPlayerRegistry Players { get; private set; } = null!;
     public WukongPlayerPropertyManager PlayerProperty { get; private set; } = null!;
@@ -58,7 +65,7 @@ public class DI
         Logger = LoggerFactory.CreateLogger("");
     }
     
-    public void Init(Guid userGuid, string host, int port)
+    public void Init()
     {
         Logger.LogDebug("Initializing DI...");
         
@@ -70,12 +77,20 @@ public class DI
             new DefaultRelaySerializerRegistration(),
             new WukongSerializerRegistration(),
         ]);
-        var relayLogger = LoggerFactory.CreateLogger("RelayClient");
-        RelayClient = new RelayClient(userGuid, host, port, Serializer, relayLogger);
+        RelayClient = new HotSwappableRelayClient();
         
         EventBus = new WukongEventBus();
         
         NetManager = new NetworkedEntityManager(World, () => RelayClient.PlayerId);
+        
+        TextSerializer = new TextRelaySerializer([
+            new DefaultTextRelaySerializerRegistration(),
+            new WukongTextSerializerRegistration(),
+        ]);
+        ShimRecorder = new ShimRelayRecorder(LoggerFactory.CreateLogger("Shim Recorder"));
+        ShimController = new ShimController(ShimRecorder, TextSerializer, Logger);
+        ShimRelayClient = new ShimRelayClient(LoggerFactory.CreateLogger("Play Shim"));
+        ShimAuto = new ShimAutoStarter(ShimRelayClient, ShimRecorder, EventBus, LoggerFactory);
         
         RoomState = new RoomStateProxy(RelayClient);
         Players = new WukongPlayerRegistry();

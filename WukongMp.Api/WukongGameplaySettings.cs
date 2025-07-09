@@ -4,13 +4,12 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Wukong.Components;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
-using WukongMp.Api.Old;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongGameplaySettings(Store world, RelayClient relayClient)
+public class WukongGameplaySettings(Store world, IRelayClient relayClient)
 {
     public void SetMonsterHpScaling(int scaling)
     {

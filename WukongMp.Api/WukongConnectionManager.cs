@@ -16,14 +16,14 @@ public class WukongConnectionManager : IDisposable
     private readonly RoomStateProxy _roomState;
     private readonly NetworkedStateSynchronizer _synchronizer;
 
-    public RelayClient RelayClient { get; }
+    public IRelayClient RelayClient { get; }
     
     public bool IsRunning { get; private set; }
     public bool EnteredRoom { get; private set; }
     
     public event Action<string>? OnMasterClientChanged;
 
-    public WukongConnectionManager(RelayClient relayClient,
+    public WukongConnectionManager(IRelayClient relayClient,
         WukongPlayerRegistry playerRegistry,
         NetworkedStateSynchronizer synchronizer,
         RoomStateProxy roomState)

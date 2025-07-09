@@ -18,9 +18,9 @@ public class WukongNetworkLogger : IDisposable
     private readonly Store _world;
     private readonly RoomStateProxyBase _roomState;
     private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly RelayClient _relayClient;
+    private readonly IRelayClient _relayClient;
 
-    public WukongNetworkLogger(ILogger logger, Store world, RoomStateProxyBase roomState, WukongPlayerRegistry playerRegistry, RelayClient relayClient)
+    public WukongNetworkLogger(ILogger logger, Store world, RoomStateProxyBase roomState, WukongPlayerRegistry playerRegistry, IRelayClient relayClient)
     {
         _logger = logger;
         _world = world;

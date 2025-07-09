@@ -8,7 +8,7 @@ using WukongMp.Api.Old.Enums;
 
 namespace WukongMp.Api.Old.State
 {
-    public sealed class RoomStateProxy(RelayClient client) : RoomStateProxyBase(client)
+    public sealed class RoomStateProxy(IRelayClient relayClient) : RoomStateProxyBase(relayClient)
     {
         public GameMode GameMode
         {

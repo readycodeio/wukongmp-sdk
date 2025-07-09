@@ -1,10 +1,12 @@
 ﻿using b1;
 using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.Serialization;
 
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
+[DeriveJsonSerializable]
 public partial struct PlayMovieData(int sequenceID, bool disablePlayerControl, bool disableMovementInput, bool disableLookAtInput, bool hidePlayer, bool hideHud, string overlapBoxGuid, ESequenceBlendInMatchPositionType matchType)
     : INetSerializable
 {

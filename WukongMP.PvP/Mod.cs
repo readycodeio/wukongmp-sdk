@@ -5,6 +5,7 @@ using ReadyM.Relay.Common.ECS;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
@@ -42,12 +43,29 @@ namespace WukongMp.PvP
                 return;
             }
 
-            DI.Instance.Init(
-                CmdLineParams.Instance.UserGuid,
-                CmdLineParams.Instance.ServerIp ?? "",
-                CmdLineParams.Instance.ServerPort ?? 0
-            );
+            DI.Instance.Init();
 
+            if (CmdLineParams.Instance.PlayShimOnStart)
+                ShimUtils.InitRelayPlayShim(
+                    DI.Instance,
+                    CmdLineParams.Instance.PlayShimFile!
+                );
+            else if (CmdLineParams.Instance.RecordShimOnStart)
+                ShimUtils.InitRelayRecordShim(
+                    DI.Instance,
+                    CmdLineParams.Instance.ServerIp!,
+                    CmdLineParams.Instance.ServerPort!.Value,
+                    CmdLineParams.Instance.UserGuid,
+                    CmdLineParams.Instance.RecordShimFile!
+                );
+            else
+                ShimUtils.InitRelay(
+                    DI.Instance,
+                    CmdLineParams.Instance.ServerIp!,
+                    CmdLineParams.Instance.ServerPort!.Value,
+                    CmdLineParams.Instance.UserGuid
+                );
+            
             if (!DI.Instance.Patcher.IsPatched)
             {
                 DI.Instance.Patcher.Patch();
@@ -83,6 +101,13 @@ namespace WukongMp.PvP
             }
 
 #if DEBUG
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+            {
+                Logging.LogDebug("Alt + 0");
+                if (CmdLineParams.Instance.RecordShimFile != null)
+                    DI.Instance.ShimController.Save(CmdLineParams.Instance.RecordShimFile!);
+            });
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 _logger.LogDebug("Alt + C");
@@ -196,7 +221,7 @@ namespace WukongMp.PvP
             if (connectedAndInRoom == true)
             {
                 _logger.LogInformation("Reconnecting after a reload");
-                throw new NotImplementedException();
+                DI.Instance.Connection.Reconnect();
             }
         }
     }

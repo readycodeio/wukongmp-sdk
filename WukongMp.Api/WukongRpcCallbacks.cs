@@ -14,21 +14,20 @@ using WukongMp.Api.Old.Api;
 using WukongMp.Api.Patches;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Api.NameCompressors;
-using WukongMp.Api.Old.Enums;
 
 namespace WukongMp.Api;
 
 public partial class WukongRpcCallbacks : IDisposable
 {
     protected readonly RelaySerializer Serializer;
-    protected readonly RelayClient RelayClient;
+    protected readonly IRelayClient RelayClient;
     private readonly EntityManagerWithLogs _entityManager;
     private readonly WukongPlayerRegistry _playerRegistry;
     private readonly WukongPawnRegistry _pawnRegistry;
 
     public WukongRpcCallbacks(
         RelaySerializer serializer,
-        RelayClient relayClient,
+        IRelayClient relayClient,
         EntityManagerWithLogs entityManager,
         WukongPlayerRegistry playerRegistry,
         WukongPawnRegistry pawnRegistry)

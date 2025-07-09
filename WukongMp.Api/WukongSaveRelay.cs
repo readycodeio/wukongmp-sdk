@@ -7,7 +7,7 @@ using WukongMp.Api.Old;
 
 namespace WukongMp.Api;
 
-public class WukongSaveRelay(RelayClient relayClient)
+public class WukongSaveRelay(IRelayClient relayClient)
 {
     public Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
         => relayClient.UploadBlobAsync(new BlobInfo(Constants.CoopWorldArchiveName, content), ct);

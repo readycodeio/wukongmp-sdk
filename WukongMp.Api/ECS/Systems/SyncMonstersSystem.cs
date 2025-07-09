@@ -8,7 +8,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncMonstersSystem(RelayClient relayClient) : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private bool IsMasterClient => relayClient.IsMasterClient;
 

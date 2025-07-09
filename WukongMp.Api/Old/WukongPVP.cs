@@ -30,7 +30,7 @@ namespace WukongMp.Api.Old;
 public partial class WukongPVP : IDisposable
 {
     protected readonly RelaySerializer Serializer;
-    protected readonly RelayClient RelayClient;
+    protected readonly IRelayClient RelayClient;
     
     private bool _isRoundEnding;
     private readonly Store _world;
@@ -45,7 +45,7 @@ public partial class WukongPVP : IDisposable
     public WukongPVP(
         Store world,
         RelaySerializer serializer,
-        RelayClient relayClient,
+        IRelayClient relayClient,
         RoomStateProxy roomState,
         WukongPlayerRegistry playerRegistry,
         WukongPlayerPropertyManager playerProperty,

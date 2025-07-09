@@ -11,7 +11,7 @@ using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.Old;
 
-public class WukongPlayerPropertyManager(RelayClient relayClient, WukongPlayerRegistry playerRegistry)
+public class WukongPlayerPropertyManager(IRelayClient relayClient, WukongPlayerRegistry playerRegistry)
 {
     private readonly object _playerPropertiesLock = new();
     private ConcurrentDictionary<string, object> _playerProperties = new();

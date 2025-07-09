@@ -4,6 +4,7 @@ using System.Reflection;
 using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
@@ -43,11 +44,28 @@ namespace WukongMp.Coop
                 return;
             }
 
-            DI.Instance.Init(
-                CmdLineParams.Instance.UserGuid,
-                CmdLineParams.Instance.ServerIp ?? "",
-                CmdLineParams.Instance.ServerPort ?? 0
-            );
+            DI.Instance.Init();
+
+            if (CmdLineParams.Instance.PlayShimOnStart)
+                ShimUtils.InitRelayPlayShim(
+                    DI.Instance,
+                    CmdLineParams.Instance.PlayShimFile!
+                );
+            else if (CmdLineParams.Instance.RecordShimOnStart)
+                ShimUtils.InitRelayRecordShim(
+                    DI.Instance,
+                    CmdLineParams.Instance.ServerIp!,
+                    CmdLineParams.Instance.ServerPort!.Value,
+                    CmdLineParams.Instance.UserGuid,
+                    CmdLineParams.Instance.RecordShimFile!
+                );
+            else
+                ShimUtils.InitRelay(
+                    DI.Instance,
+                    CmdLineParams.Instance.ServerIp!,
+                    CmdLineParams.Instance.ServerPort!.Value,
+                    CmdLineParams.Instance.UserGuid
+                );
 
             if (!DI.Instance.Patcher.IsPatched)
             {
@@ -96,6 +114,13 @@ namespace WukongMp.Coop
                 GameUtils.EnableThreading();
             });
 
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+            {
+                Logging.LogDebug("Alt + 0");
+                if (CmdLineParams.Instance.RecordShimFile != null)
+                    DI.Instance.ShimController.Save(CmdLineParams.Instance.RecordShimFile!);
+            });
+            
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 _logger.LogDebug("Alt + C");
@@ -145,13 +170,6 @@ namespace WukongMp.Coop
                 _logger.LogDebug("K");
                 if (!ChatWidget.Instance.HasFocus())
                     ChatWidget.Instance.ToggleVisibility();
-            });
-
-            Utils.RegisterKeyBind(Key.I, () =>
-            {
-                _logger.LogDebug("I");
-                if (!ChatWidget.Instance.HasFocus())
-                    DI.Instance.PVP.SwitchReadyStateSingle();
             });
 
             Utils.RegisterKeyBind(Key.UP, () =>
@@ -215,7 +233,7 @@ namespace WukongMp.Coop
             if (connectedAndInRoom == true)
             {
                 _logger.LogInformation("Reconnecting after a reload");
-                throw new NotImplementedException();
+                DI.Instance.Connection.Reconnect();
             }
         }
     }

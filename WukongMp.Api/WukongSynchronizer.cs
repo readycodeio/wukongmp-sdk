@@ -43,7 +43,7 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
         WukongRpcCallbacks rpc,
         NetworkedEntityManager netManager,
         INetworkedComponentRegistry netComponentRegistry,
-        RelayClient relayClient,
+        IRelayClient relayClient,
         SystemUpdateLoop updateLoop,
         ISystemRegistry systemRegistry,
         ILogger logger)
@@ -368,15 +368,15 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
         base.OnBeforeJoinedRoomHandler();
     }
 
-    protected override void OnAfterJoinedRoomHandler()
+    protected override void OnAfterJoinedRoomHandler(Dictionary<object, object> initialState)
     {
         Logging.LogInformation("Synchronizer after joined room");
-        base.OnAfterJoinedRoomHandler();
+        base.OnAfterJoinedRoomHandler(initialState);
     }
 
-    protected override void OnOtherPlayerJoinedHandler(PlayerId playerId)
+    protected override void OnOtherPlayerJoinedHandler(PlayerId playerId, Dictionary<object, object> initialState)
     {
-        base.OnOtherPlayerJoinedHandler(playerId);
+        base.OnOtherPlayerJoinedHandler(playerId, initialState);
         
         Logging.LogInformation("Player {PlayerId} entered the room", playerId);
         

@@ -1,12 +1,14 @@
 ﻿using b1;
 using BtlShare;
 using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Serialization;
 
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
+[DeriveJsonSerializable]
 public partial struct UnitDeadPacket(NetworkIdComponent netId, EDeadReason deadReason, int dmgId, int stiffLevel, bool isDotDmg, EAbnormalStateType abnormalType) : INetSerializable
 {
     public NetworkIdComponent NetworkId = netId;
