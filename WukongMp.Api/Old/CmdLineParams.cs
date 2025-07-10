@@ -22,7 +22,7 @@ public class CmdLineParams
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
         // REQUIRED: user GUID
-        var guidString = data.GetValueOrDefault("WUKONGMP_ID");
+        var guidString = data.GetValueOrDefault("PLAYER_ID");
         if (string.IsNullOrWhiteSpace(guidString))
         {
             Logging.LogError("GUID not provided, launch the game from the ReadyM Launcher.");
@@ -41,8 +41,8 @@ public class CmdLineParams
         }
 
         // REQUIRED: server IP and port number
-        ServerIp = data.GetValueOrDefault("WUKONGMP_SERVER_IP");
-        var serverPort = data.GetValueOrDefault("WUKONGMP_SERVER_PORT");
+        ServerIp = data.GetValueOrDefault("SERVER_IP");
+        var serverPort = data.GetValueOrDefault("SERVER_PORT");
 
         if (string.IsNullOrWhiteSpace(ServerIp) || string.IsNullOrWhiteSpace(serverPort))
         {
@@ -53,7 +53,7 @@ public class CmdLineParams
         ServerPort = int.Parse(serverPort);
 
         // REQUIRED: user nickname
-        Nickname = data.GetValueOrDefault("WUKONGMP_NICKNAME") ?? "";
+        Nickname = data.GetValueOrDefault("NICKNAME") ?? "";
         if (string.IsNullOrWhiteSpace(Nickname))
         {
             Logging.LogError("Nickname not provided, launch the game from the ReadyM Launcher.");
@@ -63,7 +63,7 @@ public class CmdLineParams
         if (!Constants.IsCoop)
         {
             // REQUIRED: Level ID
-            var level = data.GetValueOrDefault("WUKONGMP_LEVEL_ID");
+            var level = data.GetValueOrDefault("LEVEL_ID");
             if (!string.IsNullOrWhiteSpace(level))
             {
                 LevelId = int.Parse(level);
@@ -77,7 +77,7 @@ public class CmdLineParams
         }
 
         // OPTIONAL: custom mod folder
-        var modFolder = data.GetValueOrDefault("WUKONGMP_MOD_FOLDER");
+        var modFolder = data.GetValueOrDefault("MOD_FOLDER");
 
         if (!string.IsNullOrWhiteSpace(modFolder))
         {
