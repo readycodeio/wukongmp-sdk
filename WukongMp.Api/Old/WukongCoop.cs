@@ -1,6 +1,8 @@
 ﻿using System;
+using CSharpModBase;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old;
 
@@ -25,10 +27,17 @@ public class WukongCoop : IDisposable
         _playerRegistry = playerRegistry;
         _playerProperty = playerProperty;
         _synchronizer = synchronizer;
+
+        _synchronizer.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
     }
 
     public void Dispose()
     {
-        // empty
+        _synchronizer.OnAfterJoinedRoom -= OnAfterJoinedRoomHandler;
+    }
+    
+    private void OnAfterJoinedRoomHandler()
+    {
+        Utils.TryRunOnGameThread(TamerUtils.DiscoverTamers);
     }
 }
