@@ -38,7 +38,7 @@ public static class CutsceneUtils
     public static void SetWaitingForCutsceneStatus(PlayerId playerId, SequenceWaitingData sequenceWaitingData)
     {
         Logging.LogDebug("Setting WaitingForCutsceneStatus for player: {Id}, sequenceId {SequenceId}", playerId, sequenceWaitingData.SequenceID);
-        var player = WukongMpModBase.Client.GetPlayerById(playerId);
+        var player = DI.Instance.Players.GetPlayerById(playerId);
         if (player == null)
         {
             Logging.LogError("Player not found: {Id}", playerId);
@@ -46,7 +46,7 @@ public static class CutsceneUtils
         }
 
         player.WaitingSequenceId = sequenceWaitingData.SequenceID;
-        var localPlayer = WukongMpModBase.Client.LocalPlayerState;
+        var localPlayer = DI.Instance.Players.LocalPlayerState;
         if (!localPlayer.IsWaitingForSequence)
         {
             localPlayer.SequenceLocation = sequenceWaitingData.SequenceLocation;
@@ -63,12 +63,12 @@ public static class CutsceneUtils
 
     public static bool CheckAllPlayersWaitingForCutscene(int sequenceId)
     {
-        return WukongMpModBase.Client.AllConnectedPlayers.All(p => p.WaitingSequenceId == sequenceId);
+        return DI.Instance.Players.AllConnectedPlayers.All(p => p.WaitingSequenceId == sequenceId);
     }
 
     public static void TeleportLocalPlayerToCutsceneLocation()
     {
-        var playerState = WukongMpModBase.Client.LocalPlayerState;
+        var playerState = DI.Instance.Players.LocalPlayerState;
         if (playerState.IsJoiningSequence)
             PlayerUtils.TeleportLocalPlayer(playerState.SequenceLocation, playerState.Rotation, true);
     }

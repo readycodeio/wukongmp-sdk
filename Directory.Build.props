@@ -27,4 +27,12 @@
         <DebugSymbols>true</DebugSymbols>
         <IntermediateOutputPath>obj\Testing\</IntermediateOutputPath>
     </PropertyGroup>
+    <PropertyGroup>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    </PropertyGroup>
+    <PropertyGroup>
+        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/RuleSet.ruleset</CodeAnalysisRuleSet>
+    </PropertyGroup>
 </Project>

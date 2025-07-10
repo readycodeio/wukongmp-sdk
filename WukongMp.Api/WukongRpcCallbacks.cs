@@ -1,41 +1,50 @@
-﻿using b1;
+﻿using System;
+using b1;
 using b1.BGW;
 using BtlShare;
-using CSharpModBase;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
-using System;
-using System.Threading.Tasks;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.Enums;
-using WukongMp.Api.Old.State;
 using WukongMp.Api.Patches;
-using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Api.NameCompressors;
 
 namespace WukongMp.Api;
 
-public partial class WukongMpMod
+public partial class WukongRpcCallbacks : IDisposable
 {
-    public void SendAddBuffHandler(int buffid, AActor caster, AActor rootcaster, float duration, EBuffSourceType buffsourcetype, bool brecursed, FBattleAttrSnapShot battleattrsnapshot)
-        => SendAddBuff(new BuffAddData(buffid, duration));
+    protected readonly RelaySerializer Serializer;
+    protected readonly IRelayClient RelayClient;
+    private readonly EntityManagerWithLogs _entityManager;
+    private readonly WukongPlayerRegistry _playerRegistry;
+    private readonly WukongPawnRegistry _pawnRegistry;
 
-    public void SendRemoveBuffHandler(int buffid, EBuffEffectTriggerType removetriggertype, int layer, bool withtriggerremmoveeffect)
-        => SendRemoveBuff(new BuffRemoveData(buffid, removetriggertype, layer, withtriggerremmoveeffect));
+    public WukongRpcCallbacks(
+        RelaySerializer serializer,
+        IRelayClient relayClient,
+        EntityManagerWithLogs entityManager,
+        WukongPlayerRegistry playerRegistry,
+        WukongPawnRegistry pawnRegistry)
+    {
+        Serializer = serializer;
+        RelayClient = relayClient;
+        _entityManager = entityManager;
+        _playerRegistry = playerRegistry;
+        _pawnRegistry = pawnRegistry;
 
-    public void SendRemoveAllBuffsHandler(EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
-        => SendRemoveAllBuffs(new BuffRemoveAllData(removetriggertype, withtriggerremmoveeffect));
+        InitRpc();
+    }
 
-    public void HandleBuffRemoveImmediately(int buffid, EBuffEffectTriggerType removetriggertype, bool withtriggerremmoveeffect)
-        => SendRemoveBuff(new BuffRemoveData(buffid, removetriggertype, -1, withtriggerremmoveeffect));
+    public void Dispose()
+    {
+        DeInitRpc();
+    }
 
     public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
     {
@@ -62,19 +71,6 @@ public partial class WukongMpMod
         SendTriggerMagicallyChange(evData);
     }
 
-    public void SendPvPEvent(PvPEvent ev, int data = 0)
-    {
-        if (!IsMasterClient)
-        {
-            Logging.LogError("Only room owner can send start countdown.");
-            return;
-        }
-
-        Logging.LogInformation("Sending PvP event: {Event}", ev);
-
-        SendPvpEvent([(int)ev, data]);
-    }
-
     public void SendPlayMovieRequest(FPlayMovieRequest playMovieRequest)
     {
         SendPlayMovieRequest(new PlayMovieData(
@@ -89,9 +85,9 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnExitPhantomRush(PlayerId playerId)
+    internal void OnExitPhantomRush(PlayerId playerId)
     {
-        var playerState = Client.GetPlayerById(playerId);
+        var playerState = _playerRegistry.GetPlayerById(playerId);
         if (playerState == null)
         {
             Logging.LogError("Player not found: {Id}", playerId);
@@ -105,94 +101,94 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    private static void OnEndMatchmaking()
+    internal void OnEndMatchmaking()
     {
         PvPUtils.OnMatchmakingEnded();
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnAddBuff(PlayerId __sender, BuffAddData data)
+    internal void OnAddBuff(PlayerId __sender, BuffAddData data)
     {
-        var playerState = Client.GetPlayerById(__sender);
+        var playerState = _playerRegistry.GetPlayerById(__sender);
         BuffUtils.AddBuff(playerState?.Pawn, data.BuffId, data.Duration);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnRemoveBuff(PlayerId __sender, BuffRemoveData data)
+    internal void OnRemoveBuff(PlayerId __sender, BuffRemoveData data)
     {
-        var state = Client.GetPlayerById(__sender);
+        var state = _playerRegistry.GetPlayerById(__sender);
         BuffUtils.RemoveBuff(state?.Pawn, data.BuffId, data.TriggerType, data.Layer, data.WithTriggerRemoveEffect);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnRemoveAllBuffs(PlayerId __sender, BuffRemoveAllData data)
+    internal void OnRemoveAllBuffs(PlayerId __sender, BuffRemoveAllData data)
     {
-        var playerState = Client.GetPlayerById(__sender);
+        var playerState = _playerRegistry.GetPlayerById(__sender);
         BuffUtils.RemoveAllBuffs(playerState?.Pawn, data.TriggerType, data.WithTriggerRemoveEffect);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnUnitStateTrigger(StateTriggerData data)
+    internal void OnUnitStateTrigger(StateTriggerData data)
     {
-        var character = GetPawnByNetworkId(data.NetId);
+        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetStateTrigger(character, data.Trigger, data.Time, data.NeedForceUpdate);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnUnitSimpleState(SimpleStateData data)
+    internal void OnUnitSimpleState(SimpleStateData data)
     {
-        var character = GetPawnByNetworkId(data.NetId);
+        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetSimpleState(character, data.SimpleState, data.IsRemove);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnTriggerFsmState(FsmStateData data)
+    internal void OnTriggerFsmState(FsmStateData data)
     {
-        var character = GetPawnByNetworkId(data.NetId);
+        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetFsmState(character, data.FsmStateName);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnMotionMatchingState(MotionMatchingStateData data)
+    internal void OnMotionMatchingState(MotionMatchingStateData data)
     {
-        var character = GetPawnByNetworkId(data.NetId);
+        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
         NpcLocomotionUtils.SetMotionMatchingState(character, data.State);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnSpawnSummon(UnitSummonData data)
+    internal void OnSpawnSummon(UnitSummonData data)
     {
         GameLoopPatch.QueueOnGameThread(() => { SummonPatch.ExecuteSummon(data.SummonerId, data.SummonId, data.Guid, data.Name, data.TeamId); }, nameof(OnSpawnSummon));
     }
 
     [RpcEvent(RelayMode.Master)]
-    private static void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
+    internal void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
     {
         SpawningUtils.SpawnUnitsMaster(__sender, data.UnitName, data.Count, data.TeamId);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnPlayerTransBegin(PlayerId __sender, PlayerTransBeginData data)
+    internal void OnPlayerTransBegin(PlayerId __sender, PlayerTransBeginData data)
     {
         TransformationUtils.TransformPlayer(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransBeginType);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnPlayerTransEnd(PlayerId __sender, PlayerTransEndData data)
+    internal void OnPlayerTransEnd(PlayerId __sender, PlayerTransEndData data)
     {
         TransformationUtils.TransformPlayerBack(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransEndType);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnPlayMovieRequest(PlayMovieData data)
+    internal void OnPlayMovieRequest(PlayMovieData data)
     {
         CutsceneUtils.PlayCutscene(data);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnSetTarget(TargetData data)
+    internal void OnSetTarget(TargetData data)
     {
-        var pawn = GetPawnByNetworkId(data.Character);
+        var pawn = _pawnRegistry.GetPawnByNetworkId(data.Character);
         if (pawn == null)
         {
             Logging.LogNull(nameof(data.Character));
@@ -205,7 +201,7 @@ public partial class WukongMpMod
             return;
         }
 
-        var target = GetPawnByNetworkId(data.Target);
+        var target = _pawnRegistry.GetPawnByNetworkId(data.Target);
 
         if (target == null)
         {
@@ -217,11 +213,11 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnCastImmobilize(NetworkIdComponent caster)
+    internal void OnCastImmobilize(NetworkIdComponent caster)
     {
-        if (IsMasterClient)
+        if (RelayClient.IsMasterClient)
         {
-            var character = GetPawnByNetworkId(caster);
+            var character = _pawnRegistry.GetPawnByNetworkId(caster);
             if (character == null)
             {
                 Logging.LogNull(nameof(caster));
@@ -233,17 +229,17 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnTriggerImmobilize(TriggerImmobilizeData data)
+    internal void OnTriggerImmobilize(TriggerImmobilizeData data)
     {
-        var caster = GetPawnByNetworkId(data.PlayerId);
-        var target = GetPawnByNetworkId(data.Target);
+        var caster = _pawnRegistry.GetPawnByNetworkId(data.PlayerId);
+        var target = _pawnRegistry.GetPawnByNetworkId(data.Target);
         ImmobilizeUtils.TriggerImmobilize(caster, target, data.GreatSageTalentActiveBuff);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnRelieveImmobilize(NetworkIdComponent affected)
+    internal void OnRelieveImmobilize(NetworkIdComponent affected)
     {
-        var character = GetPawnByNetworkId(affected);
+        var character = _pawnRegistry.GetPawnByNetworkId(affected);
         if (character == null)
         {
             Logging.LogNull(nameof(affected));
@@ -254,24 +250,24 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnBreakImmobilize(NetworkIdComponent entity)
+    internal void OnBreakImmobilize(NetworkIdComponent entity)
     {
         // TODO
         Logging.LogWarning("BreakImmobilize not implemented");
     }
 
     [RpcEvent(RelayMode.All, EventCaching.AddToRoomCacheGlobal)]
-    private static void OnChatMessage(ChatMessage message)
+    internal void OnChatMessage(ChatMessage message)
     {
         WukongChatter.OnGetMessage(message);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnPhantomRush(PlayerId __sender, ESkillDirection direction)
+    internal void OnPhantomRush(PlayerId __sender, ESkillDirection direction)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var playerState = Client.GetPlayerById(__sender);
+            var playerState = _playerRegistry.GetPlayerById(__sender);
             if (playerState?.Pawn == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", __sender);
@@ -291,144 +287,24 @@ public partial class WukongMpMod
     public void OnBroadcastPlayerTransform(PlayerTransformData data)
     {
         // TODO: Use targeted RPC mode (select which peers to send to)
-        if (data.PlayerId != RelayClient.PlayerId)
+        if (data.PlayerId != _playerRegistry.LocalPlayerState.PlayerId)
             return;
 
         PlayerUtils.TeleportLocalPlayer(data.Location, data.Rotation, false);
     }
 
-    [RpcEvent(RelayMode.All)]
-    private void OnPvpEvent(int[] data)
-    {
-        // TODO: Not QueueOnGameThread, why?
-        var ev = (PvPEvent)data[0];
-        var winnerTeamId = data[1];
-
-        Logging.LogDebug("Received PvP event: {Event}", ev);
-
-        switch (ev)
-        {
-            case PvPEvent.RoundStart:
-                Task.Run(PvPUtils.ShowPvPCountDown);
-                WukongMP.Instance.StartRound();
-                WukongMP.Instance.EnablePvP();
-                Client.EnterPvP();
-                break;
-            case PvPEvent.RoundEnd:
-                WukongMP.Instance.DisablePvP();
-                WukongMP.Instance.EndRound();
-
-                if (winnerTeamId == Constants.DrawTeamId)
-                {
-                    UIUtils.ShowTip(Texts.RoundDraw);
-                }
-                else
-                {
-                    UIUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)));
-                }
-
-                if (winnerTeamId == Constants.DrawTeamId)
-                    return;
-
-                if (winnerTeamId == Client.LocalPlayerState.TeamId)
-                {
-                    AssetUtils.PlayBossDefeatedSound();
-                }
-
-                break;
-            case PvPEvent.TournamentEnd:
-            {
-                if (winnerTeamId == Constants.DrawTeamId)
-                {
-                    UIUtils.ShowTip(Texts.TournamentDraw);
-                }
-                else
-                {
-                    UIUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)));
-                }
-
-                Task.Run(async () =>
-                {
-                    if (IsMasterClient)
-                    {
-                        foreach (var playerState in Client.SpectatingPlayers)
-                        {
-                            Client.SetRemotePlayerProperty(playerState.PlayerId, nameof(PlayerState.IsSpectator), false);
-                        }
-                    }
-
-                    await Task.Delay(2000);
-                    PvPUtils.EndTournament();
-                    Client.ExitPvP();
-                    Client.LocalPlayerState.IsReadyForPvP = false;
-                    Client.SetReadyState(false);
-                });
-
-                break;
-            }
-            case PvPEvent.ResetStats:
-                WukongMP.Instance.ResetRoundState();
-
-                if (!Client.LocalPlayerState.IsDead)
-                {
-                    Utils.TryRunOnGameThread(() =>
-                    {
-                        TamerUtils.DestroyAllTamers();
-                        var events = BUS_EventCollectionCS.Get(Client.LocalPlayerState.Pawn!);
-
-                        if (events == null)
-                        {
-                            Logging.LogError("events are null");
-                            return;
-                        }
-
-                        events.Evt_TriggerTeleportResetPlayer!.Invoke();
-                    });
-                }
-
-                if (IsMasterClient)
-                {
-                    // reset other players' Hp to HpMax if they are not dead
-                    foreach (var (key, state) in Client.ConnectedPlayers)
-                    {
-                        if (!state.IsDead)
-                        {
-                            if (state.Pawn == null)
-                            {
-                                Logging.LogError("Pawn is null in {Patch}", nameof(OnPvpEvent));
-                                return;
-                            }
-
-                            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Pawn);
-                            if (attrContainer != null)
-                            {
-                                var hpMax = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
-                                attrContainer.SetFloatValue(EBGUAttrFloat.Hp, hpMax);
-                                state.Hp = hpMax;
-                                Client.SetRemotePlayerProperty(key, nameof(PlayerState.Hp), state.Hp);
-                            }
-                        }
-                    }
-                }
-
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ev));
-        }
-    }
-
     [RpcEvent(RelayMode.Master)]
-    private void OnSuicide(PlayerId __sender)
+    internal void OnSuicide(PlayerId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var player = Client.GetPlayerById(__sender)?.Pawn;
+            var player = _playerRegistry.GetPlayerById(__sender)?.Pawn;
             if (player == null)
                 return;
 
             var events = BUS_EventCollectionCS.Get(player);
             events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            if (IsMasterClient)
+            if (RelayClient.IsMasterClient)
             {
                 events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
             }
@@ -436,17 +312,17 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    private static void OnRebirthPlayer(PlayerId playerId)
+    internal void OnRebirthPlayer(PlayerId playerId)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
             Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
 
-            var player = Client.GetPlayerById(playerId);
+            var player = _playerRegistry.GetPlayerById(playerId);
             if (player == null)
                 return;
 
-            if (player.PlayerId == Client.LocalPlayerState.PlayerId)
+            if (player.PlayerId == RelayClient.LocalPlayer.PlayerId)
             {
                 FreeCameraManager.Instance.LeaveFreeCameraMode();
             }
@@ -462,7 +338,7 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private static void OnDamageNum(DamageNumParam damageNum)
+    internal void OnDamageNum(DamageNumParam damageNum)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
@@ -472,11 +348,11 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.All)]
-    private static void OnTeleportFinish(PlayerId __sender)
+    internal void OnTeleportFinish(PlayerId __sender)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var playerState = Client.GetPlayerById(__sender);
+            var playerState = _playerRegistry.GetPlayerById(__sender);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {PlayerId}", __sender);
@@ -495,7 +371,7 @@ public partial class WukongMpMod
         GameLoopPatch.QueueOnGameThread(() =>
         {
             var id = data.NetId;
-            var pawn = GetPawnByNetworkId(id);
+            var pawn = _pawnRegistry.GetPawnByNetworkId(id);
             if (pawn == null)
             {
                 Logging.LogNull(nameof(data.NetId));
@@ -552,11 +428,11 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnUnitDead(UnitDeadPacket data)
+    internal void OnUnitDead(UnitDeadPacket data)
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var pawn = GetPawnByNetworkId(data.NetworkId);
+            var pawn = _pawnRegistry.GetPawnByNetworkId(data.NetworkId);
             if (pawn == null)
             {
                 Logging.LogNull(nameof(data.NetworkId));
@@ -576,15 +452,15 @@ public partial class WukongMpMod
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnWaitingForSequence(PlayerId __sender, SequenceWaitingData data)
+    internal void OnWaitingForSequence(PlayerId __sender, SequenceWaitingData data)
     {
         CutsceneUtils.SetWaitingForCutsceneStatus(__sender, data);
     }
 
     [RpcEvent(RelayMode.Others)]
-    private void OnIronBodyStart(PlayerId __sender)
+    internal void OnIronBodyStart(PlayerId __sender)
     {
-        var player = Client.GetPlayerById(__sender);
+        var player = _playerRegistry.GetPlayerById(__sender);
         if (player == null)
         {
             Logging.LogError("Player not found: {Id}", __sender);
@@ -604,14 +480,14 @@ public partial class WukongMpMod
     void OnUnitSpawned(PlayerId __sender, NetworkIdComponent netEntity)
     {
         Logging.LogDebug("OnUnitSpawned called for player {PlayerId} with entity {Entity}", __sender, netEntity);
-        var player = Client.GetPlayerById(__sender);
+        var player = DI.Instance.Players.GetPlayerById(__sender);
         if (player == null)
         {
             Logging.LogError("Player not found: {Id}", __sender);
             return;
         }
 
-        if (TryGetEntityByNetworkId(netEntity, out var entity))
+        if (_entityManager.TryGetEntityByNetworkId(netEntity, out var entity))
         {
             TamerUtils.AddSpawnedUnit(player.PlayerId, entity.Value);
         }
@@ -621,14 +497,14 @@ public partial class WukongMpMod
     void OnUnitDespawn(PlayerId __sender, NetworkIdComponent netEntity)
     {
         Logging.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", __sender, netEntity);
-        var player = Client.GetPlayerById(__sender);
+        var player = DI.Instance.Players.GetPlayerById(__sender);
         if (player == null)
         {
             Logging.LogError("Player not found: {Id}", __sender);
             return;
         }
 
-        if (TryGetEntityByNetworkId(netEntity, out var entity))
+        if (_entityManager.TryGetEntityByNetworkId(netEntity, out var entity))
         {
             TamerUtils.SubtractSpawnedUnit(player.PlayerId, entity.Value);
         }
@@ -637,7 +513,7 @@ public partial class WukongMpMod
     [RpcEvent(RelayMode.Others)]
     void OnTamerSkillInteract(SkillInteractData interactData)
     {
-        if (TryGetEntityByNetworkId(interactData.InteractiveId, out var entity))
+        if (DI.Instance.NetManager.TryGetEntityByNetworkId(interactData.InteractiveId, out var entity))
         {
             if (entity.HasValue)
             {
@@ -649,7 +525,7 @@ public partial class WukongMpMod
     [RpcEvent(RelayMode.Others)]
     void OnTriggerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
     {
-        var player = Client.GetPlayerById(__sender);
+        var player = DI.Instance.Players.GetPlayerById(__sender);
         if (player == null)
         {
             Logging.LogError("Player not found: {Id}", __sender);
@@ -669,7 +545,7 @@ public partial class WukongMpMod
     [RpcEvent(RelayMode.Others)]
     void OnResetMagicallyChange(PlayerId __sender, EResetReason_MagicallyChange reason)
     {
-        var player = Client.GetPlayerById(__sender);
+        var player = DI.Instance.Players.GetPlayerById(__sender);
         if (player == null)
         {
             Logging.LogError("Player not found: {Id}", __sender);

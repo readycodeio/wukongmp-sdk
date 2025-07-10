@@ -95,7 +95,7 @@ namespace WukongMp.Api.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 RunMontageSync();
-                WukongMpMod.Instance.RunEcsWorldUpdate();
+                DI.Instance.UpdateLoop.Tick(default);
                 ComponentMonitorManager.Instance.Update();
             }
         }
@@ -121,16 +121,14 @@ namespace WukongMp.Api.Patches
 
         private static void RunMontageSync()
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches())
+            if (!DI.Instance.RelayClient.InRoom)
                 return;
 
-            var client = WukongMpMod.Client;
+            SyncPlayerMontage(DI.Instance.Players.LocalPlayerState);
 
-            SyncPlayerMontage(client.LocalPlayerState);
-
-            if (client.IsMasterClient)
+            if (DI.Instance.RelayClient.IsMasterClient)
             {
-                WukongMpMod.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
+                DI.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob(DI.Instance.Rpc));
             }
         }
 
@@ -158,14 +156,14 @@ namespace WukongMp.Api.Patches
 
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    WukongMpMod.Instance.SendMontageCallback(NetworkIdComponent.FromPlayerId(characterState.PlayerId), currentMontage, currentPosition, hasMontageRewound);
+                    DI.Instance.Rpc.SendMontageCallback(NetworkIdComponent.FromPlayerId(characterState.PlayerId), currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                WukongMpMod.Instance.SendMontageCancel(NetworkIdComponent.FromPlayerId(characterState.PlayerId));
+                DI.Instance.Rpc.SendMontageCancel(NetworkIdComponent.FromPlayerId(characterState.PlayerId));
             }
 
             montageState.LocalMontage = currentMontage;

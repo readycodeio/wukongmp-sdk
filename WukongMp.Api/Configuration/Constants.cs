@@ -224,5 +224,7 @@ namespace WukongMp.Api.Configuration
             EBGUAttrFloat.YinAtkBase,
             EBGUAttrFloat.YinDefBase,
         ]);
+
+        public const string ShimFolder = "CSharpLoader/Shims";
     }
 }

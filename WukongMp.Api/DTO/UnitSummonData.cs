@@ -1,10 +1,12 @@
 ﻿using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Serialization;
 
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
+[DeriveJsonSerializable]
 public partial struct UnitSummonData(NetworkIdComponent summonerId, NetworkIdComponent summonId, string guid, string name, int teamId) : INetSerializable
 {
     public NetworkIdComponent SummonerId = summonerId;

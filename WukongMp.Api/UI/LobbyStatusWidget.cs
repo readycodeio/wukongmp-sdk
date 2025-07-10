@@ -5,7 +5,8 @@ namespace WukongMp.Api.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
     {
-        public static LobbyStatusWidget Instance { get; } = new();
+        private static LobbyStatusWidget? _instance;
+        public static LobbyStatusWidget Instance => _instance ??= new();
         
         private LobbyStatusWidget() : base(Constants.LobbyStatusWidgetName) { }
 

@@ -1,12 +1,14 @@
 ﻿using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.Serialization;
 
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
+[DeriveJsonSerializable]
 public partial struct UnitSpawnRequestData(string unitName, int count, int teamId) : INetSerializable
 {
-    public readonly string UnitName = unitName;
-    public readonly int Count = count;
-    public readonly int TeamId = teamId;
+    public string UnitName = unitName;
+    public int Count = count;
+    public int TeamId = teamId;
 }

@@ -23,7 +23,7 @@ public static class SpawningUtils
 {
     public static PlayerState? SpawnCloneForPlayer(PlayerId playerId)
     {
-        if (WukongMpMod.Client.ConnectedPlayers.ContainsKey(playerId))
+        if (DI.Instance.Players.ConnectedPlayers.ContainsKey(playerId))
         {
             Logging.LogDebug("Player already exists: {Id}", playerId); // reconnection
             return null;
@@ -48,7 +48,7 @@ public static class SpawningUtils
         FVector loc = default;
         FRotator rot = default;
 
-        var initialProps = WukongMpMod.Client.RelayClient.GetPlayerState(playerId)?.Properties;
+        var initialProps = DI.Instance.RelayClient.GetPlayerState(playerId)?.Properties;
 
         if (initialProps == null)
         {
@@ -210,7 +210,7 @@ public static class SpawningUtils
 
     public static void SpawnUnitsMaster(PlayerId playerId, string unitName, int count, int teamId)
     {
-        var playerState = WukongMpModBase.Client.GetPlayerById(playerId);
+        var playerState = DI.Instance.Players.GetPlayerById(playerId);
         if (playerState == null || playerState.Pawn == null)
         {
             Logging.LogError("Player not found: {PlayerId}", playerId);
@@ -258,7 +258,7 @@ public static class SpawningUtils
         }
 
         Notify:
-        WukongMpModBase.Client.WukongChat.SendServerMessage("PlayerSpawned", WukongMpModBase.Client.LocalPlayerState.NickName, count.ToString(), unitName);
+        DI.Instance.Chatter.SendServerMessage("PlayerSpawned", DI.Instance.Players.LocalPlayerState.NickName, count.ToString(), unitName);
     }
 
     public static void SpawnUnitMaster(string unitName, FVector loc, int teamId)
@@ -332,7 +332,7 @@ public static class SpawningUtils
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             var spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, PvPUtils.GetOppositeTeam(WukongMpModBase.Client.LocalPlayerState.TeamId));
+            SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, PvPUtils.GetOppositeTeam(DI.Instance.Players.LocalPlayerState.TeamId));
         }
     }
 
@@ -340,7 +340,7 @@ public static class SpawningUtils
     {
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
 
-        return WukongMpMod.Instance.CreateNetworkedMonster(
+        return DI.Instance.PawnRegistry.CreateNetworkedMonster(
             new LocalTamerComponent(tamer),
             new TamerComponent
             {

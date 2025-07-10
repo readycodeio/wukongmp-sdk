@@ -1,8 +1,10 @@
 ﻿using LiteNetLib.Utils;
+using ReadyM.Relay.Common.Serialization;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.DTO;
 
+[DeriveJsonSerializable]
 public partial struct SequenceWaitingData(int sequenceID, FVector sequenceLocation) : INetSerializable
 {
     public int SequenceID = sequenceID;

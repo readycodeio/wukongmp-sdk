@@ -4,6 +4,7 @@
         <LangVersion>latest</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <Nullable>enable</Nullable>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <RootNamespace>WukongMp.Coop</RootNamespace>
@@ -11,6 +12,7 @@
         <Configurations>Debug;Release;NoDisconnect;Testing</Configurations>
         <Platforms>AnyCPU</Platforms>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <Target Name="PrintBuildVersion" AfterTargets="AfterBuild">
@@ -25,6 +27,9 @@
     <ItemGroup>
         <Reference Include="CSharpModBase">
             <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
+        </Reference>
+        <Reference Include="CSharpModBaseV2">
+            <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
     </ItemGroup>
 
