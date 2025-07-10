@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
@@ -21,55 +23,40 @@ public class CmdLineParams
 
     private CmdLineParams()
     {
-        var cmd = USystemLibrary.GetCommandLine();
-
-        Logging.LogDebug("Command line: {Args}", cmd);
-
         // REQUIRED: user GUID
-        var idMatch = Regex.Match(cmd, """-id "?([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"?""");
-        if (idMatch.Success)
-        {
-            var guidString = idMatch.Groups[1].Value;
-            if (Guid.TryParse(guidString, out var guid))
-            {
-                UserGuid = guid;
-                Logging.LogDebug("User GUID: {Guid}", UserGuid);
-            }
-            else
-            {
-                Logging.LogError("Invalid GUID format: {Guid}", guidString);
-                return;
-            }
-        }
-        else
+        var guidString = GetEnvironmentVariable("WUKONGMP_ID");
+        if (string.IsNullOrWhiteSpace(guidString))
         {
             Logging.LogError("GUID not provided, launch the game from the ReadyM Launcher.");
             return;
         }
 
-        // REQUIRED: server IP and port number
-        var serverMatch = Regex.Match(cmd, @"-serverIp ""?([0-9\.]+)""? -serverPort ""?(\d+)""?");
-
-        if (serverMatch.Success)
+        if (Guid.TryParse(guidString, out var guid))
         {
-            ServerIp = serverMatch.Groups[1].Value;
-            ServerPort = int.Parse(serverMatch.Groups[2].Value);
-            Logging.LogDebug("Server IP: {Ip}, Port: {Port}", ServerIp, ServerPort);
+            UserGuid = guid;
+            Logging.LogDebug("User GUID: {Guid}", UserGuid);
         }
         else
         {
-            Logging.LogError("Connection info not provided, launch the game from the ReadyM Launcher.");
+            Logging.LogError("Invalid GUID format: {Guid}", guidString);
             return;
         }
 
-        // REQUIRED: user nickname
-        var nicknameMatch = Regex.Match(cmd, """-nickname "?(\w+)"?""");
-        if (nicknameMatch.Success)
+        // REQUIRED: server IP and port number
+        ServerIp = GetEnvironmentVariable("WUKONGMP_SERVER_IP");
+        var serverPort = GetEnvironmentVariable("WUKONGMP_SERVER_PORT");
+
+        if (string.IsNullOrWhiteSpace(ServerIp) || string.IsNullOrWhiteSpace(serverPort))
         {
-            Nickname = nicknameMatch.Groups[1].Value;
-            Logging.LogDebug("Nickname: {Nickname}", Nickname);
+            Logging.LogError("Server IP or port not provided, launch the game from the ReadyM Launcher.");
+            return;
         }
-        else
+
+        ServerPort = int.Parse(serverPort);
+
+        // REQUIRED: user nickname
+        Nickname = GetEnvironmentVariable("WUKONGMP_NICKNAME") ?? "";
+        if (string.IsNullOrWhiteSpace(Nickname))
         {
             Logging.LogError("Nickname not provided, launch the game from the ReadyM Launcher.");
             return;
@@ -78,10 +65,10 @@ public class CmdLineParams
         if (!Constants.IsCoop)
         {
             // REQUIRED: Level ID
-            var mapMatch = Regex.Match(cmd, """-level "?(\d+)"?""");
-            if (mapMatch.Success)
+            var level = Environment.GetEnvironmentVariable("WUKONGMP_LEVEL_ID");
+            if (!string.IsNullOrWhiteSpace(level))
             {
-                LevelId = int.Parse(mapMatch.Groups[1].Value);
+                LevelId = int.Parse(level);
                 Logging.LogDebug("Level ID: {LevelId}", LevelId);
             }
             else
@@ -92,13 +79,41 @@ public class CmdLineParams
         }
 
         // OPTIONAL: custom mod folder
-        const string modFolderPattern = """[a-zA-Z]:\\(?:[^<>:"/\\|?*]+\\)*[^<>:"/\\|?*]*""";
-        var pathMatch = Regex.Match(cmd, $"""-mod_folder "?({modFolderPattern})"?""");
+        var modFolder = GetEnvironmentVariable("WUKONGMP_MOD_FOLDER");
 
-        if (pathMatch.Success)
+        if (!string.IsNullOrWhiteSpace(modFolder))
         {
-            ModFolderOverride = pathMatch.Groups[1].Value;
+            ModFolderOverride = modFolder;
             Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
         }
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern uint GetEnvironmentVariable(string lpName, StringBuilder lpBuffer, uint nSize);
+
+    private static string? GetEnvironmentVariable(string variable)
+    {
+        const int initialSize = 512;
+        StringBuilder buffer = new(initialSize);
+
+        var size = GetEnvironmentVariable(variable, buffer, (uint)buffer.Capacity);
+        if (size == 0)
+        {
+            var error = Marshal.GetLastWin32Error();
+            if (error == 203) // ERROR_ENVVAR_NOT_FOUND
+                return null;
+            if (error == 0 && buffer.Length == 0)
+                return null;
+
+            throw new System.ComponentModel.Win32Exception(error);
+        }
+
+        if (size > buffer.Capacity)
+        {
+            buffer = new StringBuilder((int)size);
+            GetEnvironmentVariable(variable, buffer, size);
+        }
+
+        return buffer.ToString();
     }
 }

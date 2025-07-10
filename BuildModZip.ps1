@@ -69,3 +69,10 @@ $zipPath = Join-Path $outputRoot $zipName
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 Compress-Archive -Path (Join-Path $destRoot '*') -DestinationPath $zipPath -Force
 Write-Output "Created $zipName"
+
+# 6. Open explorer to the output directory
+if ($PSVersionTable.PSEdition -eq 'Core') {
+    Start-Process "explorer.exe" -ArgumentList $outputRoot
+} else {
+    Invoke-Item $outputRoot
+}
