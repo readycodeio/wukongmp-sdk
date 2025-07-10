@@ -63,6 +63,8 @@ namespace WukongMp.Api.WukongUtils
 
         public static void DiscoverTamers()
         {
+            Logging.LogDebug("Discovering tamers...");
+            
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             if (DI.Instance.RelayClient.IsMasterClient)
             {

@@ -71,6 +71,8 @@ public class DI
         
         World = new Store(new EntityStore());
         SystemRegistry = new SystemRegistry(World);
+
+        NetManager = new NetworkedEntityManager(World, () => RelayClient.PlayerId);
         EntityManager = new EntityManagerWithLogs(NetManager);
 
         Serializer = new RelaySerializer([
@@ -80,8 +82,6 @@ public class DI
         RelayClient = new HotSwappableRelayClient();
         
         EventBus = new WukongEventBus();
-        
-        NetManager = new NetworkedEntityManager(World, () => RelayClient.PlayerId);
         
         TextSerializer = new TextRelaySerializer([
             new DefaultTextRelaySerializerRegistration(),
