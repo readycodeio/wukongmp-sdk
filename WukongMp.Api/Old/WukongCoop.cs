@@ -38,6 +38,9 @@ public class WukongCoop : IDisposable
     
     private void OnAfterJoinedRoomHandler()
     {
-        Utils.TryRunOnGameThread(TamerUtils.DiscoverTamers);
+        if (RelayClient.IsMasterClient)
+        {
+            Utils.TryRunOnGameThread(TamerUtils.DiscoverTamers);
+        }
     }
 }
