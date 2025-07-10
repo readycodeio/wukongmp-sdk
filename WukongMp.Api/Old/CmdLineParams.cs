@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Old;
@@ -23,8 +19,10 @@ public class CmdLineParams
 
     private CmdLineParams()
     {
+        var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
+
         // REQUIRED: user GUID
-        var guidString = GetEnvironmentVariable("WUKONGMP_ID");
+        var guidString = data.GetValueOrDefault("PLAYER_ID");
         if (string.IsNullOrWhiteSpace(guidString))
         {
             Logging.LogError("GUID not provided, launch the game from the ReadyM Launcher.");
@@ -43,8 +41,8 @@ public class CmdLineParams
         }
 
         // REQUIRED: server IP and port number
-        ServerIp = GetEnvironmentVariable("WUKONGMP_SERVER_IP");
-        var serverPort = GetEnvironmentVariable("WUKONGMP_SERVER_PORT");
+        ServerIp = data.GetValueOrDefault("SERVER_IP");
+        var serverPort = data.GetValueOrDefault("SERVER_PORT");
 
         if (string.IsNullOrWhiteSpace(ServerIp) || string.IsNullOrWhiteSpace(serverPort))
         {
@@ -55,7 +53,7 @@ public class CmdLineParams
         ServerPort = int.Parse(serverPort);
 
         // REQUIRED: user nickname
-        Nickname = GetEnvironmentVariable("WUKONGMP_NICKNAME") ?? "";
+        Nickname = data.GetValueOrDefault("NICKNAME") ?? "";
         if (string.IsNullOrWhiteSpace(Nickname))
         {
             Logging.LogError("Nickname not provided, launch the game from the ReadyM Launcher.");
@@ -65,7 +63,7 @@ public class CmdLineParams
         if (!Constants.IsCoop)
         {
             // REQUIRED: Level ID
-            var level = Environment.GetEnvironmentVariable("WUKONGMP_LEVEL_ID");
+            var level = data.GetValueOrDefault("LEVEL_ID");
             if (!string.IsNullOrWhiteSpace(level))
             {
                 LevelId = int.Parse(level);
@@ -79,41 +77,12 @@ public class CmdLineParams
         }
 
         // OPTIONAL: custom mod folder
-        var modFolder = GetEnvironmentVariable("WUKONGMP_MOD_FOLDER");
+        var modFolder = data.GetValueOrDefault("MOD_FOLDER");
 
         if (!string.IsNullOrWhiteSpace(modFolder))
         {
             ModFolderOverride = modFolder;
             Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
         }
-    }
-
-    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    private static extern uint GetEnvironmentVariable(string lpName, StringBuilder lpBuffer, uint nSize);
-
-    private static string? GetEnvironmentVariable(string variable)
-    {
-        const int initialSize = 512;
-        StringBuilder buffer = new(initialSize);
-
-        var size = GetEnvironmentVariable(variable, buffer, (uint)buffer.Capacity);
-        if (size == 0)
-        {
-            var error = Marshal.GetLastWin32Error();
-            if (error == 203) // ERROR_ENVVAR_NOT_FOUND
-                return null;
-            if (error == 0 && buffer.Length == 0)
-                return null;
-
-            throw new System.ComponentModel.Win32Exception(error);
-        }
-
-        if (size > buffer.Capacity)
-        {
-            buffer = new StringBuilder((int)size);
-            GetEnvironmentVariable(variable, buffer, size);
-        }
-
-        return buffer.ToString();
     }
 }
