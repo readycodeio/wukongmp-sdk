@@ -128,7 +128,7 @@ namespace WukongMp.Api.Patches
 
             if (DI.Instance.RelayClient.IsMasterClient)
             {
-                DI.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob());
+                DI.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob(DI.Instance.Rpc));
             }
         }
 
