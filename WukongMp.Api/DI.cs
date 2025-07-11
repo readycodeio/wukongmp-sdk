@@ -56,8 +56,8 @@ public class DI
 
     public WukongChatter Chatter { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
-    public WukongPVP PVP { get; private set; } = null!;
-    public WukongCoop Coop { get; private set; } = null!;
+    public WukongPVP? PVP { get; private set; }
+    public WukongCoop? Coop { get; private set; }
 
     public void InitLogging(ILoggerFactory loggerFactory)
     {

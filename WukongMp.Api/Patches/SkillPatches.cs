@@ -27,7 +27,7 @@ public static class PatchTriggerMagicSkill
         if (!DI.Instance.RelayClient.InRoom)
             return true;
 
-        return SkillsUtils.IsSkillWhitelisted(SkillID) && DI.Instance.PVP.IsSkillEnabledInPVP(SkillID);
+        return SkillsUtils.IsSkillWhitelisted(SkillID) && (DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true);
     }
 }
 

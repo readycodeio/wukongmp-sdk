@@ -398,7 +398,7 @@ namespace WukongMp.Api.Patches
 
                 if (_pendingDaSheng == 0)
                 {
-                    DI.Instance.PVP.CheckRoundEndCondition();
+                    DI.Instance.PVP?.CheckRoundEndCondition();
                 }
             }
         }
