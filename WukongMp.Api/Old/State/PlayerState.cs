@@ -58,11 +58,11 @@ namespace WukongMp.Api.Old.State
         public float AIPathMoveStuckTimer { get; set; }
         public bool IsAIPathMoveStuck { get; set; }
 
-        public PlayerState(PlayerId id, BGUCharacterCS pawn, int? teamId, float initialHp, float initialHpMaxBase)
+        public PlayerState(PlayerId id, BGUCharacterCS pawn, int teamId, float initialHp, float initialHpMaxBase)
         {
             PlayerId = id;
             _pawn = pawn;
-            TeamId = teamId ?? pawn.GetTeamIDInCS();
+            TeamId = teamId;
             Hp = initialHp;
             Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
             Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
@@ -80,11 +80,8 @@ namespace WukongMp.Api.Old.State
                 Logging.LogError("Failed to get attribute container from player");
             }
 
-            if (teamId != null)
-            {
-                Logging.LogDebug("Assigning team ID {TeamId} to player", teamId.Value);
-                ClientUtils.RegisterNewPlayerTeam(pawn, teamId.Value);
-            }
+            Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
+            ClientUtils.RegisterNewPlayerTeam(pawn, teamId);
         }
 
         public override string ToString()

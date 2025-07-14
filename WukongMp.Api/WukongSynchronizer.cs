@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using b1;
@@ -320,9 +321,11 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
     {
         Logging.LogInformation("Synchronizer before joined room");
         
-        int? teamId = null;
+        int teamId;
         if (RelayClient.LocalPlayer.Properties.TryGetValue(nameof(PlayerState.TeamId), out var teamIdUntyped))
             teamId = (int)teamIdUntyped;
+        else
+            teamId = Constants.AvailableTeamIds.First();
         
         var controlledPawn = GameUtils.GetControlledPawn();
 
