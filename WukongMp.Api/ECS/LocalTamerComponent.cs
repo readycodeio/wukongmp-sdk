@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using b1;
 using Friflo.Engine.ECS;
-using WukongMp.Api.Old;
+using Friflo.Json.Fliox;
 using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.ECS;
@@ -15,12 +15,14 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     public MontageState MontageState;
     public bool IsLocallySpawned;
 
+    [Ignore]
     public BUTamerActor? Tamer
     {
         get => field.IsNullOrDestroyed() ? null : field;
         set;
     } = tamer;
 
+    [Ignore]
     public BGUCharacterCS? Pawn
     {
         get
