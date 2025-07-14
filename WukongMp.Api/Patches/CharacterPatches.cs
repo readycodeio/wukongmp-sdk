@@ -629,10 +629,12 @@ namespace WukongMp.Api.Patches
                     var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                     // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
                 }
-                if (GameUtils.GetControlledPawn() == __instance.GetOwner())
-                {
-                    DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
-                }
+            }
+            if (GameUtils.GetControlledPawn() == __instance.GetOwner())
+            {
+                Logging.LogDebug("BuffRemove called for controlled pawn {Actor} with BuffID={BuffId}, RemoveTriggerType={TriggerType}, InLayer={Layer}, WithTriggerRemoveEffect={WithEffect}",
+                    __instance.GetOwner().GetName(), BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect);
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
         }
     }
@@ -660,10 +662,10 @@ namespace WukongMp.Api.Patches
                     var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                     // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
                 }
-                if (GameUtils.GetControlledPawn() == __instance.GetOwner())
-                {
-                    DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
-                }
+            }
+            if (GameUtils.GetControlledPawn() == __instance.GetOwner())
+            {
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
             }
         }
     }
@@ -691,10 +693,10 @@ namespace WukongMp.Api.Patches
                     var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                     // DI.Instance.Rpc.SendUnitRemoveAllBuffs(new BuffRemoveAllData(netPeer, RemoveTriggerType, WithTriggerRemoveEffect));
                 }
-                if (GameUtils.GetControlledPawn() == __instance.GetOwner())
-                {
-                    DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(RemoveTriggerType, WithTriggerRemoveEffect));
-                }
+            }
+            if (GameUtils.GetControlledPawn() == __instance.GetOwner())
+            {
+                DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(RemoveTriggerType, WithTriggerRemoveEffect));
             }
         }
     }
