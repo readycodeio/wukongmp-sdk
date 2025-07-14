@@ -321,11 +321,9 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
     {
         Logging.LogInformation("Synchronizer before joined room");
         
-        int teamId;
+        int? teamId = null;
         if (RelayClient.LocalPlayer.Properties.TryGetValue(nameof(PlayerState.TeamId), out var teamIdUntyped))
             teamId = (int)teamIdUntyped;
-        else
-            teamId = Constants.AvailableTeamIds.First();
         
         var controlledPawn = GameUtils.GetControlledPawn();
 

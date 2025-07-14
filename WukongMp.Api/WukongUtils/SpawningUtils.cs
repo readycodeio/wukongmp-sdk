@@ -102,7 +102,7 @@ public static class SpawningUtils
         events.Evt_OnLeaveFalling.Invoke();
 
         // get teamId
-        var teamId = Constants.AvailableTeamIds.First();
+        var teamId = newPawn.GetTeamIDInCS();
         if (initialProps.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
         {
             teamId = (int)assignedTeamId;
