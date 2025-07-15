@@ -6,6 +6,7 @@ using BtlB1;
 using CommB1;
 using HarmonyLib;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -152,10 +153,14 @@ namespace WukongMp.Api.Patches
 
                 try
                 {
+                    var timer = Stopwatch.StartNew();
                     var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
                     var playerDownloadTask = WukongMpMod.Instance.DownloadPlayerSaveAsync();
 
                     Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
+
+                    timer.Stop();
+                    Logging.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
 
                     if (worldDownloadTask.Result is null)
                     {
@@ -349,27 +354,31 @@ namespace WukongMp.Api.Patches
             {
                 if (WukongMpMod.Instance.IsMasterClient)
                 {
+                    var worldTimer = Stopwatch.StartNew();
                     var uploadedWorld = await WukongMpMod.Instance.UploadWorldSaveAsync(data);
-                    LogSuccess(uploadedWorld, "world save");
+                    LogSuccess(worldTimer, uploadedWorld, "world save");
                 }
 
+                var playerTimer = Stopwatch.StartNew();
                 var uploadedPlayer = await WukongMpMod.Instance.UploadPlayerSaveAsync(data);
-                LogSuccess(uploadedPlayer, "player save");
+                LogSuccess(playerTimer, uploadedPlayer, "player save");
             });
 
             __result = true;
             return false;
         }
 
-        private static void LogSuccess(bool success, string name)
+        private static void LogSuccess(Stopwatch stopwatch, bool success, string name)
         {
+            stopwatch.Stop();
+
             if (success)
             {
-                Logging.LogInformation("Blob uploaded successfully: {Name}", name);
+                Logging.LogInformation("Blob uploaded successfully: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
             }
             else
             {
-                Logging.LogError("Failed to upload blob: {Name}", name);
+                Logging.LogError("Failed to upload blob: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
             }
         }
     }
