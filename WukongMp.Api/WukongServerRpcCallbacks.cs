@@ -1,7 +1,6 @@
 ﻿using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.Protocol.Enums;
 using System;
 
 namespace WukongMp.Api;
@@ -26,8 +25,8 @@ public partial class WukongServerRpcCallbacks : IDisposable
         DeInitRpc();
     }
 
-    [ServerRpcEvent(ServerRpcCode.DataMessage)]
-    internal void OnDataMessage(int value)
+    [ServerRpcEvent("ExampleEvent")]
+    internal void OnExampleEvent(int value)
     {
         Logging.LogDebug("Received data from server RPC, value: {Value}", value);
     }
