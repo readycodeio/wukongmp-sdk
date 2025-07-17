@@ -43,7 +43,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 else
                 {
                     // spawn tamer
-                    Logging.LogDebug("Matching tamer not found for guid: {Guid}, spawning...", tamer.Guid);
+                    Logging.LogTrace("Matching tamer not found for guid: {Guid}, spawning...", tamer.Guid);
                     // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 }
             }

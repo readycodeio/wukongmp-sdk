@@ -356,7 +356,7 @@ namespace WukongMp.Api.Patches
                     var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
                     if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
                     {
-                        Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
+                        Logging.LogTrace("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
                         var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                         WukongMpMod.Instance.SendTriggerFsmState(new FsmStateData(netPeer, EventTag.TagName.ToString()));
                     }

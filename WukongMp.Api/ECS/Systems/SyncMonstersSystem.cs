@@ -31,7 +31,7 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
             currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
-                Logging.LogError("Monster not yet spawned");
+                Logging.LogTrace("Monster not yet spawned"); // was LogError, but the volume of these logs is too high
                 return;
             }
 

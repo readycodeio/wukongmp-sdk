@@ -606,7 +606,7 @@ public sealed class WukongClient
         }
         else if (!ConnectedPlayers.TryGetValue(playerId, out playerState))
         {
-            Logging.LogDebug("Player {Id} not found.", playerId); // TODO: Investigate why this is spammed
+            Logging.LogTrace("Player {Id} not found.", playerId); // TODO: Investigate why this is spammed
             return;
         }
 
