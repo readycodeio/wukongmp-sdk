@@ -29,7 +29,7 @@ public static class PatchComplexSkillDoInteractAction
             if (entity.HasValue)
             {
                 ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                Logging.LogDebug($"Sending skill interact for {InteractiveActor.GetName()} with ID {netComp.Id}.");
+                Logging.LogDebug("Sending skill interact for {Actor} with ID {Id}.", InteractiveActor.GetName(), netComp.Id);
                 WukongMpMod.Instance.SendTamerSkillInteract(new DTO.SkillInteractData(netComp, Action.ParamsInt[1]));
             }
         }

@@ -155,13 +155,8 @@ namespace WukongMp.Api.Old
         {
             var caller = new StackFrame(1).GetMethod();
             var threadId = Thread.CurrentThread.ManagedThreadId;
-            var args = new List<object?>
-            {
-                propertyName,
-                threadId,
-                $"{caller.DeclaringType?.FullName}.{caller.Name}"
-            };
-            Log(LogLevel.Error, $"{{Value}} is null [thread {{{ThreadIdPropertyName}}} at {{{LocationPropertyName}}}]", args.ToArray().AsSpan());
+            var fmtName = $"{caller.DeclaringType?.FullName}.{caller.Name}";
+            Log(LogLevel.Error, $"{{Value}} is null [thread {{{ThreadIdPropertyName}}} at {{{LocationPropertyName}}}]", propertyName, threadId, fmtName);
         }
     }
 }

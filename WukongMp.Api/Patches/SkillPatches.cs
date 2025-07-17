@@ -648,14 +648,14 @@ public static class TransformationPatch
 
         if (playerState == null)
         {
-            Logging.LogDebug($"Skipping transformation of {oldOwner?.GetName()} because player state is null");
+            Logging.LogDebug("Skipping transformation of {Owner} because player state is null", oldOwner.GetName());
             return;
         }
 
         playerState.Pawn = newOwner;
         // update equipment
         EquipmentHelpers.SetRemoteActorEquipment(newOwner, playerState.Equipment);
-        Logging.LogDebug($"Transformed {oldOwner?.GetName()} to {newOwner?.GetName()}");
+        Logging.LogDebug("Transformed {OldOwner} to {NewOwner}", oldOwner.GetName(), newOwner.GetName());
     }
 }
 
