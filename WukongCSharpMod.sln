@@ -25,8 +25,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Friflo.Engine.ECS", "readym
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Friflo.Engine.ECS.Boost", "readym-gameserver\src\Friflo.Engine.ECS\src\ECS.Boost\Friflo.Engine.ECS.Boost.csproj", "{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay", "readym-gameserver\src\ReadyM.Relay\ReadyM.Relay.csproj", "{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -123,27 +121,8 @@ Global
 		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
 		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Testing|Any CPU.Build.0 = Debug|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.NoDisconnect|Any CPU.ActiveCfg = Release|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.NoDisconnect|Any CPU.Build.0 = Release|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
-		{86D42A09-2657-4D8A-8BAD-F9CA583C1DDF}.Testing|Any CPU.Build.0 = Debug|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.Testing|Any CPU.ActiveCfg = NoDisconnect|Any CPU
-		{F96BBF2D-5012-F6D1-D3A7-0263E287B0E1}.Testing|Any CPU.Build.0 = NoDisconnect|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {936942BA-C81A-4E43-9334-86E598C8D75A}
 	EndGlobalSection
 EndGlobal
