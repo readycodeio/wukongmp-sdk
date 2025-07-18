@@ -416,16 +416,10 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch]
+    [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnSetRebirthPointAsCurrentBirthPoint")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnSetRebirthPointAsCurrentBirthPoint
     {
-        private static IEnumerable<MethodBase> TargetMethods()
-        {
-            yield return AccessTools.Method("b1.BPS_RebirthPointSystem:OnSetRebirthPointAsCurrentBirthPoint");
-            yield return AccessTools.Method("b1.BPS_RebirthPointSystem:OnForceSetRebirthPoint");
-        }
-        
         public static void Postfix(UActorCompBaseCS __instance, int RebirthPointID)
         {
             Logging.LogInformation("BirthPointID updated: {Id}", RebirthPointID);
@@ -446,6 +440,22 @@ namespace WukongMp.Api.Patches
         {
             Logging.LogInformation("BirthPointID updated: {Id}", BirthPointID);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(BirthPointID);
+            if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
+            {
+                Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnForceSetRebirthPoint")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnForceSetRebirthPoint
+    {
+        public static void Postfix(UActorCompBaseCS __instance, int RebirthPointId)
+        {
+            Logging.LogInformation("BirthPointID updated: {Id}", RebirthPointId);
+            FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointId);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
                 Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
