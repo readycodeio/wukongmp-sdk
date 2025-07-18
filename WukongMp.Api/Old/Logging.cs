@@ -17,11 +17,15 @@ namespace WukongMp.Api.Old
 
         public static void Log(LogLevel level, [StructuredMessageTemplate] string messageTemplate, params Span<object?> values)
         {
+#if !DEBUG
+            if (level == LogLevel.Debug)
+                return;
+#endif
+
 #if !TRACE_LOGS
             if (level == LogLevel.Trace)
                 return;
 #endif
-
             var propertyNames = ExtractPropertyNames(messageTemplate);
             var properties = new Dictionary<string, string?>();
 
@@ -75,7 +79,7 @@ namespace WukongMp.Api.Old
             }
 #endif
 
-            if (level != LogLevel.Trace)
+            if (level >= LogLevel.Information)
             {
                 Logger.Instance.Log(messageTemplate, properties, level.ToString());
             }
@@ -95,14 +99,16 @@ namespace WukongMp.Api.Old
 
         public static void LogTrace([StructuredMessageTemplate] string template, params Span<object?> args)
         {
-#if TRACE_LOGS
+#if DEBUG && TRACE_LOGS
             Log(LogLevel.Trace, template, args);
 #endif
         }
 
         public static void LogDebug([StructuredMessageTemplate] string template, params Span<object?> args)
         {
+#if DEBUG
             Log(LogLevel.Debug, template, args);
+#endif
         }
 
         public static void LogInformation([StructuredMessageTemplate] string template, params Span<object?> args)

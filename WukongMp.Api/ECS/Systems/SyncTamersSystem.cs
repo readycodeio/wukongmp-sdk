@@ -20,7 +20,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 
         if (allTamers is null)
         {
-            Logging.LogWarning("Failed to find all tamers in the world.");
+            Logging.LogError("Failed to find all tamers in the world.");
             return;
         }
 

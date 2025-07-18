@@ -64,7 +64,7 @@ namespace WukongMp.Api.Patches
                 case 151:
                     return BGW_TickGroupMask.TG_BeforePostUpdateWork;
                 default:
-                    Logging.LogWarning("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
+                    Logging.LogError("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
                     return BGW_TickGroupMask.TG_None;
             }
         }

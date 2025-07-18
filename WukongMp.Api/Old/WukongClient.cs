@@ -101,7 +101,7 @@ public sealed class WukongClient
 
     public void RegisterPlayer(PlayerState state)
     {
-        Logging.LogDebug("Registering player {PlayerId}", state.PlayerId);
+        Logging.LogInformation("Registering player {PlayerId}", state.PlayerId);
         ConnectedPlayers.Add(state.PlayerId, state);
     }
 
@@ -672,7 +672,7 @@ public sealed class WukongClient
                 case nameof(PlayerState.IsSpectator):
                 {
                     var isSpectator = (bool)kvp.Value;
-                    Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
+                    Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
 
                     Utils.TryRunOnGameThread(() =>
                     {

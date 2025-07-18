@@ -57,7 +57,7 @@ namespace WukongMp.Api.Patches
                 // local player (client)
                 if (client.LocalPlayerState.Hp <= -80000)
                 {
-                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", client.LocalPlayerState.Hp);
+                    Logging.LogError("Would set HP to {HP}, but will not (OOB fall damage)", client.LocalPlayerState.Hp);
                     return;
                 }
 
@@ -463,14 +463,14 @@ namespace WukongMp.Api.Patches
                 var entity = WukongMpMod.Instance.GetMonsterByActor(character);
                 if (entity.HasValue)
                 {
-                    Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
+                    Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
                     var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     // only clean up own monsters
                     if (netId.Creator != WukongMpMod.Instance.RelayClient.PlayerId)
                     {
-                        Logging.LogWarning("Skipping cleanup for remote monster");
+                        Logging.LogDebug("Skipping cleanup for remote monster");
                         return;
                     }
 

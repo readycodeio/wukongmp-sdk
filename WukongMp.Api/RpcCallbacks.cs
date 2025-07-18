@@ -257,7 +257,6 @@ public partial class WukongMpMod
     private void OnBreakImmobilize(NetworkIdComponent entity)
     {
         // TODO
-        Logging.LogWarning("BreakImmobilize not implemented");
     }
 
     [RpcEvent(RelayMode.All, EventCaching.AddToRoomCacheGlobal)]
@@ -304,7 +303,7 @@ public partial class WukongMpMod
         var ev = (PvPEvent)data[0];
         var winnerTeamId = data[1];
 
-        Logging.LogDebug("Received PvP event: {Event}", ev);
+        Logging.LogInformation("Received PvP event: {Event}", ev);
 
         switch (ev)
         {

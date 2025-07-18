@@ -39,7 +39,7 @@ namespace WukongMp.PvP
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
             Logging.LogInformation("Mod version: {Version}", trueModVersion);
-            Logging.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
+            Logging.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             try
             {
@@ -53,7 +53,7 @@ namespace WukongMp.PvP
 
             if (_modInstance.IsInitialized)
             {
-                Logging.LogInformation("WukongMP is already initialized");
+                Logging.LogError("WukongMP is already initialized");
                 return;
             }
 
