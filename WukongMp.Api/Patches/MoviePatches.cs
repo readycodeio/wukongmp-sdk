@@ -223,3 +223,27 @@ public static class PatchTickForMovieSystem
         return false;
     }
 }
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchOnSkipCurrentCameraMovie
+{
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BGS_MovieSystem:OnSkipCurrentCameraMovie");
+    }
+
+    public static bool Prefix(GameStateSystemBase __instance)
+    {
+        if (!DI.Instance.RelayClient.InRoom)
+            return true;
+
+        var movieSystemType = __instance.GetType();
+        MethodInfo getter = AccessTools.PropertyGetter(movieSystemType, "MovieData");
+        BGC_MovieData movieData = (BGC_MovieData)getter.Invoke(__instance, null);
+        var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
+        Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
+        DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
+        return false;
+    }
+}
