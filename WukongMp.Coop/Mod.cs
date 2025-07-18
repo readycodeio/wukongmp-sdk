@@ -39,7 +39,7 @@ namespace WukongMp.Coop
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
             Logging.LogInformation("Mod version: {Version}", trueModVersion);
-            Logging.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
+            Logging.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             try
             {
@@ -63,13 +63,13 @@ namespace WukongMp.Coop
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () => 
             { 
-                Logging.LogWarning("Alt + Y: Disable threading");
+                Logging.LogDebug("Alt + Y: Disable threading");
                 GameUtils.DisableThreading();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () => 
             {
-                Logging.LogWarning("Alt + U: Enable threading");
+                Logging.LogDebug("Alt + U: Enable threading");
                 GameUtils.EnableThreading();
             });
 

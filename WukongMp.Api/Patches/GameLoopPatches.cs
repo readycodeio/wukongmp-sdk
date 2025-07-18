@@ -27,11 +27,6 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (name != null)
-            {
-                Logging.LogTrace("Enqueueing action: {Action}", name);
-            }
-
             CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string?)>([(action, name)]), (_, queue) =>
             {
                 queue.Enqueue((action, name));
@@ -64,7 +59,7 @@ namespace WukongMp.Api.Patches
                 case 151:
                     return BGW_TickGroupMask.TG_BeforePostUpdateWork;
                 default:
-                    Logging.LogWarning("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
+                    Logging.LogError("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
                     return BGW_TickGroupMask.TG_None;
             }
         }
@@ -77,7 +72,6 @@ namespace WukongMp.Api.Patches
         public static void Prefix(ref int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
-            Logging.LogTrace("[{Thread}] Starting tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
 
             if (mask == BGW_TickGroupMask.TG_None)
             {
@@ -88,7 +82,6 @@ namespace WukongMp.Api.Patches
         public static void Postfix(int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
-            Logging.LogTrace("[{Thread}] Finished tick group {Mask}", Thread.CurrentThread.ManagedThreadId, mask);
 
             RunQueuedActions(mask);
 
@@ -109,7 +102,6 @@ namespace WukongMp.Api.Patches
             {
                 try
                 {
-                    Logging.LogTrace("Processing {Action} action for tick group {Mask}", item.Name, mask);
                     item.Action();
                 }
                 catch (Exception e)

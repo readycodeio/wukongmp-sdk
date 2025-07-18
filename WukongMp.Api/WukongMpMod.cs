@@ -65,7 +65,7 @@ public partial class WukongMpMod : WukongMpModBase
             UIUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
         }
 
-        Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);
+        Logging.LogInformation("Setting monster HP scaling to {Scaling}x", scaling);
 
         World.Query<HpComponent, LocalTamerComponent>().Each(new ScaleMonsterHpJob(scaling));
     }

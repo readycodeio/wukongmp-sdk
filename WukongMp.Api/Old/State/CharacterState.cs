@@ -32,7 +32,6 @@ namespace WukongMp.Api.Old.State
             {
                 if (field != null && field.IsNullOrDestroyed())
                 {
-                    Logging.LogTrace("Marker actor is destroyed");
                     return null;
                 }
 

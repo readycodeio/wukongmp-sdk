@@ -39,16 +39,16 @@ namespace WukongMp.Api.WukongUtils
 
         public static void ListAssetsInFolder(string path)
         {
-            UAssetDataArray assetsInFolder = UGSE_AssetUtilFuncLib.GetAssetsInFolder(new FName(path), bRecursive: true);
+            var assetsInFolder = UGSE_AssetUtilFuncLib.GetAssetsInFolder(new FName(path), bRecursive: true);
             if (assetsInFolder == null)
             {
                 return;
             }
 
-            int i = 0;
-            foreach (FAssetData item6 in assetsInFolder.AssetDataArr)
+            var i = 0;
+            foreach (var item in assetsInFolder.AssetDataArr)
             {
-                Logging.LogInformation("Asset {Id} path : {Name}", i++, item6.GetFullName());
+                Logging.LogDebug("Asset {Id} path : {Name}", i++, item.GetFullName());
             }
         }
 

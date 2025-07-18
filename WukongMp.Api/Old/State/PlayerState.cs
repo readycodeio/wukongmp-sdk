@@ -79,7 +79,7 @@ namespace WukongMp.Api.Old.State
                 Logging.LogError("Failed to get attribute container from player");
             }
 
-            Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
+            Logging.LogInformation("Assigning team ID {TeamId} to player", teamId);
             ClientUtils.RegisterNewPlayerTeam(pawn, teamId);
         }
 

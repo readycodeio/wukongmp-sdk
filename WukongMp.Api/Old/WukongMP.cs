@@ -54,7 +54,7 @@ namespace WukongMp.Api.Old
                     TamerUtils.DestroyAllTamers();
                 }
 
-                Logging.LogInformation("Initializing widgets");
+                Logging.LogDebug("Initializing widgets");
                 ModWidgetsUtils.SpawnWidgetManagerActor();
                 ModWidgetsUtils.InitializeWidgets();
                 Client.EnterRoom();
@@ -70,7 +70,7 @@ namespace WukongMp.Api.Old
         public void OnEndPlay()
         {
             Client.StopRelayClient();
-            Logging.LogInformation("Deinitializing widgets");
+            Logging.LogDebug("Deinitializing widgets");
             ModWidgetsUtils.DeinitializeWidgets();
         }
 
@@ -392,10 +392,7 @@ namespace WukongMp.Api.Old
             }
 
             if (player.Pawn == null)
-            {
-                Logging.LogWarning("Failed to cast pawn to BGUCharacterCS");
                 return;
-            }
 
             EquipmentHelpers.SetRemoteActorEquipment(player.Pawn, eq);
         }

@@ -57,7 +57,7 @@ namespace WukongMp.Api.Patches
                 // local player (client)
                 if (client.LocalPlayerState.Hp <= -80000)
                 {
-                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", client.LocalPlayerState.Hp);
+                    Logging.LogError("Would set HP to {HP}, but will not (OOB fall damage)", client.LocalPlayerState.Hp);
                     return;
                 }
 
@@ -115,7 +115,6 @@ namespace WukongMp.Api.Patches
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
                     var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
                     if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
@@ -258,8 +257,6 @@ namespace WukongMp.Api.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
-
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     client.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
                     client.CachePlayerAttribute(calc.finalVal, finalVal);
@@ -463,14 +460,14 @@ namespace WukongMp.Api.Patches
                 var entity = WukongMpMod.Instance.GetMonsterByActor(character);
                 if (entity.HasValue)
                 {
-                    Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
+                    Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
                     var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     // only clean up own monsters
                     if (netId.Creator != WukongMpMod.Instance.RelayClient.PlayerId)
                     {
-                        Logging.LogWarning("Skipping cleanup for remote monster");
+                        Logging.LogDebug("Skipping cleanup for remote monster");
                         return;
                     }
 
@@ -508,7 +505,6 @@ namespace WukongMp.Api.Patches
                     var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     WukongMpMod.Instance.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
-                    Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
                 }
             }
         }
@@ -536,14 +532,12 @@ namespace WukongMp.Api.Patches
                     var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
-                    Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
                 }
             }
 
             if (owner == client.LocalPlayerState.Pawn)
             {
                 WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(NetworkIdComponent.FromPlayerId(client.LocalPlayerState.PlayerId), Trigger, Time, NeedForceUpdate));
-                Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }
     }
