@@ -164,7 +164,6 @@ public static class SpawningUtils
         {
             if (initialProps.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
             {
-                Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
                 playerState.Attributes[attr] = (float)value;
             }
         }

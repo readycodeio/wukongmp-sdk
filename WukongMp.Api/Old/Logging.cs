@@ -21,11 +21,6 @@ namespace WukongMp.Api.Old
             if (level == LogLevel.Debug)
                 return;
 #endif
-
-#if !TRACE_LOGS
-            if (level == LogLevel.Trace)
-                return;
-#endif
             var propertyNames = ExtractPropertyNames(messageTemplate);
             var properties = new Dictionary<string, string?>();
 
@@ -60,12 +55,11 @@ namespace WukongMp.Api.Old
             }
 
 #if !DEBUG
-                Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Red;
 #else
             Console.ForegroundColor = level switch
             {
-                LogLevel.Trace => ConsoleColor.Gray,
-                LogLevel.Debug => ConsoleColor.White,
+                LogLevel.Debug => ConsoleColor.Gray,
                 LogLevel.Information => ConsoleColor.White,
                 LogLevel.Warning => ConsoleColor.Yellow,
                 LogLevel.Error => ConsoleColor.Red,
@@ -95,13 +89,6 @@ namespace WukongMp.Api.Old
             }
 
             return names;
-        }
-
-        public static void LogTrace([StructuredMessageTemplate] string template, params Span<object?> args)
-        {
-#if DEBUG && TRACE_LOGS
-            Log(LogLevel.Trace, template, args);
-#endif
         }
 
         public static void LogDebug([StructuredMessageTemplate] string template, params Span<object?> args)

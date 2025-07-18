@@ -66,7 +66,6 @@ public static class NpcLocomotionUtils
                 return;
             }
 
-            Logging.LogTrace("Changing motion matching to: {State}, for monster {Monster}", motionMatchingState, character!.PathName);
             events.Evt_ChangeMotionMatchingState.Invoke(motionMatchingState);
         }, nameof(SetMotionMatchingState));
     }

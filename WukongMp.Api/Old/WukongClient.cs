@@ -411,10 +411,6 @@ public sealed class WukongClient
     public void CachePlayerProperty(string key, object value)
     {
         _playerProperties[key] = value;
-        if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
-        {
-            Logging.LogTrace("Set player property: {Property} = {Value}", key, value);
-        }
     }
 
     public void CachePlayerAttribute(EBGUAttrFloat attr, float value)
@@ -606,7 +602,6 @@ public sealed class WukongClient
         }
         else if (!ConnectedPlayers.TryGetValue(playerId, out playerState))
         {
-            Logging.LogTrace("Player {Id} not found.", playerId); // TODO: Investigate why this is spammed
             return;
         }
 
@@ -624,8 +619,6 @@ public sealed class WukongClient
             // attributes have special treatment
             if (propertyName.StartsWith(Constants.AttributePrefix))
             {
-                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
-
                 var key = propertyName[Constants.AttributePrefix.Length..];
 
                 if (!Enum.TryParse<EBGUAttrFloat>(key, out var attr))
@@ -639,11 +632,6 @@ public sealed class WukongClient
             {
                 setter = CreateSetter<PlayerState>(propertyName);
                 PlayerSetters[propertyName] = setter;
-            }
-
-            if (kvp.Value is not (FVector or FRotator or float))
-            {
-                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
             }
 
             setter(playerState, kvp.Value);

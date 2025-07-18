@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using b1;
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
@@ -11,6 +12,8 @@ namespace WukongMp.Api.ECS.Systems;
 public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private static bool IsMasterClient => WukongMpMod.Instance.IsMasterClient;
+
+    private HashSet<string> NotYetSpawnedGuids = [];
 
     protected override void OnUpdate()
     {
@@ -31,7 +34,10 @@ public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent,
             currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
-                Logging.LogTrace("Monster not yet spawned"); // was LogError, but the volume of these logs is too high
+                if (NotYetSpawnedGuids.Add(tamerComp.Guid))
+                {
+                    Logging.LogError("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
+                }
                 return;
             }
 
