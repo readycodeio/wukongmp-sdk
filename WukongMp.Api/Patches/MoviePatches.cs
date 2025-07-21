@@ -248,6 +248,8 @@ public static class PatchOnSkipCurrentCameraMovie
         if (players.LocalPlayerState.LastSyncableSequenceId == sequenceId)
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
+            InfoMessageWidget.Instance.SetVisibility(true);
+            InfoMessageWidget.Instance.SetText("Wait for other players");
             DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
             return false;
         }
