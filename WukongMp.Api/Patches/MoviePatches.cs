@@ -183,6 +183,7 @@ public static class PatchTickForMovieSystem
                 players.LocalPlayerState.IsWaitingForSequence = false;
                 players.LocalPlayerState.IsJoiningSequence = false;
                 players.LocalPlayerState.WaitingSequenceId = 0;
+                players.LocalPlayerState.LastSyncableSequenceId = peakRequest.SequenceID;
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
@@ -242,8 +243,16 @@ public static class PatchOnSkipCurrentCameraMovie
         MethodInfo getter = AccessTools.PropertyGetter(movieSystemType, "MovieData");
         BGC_MovieData movieData = (BGC_MovieData)getter.Invoke(__instance, null);
         var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
-        Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-        DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
-        return false;
+
+        var players = DI.Instance.Players;
+        if (players.LocalPlayerState.LastSyncableSequenceId == sequenceId)
+        {
+            Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
+            DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
+            return false;
+        }
+
+        Logging.LogDebug("Skipping local movie with sequenceId {Id}", sequenceId);
+        return true;
     }
 }

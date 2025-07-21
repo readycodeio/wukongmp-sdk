@@ -54,6 +54,7 @@ namespace WukongMp.Api.Old.State
         public bool IsJoiningSequence { get; set; }
         public FVector SequenceLocation { get; set; }
         public int WaitingSequenceId { get; set; }
+        public int LastSyncableSequenceId { get; set; } // Could be a candidate to move to GlobalGameState
         public float AIPathMoveStuckTimer { get; set; }
         public bool IsAIPathMoveStuck { get; set; }
 
