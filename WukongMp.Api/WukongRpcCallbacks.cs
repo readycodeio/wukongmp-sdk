@@ -1,19 +1,19 @@
-﻿using System;
-using b1;
+﻿using b1;
 using b1.BGW;
 using BtlShare;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
+using ReadyM.Relay.Common.ECS;
+using ReadyM.Relay.Common.Protocol.Enums;
+using System;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
+using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.Patches;
 using WukongMp.Api.WukongUtils;
-using WukongMp.Api.NameCompressors;
 
 namespace WukongMp.Api;
 
@@ -551,5 +551,30 @@ public partial class WukongRpcCallbacks : IDisposable
 
         Logging.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", player.NickName, reason);
         MagicallyChangeUtils.ResetMagicallyChange(player.Pawn, reason);
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnProjectileTarget(PlayerId __sender, ProjectileTargetData targetData)
+    {
+        var player = DI.Instance.Players.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        var target = _pawnRegistry.GetPawnByNetworkId(targetData.Target);
+        if (target == null)
+        {
+            Logging.LogError("Target not found for netID: {NetID}", targetData.Target);
+            return;
+        }
+
+        ProjectileUtils.SetProjectileTarget(player.Pawn, targetData.ProjectileName, target, targetData.SocketName);
     }
 }
