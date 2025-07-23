@@ -10,6 +10,8 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SetProjectileTarget(BGUCharacterCS player, string projectileName, BGUCharacterCS target, string socketName)
         {
+            Logging.LogWarning("Setting projectile target for player: {PlayerName}, projectile: {ProjectileName}, target: {TargetName}, socket: {SocketName}",
+                player.GetName(), projectileName, target.GetName(), socketName);
             if (_projectileCtrlDataType == null)
             {
                 InitProjectileCtrlDataType();
@@ -30,8 +32,10 @@ namespace WukongMp.Api.WukongUtils
             {
                 if (projectile.GetClass().GetName() == projectileName)
                 {
-                    var events = BUS_EventCollectionCS.Get(player);
-                    events?.Evt_SwitchBulletTarget.Invoke(projectile, target, socketName);
+                    //var events = BUS_EventCollectionCS.Get(player);
+                    //events?.Evt_SwitchBulletTarget.Invoke(projectile, target, socketName);
+                    BUS_GSEventCollection bUS_GSEventCollection = BUS_EventCollectionCS.Get(projectile);
+                    bUS_GSEventCollection?.Evt_SwitchMovementTarget.Invoke(target, socketName);
                     break;
                 }
             }
