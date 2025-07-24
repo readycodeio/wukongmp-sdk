@@ -53,6 +53,8 @@ public class DI
     public WukongSynchronizer Synchronizer { get; private set; } = null!;
     public WukongConnectionManager Connection { get; private set; } = null!;
     public WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
+    public NetworkPingMonitor PingMonitor { get; private set; } = null!;
+    public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
 
     public WukongChatter Chatter { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
@@ -113,6 +115,9 @@ public class DI
             PlayerPawnManager, Rpc, NetManager, NetComponents, RelayClient, UpdateLoop, SystemRegistry, Logger);
         Connection = new WukongConnectionManager(RelayClient, Players, Synchronizer, RoomState);
         ConnectionController = new WukongLevelTransitionConnectionController(EventBus, Connection, Synchronizer);
+        
+        PingMonitor = new NetworkPingMonitor(RelayClient);
+        PingWidgetUpdater = new PingWidgetUpdater(PingMonitor);
 
         Chatter = new WukongChatter(Connection, Players, PlayerProperty, Synchronizer, Rpc, GameplaySettings);
         Patcher = new WukongPatcher();
