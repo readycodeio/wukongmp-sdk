@@ -577,4 +577,40 @@ public partial class WukongRpcCallbacks : IDisposable
 
         ProjectileUtils.SetProjectileTarget(player.Pawn, targetData.ProjectileName, target, targetData.SocketName);
     }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnSwitchOneProjectile(PlayerId __sender, ProjectileSwitchData switchData)
+    {
+        var player = DI.Instance.Players.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        ProjectileUtils.SwitchProjectileInfo(player.Pawn, switchData.ProjectileClassName, switchData.BulletSwitchID, switchData.SwitchIdx);
+    }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnProjectileDead(PlayerId __sender, ProjectileDeadData data)
+    {
+        var player = DI.Instance.Players.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        ProjectileUtils.DestroyProjectile(player.Pawn, data.ProjectileClassName, data.Reason);
+    }
 }
