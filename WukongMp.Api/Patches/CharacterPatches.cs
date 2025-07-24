@@ -589,15 +589,12 @@ namespace WukongMp.Api.Patches
                 var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
                 if (entity != null)
                 {
-                    Logging.LogDebug("BuffBegin called for {Actor} with BuffID={BuffId}, Duration={Duration}", character.GetName(), BuffID, Duration);
                     var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                     // DI.Instance.Rpc.SendUnitAddBuff(new BuffAddData(netPeer, BuffID, Duration));
                 }
             }
             if (GameUtils.GetControlledPawn() == __instance.GetOwner())
             {
-                Logging.LogDebug("BuffBegin called for controlled pawn {Actor} with BuffID={BuffId}, Duration={Duration}",
-                    __instance.GetOwner().GetName(), BuffID, Duration);
                 DI.Instance.Rpc.SendAddBuff(new BuffAddData(BuffID, Duration));
             }
         }
@@ -623,16 +620,12 @@ namespace WukongMp.Api.Patches
                 var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
                 if (entity != null)
                 {
-                    Logging.LogDebug("BuffRemove called for {Actor} with BuffID={BuffId}, RemoveTriggerType={TriggerType}, InLayer={Layer}, WithTriggerRemoveEffect={WithEffect}",
-                        character.GetName(), BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect);
                     var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                     // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
                 }
             }
             if (GameUtils.GetControlledPawn() == __instance.GetOwner())
             {
-                Logging.LogDebug("BuffRemove called for controlled pawn {Actor} with BuffID={BuffId}, RemoveTriggerType={TriggerType}, InLayer={Layer}, WithTriggerRemoveEffect={WithEffect}",
-                    __instance.GetOwner().GetName(), BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect);
                 DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
         }
