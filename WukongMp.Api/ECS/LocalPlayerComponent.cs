@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using b1;
+using Friflo.Json.Fliox;
 using WukongMp.Api.Old;
 using WukongMp.Api.Old.State;
 
@@ -16,6 +17,7 @@ public struct LocalPlayerComponent
     
     private BGUCharacterCS? _pawn;
 
+    [Ignore]
     public BGUCharacterCS? Pawn
     {
         get

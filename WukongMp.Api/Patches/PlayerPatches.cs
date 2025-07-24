@@ -642,8 +642,8 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchDoDamageLogic
     {
-        public static void Postfix(BUS_BeAttackedComp __instance, AActor Attacker)
-        {
+        public static void Postfix(BUS_BeAttackedComp __instance, AActor? Attacker)
+        {         
             if (!DI.Instance.RelayClient.InRoom)
                 return;
 

@@ -68,9 +68,7 @@ public class WukongNetworkLogger : IDisposable
         // dump synced monsters
         _world.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) =>
         {
-            Logging.LogDebug("Monster {Entity}: {NetId}", entity, netId);
-            // TODO: Dump all monster info without using .DebugJson (throws due to some internal errors,
-            // probably the same reason why JsonSerializer sometimes fails.
+            Logging.LogDebug("Monster {Entity}: {NetId}", entity.DebugJSON, netId);
         });
 
         // print team hostility info
