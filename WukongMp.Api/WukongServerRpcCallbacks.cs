@@ -2,7 +2,6 @@
 using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
-using System;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -29,7 +28,7 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     }
 
     [ServerRpcEvent("SkipMovie")]
-    internal void OnSkipMovie(int sequenceId)
+    private void OnSkipMovie(int sequenceId)
     {
         Logging.LogDebug("Received skip movie event from server, sequence id: {Id}", sequenceId);
         InfoMessageWidget.Instance.SetVisibility(false);
