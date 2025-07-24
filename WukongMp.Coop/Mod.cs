@@ -137,7 +137,7 @@ namespace WukongMp.Coop
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
             {
                 _logger.LogDebug("Alt + S");
-                CutsceneUtils.SkipCurrentCutscene();
+                CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>

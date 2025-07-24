@@ -1,8 +1,7 @@
 ﻿using b1;
-using System.Linq;
 using ReadyM.Relay.Common;
+using System.Linq;
 using WukongMp.Api.DTO;
-using WukongMp.Api.Old;
 using WukongMp.Api.Patches;
 using WukongMp.Api.UI;
 
@@ -56,9 +55,28 @@ public static class CutsceneUtils
         }
     }
 
-    public static void SkipCurrentCutscene()
+    public static void RequestSkipCurrentCutscene()
     {
         BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());
+    }
+
+    public static void SkipCutscene(int sequenceId)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            BGC_MovieData movieData = BGU_DataUtil.GetGameStateReadonlyData<BGC_MovieData>(GameUtils.GetWorld());
+            MovieInstance cameraMovieInstance = movieData.CameraMovieInstance;
+            if (cameraMovieInstance != null && cameraMovieInstance.CanSkipMovie() && cameraMovieInstance.SequenceId == sequenceId)
+            {
+                Logging.LogDebug("Skipping cutscene with sequenceId: {SequenceId}", sequenceId);
+                cameraMovieInstance.SkipMovie();
+            }
+            else
+            {
+                Logging.LogWarning("Cannot skip cutscene, either not playing or sequenceId does not match. Current sequenceId: {CurrentSequenceId}, Requested: {RequestedSequenceId}",
+                    cameraMovieInstance?.SequenceId, sequenceId);
+            }
+        }, nameof(SkipCutscene));
     }
 
     public static bool CheckAllPlayersWaitingForCutscene(int sequenceId)
