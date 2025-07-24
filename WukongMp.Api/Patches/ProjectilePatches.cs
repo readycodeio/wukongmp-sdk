@@ -46,12 +46,10 @@ public class PatchOnSwitchBulletTarget
                     Logging.LogError("Player state not found for actor: {ActorName}", InnerTarget.GetName());
                     return false;
                 }
-                Logging.LogDebug("InnerTarget is a player character: {NickName}", playerState.NickName);
                 newTargetId = NetworkIdComponent.FromPlayerId(playerState.PlayerId);
             }
             else
             {
-                Logging.LogDebug("InnerTarget is a monster or other actor: {ActorName}", InnerTarget.GetName());
                 var entity = DI.Instance.PawnRegistry.GetMonsterByActor(InnerTarget);
                 if (entity.HasValue)
                 {
@@ -110,13 +108,12 @@ public static class PatchOnProjectileDead
         if (!DI.Instance.RelayClient.InRoom)
             return;
 
-        Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead called with reason: {Reason}", Reason);
-
         var players = DI.Instance.Players;
         var master = ___MasterData.GetMasterActor();
         var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
         if (projectile != null && players.LocalPlayerState.Pawn == master)
         {
+            Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
             DI.Instance.Rpc.SendProjectileDead(new ProjectileDeadData(projectile.GetClass().GetName(), Reason));
         }
     }

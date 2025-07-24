@@ -10,10 +10,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SetProjectileTarget(BGUCharacterCS player, string projectileName, BGUCharacterCS target, string socketName)
         {
-            Logging.LogWarning("Setting projectile target for player: {PlayerName}, projectile: {ProjectileName}, target: {TargetName}, socket: {SocketName}",
-                player.GetName(), projectileName, target.GetName(), socketName);
-
-            var projectile = GetProjectileByName(player, projectileName);
+            var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)
             {
                 Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
@@ -26,10 +23,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void DestroyProjectile(BGUCharacterCS player, string projectileName, EBGUBulletDestroyReason reason)
         {
-            Logging.LogWarning("Destroying projectile for player: {PlayerName}, projectile: {ProjectileName}, reason: {Reason}",
-                player.GetName(), projectileName, reason);
-
-            var projectile = GetProjectileByName(player, projectileName);
+            var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)
             {
                 Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
@@ -41,9 +35,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SwitchProjectileInfo(BGUCharacterCS player, string projectileName, int bulletSwitchID, int switchIdx)
         {
-            Logging.LogWarning("Switching projectile info for player: {PlayerName}, projectile: {ProjectileName}, bulletSwitchID: {BulletSwitchID}, switchIdx: {SwitchIdx}",
-                player.GetName(), projectileName, bulletSwitchID, switchIdx);
-            var projectile = GetProjectileByName(player, projectileName);
+            var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)
             {
                 Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
@@ -53,7 +45,7 @@ namespace WukongMp.Api.WukongUtils
             events?.Evt_OnSwitchOneProjectile.Invoke(projectile, bulletSwitchID, switchIdx, null);
         }
 
-        private static BGUProjectileBaseActor? GetProjectileByName(BGUCharacterCS player, string projectileName)
+        private static BGUProjectileBaseActor? GetPlayerProjectileByName(BGUCharacterCS player, string projectileName)
         {
             if (_projectileCtrlDataType == null)
             {
