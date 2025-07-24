@@ -166,7 +166,7 @@ public static class PatchOnInitObjMoveInfo
                     newTargetId = entity.Value.GetComponent<NetworkIdComponent>();
                 }
             }
-            Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectile.GetClass().GetName(), players.LocalPlayerState.NickName, InnerTarget.GetName());
+            Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectile.GetClass().GetName(), players.LocalPlayerState.NickName, target.GetName());
             DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(projectile.GetClass().GetName(), newTargetId, MoveInfo.TargetActorSocketNameFromNotify));
         }
     }
