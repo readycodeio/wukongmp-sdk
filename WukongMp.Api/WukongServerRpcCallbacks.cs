@@ -1,11 +1,11 @@
-﻿using ReadyM.Api.Multiplayer;
+﻿using System;
+using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
-using System;
 
 namespace WukongMp.Api;
 
-public partial class WukongServerRpcCallbacks : IDisposable
+public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
