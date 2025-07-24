@@ -118,3 +118,56 @@ public static class PatchOnProjectileDead
         }
     }
 }
+
+[HarmonyPatch(typeof(BUS_ObjActorMovementComp), "OnInitObjMoveInfo")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchOnInitObjMoveInfo
+{
+    public static void Postfix(BUS_ObjActorMovementComp __instance, GSObjActorMoveInfo MoveInfo)
+    {
+        if (!DI.Instance.RelayClient.InRoom)
+            return;
+
+        var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
+        if (projectile == null)
+        {
+            return;
+        }
+
+        IBUC_MasterData masterData = BGU_DataUtil.GetReadOnlyData<IBUC_MasterData, BUC_MasterData>(projectile);
+        if (masterData == null)
+        {
+            return;
+        }
+
+        var players = DI.Instance.Players;
+        var master = masterData.GetMasterActor();
+
+        if (players.LocalPlayerState.Pawn == master)
+        {
+            var target = MoveInfo.TargetActor;
+
+            var newTargetId = default(NetworkIdComponent);
+            if (target is BGUPlayerCharacterCS)
+            {
+                var playerState = players.GetPlayerByActor(target);
+                if (playerState == null)
+                {
+                    Logging.LogError("Player state not found for actor: {ActorName}", target.GetName());
+                    return;
+                }
+                newTargetId = NetworkIdComponent.FromPlayerId(playerState.PlayerId);
+            }
+            else
+            {
+                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(target);
+                if (entity.HasValue)
+                {
+                    newTargetId = entity.Value.GetComponent<NetworkIdComponent>();
+                }
+            }
+            Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectile.GetClass().GetName(), players.LocalPlayerState.NickName, InnerTarget.GetName());
+            DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(projectile.GetClass().GetName(), newTargetId, MoveInfo.TargetActorSocketNameFromNotify));
+        }
+    }
+}
