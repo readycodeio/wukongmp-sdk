@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using b1;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Old;
@@ -9,7 +8,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, NetworkIdComponent, TranslationComponent, TeamComponent>
+public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
@@ -20,11 +19,11 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 
         if (allTamers is null)
         {
-            Logging.LogWarning("Failed to find all tamers in the world.");
+            Logging.LogError("Failed to find all tamers in the world.");
             return;
         }
 
-        Query.ForEachEntity((ref tamer, ref localTamer, ref netId, ref trans, ref team, entity) =>
+        Query.ForEachEntity((ref tamer, ref localTamer, entity) =>
         {
             if (!localTamer.IsTamerSynced)
             {
@@ -40,12 +39,9 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 #endif
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
                 }
-                else
-                {
-                    // spawn tamer
-                    Logging.LogDebug("Matching tamer not found for guid: {Guid}, spawning...", tamer.Guid);
-                    // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
-                }
+
+                // TODO: else spawn tamer?
+                // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
             }
         });
     }

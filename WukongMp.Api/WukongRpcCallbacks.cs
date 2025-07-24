@@ -48,7 +48,6 @@ public partial class WukongRpcCallbacks : IDisposable
 
     public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
     {
-        Logging.LogTrace("Sending montage callback: {Montage} {Position}", montage.PathName, position);
         var shortened = Compressors.MontageNameCompressor.Compress(montage.PathName, out var shortMontagePath);
         var data = shortened ? shortMontagePath : montage.PathName;
         var evData = new MontageCallbackData(netId, shortened, data, position, reset);
@@ -57,7 +56,6 @@ public partial class WukongRpcCallbacks : IDisposable
 
     public void SendMontageCancel(NetworkIdComponent netId)
     {
-        Logging.LogDebug("Sending montage cancel");
         var evData = new MontageCallbackData(netId, false, "", 0f, false);
         SendMontageCallback(evData);
     }
@@ -66,7 +64,7 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         var shortened = Compressors.VigorNameCompressor.Compress(config.PathName, out var shortMontagePath);
         var configName = shortened ? shortMontagePath : config.PathName;
-        Logging.LogTrace("Sending magically change for player {PlayerId} with config {Config} and skillID {SkillID}", player, configName, skillID);
+        Logging.LogDebug("Sending magically change for player {PlayerId} with config {Config} and skillID {SkillID}", player, configName, skillID);
         var evData = new MagicallyChangeData(configName, shortened, skillID, recoverSkillID);
         SendTriggerMagicallyChange(evData);
     }
@@ -253,7 +251,6 @@ public partial class WukongRpcCallbacks : IDisposable
     internal void OnBreakImmobilize(NetworkIdComponent entity)
     {
         // TODO
-        Logging.LogWarning("BreakImmobilize not implemented");
     }
 
     [RpcEvent(RelayMode.All, EventCaching.AddToRoomCacheGlobal)]
@@ -380,13 +377,11 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (string.IsNullOrEmpty(data.MontagePath))
             {
-                Logging.LogTrace("Stopping montage playback for character {CharacterId}", id);
                 pawn.StopAnimMontage(null);
                 return;
             }
 
             var fullMontagePath = data.Compressed ? Compressors.MontageNameCompressor.Decompress(data.MontagePath) : data.MontagePath;
-            Logging.LogTrace("Received montage: {Montage}, position: {Position}, reset: {Reset}", fullMontagePath, data.Position, data.Reset);
 
             var animInstance = pawn.Mesh.GetAnimInstance();
             if (animInstance == null)
@@ -396,12 +391,10 @@ public partial class WukongRpcCallbacks : IDisposable
             }
 
             var currentMontage = animInstance.GetCurrentActiveMontage();
-            Logging.LogTrace("Current montage: {Montage}", currentMontage?.PathName);
 
             // if the same montage is currently playing an no reset flag is given, do not play new montage
             if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data.Reset)
             {
-                Logging.LogTrace("Skipping montage playback: {Montage}, is reset: {Reset}", fullMontagePath, data.Reset);
                 return;
             }
 
@@ -421,7 +414,6 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
             }
 
-            Logging.LogTrace("Applying montage callback for character {CharacterId} with montage {Montage} @ {Position}", id, fullMontagePath, data.Position);
             animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }, nameof(OnMontageCallback));

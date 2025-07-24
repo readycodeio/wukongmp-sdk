@@ -41,10 +41,6 @@ public class WukongPlayerPropertyManager(IRelayClient relayClient, WukongPlayerR
     public void CachePlayerProperty(string key, object value)
     {
         _playerProperties[key] = value;
-        if (!(value is FVector || value is FRotator || key == nameof(PlayerState.TurnInplaceRemainAngle)))
-        {
-            Logging.LogTrace("Set player property: {Property} = {Value}", key, value);
-        }
     }
 
     public void CachePlayerAttribute(EBGUAttrFloat attr, float value)

@@ -133,7 +133,6 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
 
         if (player.Pawn == null)
         {
-            Logging.LogWarning("Failed to cast pawn to BGUCharacterCS");
             return;
         }
 
@@ -236,7 +235,6 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
         }
         else if (!_playerRegistry.ConnectedPlayers.TryGetValue(playerId, out playerState))
         {
-            Logging.LogDebug("Player {Id} not found.", playerId); // TODO: Investigate why this is spammed
             return;
         }
 
@@ -254,8 +252,6 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
             // attributes have special treatment
             if (propertyName.StartsWith(Constants.AttributePrefix))
             {
-                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
-
                 var key = propertyName[Constants.AttributePrefix.Length..];
 
                 if (!Enum.TryParse<EBGUAttrFloat>(key, out var attr))
@@ -269,11 +265,6 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
             {
                 setter = CreateSetter<PlayerState>(propertyName);
                 PlayerSetters[propertyName] = setter;
-            }
-
-            if (kvp.Value is not (FVector or FRotator or float))
-            {
-                Logging.LogTrace("Assigning {Property} = {Value} for player {PlayerId}", propertyName, kvp.Value, playerId);
             }
 
             setter(playerState, kvp.Value);
@@ -296,7 +287,7 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
                 case nameof(PlayerState.IsSpectator):
                 {
                     var isSpectator = (bool)kvp.Value;
-                    Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
+                    Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
 
                     Utils.TryRunOnGameThread(() =>
                     {

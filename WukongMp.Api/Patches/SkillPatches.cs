@@ -644,14 +644,14 @@ public static class TransformationPatch
 
         if (playerState == null)
         {
-            Logging.LogDebug("Skipping transformation of {OldOwner} because player state is null", oldOwner?.GetName());
+            Logging.LogDebug("Skipping transformation of {OldOwner} because player state is null", oldOwner.GetName());
             return;
         }
 
         playerState.Pawn = newOwner;
         // update equipment
         EquipmentHelpers.SetRemoteActorEquipment(newOwner, playerState.Equipment);
-        Logging.LogDebug("Transformed {OldOwner} to {NewOwner}", oldOwner?.GetName(), newOwner?.GetName());
+        Logging.LogDebug("Transformed {OldOwner} to {NewOwner}", oldOwner.GetName(), newOwner.GetName());
     }
 }
 
@@ -769,7 +769,7 @@ public class PatchSpawnAndPossess
 
         if (controller == null)
         {
-            Logging.LogDebug("Controller is null, cannot transform");
+            Logging.LogError("Controller is null, cannot transform");
             __result = null;
             return false;
         }
@@ -803,7 +803,7 @@ public class PatchSpawnAndPossess
         var newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(controller.World, (TSubclassOf<AActor>)pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as APawn;
         if (newPawn == null)
         {
-            Logging.LogDebug("New pawn is null, cannot transform");
+            Logging.LogError("New pawn is null, cannot transform");
             return null;
         }
 
@@ -908,7 +908,7 @@ public static class PatchOnIronBodyStart
 [HarmonyPatchCategory(Constants.CoopPatches)]
 public static class PatchBattleMainInfoCompOnPossessed
 {
-    public static bool Prefix(AActor OldActor, AActor CurActor)
+    public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
         if (!DI.Instance.RelayClient.InRoom)
             return true;
@@ -916,7 +916,7 @@ public static class PatchBattleMainInfoCompOnPossessed
         if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
             return true;
 
-        Logging.LogWarning("BPS_BattleMainInfoComp OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
+        Logging.LogDebug("BPS_BattleMainInfoComp OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
         return false;
     }
 }
@@ -925,7 +925,7 @@ public static class PatchBattleMainInfoCompOnPossessed
 [HarmonyPatchCategory(Constants.CoopPatches)]
 public static class PatchInputSystemOnPossessed
 {
-    public static bool Prefix(AActor OldActor, AActor CurActor)
+    public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
         if (!DI.Instance.RelayClient.InRoom)
             return true;
@@ -933,7 +933,7 @@ public static class PatchInputSystemOnPossessed
         if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
             return true;
 
-        Logging.LogWarning("BPS_InputSystem OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
+        Logging.LogDebug("BPS_InputSystem OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
         return false;
     }
 }
@@ -942,7 +942,7 @@ public static class PatchInputSystemOnPossessed
 [HarmonyPatchCategory(Constants.CoopPatches)]
 public static class PatchMultiTargetOnPossessed
 {
-    public static bool Prefix(AActor OldActor, AActor CurActor)
+    public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
         if (!DI.Instance.RelayClient.InRoom)
             return true;
@@ -950,7 +950,7 @@ public static class PatchMultiTargetOnPossessed
         if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
             return true;
 
-        Logging.LogWarning("BPS_MultiTargetProjectileCtrComp OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
+        Logging.LogDebug("BPS_MultiTargetProjectileCtrComp OnPossessed called, but the current actor is not the controlled pawn. OldActor: {OldActor}, CurActor: {CurActor}", OldActor?.GetName(), CurActor?.GetName());
         return false;
     }
 }
@@ -959,7 +959,7 @@ public static class PatchMultiTargetOnPossessed
 [HarmonyPatchCategory(Constants.CoopPatches)]
 public static class PatchDoCastMagicallyChangeSkill_PendingCast
 {
-    public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset _Config, int _SkillID, int _RecoverSkillID)
+    public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset? _Config, int _SkillID, int _RecoverSkillID)
     {
         if (!DI.Instance.RelayClient.InRoom)
             return;

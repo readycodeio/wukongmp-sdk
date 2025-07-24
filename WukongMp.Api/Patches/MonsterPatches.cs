@@ -340,7 +340,6 @@ namespace WukongMp.Api.Patches
 
             if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGoHome)
             {
-                Logging.LogTrace("Trying change state to {State}", EventTag.ToString());
                 return false;
             }
 
@@ -353,7 +352,6 @@ namespace WukongMp.Api.Patches
                     var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
                     if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
                     {
-                        Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
                         var netPeer = entity.Value.GetComponent<NetworkIdComponent>();
                         DI.Instance.Rpc.SendTriggerFsmState(new FsmStateData(netPeer, EventTag.TagName.ToString()));
                     }

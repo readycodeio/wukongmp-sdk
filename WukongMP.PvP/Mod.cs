@@ -86,7 +86,7 @@ namespace WukongMp.PvP
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
-            _logger.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
+            _logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             Debug.Assert(DI.Instance.Patcher.IsPatched);
 

@@ -111,7 +111,7 @@ public static class SpawningUtils
         // get initial Hp and HpMax
         if (!initialProps.TryGetValue(nameof(PlayerState.Hp), out var initialHpObj) || initialHpObj is not float initialHp)
         {
-            Logging.LogWarning("Joining player did not set initial HP");
+            Logging.LogError("Joining player did not set initial HP");
             initialHp = 1000f;
         }
         else
@@ -121,7 +121,7 @@ public static class SpawningUtils
 
         if (!initialProps.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMaxBase}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMaxBase)
         {
-            Logging.LogWarning("Joining player did not set initial HPMax");
+            Logging.LogError("Joining player did not set initial HPMax");
             initialHpMaxBase = 1000f;
         }
         else
@@ -143,7 +143,7 @@ public static class SpawningUtils
         }
         else
         {
-            Logging.LogWarning("Initial nickname not provided");
+            Logging.LogError("Initial nickname not provided");
         }
 
         // set IsReadyForPvP and IsSpectator
@@ -164,7 +164,6 @@ public static class SpawningUtils
         {
             if (initialProps.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
             {
-                Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
                 playerState.Attributes[attr] = (float)value;
             }
         }

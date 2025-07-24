@@ -46,7 +46,7 @@ public class WukongPlayerRegistry
     
     public void RegisterPlayer(PlayerState state)
     {
-        Logging.LogDebug("Registering player {PlayerId}", state.PlayerId);
+        Logging.LogInformation("Registering player {PlayerId}", state.PlayerId);
         ConnectedPlayers.Add(state.PlayerId, state);
     }
 

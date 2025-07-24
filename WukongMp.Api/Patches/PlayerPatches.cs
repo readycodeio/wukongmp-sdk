@@ -389,7 +389,7 @@ namespace WukongMp.Api.Patches
                         }
                         else
                         {
-                            Logging.LogWarning("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
+                            Logging.LogDebug("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
                         }
 
                         return;
@@ -767,7 +767,6 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
-            Logging.LogWarning("BUS_QuestDynamicObstacleComp.EnableCollision called for {Guid}", guid);
 
             return !DisabledCollidersData.IsDisabled(guid);
         }
@@ -787,11 +786,11 @@ namespace WukongMp.Api.Patches
                 var localPlayerState = DI.Instance.Players.LocalPlayerState;
                 if (___ChrData.RealWorldVelocity.IsNearlyZero())
                 {
-                    Logging.LogWarning("RealWorldVelocity is nearly zero");
+                    Logging.LogDebug("RealWorldVelocity is nearly zero");
                     localPlayerState.AIPathMoveStuckTimer += DeltaTime;
                     if (localPlayerState.AIPathMoveStuckTimer > Constants.AIPathMoveStuckTimeout)
                     {
-                        Logging.LogWarning("AIPathMove stuck detected, resetting timer");
+                        Logging.LogDebug("AIPathMove stuck detected, resetting timer");
                         localPlayerState.AIPathMoveStuckTimer = 0f;
                         localPlayerState.IsAIPathMoveStuck = true;
                         var events = BUS_EventCollectionCS.Get(__instance.GetOwner());

@@ -99,13 +99,7 @@ namespace WukongMp.Api.Configuration
 
         public static string GetUnitPath(string unitName)
         {
-            if (Configurations.TryGetValue(TamerUtils.UnifyUnitName(unitName), out var value))
-            {
-                return value;
-            }
-
-            Logging.LogWarning("Unit path for '{UnitName}' not found. Spawning '{SpawnedUnitName}' instead", unitName, CharacterKind.WolfSoldier);
-            return Configurations[CharacterKind.WolfSoldier];
+            return Configurations[TamerUtils.UnifyUnitName(unitName)];
         }
 
         public static bool IsValidMonsterName(string enemyName)

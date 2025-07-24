@@ -738,7 +738,6 @@ public partial class WukongPVP : IDisposable
         }
         else if (!_playerRegistry.ConnectedPlayers.ContainsKey(playerId))
         {
-            Logging.LogDebug("Player {Id} not found.", playerId); // TODO: Investigate why this is spammed
             return;
         }
 

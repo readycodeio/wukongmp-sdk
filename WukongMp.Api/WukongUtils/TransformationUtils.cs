@@ -26,7 +26,7 @@ public static class TransformationUtils
                 return;
             }
 
-            Logging.LogTrace("Transforming player {Nickname} to unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transBeginType);
+            Logging.LogDebug("Transforming player {Nickname} to unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transBeginType);
             events.Evt_TransBeginSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transBeginType);
         }, nameof(TransformPlayer));
     }
@@ -50,7 +50,7 @@ public static class TransformationUtils
                 return;
             }
 
-            Logging.LogTrace("Transforming player {Nickname} from unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transEndType);
+            Logging.LogDebug("Transforming player {Nickname} from unitId {UnitId} with trans type {Type}", playerState.NickName, toReplaceUnitResID, transEndType);
             events.Evt_TransBackSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transEndType);
         }, nameof(TransformPlayerBack));
     }

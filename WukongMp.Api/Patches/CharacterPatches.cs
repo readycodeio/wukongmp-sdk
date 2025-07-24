@@ -58,7 +58,7 @@ namespace WukongMp.Api.Patches
                 // local player (client)
                 if (players.LocalPlayerState.Hp <= -80000)
                 {
-                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", players.LocalPlayerState.Hp);
+                    Logging.LogError("Would set HP to {HP}, but will not (OOB fall damage)", players.LocalPlayerState.Hp);
                     return;
                 }
 
@@ -116,7 +116,6 @@ namespace WukongMp.Api.Patches
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
                     var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
 
                     if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
@@ -259,8 +258,6 @@ namespace WukongMp.Api.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
-
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     players.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
                     DI.Instance.PlayerProperty.CachePlayerAttribute(calc.finalVal, finalVal);
@@ -464,14 +461,14 @@ namespace WukongMp.Api.Patches
                 var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
                 if (entity.HasValue)
                 {
-                    Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
+                    Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
                     var netId = entity.Value.GetComponent<NetworkIdComponent>();
 
                     // only clean up own monsters
                     if (netId.Creator != DI.Instance.RelayClient.PlayerId)
                     {
-                        Logging.LogWarning("Skipping cleanup for remote monster");
+                        Logging.LogDebug("Skipping cleanup for remote monster");
                         return;
                     }
 
