@@ -642,24 +642,8 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchDoDamageLogic
     {
-        public static void Postfix(
-            BUS_BeAttackedComp __instance,
-            AActor? Attacker,
-            AActor? AttackerMaster,
-            bool IsCrit,
-            float DmgNoiseMul,
-            ref float FinalDamageValue
-        )
-        {
-            if (Attacker != null)
-            {
-                Logging.LogInformation("Attacker {Attacker}", Attacker.GetName());
-                Logging.LogInformation("Attacker {AttackerMaster}", AttackerMaster?.GetName());
-                Logging.LogInformation("IsCrit {IsCrit}", IsCrit);
-                Logging.LogInformation("IsMasterClient {DmgNoiseMul}", DmgNoiseMul);
-                Logging.LogInformation("FinalDamageValue {FinalDamageValue}", FinalDamageValue);
-            }
-            
+        public static void Postfix(BUS_BeAttackedComp __instance, AActor? Attacker)
+        {         
             if (!DI.Instance.RelayClient.InRoom)
                 return;
 
