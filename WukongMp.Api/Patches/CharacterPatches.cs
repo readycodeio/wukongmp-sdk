@@ -599,6 +599,8 @@ namespace WukongMp.Api.Patches
             }
             if (GameUtils.GetControlledPawn() == __instance.GetOwner())
             {
+                Logging.LogDebug("BuffBegin called for controlled pawn {Actor} with BuffID={BuffId}, Duration={Duration}",
+                    __instance.GetOwner().GetName(), BuffID, Duration);
                 DI.Instance.Rpc.SendAddBuff(new BuffAddData(BuffID, Duration));
             }
         }
