@@ -69,7 +69,7 @@ public class PatchOnSwitchBulletTarget
             DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(ProjectileActor.GetClass().GetName(), newTargetId, SocketName));
             return true;
         }
-        return false; 
+        return true; 
     }
 }
 
