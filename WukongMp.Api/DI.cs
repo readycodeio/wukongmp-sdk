@@ -45,6 +45,7 @@ public class DI
     public WukongPlayerPawnManager PlayerPawnManager { get; private set; } = null!;
 
     public WukongRpcCallbacks Rpc { get; private set; } = null!;
+    public WukongServerRpcCallbacks ServerRpc { get; private set; } = null!;
     public WukongSaveRelay SaveRelay { get; private set; } = null!;
     public WukongEventBus EventBus { get; private set; } = null!;
     
@@ -105,6 +106,7 @@ public class DI
         PlayerPawnManager = new WukongPlayerPawnManager(World, Players, ModeManager);
         
         Rpc = new WukongRpcCallbacks(Serializer, RelayClient, EntityManager, Players, PawnRegistry);
+        ServerRpc = new WukongServerRpcCallbacks(Serializer, RelayClient);
         SaveRelay = new WukongSaveRelay(RelayClient);
 
         NetLogger = new WukongNetworkLogger(Logger, World, RoomState, Players, RelayClient);
