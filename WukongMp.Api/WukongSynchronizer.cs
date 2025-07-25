@@ -354,7 +354,8 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
         LobbyStatusWidget.Instance.SetMaxConnectedCount(_roomState.MaxPlayers);
         
         // FIXME: Move to Coop
-        CoopStatusWidget.Instance.SetMaxConnectedCount(_roomState.MaxPlayers);
+        // TODO: _roomState.MaxPlayers is not set in co-op
+        CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
         
         base.OnBeforeJoinedRoomHandler();
     }
