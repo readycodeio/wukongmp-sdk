@@ -1,6 +1,7 @@
 ﻿using b1;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using System.Collections.Generic;
 using System.Reflection;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
@@ -171,5 +172,30 @@ public static class PatchOnInitObjMoveInfo
                 DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(projectile.GetClass().GetName(), newTargetId, MoveInfo.TargetActorSocketNameFromNotify));
             }
         }
+    }
+}
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchAllPlayerInput
+{
+    public static IEnumerable<MethodBase> TargetMethods()
+    {
+        var type = AccessTools.TypeByName("b1.BUS_ProjectileCtrComp");
+        foreach (var method in Traverse.Create<BUS_ObjActorMovementComp>().Methods())
+        {
+            if (method == "GetTickGroupMask" ||
+                method == "OnTickWithGroup" ||
+                method == "UpdateVelocityData" ||
+                method == "BulletSweepFlySpdTick"||
+                method == "CreateMoveMode")
+                continue;
+            yield return AccessTools.Method(typeof(BUS_ObjActorMovementComp), method);
+        }
+    }
+
+    public static void Prefix(MethodBase __originalMethod)
+    {
+        Logging.LogWarning("BUS_ObjActorMovementComp: {MethodName} called", __originalMethod.Name);
     }
 }
