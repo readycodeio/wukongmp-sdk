@@ -1,10 +1,12 @@
 ﻿using BtlShare;
 using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Relay.Client;
+using ReadyM.Relay.Common.Serialization;
 
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
+[DeriveJsonSerializable]
 public partial struct BuffAddData(int buffId, float duration) : INetSerializable
 {
     public int BuffId = buffId;
@@ -12,6 +14,7 @@ public partial struct BuffAddData(int buffId, float duration) : INetSerializable
 }
 
 [DeriveINetSerializable]
+[DeriveJsonSerializable]
 public partial struct BuffRemoveData(int buffId, EBuffEffectTriggerType triggerType, int layer, bool withTriggerRemoveEffect) : INetSerializable
 {
     public int BuffId = buffId;
@@ -21,6 +24,7 @@ public partial struct BuffRemoveData(int buffId, EBuffEffectTriggerType triggerT
 }
 
 [DeriveINetSerializable]
+[DeriveJsonSerializable]
 public partial struct BuffRemoveAllData(EBuffEffectTriggerType triggerType, bool withTriggerRemoveEffect) : INetSerializable
 {
     public EBuffEffectTriggerType TriggerType = triggerType;

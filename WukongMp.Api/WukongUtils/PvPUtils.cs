@@ -6,7 +6,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils;
 
-public class PvPUtils
+public static class PvPUtils
 {
     public static bool IsAfterLoadingScreen;
 
@@ -28,7 +28,7 @@ public class PvPUtils
         {
             GameMessageWidget.Instance.SetVisibility(true);
             GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(WukongMpModBase.Client.ConnectedPlayers.Count, WukongMpModBase.Client.LocalPlayerState.IsReadyForPvP));
+            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.Players.ConnectedPlayers.Count, DI.Instance.Players.LocalPlayerState.IsReadyForPvP));
             GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
             LobbyStatusWidget.Instance.SetVisibility(true);
         }
@@ -76,9 +76,9 @@ public class PvPUtils
     {
         Utils.TryRunOnGameThread(() =>
         {
-            var client = WukongMpMod.Client;
-            var current = client.RoomState.CurrentRound;
-            var total = client.RoomState.TournamentRounds;
+            var roomState = DI.Instance.RoomState;
+            var current = roomState.CurrentRound;
+            var total = roomState.TournamentRounds;
             UIUtils.ShowTip(string.Format(Texts.RoundCount, current, total));
         });
     }

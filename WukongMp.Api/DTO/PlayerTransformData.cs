@@ -1,10 +1,12 @@
 ﻿using LiteNetLib.Utils;
 using ReadyM.Relay.Common;
+using ReadyM.Relay.Common.Serialization;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.DTO;
 
-public struct PlayerTransformData(PlayerId playerId, FVector location, FRotator rotation) : INetSerializable
+[DeriveJsonSerializable]
+public partial struct PlayerTransformData(PlayerId playerId, FVector location, FRotator rotation) : INetSerializable
 {
     public PlayerId PlayerId = playerId;
     public FVector Location = location;

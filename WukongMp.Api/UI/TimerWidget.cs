@@ -6,7 +6,8 @@ namespace WukongMp.Api.UI
 {
     public class TimerWidget : GameWidgetBase
     {
-        public static TimerWidget Instance { get; } = new();
+        private static TimerWidget? _instance;
+        public static TimerWidget Instance => _instance ??= new();
         
         private TimerWidget() : base(Constants.TimerWidgetName)
         {

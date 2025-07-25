@@ -99,6 +99,8 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
+            DI.Instance.EventBus.TryInvokeBeginLoadGameplayLevel();
+
             if (!SavePatchesData.RedirectSaveFiles)
             {
                 if (SavePatchesData.ShouldCacheSave)
@@ -154,8 +156,8 @@ namespace WukongMp.Api.Patches
                 try
                 {
                     var timer = Stopwatch.StartNew();
-                    var worldDownloadTask = WukongMpMod.Instance.DownloadWorldSaveAsync();
-                    var playerDownloadTask = WukongMpMod.Instance.DownloadPlayerSaveAsync();
+                    var worldDownloadTask = DI.Instance.SaveRelay.DownloadWorldSaveAsync();
+                    var playerDownloadTask = DI.Instance.SaveRelay.DownloadPlayerSaveAsync();
 
                     Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
 
@@ -303,19 +305,21 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchArchiveReadWriter
     {
+        public static bool DisableArchiveSave;
+        
         public static bool Prefix(Dictionary<string, ArchiveAsyncRequest> ___PendingRequests)
         {
             if (Constants.IsCoop)
                 return true;
 
-            if (WukongMP.Instance.DisableArchiveSave)
+            if (DisableArchiveSave)
             {
                 return false;
             }
 
             if (___PendingRequests.Count == 0)
             {
-                WukongMP.Instance.DisableArchiveSave = true;
+                DisableArchiveSave = true;
                 return false;
             }
 
@@ -340,7 +344,7 @@ namespace WukongMp.Api.Patches
     {
         private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
         {
-            if (!WukongMP.Instance.ShouldRunConnectedPatches() || !Constants.IsCoop)
+            if (!DI.Instance.RelayClient.InRoom || !Constants.IsCoop)
                 return true;
 
             if (!SlotName.StartsWith("ArchiveSaveFile"))
@@ -352,15 +356,15 @@ namespace WukongMp.Api.Patches
 
             Task.Run(async () =>
             {
-                if (WukongMpMod.Instance.IsMasterClient)
+                if (DI.Instance.RelayClient.IsMasterClient)
                 {
                     var worldTimer = Stopwatch.StartNew();
-                    var uploadedWorld = await WukongMpMod.Instance.UploadWorldSaveAsync(data);
+                    var uploadedWorld = await DI.Instance.SaveRelay.UploadWorldSaveAsync(data);
                     LogSuccess(worldTimer, uploadedWorld, "world save");
                 }
 
                 var playerTimer = Stopwatch.StartNew();
-                var uploadedPlayer = await WukongMpMod.Instance.UploadPlayerSaveAsync(data);
+                var uploadedPlayer = await DI.Instance.SaveRelay.UploadPlayerSaveAsync(data);
                 LogSuccess(playerTimer, uploadedPlayer, "player save");
             });
 

@@ -8,7 +8,7 @@ using WukongMp.Api.Old.Enums;
 
 namespace WukongMp.Api.Old.State
 {
-    public sealed class RoomStateProxy(RelayClient client) : RoomStateProxyBase(client)
+    public sealed class RoomStateProxy(IRelayClient relayClient) : RoomStateProxyBase(relayClient)
     {
         public GameMode GameMode
         {
@@ -58,6 +58,7 @@ namespace WukongMp.Api.Old.State
             set => SetProperty(nameof(ConsumablesAllowed), value);
         }
 
+        // Is the skill enabled in PVP
         public bool ImmobilizeAllowed
         {
             get => Constants.IsCoop || GetProperty<bool>(nameof(ImmobilizeAllowed));

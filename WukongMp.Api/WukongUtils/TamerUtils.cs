@@ -62,15 +62,17 @@ namespace WukongMp.Api.WukongUtils
 
         public static void DiscoverTamers()
         {
+            Logging.LogDebug("Discovering tamers...");
+            
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            if (WukongMpModBase.Client.IsMasterClient)
+            if (DI.Instance.RelayClient.IsMasterClient)
             {
                 foreach (var actor in allActorsOfClass)
                 {
                     var tamerRef = actor.CurrentRef;
                     var guid = BGU_DataUtil.GetActorGuid(actor);
                     Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
-                    var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
+                    var entity = DI.Instance.PawnRegistry.GetMonsterByGuid(guid);
                     if (entity == null)
                     {
                         SpawningUtils.CreateMonsterInEcs(guid, actor, 2, actor.PathName);
@@ -85,7 +87,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void ClearEcsMonsters()
         {
-            WukongMpMod.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id); });
+            DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) => { DI.Instance.UpdateLoop.CommandBuffer.DeleteEntity(entity.Id); });
         }
 
         public static void DestroyMonster(Entity entity)
@@ -120,7 +122,7 @@ namespace WukongMp.Api.WukongUtils
             }
 
             Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.ToString());
-            WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
+            DI.Instance.UpdateLoop.CommandBuffer.DeleteEntity(entity.Id);
         }
 
         public static void AddSpawnedUnit(PlayerId playerId, Entity entity)

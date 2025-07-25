@@ -15,7 +15,7 @@ public class ExceptionPatches
 {
     public static void Postfix(Exception e)
     {
-        Logging.LogCriticalException(e);
+        Logging.LogCritical(e);
     }
 }
 

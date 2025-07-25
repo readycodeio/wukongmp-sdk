@@ -6,7 +6,8 @@ namespace WukongMp.Api.UI
 {
     public class CountdownWidget : GameWidgetBase
     {
-        public static CountdownWidget Instance { get; } = new();
+        private static CountdownWidget? _instance;
+        public static CountdownWidget Instance => _instance ??= new();
         
         private CountdownWidget() : base(Constants.CountdownWidgetName)
         {

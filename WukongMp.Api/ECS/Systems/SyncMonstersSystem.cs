@@ -2,16 +2,16 @@
 using b1;
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Wukong.Components;
-using WukongMp.Api.Old;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncMonstersSystem : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
-    private static bool IsMasterClient => WukongMpMod.Instance.IsMasterClient;
+    private bool IsMasterClient => relayClient.IsMasterClient;
 
     private HashSet<string> NotYetSpawnedGuids = [];
 

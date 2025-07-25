@@ -11,7 +11,7 @@ public static class TransformationUtils
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var playerState = WukongMpModBase.Client.GetPlayerById(playerId);
+            var playerState = DI.Instance.Players.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);
@@ -35,7 +35,7 @@ public static class TransformationUtils
     {
         GameLoopPatch.QueueOnGameThread(() =>
         {
-            var playerState = WukongMpModBase.Client.GetPlayerById(playerId);
+            var playerState = DI.Instance.Players.GetPlayerById(playerId);
             if (playerState == null)
             {
                 Logging.LogError("Player not found: {Id}", playerId);

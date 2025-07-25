@@ -1,8 +1,7 @@
 ﻿using b1;
-using System.Linq;
 using ReadyM.Relay.Common;
+using System.Linq;
 using WukongMp.Api.DTO;
-using WukongMp.Api.Old;
 using WukongMp.Api.Patches;
 using WukongMp.Api.UI;
 
@@ -38,7 +37,7 @@ public static class CutsceneUtils
     public static void SetWaitingForCutsceneStatus(PlayerId playerId, SequenceWaitingData sequenceWaitingData)
     {
         Logging.LogDebug("Setting WaitingForCutsceneStatus for player: {Id}, sequenceId {SequenceId}", playerId, sequenceWaitingData.SequenceID);
-        var player = WukongMpModBase.Client.GetPlayerById(playerId);
+        var player = DI.Instance.Players.GetPlayerById(playerId);
         if (player == null)
         {
             Logging.LogError("Player not found: {Id}", playerId);
@@ -46,7 +45,7 @@ public static class CutsceneUtils
         }
 
         player.WaitingSequenceId = sequenceWaitingData.SequenceID;
-        var localPlayer = WukongMpModBase.Client.LocalPlayerState;
+        var localPlayer = DI.Instance.Players.LocalPlayerState;
         if (!localPlayer.IsWaitingForSequence)
         {
             localPlayer.SequenceLocation = sequenceWaitingData.SequenceLocation;
@@ -56,19 +55,38 @@ public static class CutsceneUtils
         }
     }
 
-    public static void SkipCurrentCutscene()
+    public static void RequestSkipCurrentCutscene()
     {
         BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());
     }
 
+    public static void SkipCutscene(int sequenceId)
+    {
+        GameLoopPatch.QueueOnGameThread(() =>
+        {
+            BGC_MovieData movieData = BGU_DataUtil.GetGameStateReadonlyData<BGC_MovieData>(GameUtils.GetWorld());
+            MovieInstance cameraMovieInstance = movieData.CameraMovieInstance;
+            if (cameraMovieInstance != null && cameraMovieInstance.CanSkipMovie() && cameraMovieInstance.SequenceId == sequenceId)
+            {
+                Logging.LogDebug("Skipping cutscene with sequenceId: {SequenceId}", sequenceId);
+                cameraMovieInstance.SkipMovie();
+            }
+            else
+            {
+                Logging.LogWarning("Cannot skip cutscene, either not playing or sequenceId does not match. Current sequenceId: {CurrentSequenceId}, Requested: {RequestedSequenceId}",
+                    cameraMovieInstance?.SequenceId, sequenceId);
+            }
+        }, nameof(SkipCutscene));
+    }
+
     public static bool CheckAllPlayersWaitingForCutscene(int sequenceId)
     {
-        return WukongMpModBase.Client.AllConnectedPlayers.All(p => p.WaitingSequenceId == sequenceId);
+        return DI.Instance.Players.AllConnectedPlayers.All(p => p.WaitingSequenceId == sequenceId);
     }
 
     public static void TeleportLocalPlayerToCutsceneLocation()
     {
-        var playerState = WukongMpModBase.Client.LocalPlayerState;
+        var playerState = DI.Instance.Players.LocalPlayerState;
         if (playerState.IsJoiningSequence)
             PlayerUtils.TeleportLocalPlayer(playerState.SequenceLocation, playerState.Rotation, true);
     }

@@ -4,6 +4,7 @@
         <LangVersion>preview</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <DebugType>portable</DebugType>
         <PackageId>WukongMp.Api</PackageId>
         <RootNamespace>WukongMp.Api</RootNamespace>
@@ -36,7 +37,10 @@
             <HintPath>Game\BtlSvr.Main.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBase">
-            <HintPath>Core/CSharpModBase.dll</HintPath>
+            <HintPath>Core\CSharpModBase.dll</HintPath>
+        </Reference>
+        <Reference Include="CSharpModBase">
+            <HintPath>Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
         <Reference Include="Diana.Client.Common">
             <HintPath>Game\Diana.Client.Common.dll</HintPath>
@@ -89,9 +93,6 @@
         <Reference Include="LitJson">
             <HintPath>Game\LitJson.dll</HintPath>
         </Reference>
-        <Reference Include="Microsoft.Bcl.AsyncInterfaces">
-            <HintPath>Game\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
-        </Reference>
         <Reference Include="Mono.Cecil">
             <HintPath>Game\Mono.Cecil.dll</HintPath>
         </Reference>
@@ -122,9 +123,6 @@
         <Reference Include="System.IO.FileSystem">
             <HintPath>Game\System.IO.FileSystem.dll</HintPath>
         </Reference>
-        <Reference Include="System.Memory">
-            <HintPath>Game\System.Memory.dll</HintPath>
-        </Reference>
         <Reference Include="System.Numerics.Vectors">
             <HintPath>Game\System.Numerics.Vectors.dll</HintPath>
         </Reference>
@@ -146,6 +144,10 @@
         <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
         <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.5" />
         <PackageReference Include="Microsoft.Bcl.Numerics" Version="9.0.5" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.6" />
         <PackageReference Include="Mono.Cecil" Version="0.11.5" />
         <PackageReference Include="System.Buffers" Version="4.5.1" />
         <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
@@ -155,8 +157,8 @@
         <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
         <PackageReference Include="System.Reflection.Metadata" Version="8.0.0" />
         <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="4.7.2" />
-        <PackageReference Include="System.Text.Json" Version="4.7.2" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="9.0.6" />
+        <PackageReference Include="System.Text.Json" Version="9.0.6" />
         <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
     </ItemGroup>
 
@@ -167,35 +169,35 @@
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Wukong\ReadyM.Relay.Common.Wukong.csproj" />
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Generators\ReadyM.Relay.Common.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>
-    
+
     <ItemGroup>
-      <Compile Update="Resources\Texts.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Texts.resx</DependentUpon>
-      </Compile>
+        <Compile Update="Resources\Texts.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Texts.resx</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Update="Resources\Texts.resx">
-        <Generator>ResXFileCodeGenerator</Generator>
-        <LastGenOutput>Texts.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
+        <EmbeddedResource Update="Resources\Texts.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Texts.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Resources\Texts.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Texts.resx</DependentUpon>
-      </Compile>
+        <Compile Update="Resources\Texts.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Texts.resx</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Update="Resources\Texts.resx">
-        <Generator>ResXFileCodeGenerator</Generator>
-        <LastGenOutput>Texts.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
+        <EmbeddedResource Update="Resources\Texts.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Texts.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
 </Project>

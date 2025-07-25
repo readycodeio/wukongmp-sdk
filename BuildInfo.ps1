@@ -65,7 +65,8 @@ $overridesFiles = @(
 $overridesFilesDebug = @(
     "System.Text.Encodings.Web.pdb",
     "System.Text.Json.pdb",
-    "System.Numerics.Vectors.pdb"
+    "System.Numerics.Vectors.pdb",
+    "LiteNetLib.pdb"
 )
 
 $saveFiles = @(

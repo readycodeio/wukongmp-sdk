@@ -59,7 +59,7 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
             Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
             var playerEvents = BUS_EventCollectionCS.Get(pawn);
 
-            var entity = WukongMpMod.Instance.GetMonsterByActor(pawn);
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(pawn);
             if (entity.HasValue)
             {
                 ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
@@ -67,7 +67,7 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
             }
             else
             {
-                var player = WukongMpModBase.Client.GetPlayerByActor(pawn);
+                var player = DI.Instance.Players.GetPlayerByActor(pawn);
                 if (player != null)
                 {
                     player.RunImmobilizePatches = true;

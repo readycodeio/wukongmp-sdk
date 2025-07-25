@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Friflo.Engine.ECS;
+using Friflo.Json.Fliox;
 using UnrealEngine.Engine;
-using WukongMp.Api.Old;
 
 namespace WukongMp.Api.ECS;
 
@@ -10,6 +10,7 @@ public struct MarkerComponent : IComponent
 {
     public bool DestroyQueued;
 
+    [Ignore]
     public AActor? MarkerActor
     {
         get

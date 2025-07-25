@@ -20,17 +20,17 @@ public static class PatchComplexSkillDoInteractAction
 
     public static void Prefix(int InteractiveActorID, AActor User, AActor InteractiveActor, FUStInteractionMappingDesc Action)
     {
-        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+        if (!DI.Instance.RelayClient.InRoom)
             return;
 
         if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS)
         {
-            var entity = WukongMpMod.Instance.GetMonsterByActor(InteractiveActor);
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(InteractiveActor);
             if (entity.HasValue)
             {
                 ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                Logging.LogDebug("Sending skill interact for {Actor} with ID {Id}.", InteractiveActor.GetName(), netComp.Id);
-                WukongMpMod.Instance.SendTamerSkillInteract(new DTO.SkillInteractData(netComp, Action.ParamsInt[1]));
+                Logging.LogDebug("Sending skill interact for {ActorName} with ID {NetId}.", InteractiveActor.GetName(), netComp.Id);
+                DI.Instance.Rpc.SendTamerSkillInteract(new DTO.SkillInteractData(netComp, Action.ParamsInt[1]));
             }
         }
     }

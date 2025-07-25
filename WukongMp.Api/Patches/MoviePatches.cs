@@ -27,7 +27,7 @@ public static class PatchRequestPlayMovie
 
     public static bool Prefix(GameStateSystemBase __instance, FPlayMovieRequest Request)
     {
-        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+        if (!DI.Instance.RelayClient.InRoom)
             return true;
 
         if (UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID))
@@ -113,7 +113,7 @@ public static class PatchRequestPlayMovie
         if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
         {
             Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
-            foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+            foreach (var player in DI.Instance.Players.ConnectedPlayers.Values)
             {
                 player.Pawn?.SetActorHiddenInGame(true);
                 player.MarkerActor?.SetActorHiddenInGame(true);
@@ -121,7 +121,7 @@ public static class PatchRequestPlayMovie
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
-                foreach (var player in WukongMpModBase.Client.ConnectedPlayers.Values)
+                foreach (var player in DI.Instance.Players.ConnectedPlayers.Values)
                 {
                     player.Pawn?.SetActorHiddenInGame(false);
                     player.MarkerActor?.SetActorHiddenInGame(false);
@@ -142,10 +142,10 @@ public static class PatchTickForMovieSystem
 
     public static bool Prefix(GameStateSystemBase __instance, float DeltaTime)
     {
-        if (!WukongMP.Instance.ShouldRunConnectedPatches())
+        if (!DI.Instance.RelayClient.InRoom)
             return true;
 
-        var client = WukongMpMod.Client;
+        var players = DI.Instance.Players;
 
         // get properties
         var movieSystemType = __instance.GetType();
@@ -180,9 +180,10 @@ public static class PatchTickForMovieSystem
             if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
-                client.LocalPlayerState.IsWaitingForSequence = false;
-                client.LocalPlayerState.IsJoiningSequence = false;
-                client.LocalPlayerState.WaitingSequenceId = 0;
+                players.LocalPlayerState.IsWaitingForSequence = false;
+                players.LocalPlayerState.IsJoiningSequence = false;
+                players.LocalPlayerState.WaitingSequenceId = 0;
+                players.LocalPlayerState.LastSyncableSequenceId = peakRequest.SequenceID;
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
@@ -190,15 +191,15 @@ public static class PatchTickForMovieSystem
                     BGW_EventCollection.Get(__instance.GetOwner()).Evt_MarkMoviePlayed(peakRequest.SequenceID);
                 }
             }
-            else if (!client.LocalPlayerState.IsWaitingForSequence)
+            else if (!players.LocalPlayerState.IsWaitingForSequence)
             {
                 InfoMessageWidget.Instance.SetVisibility(true);
                 InfoMessageWidget.Instance.SetText("Wait for other players");
-                client.LocalPlayerState.IsWaitingForSequence = true;
-                client.LocalPlayerState.SequenceLocation = client.LocalPlayerState.Location;
-                client.LocalPlayerState.WaitingSequenceId = peakRequest.SequenceID;
+                players.LocalPlayerState.IsWaitingForSequence = true;
+                players.LocalPlayerState.SequenceLocation = players.LocalPlayerState.Location;
+                players.LocalPlayerState.WaitingSequenceId = peakRequest.SequenceID;
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
-                WukongMpMod.Instance.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, client.LocalPlayerState.Location));
+                DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, players.LocalPlayerState.Location));
             }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())
@@ -221,5 +222,39 @@ public static class PatchTickForMovieSystem
         }
 
         return false;
+    }
+}
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchOnSkipCurrentCameraMovie
+{
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BGS_MovieSystem:OnSkipCurrentCameraMovie");
+    }
+
+    public static bool Prefix(GameStateSystemBase __instance)
+    {
+        if (!DI.Instance.RelayClient.InRoom)
+            return true;
+
+        var movieSystemType = __instance.GetType();
+        MethodInfo getter = AccessTools.PropertyGetter(movieSystemType, "MovieData");
+        BGC_MovieData movieData = (BGC_MovieData)getter.Invoke(__instance, null);
+        var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
+
+        var players = DI.Instance.Players;
+        if (players.LocalPlayerState.LastSyncableSequenceId == sequenceId)
+        {
+            Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
+            InfoMessageWidget.Instance.SetVisibility(true);
+            InfoMessageWidget.Instance.SetText("Wait for other players");
+            DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
+            return false;
+        }
+
+        Logging.LogDebug("Skipping local movie with sequenceId {Id}", sequenceId);
+        return true;
     }
 }
