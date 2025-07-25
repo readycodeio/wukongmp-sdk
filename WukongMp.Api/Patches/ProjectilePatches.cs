@@ -1,4 +1,5 @@
 ﻿using b1;
+using BtlShare;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using System.Collections.Generic;
@@ -120,11 +121,11 @@ public static class PatchOnProjectileDead
     }
 }
 
-[HarmonyPatch(typeof(BUS_ObjActorMovementComp), "OnInitObjMoveInfo")]
+[HarmonyPatch(typeof(BUS_ObjActorMovementComp), "OnSetMoveMode")]
 [HarmonyPatchCategory(Constants.CoopPatches)]
-public static class PatchOnInitObjMoveInfo
+public static class PatchOnSetMoveMode
 {
-    public static void Postfix(BUS_ObjActorMovementComp __instance, GSObjActorMoveInfo MoveInfo)
+    public static void Postfix(BUS_ObjActorMovementComp __instance, EBulletOrMagicFieldMoveModeType MoveMode)
     {
         if (!DI.Instance.RelayClient.InRoom)
             return;
@@ -146,31 +147,8 @@ public static class PatchOnInitObjMoveInfo
 
         if (players.LocalPlayerState.Pawn == master)
         {
-            var target = MoveInfo.TargetActor??players.LocalPlayerState.Pawn;
-            if (target != null)
-            {
-                var newTargetId = default(NetworkIdComponent);
-                if (target is BGUPlayerCharacterCS)
-                {
-                    var playerState = players.GetPlayerByActor(target);
-                    if (playerState == null)
-                    {
-                        Logging.LogError("Player state not found for actor: {ActorName}", target.GetName());
-                        return;
-                    }
-                    newTargetId = NetworkIdComponent.FromPlayerId(playerState.PlayerId);
-                }
-                else
-                {
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(target);
-                    if (entity.HasValue)
-                    {
-                        newTargetId = entity.Value.GetComponent<NetworkIdComponent>();
-                    }
-                }
-                Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectile.GetClass().GetName(), players.LocalPlayerState.NickName, target.GetName());
-                DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(projectile.GetClass().GetName(), newTargetId, MoveInfo.TargetActorSocketNameFromNotify));
-            }
+            Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectile.GetClass().GetName(), players.LocalPlayerState.NickName, MoveMode);
+            DI.Instance.Rpc.SendProjectileMoveMode(new ProjectileMoveModeData(projectile.GetClass().GetName(), MoveMode));
         }
     }
 }

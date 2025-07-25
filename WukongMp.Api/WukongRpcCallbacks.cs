@@ -613,4 +613,22 @@ public partial class WukongRpcCallbacks : IDisposable
 
         ProjectileUtils.DestroyProjectile(player.Pawn, data.ProjectileClassName, data.Reason);
     }
+
+    [RpcEvent(RelayMode.Others)]
+    void OnProjectileMoveMode(PlayerId __sender, ProjectileMoveModeData data)
+    {
+        var player = DI.Instance.Players.GetPlayerById(__sender);
+        if (player == null)
+        {
+            Logging.LogError("Player not found: {Id}", __sender);
+            return;
+        }
+        if (player.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null for player {Id}", __sender);
+            return;
+        }
+
+        ProjectileUtils.SetProjectileModeMode(player.Pawn, data.ProjectileClassName, data.MoveMode);
+    }
 }
