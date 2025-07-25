@@ -2,6 +2,7 @@
 using b1.ECS;
 using BtlShare;
 using System;
+using System.Threading.Tasks;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -9,8 +10,9 @@ namespace WukongMp.Api.WukongUtils
     {
         private static Type? _projectileCtrlDataType = null;
 
-        public static void SetProjectileTarget(BGUCharacterCS player, string projectileName, BGUCharacterCS target, string socketName)
+        public static async Task SetProjectileTarget(BGUCharacterCS player, string projectileName, BGUCharacterCS target, string socketName)
         {
+            await Task.Delay(200);
             Logging.LogDebug("SetProjectileTarget called for projectile {ProjectileName} with target {TargetName}", projectileName, target.GetName());
             var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)
@@ -23,8 +25,9 @@ namespace WukongMp.Api.WukongUtils
             events?.Evt_SwitchMovementTarget.Invoke(target, socketName);
         }
 
-        public static void DestroyProjectile(BGUCharacterCS player, string projectileName, EBGUBulletDestroyReason reason)
+        public static async Task DestroyProjectile(BGUCharacterCS player, string projectileName, EBGUBulletDestroyReason reason)
         {
+            await Task.Delay(200);
             Logging.LogDebug("DestroyProjectile called for projectile {ProjectileName} with reason {Reason}", projectileName, reason);
             var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)
@@ -36,8 +39,9 @@ namespace WukongMp.Api.WukongUtils
             events?.Evt_OnProjectileDead.Invoke(reason);
         }
 
-        public static void SetProjectileModeMode(BGUCharacterCS player, string projectileName, EBulletOrMagicFieldMoveModeType moveMode)
+        public static async Task SetProjectileModeMode(BGUCharacterCS player, string projectileName, EBulletOrMagicFieldMoveModeType moveMode)
         {
+            await Task.Delay(200);
             Logging.LogDebug("SetProjectileModeMode called for projectile {ProjectileName} with move mode {MoveMode}", projectileName, moveMode);
             var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)
@@ -49,8 +53,9 @@ namespace WukongMp.Api.WukongUtils
             events?.Evt_SetObjMoveMode.Invoke(moveMode);
         }
 
-        public static void SwitchProjectileInfo(BGUCharacterCS player, string projectileName, int bulletSwitchID, int switchIdx)
+        public static async Task SwitchProjectileInfo(BGUCharacterCS player, string projectileName, int bulletSwitchID, int switchIdx)
         {
+            await Task.Delay(200);
             Logging.LogDebug("SetProjectileModeMode called for projectile {ProjectileName} with switch id {MoveMode}", projectileName, bulletSwitchID);
             var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)

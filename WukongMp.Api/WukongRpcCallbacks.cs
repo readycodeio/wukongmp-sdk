@@ -7,6 +7,7 @@ using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Protocol.Enums;
 using System;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
 using WukongMp.Api.NameCompressors;
@@ -575,7 +576,7 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        ProjectileUtils.SetProjectileTarget(player.Pawn, targetData.ProjectileName, target, targetData.SocketName);
+        Task.Run(async () => await ProjectileUtils.SetProjectileTarget(player.Pawn, targetData.ProjectileName, target, targetData.SocketName));
     }
 
     [RpcEvent(RelayMode.Others)]
@@ -593,7 +594,7 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        ProjectileUtils.SwitchProjectileInfo(player.Pawn, switchData.ProjectileClassName, switchData.BulletSwitchID, switchData.SwitchIdx);
+        Task.Run(async () => await ProjectileUtils.SwitchProjectileInfo(player.Pawn, switchData.ProjectileClassName, switchData.BulletSwitchID, switchData.SwitchIdx));
     }
 
     [RpcEvent(RelayMode.Others)]
@@ -611,7 +612,7 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        ProjectileUtils.DestroyProjectile(player.Pawn, data.ProjectileClassName, data.Reason);
+        Task.Run(async () => await ProjectileUtils.DestroyProjectile(player.Pawn, data.ProjectileClassName, data.Reason));
     }
 
     [RpcEvent(RelayMode.Others)]
@@ -629,6 +630,6 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        ProjectileUtils.SetProjectileModeMode(player.Pawn, data.ProjectileClassName, data.MoveMode);
+        Task.Run(async () => await ProjectileUtils.SetProjectileModeMode(player.Pawn, data.ProjectileClassName, data.MoveMode));
     }
 }
