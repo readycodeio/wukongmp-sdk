@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CSharpModBase;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common;
@@ -7,43 +8,53 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old;
 
-public class WukongCoop : IDisposable
+public sealed class WukongCoop : IDisposable
 {
-    protected readonly RelaySerializer Serializer;
-    protected readonly IRelayClient RelayClient;
+    private readonly IRelayClient _relayClient;
     private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPlayerPropertyManager _playerProperty;
     private readonly WukongSynchronizer _synchronizer;
+    private readonly WukongGameplaySettings _gameplaySettings;
 
     public WukongCoop(
-        RelaySerializer serializer,
         IRelayClient relayClient,
         WukongPlayerRegistry playerRegistry,
-        WukongPlayerPropertyManager playerProperty,
-        WukongSynchronizer synchronizer
+        WukongSynchronizer synchronizer,
+        WukongGameplaySettings gameplaySettings
     )
     {
-        Serializer = serializer; 
-        RelayClient = relayClient;
+        _relayClient = relayClient;
         _playerRegistry = playerRegistry;
-        _playerProperty = playerProperty;
         _synchronizer = synchronizer;
+        _gameplaySettings = gameplaySettings;
 
         _synchronizer.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
+        _synchronizer.OnOtherPlayerJoined += SetMonsterScaling;
+        _synchronizer.OnOtherPlayerLeft += SetMonsterScaling;
+    }
+
+    private void SetMonsterScaling(PlayerId _)
+    {
+        if (!_relayClient.IsMasterClient)
+            return;
+
+        var numPlayers = _playerRegistry.AllConnectedPlayers.Count();
+        _gameplaySettings.SetMonsterHpScaling(numPlayers);
     }
 
     public void Dispose()
     {
         _synchronizer.OnAfterJoinedRoom -= OnAfterJoinedRoomHandler;
+        _synchronizer.OnOtherPlayerJoined -= SetMonsterScaling;
+        _synchronizer.OnOtherPlayerLeft -= SetMonsterScaling;
     }
-    
+
     private void OnAfterJoinedRoomHandler()
     {
-        if (RelayClient.IsMasterClient)
+        if (_relayClient.IsMasterClient)
         {
             Utils.TryRunOnGameThread(TamerUtils.DiscoverTamers);
         }
-        
+
         CoopStatusWidget.Instance.SetVisibility(true);
     }
 }

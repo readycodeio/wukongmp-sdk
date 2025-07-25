@@ -55,18 +55,6 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 attrs.SetFloatValue(EBGUAttrFloat.SkillSuperArmor, 1);
                 attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
 #endif
-
-                if (IsMasterClient && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
-                {
-                    hpComp.HpMaxBase *= hpComp.HpMult;
-                    hpComp.Hp *= hpComp.HpMult;
-
-                    attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
-                    attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-
-                    hpComp.LastMult = hpComp.HpMult;
-                    Logging.LogDebug("Monster {Guid} HP scaling set to {Scaling}x", tamerComp.Guid, hpComp.HpMult);
-                }
             }
 
             var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);

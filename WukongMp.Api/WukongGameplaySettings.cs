@@ -16,10 +16,10 @@ public class WukongGameplaySettings(Store world, IRelayClient relayClient)
         if (!relayClient.IsMasterClient)
         {
             UIUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
+            return;
         }
 
         Logging.LogDebug("Setting monster HP scaling to {Scaling}x", scaling);
-
         world.Query<HpComponent, LocalTamerComponent>().Each(new ScaleMonsterHpJob(scaling));
     }
 }

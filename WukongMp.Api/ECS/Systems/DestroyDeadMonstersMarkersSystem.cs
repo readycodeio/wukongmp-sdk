@@ -1,7 +1,6 @@
 ﻿using b1;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
-using WukongMp.Api.Old;
 using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.ECS.Systems;

@@ -125,7 +125,7 @@ public class DI
         Patcher = new WukongPatcher();
         
         if (Constants.IsCoop)
-            Coop = new WukongCoop(Serializer, RelayClient, Players, PlayerProperty, Synchronizer);
+            Coop = new WukongCoop(RelayClient, Players, Synchronizer, GameplaySettings);
         else
             PVP = new WukongPVP(World, Serializer, RelayClient, RoomState, Players, PlayerProperty, EventBus, Synchronizer, Rpc, Chatter);
 
