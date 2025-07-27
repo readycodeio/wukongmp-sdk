@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using ReadyM.Relay.Client;
+using ReadyM.Relay.Client.Blobs;
 using ReadyM.Relay.Common;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;

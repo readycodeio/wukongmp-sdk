@@ -27,7 +27,7 @@ public static class PatchRequestPlayMovie
 
     public static bool Prefix(GameStateSystemBase __instance, FPlayMovieRequest Request)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         if (UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID))
@@ -142,7 +142,7 @@ public static class PatchTickForMovieSystem
 
     public static bool Prefix(GameStateSystemBase __instance, float DeltaTime)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         var players = DI.Instance.Players;

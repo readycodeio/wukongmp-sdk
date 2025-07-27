@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Shim;
 
 namespace WukongMp.Api;
@@ -31,7 +30,7 @@ public static class ShimUtils
             }
         }
         
-        var relayClient = new RelayClient(host, port, options, container.Serializer, container.LoggerFactory.CreateLogger("Relay Client"));
+        var relayClient = new RelayClient(host, port, options, container.LoggerFactory.CreateLogger("Relay Client"));
         return relayClient;
     }
 
@@ -74,7 +73,6 @@ public static class ShimUtils
             host,
             port,
             recordOptions,
-            container.Serializer,
             container.LoggerFactory.CreateLogger("Recorder Relay")
         );
         var recording = new ShimRecording();

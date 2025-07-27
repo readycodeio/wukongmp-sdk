@@ -5,6 +5,7 @@ using ReadyM.Relay.Common.ECS;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
@@ -210,7 +211,7 @@ namespace WukongMp.PvP
         public object GetReloadContext()
         {
             _logger.LogInformation("GetReloadContext");
-            return (bool?)DI.Instance.RelayClient.InRoom;
+            return (bool?)DI.Instance.RoomState.InRoom;
         }
 
         public void Reload(object? context)

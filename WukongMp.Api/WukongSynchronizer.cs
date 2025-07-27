@@ -7,14 +7,12 @@ using BtlShare;
 using CSharpModBase;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Idents;
-using ReadyM.Api.ECS.Systems;
 using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Wukong;
+using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Systems;
@@ -29,42 +27,40 @@ namespace WukongMp.Api;
 
 public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
 {
-    private readonly RoomStateProxy _roomState;
+    private readonly ClientState _state;
+    private readonly WukongRoomState _roomState;
     private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPlayerPropertyManager _playerProperty;
     private readonly WukongPlayerModeManager _modeManager;
     private readonly WukongPlayerPawnManager _playerPawnManager;
     private readonly WukongRpcCallbacks _rpc;
-    private ArchetypeId _roomConfigArchetype;
-    
+
     public WukongSynchronizer(
         Store world,
-        RoomStateProxy roomState,
+        ClientState state,
+        WukongRoomState roomState,
         WukongPlayerRegistry playerRegistry,
-        WukongPlayerPropertyManager playerProperty,
         WukongPlayerModeManager modeManager,
         WukongPlayerPawnManager playerPawnManager,
         WukongRpcCallbacks rpc,
         NetworkedEntityManager netManager,
+        ClientJobRegistry jobRegistry,
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
-        SystemUpdateLoop updateLoop,
-        ISystemRegistry systemRegistry,
+        IClientEcsUpdateLoop updateLoop,
         ILogger logger)
-        : base(world, netManager, netComponentRegistry, relayClient, updateLoop, logger)
+        : base(world, netManager, jobRegistry, netComponentRegistry, relayClient, updateLoop, logger)
     {
+        _state = state;
         _roomState = roomState;
         _playerRegistry = playerRegistry;
-        _playerProperty = playerProperty;
         _modeManager = modeManager;
         _playerPawnManager = playerPawnManager;
         _rpc = rpc;
-        _roomConfigArchetype = systemRegistry.RegisterArchetype(WukongCoreApi.RegisterRoomConfigArchetype);
-
-        systemRegistry.AddSystem<SyncTamersSystem>();
-        systemRegistry.AddSystem<UpdateMarkersSystem>();
-        systemRegistry.AddSystem<DestroyDeadMonstersMarkersSystem>();
-        systemRegistry.AddSystem(new SyncMonstersSystem(RelayClient));
+ 
+        updateLoop.AddSystem<SyncTamersSystem>();
+        updateLoop.AddSystem<UpdateMarkersSystem>();
+        updateLoop.AddSystem<DestroyDeadMonstersMarkersSystem>();
+        updateLoop.AddSystem(new SyncMonstersSystem(state));
     }
 
     [Obsolete("Ideally we should just be able to get rid of this entirely")]
@@ -74,26 +70,23 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
             return;
 
         // NOTE: This shouldn't depend on _roomState.InMatchmaking
-        if (!_roomState.InMatchmaking && _playerRegistry.LocalPlayerState.IsSpectator)
+        if (!_roomState.CurrentRoom.InMatchmaking && _playerRegistry.LocalPlayerState.IsSpectator)
         {
             _modeManager.HandleBecameSpectator(_playerRegistry.LocalPlayerState); // TODO: Called twice?
         }
 
         _modeManager.UpdatePlayerTeamUi(_playerRegistry.LocalPlayerState);
     }
-
-    protected override void RunOnGameThread(Action action)
-    {
-        GameLoopPatch.QueueOnGameThread(action);
-    }
     
     private void SpawnPlayersAlreadyInRoom()
     {
         // when joining game, spawn all players already in room
-        foreach (var d in RelayClient.OtherPlayers)
+        foreach (var playerId in _state.AllPlayers)
         {
-            Logging.LogDebug("Other player: {PlayerId}", d.Key);
-            GameLoopPatch.QueueOnGameThread(() => AddPlayer(d.Value.PlayerId), "AddPlayer");
+            if (playerId == _state.LocalPlayerId)
+                continue;
+            Logging.LogDebug("Other player: {PlayerId}", playerId.Key);
+            GameLoopPatch.QueueOnGameThread(() => AddPlayer(playerId.Value.PlayerId), "AddPlayer");
         }
     }
     
@@ -103,7 +96,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
 
         if (playerState != null)
         {
-            var props = RelayClient.GetPlayerState(playerId)?.Properties;
+            var props = _state.GetPlayerState(playerId)?.Properties;
 
             if (props == null)
             {
@@ -115,7 +108,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
             var isSpectator = playerState.IsSpectator;
 
             // set remote player property - IsSpectator
-            if (RelayClient.IsMasterClient)
+            if (_roomState.IsMasterClient)
             {
                 _playerProperty.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
             }
@@ -228,7 +221,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
         
         PlayerState playerState;
 
-        if (playerId == RelayClient.LocalPlayer.PlayerId) // local player
+        if (playerId == _state.LocalPlayerId) // local player
         {
             if (!_playerRegistry.HasLocalPlayerState)
             {
@@ -325,7 +318,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
         Logging.LogInformation("Synchronizer before joined room");
         
         int? teamId = null;
-        if (RelayClient.LocalPlayer.Properties.TryGetValue(nameof(PlayerState.TeamId), out var teamIdUntyped))
+        if (_state.LocalPlayer.Properties.TryGetValue(nameof(PlayerState.TeamId), out var teamIdUntyped))
             teamId = (int)teamIdUntyped;
         
         var controlledPawn = GameUtils.GetControlledPawn();
@@ -340,13 +333,13 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
         var initialHp = data.GetFloatValue(EBGUAttrFloat.Hp);
         var initialHpMaxBase = data.GetFloatValue(EBGUAttrFloat.HpMaxBase);
 
-        _playerRegistry.LocalPlayerState = new PlayerState(RelayClient.PlayerId, controlledPawn, teamId, initialHp, initialHpMaxBase);
+        _playerRegistry.LocalPlayerState = new PlayerState(_state.LocalPlayerId, controlledPawn, teamId, initialHp, initialHpMaxBase);
 
         // get nickname from Relay
-        var playerNickname = (string)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.NickName), CmdLineParams.Instance.Nickname);
+        var playerNickname = (string)_state.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.NickName), CmdLineParams.Instance.Nickname);
         _playerRegistry.LocalPlayerState.NickName = playerNickname;
 
-        _playerRegistry.LocalPlayerState.IsSpectator = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
+        _playerRegistry.LocalPlayerState.IsSpectator = (bool)_state.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
 
         SpawnPlayersAlreadyInRoom();
         _playerPawnManager.UpdateConnectedCount();
@@ -364,10 +357,10 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
 #endif
         
         // FIXME: Move to PVP
-        LobbyStatusWidget.Instance.SetMaxConnectedCount(_roomState.MaxPlayers);
+        LobbyStatusWidget.Instance.SetMaxConnectedCount(_roomState.CurrentRoom.MaxPlayers);
         
         // FIXME: Move to Coop
-        CoopStatusWidget.Instance.SetMaxConnectedCount(_roomState.MaxPlayers);
+        CoopStatusWidget.Instance.SetMaxConnectedCount(_roomState.CurrentRoom.MaxPlayers);
         
         base.OnBeforeJoinedRoomHandler();
     }

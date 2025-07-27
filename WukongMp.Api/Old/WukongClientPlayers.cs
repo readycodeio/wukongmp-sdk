@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using ReadyM.Api.ECS.Idents;
+using ReadyM.Relay.Client.State;
 using UnrealEngine.Engine;
 using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.Old;
 
-public class WukongPlayerRegistry
+public class WukongPlayerRegistry(ClientState state)
 {
     private PlayerState? _localPlayerState;
 

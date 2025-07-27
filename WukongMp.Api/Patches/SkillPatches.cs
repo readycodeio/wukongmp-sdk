@@ -25,7 +25,7 @@ public static class PatchTriggerMagicSkill
 {
     public static bool Prefix(int SkillID)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         return SkillsUtils.IsSkillWhitelisted(SkillID) && (DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true);
@@ -48,22 +48,22 @@ public static class PatchTriggerItemSkill
 {
     public static bool Prefix(BUS_PlayerInputActionComp __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         var roomState = DI.Instance.RoomState;
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
 
-        if (!roomState.GourdAllowed && !roomState.ConsumablesAllowed)
+        if (!roomState.CurrentRoom.GourdAllowed && !roomState.CurrentRoom.ConsumablesAllowed)
         {
             return false;
         }
-        else if (roomState.GourdAllowed && lastSkill == Constants.GourdSkillId)
+        else if (roomState.CurrentRoom.GourdAllowed && lastSkill == Constants.GourdSkillId)
         {
             return true;
         }
 
-        return roomState.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId;
+        return roomState.CurrentRoom.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId;
     }
 }
 
@@ -78,10 +78,10 @@ public static class PatchDoPoleDrink
 
     public static bool Prefix()
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
-        return DI.Instance.RoomState.GourdAllowed;
+        return DI.Instance.RoomState.CurrentRoom.GourdAllowed;
     }
 }
 
@@ -106,7 +106,7 @@ public static class PatchOnCastImmobilize
 {
     public static bool Prefix(int ConfigID, BUS_CastImmobilizeComp __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         var players = DI.Instance.Players;
@@ -129,7 +129,7 @@ public static class PatchOnCastImmobilize
 
         var castingPlayerState = players.GetPlayerByActor(castingCharacter);
 
-        if (!DI.Instance.RelayClient.IsMasterClient)
+        if (!DI.Instance.RoomState.IsMasterClient)
         {
             // Broadcast that you have cast a spell
             if (castingPlayerState != null && castingPlayerState.PlayerId == players.LocalPlayerState.PlayerId)
@@ -254,10 +254,10 @@ public static class PatchImmobilizeOnTickWithGroup
 {
     public static bool Prefix()
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
-        if (DI.Instance.RelayClient.IsMasterClient)
+        if (DI.Instance.RoomState.IsMasterClient)
         {
             return true;
         }
@@ -272,7 +272,7 @@ public static class PatchRelieveImmobilized
 {
     public static bool Prefix(BUS_BeImmobilizedComp __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         var players = DI.Instance.Players;
@@ -295,7 +295,7 @@ public static class PatchRelieveImmobilized
 
         var netId = playerState != null ? NetworkIdComponent.FromPlayerId(playerState.PlayerId) : entity!.Value.GetComponent<MetadataComponent>().NetId;
 
-        if (DI.Instance.RelayClient.IsMasterClient)
+        if (DI.Instance.RoomState.IsMasterClient)
         {
             DI.Instance.Rpc.SendRelieveImmobilize(netId);
             return true;
@@ -330,7 +330,7 @@ public static class PatchOnTriggerImmobilizedBreak
 {
     public static bool Prefix(BUS_BeImmobilizedComp __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         var players = DI.Instance.Players;
@@ -342,7 +342,7 @@ public static class PatchOnTriggerImmobilizedBreak
             return false;
         }
 
-        if (DI.Instance.RelayClient.IsMasterClient)
+        if (DI.Instance.RoomState.IsMasterClient)
         {
             var playerState = players.GetPlayerByActor(owner);
 
@@ -360,7 +360,7 @@ public static class PatchOnTriggerImmobilizedBreak
                 var meta = entity.Value.GetComponent<MetadataComponent>();
                 var pawn = entity.Value.GetComponent<LocalTamerComponent>().Pawn;
 
-                WukongMpMod.Instance.SendRelieveImmobilize(meta.NetId);
+                DI.Instance.Rpc.SendRelieveImmobilize(meta.NetId);
                 BUS_EventCollectionCS.Get(pawn)?.Evt_RelieveImmobilized.Invoke();
             }
 
@@ -384,12 +384,12 @@ public static class PatchOnTriggerPhantomRush
         IBUC_SkillInstsData ___SkillInstsData,
         ESkillDirection PhantomRushDir)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         var players = DI.Instance.Players;
 
-        if (!DI.Instance.RoomState.PhantomRushAllowed)
+        if (!DI.Instance.RoomState.CurrentRoom.PhantomRushAllowed)
         {
             return false;
         }
@@ -496,7 +496,7 @@ public static class PatchOnTriggerPhantomRush
 
     public static void Postfix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData, ESkillDirection PhantomRushDir)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         // PhantomRush not triggered - skip
@@ -528,7 +528,7 @@ public static class PatchOnUnitCastSkillTry
 {
     public static void Postfix(FCastSkillInfo CSI, BUC_SkillInstsData ___SkillInstsData, BUS_SkillInstsCompSvr __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         var players = DI.Instance.Players;
@@ -557,7 +557,7 @@ public static class PatchExitPhantomRush
 {
     public static void Prefix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         var players = DI.Instance.Players;
@@ -574,7 +574,7 @@ public static class PatchExitPhantomRush
         if (playerState == null)
             return;
 
-        if ((DI.Instance.RelayClient.IsMasterClient || owner == players.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
+        if ((DI.Instance.RoomState.IsMasterClient || owner == players.LocalPlayerState.Pawn) && !playerState.ReceivedPhantomRushExit)
         {
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", playerState.NickName);
             DI.Instance.Rpc.SendExitPhantomRush(playerState.PlayerId);
@@ -597,7 +597,7 @@ public static class PatchBuffPlayerWinePartnerAttr
         OutAbs = 0.0f;
         OutMul = 0.0f;
 
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         ABGUCharacter? abguCharacter = Target as ABGUCharacter;
@@ -623,7 +623,7 @@ public static class TransformationPatch
 
     public static void Postfix(UActorCompBaseCS __instance, ABGUCharacter ToReplaceUnitInst)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         var oldOwner = __instance.GetOwner() as APawn;
@@ -664,7 +664,7 @@ public class PatchLogs4
 {
     public static bool Prefix(BPC_BattleMainInfoData __instance, ref bool __result, out bool IsDisabled)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
         {
             IsDisabled = false;
             return true;
@@ -697,7 +697,7 @@ public class PatchOnTransBeginSpawnNewOne
         bool EnableBlendViewTarget,
         EPlayerTransBeginType TransBeginType)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         var players = DI.Instance.Players;
@@ -724,7 +724,7 @@ public class PatchOnTransBackSpawnNewOne
         bool EnableBlendViewTarget,
         EPlayerTransEndType TransEndType)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         var players = DI.Instance.Players;
@@ -755,7 +755,7 @@ public class PatchSpawnAndPossess
         BGUFuncLibPlayer.SpawnControlledPawnBlendParam SpawnControlledPawnBlendParam,
         int ToReplaceUnitResID)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         var bgwEventCollection = Traverse.Create(__instance).Property<BGW_EventCollection>("BGWEventCollection").Value;
@@ -857,7 +857,7 @@ public class PatchUpdateTransGuideData
 {
     public static bool Prefix(BUS_TransGuideComp __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         if (__instance.GetOwner() != GameUtils.GetControlledPawn())
@@ -875,7 +875,7 @@ public class PatchOnPostTransBindData
 {
     public static bool Prefix(BUS_TransPlayerDataBindComp __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         if (__instance.GetOwner() != GameUtils.GetControlledPawn())
@@ -893,7 +893,7 @@ public static class PatchOnIronBodyStart
 {
     public static void Postfix(BUS_IronBodyComp __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         var players = DI.Instance.Players;
@@ -911,7 +911,7 @@ public static class PatchBattleMainInfoCompOnPossessed
 {
     public static bool Prefix(AActor OldActor, AActor CurActor)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
@@ -928,7 +928,7 @@ public static class PatchInputSystemOnPossessed
 {
     public static bool Prefix(AActor OldActor, AActor CurActor)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
@@ -945,7 +945,7 @@ public static class PatchMultiTargetOnPossessed
 {
     public static bool Prefix(AActor OldActor, AActor CurActor)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return true;
 
         if (CurActor != null && CurActor == GameUtils.GetControlledPawn())
@@ -962,7 +962,7 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset _Config, int _SkillID, int _RecoverSkillID)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         if (_Config != null)
@@ -983,7 +983,7 @@ public static class PatchPendingReset
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, EResetReason_MagicallyChange Reason)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         Logging.LogDebug("BUS_MagicallyChangeComp PendingReset called with reason: {Reason}", Reason);

@@ -122,12 +122,12 @@ namespace WukongMp.Api.Patches
 
         private static void RunMontageSync()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             SyncPlayerMontage(DI.Instance.Players.LocalPlayerState);
 
-            DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Players.LocalPlayerState.PlayerId));
+            DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, DI.Instance.State.LocalPlayerId));
         }
 
         [Obsolete("To be replaced when we integrate players into ECS")]

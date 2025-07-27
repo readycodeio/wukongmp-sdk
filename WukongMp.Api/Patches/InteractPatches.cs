@@ -19,7 +19,7 @@ public static class PatchComplexSkillDoInteractAction
 
     public static void Prefix(int InteractiveActorID, AActor User, AActor InteractiveActor, FUStInteractionMappingDesc Action)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.RoomState.InRoom)
             return;
 
         if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS)
@@ -29,7 +29,7 @@ public static class PatchComplexSkillDoInteractAction
             {
                 ref var meta = ref entity.Value.GetComponent<MetadataComponent>();
                 Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
-                WukongMpMod.Instance.SendTamerSkillInteract(new DTO.SkillInteractData(meta.NetId, Action.ParamsInt[1]));
+                DI.Instance.Rpc.SendTamerSkillInteract(new DTO.SkillInteractData(meta.NetId, Action.ParamsInt[1]));
             }
         }
     }

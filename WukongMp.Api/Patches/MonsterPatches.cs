@@ -23,15 +23,15 @@ namespace WukongMp.Api.Patches
 
         private static void Postfix(float DeltaTime, int TickGroup)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
-            WukongMpMod.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((ref meta, ref tamer, ref trans, _) =>
+            DI.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((ref meta, ref tamer, ref trans, _) =>
             {
                 if (!tamer.IsTamerSynced || !tamer.IsTamerValid || tamer.Pawn == null)
                     return;
 
-                if (WukongMpMod.Instance.OwnsEntity(meta.Owner))
+                if (DI.Instance.OwnsEntity(meta.Owner))
                 {
                     // send updates for owned monsters
                     trans.Position = tamer.Pawn.GetActorLocation().ToVector3();
@@ -71,7 +71,7 @@ namespace WukongMp.Api.Patches
 
         public static void Postfix(FTamerRef InTamer)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             Logging.LogDebug("Tamer {Tamer} registered by game", InTamer.TamerName);
@@ -84,10 +84,10 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUTamerActor __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
+            if (DI.Instance.RoomState.IsMasterClient)
             {
                 if (__instance.TamerType != ETamerType.Summoned)
                 {
@@ -112,7 +112,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(FTamerRef __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             try
@@ -131,7 +131,7 @@ namespace WukongMp.Api.Patches
                     {
                         localTamerComp.IsLocallySpawned = true;
                         var meta = entity.Value.GetComponent<MetadataComponent>();
-                        WukongMpMod.Instance.SendUnitSpawned(meta.NetId);
+                        DI.Instance.Rpc.SendUnitSpawned(meta.NetId);
                     }
                 }
                 else
@@ -163,7 +163,7 @@ namespace WukongMp.Api.Patches
     {
         static bool Prefix(FTamerRef __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
@@ -179,7 +179,7 @@ namespace WukongMp.Api.Patches
                 {
                     localTamerComp.IsLocallySpawned = false;
                     var meta = entity.Value.GetComponent<MetadataComponent>();
-                    WukongMpMod.Instance.SendUnitDespawn(meta.NetId);
+                    DI.Instance.Rpc.SendUnitDespawn(meta.NetId);
                 }
 
                 ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
@@ -206,15 +206,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_AIComp __instance, bool bEnable)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
 
-                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
                     return true;
             }
 
@@ -228,15 +228,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_AIComp __instance, bool IsPause)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
 
-                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
                     return true;
             }
 
@@ -251,15 +251,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_AIComp __instance, bool bEnable)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
 
-                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
                     return true;
             }
 
@@ -273,15 +273,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_FsmComp __instance, bool IsPause)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
 
-                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
                     return true;
             }
 
@@ -300,15 +300,15 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(UActorCompBaseCS __instance, bool bEnable)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
 
-                if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
                     return true;
             }
 
@@ -331,7 +331,7 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(UActorCompBaseCS __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var teamId = Traverse.Create(__instance).Field<BGUCharacterCS>("OwnerAsCharacterCS").Value.GetTeamIDInCS();
@@ -345,7 +345,7 @@ namespace WukongMp.Api.Patches
     {
         static bool Prefix(EResetActorReason ResetReason, FTamerRef __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             Logging.LogDebug("Tamer on reset called for tamer {Tamer} with reason {Reason}", __instance.TamerName, ResetReason);
@@ -359,7 +359,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(FGameplayTag EventTag, BUS_FsmComp __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGoHome)
@@ -369,15 +369,15 @@ namespace WukongMp.Api.Patches
             }
 
             var owner = __instance.GetOwner();
-            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
-            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+            if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
             {
                 var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
                 if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
                 {
                     Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
                     var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
-                    WukongMpMod.Instance.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
+                    DI.Instance.Rpc.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
                 }
             }
 
@@ -391,7 +391,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem? __instance, BUC_MovementData ___MovementData)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (__instance == null)
@@ -419,7 +419,7 @@ namespace WukongMp.Api.Patches
                     return;
 
                 ref var anim = ref entity.Value.GetComponent<MonsterAnimationComponent>();
-                if (WukongMpMod.Instance.OwnsEntity(entity.Value))
+                if (DI.Instance.OwnsEntity(entity.Value))
                 {
                     anim.MoveAiType = (byte)___MovementData.MoveAIType;
                 }

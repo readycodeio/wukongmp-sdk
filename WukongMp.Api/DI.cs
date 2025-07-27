@@ -1,17 +1,17 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.ECS.Systems;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Api.Serialization;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Shim;
+using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common;
+using ReadyM.Relay.Common.ECS.Registry;
 using ReadyM.Relay.Common.Wukong;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api;
 
@@ -23,13 +23,14 @@ public class DI
     public ILogger Logger { get; private set; } = null!;
 
     public Store World { get; private set; } = null!;
-    public WukongUpdateLoop UpdateLoop { get; private set; } = null!;
-    public ISystemRegistry SystemRegistry { get; private set; } = null!;
+    public IClientEcsUpdateLoop UpdateLoop { get; private set; } = null!;
     public EntityManagerWithLogs EntityManager { get; private set; } = null!;
     
     public RelaySerializer Serializer { get; private set; } = null!;
     public HotSwappableRelayClient RelayClient { get; private set; } = null!;
     public NetworkedEntityManager NetManager { get; private set; } = null!;
+
+    public ClientState State { get; private set; } = null!;
 
     public TextRelaySerializer TextSerializer { get; private set; } = null!;
     public ShimRelayRecorder ShimRecorder { get; private set; } = null!;
@@ -38,8 +39,11 @@ public class DI
     public ShimAutoStarter ShimAuto { get; set; } = null!;
     
     public WukongPlayerRegistry Players { get; private set; } = null!;
-    public WukongPlayerPropertyManager PlayerProperty { get; private set; } = null!;
 
+    public AreaComponentRegistry AreaComponentRegistry { get; private set; } = null!;
+    public PlayerComponentRegistry PlayerComponentRegistry { get; private set; } = null!;
+
+    public WukongRoomState RoomState { get; private set; } = null!;
     public WukongPawnRegistry PawnRegistry { get; private set; } = null!;
     public WukongPlayerModeManager ModeManager { get; private set; } = null!;
     public WukongGameplaySettings GameplaySettings { get; private set; } = null!;
@@ -71,9 +75,8 @@ public class DI
         Logger.LogDebug("Initializing DI...");
         
         World = new Store(new EntityStore());
-        SystemRegistry = new SystemRegistry(World);
 
-        NetManager = new NetworkedEntityManager(World, () => RelayClient.PlayerId);
+        NetManager = new NetworkedEntityManager(World, Logger, () => RelayClient.PlayerId);
         EntityManager = new EntityManagerWithLogs(NetManager);
 
         Serializer = new RelaySerializer([
@@ -94,8 +97,16 @@ public class DI
         ShimAuto = new ShimAutoStarter(ShimRelayClient, ShimRecorder, EventBus, LoggerFactory);
         
         Players = new WukongPlayerRegistry();
-        PlayerProperty = new WukongPlayerPropertyManager(RelayClient, Players);
-        UpdateLoop = new WukongUpdateLoop(World, PlayerProperty);
+        UpdateLoop = new ClientEcsUpdateLoop(World, PlayerProperty);
+
+        AreaComponentRegistry = new AreaComponentRegistry([
+            new WukongRoomRegistration(),
+        ]);
+        PlayerComponentRegistry = new PlayerComponentRegistry([
+            new WukongPlayerRegistration(),
+        ]);
+        State = new ClientState(World);
+        RoomState = new WukongRoomState(World, AreaComponentRegistry);
 
         PawnRegistry = new WukongPawnRegistry(Players, World, EntityManager, SystemRegistry);
         ModeManager = new WukongPlayerModeManager(Players, RoomState);

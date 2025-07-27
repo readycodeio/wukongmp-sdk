@@ -10,6 +10,7 @@ using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
+using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -35,9 +36,9 @@ public partial class WukongPVP : IDisposable
     
     private bool _isRoundEnding;
     private readonly Store _world;
-    private readonly RoomStateProxy _roomState;
+    private readonly ClientState _state;
+    private readonly WukongRoomState _roomState;
     private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPlayerPropertyManager _playerProperty;
     private readonly WukongEventBus _eventBus;
     private readonly WukongSynchronizer _synchronizer;
     private readonly WukongRpcCallbacks _rpc;
@@ -47,9 +48,9 @@ public partial class WukongPVP : IDisposable
         Store world,
         RelaySerializer serializer,
         IRelayClient relayClient,
-        RoomStateProxy roomState,
+        ClientState state,
+        WukongRoomState roomState,
         WukongPlayerRegistry playerRegistry,
-        WukongPlayerPropertyManager playerProperty,
         WukongEventBus eventBus,
         WukongSynchronizer synchronizer,
         WukongRpcCallbacks rpc,
@@ -59,9 +60,9 @@ public partial class WukongPVP : IDisposable
         _world = world;
         Serializer = serializer;
         RelayClient = relayClient;
+        _state = state;
         _roomState = roomState;
         _playerRegistry = playerRegistry;
-        _playerProperty = playerProperty;
         _eventBus = eventBus;
         _synchronizer = synchronizer;
         _rpc = rpc;
@@ -95,20 +96,20 @@ public partial class WukongPVP : IDisposable
 
     public void StartPvP()
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             return;
         }
 
         // clear previous round winners
-        _roomState.RoundWinners = [];
+        _roomState.CurrentRoom.RoundWinners = [];
 
         Task.Run(StartRoundAsync);
     }
     
     public async Task StartRoundAsync()
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             Logging.LogError("Only master client can use the lobby manager");
             return;
@@ -123,7 +124,7 @@ public partial class WukongPVP : IDisposable
     
     private void PlacePlayers(FVector center, float radius)
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             Logging.LogError("Only master client can use the lobby manager");
             return;
@@ -162,7 +163,7 @@ public partial class WukongPVP : IDisposable
 
     public async Task EndRoundAsync(int winner)
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             Logging.LogError("Only master client can use the lobby manager");
             return;
@@ -179,12 +180,12 @@ public partial class WukongPVP : IDisposable
         SendPvPEvent(PvPEvent.RoundEnd, winner);
 
         // increment round number
-        _roomState.SetLastRoundWinnerTeam(winner);
+        _roomState.CurrentRoom.SetLastRoundWinnerTeam(winner);
 
         // wait until all players death animations are finished
         await Task.Delay(5000);
 
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             Logging.LogDebug("Master client disconnected before finishing EndRoundAsync");
             return;
@@ -193,7 +194,7 @@ public partial class WukongPVP : IDisposable
         await ResetHpAndRespawnAllPlayers();
 
         // resolve tournament
-        var winnersSoFar = _roomState.RoundWinners.ToList();
+        var winnersSoFar = _roomState.CurrentRoom.RoundWinners.ToList();
         var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
         // check if only one team is present
@@ -205,7 +206,7 @@ public partial class WukongPVP : IDisposable
         }
 
         // check if any team won more than half of the rounds
-        var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _roomState.TournamentRounds / 2);
+        var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > _roomState.CurrentRoom.TournamentRounds / 2);
         if (winnerTeam.Key != 0)
         {
             SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
@@ -214,7 +215,7 @@ public partial class WukongPVP : IDisposable
         }
 
         // otherwise, check if we have a tie
-        if (_roomState.CurrentRound > _roomState.TournamentRounds)
+        if (_roomState.CurrentRoom.CurrentRound > _roomState.CurrentRoom.TournamentRounds)
         {
             if (winnersByTeam.Count > 0)
             {
@@ -247,7 +248,7 @@ public partial class WukongPVP : IDisposable
 
     private async Task ResetHpAndRespawnAllPlayers()
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             Logging.LogError("Only master client can use the lobby manager");
             return;
@@ -273,9 +274,9 @@ public partial class WukongPVP : IDisposable
         GameMessageWidget.Instance.SetVisibility(false);
         CountdownWidget.Instance.StopCountdown();
         TimerWidget.Instance.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, RoundEndedTimeout);
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
-            _roomState.InCombatRound = true;
+            _roomState.CurrentRoom.InCombatRound = true;
 
             var monsterCount = 0;
             _world.Query<LocalTamerComponent>().ForEachEntity((ref tamer, _) =>
@@ -286,7 +287,7 @@ public partial class WukongPVP : IDisposable
                 }
             });
 
-            if (_roomState.BotsEnabled && _playerRegistry.ConnectedPlayers.Count == 0 && monsterCount == 0)
+            if (_roomState.CurrentRoom.BotsEnabled && _playerRegistry.ConnectedPlayers.Count == 0 && monsterCount == 0)
             {
                 GameLoopPatch.QueueOnGameThread(SpawningUtils.SpawnBots, "SpawnBots");
             }
@@ -298,7 +299,7 @@ public partial class WukongPVP : IDisposable
     private void RoundEndedTimeout()
     {
         Logging.LogInformation("Round time ended, ending round");
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
             Task.Run(async () => await EndRoundAsync(Constants.DrawTeamId));
         }
@@ -308,9 +309,9 @@ public partial class WukongPVP : IDisposable
     {
         TimerWidget.Instance.StopCountdown();
 
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
-            _roomState.InCombatRound = false;
+            _roomState.CurrentRoom.InCombatRound = false;
             foreach (var playerState in _playerRegistry.AllConnectedPlayers)
             {
                 var events = BUS_EventCollectionCS.Get(playerState.Pawn);
@@ -338,7 +339,7 @@ public partial class WukongPVP : IDisposable
     
     public void SwitchReadyStateMulti()
     {
-        if (RelayClient.InRoom && _roomState is { InPvP: false, InMatchmaking: false } && _playerRegistry.ConnectedPlayers.Count > 0)
+        if (_roomState.InRoom && _roomState.CurrentRoom is { InPvP: false, InMatchmaking: false } && _playerRegistry.ConnectedPlayers.Count > 0)
         {
             SwitchReadyState();
         }
@@ -346,7 +347,7 @@ public partial class WukongPVP : IDisposable
 
     public void SwitchReadyStateSingle()
     {
-        if (RelayClient.InRoom && _roomState is { InPvP: false, InMatchmaking: false } && _playerRegistry.ConnectedPlayers.Count == 0)
+        if (_roomState.InRoom && _roomState.CurrentRoom is { InPvP: false, InMatchmaking: false } && _playerRegistry.ConnectedPlayers.Count == 0)
         {
             SwitchReadyState();
         }
@@ -361,7 +362,7 @@ public partial class WukongPVP : IDisposable
     
     public void SwitchTeam(bool force = false)
     {
-        if (force || (RelayClient.InRoom && !_playerRegistry.LocalPlayerState.IsReadyForPvP && _roomState is { InPvP: false, InMatchmaking: false }))
+        if (force || (_roomState.InRoom && !_playerRegistry.LocalPlayerState.IsReadyForPvP && _roomState.CurrentRoom is { InPvP: false, InMatchmaking: false }))
         {
             var teamId = PvPUtils.GetOppositeTeam(_playerRegistry.LocalPlayerState.TeamId);
             _playerProperty.CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
@@ -416,35 +417,35 @@ public partial class WukongPVP : IDisposable
     
     public void EnterPvP()
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
             return;
 
-        if (!RelayClient.InRoom)
+        if (!_roomState.InRoom)
         {
             Logging.LogError("No room joined.");
             return;
         }
 
-        _roomState.InPvP = true;
+        _roomState.CurrentRoom.InPvP = true;
     }
     
     public void ExitPvP()
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
             return;
 
-        if (!RelayClient.InRoom)
+        if (!_roomState.InRoom)
         {
             Logging.LogError("No room joined.");
             return;
         }
 
-        _roomState.InPvP = false;
+        _roomState.CurrentRoom.InPvP = false;
     }
     
     public void CheckRoundEndCondition()
     {
-        if (!RelayClient.IsMasterClient || !_roomState.InPvP)
+        if (!_roomState.IsMasterClient || !_roomState.CurrentRoom.InPvP)
         {
             return;
         }
@@ -497,7 +498,7 @@ public partial class WukongPVP : IDisposable
     
     public bool IsSkillEnabledInPVP(int skillId)
     {
-        if (skillId == Constants.ImmobilizeSkillId && !_roomState.ImmobilizeAllowed)
+        if (skillId == Constants.ImmobilizeSkillId && !_roomState.CurrentRoom.ImmobilizeAllowed)
         {
             return false;
         }
@@ -510,17 +511,18 @@ public partial class WukongPVP : IDisposable
     {
         Logging.LogInformation("Joining or creating private room");
 
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             Logging.LogInformation("Not master client, skipping initialization");
             return;
         }
 
         // TODO: set from initial room properties (via server allocation request)
-        _roomState.GameMode = GameMode.Private;
-        _roomState.RoundWinners = [];
-        _roomState.BotsEnabled = true; // TODO: Selector
-        _roomState.MaxPlayers = 10;
+        ref var room = ref _roomState.CurrentRoom;
+        room.GameMode = GameMode.Private;
+        room.RoundWinners = [];
+        room.BotsEnabled = true; // TODO: Selector
+        room.MaxPlayers = 10;
     }
     
     private int GetSmallerTeamId()
@@ -531,11 +533,13 @@ public partial class WukongPVP : IDisposable
         teamsCount[team1Id] = 0;
         teamsCount[team2Id] = 0;
         
-        foreach (var d in RelayClient.OtherPlayers)
+        foreach (var playerId in _state.AllPlayers)
         {
-            if (d.Value.Properties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
+            if (playerId == _state.LocalPlayerId)
+                continue;
+            if (playerId.Value.Properties.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
             {
-                Logging.LogDebug("Player {PlayerId} in team {TeamId}", d.Key, assignedTeamId);
+                Logging.LogDebug("Player {PlayerId} in team {TeamId}", playerId, assignedTeamId);
                 teamsCount[(int)assignedTeamId]++;
             }
         }
@@ -545,9 +549,9 @@ public partial class WukongPVP : IDisposable
     
     private void SetUpRoom()
     {
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
-            _roomState.InPvP = false;
+            _roomState.CurrentRoom.InPvP = false;
         }
     }
     
@@ -556,16 +560,16 @@ public partial class WukongPVP : IDisposable
         if (_roomState.GameMode == GameMode.Private)
             return;
 
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
-            _roomState.InMatchmaking = true;
-            _roomState.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
+            _roomState.CurrentRoom.InMatchmaking = true;
+            _roomState.CurrentRoom.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
         }
     }
 
     private FVector GetSpawnPosition(PlayerId playerId)
     {
-        int maxPlayersCount = _roomState.MaxPlayers;
+        int maxPlayersCount = _roomState.CurrentRoom.MaxPlayers;
 
         float angle = playerId.RawValue / (float)maxPlayersCount * 2f * FMath.PI;
         float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
@@ -595,7 +599,7 @@ public partial class WukongPVP : IDisposable
 
             if (!isSpectator)
             {
-                playerState.IsSpectator = _roomState.InPvP && !playerState.IsReadyForPvP;
+                playerState.IsSpectator = _roomState.CurrentRoom.InPvP && !playerState.IsReadyForPvP;
             }
 
             // readiness callback
@@ -604,7 +608,7 @@ public partial class WukongPVP : IDisposable
                 NotifyPlayerReadinessChanged(playerState.NickName, playerState.IsReadyForPvP);
             }
 
-            if (_playerRegistry.AllConnectedPlayers.Count() == _roomState.MaxPlayers)
+            if (_playerRegistry.AllConnectedPlayers.Count() == _roomState.CurrentRoom.MaxPlayers)
             {
                 EndMatchmaking();
             }
@@ -613,9 +617,9 @@ public partial class WukongPVP : IDisposable
     
     private void EndMatchmaking()
     {
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
-            _roomState.InMatchmaking = false;
+            _roomState.CurrentRoom.InMatchmaking = false;
             _rpc.SendEndMatchmaking();
         }
 
@@ -630,7 +634,7 @@ public partial class WukongPVP : IDisposable
     
     private void UpdateReadiness(string playerNickName, bool isReady, int readyCount)
     {
-        if (RelayClient.IsMasterClient) // send this only once
+        if (_roomState.IsMasterClient) // send this only once
         {
             if (isReady)
             {
@@ -644,7 +648,7 @@ public partial class WukongPVP : IDisposable
 
         if (isReady)
         {
-            if ((_playerRegistry.ConnectedPlayers.Count > 0 || _roomState.BotsEnabled) && readyCount == _playerRegistry.ConnectedPlayers.Count + 1)
+            if ((_playerRegistry.ConnectedPlayers.Count > 0 || _roomState.CurrentRoom.BotsEnabled) && readyCount == _playerRegistry.ConnectedPlayers.Count + 1)
             {
                 // all players are ready
                 GameMessageWidget.Instance.SetMainText(Texts.StartingGame);
@@ -670,12 +674,12 @@ public partial class WukongPVP : IDisposable
     
     private void OnLoadingScreenClose()
     {
-        if (RelayClient.InRoom)
+        if (_roomState.InRoom)
         {
             PvPUtils.IsAfterLoadingScreen = true;
-            if (_roomState.InMatchmaking)
+            if (_roomState.CurrentRoom.InMatchmaking)
             {
-                var timeDifference = new DateTime(_roomState.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
+                var timeDifference = new DateTime(_roomState.CurrentRoom.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
                 TimerWidget.Instance.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
                 PvPUtils.SetupMatchmakingUi();
             }
@@ -692,10 +696,10 @@ public partial class WukongPVP : IDisposable
 
         Logging.LogInformation("Joined room");
 
-        var teamId = (int)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.TeamId), GetSmallerTeamId());
+        var teamId = (int)_state.LocalPlayerEntry.Properties.GetValueOrDefault(nameof(PlayerState.TeamId), GetSmallerTeamId());
         _playerProperty.CachePlayerProperty(nameof(PlayerState.TeamId), teamId);
         
-        _playerRegistry.LocalPlayerState.IsReadyForPvP = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsReadyForPvP), false);
+        _playerRegistry.LocalPlayerState.IsReadyForPvP = (bool)_state.LocalPlayerEntry.Properties.GetValueOrDefault(nameof(PlayerState.IsReadyForPvP), false);
 
         SetUpRoom();
         LobbyStatusWidget.Instance.SetReadyCount(_playerRegistry.AllConnectedPlayers.Count(x => x.IsReadyForPvP));
@@ -717,7 +721,7 @@ public partial class WukongPVP : IDisposable
     
     private void OnOtherPlayerLeftHandler(PlayerId playerId)
     {
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
             _ = Task.Run(async () =>
             {
@@ -729,7 +733,7 @@ public partial class WukongPVP : IDisposable
 
     private void OnPlayerPropertiesChangedHandler(PlayerId playerId, Dictionary<object, object?> changes)
     {
-        if (playerId == RelayClient.LocalPlayer.PlayerId) // local player
+        if (playerId == _state.LocalPlayerId) // local player
         {
             if (!_playerRegistry.HasLocalPlayerState)
             {
@@ -779,7 +783,7 @@ public partial class WukongPVP : IDisposable
     
     public void SendPvPEvent(PvPEvent ev, int data = 0)
     {
-        if (!RelayClient.IsMasterClient)
+        if (!_roomState.IsMasterClient)
         {
             Logging.LogError("Only room owner can send start countdown.");
             return;
@@ -842,7 +846,7 @@ public partial class WukongPVP : IDisposable
 
                 Task.Run(async () =>
                 {
-                    if (RelayClient.IsMasterClient)
+                    if (_roomState.IsMasterClient)
                     {
                         foreach (var playerState in _playerRegistry.SpectatingPlayers)
                         {
@@ -879,7 +883,7 @@ public partial class WukongPVP : IDisposable
                     });
                 }
 
-                if (RelayClient.IsMasterClient)
+                if (_roomState.IsMasterClient)
                 {
                     // reset other players' Hp to HpMax if they are not dead
                     foreach (var (key, state) in _playerRegistry.ConnectedPlayers)

@@ -31,7 +31,7 @@ namespace WukongMp.Api.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (__instance == null)
@@ -119,7 +119,7 @@ namespace WukongMp.Api.Patches
             IBUC_ABPHelperData HelperData,
             float DeltaTime)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (Owner is not BGUCharacterCS)
@@ -170,7 +170,7 @@ namespace WukongMp.Api.Patches
             IBUC_ABPSpecialMoveData SpecialMoveData,
             float DeltaTime)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (Owner is not BGUCharacterCS)
@@ -221,7 +221,7 @@ namespace WukongMp.Api.Patches
             IBUC_SpeedCtrlData SpeedCtrlData,
             float DeltaTime)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (Owner is not BGUCharacterCS character)
@@ -269,7 +269,7 @@ namespace WukongMp.Api.Patches
 
                     ref var anim = ref entity.Value.GetComponent<AnimationComponent>();
 
-                    if (WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    if (DI.Instance.OwnsEntity(entity.Value))
                     {
                         anim.MoveSpeedLevel = (byte)__instance.MoveSpeedLevel;
                         anim.MoveSpeedState = (byte)__instance.MoveSpeedState;
@@ -291,7 +291,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_EquipComp __instance, EquipPosition EquipPosition, int EquipID)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var players = DI.Instance.Players;
@@ -330,7 +330,7 @@ namespace WukongMp.Api.Patches
         {
             __state = false;
 
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (DeadReason == EDeadReason.PlayerTrans)
@@ -352,7 +352,8 @@ namespace WukongMp.Api.Patches
 
             __state = true;
 
-            if (DI.Instance is { RelayClient.IsMasterClient: true, RoomState.InPvP: true, RoomState.InCombatRound: true })
+            if (DI.Instance is
+                { RoomState: { IsMasterClient: true, CurrentRoom: { InPvP: true, InCombatRound: true } } })
             {
                 if (Attacker != owner)
                 {
@@ -454,14 +455,14 @@ namespace WukongMp.Api.Patches
                     TamerUtils.ClearSpawnedUnit(entity.Value);
                 }
 
-                if (!WukongMpMod.Instance.OwnsEntity(entity.Value))
+                if (!DI.Instance.OwnsEntity(entity.Value))
                     return;
 
                 if (entity.Value.TryGetComponent<MetadataComponent>(out var meta))
                 {
                     // TODO: send attacker and anim montage
                     var payload = new UnitDeadPacket(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
-                    WukongMpMod.Instance.SendUnitDead(payload);
+                    DI.Instance.Rpc.SendUnitDead(payload);
                     Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
                 }
                 else
@@ -478,7 +479,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             return false;
@@ -491,7 +492,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_PlayerCameraCompImpl __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var players = DI.Instance.Players;
@@ -520,7 +521,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             return false;
@@ -533,7 +534,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(ref bool __result)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             __result = false;
@@ -552,7 +553,7 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(UnitLockTargetInfo NewTargetInfo, BUC_TargetInfoData ___TargetInfoData, UActorCompBaseCS __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var players = DI.Instance.Players;
@@ -601,13 +602,13 @@ namespace WukongMp.Api.Patches
                 return true;
             }
 
-            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
-            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+            if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", players.LocalPlayerState.NickName, name);
 
                 var meta = entity.Value.GetComponent<MetadataComponent>();
-                WukongMpMod.Instance.SendSetTarget(new TargetData(meta.NetId, newTargetId, clearTarget));
+                DI.Instance.Rpc.SendSetTarget(new TargetData(meta.NetId, newTargetId, clearTarget));
             }
 
             return true;
@@ -620,7 +621,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(GSCameraControlData InControlData)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             if (!Constants.IsCoop)
@@ -639,10 +640,10 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUS_BeAttackedComp __instance, AActor Attacker)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
-            if (DI.Instance.RelayClient.IsMasterClient)
+            if (DI.Instance.RoomState.IsMasterClient)
             {
                 var owner = __instance.GetOwner();
 
@@ -671,7 +672,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             return false;
@@ -684,7 +685,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(ref FUStUnitBattleInfoExtendDesc? __result)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (__result != null && __result.DefaultCamID == 0)
@@ -698,10 +699,10 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(ref int __result)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
-            __result = DI.Instance.RoomState.EnemiesNgPlusLevel + 1;
+            __result = DI.Instance.RoomState.CurrentRoom.EnemiesNgPlusLevel + 1;
             return false;
         }
     }
@@ -712,7 +713,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_PlayerInputActionComp __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var players = DI.Instance.Players;
@@ -727,7 +728,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             return false;
@@ -745,7 +746,7 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(bool bInCanUnitDead)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             return !bInCanUnitDead;
@@ -758,7 +759,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
@@ -774,7 +775,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(float DeltaTime, BUS_PlayerMovementSystem __instance, BUC_MovementData ___MovementData, IBUC_ABPCharacterData ___ChrData)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (__instance.GetOwner() == GameUtils.GetControlledPawn() && ___MovementData.GetMoveType() == EBGUMoveMode.AIPathMove)
@@ -808,7 +809,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(InteractStepMatchPos __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return true;
 
             var localPlayerState = DI.Instance.Players.LocalPlayerState;

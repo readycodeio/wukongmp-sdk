@@ -2,22 +2,20 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteNetLib;
-using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api;
 
 public class WukongConnectionManager : IDisposable
 {
     private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly RoomStateProxy _roomState;
     private readonly ClientNetworkedStateSynchronizer _synchronizer;
 
     public IRelayClient RelayClient { get; }
+    public WukongRoomState RoomState { get; }
     
     public bool IsRunning { get; private set; }
     public bool EnteredRoom { get; private set; }
@@ -27,13 +25,13 @@ public class WukongConnectionManager : IDisposable
     public WukongConnectionManager(IRelayClient relayClient,
         WukongPlayerRegistry playerRegistry,
         ClientNetworkedStateSynchronizer synchronizer,
-        RoomStateProxy roomState)
+        WukongRoomState roomState)
     {
         _playerRegistry = playerRegistry;
-        _roomState = roomState;
         _synchronizer = synchronizer;
         RelayClient = relayClient;
-        
+        RoomState = roomState;
+
         RelayClient.OnDisconnected += OnDisconnectedHandler;
     }
 
@@ -113,12 +111,12 @@ public class WukongConnectionManager : IDisposable
     
     public void SetMasterClient(string newMasterName)
     {
-        if (RelayClient.IsMasterClient)
+        if (RoomState.IsMasterClient)
         {
             var newMasterPlayer = _playerRegistry.AllConnectedPlayers.FirstOrDefault(x => x.NickName == newMasterName);
             if (newMasterPlayer != null)
             {
-                _roomState.MasterClientId = newMasterPlayer.PlayerId;
+                RoomState.MasterClientId = newMasterPlayer.PlayerId;
                 OnMasterClientChanged?.Invoke(newMasterName);
             }
             else

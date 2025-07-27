@@ -6,7 +6,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old;
 
-public class WukongPlayerModeManager(WukongPlayerRegistry playerRegistry, RoomStateProxy roomState)
+public class WukongPlayerModeManager(WukongPlayerRegistry playerRegistry, WukongRoomState roomState)
 {
     public void HandleBecameSpectator(PlayerState playerState)
     {
@@ -38,11 +38,13 @@ public class WukongPlayerModeManager(WukongPlayerRegistry playerRegistry, RoomSt
         if (isMyself)
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
-            if (roomState.InMatchmaking)
+
+            var wukongRoom = roomState.CurrentRoom;
+            if (wukongRoom.InMatchmaking)
             {
                 PvPUtils.SetupMatchmakingUi();
             }
-            else if (!roomState.InPvP)
+            else if (!wukongRoom.InPvP)
             {
                 PvPUtils.SetupLobbyUi();
             }

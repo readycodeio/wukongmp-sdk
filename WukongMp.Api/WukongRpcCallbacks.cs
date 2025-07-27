@@ -7,6 +7,7 @@ using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
+using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
@@ -22,6 +23,8 @@ public partial class WukongRpcCallbacks : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
+    private readonly ClientState _state;
+    private readonly WukongRoomState _roomState;
     private readonly EntityManagerWithLogs _entityManager;
     private readonly WukongPlayerRegistry _playerRegistry;
     private readonly WukongPawnRegistry _pawnRegistry;
@@ -29,12 +32,16 @@ public partial class WukongRpcCallbacks : IDisposable
     public WukongRpcCallbacks(
         RelaySerializer serializer,
         IRelayClient relayClient,
+        ClientState state,
+        WukongRoomState roomState,
         EntityManagerWithLogs entityManager,
         WukongPlayerRegistry playerRegistry,
         WukongPawnRegistry pawnRegistry)
     {
         Serializer = serializer;
         RelayClient = relayClient;
+        _state = state;
+        _roomState = roomState;
         _entityManager = entityManager;
         _playerRegistry = playerRegistry;
         _pawnRegistry = pawnRegistry;
@@ -216,7 +223,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnCastImmobilize(NetworkIdComponent caster)
     {
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
             var character = _pawnRegistry.GetPawnByNetworkId(caster);
             if (character == null)
@@ -305,7 +312,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             var events = BUS_EventCollectionCS.Get(player);
             events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            if (RelayClient.IsMasterClient)
+            if (_roomState.IsMasterClient)
             {
                 events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
             }
@@ -323,7 +330,7 @@ public partial class WukongRpcCallbacks : IDisposable
             if (player == null)
                 return;
 
-            if (player.PlayerId == RelayClient.LocalPlayer.PlayerId)
+            if (player.PlayerId == _state.LocalPlayerId)
             {
                 FreeCameraManager.Instance.LeaveFreeCameraMode();
             }

@@ -15,7 +15,6 @@ public class WukongChatter : IDisposable
 {
     private readonly WukongConnectionManager _connection;
     private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPlayerPropertyManager _playerProperty;
     private readonly WukongSynchronizer _synchronizer;
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongGameplaySettings _gameplaySettings;
@@ -27,7 +26,6 @@ public class WukongChatter : IDisposable
     public WukongChatter(
         WukongConnectionManager connection,
         WukongPlayerRegistry playerRegistry,
-        WukongPlayerPropertyManager playerProperty,
         WukongSynchronizer synchronizer,
         WukongRpcCallbacks rpc,
         WukongGameplaySettings gameplaySettings
@@ -37,7 +35,6 @@ public class WukongChatter : IDisposable
         
         _connection = connection;
         _playerRegistry = playerRegistry;
-        _playerProperty = playerProperty;
         _synchronizer = synchronizer;
         _rpc = rpc;
         _gameplaySettings = gameplaySettings;
@@ -146,7 +143,7 @@ public class WukongChatter : IDisposable
 
     private void RequestDisconnect(ReadOnlyMemory<string> _)
     {
-        if (_connection.RelayClient.InRoom)
+        if (_connection.RoomState.InRoom)
         {
             SendServerMessage("PlayerLeft", NickName);
             _connection.Disconnect();
@@ -244,7 +241,7 @@ public class WukongChatter : IDisposable
 
     private void OnOtherPlayerLeftHandler(PlayerId playerId)
     {
-        if (_connection.RelayClient.IsMasterClient)
+        if (_connection.RoomState.IsMasterClient)
         {
             var player = _connection.RelayClient.GetPlayerState(playerId)!;
             var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");

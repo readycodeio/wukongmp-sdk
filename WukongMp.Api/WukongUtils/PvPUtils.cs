@@ -77,8 +77,8 @@ public static class PvPUtils
         Utils.TryRunOnGameThread(() =>
         {
             var roomState = DI.Instance.RoomState;
-            var current = roomState.CurrentRound;
-            var total = roomState.TournamentRounds;
+            var current = roomState.CurrentRoom.CurrentRound;
+            var total = roomState.CurrentRoom.TournamentRounds;
             UIUtils.ShowTip(string.Format(Texts.RoundCount, current, total));
         });
     }

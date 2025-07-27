@@ -339,7 +339,7 @@ namespace WukongMp.Api.Patches
     {
         private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
         {
-            if (!DI.Instance.RelayClient.InRoom || !Constants.IsCoop)
+            if (!DI.Instance.RoomState.InRoom || !Constants.IsCoop)
                 return true;
 
             if (!SlotName.StartsWith("ArchiveSaveFile"))
@@ -351,7 +351,7 @@ namespace WukongMp.Api.Patches
 
             Task.Run(async () =>
             {
-                if (DI.Instance.RelayClient.IsMasterClient)
+                if (DI.Instance.RoomState.IsMasterClient)
                 {
                     var uploadedWorld = await DI.Instance.SaveRelay.UploadWorldSaveAsync(data);
                     LogSuccess(uploadedWorld, "world save");

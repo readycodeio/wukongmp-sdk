@@ -1,6 +1,5 @@
 ﻿using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.ECS.Systems;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
@@ -19,13 +18,13 @@ public class WukongPawnRegistry
     private readonly EntityManagerWithLogs _entityManager;
     private readonly ArchetypeId _monsterArchetype;
 
-    public WukongPawnRegistry(WukongPlayerRegistry playerRegistry, Store world, EntityManagerWithLogs entityManager, ISystemRegistry config)
+    public WukongPawnRegistry(WukongPlayerRegistry playerRegistry, Store world, EntityManagerWithLogs entityManager)
     {
         _playerRegistry = playerRegistry;
         _world = world;
         _entityManager = entityManager;
         
-        _monsterArchetype = config.RegisterArchetype(b =>
+        _monsterArchetype = world.RegisterArchetype(b =>
         {
             WukongCoreApi.RegisterMonsterArchetype(b);
             b.Add<LocalTamerComponent>();

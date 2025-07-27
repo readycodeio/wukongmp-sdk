@@ -11,22 +11,22 @@ public class WukongCoop : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
+    private readonly WukongRoomState _roomState;
     private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPlayerPropertyManager _playerProperty;
     private readonly WukongSynchronizer _synchronizer;
 
     public WukongCoop(
         RelaySerializer serializer,
         IRelayClient relayClient,
+        WukongRoomState roomState,
         WukongPlayerRegistry playerRegistry,
-        WukongPlayerPropertyManager playerProperty,
         WukongSynchronizer synchronizer
     )
     {
         Serializer = serializer; 
         RelayClient = relayClient;
+        _roomState = roomState;
         _playerRegistry = playerRegistry;
-        _playerProperty = playerProperty;
         _synchronizer = synchronizer;
 
         _synchronizer.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
@@ -39,7 +39,7 @@ public class WukongCoop : IDisposable
     
     private void OnAfterJoinedRoomHandler()
     {
-        if (RelayClient.IsMasterClient)
+        if (_roomState.IsMasterClient)
         {
             Utils.TryRunOnGameThread(TamerUtils.DiscoverTamers);
         }

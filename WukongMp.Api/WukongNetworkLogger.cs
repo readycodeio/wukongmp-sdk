@@ -15,11 +15,11 @@ public class WukongNetworkLogger : IDisposable
 {
     private readonly ILogger _logger;
     private readonly Store _world;
-    private readonly RoomStateProxyBase _roomState;
+    private readonly WukongRoomState _roomState;
     private readonly WukongPlayerRegistry _playerRegistry;
     private readonly IRelayClient _relayClient;
 
-    public WukongNetworkLogger(ILogger logger, Store world, RoomStateProxyBase roomState, WukongPlayerRegistry playerRegistry, IRelayClient relayClient)
+    public WukongNetworkLogger(ILogger logger, Store world, WukongRoomState roomState, WukongPlayerRegistry playerRegistry, IRelayClient relayClient)
     {
         _logger = logger;
         _world = world;

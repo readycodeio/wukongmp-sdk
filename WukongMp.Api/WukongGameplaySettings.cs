@@ -1,18 +1,19 @@
-﻿using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Multiplayer.Client;
+﻿using Friflo.Engine.ECS;
+using ReadyM.Api.ECS.Worlds;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS;
 using WukongMp.Api.ECS.Jobs;
+using WukongMp.Api.Old;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongGameplaySettings(Store world, IRelayClient relayClient)
+public class WukongGameplaySettings(Store world, WukongRoomState roomState)
 {
     public void SetMonsterHpScaling(int scaling)
     {
-        if (!relayClient.IsMasterClient)
+        if (!roomState.IsMasterClient)
         {
             UIUtils.ShowTip(string.Format(Texts.OnlyRoomOwnerCanUse, "/hp_scaling"));
         }

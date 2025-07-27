@@ -1,16 +1,15 @@
-﻿using System;
-using b1;
+﻿using b1;
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Api.ECS.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Old.Api;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncMonstersSystem(Lazy<PlayerId> player) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SyncMonstersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
@@ -50,7 +49,7 @@ public sealed class SyncMonstersSystem(Lazy<PlayerId> player) : QuerySystem<Meta
                 attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
 #endif
 
-                if (meta.Owner == player.Value && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
+                if (meta.Owner == state.LocalPlayerId && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
                 {
                     hpComp.HpMaxBase *= hpComp.HpMult;
                     hpComp.Hp *= hpComp.HpMult;
@@ -76,7 +75,7 @@ public sealed class SyncMonstersSystem(Lazy<PlayerId> player) : QuerySystem<Meta
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
             }
 
-            if (meta.Owner != player.Value)
+            if (meta.Owner != state.LocalPlayerId)
             {
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);

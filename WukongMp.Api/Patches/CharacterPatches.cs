@@ -19,7 +19,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUC_AttrContainer __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             var players = DI.Instance.Players;
@@ -30,12 +30,12 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (__instance.Owner == client.LocalPlayerState.Pawn)
+            if (__instance.Owner == players.LocalPlayerState.Pawn)
             {
                 return; // players own their characters
             }
 
-            var playerState = client.GetPlayerByActor(__instance.Owner);
+            var playerState = players.GetPlayerByActor(__instance.Owner);
 
             // remote player - sync properties and HP
 
@@ -85,12 +85,12 @@ namespace WukongMp.Api.Patches
 
             // remote monster - sync HP
 
-            var entity = WukongMpMod.Instance.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
             if (!entity.HasValue)
                 return;
 
             // owned, skip
-            if (WukongMpMod.Instance.OwnsEntity(entity.Value))
+            if (DI.Instance.OwnsEntity(entity.Value))
                 return;
 
             if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
@@ -119,7 +119,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             var players = DI.Instance.Players;
@@ -135,22 +135,22 @@ namespace WukongMp.Api.Patches
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
-                if (owner == client.LocalPlayerState.Pawn)
+                if (owner == players.LocalPlayerState.Pawn)
                 {
-                    if (!client.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
+                    if (!players.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
                     {
-                        client.LocalPlayerState.Hp = result;
+                        players.LocalPlayerState.Hp = result;
                         client.CachePlayerProperty(nameof(PlayerState.Hp), result);
                     }
                 }
                 else
                 {
-                    var entity = WukongMpMod.Instance.GetMonsterByActor(owner as BGUCharacterCS);
+                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner as BGUCharacterCS);
 
                     if (!entity.HasValue)
                         return; // not found
 
-                    if (!WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    if (!DI.Instance.OwnsEntity(entity.Value))
                         return; // not owned
 
                     if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
@@ -163,7 +163,7 @@ namespace WukongMp.Api.Patches
                 }
             }
 
-            if (Constants.SyncedAttributes.Contains(AttrID) && owner == client.LocalPlayerState.Pawn)
+            if (Constants.SyncedAttributes.Contains(AttrID) && owner == players.LocalPlayerState.Pawn)
             {
                 if (players.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
@@ -195,7 +195,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUC_ABPCharacterData? __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (__instance == null)
@@ -322,7 +322,7 @@ namespace WukongMp.Api.Patches
                             return;
                         }
 
-                        if (WukongMpMod.Instance.OwnsEntity(entity.Value))
+                        if (DI.Instance.OwnsEntity(entity.Value))
                         {
                             ref var anim = ref entity.Value.GetComponent<AnimationComponent>();
                             anim.Velocity = __instance.Velocity.ToVector3();
@@ -375,7 +375,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(AActor Actor)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             if (Actor is BGUCharacterCS character)
@@ -386,7 +386,7 @@ namespace WukongMp.Api.Patches
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
                     // only clean up own monsters
-                    if (!WukongMpMod.Instance.OwnsEntity(entity.Value))
+                    if (!DI.Instance.OwnsEntity(entity.Value))
                     {
                         Logging.LogWarning("Skipping cleanup for remote monster");
                         return;
@@ -411,19 +411,19 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(EBGUSimpleState SimpleState, bool IsRemove, BUS_UnitStateSystem __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             var owner = __instance.GetOwner();
-            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
-            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+            if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
             {
                 if (SimpleState == EBGUSimpleState.Immobilizing)
                     return;
 
                 var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
 
-                WukongMpMod.Instance.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
+                DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
                 Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
             }
         }
@@ -435,26 +435,26 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(EBUStateTrigger Trigger, float Time, bool NeedForceUpdate, BUS_UnitStateSystem __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
             var players = DI.Instance.Players;
             var owner = __instance.GetOwner();
 
-            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
-            if (entity.HasValue && WukongMpMod.Instance.OwnsEntity(entity.Value))
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+            if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
             {
                 if (Trigger == EBUStateTrigger.Die)
                     return;
 
                 var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
 
-                WukongMpMod.Instance.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
+                DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
             }
 
 
-            if (owner == client.LocalPlayerState.Pawn)
+            if (owner == players.LocalPlayerState.Pawn)
             {
                 DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(NetworkIdComponent.FromPlayerId(players.LocalPlayerState.PlayerId), Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
@@ -468,19 +468,17 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(EState_MM MMState, BUS_ABPHelperComp __instance)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.RoomState.InRoom)
                 return;
 
-            var client = WukongMpMod.Client;
-
             var owner = __instance.GetOwner();
-            var entity = WukongMpMod.Instance.GetMonsterByActor(owner);
+            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
 
-            if (!entity.HasValue || !WukongMpMod.Instance.OwnsEntity(entity.Value))
+            if (!entity.HasValue || !DI.Instance.OwnsEntity(entity.Value))
                 return;
 
             var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
-            WukongMpMod.Instance.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
+            DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
         }
     }
 }

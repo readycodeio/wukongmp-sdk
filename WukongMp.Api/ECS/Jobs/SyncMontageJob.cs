@@ -40,7 +40,7 @@ public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlay
         }
         else if (montageState.LocalMontage != null)
         {
-            WukongMpMod.Instance.SendMontageCancel(meta.NetId);
+            DI.Instance.Rpc.SendMontageCancel(meta.NetId);
         }
 
         montageState.LocalMontage = currentMontage;

@@ -70,7 +70,7 @@ namespace WukongMp.Api.WukongUtils
                 var tamerRef = actor.CurrentRef;
                 var guid = BGU_DataUtil.GetActorGuid(actor);
                 Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
-                var entity = WukongMpMod.Instance.GetMonsterByGuid(guid);
+                var entity = DI.Instance.PawnRegistry.GetMonsterByGuid(guid);
                 if (entity == null)
                 {
                     SpawningUtils.CreateMonsterInEcs(guid, actor, 2, actor.PathName);
@@ -84,9 +84,9 @@ namespace WukongMp.Api.WukongUtils
 
         public static void ClearEcsMonsters()
         {
-            WukongMpMod.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) =>
+            DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) =>
             {
-                WukongMpMod.Instance.CommandBuffer.DeleteEntity(entity.Id);
+                DI.Instance.CommandBuffer.DeleteEntity(entity.Id);
             });
         }
 

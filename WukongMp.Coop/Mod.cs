@@ -223,7 +223,7 @@ namespace WukongMp.Coop
         public object GetReloadContext()
         {
             _logger.LogInformation("GetReloadContext");
-            return (bool?)DI.Instance.RelayClient.InRoom;
+            return (bool?)DI.Instance.RoomState.InRoom;
         }
 
         public void Reload(object? context)
