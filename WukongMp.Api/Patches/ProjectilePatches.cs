@@ -66,6 +66,8 @@ public class PatchOnSwitchBulletTarget
     }
 }
 
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnSwitchBulletInfoIfNeed
 {
     private static MethodBase TargetMethod()
@@ -175,5 +177,38 @@ public class PatchAllPlayerInput
     public static void Prefix(MethodBase __originalMethod)
     {
         Logging.LogWarning("BUS_ObjActorMovementComp: {MethodName} called", __originalMethod.Name);
+    }
+}
+
+
+[HarmonyPatch(typeof(BUEffectBulletSwitchSelf), "ApplyBySkill_Implement")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchApplyBySkill_Implement
+{
+    public static bool Prefix(int EffectID, AActor? Caster, AActor? Target)
+    {
+        if (!DI.Instance.RelayClient.InRoom)
+            return true;
+
+        BGUBulletBaseCS? bGUBulletBaseCS = Target as BGUBulletBaseCS;
+        if (bGUBulletBaseCS == null)
+        {
+            return true;
+        }
+        BUC_MasterData readOnlyData = BGU_DataUtil.GetReadOnlyData<BUC_MasterData>(bGUBulletBaseCS);
+        if (readOnlyData == null)
+        {
+            return true;
+        }
+        AActor masterActor = readOnlyData.GetMasterActor();
+
+        var players = DI.Instance.Players;
+
+        if (masterActor is BGUPlayerCharacterCS && players.LocalPlayerState.Pawn != masterActor)
+        {
+            Logging.LogDebug("Skipping BUEffectBulletSwitchSelf ApplyBySkill_Implement called for non local player");
+            return false;
+        }
+        return true;
     }
 }

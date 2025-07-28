@@ -56,7 +56,7 @@ namespace WukongMp.Api.WukongUtils
         public static async Task SwitchProjectileInfo(BGUCharacterCS player, string projectileName, int bulletSwitchID, int switchIdx)
         {
             await Task.Delay(200);
-            Logging.LogDebug("SetProjectileModeMode called for projectile {ProjectileName} with switch id {MoveMode}", projectileName, bulletSwitchID);
+            Logging.LogDebug("SwitchProjectileInfo called for projectile {ProjectileName} with switch id {MoveMode}", projectileName, bulletSwitchID);
             var projectile = GetPlayerProjectileByName(player, projectileName);
             if (projectile == null)
             {
