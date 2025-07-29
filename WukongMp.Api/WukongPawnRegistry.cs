@@ -41,7 +41,8 @@ public class WukongPawnRegistry
             b.Add(team);
             b.Add(new HpComponent
             {
-                HpMult = _playerRegistry.AllConnectedPlayers.Count()
+                CurrentMultiplier = _playerRegistry.AllConnectedPlayers.Count(),
+                LastMultiplier = 1f
             });
         });
         Logging.LogDebug("Creating local networked monster with {NetId}", netId);

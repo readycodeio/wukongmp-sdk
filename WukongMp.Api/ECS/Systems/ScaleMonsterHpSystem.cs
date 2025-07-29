@@ -1,7 +1,9 @@
-﻿using b1;
+﻿using System;
+using b1;
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.Components;
+using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.ECS.Systems;
 
@@ -12,22 +14,20 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
         if (!DI.Instance.RelayClient.IsMasterClient)
             return; // TODO: Ownership check
 
-        var targetMult = 1 + DI.Instance.Players.ConnectedPlayers.Count;
+        var otherPlayers = DI.Instance.Players.ConnectedPlayers.Count;
+        var targetScaling = 1 + 1.5f * otherPlayers;
 
-        Query.ForEachEntity((ref hp, ref localTamer, entity) =>
+        Query.ForEachEntity((ref hp, ref localTamer, _) =>
         {
             if (!localTamer.IsMonsterSynced)
                 return;
 
-            if (hp.Hp.Equals(0, 0.01f) && hp.HpMaxBase.Equals(0, 0.01f))
+            if (hp.Hp.Equals(0, Constants.FloatComparisonTolerance) && hp.HpMaxBase.Equals(0, Constants.FloatComparisonTolerance))
                 return; // no need to scale if monster is not active
 
-            hp.HpMult = targetMult;
+            hp.CurrentMultiplier = targetScaling;
 
-            if (hp.LastMult == 0) // never scaled before
-                hp.LastMult = 1;
-
-            if (hp.HpMult != hp.LastMult)
+            if (Math.Abs(hp.CurrentMultiplier - hp.LastMultiplier) > Constants.FloatComparisonTolerance)
             {
                 if (localTamer.Pawn == null)
                     return;
@@ -36,13 +36,13 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
                 var currentHp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                 var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
 
-                hp.HpMaxBase = maxHp / hp.LastMult * hp.HpMult;
-                hp.Hp = currentHp / hp.LastMult * hp.HpMult;
+                hp.HpMaxBase = maxHp / hp.LastMultiplier * hp.CurrentMultiplier;
+                hp.Hp = currentHp / hp.LastMultiplier * hp.CurrentMultiplier;
 
                 attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hp.HpMaxBase);
                 attrs.SetFloatValue(EBGUAttrFloat.Hp, hp.Hp);
 
-                hp.LastMult = hp.HpMult;
+                hp.LastMultiplier = hp.CurrentMultiplier;
             }
         });
     }
