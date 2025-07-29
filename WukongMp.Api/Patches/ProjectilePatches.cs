@@ -155,32 +155,6 @@ public static class PatchOnSetMoveMode
     }
 }
 
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchAllPlayerInput
-{
-    public static IEnumerable<MethodBase> TargetMethods()
-    {
-        var type = AccessTools.TypeByName("b1.BUS_ProjectileCtrComp");
-        foreach (var method in Traverse.Create<BUS_ObjActorMovementComp>().Methods())
-        {
-            if (method == "GetTickGroupMask" ||
-                method == "OnTickWithGroup" ||
-                method == "UpdateVelocityData" ||
-                method == "BulletSweepFlySpdTick"||
-                method == "CreateMoveMode")
-                continue;
-            yield return AccessTools.Method(typeof(BUS_ObjActorMovementComp), method);
-        }
-    }
-
-    public static void Prefix(MethodBase __originalMethod)
-    {
-        Logging.LogWarning("BUS_ObjActorMovementComp: {MethodName} called", __originalMethod.Name);
-    }
-}
-
-
 [HarmonyPatch(typeof(BUEffectBulletSwitchSelf), "ApplyBySkill_Implement")]
 [HarmonyPatchCategory(Constants.CoopPatches)]
 public static class PatchApplyBySkill_Implement
