@@ -30,6 +30,7 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
             {
                 TamerUtils.SpawnMonsterLocally(entity);
             }
+
             monster = localTamerComp.Tamer?.GetMonster();
             currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
@@ -38,6 +39,7 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 {
                     Logging.LogError("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
                 }
+
                 return;
             }
 
@@ -46,8 +48,11 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
 
             if (attrs != null)
             {
-                hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-                hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                if (IsMasterClient)
+                {
+                    hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                    hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                }
 #if TESTING
                 hpComp.Hp = 10;
                 attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);

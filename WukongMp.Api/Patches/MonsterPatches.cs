@@ -1,10 +1,9 @@
-﻿using b1;
+﻿using System;
+using System.Reflection;
+using b1;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
-using System;
-using System.Reflection;
-using b1.UI.Comm;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -408,16 +407,6 @@ namespace WukongMp.Api.Patches
                     events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
                 }
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(BUI_BarCSharp), nameof(BUI_BarCSharp.InitSetCurAndMaxValue))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchEnemyHpBar
-    {
-        private static void Prefix(ref bool InIsReCalcMaxLen)
-        {
-            InIsReCalcMaxLen = true;
         }
     }
 }
