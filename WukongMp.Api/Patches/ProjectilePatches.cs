@@ -1,6 +1,8 @@
 ﻿using b1;
+using BtlShare;
 using HarmonyLib;
 using ReadyM.Relay.Common.ECS;
+using System.Collections.Generic;
 using System.Reflection;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
@@ -64,6 +66,8 @@ public class PatchOnSwitchBulletTarget
     }
 }
 
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnSwitchBulletInfoIfNeed
 {
     private static MethodBase TargetMethod()
@@ -116,5 +120,69 @@ public static class PatchOnProjectileDead
             Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
             DI.Instance.Rpc.SendProjectileDead(new ProjectileDeadData(projectile.GetClass().GetName(), Reason));
         }
+    }
+}
+
+[HarmonyPatch(typeof(BUS_ObjActorMovementComp), "OnSetMoveMode")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchOnSetMoveMode
+{
+    public static void Postfix(BUS_ObjActorMovementComp __instance, EBulletOrMagicFieldMoveModeType MoveMode)
+    {
+        if (!DI.Instance.RelayClient.InRoom)
+            return;
+
+        var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
+        if (projectile == null)
+        {
+            return;
+        }
+
+        IBUC_MasterData masterData = BGU_DataUtil.GetReadOnlyData<IBUC_MasterData, BUC_MasterData>(projectile);
+        if (masterData == null)
+        {
+            return;
+        }
+
+        var players = DI.Instance.Players;
+        var master = masterData.GetMasterActor();
+
+        if (players.LocalPlayerState.Pawn == master)
+        {
+            Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectile.GetClass().GetName(), players.LocalPlayerState.NickName, MoveMode);
+            DI.Instance.Rpc.SendProjectileMoveMode(new ProjectileMoveModeData(projectile.GetClass().GetName(), MoveMode));
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BUEffectBulletSwitchSelf), "ApplyBySkill_Implement")]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchApplyBySkill_Implement
+{
+    public static bool Prefix(int EffectID, AActor? Caster, AActor? Target)
+    {
+        if (!DI.Instance.RelayClient.InRoom)
+            return true;
+
+        BGUBulletBaseCS? bGUBulletBaseCS = Target as BGUBulletBaseCS;
+        if (bGUBulletBaseCS == null)
+        {
+            return true;
+        }
+        BUC_MasterData readOnlyData = BGU_DataUtil.GetReadOnlyData<BUC_MasterData>(bGUBulletBaseCS);
+        if (readOnlyData == null)
+        {
+            return true;
+        }
+        AActor masterActor = readOnlyData.GetMasterActor();
+
+        var players = DI.Instance.Players;
+
+        if (masterActor is BGUPlayerCharacterCS && players.LocalPlayerState.Pawn != masterActor)
+        {
+            Logging.LogDebug("Skipping BUEffectBulletSwitchSelf ApplyBySkill_Implement called for non local player");
+            return false;
+        }
+        return true;
     }
 }

@@ -1,6 +1,9 @@
 ﻿using b1;
 using b1.ECS;
+using BtlShare;
 using System;
+using System.Threading.Tasks;
+using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -10,39 +13,67 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SetProjectileTarget(BGUCharacterCS player, string projectileName, BGUCharacterCS target, string socketName)
         {
-            var projectile = GetPlayerProjectileByName(player, projectileName);
-            if (projectile == null)
+            GameLoopPatch.QueueOnGameThread(() =>
             {
-                Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
-                return;
-            }
+                Logging.LogDebug("SetProjectileTarget called for projectile {ProjectileName} with target {TargetName}", projectileName, target.GetName());
+                var projectile = GetPlayerProjectileByName(player, projectileName);
+                if (projectile == null)
+                {
+                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
+                    return;
+                }
 
-            var events = BUS_EventCollectionCS.Get(projectile);
-            events?.Evt_SwitchMovementTarget.Invoke(target, socketName);
+                var events = BUS_EventCollectionCS.Get(projectile);
+                events?.Evt_SwitchMovementTarget.Invoke(target, socketName);
+            }, nameof(SetProjectileTarget));
         }
 
         public static void DestroyProjectile(BGUCharacterCS player, string projectileName, EBGUBulletDestroyReason reason)
         {
-            var projectile = GetPlayerProjectileByName(player, projectileName);
-            if (projectile == null)
+            GameLoopPatch.QueueOnGameThread(() =>
             {
-                Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
-                return;
-            }
-            var events = BUS_EventCollectionCS.Get(projectile);
-            events?.Evt_OnProjectileDead.Invoke(reason);
+                Logging.LogDebug("DestroyProjectile called for projectile {ProjectileName} with reason {Reason}", projectileName, reason);
+                var projectile = GetPlayerProjectileByName(player, projectileName);
+                if (projectile == null)
+                {
+                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
+                    return;
+                }
+                var events = BUS_EventCollectionCS.Get(projectile);
+                events?.Evt_OnProjectileDead.Invoke(reason);
+            }, nameof(DestroyProjectile));
+        }
+
+        public static void SetProjectileModeMode(BGUCharacterCS player, string projectileName, EBulletOrMagicFieldMoveModeType moveMode)
+        {
+            GameLoopPatch.QueueOnGameThread(() =>
+            {
+                Logging.LogDebug("SetProjectileModeMode called for projectile {ProjectileName} with move mode {MoveMode}", projectileName, moveMode);
+                var projectile = GetPlayerProjectileByName(player, projectileName);
+                if (projectile == null)
+                {
+                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
+                    return;
+                }
+                var events = BUS_EventCollectionCS.Get(projectile);
+                events?.Evt_SetObjMoveMode.Invoke(moveMode);
+            }, nameof(SetProjectileModeMode));
         }
 
         public static void SwitchProjectileInfo(BGUCharacterCS player, string projectileName, int bulletSwitchID, int switchIdx)
         {
-            var projectile = GetPlayerProjectileByName(player, projectileName);
-            if (projectile == null)
+            GameLoopPatch.QueueOnGameThread(() =>
             {
-                Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
-                return;
-            }
-            var events = BUS_EventCollectionCS.Get(player);
-            events?.Evt_OnSwitchOneProjectile.Invoke(projectile, bulletSwitchID, switchIdx, null);
+                Logging.LogDebug("SwitchProjectileInfo called for projectile {ProjectileName} with switch id {MoveMode}", projectileName, bulletSwitchID);
+                var projectile = GetPlayerProjectileByName(player, projectileName);
+                if (projectile == null)
+                {
+                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
+                    return;
+                }
+                var events = BUS_EventCollectionCS.Get(player);
+                events?.Evt_OnSwitchOneProjectile.Invoke(projectile, bulletSwitchID, switchIdx, null);
+            }, nameof(SwitchProjectileInfo));
         }
 
         private static BGUProjectileBaseActor? GetPlayerProjectileByName(BGUCharacterCS player, string projectileName)
