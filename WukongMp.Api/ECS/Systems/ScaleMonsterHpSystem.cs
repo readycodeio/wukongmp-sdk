@@ -19,6 +19,9 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
             if (!localTamer.IsMonsterSynced)
                 return;
 
+            if (hp.Hp.Equals(0, 0.01f) && hp.HpMaxBase.Equals(0, 0.01f))
+                return; // no need to scale if monster is not active
+
             hp.HpMult = targetMult;
 
             if (hp.LastMult == 0) // never scaled before
@@ -31,7 +34,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 
                 var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(localTamer.Pawn);
                 var currentHp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMax);
+                var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
 
                 hp.HpMaxBase = maxHp / hp.LastMult * hp.HpMult;
                 hp.Hp = currentHp / hp.LastMult * hp.HpMult;
