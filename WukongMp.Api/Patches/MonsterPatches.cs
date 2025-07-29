@@ -4,6 +4,7 @@ using ReadyM.Relay.Common.ECS;
 using ReadyM.Relay.Common.Wukong.Components;
 using System;
 using System.Reflection;
+using b1.UI.Comm;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -196,6 +197,7 @@ namespace WukongMp.Api.Patches
                     localTamerComp.IsMonsterSynced = false;
                     return true;
                 }
+
                 return false;
             }
             else
@@ -364,7 +366,7 @@ namespace WukongMp.Api.Patches
 
     [HarmonyPatch(typeof(BUS_MovementSystem), "TickForMonster")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchMovementTickForMonstere
+    public class PatchMovementTickForMonster
     {
         public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem? __instance, BUC_MovementData ___MovementData)
         {
@@ -406,6 +408,16 @@ namespace WukongMp.Api.Patches
                     events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
                 }
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(BUI_BarCSharp), nameof(BUI_BarCSharp.InitSetCurAndMaxValue))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchEnemyHpBar
+    {
+        private static void Prefix(ref bool InIsReCalcMaxLen)
+        {
+            InIsReCalcMaxLen = true;
         }
     }
 }
