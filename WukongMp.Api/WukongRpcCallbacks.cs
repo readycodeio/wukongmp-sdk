@@ -576,7 +576,7 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        Task.Run(async () => await ProjectileUtils.SetProjectileTarget(player.Pawn, targetData.ProjectileName, target, targetData.SocketName));
+        ProjectileUtils.SetProjectileTarget(player.Pawn, targetData.ProjectileName, target, targetData.SocketName);
     }
 
     [RpcEvent(RelayMode.Others)]
@@ -594,7 +594,7 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        Task.Run(async () => await ProjectileUtils.SwitchProjectileInfo(player.Pawn, switchData.ProjectileClassName, switchData.BulletSwitchID, switchData.SwitchIdx));
+        ProjectileUtils.SwitchProjectileInfo(player.Pawn, switchData.ProjectileClassName, switchData.BulletSwitchID, switchData.SwitchIdx);
     }
 
     [RpcEvent(RelayMode.Others)]
@@ -612,7 +612,7 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        Task.Run(async () => await ProjectileUtils.DestroyProjectile(player.Pawn, data.ProjectileClassName, data.Reason));
+        ProjectileUtils.DestroyProjectile(player.Pawn, data.ProjectileClassName, data.Reason);
     }
 
     [RpcEvent(RelayMode.Others)]
@@ -630,6 +630,6 @@ public partial class WukongRpcCallbacks : IDisposable
             return;
         }
 
-        Task.Run(async () => await ProjectileUtils.SetProjectileModeMode(player.Pawn, data.ProjectileClassName, data.MoveMode));
+        ProjectileUtils.SetProjectileModeMode(player.Pawn, data.ProjectileClassName, data.MoveMode);
     }
 }
