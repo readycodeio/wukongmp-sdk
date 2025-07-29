@@ -41,7 +41,6 @@ public class DI
 
     public WukongPawnRegistry PawnRegistry { get; private set; } = null!;
     public WukongPlayerModeManager ModeManager { get; private set; } = null!;
-    public WukongGameplaySettings GameplaySettings { get; private set; } = null!;
     public WukongPlayerPawnManager PlayerPawnManager { get; private set; } = null!;
 
     public WukongRpcCallbacks Rpc { get; private set; } = null!;
@@ -102,7 +101,6 @@ public class DI
 
         PawnRegistry = new WukongPawnRegistry(Players, World, EntityManager, SystemRegistry);
         ModeManager = new WukongPlayerModeManager(Players, RoomState);
-        GameplaySettings = new WukongGameplaySettings(World, RelayClient);
         PlayerPawnManager = new WukongPlayerPawnManager(World, Players, ModeManager);
         
         Rpc = new WukongRpcCallbacks(Serializer, RelayClient, EntityManager, Players, PawnRegistry);
@@ -121,11 +119,11 @@ public class DI
         PingMonitor = new NetworkPingMonitor(RelayClient);
         PingWidgetUpdater = new PingWidgetUpdater(PingMonitor);
 
-        Chatter = new WukongChatter(Connection, Players, PlayerProperty, Synchronizer, Rpc, GameplaySettings);
+        Chatter = new WukongChatter(Connection, Players, PlayerProperty, Synchronizer, Rpc);
         Patcher = new WukongPatcher();
         
         if (Constants.IsCoop)
-            Coop = new WukongCoop(Serializer, RelayClient, Players, PlayerProperty, Synchronizer);
+            Coop = new WukongCoop(RelayClient, Players, Synchronizer);
         else
             PVP = new WukongPVP(World, Serializer, RelayClient, RoomState, Players, PlayerProperty, EventBus, Synchronizer, Rpc, Chatter);
 

@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Linq;
+using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api;
 using ReadyM.Relay.Common.ECS;
@@ -38,6 +39,11 @@ public class WukongPawnRegistry
             b.Add(localTamer);
             b.Add(tamer);
             b.Add(team);
+            b.Add(new HpComponent
+            {
+                CurrentMultiplier = _playerRegistry.AllConnectedPlayers.Count(),
+                LastMultiplier = 1f
+            });
         });
         Logging.LogDebug("Creating local networked monster with {NetId}", netId);
         return entity;

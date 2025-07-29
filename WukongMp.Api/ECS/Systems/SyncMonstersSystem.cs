@@ -30,6 +30,7 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
             {
                 TamerUtils.SpawnMonsterLocally(entity);
             }
+
             monster = localTamerComp.Tamer?.GetMonster();
             currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
@@ -38,6 +39,7 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 {
                     Logging.LogError("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
                 }
+
                 return;
             }
 
@@ -46,8 +48,11 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
 
             if (attrs != null)
             {
-                hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-                hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                if (IsMasterClient)
+                {
+                    hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                    hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                }
 #if TESTING
                 hpComp.Hp = 10;
                 attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
@@ -55,18 +60,6 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 attrs.SetFloatValue(EBGUAttrFloat.SkillSuperArmor, 1);
                 attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
 #endif
-
-                if (IsMasterClient && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
-                {
-                    hpComp.HpMaxBase *= hpComp.HpMult;
-                    hpComp.Hp *= hpComp.HpMult;
-
-                    attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
-                    attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-
-                    hpComp.LastMult = hpComp.HpMult;
-                    Logging.LogDebug("Monster {Guid} HP scaling set to {Scaling}x", tamerComp.Guid, hpComp.HpMult);
-                }
             }
 
             var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
