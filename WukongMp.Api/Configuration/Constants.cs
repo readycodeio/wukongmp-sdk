@@ -31,6 +31,7 @@ namespace WukongMp.Api.Configuration
         public const int MaxPlayers = 10;
         public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;
+        public const int DefaultMonsterTeamId = 2;
         public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
         public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
         public const string WhiteTeamColor = "(R=0.9,G=0.9,B=0.9)";

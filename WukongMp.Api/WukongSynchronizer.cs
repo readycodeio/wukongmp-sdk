@@ -62,6 +62,7 @@ public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
         systemRegistry.AddSystem<DestroyDeadMonstersMarkersSystem>();
         systemRegistry.AddSystem(new SyncMonstersSystem(RelayClient));
         systemRegistry.AddSystem<ScaleMonsterHpSystem>();
+        systemRegistry.AddSystem<SyncMonsterTeamSystem>();
     }
 
     [Obsolete("Ideally we should just be able to get rid of this entirely")]

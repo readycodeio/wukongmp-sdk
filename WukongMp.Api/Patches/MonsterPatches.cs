@@ -100,7 +100,7 @@ namespace WukongMp.Api.Patches
                     var entity = DI.Instance.PawnRegistry.GetMonsterByGuid(guid);
                     if (entity == null)
                     {
-                        SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
+                        SpawningUtils.CreateMonsterInEcs(guid, __instance, Constants.DefaultMonsterTeamId, __instance.PathName);
                     }
                     else
                     {
