@@ -52,6 +52,7 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 {
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                    teamComp.TeamId = monster.GetTeamIDInCS();
                 }
 #if TESTING
                 hpComp.Hp = 10;
@@ -81,8 +82,6 @@ public sealed class SyncMonstersSystem(IRelayClient relayClient) : QuerySystem<H
                 events.Evt_AIPauseBT.Invoke(true);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
-
-            ClientUtils.RegisterNewPlayerTeam(monster, teamComp.TeamId);
 
             localTamerComp.IsMonsterSynced = true;
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
