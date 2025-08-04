@@ -993,3 +993,28 @@ public static class PatchPendingReset
         }
     }
 }
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.CoopPatches)]
+public static class PatchOnSweepCheckHit
+{
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BUS_SweepCheckHitComp:OnSweepCheckHit");
+    }
+
+    public static bool Prefix(UActorCompBaseCS __instance, AActor Victim)
+    {
+        if (!DI.Instance.RelayClient.InRoom)
+            return true;
+
+        if (__instance.GetOwner() is BGUCharacterCS casterCharacter && Victim is BGUCharacterCS targetCharacter)
+        {
+            if (casterCharacter.GetTeamIDInCS() == targetCharacter.GetTeamIDInCS())
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+}
