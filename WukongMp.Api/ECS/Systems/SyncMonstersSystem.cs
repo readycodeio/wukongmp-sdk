@@ -4,7 +4,7 @@ using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.Old.Api;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
@@ -13,7 +13,13 @@ public sealed class SyncMonstersSystem(ClientState state) : QuerySystem<Metadata
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref meta, ref hpComp, ref teamComp, ref tamerComp, ref localTamerComp, entity) =>
+        Query.ForEachEntity((
+            ref metaComp, 
+            ref hpComp, 
+            ref teamComp, 
+            ref tamerComp, 
+            ref localTamerComp,
+            entity) =>
         {
             if (localTamerComp.IsMonsterSynced || !tamerComp.ShouldBeSpawned)
             {
@@ -24,7 +30,7 @@ public sealed class SyncMonstersSystem(ClientState state) : QuerySystem<Metadata
             var monster = localTamerComp.Tamer?.GetMonster();
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
-                TamerUtils.SpawnMonsterLocally(entity);
+                TamerUtils.SpawnMonsterLocally(new TamerEntity(entity));
             }
             monster = localTamerComp.Tamer?.GetMonster();
             currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
@@ -49,7 +55,7 @@ public sealed class SyncMonstersSystem(ClientState state) : QuerySystem<Metadata
                 attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
 #endif
 
-                if (meta.Owner == state.LocalPlayerId && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
+                if (metaComp.Owner == state.LocalPlayerId && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
                 {
                     hpComp.HpMaxBase *= hpComp.HpMult;
                     hpComp.Hp *= hpComp.HpMult;
@@ -75,14 +81,14 @@ public sealed class SyncMonstersSystem(ClientState state) : QuerySystem<Metadata
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
             }
 
-            if (meta.Owner != state.LocalPlayerId)
+            if (metaComp.Owner != state.LocalPlayerId)
             {
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
 
-            ClientUtils.RegisterNewPlayerTeam(monster, teamComp.TeamId);
+            ClientUtils.RegisterAndSetPlayerTeam(monster, teamComp.TeamId);
 
             localTamerComp.IsMonsterSynced = true;
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);

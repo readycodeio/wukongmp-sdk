@@ -2,10 +2,10 @@
 using BtlShare;
 using Friflo.Engine.ECS;
 using System.Collections.Generic;
-using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
-using WukongMp.Api.ECS;
+using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -50,10 +50,10 @@ namespace WukongMp.Api.WukongUtils
             return unitName.ToLower().Replace("-", "").Replace("_", "");
         }
 
-        public static void SpawnMonsterLocally(Entity tamerEntity)
+        public static void SpawnMonsterLocally(TamerEntity tamerEntity)
         {
-            var localTamerComp = tamerEntity.GetComponent<LocalTamerComponent>();
-            ref var tamerComp = ref tamerEntity.GetComponent<TamerComponent>();
+            ref var localTamerComp = ref tamerEntity.GetLocalTamer();
+            ref var tamerComp = ref tamerEntity.GetTamer();
 
             Logging.LogDebug("Spawn monster immediately for tamer: {Guid}", tamerComp.Guid);
             var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
@@ -70,7 +70,7 @@ namespace WukongMp.Api.WukongUtils
                 var tamerRef = actor.CurrentRef;
                 var guid = BGU_DataUtil.GetActorGuid(actor);
                 Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
-                var entity = DI.Instance.PawnRegistry.GetMonsterByGuid(guid);
+                var entity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
                 if (entity == null)
                 {
                     SpawningUtils.CreateMonsterInEcs(guid, actor, 2, actor.PathName);
@@ -90,57 +90,55 @@ namespace WukongMp.Api.WukongUtils
             });
         }
 
-        public static void DestroyMonster(Entity entity)
+        public static void DestroyMonster(TamerEntity tamerEntity)
         {
-            var tamerComp = entity.GetComponent<LocalTamerComponent>();
+            ref var localTamerComp = ref tamerEntity.GetLocalTamer();
 
-            if (tamerComp.Tamer == null)
-            {
+            if (localTamerComp.Tamer == null)
                 return;
-            }
 
-            var monsterPawn = tamerComp.Tamer.GetMonster();
+            var monsterPawn = localTamerComp.Tamer.GetMonster();
             if (monsterPawn != null)
             {
                 var events = BUS_EventCollectionCS.Get(monsterPawn);
                 events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
-                BGU_UnrealWorldUtil.DestroyActor(tamerComp.Pawn);
+                BGU_UnrealWorldUtil.DestroyActor(localTamerComp.Pawn);
             }
 
-            BGU_UnrealWorldUtil.DestroyActor(tamerComp.Tamer);
+            BGU_UnrealWorldUtil.DestroyActor(localTamerComp.Tamer);
 
-            CleanupMonster(entity);
+            CleanupMonster(tamerEntity);
         }
 
-        public static void CleanupMonster(Entity entity)
+        public static void CleanupMonster(TamerEntity tamerEntity)
         {
-            var markerComp = entity.GetComponent<MarkerComponent>();
+            ref var markerComp = ref tamerEntity.GetMarker();
 
             if (markerComp.MarkerActor != null)
             {
                 BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
             }
 
-            Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", entity.ToString());
-            DI.Instance.UpdateLoop.CommandBuffer.DeleteEntity(entity.Id);
+            Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", tamerEntity.ToString());
+            DI.Instance.UpdateLoop.CommandBuffer.DeleteEntity(tamerEntity.Entity.Id);
         }
 
-        public static void AddSpawnedUnit(PlayerId playerId, Entity entity)
+        public static void AddSpawnedUnitRefCount(PlayerId playerId, TamerEntity tamerEntity)
         {
-            Logging.LogDebug("Adding spawned unit counter for entity: {Entity} for player {Player}", entity.ToString(), playerId);
-            ref var tamerComp = ref entity.GetComponent<TamerComponent>();
+            Logging.LogDebug("Adding spawned unit counter for entity: {Entity} for player {Player}", tamerEntity.ToString(), playerId);
+            ref var tamerComp = ref tamerEntity.GetTamer();
             tamerComp.ShouldBeSpawned = true;
             tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Add(playerId);
         }
 
-        public static void SubtractSpawnedUnit(PlayerId playerId, Entity entity)
+        public static void SubtractSpawnedUnitRefCount(PlayerId playerId, TamerEntity tamerEntity)
         {
-            Logging.LogDebug("Subtracting spawned unit counter for entity: {Entity} for player {Player}", entity.ToString(), playerId);
-            ref var tamerComp = ref entity.GetComponent<TamerComponent>();
-            SubtractSpawnedUnit(playerId, ref tamerComp);
+            Logging.LogDebug("Subtracting spawned unit counter for entity: {Entity} for player {Player}", tamerEntity.ToString(), playerId);
+            ref var tamerComp = ref tamerEntity.GetTamer();
+            SubtractSpawnedUnitRefCount(playerId, ref tamerComp);
         }
 
-        public static void SubtractSpawnedUnit(PlayerId playerId, ref TamerComponent tamerComp)
+        public static void SubtractSpawnedUnitRefCount(PlayerId playerId, ref TamerComponent tamerComp)
         {
             tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Remove(playerId);
             if (tamerComp.HoldingPlayers.Count == 0)
@@ -149,10 +147,10 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        public static void ClearSpawnedUnit(Entity entity)
+        public static void ClearSpawnedUnitRefCount(TamerEntity tamerEntity)
         {
-            Logging.LogDebug("Clearing spawned unit counter for entity: {Entity}", entity.ToString());
-            ref var tamerComp = ref entity.GetComponent<TamerComponent>();
+            Logging.LogDebug("Clearing spawned unit counter for entity: {Entity}", tamerEntity.ToString());
+            ref var tamerComp = ref tamerEntity.GetTamer();
             tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Clear();
             tamerComp.ShouldBeSpawned = false;
         }

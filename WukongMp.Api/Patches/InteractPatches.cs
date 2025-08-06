@@ -19,15 +19,15 @@ public static class PatchComplexSkillDoInteractAction
 
     public static void Prefix(int InteractiveActorID, AActor User, AActor InteractiveActor, FUStInteractionMappingDesc Action)
     {
-        if (!DI.Instance.RoomState.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return;
 
         if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS)
         {
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(InteractiveActor);
+            var entity = DI.Instance.PawnState.GetEntityByTamerMonster(InteractiveActor);
             if (entity.HasValue)
             {
-                ref var meta = ref entity.Value.GetComponent<MetadataComponent>();
+                ref var meta = ref entity.Value.GetMeta();
                 Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
                 DI.Instance.Rpc.SendTamerSkillInteract(new DTO.SkillInteractData(meta.NetId, Action.ParamsInt[1]));
             }

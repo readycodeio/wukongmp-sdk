@@ -1,0 +1,139 @@
+﻿using b1;
+using Friflo.Engine.ECS;
+using Microsoft.Extensions.Logging;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Relay.Server.Wukong.ECS.Registry;
+using UnrealEngine.Engine;
+using WukongMp.Api.ECS.Components;
+
+namespace WukongMp.Api.State;
+
+public class WukongPawnState
+{
+    private readonly Store _world;
+    private readonly ClientNetworkedEntityState _netEntity;
+    private readonly ILogger _logger;
+    
+    private readonly ArchetypeId _monsterArchetype;
+
+    public WukongPawnState(Store world, ClientNetworkedEntityState netEntity, ILogger logger)
+    {
+        _world = world;
+        _netEntity = netEntity;
+        _logger = logger;
+
+        _monsterArchetype = world.RegisterArchetype(b =>
+        {
+            WukongCoreApi.RegisterMonsterArchetype(b);
+            b.Add<LocalTamerComponent>();
+            b.Add<MarkerComponent>();
+        });
+    }
+    
+    public Entity CreateNetworkedMonster(LocalTamerComponent localTamer, TamerComponent tamer, TeamComponent team)
+    {
+        var (entity, netId) = _netEntity.CreateNetworkedAreaEntity(_monsterArchetype, b =>
+        {
+            b.Add(localTamer);
+            b.Add(tamer);
+            b.Add(team);
+        });
+        Logging.LogDebug("Creating local networked monster with {NetId}", netId);
+        return entity;
+    }
+
+    public BGUCharacterCS? GetPawnByNetworkId(NetworkId netId)
+    {
+        if (!_netEntity.TryGetEntityByNetworkId(netId, out var entity))
+            return null;
+        
+        if (entity.Value.TryGetComponent<LocalTamerComponent>(out var localTamer))
+            return localTamer.Pawn;
+
+        if (entity.Value.TryGetComponent<LocalMainCharacterComponent>(out var localMain))
+            return localMain.Pawn;
+
+        return null;
+    }
+
+    public TamerEntity? GetEntityByTamerMonster(AActor? actor)
+    {
+        if (actor == null)
+            return null;
+
+        TamerEntity? result = null;
+
+        var query = _world.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Pawn == actor)
+            {
+                result = new TamerEntity(entity);
+            }
+        });
+
+        return result;
+    }
+
+    public TamerEntity? GetEntityByTamerGuid(string guid)
+    {
+        TamerEntity? result = null;
+
+        var query = _world.Query<TamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Guid == guid)
+            {
+                result = new TamerEntity(entity);
+            }
+        });
+
+        return result;
+    }
+
+    public TamerEntity? GetByEntityByTamer(BUTamerActor? owner)
+    {
+        if (owner == null)
+            return null;
+
+        TamerEntity? result = null;
+
+        var query = _world.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Tamer == owner)
+            {
+                result = new TamerEntity(entity);
+            }
+        });
+
+        return result;
+    }
+
+    public MainCharacterEntity? GetByEntityByPlayerPawn(AActor? owner)
+    {
+        if (owner == null)
+            return null;
+
+        MainCharacterEntity? result = null;
+
+        var query = _world.Query<LocalMainCharacterComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref tamer, entity) =>
+        {
+            if (tamer.Pawn == owner)
+            {
+                result = new MainCharacterEntity(entity);
+            }
+        });
+
+        return result;
+    }
+}

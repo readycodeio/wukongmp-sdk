@@ -1,0 +1,114 @@
+ using System;
+ using System.Collections.Generic;
+ using System.Linq;
+using b1;
+using Friflo.Engine.ECS;
+using Microsoft.Extensions.Logging;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Engine;
+using WukongMp.Api.ECS.Jobs;
+using WukongMp.Api.Old;
+using WukongMp.Api.State;
+using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
+
+namespace WukongMp.Api;
+
+// FIXME: This should be merged with `WukongPawnState`. In addition, this class does to many things. It should exclusively
+// deal with placing and removing pawns.
+public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerState playerState, WukongPlayerModeManager modeManager, ILogger logger)
+{
+    private struct Entry
+    {
+        public AActor? MarkerActor;
+        public BGUCharacterCS? Pawn;
+        public string CharacterNickName;
+    }
+    
+    private readonly Dictionary<PlayerId, Entry> _entries = new();
+    
+    public void AddPlayerPawn(PlayerId playerId)
+    {
+        if (_entries.ContainsKey(playerId))
+            return;
+        
+        var playerEntity = playerState.GetPlayerById(playerId);
+        if (playerEntity == null)
+        {
+            logger.LogError("Player with ID {PlayerId} not found in player state.", playerId);
+            return;
+        }
+        
+        var mainEntity = playerState.GetMainCharacterById(playerId);
+        if (mainEntity == null)
+        {
+            logger.LogError("Main character for player {PlayerId} not found in player state.", playerId);
+            return;
+        }
+        
+        var pawn = SpawningUtils.SpawnCloneForPlayer(playerEntity.Value, mainEntity.Value);
+        if (pawn == null)
+            return;
+        
+        var marker = MarkerUtils.CreateMarkerForCharacter(mainEntity.Value); // 3D marker above player
+        var nickname = mainEntity.Value.GetState().CharacterNickName;
+        
+        var entry = new Entry
+        {
+            MarkerActor = marker,
+            Pawn = pawn,
+            CharacterNickName = nickname
+        };
+        
+        _entries.Add(playerId, entry);
+        
+        UpdateConnectedCount();
+        modeManager.UpdatePlayerTeamUi(playerEntity.Value);
+    }
+    
+    public void RemovePlayerPawn(PlayerId playerId)
+    {
+        if (!_entries.TryGetValue(playerId, out var entry))
+        {
+            logger.LogWarning("Attempted to remove player pawn for {PlayerId} but it was not found in entries.", playerId);
+            return;
+        }
+
+        if (entry.MarkerActor != null)
+        {
+            BGU_UnrealWorldUtil.DestroyActor(entry.MarkerActor);
+        }
+        
+        if (entry.Pawn != null)
+        {
+            BGU_UnrealWorldUtil.DestroyActor(entry.Pawn);
+            return;
+        }
+        else
+        {
+            logger.LogWarning("Attempted to remove player pawn for {PlayerId} but it was already null.", playerId);
+        }
+
+        // FIXME: This seems to be the wrong scope. At the very least it shouldn't be using the nickname as the identifier?
+        LobbyStatusWidget.Instance.RemovePlayerFromTeams(entry.CharacterNickName);
+
+        UpdateConnectedCount();
+
+        // FIXME: This seems to be the wrong scope. Player removal should trigger `RemovePlayerPawn` and related actions not the 
+        // other way around.
+        LobbyStatusWidget.Instance.SetReadyCount(state.AllPlayers.Select(playerState.GetPlayerById).Count(x => x?.GetState().IsReadyForPvP == true));
+        CoopStatusWidget.Instance.RemovePlayer(entry.CharacterNickName);
+
+        world.Query<TamerComponent>().Each(new ClearPlayerTamerRefCountJob(playerId));
+    }
+
+    public void UpdateConnectedCount()
+    {
+        LobbyStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count + 1);
+        CoopStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count + 1);
+        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(state.AllPlayers.Count, playerState.LocalPlayer?.GetState().IsReadyForPvP == true));
+    }
+}

@@ -1,7 +1,8 @@
 ﻿using LiteNetLib.Utils;
-using ReadyM.Api.ECS.Idents;
+using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Api.Serialization;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Serialization;
 
 namespace WukongMp.Api.DTO;
 

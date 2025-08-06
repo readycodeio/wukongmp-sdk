@@ -58,7 +58,6 @@ public class WukongLevelTransitionConnectionController : IDisposable
         if (_connection.EnteredRoom)
         {
             ChatWidget.Instance.SetVisibility(true);
-            _synchronizer.Refresh();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Generators;
 
 namespace WukongMp.Api.DTO;
 

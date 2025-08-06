@@ -1,6 +1,6 @@
 ﻿using System;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old.Api;
+using WukongMp.Api.Helpers;
 
 namespace WukongMp.Api.UI
 {

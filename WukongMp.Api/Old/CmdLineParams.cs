@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.Windows;
 
 namespace WukongMp.Api.Old;
 

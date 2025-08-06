@@ -2,9 +2,6 @@
 using b1.ECS;
 using BtlB1;
 using UnrealEngine.Engine;
-using WukongMp.Api.ECS;
-using WukongMp.Api.Old;
-using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -12,70 +9,61 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
 {
     internal static void CastImmobilize(BGUCharacterCS caster)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
-        {
-            Logging.LogDebug("Received cast immobilize for character {Nickname}", caster.GetName());
-            var playerEvents = BUS_EventCollectionCS.Get(caster);
-            playerEvents.Evt_CastImmobilize.Invoke(0);
-        }, nameof(CastImmobilize));
+        Logging.LogDebug("Received cast immobilize for character {Nickname}", caster.GetName());
+        var playerEvents = BUS_EventCollectionCS.Get(caster);
+        playerEvents.Evt_CastImmobilize.Invoke(0);
     }
 
     internal static void TriggerImmobilize(BGUCharacterCS? pawn, BGUCharacterCS? caster, bool hasBuff)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        Logging.LogDebug("Received trigger immobilize for character {Pawn}", pawn?.GetName());
+
+        if (pawn == null)
         {
-            Logging.LogDebug("Received trigger immobilize for character {Pawn}", pawn?.GetName());
+            Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
+            return;
+        }
 
-            if (pawn == null)
-            {
-                Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
-                return;
-            }
+        if (caster == null)
+        {
+            Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
+            return;
+        }
 
-            if (caster == null)
-            {
-                Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
-                return;
-            }
+        var castImmobilizeData = (BUC_CastImmobilizeData)caster.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
 
-            var castImmobilizeData = (BUC_CastImmobilizeData)caster.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+        var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
+        if (cachedImmobilizeConfigDesc == null)
+        {
+            Logging.LogError("cachedImmobilizeConfigDesc is null");
+            return;
+        }
 
-            var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
-            if (cachedImmobilizeConfigDesc == null)
-            {
-                Logging.LogError("cachedImmobilizeConfigDesc is null");
-                return;
-            }
-
-            var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
-            BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
-        }, nameof(TriggerImmobilize));
+        var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
+        BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
     }
 
     internal static void RelieveImmobilize(BGUCharacterCS pawn)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
+        var playerEvents = BUS_EventCollectionCS.Get(pawn);
+
+        var entity = DI.Instance.PawnState.GetEntityByTamerMonster(pawn);
+        if (entity.HasValue)
         {
-            Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
-            var playerEvents = BUS_EventCollectionCS.Get(pawn);
-
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(pawn);
-            if (entity.HasValue)
+            ref var localTamer = ref entity.Value.GetLocalTamer();
+            localTamer.RunImmobilizePatches = true;
+        }
+        else
+        {
+            var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+            if (mainEntity != null)
             {
-                ref var tamerComponent = ref entity.Value.GetComponent<LocalTamerComponent>();
-                tamerComponent.RunImmobilizePatches = true;
+                mainEntity.Value.GetLocalState().RunImmobilizePatches = true;
             }
-            else
-            {
-                var player = DI.Instance.Players.GetPlayerByActor(pawn);
-                if (player != null)
-                {
-                    player.RunImmobilizePatches = true;
-                }
-            }
+        }
 
-            playerEvents?.Evt_RelieveImmobilized.Invoke();
-        }, nameof(RelieveImmobilize));
+        playerEvents?.Evt_RelieveImmobilized.Invoke();
     }
 
     public static ImmobilizeConfigInstance CreateImmobilizeConfig(AActor character, AActor casterActor, FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc, int castImmobilizeDataResId, bool hasBuff)

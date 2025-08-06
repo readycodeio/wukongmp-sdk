@@ -1,6 +1,5 @@
 ﻿using CSharpModBase;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 
@@ -28,7 +27,7 @@ public static class PvPUtils
         {
             GameMessageWidget.Instance.SetVisibility(true);
             GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.Players.ConnectedPlayers.Count, DI.Instance.Players.LocalPlayerState.IsReadyForPvP));
+            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalPlayer?.GetState().IsReadyForPvP == true));
             GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
             LobbyStatusWidget.Instance.SetVisibility(true);
         }
@@ -74,13 +73,15 @@ public static class PvPUtils
 
     public static void ShowPvPCountDown()
     {
-        Utils.TryRunOnGameThread(() =>
-        {
-            var roomState = DI.Instance.RoomState;
-            var current = roomState.CurrentRoom.CurrentRound;
-            var total = roomState.CurrentRoom.TournamentRounds;
-            UIUtils.ShowTip(string.Format(Texts.RoundCount, current, total));
-        });
+        var areaState = DI.Instance.AreaState;
+        var areaEntity = areaState.CurrentArea;
+        if (areaEntity == null)
+            return;
+
+        ref var room = ref areaEntity.Value.GetRoom();
+        var current = room.CurrentRound;
+        var total = room.TournamentRounds;
+        UIUtils.ShowTip(string.Format(Texts.RoundCount, current, total));
     }
 
     public static string GetTeamColorString(int teamId)

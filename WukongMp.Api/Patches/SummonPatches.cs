@@ -12,9 +12,9 @@ namespace WukongMp.Api.Patches
 {
     public static class SummonPatch
     {
-        private static readonly ConcurrentDictionary<NetworkIdComponent, ConcurrentQueue<FServantReq>> _summonsQueues = new();
+        private static readonly ConcurrentDictionary<NetworkId, ConcurrentQueue<FServantReq>> _summonsQueues = new();
 
-        public static void QueueServant(NetworkIdComponent summonerId, FServantReq summonReq)
+        public static void QueueServant(NetworkId summonerId, FServantReq summonReq)
         {
             Logging.LogDebug("Enqueueing summon for character {Id}, type: {Action}", summonerId, summonReq.TamerTemplate.GetPathName());
 
@@ -25,7 +25,7 @@ namespace WukongMp.Api.Patches
             });
         }
 
-        public static void ExecuteSummon(NetworkIdComponent summonerId, NetworkIdComponent summonId, string guid, string tamerClassName, int teamId)
+        public static void ExecuteSummon(NetworkId summonerId, NetworkId summonId, string guid, string tamerClassName, int teamId)
         {
             Logging.LogDebug("Executing summon for character {Id}, type: {Action}", summonerId, tamerClassName);
 
@@ -45,7 +45,7 @@ namespace WukongMp.Api.Patches
             }
         }
 
-        public static string? SpawnServant(NetworkIdComponent summonId, string guid, int teamId, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
+        public static string? SpawnServant(NetworkId summonId, string guid, int teamId, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
         {
             Logging.LogDebug("Spawning servant: {TamerName}, with Guid {Guid}", TamerClass.Value.GetPathName(), guid);
 
@@ -90,9 +90,9 @@ namespace WukongMp.Api.Patches
             var entity = default(Entity); // TODO: The SendSummon event is never sent
             // var entity = SpawningUtils.AddRemoteMonsterToEcs(summonId, guid, bUTamerActor, teamId, TamerClass.Value.PathName);
 
-            ref var trans = ref entity.GetComponent<TranslationComponent>();
-            trans.Position = InServantReq.BornTransform.GetLocation().ToVector3();
-            trans.Rotation = InServantReq.BornTransform.Rotator().ToVector3();
+            ref var transComp = ref entity.GetComponent<TranslationComponent>();
+            transComp.Position = InServantReq.BornTransform.GetLocation().ToVector3();
+            transComp.Rotation = InServantReq.BornTransform.Rotator().ToVector3();
 
             bUTamerActor.MarkAsServant();
             InServantReq.ServantTamerGuid = bUTamerActor.GetFinalGuid();

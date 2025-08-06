@@ -5,11 +5,10 @@ using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.ECS;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
+using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -150,13 +149,23 @@ namespace WukongMp.Coop
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerId(DI.Instance.Players.LocalPlayerState.PlayerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+
+                var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+                if (mainEntity == null)
+                    return;
+                
+                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerId(DI.Instance.Players.LocalPlayerState.PlayerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                
+                var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+                if (mainEntity == null)
+                    return;
+                
+                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
@@ -223,7 +232,7 @@ namespace WukongMp.Coop
         public object GetReloadContext()
         {
             _logger.LogInformation("GetReloadContext");
-            return (bool?)DI.Instance.RoomState.InRoom;
+            return (bool?)DI.Instance.AreaState.InRoom;
         }
 
         public void Reload(object? context)

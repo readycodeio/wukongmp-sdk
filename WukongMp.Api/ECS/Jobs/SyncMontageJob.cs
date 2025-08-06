@@ -1,14 +1,15 @@
 ﻿using Friflo.Engine.ECS;
-using ReadyM.Api.ECS.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.Idents;
+using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayer) : IEach<LocalTamerComponent, MetadataComponent>
+public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayerId) : IEach<LocalTamerComponent, MetadataComponent>
 {
     public void Execute(ref LocalTamerComponent tamerComponent, ref MetadataComponent meta)
     {
-        if (meta.Owner != ownerPlayer)
+        if (meta.Owner != ownerPlayerId)
             return;
 
         if (tamerComponent.Pawn == null)

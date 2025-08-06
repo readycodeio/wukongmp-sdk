@@ -1,28 +1,27 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS;
-using WukongMp.Api.Old.State;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
     [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
-    [HarmonyPatchCategory(Constants.CoopPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class CoopPatchAttrs
     {
         public static void Postfix(BUC_AttrContainer __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            var players = DI.Instance.Players;
+            if (DI.Instance.PlayerState.LocalMainCharacter == null)
+                return;
 
             if (__instance.Owner.IsNullOrDestroyed())
             {
@@ -30,43 +29,45 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (__instance.Owner == players.LocalPlayerState.Pawn)
+            if (__instance.Owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
             {
                 return; // players own their characters
             }
 
-            var playerState = players.GetPlayerByActor(__instance.Owner);
+            var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(__instance.Owner);
 
             // remote player - sync properties and HP
 
-            if (playerState != null)
+            if (mainEntity != null)
             {
+                ref var mainComp = ref mainEntity.Value.GetState();
+                
                 // set their attributes
-                foreach (var (attr, value) in playerState.Attributes)
+                foreach (var (attr, value) in mainComp.Attributes)
                 {
                     __instance.SetFloatValue(attr, value);
                 }
 
-                if (playerState.Hp <= -80000)
+                if (mainComp.Hp <= -80000)
                 {
-                    Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", playerState.Hp);
+                    Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
                     return;
                 }
 
-                if (playerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                if (mainComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                 {
                     return; // do not reapply the same value
                 }
 
-                Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
-                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
+                Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), mainComp.Hp);
+                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
 
-                if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
+                if (!set.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
                 {
-                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", playerState.NickName, playerState.Hp, set);
+                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, set);
                 }
 
-                if (playerState.IsDead)
+                if (mainComp.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
@@ -76,7 +77,7 @@ namespace WukongMp.Api.Patches
                         return;
                     }
 
-                    Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PlayerId);
+                    Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
 
@@ -85,21 +86,23 @@ namespace WukongMp.Api.Patches
 
             // remote monster - sync HP
 
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
-            if (!entity.HasValue)
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance.Owner as BGUCharacterCS);
+            if (!tamerEntity.HasValue)
                 return;
 
             // owned, skip
-            if (DI.Instance.OwnsEntity(entity.Value))
+            if (DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
-            if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
+            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+            
+            if (!localTamer.IsTamerSynced)
             {
                 Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
                 return;
             }
 
-            var hpComp = entity.Value.GetComponent<HpComponent>();
+            ref var hpComp = ref tamerEntity.Value.GetHp();
 
             if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
             {
@@ -119,10 +122,10 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            var players = DI.Instance.Players;
+            var playerState = DI.Instance.PlayerState;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -133,46 +136,52 @@ namespace WukongMp.Api.Patches
 
             var result = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(AttrID);
 
+            var mainEntity = playerState.LocalMainCharacter;
+
             if (AttrID == EBGUAttrFloat.Hp)
             {
-                if (owner == players.LocalPlayerState.Pawn)
+                if (mainEntity != null && owner == mainEntity.Value.GetLocalState().Pawn)
                 {
-                    if (!players.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
+                    ref var mainComp = ref mainEntity.Value.GetState();
+                    
+                    if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
                     {
-                        players.LocalPlayerState.Hp = result;
-                        client.CachePlayerProperty(nameof(PlayerState.Hp), result);
+                        mainComp.Hp = result;
                     }
                 }
                 else
                 {
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner as BGUCharacterCS);
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner as BGUCharacterCS);
 
-                    if (!entity.HasValue)
+                    if (!tamerEntity.HasValue)
                         return; // not found
 
-                    if (!DI.Instance.OwnsEntity(entity.Value))
+                    if (!DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                         return; // not owned
 
-                    if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
+                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+
+                    if (!localTamer.IsTamerSynced)
                         return; // not synced
 
-                    ref var hpComp = ref entity.Value.GetComponent<HpComponent>();
+                    ref var hpComp = ref tamerEntity.Value.GetHp();
 
                     hpComp.HpMaxBase = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = result;
                 }
             }
 
-            if (Constants.SyncedAttributes.Contains(AttrID) && owner == players.LocalPlayerState.Pawn)
+            if (mainEntity != null && Constants.SyncedAttributes.Contains(AttrID) && owner == mainEntity.Value.GetLocalState().Pawn)
             {
-                if (players.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
+                ref var mainComp = ref mainEntity.Value.GetState();
+                
+                if (mainComp.Attributes.TryGetValue(AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
                     return;
                 }
 
-                players.LocalPlayerState.Attributes[AttrID] = result;
-                DI.Instance.PlayerProperty.CachePlayerAttribute(AttrID, result);
+                mainComp.Attributes[AttrID] = result;
 
                 // some attributes may influence other attributes
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
@@ -181,8 +190,7 @@ namespace WukongMp.Api.Patches
                     Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
-                    players.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
-                    DI.Instance.PlayerProperty.CachePlayerAttribute(calc.finalVal, finalVal);
+                    mainComp.Attributes[calc.finalVal] = finalVal;
                 }
             }
         }
@@ -195,7 +203,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUC_ABPCharacterData? __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
             if (__instance == null)
@@ -213,79 +221,78 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var players = DI.Instance.Players;
+            var playerState = DI.Instance.PlayerState;
+            var pawnState = DI.Instance.PawnState;
+            
+            var mainEntity = playerState.LocalMainCharacter;
 
-            if (character == players.LocalPlayerState.Pawn)
+            if (mainEntity != null && character == mainEntity.Value.GetLocalState().Pawn)
             {
-                var localState = players.LocalPlayerState;
+                ref var main = ref mainEntity.Value.GetState();
+                ref var localMain = ref mainEntity.Value.GetLocalState();
 
-                if (localState.IsWaitingForSequence)
+                if (localMain.IsWaitingForSequence)
                 {
                     // update local player location
-                    RestrictPlayerLocation(localState, __instance);
+                    RestrictPlayerLocation(mainEntity.Value, __instance);
                 }
 
-                if (localState.IsFlying != __instance.IsFlying)
+                if (main.IsFlying != __instance.IsFlying)
                 {
-                    players.LocalPlayerState.IsFlying = __instance.IsFlying;
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.IsFlying), players.LocalPlayerState.IsFlying);
+                    main.IsFlying = __instance.IsFlying;
                 }
 
-                if (localState.IsFalling != __instance.IsFalling)
+                if (main.IsFalling != __instance.IsFalling)
                 {
-                    players.LocalPlayerState.IsFalling = __instance.IsFalling;
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.IsFalling), players.LocalPlayerState.IsFalling);
+                    main.IsFalling = __instance.IsFalling;
                 }
 
-                if (localState.IsLandingMove != __instance.IsLandingMove)
+                if (main.IsLandingMove != __instance.IsLandingMove)
                 {
-                    players.LocalPlayerState.IsLandingMove = __instance.IsLandingMove;
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.IsLandingMove), players.LocalPlayerState.IsLandingMove);
+                    main.IsLandingMove = __instance.IsLandingMove;
                 }
 
-                if (!players.LocalPlayerState.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
+                if (!main.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                 {
-                    players.LocalPlayerState.Velocity = __instance.Velocity;
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.Velocity), players.LocalPlayerState.Velocity);
+                    main.Velocity = __instance.Velocity;
                 }
 
-                if (!players.LocalPlayerState.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
+                if (!main.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                 {
-                    players.LocalPlayerState.MoveAcceleration = __instance.MoveAcceleration;
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.MoveAcceleration), players.LocalPlayerState.MoveAcceleration);
+                    main.MoveAcceleration = __instance.MoveAcceleration;
                 }
 
-                if (!players.LocalPlayerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                if (!main.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                 {
-                    players.LocalPlayerState.Location = __instance.ActorLocation;
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.Location), players.LocalPlayerState.Location);
+                    main.Location = __instance.ActorLocation;
                 }
 
-                if (!players.LocalPlayerState.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                if (!main.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                 {
-                    players.LocalPlayerState.Rotation = __instance.ActorRotation;
-                    DI.Instance.PlayerProperty.CachePlayerProperty(nameof(PlayerState.Rotation), players.LocalPlayerState.Rotation);
+                    main.Rotation = __instance.ActorRotation;
                 }
 
-                DI.Instance.Synchronizer.UpdatePlayer(localState, DeltaTime);
+                TeleportUtils.UpdatePlayerPosition(mainEntity.Value, DeltaTime);
             }
             else
             {
-                var playerState = players.GetPlayerByActor(character);
+                var otherMainEntity = pawnState.GetByEntityByPlayerPawn(character);
 
-                if (playerState != null)
+                if (otherMainEntity != null)
                 {
+                    ref var otherMain = ref otherMainEntity.Value.GetState();
+                    
                     var events = BUS_EventCollectionCS.Get(character);
 
-                    __instance.IsFlying = playerState.IsFlying;
-                    __instance.IsFalling = playerState.IsFalling;
-                    __instance.IsLandingMove = playerState.IsLandingMove;
-                    __instance.Velocity = playerState.Velocity;
+                    __instance.IsFlying = otherMain.IsFlying;
+                    __instance.IsFalling = otherMain.IsFalling;
+                    __instance.IsLandingMove = otherMain.IsLandingMove;
+                    __instance.Velocity = otherMain.Velocity;
 
                     if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.Velocity = FVector.ZeroVector;
-                        playerState.Velocity = FVector.ZeroVector;
+                        otherMain.Velocity = FVector.ZeroVector;
 
                         // without these 5 lines the character will not jump
                         __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
@@ -296,54 +303,55 @@ namespace WukongMp.Api.Patches
                         events.Evt_MovementForceStop.Invoke();
                     }
 
-                    __instance.MoveAcceleration = playerState.MoveAcceleration;
+                    __instance.MoveAcceleration = otherMain.MoveAcceleration;
                     if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.MoveAcceleration = FVector.ZeroVector;
-                        playerState.MoveAcceleration = FVector.ZeroVector;
+                        otherMain.MoveAcceleration = FVector.ZeroVector;
                     }
 
-                    if (!playerState.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                    if (!otherMain.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
-                        events.Evt_InterpolationMove.Invoke(playerState.Location, playerState.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        events.Evt_InterpolationMove.Invoke(otherMain.Location, otherMain.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
 
-                    DI.Instance.Synchronizer.UpdatePlayer(playerState, DeltaTime);
+                    TeleportUtils.UpdatePlayerPosition(otherMainEntity.Value, DeltaTime);
                 }
                 else
                 {
                     // maybe it's a monster
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
 
-                    if (entity.HasValue)
+                    if (tamerEntity.HasValue)
                     {
-                        if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
+                        ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                        
+                        if (!localTamer.IsTamerSynced)
                         {
                             return;
                         }
 
-                        if (DI.Instance.OwnsEntity(entity.Value))
+                        if (DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                         {
-                            ref var anim = ref entity.Value.GetComponent<AnimationComponent>();
+                            ref var anim = ref tamerEntity.Value.GetAnimation();
                             anim.Velocity = __instance.Velocity.ToVector3();
                             anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
 
-                            ref var trans = ref entity.Value.GetComponent<TranslationComponent>();
+                            ref var trans = ref tamerEntity.Value.GetTranslation();
                             trans.Position = __instance.ActorLocation.ToVector3();
                             trans.Rotation = __instance.ActorRotation.ToVector3();
                         }
                         else
                         {
-                            var anim = entity.Value.GetComponent<AnimationComponent>();
-                            var tamer = entity.Value.GetComponent<LocalTamerComponent>();
+                            ref var anim = ref tamerEntity.Value.GetAnimation();
 
                             __instance.Velocity = anim.Velocity.ToFVector();
                             __instance.MoveAcceleration = anim.MoveAcceleration.ToFVector();
                             __instance.MovementComp.Velocity = anim.Velocity.ToFVector();
 
-                            var events = BUS_EventCollectionCS.Get(tamer.Pawn);
+                            var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
 
-                            var trans = entity.Value.GetComponent<TranslationComponent>();
+                            ref var trans = ref tamerEntity.Value.GetTranslation();
                             var location = trans.Position.ToFVector();
                             var rotation = trans.Rotation.ToFRotator();
 
@@ -358,13 +366,15 @@ namespace WukongMp.Api.Patches
             }
         }
 
-        private static void RestrictPlayerLocation(PlayerState localState, BUC_ABPCharacterData characterData)
+        private static void RestrictPlayerLocation(MainCharacterEntity mainEntity, BUC_ABPCharacterData characterData)
         {
-            var distanceSq = localState.SequenceLocation.Vector_DistanceSquared(characterData.ActorLocation);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            
+            var distanceSq = localMainComp.SequenceLocation.Vector_DistanceSquared(characterData.ActorLocation);
             if (distanceSq > Constants.RestrictedMovementRadiusSquare)
             {
-                characterData.ActorLocation = localState.SequenceLocation + Constants.RestrictedMovementRadius * (characterData.ActorLocation - localState.SequenceLocation).GetSafeNormal(); // cast from above
-                localState.Pawn?.SetActorLocation(characterData.ActorLocation, false, out _, true);
+                characterData.ActorLocation = localMainComp.SequenceLocation + Constants.RestrictedMovementRadius * (characterData.ActorLocation - localMainComp.SequenceLocation).GetSafeNormal(); // cast from above
+                localMainComp.Pawn?.SetActorLocation(characterData.ActorLocation, false, out _, true);
             }
         }
     }
@@ -375,25 +385,25 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(AActor Actor)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
             if (Actor is BGUCharacterCS character)
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
-                if (entity.HasValue)
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
+                if (tamerEntity.HasValue)
                 {
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
                     // only clean up own monsters
-                    if (!DI.Instance.OwnsEntity(entity.Value))
+                    if (!DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                     {
                         Logging.LogWarning("Skipping cleanup for remote monster");
                         return;
                     }
 
                     Logging.LogDebug("Cleaning up monster: {Name}", Actor.GetFullName());
-                    TamerUtils.CleanupMonster(entity.Value);
+                    TamerUtils.CleanupMonster(tamerEntity.Value);
                 }
 
                 var tamer = character.GetTamerOwner();
@@ -411,17 +421,17 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(EBGUSimpleState SimpleState, bool IsRemove, BUS_UnitStateSystem __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
             var owner = __instance.GetOwner();
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
-            if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
             {
                 if (SimpleState == EBGUSimpleState.Immobilizing)
                     return;
 
-                var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
+                var netId = tamerEntity.Value.GetMeta().NetId;
 
                 DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
                 Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
@@ -435,28 +445,30 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(EBUStateTrigger Trigger, float Time, bool NeedForceUpdate, BUS_UnitStateSystem __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            var players = DI.Instance.Players;
+            var playerState = DI.Instance.PlayerState;
             var owner = __instance.GetOwner();
 
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
-            if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
             {
                 if (Trigger == EBUStateTrigger.Die)
                     return;
 
-                var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
+                var netId = tamerEntity.Value.GetMeta().NetId;
 
                 DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
             }
 
-
-            if (owner == players.LocalPlayerState.Pawn)
+            if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
-                DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(NetworkIdComponent.FromPlayerId(players.LocalPlayerState.PlayerId), Trigger, Time, NeedForceUpdate));
+                var mainEntity = playerState.LocalMainCharacter;
+                var netId = mainEntity.Value.GetMeta().NetId;
+                
+                DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }
@@ -468,16 +480,16 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(EState_MM MMState, BUS_ABPHelperComp __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
             var owner = __instance.GetOwner();
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (!entity.HasValue || !DI.Instance.OwnsEntity(entity.Value))
+            if (!tamerEntity.HasValue || !DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
-            var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
+            var netId = tamerEntity.Value.GetMeta().NetId;
             DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
         }
     }

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
@@ -339,7 +340,7 @@ namespace WukongMp.Api.Patches
     {
         private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
         {
-            if (!DI.Instance.RoomState.InRoom || !Constants.IsCoop)
+            if (!DI.Instance.AreaState.InRoom || !Constants.IsCoop)
                 return true;
 
             if (!SlotName.StartsWith("ArchiveSaveFile"))
@@ -351,7 +352,7 @@ namespace WukongMp.Api.Patches
 
             Task.Run(async () =>
             {
-                if (DI.Instance.RoomState.IsMasterClient)
+                if (DI.Instance.AreaState.IsMasterClient)
                 {
                     var uploadedWorld = await DI.Instance.SaveRelay.UploadWorldSaveAsync(data);
                     LogSuccess(uploadedWorld, "world save");

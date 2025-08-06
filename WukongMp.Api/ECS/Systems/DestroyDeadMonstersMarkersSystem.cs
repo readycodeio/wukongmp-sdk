@@ -1,6 +1,7 @@
 ﻿using b1;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.ECS.Systems;
@@ -11,16 +12,16 @@ public sealed class DestroyDeadMonstersMarkersSystem : QuerySystem<HpComponent, 
     {
         Query.ForEachEntity((
             ref hpComp,
-            ref tamer,
-            ref marker,
+            ref localTamerComp,
+            ref markerComp,
             entity) =>
         {
-            if (tamer.IsMonsterSynced && hpComp.Hp <= 0 && !marker.DestroyQueued)
+            if (localTamerComp.IsMonsterSynced && hpComp.Hp <= 0 && !markerComp.DestroyQueued)
             {
                 Logging.LogDebug("Monster {Id} died, destroying marker", entity.Id);
-                marker.DestroyQueued = true;
+                markerComp.DestroyQueued = true;
 
-                var markerActor = marker.MarkerActor;
+                var markerActor = markerComp.MarkerActor;
                 if (markerActor != null)
                 {
                     GameLoopPatch.QueueOnGameThread(() => { BGU_UnrealWorldUtil.DestroyActor(markerActor); }, "DestroyMarkerActor");

@@ -1,0 +1,71 @@
+﻿using b1;
+using Friflo.Engine.ECS;
+using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
+using WukongMp.Api.ECS.Values;
+
+namespace WukongMp.Api.ECS.Components;
+
+public struct LocalMainCharacterComponent : IComponent
+{
+    private BGUCharacterCS? _pawn;
+
+    public BGUCharacterCS? Pawn
+    {
+        get
+        {
+            if (_pawn.IsNullOrDestroyed())
+            {
+                Logging.LogWarning("Player pawn is null or destroyed");
+                return null;
+            }
+
+            return _pawn;
+        }
+        set => _pawn = value;
+    }
+        
+    public bool RunImmobilizePatches { get; set; }
+    public MontageState MontageState { get; set; }
+        
+    public bool ReceivedPhantomRushExit { get; set; }
+    public int TeleportFinishFrames { get; set; }
+    public float AIPathMoveStuckTimer { get; set; }
+    public bool IsAIPathMoveStuck { get; set; }
+
+    // FIXME: Move to PlayerComponent?
+    public bool IsWaitingForSequence { get; set; }
+    public bool IsJoiningSequence { get; set; }
+    public FVector SequenceLocation { get; set; }
+    public int WaitingSequenceId { get; set; }
+    
+    public AActor? MarkerActor
+    {
+        get
+        {
+            if (field != null && field.IsNullOrDestroyed())
+            {
+                Logging.LogTrace("Marker actor is destroyed");
+                return null;
+            }
+
+            return field;
+        }
+        set;
+    }
+        
+    public void UpdateMarkerPosition()
+    {
+        if (MarkerActor != null)
+        {
+            if (Pawn == null)
+            {
+                Logging.LogError("Pawn is null");
+                return;
+            }
+
+            var markerHeight = Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
+            MarkerActor.SetActorLocation(Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
+        }
+    }
+}

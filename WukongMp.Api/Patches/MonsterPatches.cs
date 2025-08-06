@@ -8,6 +8,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
@@ -23,15 +24,15 @@ namespace WukongMp.Api.Patches
 
         private static void Postfix(float DeltaTime, int TickGroup)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            DI.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((ref meta, ref tamer, ref trans, _) =>
+            DI.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((ref meta, ref tamer, ref trans, entity) =>
             {
                 if (!tamer.IsTamerSynced || !tamer.IsTamerValid || tamer.Pawn == null)
                     return;
 
-                if (DI.Instance.OwnsEntity(meta.Owner))
+                if (DI.Instance.OwnerManager.OwnsEntity(entity))
                 {
                     // send updates for owned monsters
                     trans.Position = tamer.Pawn.GetActorLocation().ToVector3();
@@ -71,7 +72,7 @@ namespace WukongMp.Api.Patches
 
         public static void Postfix(FTamerRef InTamer)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
             Logging.LogDebug("Tamer {Tamer} registered by game", InTamer.TamerName);
@@ -84,22 +85,22 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUTamerActor __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            if (DI.Instance.RoomState.IsMasterClient)
+            if (DI.Instance.AreaState.IsMasterClient)
             {
                 if (__instance.TamerType != ETamerType.Summoned)
                 {
                     var guid = BGU_DataUtil.GetActorGuid(__instance);
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByGuid(guid);
-                    if (entity == null)
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
+                    if (tamerEntity == null)
                     {
                         SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
                     }
                     else
                     {
-                        Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
+                        Logging.LogDebug("Monster already exists in ECS: {Entity}", tamerEntity.ToString());
                     }
                 }
             }
@@ -112,7 +113,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(FTamerRef __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
             try
@@ -123,14 +124,14 @@ namespace WukongMp.Api.Patches
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
-                var entity = DI.Instance.PawnRegistry.GetByTamerActor(tamer);
-                if (entity.HasValue)
+                var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
+                if (tamerEntity.HasValue)
                 {
-                    ref var localTamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
-                    if (!localTamerComp.IsLocallySpawned)
+                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                    if (!localTamer.IsLocallySpawned)
                     {
-                        localTamerComp.IsLocallySpawned = true;
-                        var meta = entity.Value.GetComponent<MetadataComponent>();
+                        localTamer.IsLocallySpawned = true;
+                        var meta = tamerEntity.Value.GetMeta();
                         DI.Instance.Rpc.SendUnitSpawned(meta.NetId);
                     }
                 }
@@ -163,30 +164,30 @@ namespace WukongMp.Api.Patches
     {
         static bool Prefix(FTamerRef __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
                 return true;
 
-            var tamer = __instance.InstancePtr.Get();
+            var tamerActor = __instance.InstancePtr.Get();
 
-            var entity = DI.Instance.PawnRegistry.GetByTamerActor(tamer);
-            if (entity.HasValue)
+            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamerActor);
+            if (tamerEntity.HasValue)
             {
-                ref var localTamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
-                if (localTamerComp.IsLocallySpawned)
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                if (localTamer.IsLocallySpawned)
                 {
-                    localTamerComp.IsLocallySpawned = false;
-                    var meta = entity.Value.GetComponent<MetadataComponent>();
+                    localTamer.IsLocallySpawned = false;
+                    ref var meta = ref tamerEntity.Value.GetMeta();
                     DI.Instance.Rpc.SendUnitDespawn(meta.NetId);
                 }
 
-                ref var tamerComp = ref entity.Value.GetComponent<TamerComponent>();
-                if (!tamerComp.ShouldBeSpawned)
+                ref var tamer = ref tamerEntity.Value.GetTamer();
+                if (!tamer.ShouldBeSpawned)
                 {
-                    Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamer));
-                    localTamerComp.IsMonsterSynced = false;
+                    Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
+                    localTamer.IsMonsterSynced = false;
                     return true;
                 }
 
@@ -194,7 +195,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
+                Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamerActor.GetMonster()));
                 return true;
             }
         }
@@ -206,15 +207,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_AIComp __instance, bool bEnable)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -228,15 +229,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_AIComp __instance, bool IsPause)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -251,15 +252,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_AIComp __instance, bool bEnable)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -273,15 +274,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(BUS_FsmComp __instance, bool IsPause)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -300,15 +301,15 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(UActorCompBaseCS __instance, bool bEnable)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             var owner = __instance.GetOwner();
             if (owner != null)
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -331,7 +332,7 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(UActorCompBaseCS __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             var teamId = Traverse.Create(__instance).Field<BGUCharacterCS>("OwnerAsCharacterCS").Value.GetTeamIDInCS();
@@ -345,7 +346,7 @@ namespace WukongMp.Api.Patches
     {
         static bool Prefix(EResetActorReason ResetReason, FTamerRef __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             Logging.LogDebug("Tamer on reset called for tamer {Tamer} with reason {Reason}", __instance.TamerName, ResetReason);
@@ -359,7 +360,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(FGameplayTag EventTag, BUS_FsmComp __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGoHome)
@@ -369,14 +370,14 @@ namespace WukongMp.Api.Patches
             }
 
             var owner = __instance.GetOwner();
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner);
-            if (entity.HasValue && DI.Instance.OwnsEntity(entity.Value))
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
             {
-                var tamerComp = entity.Value.GetComponent<LocalTamerComponent>();
-                if (tamerComp.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerComp.Pawn, EventTag))
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                if (localTamer.Pawn != null && !BGU_CommonUtil.IsInFsmState(localTamer.Pawn, EventTag))
                 {
                     Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
-                    var netId = entity.Value.GetComponent<MetadataComponent>().NetId;
+                    var netId = tamerEntity.Value.GetMeta().NetId;
                     DI.Instance.Rpc.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
                 }
             }
@@ -391,7 +392,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem? __instance, BUC_MovementData ___MovementData)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
             if (__instance == null)
@@ -410,22 +411,22 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(character);
-            if (entity.HasValue)
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
+            if (tamerEntity.HasValue)
             {
-                ref var tamerComp = ref entity.Value.GetComponent<LocalTamerComponent>();
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
 
-                if (!tamerComp.IsTamerValid)
+                if (!localTamer.IsTamerValid)
                     return;
 
-                ref var anim = ref entity.Value.GetComponent<MonsterAnimationComponent>();
-                if (DI.Instance.OwnsEntity(entity.Value))
+                ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
+                if (DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
                 {
                     anim.MoveAiType = (byte)___MovementData.MoveAIType;
                 }
                 else
                 {
-                    var events = BUS_EventCollectionCS.Get(tamerComp.Pawn);
+                    var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
                     events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
                 }
             }

@@ -1,11 +1,8 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS;
-using WukongMp.Api.Old;
-using WukongMp.Api.Old.State;
 
 namespace WukongMp.Api.Patches
 {
@@ -15,10 +12,10 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUC_AttrContainer __instance)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            var players = DI.Instance.Players;
+            var playerState = DI.Instance.PlayerState;
 
             if (__instance.Owner.IsNullOrDestroyed())
             {
@@ -26,16 +23,17 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (DI.Instance.RoomState.IsMasterClient)
+            if (DI.Instance.AreaState.IsMasterClient)
             {
                 // master client always has the latest data for himself, but may need to apply it for others
-                if (__instance.Owner == players.LocalPlayerState.Pawn)
+                if (__instance.Owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
                     return;
 
-                var playerState = players.GetPlayerByActor(__instance.Owner);
-                if (playerState != null)
+                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(__instance.Owner);
+                if (mainEntity != null)
                 {
-                    foreach (var (attr, value) in playerState.Attributes)
+                    ref var mainComp = ref mainEntity.Value.GetState();
+                    foreach (var (attr, value) in mainComp.Attributes)
                     {
                         __instance.SetFloatValue(attr, value);
                     }
@@ -47,31 +45,34 @@ namespace WukongMp.Api.Patches
             // for clients, their own attributes are already set by them, and they do not care about attributes of other clients / monsters
             // because it's the master client that ultimately calculates damage in combat
 
-            if (__instance.Owner == players.LocalPlayerState.Pawn)
+            if (__instance.Owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
+                var mainEntity = playerState.LocalMainCharacter;
+                ref var mainComp = ref mainEntity.Value.GetState();
+                
                 // local player (client)
-                if (players.LocalPlayerState.Hp <= -80000)
+                if (mainComp.Hp <= -80000)
                 {
-                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", players.LocalPlayerState.Hp);
+                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", mainComp.Hp);
                     return;
                 }
 
                 var currentHp = __instance.GetFloatValue(EBGUAttrFloat.Hp);
 
-                if (players.LocalPlayerState.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
+                if (mainComp.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
                 {
                     return; // do not reapply the same value
                 }
 
-                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, players.LocalPlayerState.Hp);
+                var setHp = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
 
-                if (!set.Equals(players.LocalPlayerState.Hp, Constants.FloatComparisonTolerance))
+                if (!setHp.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
                 {
-                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", players.LocalPlayerState.NickName, players.LocalPlayerState.Hp, set);
-                    players.CachePlayerProperty(nameof(PlayerState.Hp), set);
+                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, setHp);
+                    // NOTE: This branch no longer does anything as ECS entities are propagated automatically
                 }
 
-                if (players.LocalPlayerState.IsDead)
+                if (mainComp.IsDead)
                 {
                     var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
@@ -81,44 +82,46 @@ namespace WukongMp.Api.Patches
                         return;
                     }
 
-                    Logging.LogDebug("Applying unit dead for player {PlayerId}", players.LocalPlayerState.PlayerId);
+                    Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
 
                     GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                 }
             }
             else
             {
-                var playerState = players.GetPlayerByActor(__instance.Owner);
+                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(__instance.Owner);
 
                 // remote player
-                if (playerState != null)
+                if (mainEntity != null)
                 {
+                    ref var mainComp = ref mainEntity.Value.GetState();
+                    
                     // set their attributes
-                    foreach (var (attr, value) in playerState.Attributes)
+                    foreach (var (attr, value) in mainComp.Attributes)
                     {
                         __instance.SetFloatValue(attr, value);
                     }
 
-                    if (playerState.Hp <= -80000)
+                    if (mainComp.Hp <= -80000)
                     {
-                        Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", playerState.Hp);
+                        Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
                         return;
                     }
 
-                    if (playerState.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                    if (mainComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                     {
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), playerState.Hp);
-                    var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, playerState.Hp);
+                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), mainComp.Hp);
+                    var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
 
-                    if (!set.Equals(playerState.Hp, Constants.FloatComparisonTolerance))
+                    if (!set.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
                     {
-                        Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", playerState.NickName, playerState.Hp, set);
+                        Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, set);
                     }
 
-                    if (playerState.IsDead)
+                    if (mainComp.IsDead)
                     {
                         var events = BUS_EventCollectionCS.Get(__instance.Owner);
 
@@ -128,23 +131,24 @@ namespace WukongMp.Api.Patches
                             return;
                         }
 
-                        Logging.LogDebug("Applying unit dead for player {PlayerId}", playerState.PlayerId);
+                        Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
                         GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
                     }
                 }
                 else
                 {
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(__instance.Owner as BGUCharacterCS);
-                    if (!entity.HasValue)
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance.Owner as BGUCharacterCS);
+                    if (!tamerEntity.HasValue)
                         return;
 
-                    if (!entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
+                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                    if (!localTamer.IsTamerSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
                         return;
                     }
 
-                    var hpComp = entity.Value.GetComponent<HpComponent>();
+                    var hpComp = tamerEntity.Value.GetHp();
 
                     if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
                     {
@@ -167,18 +171,18 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(EBGUAttrFloat AttrID)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            return AttrID != EBGUAttrFloat.Hp || DI.Instance.RoomState.IsMasterClient;
+            return AttrID != EBGUAttrFloat.Hp || DI.Instance.AreaState.IsMasterClient;
         }
 
         public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
         {
-            if (!DI.Instance.RoomState.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            var players = DI.Instance.Players;
+            var playerState = DI.Instance.PlayerState;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -192,42 +196,49 @@ namespace WukongMp.Api.Patches
             if (AttrID == EBGUAttrFloat.Hp)
             {
                 // I am a server
-                if (DI.Instance.RoomState.IsMasterClient)
+                if (DI.Instance.AreaState.IsMasterClient)
                 {
+                    var mainEntity = playerState.LocalMainCharacter;
+                    if (!mainEntity.HasValue)
+                        return;
+                    
+                    ref var mainComp = ref mainEntity.Value.GetState();
+                    ref var localMainComp = ref mainEntity.Value.GetLocalState();
+                    
                     // I was damaged, set my Hp
-                    if (owner == players.LocalPlayerState.Pawn)
+                    if (owner == localMainComp.Pawn)
                     {
-                        if (!players.LocalPlayerState.Hp.Equals(result, Constants.FloatComparisonTolerance))
+                        if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            players.LocalPlayerState.Hp = result;
-                            players.CachePlayerProperty(nameof(PlayerState.Hp), result);
+                            mainComp.Hp = result;
                         }
 
                         return;
                     }
 
                     // remote player was damaged, set his properties
-                    var remotePlayer = DI.Instance.Players.GetPlayerByActor(owner);
-                    if (remotePlayer != null)
+                    var remoteMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+                    if (remoteMainEntity != null)
                     {
-                        if (!remotePlayer.Hp.Equals(result, Constants.FloatComparisonTolerance))
+                        ref var remoteMain = ref remoteMainEntity.Value.GetState();
+                        
+                        if (!remoteMain.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
-                            remotePlayer.Hp = result;
-                            players.SetRemotePlayerProperty(remotePlayer.PlayerId, nameof(PlayerState.Hp), result);
+                            remoteMain.Hp = result;
                         }
 
                         return;
                     }
 
                     // monster was damaged
-                    var entity = DI.Instance.PawnRegistry.GetMonsterByActor(owner as BGUCharacterCS);
-                    if (!entity.HasValue || !entity.Value.GetComponent<LocalTamerComponent>().IsTamerSynced)
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner as BGUCharacterCS);
+                    if (!tamerEntity.HasValue || !tamerEntity.Value.GetLocalTamer().IsTamerSynced)
                     {
                         Logging.LogDebug("Monster {Name} is not synced, skipping HP update", owner.GetName());
                         return;
                     }
 
-                    ref var hpComp = ref entity.Value.GetComponent<HpComponent>();
+                    ref var hpComp = ref tamerEntity.Value.GetHp();
 
                     hpComp.HpMaxBase = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = result;
@@ -238,16 +249,18 @@ namespace WukongMp.Api.Patches
             }
 
             // only sync attributes that influence combat and are client-authoritative
-            if (Constants.SyncedAttributes.Contains(AttrID) && owner == players.LocalPlayerState.Pawn)
+            if (Constants.SyncedAttributes.Contains(AttrID) && owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
-                if (players.LocalPlayerState.Attributes.TryGetValue(AttrID, out var existing)
+                var mainEntity = playerState.LocalMainCharacter;
+                ref var main = ref mainEntity.Value.GetState();
+                
+                if (main.Attributes.TryGetValue(AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
                     return;
                 }
 
-                players.LocalPlayerState.Attributes[AttrID] = result;
-                players.CachePlayerAttribute(AttrID, result);
+                main.Attributes[AttrID] = result;
 
                 // some attributes may influence other attributes
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
@@ -256,8 +269,7 @@ namespace WukongMp.Api.Patches
                     Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
-                    players.LocalPlayerState.Attributes[calc.finalVal] = finalVal;
-                    players.CachePlayerAttribute(calc.finalVal, finalVal);
+                    main.Attributes[calc.finalVal] = finalVal;
                 }
             }
         }

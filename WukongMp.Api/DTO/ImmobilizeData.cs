@@ -1,15 +1,15 @@
 ﻿using LiteNetLib.Utils;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Serialization;
-using ReadyM.Relay.Client;
 
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct TriggerImmobilizeData(NetworkIdComponent playerId, NetworkIdComponent target, bool greatSageTalentActiveBuff) : INetSerializable
+public partial struct TriggerImmobilizeData(NetworkId playerId, NetworkId target, bool greatSageTalentActiveBuff) : INetSerializable
 {
-    public NetworkIdComponent PlayerId = playerId;
-    public NetworkIdComponent Target = target;
+    public NetworkId PlayerId = playerId;
+    public NetworkId Target = target;
     public bool GreatSageTalentActiveBuff = greatSageTalentActiveBuff;
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
@@ -15,7 +15,7 @@ namespace WukongMp.Api.UI
         private int _messageId;
 
         private bool _levelLoaded;
-        private Queue<string> _commandQueue = new();
+        private readonly Queue<string> _commandQueue = new();
 
         protected override void PostInitialize()
         {

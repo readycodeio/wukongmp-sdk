@@ -2,6 +2,7 @@
 using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
 
