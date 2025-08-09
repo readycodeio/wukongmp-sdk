@@ -2,13 +2,14 @@
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class SyncMainCharacterSystem(WukongPlayerState playerState, WukongPlayerModeManager modeManager, ILogger logger)
+public class SyncOtherMainCharactersSystem(WukongPlayerState playerState, WukongPlayerModeManager modeManager, ILogger logger)
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent, TeamComponent>
 {
     protected override void OnUpdate()

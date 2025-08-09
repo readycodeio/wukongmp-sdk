@@ -5,11 +5,17 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class SyncMonstersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+/// <summary>
+/// Spawns pawns for monsters that do not correspond to any current scene pawn. Tamers have local state that indicates
+/// whether they require spawning.
+/// </summary>
+/// <param name="state"></param>
+public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
@@ -21,6 +27,8 @@ public sealed class SyncMonstersSystem(ClientState state) : QuerySystem<Metadata
             ref localTamerComp,
             entity) =>
         {
+            // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
+            // ones spawned in PVP?)
             if (localTamerComp.IsMonsterSynced || !tamerComp.ShouldBeSpawned)
             {
                 return;

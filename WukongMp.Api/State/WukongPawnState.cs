@@ -2,13 +2,13 @@
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Server.Wukong.ECS.Registry;
 using UnrealEngine.Engine;
+using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
@@ -18,25 +18,24 @@ public class WukongPawnState
     private readonly ClientNetworkedEntityState _netEntity;
     private readonly ILogger _logger;
     
-    private readonly ArchetypeId _monsterArchetype;
+    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
 
-    public WukongPawnState(Store world, ClientNetworkedEntityState netEntity, ILogger logger)
+    public WukongPawnState(
+        Store world, 
+        ClientWukongArchetypeRegistration wukongArchetype, 
+        ClientNetworkedEntityState netEntity,
+        ILogger logger)
     {
         _world = world;
         _netEntity = netEntity;
         _logger = logger;
 
-        _monsterArchetype = world.RegisterArchetype(b =>
-        {
-            WukongCoreApi.RegisterMonsterArchetype(b);
-            b.Add<LocalTamerComponent>();
-            b.Add<MarkerComponent>();
-        });
+        _wukongArchetype = wukongArchetype;
     }
     
     public Entity CreateNetworkedMonster(LocalTamerComponent localTamer, TamerComponent tamer, TeamComponent team)
     {
-        var (entity, netId) = _netEntity.CreateNetworkedAreaEntity(_monsterArchetype, b =>
+        var (entity, netId) = _netEntity.CreateNetworkedAreaEntity(_wukongArchetype.MonsterArchetype, b =>
         {
             b.Add(localTamer);
             b.Add(tamer);

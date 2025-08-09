@@ -10,7 +10,7 @@ namespace WukongMp.Api.Shim;
 
 public static class ShimUtils
 {
-    private static RelayClient CreateRelayNetworked(DI container, string host, int port, Guid userGuid, string? shimDbPath = null)
+    private static RelayClient CreateRelayNetworked(DI container, string host, int port, Guid userGuid, bool noDisconnect, string? shimDbPath = null)
     {
         var options = new RelayConnectionOptions()
         {
@@ -30,7 +30,7 @@ public static class ShimUtils
             }
         }
         
-        var relayClient = new RelayClient(host, port, options, container.LoggerFactory.CreateLogger("Relay Client"));
+        var relayClient = new RelayClient(host, port, options, noDisconnect, container.LoggerFactory.CreateLogger("Relay Client"));
         return relayClient;
     }
 
@@ -47,20 +47,20 @@ public static class ShimUtils
         container.ShimAuto.ShouldAutoPlay = true;
     }
 
-    public static void InitRelayRecordShim(DI container, string host, int port, Guid userGuid, string shimPath)
+    public static void InitRelayRecordShim(DI container, string host, int port, Guid userGuid, bool noDisconnect, string shimPath)
     {
         var shimDbPath = Path.GetDirectoryName(shimPath);
         
-        var relayClient = CreateRelayNetworked(container, host, port, userGuid, shimDbPath);
+        var relayClient = CreateRelayNetworked(container, host, port, userGuid, noDisconnect, shimDbPath);
 
-        AttachRecording(container, host, port);
+        AttachRecording(container, host, port, noDisconnect);
         
         container.RelayClient.Attach(relayClient);
         
         container.ShimAuto.ShouldAutoRecord = true;
     }
     
-    private static void AttachRecording(DI container, string host, int port)
+    private static void AttachRecording(DI container, string host, int port, bool noDisconnect)
     {
         var recordGuid = new Guid("deadbeef-3333-3333-3333-deadbeef0001");
         var recordOptions = new RelayConnectionOptions()
@@ -73,16 +73,20 @@ public static class ShimUtils
             host,
             port,
             recordOptions,
+            noDisconnect,
             container.LoggerFactory.CreateLogger("Recorder Relay")
         );
-        var recording = new ShimRecording();
+
+        var playerId = recordRelayClient.PlayerId;
+        var recording = new ShimRecording(playerId!.Value);
+        
         container.ShimRecorder.SetRecording(recording);
         container.ShimRecorder.Attach(recordRelayClient);
     }
 
-    public static void InitRelay(DI container, string host, int port, Guid userGuid)
+    public static void InitRelay(DI container, string host, int port, Guid userGuid, bool noDisconnect)
     {
-        var relayClient = CreateRelayNetworked(container, host, port, userGuid);
+        var relayClient = CreateRelayNetworked(container, host, port, userGuid, noDisconnect);
         
         container.RelayClient.Attach(relayClient);
     }

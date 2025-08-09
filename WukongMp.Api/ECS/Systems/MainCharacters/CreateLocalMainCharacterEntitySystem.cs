@@ -2,20 +2,30 @@
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class CreateLocalMainCharacterEntitySystem(WukongPlayerState playerState, ILogger logger) : BaseSystem
+/// <summary>
+/// Creates the MainCharacterEntity corresponding to the locally controlled pawn
+/// </summary>
+/// <param name="clientState"></param>
+/// <param name="playerState"></param>
+/// <param name="logger"></param>
+public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
-        var playerEntity = playerState.LocalPlayer;
+        var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity == null)
+            return;
+        var areaId = clientState.CurrentAreaId;
+        if (areaId == null)
             return;
         
         var pawn = GameUtils.GetControlledPawn();
@@ -36,9 +46,12 @@ public class CreateLocalMainCharacterEntitySystem(WukongPlayerState playerState,
         
         var mainEntity = playerState.CreateLocalMainCharacter();
         ref var mainComp = ref mainEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
+
+        localMainComp.Pawn = pawn;
         
-        mainComp.Location = pawn.GetActorLocation();
-        mainComp.Rotation = pawn.GetActorRotation();
+        mainComp.Location = pawn.GetActorLocation().ToVector3();
+        mainComp.Rotation = pawn.GetActorRotation().ToVector3();
 
         var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
         mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
@@ -47,7 +60,7 @@ public class CreateLocalMainCharacterEntitySystem(WukongPlayerState playerState,
         foreach (var attr in Constants.SyncedAttributes)
         {
             var value = attrContainer.GetFloatValue(attr);
-            mainComp.Attributes[attr] = value;
+            mainComp.Attributes.SetAttribute((byte)attr, value);
         }
 
         mainComp.CharacterNickName = player.NickName;

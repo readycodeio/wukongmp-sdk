@@ -1,32 +1,58 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Client.Blobs;
+using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Shim;
-using ReadyM.Relay.Common.Protocol;
+using ReadyM.Relay.Client.State;
 using WukongMp.Api.Old;
 
 namespace WukongMp.Api.Shim;
 
 public class ShimAutoStarter : IDisposable
 {
+    private readonly ClientState _clientState;
+    
     private readonly ShimRelayClient _playClient;
+    
     private readonly ShimRelayRecorder _recorder;
+    private readonly IRelayClient? _recorderRelayClient;
+    private readonly IBlobClient? _recorderBlobClient;
+    private readonly RelayClientService? _recorderRelayService;
     private readonly WukongEventBus _eventBus;
-    private readonly ILogger _backgroundLogger;
+    private readonly ILogger _recorderLogger;
 
     public bool ShouldAutoRecord { get; set; }
     public bool ShouldAutoPlay { get; set; }
 
     private bool _autoRecordingEnabled;
     private bool _autoPlayingEnabled;
-    private Task? _backgroundTask;
+    private Task? _recordingStartedTask;
 
-    public ShimAutoStarter(ShimRelayClient playClient, ShimRelayRecorder recorder, WukongEventBus eventBus, ILoggerFactory loggerFactory)
+    public ShimAutoStarter(
+        ClientState clientState,
+        ShimRelayClient playClient,
+        ShimRelayRecorder recorder,
+        WukongEventBus eventBus,
+        ILoggerFactory loggerFactory
+    )
     {
+        _clientState = clientState;
+        
         _playClient = playClient;
+
+        _recorderLogger = loggerFactory.CreateLogger("Recorder Shim");
         _recorder = recorder;
+        _recorderRelayClient = recorder.RelayClient;
+        if (_recorderRelayClient != null)
+        {
+            _recorderBlobClient = new BlobClient(_recorderRelayClient, _recorderLogger);
+            _recorderRelayService = new RelayClientService(_recorderRelayClient, _recorderLogger);
+        }
+        
         _eventBus = eventBus;
-        _backgroundLogger = loggerFactory.CreateLogger("Background Shim");
         
         _eventBus.OnBeginLoadGameplayLevel += OnBeginLoadGameplayLevel;
         _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
@@ -37,7 +63,7 @@ public class ShimAutoStarter : IDisposable
 
     public void Dispose()
     {
-        _backgroundTask?.GetAwaiter().GetResult();
+        _recordingStartedTask?.GetAwaiter().GetResult();
         
         if (_playClient.IsPlaying)
         {
@@ -81,33 +107,52 @@ public class ShimAutoStarter : IDisposable
     
     private void OnRecordingStarted()
     {
-        _backgroundTask = Task.Run(OnRecordingStartedAsync);
+        _recordingStartedTask = Task.Run(OnRecordingStartedAsync);
     }
 
     private async Task OnRecordingStartedAsync()
     {
-        var recordRelayClient = _recorder.RelayClient;
-        if (recordRelayClient == null)
+        if (_recorderRelayClient == null)
+            return;
+        if (_recorderRelayService == null)
             return;
         
-        _backgroundLogger.LogDebug("Connecting to record");
-        recordRelayClient.Start();
+        _recorderLogger.LogDebug("Connecting to record");
+        _recorderRelayService.Start();
 
-        _backgroundLogger.LogDebug("Waiting for establishing connection");
-        while (recordRelayClient.Connected != true)
+        _recorderRelayClient.RequestConnect();
+        
+        _recorderLogger.LogDebug("Waiting for establishing connection");
+
+        while (true)
         {
-            await Task.Delay(Constants.ShimClientTickRateMs);
+            var connected = await _recorderRelayClient.Scheduler.RunFuncAsync(context => context.Connected);
+            if (connected)
+                break;
+        
+            await Task.Delay(100);
         }
         
-        _backgroundLogger.LogDebug("Entering room");
-        recordRelayClient.EnterRoom();
+        _recorderLogger.LogDebug("Entering room");
+
+        AreaId? areaId;
+        while (true)
+        {
+            areaId = _clientState.CurrentAreaId;
+            if (areaId != null)
+                break;
+            
+            await Task.Delay(100);
+        }
         
-        _backgroundLogger.LogDebug("Requesting saves to record the results for shim");
-        var recordSaveRelay = new WukongSaveRelay(recordRelayClient);
+        _recorderRelayClient.RequestJoinArea(areaId.Value);
+        
+        _recorderLogger.LogDebug("Requesting saves to record the results for shim");
+        var recordSaveRelay = new WukongSaveRelay(_recorderBlobClient!, _recorderLogger);
         var worldSave = await recordSaveRelay.DownloadWorldSaveAsync();
-        _backgroundLogger.LogDebug("World save downloaded: {WorldSave}, size {Size} bytes", worldSave?.Name, worldSave?.Content.Length);
+        _recorderLogger.LogDebug("World save downloaded: {WorldSave}, size {Size} bytes", worldSave?.Name, worldSave?.Content.Length);
         var playerSave = await recordSaveRelay.DownloadPlayerSaveAsync();
-        _backgroundLogger.LogDebug("Player save downloaded: {PlayerSave}, size {Size} bytes", playerSave?.Name, playerSave?.Content.Length);
+        _recorderLogger.LogDebug("Player save downloaded: {PlayerSave}, size {Size} bytes", playerSave?.Name, playerSave?.Content.Length);
     }
 
     private void OnRecordingStopped()
@@ -116,7 +161,7 @@ public class ShimAutoStarter : IDisposable
         if (recordRelayClient == null)
             return;
         
-        recordRelayClient.ExitRoom();
+        recordRelayClient.RequestLeaveArea();
         recordRelayClient.Stop();
     }
 }

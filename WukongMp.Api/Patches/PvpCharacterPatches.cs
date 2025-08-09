@@ -35,7 +35,7 @@ namespace WukongMp.Api.Patches
                     ref var mainComp = ref mainEntity.Value.GetState();
                     foreach (var (attr, value) in mainComp.Attributes)
                     {
-                        __instance.SetFloatValue(attr, value);
+                        __instance.SetFloatValue((EBGUAttrFloat)attr, value);
                     }
                 }
 
@@ -99,7 +99,7 @@ namespace WukongMp.Api.Patches
                     // set their attributes
                     foreach (var (attr, value) in mainComp.Attributes)
                     {
-                        __instance.SetFloatValue(attr, value);
+                        __instance.SetFloatValue((EBGUAttrFloat)attr, value);
                     }
 
                     if (mainComp.Hp <= -80000)
@@ -254,13 +254,13 @@ namespace WukongMp.Api.Patches
                 var mainEntity = playerState.LocalMainCharacter;
                 ref var main = ref mainEntity.Value.GetState();
                 
-                if (main.Attributes.TryGetValue(AttrID, out var existing)
+                if (main.Attributes.TryGetAttribute((byte)AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
                     return;
                 }
 
-                main.Attributes[AttrID] = result;
+                main.Attributes.SetAttribute((byte)AttrID, result);
 
                 // some attributes may influence other attributes
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
@@ -269,7 +269,7 @@ namespace WukongMp.Api.Patches
                     Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
-                    main.Attributes[calc.finalVal] = finalVal;
+                    main.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
                 }
             }
         }

@@ -1,11 +1,12 @@
 ﻿using Friflo.Engine.ECS.Systems;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class SyncPlayerSystem(WukongPlayerState playerState, WukongPlayerModeManager modeManager) : QuerySystem<PlayerComponent>
+public class SyncPlayersSystem(WukongPlayerState playerState, WukongPlayerModeManager modeManager) : QuerySystem<PlayerComponent>
 {
     protected override void OnUpdate()
     {

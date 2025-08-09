@@ -4,6 +4,10 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
+/// <summary>
+/// Deletes the MainCharacterEntity corresponding to the locally controlled pawn when the pawn gets destroyed.
+/// </summary>
+/// <param name="playerState"></param>
 public class DeleteLocalMainCharacterEntitySystem(WukongPlayerState playerState) : BaseSystem
 {
     protected override void OnUpdateGroup()

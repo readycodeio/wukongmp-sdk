@@ -2,11 +2,11 @@
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
@@ -14,32 +14,25 @@ public class WukongPlayerState
 {
     private readonly ComponentIndex<MainCharacterComponent, PlayerId> _ix;
 
+    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
     private readonly ClientNetworkedEntityState _clientNetEntity;
     private readonly ClientState _state;
     private readonly ILogger _logger;
-    public ArchetypeId MainCharacterArchetype;
 
-    public WukongPlayerState(Store world, ClientNetworkedEntityState clientNetEntity, ClientState state, ILogger logger)
+    public WukongPlayerState(Store world, ClientWukongArchetypeRegistration wukongArchetype, ClientNetworkedEntityState clientNetEntity, ClientState state, ILogger logger)
     {
+        _wukongArchetype = wukongArchetype;
         _clientNetEntity = clientNetEntity;
         _state = state;
         _logger = logger;
 
         _ix = world.ComponentIndex<MainCharacterComponent, PlayerId>();
-
-        MainCharacterArchetype = world.RegisterArchetype(b =>
-        {
-            b.Add<MainCharacterComponent>();
-            b.Add<MainCharacterComponent>();
-            b.Add<LocalMainCharacterComponent>();
-            b.Add<TeamComponent>();
-        });
     }
 
     public PlayerId? LocalPlayerId
         => _state.LocalPlayerId;
 
-    public PlayerEntity? LocalPlayer
+    public PlayerEntity? LocalPlayerEntity
     {
         get
         {
@@ -106,7 +99,7 @@ public class WukongPlayerState
         if (mainEntity != null)
             return mainEntity.Value;
 
-        var result = _clientNetEntity.CreateNetworkedAreaEntity(MainCharacterArchetype, b =>
+        var result = _clientNetEntity.CreateNetworkedAreaEntity(_wukongArchetype.MainCharacterArchetype, b =>
         {
             b.Add(new MainCharacterComponent()
             {

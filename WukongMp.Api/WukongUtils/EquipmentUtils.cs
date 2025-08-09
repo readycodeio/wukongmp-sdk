@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using b1;
 using HarmonyLib;
+using ReadyM.Relay.Common.Wukong.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Values;
 
@@ -15,7 +16,7 @@ public static class EquipmentUtils
     public static EquipmentState GetCurrentEquipmentStateForActor(APawn player)
     {
         var roleData = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(player.PlayerState);
-        return new EquipmentState(roleData.EquipList.Select(kvp => (kvp.Key, kvp.Value)));
+        return new EquipmentState(roleData.EquipList.Select(kvp => (kvp.Key.FromGame(), kvp.Value)));
     }
 
     public static void SetActorEquipment(BGUCharacterCS actor, EquipmentState equipment)

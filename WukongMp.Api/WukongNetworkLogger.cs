@@ -10,21 +10,21 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api;
 
 public class WukongNetworkLogger(
-    ILogger logger,
     Store world,
     ClientState state,
     WukongAreaState areaState,
-    WukongPlayerState playerState)
+    WukongPlayerState playerState,
+    ILogger logger)
 {
     public void DumpDebugInfo()
     {
         // dump room state
         logger.LogDebug("Room state: {State}", areaState.ToString());
 
-        if (playerState.LocalPlayer != null)
+        if (playerState.LocalPlayerEntity != null)
         {
             // dump player state to console for me
-            logger.LogDebug("Local player state: {State}", playerState.LocalPlayer.Value.GetState());
+            logger.LogDebug("Local player state: {State}", playerState.LocalPlayerEntity.Value.GetState());
         }
         else
         {

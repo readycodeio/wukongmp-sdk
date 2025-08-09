@@ -1,5 +1,5 @@
 ﻿using b1;
-using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils;
 

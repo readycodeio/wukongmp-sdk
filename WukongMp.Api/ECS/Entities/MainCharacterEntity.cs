@@ -2,8 +2,9 @@ using System;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.ECS.Components;
 
-namespace WukongMp.Api.ECS.Components;
+namespace WukongMp.Api.ECS.Entities;
 
 public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainCharacterEntity>
 {

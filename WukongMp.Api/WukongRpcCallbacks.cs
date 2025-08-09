@@ -5,6 +5,7 @@ using BtlShare;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
@@ -14,6 +15,7 @@ using ReadyM.Relay.Common.Serialization;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Old;
 using WukongMp.Api.Patches;
 using WukongMp.Api.WukongUtils;
@@ -338,7 +340,7 @@ public partial class WukongRpcCallbacks : IDisposable
         _logger.LogWarning("BreakImmobilize not implemented");
     }
 
-    [RpcEvent(RelayMode.AreaOfInterestAll, EventCaching.AddToRoomCacheGlobal)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnChatMessage(ChatMessage message)
     {
         _ecsLoop.Scheduler.Schedule((_, message0) =>

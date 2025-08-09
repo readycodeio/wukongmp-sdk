@@ -21,7 +21,7 @@ public class WukongChatter : IDisposable
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongGameplaySettings _gameplaySettings;
 
-    private string NickName => _playerState.LocalPlayer?.GetState().NickName ?? "";
+    private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
     private const char Separator = ' ';
     private readonly Dictionary<string, WukongChatterCommand> _commands = new();
 
@@ -95,7 +95,7 @@ public class WukongChatter : IDisposable
             return;
         }
 
-        var playerEntity = _playerState.LocalPlayer;
+        var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
         
@@ -124,7 +124,11 @@ public class WukongChatter : IDisposable
 
     private void RequestRebirth(ReadOnlyMemory<string> _)
     {
-        _rpc.SendRebirthPlayer(_connection.RelayClient.PlayerId);
+        var playerId = _connection.PlayerId;
+        if (playerId == null)
+            return;
+        
+        _rpc.SendRebirthPlayer(playerId.Value);
         SendServerMessage("PlayerRequestedRebirth", NickName);
     }
 
@@ -132,8 +136,10 @@ public class WukongChatter : IDisposable
     {
         if (_playerState.LocalMainCharacter is not { } mainEntity)
             return;
+
+        var playerId = mainEntity.GetState().PlayerId;
         PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
-        _rpc.SendRebirthPlayer(_connection.RelayClient.PlayerId);
+        _rpc.SendRebirthPlayer(playerId);
         SendServerMessage("PlayerRequestedRebirth", NickName);
     }
 
@@ -150,7 +156,7 @@ public class WukongChatter : IDisposable
 
     private void RequestDisconnect(ReadOnlyMemory<string> _)
     {
-        if (_connection.areaState.InRoom)
+        if (_connection.AreaState.InRoom)
         {
             SendServerMessage("PlayerLeft", NickName);
             _connection.Disconnect();
@@ -171,7 +177,7 @@ public class WukongChatter : IDisposable
         {
             var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
 
-            var playerEntity = _playerState.LocalPlayer;
+            var playerEntity = _playerState.LocalPlayerEntity;
             if (playerEntity == null)
                 return;
             playerEntity.Value.GetState().IsSpectator = isSpectator;
@@ -240,7 +246,7 @@ public class WukongChatter : IDisposable
     
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
-        var playerEntity = _playerState.LocalPlayer;
+        var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
         ref var player = ref playerEntity.Value.GetState();
@@ -250,9 +256,9 @@ public class WukongChatter : IDisposable
 
     private void OnLeftAreaHandler(AreaId areaId, Entity entity)
     {
-        if (_connection.areaState.IsMasterClient)
+        if (_connection.AreaState.IsMasterClient)
         {
-            var playerEntity = _playerState.LocalPlayer;
+            var playerEntity = _playerState.LocalPlayerEntity;
             if (playerEntity == null)
                 return;
             ref var player = ref playerEntity.Value.GetState();

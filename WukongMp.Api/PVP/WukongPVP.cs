@@ -17,12 +17,13 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Common.Wukong.Enums;
+using ReadyM.Relay.Common.Wukong.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Old;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -350,8 +351,8 @@ public partial class WukongPVP : IDisposable
         {
             // FIXME: Is there any way to get rid of having those checks all over the place? Seems very tedious,
             // and it handles a fringe case where somehow the player got disconnected.
-            if (_playerState.LocalPlayer != null)
-                SpawningUtils.SpawnBots(_playerState.LocalPlayer.Value);
+            if (_playerState.LocalPlayerEntity != null)
+                SpawningUtils.SpawnBots(_playerState.LocalPlayerEntity.Value);
         }
     }
 
@@ -395,9 +396,9 @@ public partial class WukongPVP : IDisposable
     
     public void SetReadyState(bool isReady)
     {
-        if (_playerState.LocalPlayer == null)
+        if (_playerState.LocalPlayerEntity == null)
             return;
-        _playerState.LocalPlayer.Value.GetState().IsReadyForPvP = isReady;
+        _playerState.LocalPlayerEntity.Value.GetState().IsReadyForPvP = isReady;
     }
     
     public void SwitchReadyState(bool isReady)
@@ -424,21 +425,21 @@ public partial class WukongPVP : IDisposable
 
     private void SwitchReadyState()
     {
-        if (_playerState.LocalPlayer == null)
+        if (_playerState.LocalPlayerEntity == null)
             return;
-        var isReady = _playerState.LocalPlayer.Value.GetState().IsReadyForPvP;
+        var isReady = _playerState.LocalPlayerEntity.Value.GetState().IsReadyForPvP;
         SetReadyState(!isReady);
         SwitchReadyState(!isReady);
     }
     
     public void SwitchTeam(bool force = false)
     {
-        if (_playerState.LocalPlayer == null)
+        if (_playerState.LocalPlayerEntity == null)
             return;
         
-        if (force || (_areaState.InRoom && _playerState.LocalPlayer.Value.GetState().IsReadyForPvP == false && _areaState.CurrentArea is { Room: { InPvP: false, InMatchmaking: false } }))
+        if (force || (_areaState.InRoom && _playerState.LocalPlayerEntity.Value.GetState().IsReadyForPvP == false && _areaState.CurrentArea is { Room: { InPvP: false, InMatchmaking: false } }))
         {
-            var playerEntity = _playerState.LocalPlayer;
+            var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
             var teamId = PvPUtils.GetOppositeTeam(player.TeamId);
             player.TeamId = teamId;
@@ -449,10 +450,10 @@ public partial class WukongPVP : IDisposable
     {
         Logging.LogInformation("Enabled PvP");
 
-        if (_playerState.LocalPlayer == null)
+        if (_playerState.LocalPlayerEntity == null)
             return;
         
-        var playerEntity = _playerState.LocalPlayer;
+        var playerEntity = _playerState.LocalPlayerEntity;
         ref var player = ref playerEntity.Value.GetState();
         
         var myTeam = player.TeamId;
@@ -475,10 +476,10 @@ public partial class WukongPVP : IDisposable
     {
         Logging.LogInformation("Disabled PvP");
 
-        if (_playerState.LocalPlayer == null)
+        if (_playerState.LocalPlayerEntity == null)
             return;
         
-        var playerEntity = _playerState.LocalPlayer;
+        var playerEntity = _playerState.LocalPlayerEntity;
         ref var player = ref playerEntity.Value.GetState();
         
         var myTeam = player.TeamId;
@@ -824,7 +825,7 @@ public partial class WukongPVP : IDisposable
             TimerWidget.Instance.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
             PvPUtils.SetupMatchmakingUi();
         }
-        else if (_playerState.LocalPlayer?.GetState().IsSpectator == false)
+        else if (_playerState.LocalPlayerEntity?.GetState().IsSpectator == false)
         {
             PvPUtils.SetupLobbyUi();
         }
@@ -840,7 +841,7 @@ public partial class WukongPVP : IDisposable
         LobbyStatusWidget.Instance.SetReadyCount(OtherPlayers.Count(x => x.Player.GetState().IsReadyForPvP));
         SetupMatchmaking();
 
-        var playerEntity = _playerState.LocalPlayer;
+        var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
         ref var player = ref playerEntity.Value.GetState();
@@ -871,7 +872,7 @@ public partial class WukongPVP : IDisposable
     
     private void OnUpdateLoopHandler(CommandBufferSynced cb)
     {
-        var playerEntity = _playerState.LocalPlayer;
+        var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
         
@@ -937,7 +938,7 @@ public partial class WukongPVP : IDisposable
                 if (winnerTeamId == Constants.DrawTeamId)
                     return;
 
-                var playerEntity = _playerState.LocalPlayer;
+                var playerEntity = _playerState.LocalPlayerEntity;
                 if (playerEntity == null)
                     return;
                 

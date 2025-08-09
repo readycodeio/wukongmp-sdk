@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using BtlShare;
+using ReadyM.Api.Multiplayer.Idents;
 using WukongMp.Api.Helpers;
 
 namespace WukongMp.Api.Configuration
@@ -226,5 +227,7 @@ namespace WukongMp.Api.Configuration
         ]);
 
         public const string ShimFolder = "CSharpLoader/Shims";
+
+        public static AreaId MainArea = new(1);
     }
 }

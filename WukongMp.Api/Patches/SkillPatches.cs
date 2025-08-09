@@ -538,9 +538,9 @@ public static class PatchOnTriggerPhantomRush
         }
 
         var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
-        if (mainEntity != null && mainEntity != playerState.LocalMainCharacter && playerState.LocalPlayer != null)
+        if (mainEntity != null && mainEntity != playerState.LocalMainCharacter && playerState.LocalPlayerEntity != null)
         {
-            DI.Instance.ModeManager.SetPlayerVisibility(playerState.LocalPlayer.Value, mainEntity.Value, false);
+            DI.Instance.ModeManager.SetPlayerVisibility(playerState.LocalPlayerEntity.Value, mainEntity.Value, false);
         }
     }
 }

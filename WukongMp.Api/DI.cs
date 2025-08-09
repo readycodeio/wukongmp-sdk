@@ -3,18 +3,20 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
-using ReadyM.Api.Serialization;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Blobs;
+using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common;
+using ReadyM.Relay.Common.ECS.Archetypes;
+using ReadyM.Relay.Common.ECS.Jobs;
 using ReadyM.Relay.Common.ECS.Registry;
 using ReadyM.Relay.Common.Serialization;
-using ReadyM.Relay.Common.Wukong;
-using ReadyM.Relay.Server.Wukong.ECS.Registry;
+using ReadyM.Relay.Common.Wukong.ECS.Registry;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Coop;
+using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Old;
 using WukongMp.Api.PVP;
 using WukongMp.Api.Serialization;
@@ -31,12 +33,14 @@ public class DI
     public ILogger Logger { get; private set; } = null!;
 
     public Store World { get; private set; } = null!;
-    public IClientEcsUpdateLoop UpdateLoop { get; private set; } = null!;
+    public ArchetypeEventRouter archetypeEvent { get; private set; } = null!;
+    public IClientEcsUpdateLoop EcsLoop { get; private set; } = null!;
     
     public RelaySerializer Serializer { get; private set; } = null!;
     public HotSwappableRelayClient RelayClient { get; private set; } = null!;
     public BlobClient BlobClient { get; set; } = null!;
     public NetworkedEntityManager NetEntity { get; private set; } = null!;
+    public RelayClientService RelayClientService { get; private set; } = null!;
 
     public ClientState State { get; private set; } = null!;
     public ClientNetworkedEntityState ClientNetEntity { get; private set; } = null!;
@@ -49,7 +53,8 @@ public class DI
     
     public AreaComponentRegistry AreaComponentRegistry { get; private set; } = null!;
     public PlayerComponentRegistry PlayerComponentRegistry { get; private set; } = null!;
-    public ClientOwnershipManager OwnerManager { get; private set; } = null!;
+    public NetworkedOwnershipManager OwnershipManager { get; private set; } = null!;
+    public ClientOwnershipManager ClientOwnership { get; private set; } = null!;
 
     public WukongAreaState AreaState { get; private set; } = null!;
     public WukongPlayerState PlayerState { get; private set; } = null!;
@@ -63,7 +68,8 @@ public class DI
     public WukongEventBus EventBus { get; private set; } = null!;
     
     public WukongNetworkLogger NetLogger { get; private set; } = null!;
-    public INetworkedComponentRegistry NetComponents { get; private set; } = null!;
+    public INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
+    public JobRegistry JobRegistry { get; private set; } = null!;
     public WukongSynchronizer Synchronizer { get; private set; } = null!;
     public WukongConnectionManager Connection { get; private set; } = null!;
     public WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
@@ -82,69 +88,99 @@ public class DI
     public void Init()
     {
         Logger.LogDebug("Initializing DI...");
+
+        var loggerFactory = LoggerFactory;
+        var logger = Logger;
         
-        World = new Store(new EntityStore());
-
-        NetEntity = new NetworkedEntityManager(World, Logger, () => RelayClient.PlayerId);
-
-        Serializer = new RelaySerializer([
+        var areaComponentRegistry = AreaComponentRegistry = new AreaComponentRegistry([
+            new WukongAreaRegistration(),
+        ]);
+        var playerComponentRegistry = PlayerComponentRegistry = new PlayerComponentRegistry([
+            new WukongPlayerRegistration(),
+        ]);
+        var areaArchetype = new DefaultAreaArchetypeRegistration(areaComponentRegistry);
+        var playerArchetype = new DefaultPlayerArchetypeRegistration(playerComponentRegistry);
+        var wukongArchetype = new ClientWukongArchetypeRegistration();
+        
+        var world = World = new Store(new EntityStore(), [
+            areaArchetype,
+            playerArchetype,
+            wukongArchetype,
+        ]);
+        
+        var worldEvent = archetypeEvent = new ArchetypeEventRouter(world);
+        var serializer = Serializer = new RelaySerializer([
             new DefaultRelaySerializerRegistration(),
             new WukongSerializerRegistration(),
         ]);
-        RelayClient = new HotSwappableRelayClient();
-        BlobClient = new BlobClient(RelayClient, Logger);
         
-        EventBus = new WukongEventBus();
+        var relayClient = RelayClient = new HotSwappableRelayClient();
+        var blobClient = BlobClient = new BlobClient(relayClient, logger);
+        var netEntity = NetEntity = new NetworkedEntityManager(world, logger, relayClient);
+        var relayClientService = RelayClientService = new RelayClientService(relayClient, logger);
         
-        TextSerializer = new TextRelaySerializer([
+        var eventBus = EventBus = new WukongEventBus();
+        
+        var textSerializer = TextSerializer = new TextRelaySerializer([
             new DefaultTextRelaySerializerRegistration(),
             new WukongTextSerializerRegistration(),
         ]);
-        ShimRecorder = new ShimRelayRecorder(LoggerFactory.CreateLogger("Shim Recorder"));
-        ShimController = new ShimController(ShimRecorder, TextSerializer, Logger);
-        ShimRelayClient = new ShimRelayClient(LoggerFactory.CreateLogger("Play Shim"));
-        ShimAuto = new ShimAutoStarter(ShimRelayClient, ShimRecorder, EventBus, LoggerFactory);
         
-        UpdateLoop = new ClientEcsUpdateLoop(World, Logger);
+        var shimRecorder = ShimRecorder = new ShimRelayRecorder(loggerFactory.CreateLogger("Shim Recorder"));
+        var shimController = ShimController = new ShimController(shimRecorder, textSerializer, logger);
+        var shimRelayClient = ShimRelayClient = new ShimRelayClient(loggerFactory.CreateLogger("Play Shim"));
+        
+        var ecsLoop = EcsLoop = new ClientEcsUpdateLoop(world, logger);
 
-        AreaComponentRegistry = new AreaComponentRegistry([
-            new WukongAreaRegistration(),
+        var netComponentRegistry = NetComponentRegistry = new NetworkedComponentRegistry([
+            new DefaultNetworkedComponentRegistration(),
+            new WukongNetworkedComponentRegistration(),
         ]);
-        PlayerComponentRegistry = new PlayerComponentRegistry([
-            new WukongPlayerRegistration(),
-        ]);
+        var jobRegistry = JobRegistry = new JobRegistry(netComponentRegistry, netEntity, relayClient, logger);
+ 
+        var state = State = new ClientState(world, relayClient, ecsLoop, jobRegistry, areaArchetype, playerArchetype, logger);
+        var areaState = AreaState = new WukongAreaState(state);
+        var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
+        var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
         
-        pawnState = new WukongPawnState(Players, World, ClientNetEntity);
-        ModeManager = new WukongPlayerModeManager(Players, AreaState);
-        GameplaySettings = new WukongGameplaySettings(World, AreaState);
-        PlayerPawnState = new WukongPlayerPawnState(World, Players, ModeManager);
+        var shimAuto = ShimAuto = new ShimAutoStarter(state, shimRelayClient, shimRecorder, eventBus, loggerFactory);
+
+        var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
+        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState);
+        var gameplaySettings = GameplaySettings = new WukongGameplaySettings(world, areaState);
+        var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, state, playerState, modeManager, logger);
         
-        NetLogger = new WukongNetworkLogger(Logger, World, AreaState, Players, RelayClient);
-        NetComponents = new NetworkedComponentRegistry([
-            new WukongCoreComponentRegistration(),
-        ]);
-        Synchronizer = new WukongSynchronizer(World, AreaState, Players, PlayerProperty, ModeManager,
-            PlayerPawnState, Rpc, NetEntity, NetComponents, RelayClient, UpdateLoop, SystemRegistry, Logger);
-        Connection = new WukongConnectionManager(RelayClient, Players, Synchronizer, AreaState);
-        ConnectionController = new WukongLevelTransitionConnectionController(EventBus, Connection, Synchronizer);
+        var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
+        var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
+        var synchronizer = Synchronizer = new WukongSynchronizer(
+            worldEvent,
+            state,
+            wukongArchetype,
+            areaState,
+            playerState,
+            playerPawnState,
+            modeManager,
+            netEntity,
+            jobRegistry, 
+            netComponentRegistry,
+            relayClient,
+            ecsLoop,
+            logger);
+        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer);
 
-        State = new ClientState(World, RelayClient, UpdateLoop, Synchronizer, AreaComponentRegistry, PlayerComponentRegistry);
-        AreaState = new WukongAreaState(State);
-        PlayerState = new WukongPlayerState(State);
-        ClientNetEntity = new ClientNetworkedEntityState(NetEntity, State, Logger);
+        var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
+        var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
-        OwnerManager = new NetworkedOwnershipManager(World, Logger);
+        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
+        var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
-        Rpc = new WukongRpcCallbacks(Serializer, RelayClient, State, AreaState, ClientNetEntity, Players, pawnState);
-        SaveRelay = new WukongSaveRelay(BlobClient);
+        var chatter = Chatter = new WukongChatter(connection, state, playerState, rpc, gameplaySettings);
+        var patcher = Patcher = new WukongPatcher();
 
-        Chatter = new WukongChatter(Connection, Players, PlayerProperty, Synchronizer, Rpc, GameplaySettings);
-        Patcher = new WukongPatcher();
-        
         if (Constants.IsCoop)
-            Coop = new WukongCoop(Serializer, RelayClient, Players, PlayerProperty, Synchronizer);
+            Coop = new WukongCoop(serializer, relayClient, areaState, playerState, synchronizer);
         else
-            PVP = new WukongPVP(World, Serializer, RelayClient, AreaState, Players, PlayerProperty, EventBus, Synchronizer, Rpc, Chatter);
+            PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, synchronizer, rpc, chatter, ecsLoop, logger);
 
         Logger.LogDebug("DI Initialized");
     }

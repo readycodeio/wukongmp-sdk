@@ -6,6 +6,7 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -86,7 +87,7 @@ namespace WukongMp.Api.WukongUtils
         {
             DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) =>
             {
-                DI.Instance.CommandBuffer.DeleteEntity(entity.Id);
+                DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(entity.Id);
             });
         }
 
@@ -120,7 +121,7 @@ namespace WukongMp.Api.WukongUtils
             }
 
             Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", tamerEntity.ToString());
-            DI.Instance.UpdateLoop.CommandBuffer.DeleteEntity(tamerEntity.Entity.Id);
+            DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Entity.Id);
         }
 
         public static void AddSpawnedUnitRefCount(PlayerId playerId, TamerEntity tamerEntity)

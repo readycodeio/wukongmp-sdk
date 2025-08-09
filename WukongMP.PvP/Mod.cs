@@ -1,12 +1,8 @@
-﻿using System;
-using CSharpModBase;
+﻿using CSharpModBase;
 using CSharpModBase.Input;
-using ReadyM.Relay.Common.ECS;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
@@ -58,6 +54,11 @@ namespace WukongMp.PvP
                     CmdLineParams.Instance.ServerIp!,
                     CmdLineParams.Instance.ServerPort!.Value,
                     CmdLineParams.Instance.UserGuid,
+#if NO_DISCONNECT
+                    true,
+#else
+                    false,
+#endif
                     CmdLineParams.Instance.RecordShimFile!
                 );
             else
@@ -65,7 +66,12 @@ namespace WukongMp.PvP
                     DI.Instance,
                     CmdLineParams.Instance.ServerIp!,
                     CmdLineParams.Instance.ServerPort!.Value,
-                    CmdLineParams.Instance.UserGuid
+                    CmdLineParams.Instance.UserGuid,
+#if NO_DISCONNECT
+                    true
+#else
+                    false
+#endif
                 );
             
             if (!DI.Instance.Patcher.IsPatched)
@@ -94,12 +100,23 @@ namespace WukongMp.PvP
 
             if (!DI.Instance.Connection.IsRunning)
             {
+                DI.Instance.EcsLoop.Start();
                 DI.Instance.Connection.Start();
             }
             else
             {
                 _logger.LogInformation("WukongMP is already initialized");
                 return;
+            }
+            
+            if (!DI.Instance.Connection.RequestedConnect)
+            {
+                DI.Instance.Connection.Connect();
+            }
+            
+            if (!DI.Instance.Connection.RequestedConnect)
+            {
+                DI.Instance.Connection.Connect();
             }
 
 #if DEBUG
@@ -213,9 +230,15 @@ namespace WukongMp.PvP
                 DI.Instance.Patcher.Unpatch();
             }
 
+            if (DI.Instance.Connection.RequestedConnect)
+            {
+                DI.Instance.Connection.Disconnect();
+            }
+            
             if (DI.Instance.Connection.IsRunning)
             {
                 DI.Instance.Connection.Stop();
+                DI.Instance.EcsLoop.Stop();
             }
         }
         

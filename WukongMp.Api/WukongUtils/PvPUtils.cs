@@ -27,7 +27,7 @@ public static class PvPUtils
         {
             GameMessageWidget.Instance.SetVisibility(true);
             GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalPlayer?.GetState().IsReadyForPvP == true));
+            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
             GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
             LobbyStatusWidget.Instance.SetVisibility(true);
         }

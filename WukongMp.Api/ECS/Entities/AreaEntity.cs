@@ -2,7 +2,7 @@
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 
-namespace WukongMp.Api.ECS.Components;
+namespace WukongMp.Api.ECS.Entities;
 
 public readonly struct AreaEntity(Entity entity) : IComponent
 {
@@ -11,12 +11,12 @@ public readonly struct AreaEntity(Entity entity) : IComponent
     public bool IsNull
         => Entity.IsNull;
     
-    public WukongRoomComponent Room
-        => Entity.GetComponent<WukongRoomComponent>();
+    public RoomComponent Room
+        => Entity.GetComponent<RoomComponent>();
     
     public ref MetadataComponent GetMeta()
         => ref Entity.GetComponent<MetadataComponent>();
     
-    public ref WukongRoomComponent GetRoom()
-        => ref Entity.GetComponent<WukongRoomComponent>();
+    public ref RoomComponent GetRoom()
+        => ref Entity.GetComponent<RoomComponent>();
 }

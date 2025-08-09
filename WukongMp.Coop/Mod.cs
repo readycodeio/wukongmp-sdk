@@ -4,7 +4,6 @@ using System.Reflection;
 using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
@@ -57,6 +56,11 @@ namespace WukongMp.Coop
                     CmdLineParams.Instance.ServerIp!,
                     CmdLineParams.Instance.ServerPort!.Value,
                     CmdLineParams.Instance.UserGuid,
+#if NO_DISCONNECT
+                    true,
+#else
+                    false,
+#endif
                     CmdLineParams.Instance.RecordShimFile!
                 );
             else
@@ -64,7 +68,12 @@ namespace WukongMp.Coop
                     DI.Instance,
                     CmdLineParams.Instance.ServerIp!,
                     CmdLineParams.Instance.ServerPort!.Value,
-                    CmdLineParams.Instance.UserGuid
+                    CmdLineParams.Instance.UserGuid,
+#if NO_DISCONNECT
+                    true
+#else
+                    false
+#endif
                 );
 
             if (!DI.Instance.Patcher.IsPatched)
@@ -89,18 +98,28 @@ namespace WukongMp.Coop
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
             _logger.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
-            Debug.Assert(DI.Instance.Patcher.IsPatched);
-            
-            if (!DI.Instance.Connection.IsRunning)
+            // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
+            Utils.TryRunOnGameThread(() =>
             {
-                DI.Instance.Connection.Start();
-            }
-            else
-            {
-                _logger.LogInformation("WukongMP is already initialized");
-                return;
-            }
+                Debug.Assert(DI.Instance.Patcher.IsPatched);
 
+                if (!DI.Instance.Connection.IsRunning)
+                {
+                    DI.Instance.EcsLoop.Start();
+                    DI.Instance.Connection.Start();
+                }
+                else
+                {
+                    _logger.LogInformation("WukongMP is already initialized");
+                    return;
+                }
+            
+                if (!DI.Instance.Connection.RequestedConnect)
+                {
+                    DI.Instance.Connection.Connect();
+                }
+            });
+            
 #if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () => 
             { 
@@ -217,16 +236,25 @@ namespace WukongMp.Coop
             {
                 return;
             }
-
-            if (DI.Instance.Patcher.IsPatched)
+            
+            Utils.TryRunOnGameThread(() =>
             {
-                DI.Instance.Patcher.Unpatch();
-            }
-
-            if (DI.Instance.Connection.IsRunning)
-            {
-                DI.Instance.Connection.Stop();
-            }
+                if (DI.Instance.Connection.RequestedConnect)
+                {
+                    DI.Instance.Connection.Disconnect();
+                }
+            
+                if (DI.Instance.Connection.IsRunning)
+                {
+                    DI.Instance.Connection.Stop();
+                    DI.Instance.EcsLoop.Stop();
+                }
+                
+                if (DI.Instance.Patcher.IsPatched)
+                {
+                    DI.Instance.Patcher.Unpatch();
+                }
+            });
         }
         
         public object GetReloadContext()

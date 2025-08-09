@@ -2,6 +2,7 @@
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
@@ -19,7 +20,7 @@ public class WukongAreaState(ClientState state)
                 // FIXME: Is this correct?
                 return false;
             
-            var roomComponent = areaEntity.Value.GetComponent<WukongRoomComponent>();
+            var roomComponent = areaEntity.Value.GetComponent<RoomComponent>();
             return roomComponent.MasterClient == state.LocalPlayerId;
         }
     }

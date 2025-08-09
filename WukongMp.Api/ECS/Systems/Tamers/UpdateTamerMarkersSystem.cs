@@ -5,7 +5,8 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class UpdateMarkersSystem : QuerySystem<LocalTamerComponent, MarkerComponent, TranslationComponent, NicknameComponent, TamerComponent>
+// FIXME: In the future this should support both TamerEntities and MainCharacterEntities
+public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, MarkerComponent, TranslationComponent, NicknameComponent, TamerComponent>
 {
     protected override void OnUpdate()
     {

@@ -2,6 +2,7 @@
 using BtlShare;
 using LiteNetLib.Utils;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Serialization;
 

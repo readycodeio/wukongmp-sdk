@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -36,18 +37,18 @@ public class WukongLevelTransitionConnectionController : IDisposable
     
     private void OnBeginPlayGameplayLevel()
     {
-        Debug.Assert(!_connection.EnteredRoom);
+        Debug.Assert(_connection.RequestedAreaId != null);
         
         Logging.LogInformation("Initializing widgets");
         ModWidgetsUtils.SpawnWidgetManagerActor();
         ModWidgetsUtils.InitializeWidgets();
 
-        _connection.EnterRoom();
+        _connection.JoinArea(Constants.MainArea);
     }
     
     private void OnEndPlayGameplayLevel()
     {
-        _connection.ExitRoom();
+        _connection.LeaveArea();
         
         Logging.LogInformation("Deinitializing widgets");
         ModWidgetsUtils.DeinitializeWidgets();
@@ -55,7 +56,7 @@ public class WukongLevelTransitionConnectionController : IDisposable
     
     private void OnLoadingScreenClose()
     {
-        if (_connection.EnteredRoom)
+        if (_connection.RequestedAreaId != null)
         {
             ChatWidget.Instance.SetVisibility(true);
         }

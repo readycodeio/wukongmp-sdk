@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.Idents;
-using ReadyM.Relay.Client.State;
-using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS.Systems;
 
+/// <summary>
+/// Despawns the pawns corresponding to MainCharacterEntities for other players. Doesn't affect the main players' MainCharacterEntity.
+/// </summary>
 public class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
 {
     private struct PendingDeleteEvent
@@ -16,30 +19,33 @@ public class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         public PlayerId PlayerId;
     }
     
-    private readonly StoreEventQueue _queue;
+    private readonly ArchetypeEventRouter _archetypeEvent;
     private readonly WukongPlayerState _playerState;
+    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
     private readonly WukongPlayerPawnState _playerPawnState;
 
     private readonly List<PendingDeleteEvent> _pendingDeleteEvents = new();
 
-    public DespawnOtherMainCharactersSystem(StoreEventQueue queue, WukongPlayerState playerState, WukongPlayerPawnState playerPawnState)
+    public DespawnOtherMainCharactersSystem(ArchetypeEventRouter archetypeEvent, WukongPlayerState playerState, ClientWukongArchetypeRegistration wukongArchetype, WukongPlayerPawnState playerPawnState)
     {
-        _queue = queue;
+        _archetypeEvent = archetypeEvent;
         _playerState = playerState;
+        _wukongArchetype = wukongArchetype;
         _playerPawnState = playerPawnState;
 
-        _queue[_playerState.MainCharacterArchetype].OnEntityDelete += OnEntityDeleteHandler;
+        _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete += OnEntityDeleteHandler;
     }
 
     public void Dispose()
     {
-        _queue[_playerState.MainCharacterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
+        _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
     }
 
     private void OnEntityDeleteHandler(EntityDelete obj)
     {
         var mainEntity = new MainCharacterEntity(obj.Entity);
         ref var mainComp = ref mainEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
 
         var playerId = mainComp.PlayerId;
         if (playerId == _playerState.LocalPlayerId)
@@ -55,6 +61,7 @@ public class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     {
         foreach (var pending in _pendingDeleteEvents)
         {
+            // NOTE: Currently it safely handles removing characters that are already despawned
             _playerPawnState.RemovePlayerPawn(pending.PlayerId);
         }
         _pendingDeleteEvents.Clear();

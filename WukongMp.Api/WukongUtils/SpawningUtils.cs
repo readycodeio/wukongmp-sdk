@@ -8,6 +8,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Old;
 
 namespace WukongMp.Api.WukongUtils;
@@ -46,8 +47,8 @@ public static class SpawningUtils
             return null;
         }
 
-        var loc = mainComp.Location;
-        var rot = mainComp.Rotation;
+        var loc = mainComp.Location.ToFVector();
+        var rot = mainComp.Rotation.ToFRotator();
 
         var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
 
@@ -96,8 +97,8 @@ public static class SpawningUtils
 
         localMainComp.Pawn = newPawn;
         
-        // FIXME: (refactor) The actor needs to be synchronized to have the right equipment. ECS equipment shouldn't be set to 
-        // actor's equipment.
+        // NOTE: The actor needs to be synchronized to have the right equipment. ECS equipment shouldn't be set to 
+        // actor's equipment. Therefore, the following can be removed
         // Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
         // Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
@@ -111,7 +112,7 @@ public static class SpawningUtils
             
             foreach (var attr in Constants.SyncedAttributes)
             {
-                var value = mainComp.Attributes[attr];
+                var value = mainComp.Attributes.GetAttribute((byte)attr);
                 Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
                 attrContainer.SetFloatValue(attr, value);
             }
@@ -124,10 +125,10 @@ public static class SpawningUtils
         Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
         ClientUtils.RegisterAndSetPlayerTeam(newPawn, teamId);
 
-        // FIXME: (refactor) Nickname already set in ECS, remove this
+        // NOTE: Nickname already set in ECS. Therefore, the following can be removed
         Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickName);
 
-        // FIXME: (refactor) Player properties already set in ECS, remove this
+        // NOTE: Player properties already set in ECS. Therefore the following can be removed
         Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", player.IsReadyForPvP);
         Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", player.IsSpectator);
 

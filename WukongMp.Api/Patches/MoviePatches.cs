@@ -210,10 +210,10 @@ public static class PatchTickForMovieSystem
                 InfoMessageWidget.Instance.SetVisibility(true);
                 InfoMessageWidget.Instance.SetText("Wait for other players");
                 localMain.IsWaitingForSequence = true;
-                localMain.SequenceLocation = main.Location;
+                localMain.SequenceLocation = main.Location.ToFVector();
                 localMain.WaitingSequenceId = peakRequest.SequenceID;
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
-                DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location));
+                DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
             }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())

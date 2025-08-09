@@ -7,9 +7,9 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class StoreEventQueue : IDisposable
+public class ArchetypeEventRouter : IDisposable
 {
-    public readonly struct ArchetypeEntry(StoreEventQueue owner, ArchetypeId archetypeId)
+    public readonly struct ArchetypeEntry(ArchetypeEventRouter owner, ArchetypeId archetypeId)
     {
         public event Action<EntityCreate>? OnEntityCreate
         {
@@ -42,7 +42,7 @@ public class StoreEventQueue : IDisposable
         }
     }
     
-    public StoreEventQueue(Store store)
+    public ArchetypeEventRouter(Store store)
     {
         _store = store;
         

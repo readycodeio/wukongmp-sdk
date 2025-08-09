@@ -7,6 +7,7 @@ using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
@@ -45,7 +46,7 @@ namespace WukongMp.Api.Patches
                 // set their attributes
                 foreach (var (attr, value) in mainComp.Attributes)
                 {
-                    __instance.SetFloatValue(attr, value);
+                    __instance.SetFloatValue((EBGUAttrFloat)attr, value);
                 }
 
                 if (mainComp.Hp <= -80000)
@@ -91,7 +92,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             // owned, skip
-            if (DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
             ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
@@ -156,7 +157,7 @@ namespace WukongMp.Api.Patches
                     if (!tamerEntity.HasValue)
                         return; // not found
 
-                    if (!DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                    if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                         return; // not owned
 
                     ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
@@ -175,13 +176,13 @@ namespace WukongMp.Api.Patches
             {
                 ref var mainComp = ref mainEntity.Value.GetState();
                 
-                if (mainComp.Attributes.TryGetValue(AttrID, out var existing)
+                if (mainComp.Attributes.TryGetAttribute((byte)AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
                     return;
                 }
 
-                mainComp.Attributes[AttrID] = result;
+                mainComp.Attributes.SetAttribute((byte)AttrID, result);
 
                 // some attributes may influence other attributes
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
@@ -190,7 +191,7 @@ namespace WukongMp.Api.Patches
                     Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
 
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
-                    mainComp.Attributes[calc.finalVal] = finalVal;
+                    mainComp.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
                 }
             }
         }
@@ -252,24 +253,24 @@ namespace WukongMp.Api.Patches
                     main.IsLandingMove = __instance.IsLandingMove;
                 }
 
-                if (!main.Velocity.Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
+                if (main.Velocity.ToFVector().Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                 {
-                    main.Velocity = __instance.Velocity;
+                    main.Velocity = __instance.Velocity.ToVector3();
                 }
 
-                if (!main.MoveAcceleration.Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
+                if (!main.MoveAcceleration.ToFVector().Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                 {
-                    main.MoveAcceleration = __instance.MoveAcceleration;
+                    main.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
                 }
 
-                if (!main.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                if (!main.Location.ToFVector().Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                 {
-                    main.Location = __instance.ActorLocation;
+                    main.Location = __instance.ActorLocation.ToVector3();
                 }
 
-                if (!main.Rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                if (!main.Rotation.ToFRotator().Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                 {
-                    main.Rotation = __instance.ActorRotation;
+                    main.Rotation = __instance.ActorRotation.ToVector3();
                 }
 
                 TeleportUtils.UpdatePlayerPosition(mainEntity.Value, DeltaTime);
@@ -287,12 +288,12 @@ namespace WukongMp.Api.Patches
                     __instance.IsFlying = otherMain.IsFlying;
                     __instance.IsFalling = otherMain.IsFalling;
                     __instance.IsLandingMove = otherMain.IsLandingMove;
-                    __instance.Velocity = otherMain.Velocity;
+                    __instance.Velocity = otherMain.Velocity.ToFVector();
 
                     if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.Velocity = FVector.ZeroVector;
-                        otherMain.Velocity = FVector.ZeroVector;
+                        otherMain.Velocity = FVector.ZeroVector.ToVector3();
 
                         // without these 5 lines the character will not jump
                         __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
@@ -303,16 +304,16 @@ namespace WukongMp.Api.Patches
                         events.Evt_MovementForceStop.Invoke();
                     }
 
-                    __instance.MoveAcceleration = otherMain.MoveAcceleration;
+                    __instance.MoveAcceleration = otherMain.MoveAcceleration.ToFVector();
                     if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.MoveAcceleration = FVector.ZeroVector;
-                        otherMain.MoveAcceleration = FVector.ZeroVector;
+                        otherMain.MoveAcceleration = FVector.ZeroVector.ToVector3();
                     }
 
-                    if (!otherMain.Location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
+                    if (!otherMain.Location.ToFVector().Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
-                        events.Evt_InterpolationMove.Invoke(otherMain.Location, otherMain.Rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        events.Evt_InterpolationMove.Invoke(otherMain.Location.ToFVector(), otherMain.Rotation.ToFRotator(), Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
 
                     TeleportUtils.UpdatePlayerPosition(otherMainEntity.Value, DeltaTime);
@@ -331,7 +332,7 @@ namespace WukongMp.Api.Patches
                             return;
                         }
 
-                        if (DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                        if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                         {
                             ref var anim = ref tamerEntity.Value.GetAnimation();
                             anim.Velocity = __instance.Velocity.ToVector3();
@@ -396,7 +397,7 @@ namespace WukongMp.Api.Patches
                     Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
                     // only clean up own monsters
-                    if (!DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                    if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     {
                         Logging.LogWarning("Skipping cleanup for remote monster");
                         return;
@@ -426,7 +427,7 @@ namespace WukongMp.Api.Patches
 
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 if (SimpleState == EBGUSimpleState.Immobilizing)
                     return;
@@ -452,7 +453,7 @@ namespace WukongMp.Api.Patches
             var owner = __instance.GetOwner();
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 if (Trigger == EBUStateTrigger.Die)
                     return;
@@ -486,7 +487,7 @@ namespace WukongMp.Api.Patches
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (!tamerEntity.HasValue || !DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+            if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
             var netId = tamerEntity.Value.GetMeta().NetId;

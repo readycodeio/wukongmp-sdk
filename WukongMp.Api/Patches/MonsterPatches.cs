@@ -32,7 +32,7 @@ namespace WukongMp.Api.Patches
                 if (!tamer.IsTamerSynced || !tamer.IsTamerValid || tamer.Pawn == null)
                     return;
 
-                if (DI.Instance.OwnerManager.OwnsEntity(entity))
+                if (DI.Instance.ClientOwnership.OwnsEntity(entity))
                 {
                     // send updates for owned monsters
                     trans.Position = tamer.Pawn.GetActorLocation().ToVector3();
@@ -215,7 +215,7 @@ namespace WukongMp.Api.Patches
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -237,7 +237,7 @@ namespace WukongMp.Api.Patches
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -260,7 +260,7 @@ namespace WukongMp.Api.Patches
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -282,7 +282,7 @@ namespace WukongMp.Api.Patches
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -309,7 +309,7 @@ namespace WukongMp.Api.Patches
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-                if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     return true;
             }
 
@@ -371,7 +371,7 @@ namespace WukongMp.Api.Patches
 
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                 if (localTamer.Pawn != null && !BGU_CommonUtil.IsInFsmState(localTamer.Pawn, EventTag))
@@ -420,7 +420,7 @@ namespace WukongMp.Api.Patches
                     return;
 
                 ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
-                if (DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 {
                     anim.MoveAiType = (byte)___MovementData.MoveAIType;
                 }

@@ -1,6 +1,7 @@
 using Friflo.Engine.ECS;
+using WukongMp.Api.ECS.Components;
 
-namespace WukongMp.Api.ECS.Components;
+namespace WukongMp.Api.ECS.Entities;
 
 public readonly struct PlayerEntity(Entity entity)
 {

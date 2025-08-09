@@ -6,6 +6,7 @@ using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
 using static Friflo.Engine.ECS.QueryExtensions;
@@ -93,7 +94,7 @@ namespace WukongMp.Api.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 RunMontageSync();
-                DI.Instance.UpdateLoop.Tick(default);
+                DI.Instance.EcsLoop.Tick(default);
                 ComponentMonitorManager.Instance.Update();
             }
         }

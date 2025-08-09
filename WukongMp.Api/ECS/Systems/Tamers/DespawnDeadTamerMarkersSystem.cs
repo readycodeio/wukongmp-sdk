@@ -6,7 +6,7 @@ using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public sealed class DestroyDeadMonstersMarkersSystem : QuerySystem<HpComponent, LocalTamerComponent, MarkerComponent>
+public sealed class DespawnDeadTamerMarkersSystem : QuerySystem<HpComponent, LocalTamerComponent, MarkerComponent>
 {
     protected override void OnUpdate()
     {
@@ -24,7 +24,11 @@ public sealed class DestroyDeadMonstersMarkersSystem : QuerySystem<HpComponent, 
                 var markerActor = markerComp.MarkerActor;
                 if (markerActor != null)
                 {
-                    GameLoopPatch.QueueOnGameThread(() => { BGU_UnrealWorldUtil.DestroyActor(markerActor); }, "DestroyMarkerActor");
+                    GameLoopPatch.QueueOnGameThread(() =>
+                    {
+                        // NOTE: Could have been destroyed since the moment the action was scheduled
+                        if (!markerActor.IsNullOrDestroyed()) BGU_UnrealWorldUtil.DestroyActor(markerActor);
+                    }, "DestroyMarkerActor");
                 }
             }
         });

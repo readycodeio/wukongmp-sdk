@@ -8,10 +8,12 @@ using HarmonyLib;
 using System.Reflection;
 using System.Threading.Tasks;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Values;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -65,9 +67,9 @@ namespace WukongMp.Api.Patches
                     mainComp.IsAttacking = __instance.IsAttacking;
                 }
 
-                if (!mainComp.TurnInplaceTargetRotation.Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
+                if (!mainComp.TurnInplaceTargetRotation.ToFRotator().Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
                 {
-                    mainComp.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation;
+                    mainComp.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation.ToVector3();
                 }
 
                 if (!mainComp.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
@@ -90,7 +92,7 @@ namespace WukongMp.Api.Patches
 
                 __instance.IsStandRotate = mainComp.IsStandRotate;
                 __instance.IsAttacking = mainComp.IsAttacking;
-                __instance.TurnInplaceTargetRotation = mainComp.TurnInplaceTargetRotation;
+                __instance.TurnInplaceTargetRotation = mainComp.TurnInplaceTargetRotation.ToFRotator();
                 __instance.TurnInplaceRemainAngle = mainComp.TurnInplaceRemainAngle;
                 __instance.bOrientRotationToMovement = mainComp.OrientRotationToMovement;
             }
@@ -229,14 +231,14 @@ namespace WukongMp.Api.Patches
                 var mainEntity = playerState.LocalMainCharacter;
                 ref var mainComp = ref mainEntity.Value.GetState();
 
-                if (mainComp.MoveSpeedLevel != __instance.MoveSpeedLevel)
+                if (mainComp.MoveSpeedLevel != __instance.MoveSpeedLevel.FromGame())
                 {
-                    mainComp.MoveSpeedLevel = __instance.MoveSpeedLevel;
+                    mainComp.MoveSpeedLevel = __instance.MoveSpeedLevel.FromGame();
                 }
 
-                if (mainComp.MoveSpeedState != __instance.MoveSpeedState)
+                if (mainComp.MoveSpeedState != __instance.MoveSpeedState.FromGame())
                 {
-                    mainComp.MoveSpeedState = __instance.MoveSpeedState;
+                    mainComp.MoveSpeedState = __instance.MoveSpeedState.FromGame();
                 }
             }
             else
@@ -246,8 +248,8 @@ namespace WukongMp.Api.Patches
                 if (mainEntity.HasValue)
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
-                    __instance.MoveSpeedLevel = mainComp.MoveSpeedLevel;
-                    __instance.MoveSpeedState = mainComp.MoveSpeedState;
+                    __instance.MoveSpeedLevel = mainComp.MoveSpeedLevel.ToGame();
+                    __instance.MoveSpeedState = mainComp.MoveSpeedState.ToGame();
                 }
                 else
                 {
@@ -258,7 +260,7 @@ namespace WukongMp.Api.Patches
 
                     ref var anim = ref tamerEntity.Value.GetAnimation();
 
-                    if (DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                    if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     {
                         anim.MoveSpeedLevel = (byte)__instance.MoveSpeedLevel;
                         anim.MoveSpeedState = (byte)__instance.MoveSpeedState;
@@ -296,7 +298,7 @@ namespace WukongMp.Api.Patches
             if (owner == mainEntity?.GetLocalState().Pawn)
             {
                 ref var main = ref mainEntity.Value.GetState();
-                main.Equipment.SetEquipment(EquipPosition, EquipID);
+                main.Equipment.SetEquipment(EquipPosition.FromGame(), EquipID);
             }
 
             return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer"); // TODO: Exact comparison
@@ -439,7 +441,7 @@ namespace WukongMp.Api.Patches
 
                 TamerUtils.ClearSpawnedUnitRefCount(tamerEntity.Value);
 
-                if (!DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     return;
 
                 ref var meta = ref tamerEntity.Value.GetMeta();
@@ -590,7 +592,7 @@ namespace WukongMp.Api.Patches
             }
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.OwnerManager.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetNickname().Nickname, name);
 
@@ -707,7 +709,7 @@ namespace WukongMp.Api.Patches
 
             var playerState = DI.Instance.PlayerState;
 
-            var playerEntity = playerState.LocalPlayer;
+            var playerEntity = playerState.LocalPlayerEntity;
             var mainEntity = playerState.LocalMainCharacter;
             if (!mainEntity.HasValue)
                 return true;
