@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
@@ -25,7 +26,11 @@ public class SpawnOtherMainCharactersSystem(ClientState clientState, WukongPlaye
         if (areaId == null)
             return;
         
-        Query.ForEachEntity((ref localMainComp, ref mainComp, ref teamComp, entity) =>
+        Query.ForEachEntity((
+            ref LocalMainCharacterComponent localMainComp,
+            ref MainCharacterComponent mainComp,
+            ref TeamComponent teamComp,
+            Entity entity) =>
         {
             if (mainComp.PlayerId == playerId)
                 return;

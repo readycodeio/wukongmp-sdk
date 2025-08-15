@@ -68,9 +68,9 @@ public class WukongPawnState
 
         var query = _world.Query<LocalTamerComponent>();
         query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref tamer, entity) =>
+        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
         {
-            if (tamer.Pawn == actor)
+            if (localTamerComp.Pawn == actor)
             {
                 result = new TamerEntity(entity);
             }
@@ -85,9 +85,9 @@ public class WukongPawnState
 
         var query = _world.Query<TamerComponent>();
         query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref tamer, entity) =>
+        query.ForEachEntity((ref TamerComponent tamerComp, Entity entity) =>
         {
-            if (tamer.Guid == guid)
+            if (tamerComp.Guid == guid)
             {
                 result = new TamerEntity(entity);
             }
@@ -105,9 +105,9 @@ public class WukongPawnState
 
         var query = _world.Query<LocalTamerComponent>();
         query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref tamer, entity) =>
+        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
         {
-            if (tamer.Tamer == owner)
+            if (localTamerComp.Tamer == owner)
             {
                 result = new TamerEntity(entity);
             }
@@ -125,9 +125,9 @@ public class WukongPawnState
 
         var query = _world.Query<LocalMainCharacterComponent>();
         query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref tamer, entity) =>
+        query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
         {
-            if (tamer.Pawn == owner)
+            if (localMainComp.Pawn == owner)
             {
                 result = new MainCharacterEntity(entity);
             }

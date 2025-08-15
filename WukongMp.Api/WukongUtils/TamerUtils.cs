@@ -85,7 +85,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void ClearEcsMonsters()
         {
-            DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref _, entity) =>
+            DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent _, Entity entity) =>
             {
                 DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(entity.Id);
             });

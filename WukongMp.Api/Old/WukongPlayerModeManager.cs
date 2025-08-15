@@ -89,21 +89,26 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         return true;
     }
 
-    public void SetPlayerVisibility(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool visible)
+    public bool SetPlayerVisibility(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool visible)
     {
         ref var localMainComp = ref mainEntity.GetLocalState();
         ref var playerComp = ref playerEntity.GetState();
 
+        var isVisible = localMainComp.Pawn?.Hidden == false;
+        if (isVisible == visible)
+            return false;
+        
         Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerComp.NickName, visible);
 
         if (localMainComp.Pawn == null)
         {
             Logging.LogError("Player pawn is null");
-            return;
+            return false;
         }
 
         localMainComp.Pawn.SetActorHiddenInGame(!visible);
         localMainComp.MarkerActor?.SetActorHiddenInGame(!visible);
+        return true;
     }
     
     public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainEntity)

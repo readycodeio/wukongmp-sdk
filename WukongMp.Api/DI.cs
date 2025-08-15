@@ -138,7 +138,7 @@ public class DI
         ]);
         var jobRegistry = JobRegistry = new JobRegistry(netComponentRegistry, netEntity, relayClient, logger);
  
-        var state = State = new ClientState(world, relayClient, ecsLoop, jobRegistry, areaArchetype, playerArchetype, logger);
+        var state = State = new ClientState(world, netEntity, relayClient, ecsLoop, jobRegistry, areaArchetype, playerArchetype, logger);
         var areaState = AreaState = new WukongAreaState(state);
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);

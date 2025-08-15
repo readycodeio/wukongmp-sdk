@@ -1,5 +1,6 @@
 ﻿using b1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
@@ -20,12 +21,12 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref metaComp, 
-            ref hpComp, 
-            ref teamComp, 
-            ref tamerComp, 
-            ref localTamerComp,
-            entity) =>
+            ref MetadataComponent metaComp, 
+            ref HpComponent hpComp, 
+            ref TeamComponent teamComp, 
+            ref TamerComponent tamerComp, 
+            ref LocalTamerComponent localTamerComp,
+            Entity entity) =>
         {
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)

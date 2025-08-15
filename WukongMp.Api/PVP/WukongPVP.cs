@@ -339,9 +339,9 @@ public partial class WukongPVP : IDisposable
         room.InCombatRound = true;
 
         var monsterCount = 0;
-        _world.Query<LocalTamerComponent>().ForEachEntity((ref localTamer, _) =>
+        _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity _) =>
         {
-            if (localTamer.IsTamerSynced)
+            if (localTamerComp.IsTamerSynced)
             {
                 monsterCount++;
             }
@@ -548,12 +548,12 @@ public partial class WukongPVP : IDisposable
         var aliveTeamIds = playerEntities.Where(p => !p.Character.GetState().IsDead).Select(x => x.Player.GetState().TeamId).ToList();
 
         var aliveMonsters = new List<int>();
-        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hp, ref team, _) =>
+        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref HpComponent hpComp, ref TeamComponent teamComp, Entity _) =>
         {
-            if (hp.Hp <= 0)
+            if (hpComp.Hp <= 0)
                 return;
 
-            aliveMonsters.Add(team.TeamId);
+            aliveMonsters.Add(teamComp.TeamId);
         });
 
         var alivePlayersTeams = aliveTeamIds.Concat(aliveMonsters).ToList();

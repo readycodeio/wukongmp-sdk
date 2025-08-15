@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Old;
@@ -10,7 +11,7 @@ public class SyncPlayersSystem(WukongPlayerState playerState, WukongPlayerModeMa
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref playerComp, entity) =>
+        Query.ForEachEntity((ref PlayerComponent playerComp, Entity entity) =>
         {
             // FIXME: (refactor) Have to check for state changes
 
@@ -21,20 +22,6 @@ public class SyncPlayersSystem(WukongPlayerState playerState, WukongPlayerModeMa
 
     private void SyncPlayerState(PlayerEntity playerEntity)
     {
-        var playerId = playerEntity.GetState().PlayerId;
-        var mainEntity = playerState.GetMainCharacterById(playerId);
-        if (mainEntity == null)
-        {
-            Logging.LogWarning("Player {Id} has no main character entity, skipping sync.", playerId);
-            return;
-        }
-        
-        ref var playerComp = ref playerEntity.GetState();
-
-        var isSpectator = playerComp.IsSpectator;
-        if (modeManager.HandleBecameSpectator(playerEntity, mainEntity.Value, isSpectator))
-        {
-            Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
-        }
+        // empty
     }
 }

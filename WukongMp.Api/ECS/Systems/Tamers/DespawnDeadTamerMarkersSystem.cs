@@ -1,4 +1,5 @@
 ﻿using b1;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
@@ -11,10 +12,10 @@ public sealed class DespawnDeadTamerMarkersSystem : QuerySystem<HpComponent, Loc
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref hpComp,
-            ref localTamerComp,
-            ref markerComp,
-            entity) =>
+            ref HpComponent hpComp,
+            ref LocalTamerComponent localTamerComp,
+            ref MarkerComponent markerComp,
+            Entity entity) =>
         {
             if (localTamerComp.IsMonsterSynced && hpComp.Hp <= 0 && !markerComp.DestroyQueued)
             {

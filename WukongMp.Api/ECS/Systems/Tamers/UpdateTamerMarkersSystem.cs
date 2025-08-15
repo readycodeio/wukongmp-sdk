@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Components;
@@ -10,15 +11,21 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref tamer, ref marker, ref trans, ref name, ref tam, _) =>
+        Query.ForEachEntity((
+            ref LocalTamerComponent localTamerComp,
+            ref MarkerComponent markerComp,
+            ref TranslationComponent transComp,
+            ref NicknameComponent nameComp,
+            ref TamerComponent tamerComp,
+            Entity _) =>
         {
-            if (marker.MarkerActor == null)
+            if (markerComp.MarkerActor == null)
                 return;
 
-            if (tamer.Tamer != null)
+            if (localTamerComp.Tamer != null)
             {
-                var markerHeight = tamer.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-                marker.MarkerActor.SetActorLocation(trans.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+                var markerHeight = localTamerComp.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
+                markerComp.MarkerActor.SetActorLocation(transComp.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
             }
 #if TESTING
             string title = tamer.Tamer?.GetClass().GetName() ?? "";

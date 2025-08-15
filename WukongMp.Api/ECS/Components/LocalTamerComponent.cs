@@ -14,11 +14,13 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     public MontageState MontageState;
     public bool IsLocallySpawned;
 
+    private BUTamerActor? _tamer = tamer;
+    
     public BUTamerActor? Tamer
     {
-        get => field.IsNullOrDestroyed() ? null : field;
-        set;
-    } = tamer;
+        get => _tamer.IsNullOrDestroyed() ? null : _tamer;
+        set => _tamer = value;
+    }
 
     public BGUCharacterCS? Pawn
     {

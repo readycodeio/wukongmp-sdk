@@ -1,4 +1,5 @@
 ﻿using b1;
+using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Components;
@@ -39,9 +40,9 @@ public class WukongNetworkLogger(
         }
 
         // dump synced monsters
-        world.Query<MetadataComponent>().ForEachEntity((ref meta, entity) =>
+        world.Query<MetadataComponent>().ForEachEntity((ref MetadataComponent metaComp, Entity entity) =>
         {
-            logger.LogDebug("Monster {Entity}: {NetId}", entity, meta.NetId);
+            logger.LogDebug("Monster {Entity}: {NetId}", entity, metaComp.NetId);
             // TODO: Dump all monster info without using .DebugJson (throws due to some internal errors,
             // probably the same reason why JsonSerializer sometimes fails.
         });

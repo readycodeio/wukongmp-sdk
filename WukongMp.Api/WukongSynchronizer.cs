@@ -10,6 +10,7 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
 using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
@@ -54,7 +55,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
         _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState));
         _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState));
-        _syncGroup.Add(new SyncOtherMainCharactersSystem(playerState, modeManager, Logger));
+        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, Logger));
 
         _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));
 

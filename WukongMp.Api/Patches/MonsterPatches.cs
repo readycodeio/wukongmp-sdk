@@ -2,6 +2,7 @@
 using HarmonyLib;
 using System;
 using System.Reflection;
+using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
@@ -27,30 +28,34 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            DI.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((ref meta, ref tamer, ref trans, entity) =>
+            DI.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((
+                ref MetadataComponent metaComp,
+                ref LocalTamerComponent localTamerComp,
+                ref TranslationComponent transComp,
+                Entity entity) =>
             {
-                if (!tamer.IsTamerSynced || !tamer.IsTamerValid || tamer.Pawn == null)
+                if (!localTamerComp.IsTamerSynced || !localTamerComp.IsTamerValid || localTamerComp.Pawn == null)
                     return;
 
                 if (DI.Instance.ClientOwnership.OwnsEntity(entity))
                 {
                     // send updates for owned monsters
-                    trans.Position = tamer.Pawn.GetActorLocation().ToVector3();
-                    trans.Rotation = tamer.Pawn.GetActorRotation().ToVector3();
+                    transComp.Position = localTamerComp.Pawn.GetActorLocation().ToVector3();
+                    transComp.Rotation = localTamerComp.Pawn.GetActorRotation().ToVector3();
                 }
                 else
                 {
                     // apply updates for monsters owned by other players
-                    var events = BUS_EventCollectionCS.Get(tamer.Pawn);
+                    var events = BUS_EventCollectionCS.Get(localTamerComp.Pawn);
 
                     if (events == null)
                         return;
 
-                    var pos = trans.Position.ToFVector();
-                    var rot = trans.Rotation.ToFRotator();
+                    var pos = transComp.Position.ToFVector();
+                    var rot = transComp.Rotation.ToFRotator();
 
-                    var posChanged = !pos.Equals(tamer.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance);
-                    var rotChanged = !rot.Equals(tamer.Pawn.GetActorRotation(), Constants.FloatComparisonTolerance);
+                    var posChanged = !pos.Equals(localTamerComp.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance);
+                    var rotChanged = !rot.Equals(localTamerComp.Pawn.GetActorRotation(), Constants.FloatComparisonTolerance);
 
                     if (posChanged || rotChanged)
                     {

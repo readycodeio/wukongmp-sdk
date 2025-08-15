@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using b1;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -23,32 +24,32 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
             return;
         }
 
-        Query.ForEachEntity((ref tamer, ref localTamer, entity) =>
+        Query.ForEachEntity((ref TamerComponent tamerComp, ref LocalTamerComponent localTamerComp, Entity entity) =>
         {
-            if (!localTamer.IsTamerSynced)
+            if (!localTamerComp.IsTamerSynced)
             {
-                if (tamer.Guid is null)
+                if (tamerComp.Guid is null)
                 {
                     Logging.LogWarning("Entity {EntityId} has a TamerComponent with a null Guid. Cannot sync tamer.", entity.Id);
                     return;
                 }
 
-                if (allTamers.TryGetValue(tamer.Guid, out var actor))
+                if (allTamers.TryGetValue(tamerComp.Guid, out var actor))
                 {
-                    localTamer.Tamer = actor;
-                    localTamer.IsTamerSynced = true;
+                    localTamerComp.Tamer = actor;
+                    localTamerComp.IsTamerSynced = true;
 
                     ref var nameComp = ref entity.GetComponent<NicknameComponent>();
                     nameComp.Nickname = actor.GetClass().GetName();
 #if TESTING
                     MarkerUtils.CreateMarkerForCharacter(entity);
 #endif
-                    Logging.LogDebug("Found matching tamer with guid: {Guid}", tamer.Guid);
+                    Logging.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);
                 }
                 else
                 {
                     // spawn tamer
-                    Logging.LogDebug("Matching tamer not found for guid: {Guid}, spawning...", tamer.Guid);
+                    Logging.LogDebug("Matching tamer not found for guid: {Guid}, spawning...", tamerComp.Guid);
                     // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
                 }
             }
