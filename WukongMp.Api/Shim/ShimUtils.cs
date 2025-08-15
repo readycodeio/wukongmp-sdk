@@ -77,8 +77,7 @@ public static class ShimUtils
             container.LoggerFactory.CreateLogger("Recorder Relay")
         );
 
-        var playerId = recordRelayClient.PlayerId;
-        var recording = new ShimRecording(playerId!.Value);
+        var recording = new ShimRecording();
         
         container.ShimRecorder.SetRecording(recording);
         container.ShimRecorder.Attach(recordRelayClient);
