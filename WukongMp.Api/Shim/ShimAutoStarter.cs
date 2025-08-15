@@ -15,7 +15,7 @@ public class ShimAutoStarter : IDisposable
 {
     private readonly ClientState _clientState;
     
-    private readonly ShimRelayClient _playClient;
+    private readonly ShimPlaybackRelayClient _playClient;
     
     private readonly ShimRelayRecorder _recorder;
     private readonly IRelayClient? _recorderRelayClient;
@@ -33,7 +33,7 @@ public class ShimAutoStarter : IDisposable
 
     public ShimAutoStarter(
         ClientState clientState,
-        ShimRelayClient playClient,
+        ShimPlaybackRelayClient playClient,
         ShimRelayRecorder recorder,
         WukongEventBus eventBus,
         ILoggerFactory loggerFactory

@@ -46,9 +46,12 @@ public class DI
     public ClientNetworkedEntityState ClientNetEntity { get; private set; } = null!;
 
     public TextRelaySerializer TextSerializer { get; private set; } = null!;
+    public ShimRelayMessageParser ShimParser { get; private set; } = null!;
+    public ShimReplayDependencyTracker ShimDepTracker { get; set; } = null!;
+    public ShimReplayDependencyTracker shimReplayDependencyTracker { get; private set; } = null!;
     public ShimRelayRecorder ShimRecorder { get; private set; } = null!;
     public ShimController ShimController { get; private set; } = null!;
-    public ShimRelayClient ShimRelayClient { get; private set; } = null!;
+    public ShimPlaybackRelayClient ShimPlaybackRelayClient { get; private set; } = null!;
     public ShimAutoStarter ShimAuto { get; set; } = null!;
     
     public AreaComponentRegistry AreaComponentRegistry { get; private set; } = null!;
@@ -125,10 +128,22 @@ public class DI
             new DefaultTextRelaySerializerRegistration(),
             new WukongTextSerializerRegistration(),
         ]);
-        
-        var shimRecorder = ShimRecorder = new ShimRelayRecorder(loggerFactory.CreateLogger("Shim Recorder"));
+
+        var shimParser = ShimParser = new ShimRelayMessageParser([
+            new BlobClientShimParserImpl(),
+            new ClientSynchronizerShimParserImpl(netEntity, logger),
+        ]);
+        var shimDepTracker = ShimDepTracker = new ShimReplayDependencyTracker([
+            new BlobClientShimTrackerImpl(),
+            new ClientSynchronizerShimTrackerImpl(),
+        ]);
+        var shimRecorder = ShimRecorder = new ShimRelayRecorder(shimParser, loggerFactory.CreateLogger("Shim Recorder"));
         var shimController = ShimController = new ShimController(shimRecorder, textSerializer, logger);
-        var shimRelayClient = ShimRelayClient = new ShimRelayClient(loggerFactory.CreateLogger("Play Shim"));
+        var shimRelayClient = ShimPlaybackRelayClient = new ShimPlaybackRelayClient(
+            shimDepTracker,
+            shimParser,
+            loggerFactory.CreateLogger("Play Shim")
+        );
         
         var ecsLoop = EcsLoop = new ClientEcsUpdateLoop(world, logger);
 

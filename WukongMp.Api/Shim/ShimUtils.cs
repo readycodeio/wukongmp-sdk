@@ -40,9 +40,9 @@ public static class ShimUtils
 
         container.Logger.LogInformation("Loading shim recording from: {Path}", shimPath);
         var recording = shimSerializer.Load(shimPath);
-        container.ShimRelayClient.SetRecording(recording!);
+        container.ShimPlaybackRelayClient.SetRecording(recording!);
 
-        container.RelayClient.Attach(container.ShimRelayClient);
+        container.RelayClient.Attach(container.ShimPlaybackRelayClient);
 
         container.ShimAuto.ShouldAutoPlay = true;
     }
@@ -77,9 +77,6 @@ public static class ShimUtils
             container.LoggerFactory.CreateLogger("Recorder Relay")
         );
 
-        var recording = new ShimRecording();
-        
-        container.ShimRecorder.SetRecording(recording);
         container.ShimRecorder.Attach(recordRelayClient);
     }
 
