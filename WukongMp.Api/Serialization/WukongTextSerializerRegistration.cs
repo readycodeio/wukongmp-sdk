@@ -10,9 +10,9 @@ public class WukongTextSerializerRegistration : ITextRelaySerializerRegistration
 {
     public void Register(TextRelaySerializer serializer)
     {
-        serializer.RegisterPolymorphicType("dataNumParam", typeof(DamageNumParam), TextSerializationHelpers.TextSerializeDamageNumParam, TextSerializationHelpers.TextDeserializeDamageNumParam);
+        serializer.RegisterPolymorphicType("dataNumParam", TextSerializationHelpers.TextSerializeDamageNumParam, TextSerializationHelpers.TextDeserializeDamageNumParam);
         serializer.RegisterPolymorphicType("equipmentState", EquipmentState.TextSerialize, EquipmentState.TextDeserialize);
-        serializer.RegisterPolymorphicType("fRotator", typeof(FRotator), TextSerializationHelpers.TextSerializeFRotator, TextSerializationHelpers.TextDeserializeFRotator);
-        serializer.RegisterPolymorphicType("fVector", typeof(FVector), TextSerializationHelpers.TextSerializeFVector, TextSerializationHelpers.TextDeserializeFVector);
+        serializer.RegisterPolymorphicType("fRotator", TextSerializationHelpers.TextSerializeFRotator, TextSerializationHelpers.TextDeserializeFRotator);
+        serializer.RegisterPolymorphicType("fVector", TextSerializationHelpers.TextSerializeFVector, TextSerializationHelpers.TextDeserializeFVector);
     }
 }

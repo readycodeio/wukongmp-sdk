@@ -18,12 +18,13 @@ public class ShimAutoStarter : IDisposable
     private readonly ShimPlaybackRelayClient _playClient;
     
     private readonly ShimRelayRecorder _recorder;
-    private readonly IRelayClient? _recorderRelayClient;
-    private readonly IBlobClient? _recorderBlobClient;
-    private readonly RelayClientService? _recorderRelayService;
     private readonly WukongEventBus _eventBus;
     private readonly ILogger _recorderLogger;
 
+    private IRelayClient? _recorderRelayClient;
+    private IBlobClient? _recorderBlobClient;
+    private RelayClientService? _recorderRelayService;
+    
     public bool ShouldAutoRecord { get; set; }
     public bool ShouldAutoPlay { get; set; }
 
@@ -45,20 +46,15 @@ public class ShimAutoStarter : IDisposable
 
         _recorderLogger = loggerFactory.CreateLogger("Recorder Shim");
         _recorder = recorder;
-        _recorderRelayClient = recorder.RelayClient;
-        if (_recorderRelayClient != null)
-        {
-            _recorderBlobClient = new BlobClient(_recorderRelayClient, _recorderLogger);
-            _recorderRelayService = new RelayClientService(_recorderRelayClient, _recorderLogger);
-        }
-        
         _eventBus = eventBus;
         
-        _eventBus.OnBeginLoadGameplayLevel += OnBeginLoadGameplayLevel;
-        _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
-        
-        _recorder.OnRecordingStarted += OnRecordingStarted;
-        _recorder.OnRecordingStopped += OnRecordingStopped;
+        _eventBus.OnBeginLoadGameplayLevel += OnBeginLoadGameplayLevelHandler;
+        _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevelHandler;
+
+        _recorder.OnAttached += OnAttachedHandler;
+        _recorder.OnDetached += OnDetachedHandler;
+        _recorder.OnRecordingStarted += OnRecordingStartedHandler;
+        _recorder.OnRecordingStopped += OnRecordingStoppedHandler;
     }
 
     public void Dispose()
@@ -70,14 +66,34 @@ public class ShimAutoStarter : IDisposable
             _playClient.StopPlaying();
         }
         
-        _recorder.OnRecordingStopped -= OnRecordingStopped;
-        _recorder.OnRecordingStarted -= OnRecordingStarted;
+        _recorder.OnRecordingStopped -= OnRecordingStoppedHandler;
+        _recorder.OnRecordingStarted -= OnRecordingStartedHandler;
+        _recorder.OnDetached -= OnDetachedHandler;
+        _recorder.OnAttached -= OnAttachedHandler;
         
-        _eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevel;
-        _eventBus.OnBeginLoadGameplayLevel -= OnBeginLoadGameplayLevel;
+        _eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevelHandler;
+        _eventBus.OnBeginLoadGameplayLevel -= OnBeginLoadGameplayLevelHandler;
     }
 
-    private void OnBeginLoadGameplayLevel()
+    private void OnAttachedHandler(IRelayClient relayClient)
+    {
+        _recorderRelayClient = relayClient;
+        if (_recorderRelayClient != null)
+        {
+            _recorderBlobClient = new BlobClient(_recorderRelayClient, _recorderLogger);
+            _recorderRelayService = new RelayClientService(_recorderRelayClient, _recorderLogger);
+        }
+    }
+
+    private void OnDetachedHandler(IRelayClient relayClient)
+    {
+        _recorderRelayClient = null;
+        _recorderBlobClient = null;
+        _recorderRelayService!.Dispose();
+        _recorderRelayService = null;
+    }
+
+    private void OnBeginLoadGameplayLevelHandler()
     {
         if (ShouldAutoPlay)
         {
@@ -91,7 +107,7 @@ public class ShimAutoStarter : IDisposable
         }
     }
 
-    private void OnEndPlayGameplayLevel()
+    private void OnEndPlayGameplayLevelHandler()
     {
         if (_autoPlayingEnabled)
         {
@@ -105,7 +121,7 @@ public class ShimAutoStarter : IDisposable
         }
     }
     
-    private void OnRecordingStarted()
+    private void OnRecordingStartedHandler()
     {
         _recordingStartedTask = Task.Run(OnRecordingStartedAsync);
     }
@@ -155,13 +171,12 @@ public class ShimAutoStarter : IDisposable
         _recorderLogger.LogDebug("Player save downloaded: {PlayerSave}, size {Size} bytes", playerSave?.Name, playerSave?.Content.Length);
     }
 
-    private void OnRecordingStopped()
+    private void OnRecordingStoppedHandler()
     {
-        var recordRelayClient = _recorder.RelayClient;
-        if (recordRelayClient == null)
+        if (_recorderRelayClient == null)
             return;
         
-        recordRelayClient.RequestLeaveArea();
-        recordRelayClient.Stop();
+        _recorderRelayClient.RequestLeaveArea();
+        _recorderRelayClient.Stop();
     }
 }

@@ -7,9 +7,8 @@ namespace WukongMp.Api.Serialization;
 
 public static class TextSerializationHelpers
 {
-    public static void TextSerializeFVector(Utf8JsonWriter writer, object obj, JsonSerializerOptions options)
+    public static void TextSerializeFVector(Utf8JsonWriter writer, FVector vec, JsonSerializerOptions options)
     {
-        var vec = (FVector)obj;
         writer.WriteStartArray();
         writer.WriteNumberValue(vec.X);
         writer.WriteNumberValue(vec.Y);
@@ -17,7 +16,7 @@ public static class TextSerializationHelpers
         writer.WriteEndArray();
     }
 
-    public static object TextDeserializeFVector(ref Utf8JsonReader reader, JsonSerializerOptions options)
+    public static FVector TextDeserializeFVector(ref Utf8JsonReader reader, JsonSerializerOptions options)
     {
         DebugJson.Assert(reader.TokenType == JsonTokenType.StartArray);
         
@@ -37,9 +36,8 @@ public static class TextSerializationHelpers
         return new FVector(x, y, z);
     }
 
-    public static void TextSerializeFRotator(Utf8JsonWriter writer, object obj, JsonSerializerOptions options)
+    public static void TextSerializeFRotator(Utf8JsonWriter writer, FRotator vec, JsonSerializerOptions options)
     {
-        var vec = (FRotator)obj;
         writer.WriteStartArray();
         writer.WriteNumberValue(vec.Pitch);
         writer.WriteNumberValue(vec.Yaw);
@@ -47,7 +45,7 @@ public static class TextSerializationHelpers
         writer.WriteEndArray();
     }
 
-    public static object TextDeserializeFRotator(ref Utf8JsonReader reader, JsonSerializerOptions options)
+    public static FRotator TextDeserializeFRotator(ref Utf8JsonReader reader, JsonSerializerOptions options)
     {
         DebugJson.Assert(reader.TokenType == JsonTokenType.StartArray);
         
@@ -67,10 +65,8 @@ public static class TextSerializationHelpers
         return new FRotator(pitch, yaw, roll);
     }
 
-    public static void TextSerializeDamageNumParam(Utf8JsonWriter writer, object obj, JsonSerializerOptions options)
+    public static void TextSerializeDamageNumParam(Utf8JsonWriter writer, DamageNumParam dmg, JsonSerializerOptions options)
     {
-        var dmg = (DamageNumParam)obj;
-
         writer.WriteStartObject();
         writer.WriteNumber("damageNum", dmg.DamageNum);
         writer.WriteNumber("damageType", (byte)dmg.DamageType);
@@ -83,7 +79,7 @@ public static class TextSerializationHelpers
         writer.WriteEndObject();
     }
 
-    public static object TextDeserializeDamageNumParam(ref Utf8JsonReader reader, JsonSerializerOptions options)
+    public static DamageNumParam TextDeserializeDamageNumParam(ref Utf8JsonReader reader, JsonSerializerOptions options)
     {
         var damageNum = 0;
         EDamageNumberType damageType = default;

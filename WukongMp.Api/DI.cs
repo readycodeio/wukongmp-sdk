@@ -6,6 +6,7 @@ using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Blobs;
 using ReadyM.Relay.Client.Host;
+using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Archetypes;
@@ -127,6 +128,7 @@ public class DI
         var textSerializer = TextSerializer = new TextRelaySerializer([
             new DefaultTextRelaySerializerRegistration(),
             new WukongTextSerializerRegistration(),
+            new ClientShimTextSerializerRegistration(),
         ]);
 
         var shimParser = ShimParser = new ShimRelayMessageParser([
