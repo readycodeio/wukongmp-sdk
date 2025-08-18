@@ -1,6 +1,7 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Client;
@@ -70,6 +71,8 @@ public class DI
     public WukongSynchronizer Synchronizer { get; private set; } = null!;
     public WukongConnectionManager Connection { get; private set; } = null!;
     public WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
+    public NetworkPingMonitor PingMonitor { get; private set; } = null!;
+    public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
 
     public WukongChatter Chatter { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
@@ -174,6 +177,9 @@ public class DI
             eventBus,
             logger);
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer);
+        
+        var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
+        var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor);
 
         var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
