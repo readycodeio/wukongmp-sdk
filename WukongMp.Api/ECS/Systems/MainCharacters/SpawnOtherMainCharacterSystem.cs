@@ -1,11 +1,14 @@
 ﻿using System.Diagnostics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Old;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
@@ -14,11 +17,18 @@ namespace WukongMp.Api.ECS.Systems;
 /// or pawn of the local player.
 /// </summary>
 /// <param name="playerPawn"></param>
-public class SpawnOtherMainCharactersSystem(ClientState clientState, WukongPlayerState playerState, WukongPlayerPawnState playerPawn)
+public class SpawnOtherMainCharactersSystem(ClientState clientState, WukongPlayerState playerState, 
+    WukongPlayerPawnState playerPawn, WukongEventBus eventBus, ILogger logger)
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent, TeamComponent>
 {
     protected override void OnUpdate()
     {
+        if (!eventBus.IsGameplayLevel)
+            return;
+        
+        if (GameUtils.GetControlledPawn() == null)
+            return;
+        
         var playerId = playerState.LocalPlayerId;
         if (playerId == null)
             return;
@@ -34,10 +44,13 @@ public class SpawnOtherMainCharactersSystem(ClientState clientState, WukongPlaye
         {
             if (mainComp.PlayerId == playerId)
                 return;
-            if (localMainComp.Pawn != null)
+            if (localMainComp.HasPawn)
                 return;
 
             var mainEntity = new MainCharacterEntity(entity);
+            
+            logger.LogDebug("ATTEMPTING TO **SPAWN** OTHER MAIN CHARACTER ENTITY: {PlayerId}", mainComp.PlayerId);
+
             AddPlayer(mainEntity);
         });
     }
@@ -50,6 +63,8 @@ public class SpawnOtherMainCharactersSystem(ClientState clientState, WukongPlaye
 
         playerPawn.AddPlayerPawn(playerId);
         
-        Debug.Assert(localMainComp.Pawn != null);
+        localMainComp.IsPlayerSynced = true;
+
+        Debug.Assert(localMainComp.HasPawn);
     }
 }

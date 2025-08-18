@@ -10,11 +10,15 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class SyncMainCharactersSystem(WukongPlayerState playerState, WukongPlayerModeManager modeManager, ILogger logger)
+public class SyncMainCharactersSystem(WukongPlayerState playerState, WukongPlayerModeManager modeManager, 
+    WukongEventBus eventBus, ILogger logger)
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent, TeamComponent>
 {
     protected override void OnUpdate()
     {
+        if (!eventBus.IsGameplayLevel)
+            return;
+        
         Query.ForEachEntity((
             ref LocalMainCharacterComponent localMainComp,
             ref MainCharacterComponent mainComp,

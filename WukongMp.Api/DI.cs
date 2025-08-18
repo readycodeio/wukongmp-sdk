@@ -171,6 +171,7 @@ public class DI
             netComponentRegistry,
             relayClient,
             ecsLoop,
+            eventBus,
             logger);
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer);
 

@@ -10,10 +10,17 @@ public struct LocalMainCharacterComponent : IComponent
 {
     private BGUCharacterCS? _pawn;
 
+    public bool IsPlayerSynced;
+    
     public BGUCharacterCS? Pawn
     {
         get
         {
+            if (!IsPlayerSynced)
+            {
+                return null;
+            }
+            
             if (_pawn.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Player pawn is null or destroyed");
@@ -24,6 +31,9 @@ public struct LocalMainCharacterComponent : IComponent
         }
         set => _pawn = value;
     }
+
+    public bool HasPawn
+        => !_pawn.IsNullOrDestroyed();
         
     public bool RunImmobilizePatches { get; set; }
     public MontageState MontageState { get; set; }

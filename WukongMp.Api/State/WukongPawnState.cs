@@ -127,10 +127,11 @@ public class WukongPawnState
         query.ThrowOnStructuralChange = false; // okay because the query is readonly
         query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
         {
+            if (!localMainComp.HasPawn)
+                return;
+            
             if (localMainComp.Pawn == owner)
-            {
                 result = new MainCharacterEntity(entity);
-            }
         });
 
         return result;

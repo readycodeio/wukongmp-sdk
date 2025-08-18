@@ -33,7 +33,12 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
     public void AddPlayerPawn(PlayerId playerId)
     {
         if (_entries.ContainsKey(playerId))
+        {
+            logger.LogWarning("Attempted to add player pawn for {PlayerId} but it already exists in entries.", playerId);
             return;
+        }
+        
+        logger.LogDebug("SPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
         
         var playerEntity = playerState.GetPlayerById(playerId);
         if (playerEntity == null)
@@ -67,6 +72,8 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
         
         UpdateConnectedCount();
         modeManager.UpdatePlayerTeamUi(playerEntity.Value);
+        
+        logger.LogDebug("Spawn successful: {PlayerId}", playerId);
     }
     
     public void RemovePlayerPawn(PlayerId playerId)
@@ -77,6 +84,10 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
             return;
         }
 
+        logger.LogDebug("DESPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
+        logger.LogDebug("Other main character marker: {Actor}", entry.MarkerActor?.GetName());
+        logger.LogDebug("Other main character pawn: {Pawn}", entry.Pawn?.PathName);
+
         if (entry.MarkerActor != null)
         {
             BGU_UnrealWorldUtil.DestroyActor(entry.MarkerActor);
@@ -85,12 +96,14 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
         if (entry.Pawn != null)
         {
             BGU_UnrealWorldUtil.DestroyActor(entry.Pawn);
-            return;
         }
         else
         {
             logger.LogWarning("Attempted to remove player pawn for {PlayerId} but it was already null.", playerId);
+            return;
         }
+        
+        DI.Instance.Logger.LogDebug("DELETE OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
 
         // FIXME: This seems to be the wrong scope. At the very least it shouldn't be using the nickname as the identifier?
         LobbyStatusWidget.Instance.RemovePlayerFromTeams(entry.CharacterNickName);

@@ -25,7 +25,7 @@ public static class SpawningUtils
         
         ref var player = ref playerEntity.GetState();
         
-        if (localMainComp.Pawn != null)
+        if (localMainComp.HasPawn)
         {
             Logging.LogDebug("Player already exists: {Id}", playerId); // reconnection
             return null;

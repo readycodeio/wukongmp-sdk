@@ -1,4 +1,5 @@
 ﻿using Friflo.Engine.ECS.Systems;
+using Microsoft.Extensions.Logging;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -8,7 +9,7 @@ namespace WukongMp.Api.ECS.Systems;
 /// Deletes the MainCharacterEntity corresponding to the locally controlled pawn when the pawn gets destroyed.
 /// </summary>
 /// <param name="playerState"></param>
-public class DeleteLocalMainCharacterEntitySystem(WukongPlayerState playerState) : BaseSystem
+public class DeleteLocalMainCharacterEntitySystem(WukongPlayerState playerState, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
@@ -17,6 +18,7 @@ public class DeleteLocalMainCharacterEntitySystem(WukongPlayerState playerState)
 
         if (pawn.IsNullOrDestroyed() && mainEntity != null)
         {
+            logger.LogDebug("DELETING LOCAL MAIN CHARACTER ENTITY");
             // NOTE: Controlled pawn doesn't exist (perhaps unloading scene) so we need to bring ECS up to date
             playerState.DeleteLocalMainCharacter();
         }

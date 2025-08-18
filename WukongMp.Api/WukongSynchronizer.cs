@@ -37,6 +37,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
+        WukongEventBus eventBus,
         ILogger logger)
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, logger)
     {
@@ -51,11 +52,11 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
 
-        _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, Logger));
-        _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState));
-        _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState));
-        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState));
-        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, Logger));
+        _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
+        _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState, Logger));
+        _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, Logger));
+        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, eventBus, Logger));
+        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
 
         _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));
 
