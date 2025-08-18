@@ -63,7 +63,6 @@ public class PatchOnLateBeginPlay
         if (owner == GameUtils.GetControlledPawn())
         {
             Logging.LogInformation("Local player late begin play");
-            DI.Instance.EventBus.TryInvokeBeginPlayGameplayLevel();
         }
     }
 }
@@ -78,7 +77,6 @@ public class PatchOnPlayerEndPlay
         if (owner == GameUtils.GetControlledPawn())
         {
             Logging.LogInformation("Local player end play");
-            DI.Instance.EventBus.TryInvokeEndPlayGameplayLevel();
         }
     }
 }
@@ -90,6 +88,7 @@ public class PatchOnPlayerControllerBeginPlay
     public static void Postfix(BPS_LiftTimeSystem __instance) // This is called only for player controller where BPS_LiftTimeSystem is registered
     {
         Logging.LogInformation("Player controller begin play");
+        DI.Instance.EventBus.TryInvokeBeginPlayGameplayLevel();
     }
 }
 
@@ -100,6 +99,7 @@ public class PatchOnPlayerControllerEndPlay
     public static void Postfix(BPS_LiftTimeSystem __instance) // This is called only for player controller where BPS_LiftTimeSystem is registered
     {
         Logging.LogInformation("Player controller end play");
+        DI.Instance.EventBus.TryInvokeEndPlayGameplayLevel();
     }
 }
 
