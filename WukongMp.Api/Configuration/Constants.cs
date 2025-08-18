@@ -29,7 +29,7 @@ namespace WukongMp.Api.Configuration
         public const int CharacterArchiveId = 10;
         public const int NewCharacterArchiveId = 9;
         public const int WorldArchiveId = 0;
-        public const int MaxPlayers = 20;
+        public const int MaxPlayers = 10;
         public static readonly List<int> AvailableTeamIds = [-9999, -9998];
         public const int DrawTeamId = 9999;
         public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
