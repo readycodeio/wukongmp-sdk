@@ -1,5 +1,6 @@
 ﻿using b1;
 using Friflo.Engine.ECS;
+using Friflo.Json.Fliox;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Values;
@@ -12,6 +13,7 @@ public struct LocalMainCharacterComponent : IComponent
 
     public bool IsPlayerSynced;
     
+    [Ignore]
     public BGUCharacterCS? Pawn
     {
         get
@@ -51,6 +53,7 @@ public struct LocalMainCharacterComponent : IComponent
     
     private AActor? _markerActor;
     
+    [Ignore]
     public AActor? MarkerActor
     {
         get
