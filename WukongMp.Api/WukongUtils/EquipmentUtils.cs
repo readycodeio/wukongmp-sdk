@@ -25,7 +25,7 @@ public static class EquipmentUtils
 
         foreach (var (position, item) in equipment.GetEquipments())
         {
-            OnChangeEquipReal.Invoke(equipComp, [position, item]);
+            OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), item]);
         }
     }
 

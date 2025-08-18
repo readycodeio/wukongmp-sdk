@@ -47,13 +47,6 @@ public class DI
     public ClientNetworkedEntityState ClientNetEntity { get; private set; } = null!;
 
     public TextRelaySerializer TextSerializer { get; private set; } = null!;
-    public ShimRelayMessageParser ShimParser { get; private set; } = null!;
-    public ShimReplayDependencyTracker ShimDepTracker { get; set; } = null!;
-    public ShimReplayDependencyTracker shimReplayDependencyTracker { get; private set; } = null!;
-    public ShimRelayRecorder ShimRecorder { get; private set; } = null!;
-    public ShimController ShimController { get; private set; } = null!;
-    public ShimPlaybackRelayClient ShimPlaybackRelayClient { get; private set; } = null!;
-    public ShimAutoStarter ShimAuto { get; set; } = null!;
     
     public AreaComponentRegistry AreaComponentRegistry { get; private set; } = null!;
     public PlayerComponentRegistry PlayerComponentRegistry { get; private set; } = null!;
@@ -82,6 +75,20 @@ public class DI
     public WukongPatcher Patcher { get; private set; } = null!;
     public WukongPVP? PVP { get; private set; }
     public WukongCoop? Coop { get; private set; }
+    
+    public ShimRelayMessageParser ShimParser { get; private set; } = null!;
+    public ShimReplayDependencyTracker ShimDepTracker { get; set; } = null!;
+    public ShimReplayDependencyTracker shimReplayDependencyTracker { get; private set; } = null!;
+    public HotSwappableRelayClient ShimRecorderRelayClient { get; set; } = null!;
+    public ShimRelayRecorder ShimRecorder { get; private set; } = null!;
+    public ShimController ShimController { get; private set; } = null!;
+    public ShimPlaybackRelayClient ShimPlaybackRelayClient { get; private set; } = null!;
+    public ClientEcsUpdateLoop ShimEcsLoop { get; set; } = null!;
+    public RelayClientService ShimRelayClientService { get; set; } = null!;
+    public NetworkedEntityManager ShimNetEntity { get; set; } = null!;
+    public BlobClient ShimBlobClient { get; set; } = null!;
+    
+    public ShimAutoStarter ShimAuto { get; set; } = null!;
 
     public void InitLogging(ILoggerFactory loggerFactory)
     {
@@ -131,22 +138,6 @@ public class DI
             new ClientShimTextSerializerRegistration(),
         ]);
 
-        var shimParser = ShimParser = new ShimRelayMessageParser([
-            new BlobClientShimParserImpl(),
-            new ClientSynchronizerShimParserImpl(netEntity, logger),
-        ]);
-        var shimDepTracker = ShimDepTracker = new ShimReplayDependencyTracker([
-            new BlobClientShimTrackerImpl(),
-            new ClientSynchronizerShimTrackerImpl(),
-        ]);
-        var shimRecorder = ShimRecorder = new ShimRelayRecorder(shimParser, loggerFactory.CreateLogger("Shim Recorder"));
-        var shimController = ShimController = new ShimController(shimRecorder, textSerializer, logger);
-        var shimRelayClient = ShimPlaybackRelayClient = new ShimPlaybackRelayClient(
-            shimDepTracker,
-            shimParser,
-            loggerFactory.CreateLogger("Play Shim")
-        );
-        
         var ecsLoop = EcsLoop = new ClientEcsUpdateLoop(world, logger);
 
         var netComponentRegistry = NetComponentRegistry = new NetworkedComponentRegistry([
@@ -160,8 +151,6 @@ public class DI
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
         
-        var shimAuto = ShimAuto = new ShimAutoStarter(state, shimRelayClient, shimRecorder, eventBus, loggerFactory);
-
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState);
         var gameplaySettings = GameplaySettings = new WukongGameplaySettings(world, areaState);
@@ -199,6 +188,78 @@ public class DI
         else
             PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, synchronizer, rpc, chatter, ecsLoop, logger);
 
+        // ---
+        
+        var shimLogger = LoggerFactory.CreateLogger("Shim");
+        var shimRecorderLogger = LoggerFactory.CreateLogger("Shim Recorder");
+        var shimPlaybackLogger = LoggerFactory.CreateLogger("Shim Playback");
+
+        var shimWorld = new Store(new EntityStore(), [
+            areaArchetype,
+            playerArchetype,
+            wukongArchetype,
+        ]);
+        var shimRecorderRelayClient = ShimRecorderRelayClient = new HotSwappableRelayClient();
+        var shimRecorderRelayService = ShimRelayClientService = new RelayClientService(shimRecorderRelayClient, shimRecorderLogger);
+        var shimBlobClient = ShimBlobClient = new BlobClient(shimRecorderRelayClient, shimRecorderLogger);
+        var shimNetEntity = ShimNetEntity = new NetworkedEntityManager(shimWorld, shimRecorderLogger, shimRecorderRelayClient);
+        
+        var shimEcsLoop = ShimEcsLoop = new ClientEcsUpdateLoop(shimWorld, shimRecorderLogger);
+        var shimState = new ClientState(
+            shimWorld,
+            shimNetEntity,
+            shimRecorderRelayClient,
+            shimEcsLoop,
+            jobRegistry,
+            areaArchetype,
+            playerArchetype,
+            shimRecorderLogger
+        );
+
+        var shimSynchronizer = new ClientNetworkedStateSynchronizer(
+            shimNetEntity,
+            shimState,
+            jobRegistry,
+            netComponentRegistry,
+            shimRecorderRelayClient,
+            shimEcsLoop,
+            shimRecorderLogger
+        );
+        
+        var shimParser = ShimParser = new ShimRelayMessageParser([
+            new BlobClientShimParserImpl(),
+            new ClientSynchronizerShimParserImpl(shimNetEntity, shimLogger),
+        ]);
+        var shimDepTracker = ShimDepTracker = new ShimReplayDependencyTracker([
+            new BlobClientShimTrackerImpl(),
+            new ClientSynchronizerShimTrackerImpl(),
+        ]);
+        
+        var shimPlaybackRelayClient = ShimPlaybackRelayClient = new ShimPlaybackRelayClient(
+            shimDepTracker,
+            shimParser,
+            shimPlaybackLogger
+        );
+
+        var shimRecorder = ShimRecorder = new ShimRelayRecorder(shimRecorderRelayClient, shimParser, shimRecorderLogger);
+        var shimController = ShimController = new ShimController(shimRecorder, textSerializer, shimRecorderLogger);
+
+        // ---
+        
+        var shimAuto = ShimAuto = new ShimAutoStarter(
+            state, 
+            eventBus,
+            ecsLoop,
+            shimEcsLoop,
+            shimPlaybackRelayClient,
+            shimRecorder,
+            shimBlobClient,
+            shimRecorderRelayService,
+            shimLogger
+        );
+        
+        // ---
+        
         Logger.LogDebug("DI Initialized");
     }
 }

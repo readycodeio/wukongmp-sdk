@@ -77,7 +77,7 @@ public static class ShimUtils
             container.LoggerFactory.CreateLogger("Recorder Relay")
         );
 
-        container.ShimRecorder.Attach(recordRelayClient);
+        container.ShimRecorderRelayClient.Attach(recordRelayClient);
     }
 
     public static void InitRelay(DI container, string host, int port, Guid userGuid, bool noDisconnect)
