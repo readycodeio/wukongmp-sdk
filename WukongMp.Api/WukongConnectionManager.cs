@@ -9,6 +9,8 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.Old;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api;
@@ -49,12 +51,19 @@ public class WukongConnectionManager : IDisposable
         PlayerState = playerState;
         _state = state;
         _logger = logger;
-        
+
+        _state.OnConnected += OnConnectedHandler;
         _state.OnDisconnected += OnDisconnectedHandler;
+    }
+
+    private static void OnConnectedHandler(PlayerId player, Entity entity)
+    {
+        entity.GetComponent<PlayerComponent>().NickName = CmdLineParams.Instance.Nickname;
     }
 
     public void Dispose()
     {
+        _state.OnConnected -= OnConnectedHandler;
         _state.OnDisconnected -= OnDisconnectedHandler;
     }
 
@@ -70,9 +79,9 @@ public class WukongConnectionManager : IDisposable
 
     public void Connect()
     {
-        RelayClient.RequestConnect();;
+        RelayClient.RequestConnect();
     }
-    
+
     public void Disconnect()
     {
         if (RequestedAreaId != null)
@@ -90,7 +99,7 @@ public class WukongConnectionManager : IDisposable
     {
         RelayClient.RequestLeaveArea();
     }
-    
+
     public void Reconnect()
     {
         Logging.LogInformation("Attempting to reconnect...");
@@ -117,7 +126,7 @@ public class WukongConnectionManager : IDisposable
             }
         }, this);
     }
-    
+
     public void SetMasterClient(string newMasterName)
     {
         if (AreaState.IsMasterClient)
@@ -140,7 +149,7 @@ public class WukongConnectionManager : IDisposable
             }
         }
     }
-    
+
     public void OnDisconnectedHandler(PlayerId playerId, Entity entity, DisconnectReason disconnectReason)
     {
         Logging.LogInformation("Disconnected");
