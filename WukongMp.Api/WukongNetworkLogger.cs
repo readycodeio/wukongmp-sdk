@@ -42,9 +42,7 @@ public class WukongNetworkLogger(
         // dump synced monsters
         world.Query<MetadataComponent>().ForEachEntity((ref MetadataComponent metaComp, Entity entity) =>
         {
-            logger.LogDebug("Monster {Entity}: {NetId}", entity, metaComp.NetId);
-            // TODO: Dump all monster info without using .DebugJson (throws due to some internal errors,
-            // probably the same reason why JsonSerializer sometimes fails.
+            logger.LogDebug("Monster {Entity}: {NetId}", entity.DebugJSON, metaComp.NetId);
         });
 
         // print team hostility info

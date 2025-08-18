@@ -1,6 +1,5 @@
- using System;
- using System.Collections.Generic;
- using System.Linq;
+using System.Collections.Generic;
+using System.Linq;
 using b1;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
@@ -9,6 +8,7 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
@@ -118,10 +118,11 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
         world.Query<TamerComponent>().Each(new ClearPlayerTamerRefCountJob(playerId));
     }
 
-    public void UpdateConnectedCount()
+    private void UpdateConnectedCount()
     {
         LobbyStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count + 1);
         CoopStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count + 1);
+        CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
         GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(state.AllPlayers.Count, playerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
     }
 }
