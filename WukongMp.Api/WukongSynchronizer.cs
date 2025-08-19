@@ -59,6 +59,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));
 
+        _syncGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_syncGroup);
     }
 
