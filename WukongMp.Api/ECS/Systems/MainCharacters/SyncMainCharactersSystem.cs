@@ -81,10 +81,14 @@ public class SyncMainCharactersSystem(
             modeManager.UpdatePlayerTeam(playerEntity, mainEntity);
         }
 
-        if (mainComp.Equipment.IsDirty)
+        var eqCopy = mainComp.Equipment;
+        if (eqCopy.IsDirty)
         {
             EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
-            mainComp.Equipment.ClearDirty();
+            eqCopy.ClearDirty();
+            mainComp.Equipment = eqCopy;
+            // Equipment is passed by value, so we need to reassign it
+            // This sets the dirty flag, but since we're not the owner of the entity, it won't be sent back to the server
         }
     }
 }
