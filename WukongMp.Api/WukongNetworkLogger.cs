@@ -15,7 +15,8 @@ public class WukongNetworkLogger(
     ClientState state,
     WukongAreaState areaState,
     WukongPlayerState playerState,
-    ILogger logger)
+    ILogger logger
+)
 {
     public void DumpDebugInfo()
     {
@@ -31,7 +32,7 @@ public class WukongNetworkLogger(
         {
             logger.LogDebug("No local player state found.");
         }
-        
+
         // dump player state to console for each connected player
         foreach (var playerId in state.AllPlayers)
         {
@@ -42,7 +43,7 @@ public class WukongNetworkLogger(
         // dump synced monsters
         world.Query<MetadataComponent>().ForEachEntity((ref MetadataComponent metaComp, Entity entity) =>
         {
-            logger.LogDebug("Monster {Entity}: {NetId}", entity.DebugJSON, metaComp.NetId);
+            logger.LogDebug("Entity {NetId}: {Entity}", metaComp.NetId, entity.DebugJSON);
         });
 
         // print team hostility info

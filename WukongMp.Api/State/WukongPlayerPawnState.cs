@@ -120,8 +120,8 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
 
     private void UpdateConnectedCount()
     {
-        LobbyStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count + 1);
-        CoopStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count + 1);
+        LobbyStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count);
+        CoopStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count);
         CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
         GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(state.AllPlayers.Count, playerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
     }
