@@ -17,7 +17,7 @@ namespace WukongMp.Api.State;
 
 // FIXME: This should be merged with `WukongPawnState`. In addition, this class does to many things. It should exclusively
 // deal with placing and removing pawns.
-public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerState playerState, WukongPlayerModeManager modeManager, ILogger logger)
+public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, ILogger logger)
 {
     private struct Entry
     {
@@ -68,9 +68,6 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
 
         _entries.Add(playerId, entry);
 
-        // UpdateConnectedCount();
-        // modeManager.UpdatePlayerTeamUi(playerEntity.Value);
-
         logger.LogDebug("Spawn successful: {PlayerId}", playerId);
     }
 
@@ -104,12 +101,13 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
         DI.Instance.Logger.LogDebug("DELETE OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
 
         // FIXME: This seems to be the wrong scope. At the very least it shouldn't be using the nickname as the identifier?
-        LobbyStatusWidget.Instance.RemovePlayerFromTeams(entry.CharacterNickName);
-        
+        // LobbyStatusWidget.Instance.RemovePlayerFromTeams(entry.CharacterNickName);
+
         // FIXME: This seems to be the wrong scope. Player removal should trigger `RemovePlayerPawn` and related actions not the 
         // other way around.
-        LobbyStatusWidget.Instance.SetReadyCount(state.AllPlayers.Select(playerState.GetPlayerById).Count(x => x?.GetState().IsReadyForPvP == true));
-        CoopStatusWidget.Instance.RemovePlayer(entry.CharacterNickName);
+
+        // LobbyStatusWidget.Instance.SetReadyCount(state.AllPlayers.Select(playerState.GetPlayerById).Count(x => x?.GetState().IsReadyForPvP == true));
+        // CoopStatusWidget.Instance.RemovePlayer(entry.CharacterNickName);
 
         world.Query<TamerComponent>().Each(new ClearPlayerTamerRefCountJob(playerId));
     }

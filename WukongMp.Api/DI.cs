@@ -162,7 +162,7 @@ public class DI
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
         var gameplaySettings = GameplaySettings = new WukongGameplaySettings(world, areaState);
-        var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, state, playerState, modeManager, logger);
+        var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);

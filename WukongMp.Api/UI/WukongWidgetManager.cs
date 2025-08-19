@@ -92,10 +92,10 @@ public class WukongWidgetManager : IDisposable
 
     private void RefreshWidgets()
     {
-        LobbyStatusWidget.Instance.SetConnectedCount(_clientState.AllPlayers.Count);
-        CoopStatusWidget.Instance.SetConnectedCount(_clientState.AllPlayers.Count);
+        LobbyStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
+        CoopStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(_clientState.AllPlayers.Count, _playerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
+        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(_clientState.AreaPlayers.Count, _playerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
     }
 
     public void ShowInGameWidgets()
