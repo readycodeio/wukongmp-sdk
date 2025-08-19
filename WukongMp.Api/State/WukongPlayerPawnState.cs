@@ -8,14 +8,12 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Old;
-using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api;
+namespace WukongMp.Api.State;
 
 // FIXME: This should be merged with `WukongPawnState`. In addition, this class does to many things. It should exclusively
 // deal with placing and removing pawns.
@@ -27,9 +25,9 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
         public BGUCharacterCS? Pawn;
         public string CharacterNickName;
     }
-    
-    private readonly Dictionary<PlayerId, Entry> _entries = new();
-    
+
+    private readonly Dictionary<PlayerId, Entry> _entries = [];
+
     public void AddPlayerPawn(PlayerId playerId)
     {
         if (_entries.ContainsKey(playerId))
@@ -37,45 +35,45 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
             logger.LogWarning("Attempted to add player pawn for {PlayerId} but it already exists in entries.", playerId);
             return;
         }
-        
+
         logger.LogDebug("SPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
-        
+
         var playerEntity = playerState.GetPlayerById(playerId);
         if (playerEntity == null)
         {
             logger.LogError("Player with ID {PlayerId} not found in player state.", playerId);
             return;
         }
-        
+
         var mainEntity = playerState.GetMainCharacterById(playerId);
         if (mainEntity == null)
         {
             logger.LogError("Main character for player {PlayerId} not found in player state.", playerId);
             return;
         }
-        
+
         var pawn = SpawningUtils.SpawnCloneForPlayer(playerEntity.Value, mainEntity.Value);
         if (pawn == null)
             return;
-        
+
         var marker = MarkerUtils.CreateMarkerForCharacter(mainEntity.Value); // 3D marker above player
         var nickname = mainEntity.Value.GetState().CharacterNickName;
-        
+
         var entry = new Entry
         {
             MarkerActor = marker,
             Pawn = pawn,
             CharacterNickName = nickname
         };
-        
+
         _entries.Add(playerId, entry);
-        
-        UpdateConnectedCount();
-        modeManager.UpdatePlayerTeamUi(playerEntity.Value);
-        
+
+        // UpdateConnectedCount();
+        // modeManager.UpdatePlayerTeamUi(playerEntity.Value);
+
         logger.LogDebug("Spawn successful: {PlayerId}", playerId);
     }
-    
+
     public void RemovePlayerPawn(PlayerId playerId)
     {
         if (!_entries.TryGetValue(playerId, out var entry))
@@ -92,7 +90,7 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
         {
             BGU_UnrealWorldUtil.DestroyActor(entry.MarkerActor);
         }
-        
+
         if (entry.Pawn != null)
         {
             BGU_UnrealWorldUtil.DestroyActor(entry.Pawn);
@@ -102,27 +100,17 @@ public class WukongPlayerPawnState(Store world, ClientState state, WukongPlayerS
             logger.LogWarning("Attempted to remove player pawn for {PlayerId} but it was already null.", playerId);
             return;
         }
-        
+
         DI.Instance.Logger.LogDebug("DELETE OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
 
         // FIXME: This seems to be the wrong scope. At the very least it shouldn't be using the nickname as the identifier?
         LobbyStatusWidget.Instance.RemovePlayerFromTeams(entry.CharacterNickName);
-
-        UpdateConnectedCount();
-
+        
         // FIXME: This seems to be the wrong scope. Player removal should trigger `RemovePlayerPawn` and related actions not the 
         // other way around.
         LobbyStatusWidget.Instance.SetReadyCount(state.AllPlayers.Select(playerState.GetPlayerById).Count(x => x?.GetState().IsReadyForPvP == true));
         CoopStatusWidget.Instance.RemovePlayer(entry.CharacterNickName);
 
         world.Query<TamerComponent>().Each(new ClearPlayerTamerRefCountJob(playerId));
-    }
-
-    private void UpdateConnectedCount()
-    {
-        LobbyStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count);
-        CoopStatusWidget.Instance.SetConnectedCount(state.AllPlayers.Count);
-        CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(state.AllPlayers.Count, playerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
     }
 }

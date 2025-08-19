@@ -5,9 +5,9 @@ using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Managers;
 
-public class ArchetypeEventRouter : IDisposable
+public sealed class ArchetypeEventRouter : IDisposable
 {
     public readonly struct ArchetypeEntry(ArchetypeEventRouter owner, ArchetypeId archetypeId)
     {

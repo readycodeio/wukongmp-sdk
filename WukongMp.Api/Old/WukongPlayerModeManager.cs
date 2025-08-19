@@ -8,7 +8,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old;
 
-public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState)
+public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager)
 {
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
@@ -39,7 +39,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             PvPUtils.SetupSpectatorUi();
         }
 
-        UpdatePlayerTeamUi(playerEntity);
+        widgetManager.UpdatePlayerTeamUi(playerEntity);
         return true;
     }
 
@@ -84,7 +84,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             }
         }
 
-        UpdatePlayerTeamUi(playerEntity);
+        widgetManager.UpdatePlayerTeamUi(playerEntity);
 
         return true;
     }
@@ -136,21 +136,6 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
         }
 
-        UpdatePlayerTeamUi(playerEntity);
-    }
-
-    public void UpdatePlayerTeamUi(PlayerEntity playerEntity)
-    {
-        ref var playerComp = ref playerEntity.GetState();
-        
-        if (Constants.IsCoop)
-        {
-            CoopStatusWidget.Instance.RemovePlayer(playerComp.NickName);
-            CoopStatusWidget.Instance.AddPlayer(playerComp.NickName);
-        }
-        else
-        {
-            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, playerComp.IsSpectator);
-        }
+        widgetManager.UpdatePlayerTeamUi(playerEntity);
     }
 }

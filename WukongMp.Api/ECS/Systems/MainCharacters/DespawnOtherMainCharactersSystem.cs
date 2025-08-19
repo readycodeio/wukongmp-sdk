@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Idents;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
 
@@ -52,7 +53,6 @@ public class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     {
         var mainEntity = new MainCharacterEntity(obj.Entity);
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
 
         if (_playerState.LocalPlayerId == null)
         {
