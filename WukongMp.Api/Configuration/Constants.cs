@@ -227,7 +227,5 @@ namespace WukongMp.Api.Configuration
         ]);
 
         public const string ShimFolder = "CSharpLoader/Shims";
-
-        public static AreaId MainArea = new(1);
     }
 }

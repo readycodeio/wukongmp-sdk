@@ -1,4 +1,6 @@
-﻿using System;
+﻿using b1;
+using ReadyM.Api.Multiplayer.Idents;
+using System;
 using System.Diagnostics;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
@@ -46,7 +48,12 @@ public class WukongLevelTransitionConnectionController : IDisposable
         ModWidgetsUtils.SpawnWidgetManagerActor();
         ModWidgetsUtils.InitializeWidgets();
 
-        _connection.JoinArea(Constants.MainArea);
+        var areaId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
+        if (areaId > ushort.MaxValue)
+        {
+            throw new InvalidCastException("AreaId is greater than ushort max value");
+        }
+        _connection.JoinArea(new AreaId((ushort)areaId));
     }
     
     private void OnEndPlayGameplayLevel()
