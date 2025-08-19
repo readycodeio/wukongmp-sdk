@@ -92,7 +92,7 @@ public class WukongConnectionManager : IDisposable
 
     public void JoinArea(AreaId areaId)
     {
-        RelayClient.RequestJoinArea(Constants.MainArea);
+        RelayClient.RequestJoinArea(areaId);
     }
 
     public void LeaveArea()
