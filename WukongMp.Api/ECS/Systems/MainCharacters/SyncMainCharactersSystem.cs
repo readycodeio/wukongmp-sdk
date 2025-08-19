@@ -10,15 +10,19 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class SyncMainCharactersSystem(WukongPlayerState playerState, WukongPlayerModeManager modeManager, 
-    WukongEventBus eventBus, ILogger logger)
+public class SyncMainCharactersSystem(
+    WukongPlayerState playerState,
+    WukongPlayerModeManager modeManager,
+    WukongEventBus eventBus,
+    ILogger logger
+)
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent, TeamComponent>
 {
     protected override void OnUpdate()
     {
         if (!eventBus.IsGameplayLevel)
             return;
-        
+
         Query.ForEachEntity((
             ref LocalMainCharacterComponent localMainComp,
             ref MainCharacterComponent mainComp,
@@ -54,7 +58,7 @@ public class SyncMainCharactersSystem(WukongPlayerState playerState, WukongPlaye
             Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerComp.PlayerId, isSpectator);
         }
     }
-    
+
     private void SyncLocalMainCharacterState(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
         SyncMainCharacterStateBase(playerEntity, mainEntity);
@@ -76,8 +80,12 @@ public class SyncMainCharactersSystem(WukongPlayerState playerState, WukongPlaye
 
             modeManager.UpdatePlayerTeam(playerEntity, mainEntity);
         }
-        
+
         var eq = mainComp.Equipment;
-        EquipmentUtils.SetActorEquipment(localMainComp.Pawn, eq);
+        if (eq.IsDirty)
+        {
+            EquipmentUtils.SetActorEquipment(localMainComp.Pawn, eq);
+            eq.ClearDirty();
+        }
     }
 }
