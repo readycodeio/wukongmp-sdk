@@ -64,7 +64,6 @@ namespace WukongMp.Api.WukongUtils
         public static void InitializeWidgets()
         {
             ChatWidget.Instance.Initialize();
-            ChatWidget.Instance.SetVisibility(false);
             TimerWidget.Instance.Initialize();
             LobbyStatusWidget.Instance.Initialize();
             CoopStatusWidget.Instance.Initialize();
@@ -72,7 +71,6 @@ namespace WukongMp.Api.WukongUtils
             CountdownWidget.Instance.Initialize();
             InfoMessageWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.Initialize();
-            PingIndicatorWidget.Instance.SetVisibility(true);
             FreeCameraControlsWidget.Instance.Initialize();
         }
 

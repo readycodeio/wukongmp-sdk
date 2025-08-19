@@ -12,16 +12,19 @@ public class WukongLevelTransitionConnectionController : IDisposable
     private readonly WukongEventBus _eventBus;
     private readonly WukongConnectionManager _connection;
     private readonly WukongSynchronizer _synchronizer;
+    private readonly WukongWidgetManager _widgetManager;
 
     public WukongLevelTransitionConnectionController(
         WukongEventBus eventBus,
         WukongConnectionManager connection,
-        WukongSynchronizer synchronizer
+        WukongSynchronizer synchronizer,
+        WukongWidgetManager widgetManager
     )
     {
         _eventBus = eventBus;
         _connection = connection;
         _synchronizer = synchronizer;
+        _widgetManager = widgetManager;
         
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
         _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
@@ -58,7 +61,7 @@ public class WukongLevelTransitionConnectionController : IDisposable
     {
         if (_connection.RequestedAreaId != null)
         {
-            ChatWidget.Instance.SetVisibility(true);
+            _widgetManager.ShowInGameWidgets();
         }
     }
 }

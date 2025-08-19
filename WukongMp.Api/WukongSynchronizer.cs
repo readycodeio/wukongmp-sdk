@@ -10,17 +10,15 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
 using WukongMp.Api.ECS.Archetypes;
-using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
+public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 {
     private readonly WukongAreaState _areaState;
     private readonly SystemGroup _syncGroup;
@@ -78,7 +76,5 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer, IDisposable
         {
             TamerUtils.DiscoverTamers();
         }
-        
-        CoopStatusWidget.Instance.SetVisibility(true);
     }
 }

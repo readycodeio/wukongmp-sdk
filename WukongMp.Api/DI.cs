@@ -181,7 +181,7 @@ public class DI
             ecsLoop,
             eventBus,
             logger);
-        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer);
+        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer, widgetManager);
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor);
