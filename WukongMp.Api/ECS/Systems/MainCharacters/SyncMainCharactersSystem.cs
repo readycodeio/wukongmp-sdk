@@ -81,11 +81,10 @@ public class SyncMainCharactersSystem(
             modeManager.UpdatePlayerTeam(playerEntity, mainEntity);
         }
 
-        var eq = mainComp.Equipment;
-        if (eq.IsDirty)
+        if (mainComp.Equipment.IsDirty)
         {
-            EquipmentUtils.SetActorEquipment(localMainComp.Pawn, eq);
-            eq.ClearDirty();
+            EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
+            mainComp.Equipment.ClearDirty();
         }
     }
 }
