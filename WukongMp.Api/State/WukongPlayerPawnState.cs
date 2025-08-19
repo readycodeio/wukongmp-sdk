@@ -73,7 +73,7 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
 
     public void RemovePlayerPawn(PlayerId playerId)
     {
-        if (!_entries.TryGetValue(playerId, out var entry))
+        if (!_entries.Remove(playerId, out var entry))
         {
             logger.LogWarning("Attempted to remove player pawn for {PlayerId} but it was not found in entries.", playerId);
             return;
