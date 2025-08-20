@@ -189,6 +189,7 @@ public class DI
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
         var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
+        ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
         var chatter = Chatter = new WukongChatter(connection, state, playerState, rpc);
