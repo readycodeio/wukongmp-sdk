@@ -23,7 +23,7 @@ public static class EquipmentUtils
     {
         var equipComp = GetEquipComp(actor);
 
-        foreach (var (position, item) in equipment.GetEquipments())
+        foreach (var (position, item) in equipment.GetItems())
         {
             OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), item]);
         }

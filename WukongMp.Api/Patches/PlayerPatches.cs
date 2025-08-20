@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using b1;
 using B1UI.GSUI;
-using BtlB1;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
@@ -9,6 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Relay.Common.Wukong.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -16,6 +16,7 @@ using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
+using EquipPosition = BtlB1.EquipPosition;
 
 namespace WukongMp.Api.Patches
 {
@@ -87,7 +88,7 @@ namespace WukongMp.Api.Patches
                 mainEntity = pawnState.GetByEntityByPlayerPawn(Owner);
                 if (!mainEntity.HasValue)
                     return;
-                
+
                 ref var mainComp = ref mainEntity.Value.GetState();
 
                 __instance.IsStandRotate = mainComp.IsStandRotate;
@@ -128,7 +129,7 @@ namespace WukongMp.Api.Patches
             }
 
             var playerState = DI.Instance.PlayerState;
-            
+
             if (Owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
                 var mainEntity = playerState.LocalMainCharacter;
@@ -192,7 +193,7 @@ namespace WukongMp.Api.Patches
                 var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
                 if (!mainEntity.HasValue)
                     return;
-                
+
                 ref var mainComp = ref mainEntity.Value.GetState();
                 __instance.bInJump = mainComp.InJump;
             }
@@ -244,7 +245,7 @@ namespace WukongMp.Api.Patches
             else
             {
                 var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
-                
+
                 if (mainEntity.HasValue)
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
@@ -298,7 +299,7 @@ namespace WukongMp.Api.Patches
             if (owner == mainEntity?.GetLocalState().Pawn)
             {
                 ref var main = ref mainEntity.Value.GetState();
-                main.Equipment.SetEquipment(EquipPosition.FromGame(), EquipID);
+                main.Equipment = main.Equipment.WithSetItem(EquipPosition.FromGame(), EquipID);
             }
 
             return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer"); // TODO: Exact comparison
@@ -344,12 +345,12 @@ namespace WukongMp.Api.Patches
                 {
                     var attackerMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Attacker);
                     var killedMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
-                    
+
                     if (attackerMainEntity != null && killedMainEntity != null)
                     {
                         ref var attackerMain = ref attackerMainEntity.Value.GetState();
                         ref var killedMain = ref killedMainEntity.Value.GetState();
-                        
+
                         // FIXME: This is not the place to do this. Invert control: it's the chatter that should subscribe to
                         // game events and that should report messages
                         DI.Instance.Chatter.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickName, killedMain.CharacterNickName);
@@ -481,9 +482,9 @@ namespace WukongMp.Api.Patches
             var mainEntity = playerState.LocalMainCharacter;
             if (!mainEntity.HasValue)
                 return false;
-            
+
             ref var localMain = ref mainEntity.Value.GetLocalState();
-            
+
             var localPawn = localMain.Pawn;
             var owner = __instance.GetOwner();
 
@@ -585,7 +586,7 @@ namespace WukongMp.Api.Patches
             if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
                 var mainEntity = playerState.LocalMainCharacter.Value;
-                
+
                 Logging.LogDebug("New target sent for {Subject} as: {Target}", mainEntity.GetState().CharacterNickName, name);
                 DI.Instance.Rpc.SendSetTarget(new TargetData(mainEntity.GetMeta().NetId, newTargetId, clearTarget));
                 return true;
@@ -692,7 +693,7 @@ namespace WukongMp.Api.Patches
                 return true;
             if (DI.Instance.AreaState.CurrentArea == null)
                 return true;
-            
+
             __result = DI.Instance.AreaState.CurrentArea.Value.GetRoom().EnemiesNgPlusLevel + 1;
             return false;
         }
@@ -815,7 +816,7 @@ namespace WukongMp.Api.Patches
             var mainEntity = playerState.LocalMainCharacter;
             if (!mainEntity.HasValue)
                 return true;
-            
+
             ref var localMain = ref mainEntity.Value.GetLocalState();
             if (localMain.IsAIPathMoveStuck)
             {

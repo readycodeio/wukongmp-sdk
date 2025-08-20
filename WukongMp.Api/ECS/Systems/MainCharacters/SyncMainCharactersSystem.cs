@@ -82,10 +82,10 @@ public class SyncMainCharactersSystem(
         }
 
         var eqCopy = mainComp.Equipment;
-        if (eqCopy.IsDirty)
+        if (eqCopy.IsLocallyDirty)
         {
             EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
-            eqCopy.ClearDirty();
+            eqCopy.ClearLocallyDirty();
             mainComp.Equipment = eqCopy;
             // Equipment is passed by value, so we need to reassign it
             // This sets the dirty flag, but since we're not the owner of the entity, it won't be sent back to the server
