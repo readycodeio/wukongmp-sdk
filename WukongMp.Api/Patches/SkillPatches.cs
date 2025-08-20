@@ -1028,7 +1028,7 @@ public static class PatchPendingReset
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.DisabledPatches)]
 public static class PatchOnSweepCheckHit
 {
     private static MethodBase TargetMethod()
