@@ -12,6 +12,7 @@ using ReadyM.Relay.Common.ECS.Jobs;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
+using WukongMp.Api.ECS.Systems.Tamers;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;

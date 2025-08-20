@@ -5,7 +5,7 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.Patches;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Systems.Tamers;
 
 public sealed class DespawnDeadTamerMarkersSystem : QuerySystem<HpComponent, LocalTamerComponent, MarkerComponent>
 {

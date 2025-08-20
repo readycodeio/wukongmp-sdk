@@ -2,9 +2,10 @@
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Systems.Tamers;
 
 // FIXME: In the future this should support both TamerEntities and MainCharacterEntities
 public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, MarkerComponent, TranslationComponent, NicknameComponent, TamerComponent>
@@ -28,14 +29,14 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
                 markerComp.MarkerActor.SetActorLocation(transComp.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
             }
 #if TESTING
-            string title = tamer.Tamer?.GetClass().GetName() ?? "";
-            if (tamer.Pawn != null)
+            string title = localTamerComp.Tamer?.GetClass().GetName() ?? "";
+            if (localTamerComp.Pawn != null)
             {
-                marker.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.BlueTeamColor}", true);
+                markerComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.BlueTeamColor}", true);
             }
-            else if (tamer.Tamer != null)
+            else if (localTamerComp.Tamer != null)
             {
-                marker.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.RedTeamColor}", true);
+                markerComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.RedTeamColor}", true);
             }
 #endif
         });

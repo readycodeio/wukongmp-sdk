@@ -10,7 +10,7 @@ using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Systems.Tamers;
 
 /// <summary>
 /// Spawns pawns for monsters that do not correspond to any current scene pawn. Tamers have local state that indicates

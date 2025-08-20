@@ -5,9 +5,10 @@ using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Systems.Tamers;
 
 public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
 {
@@ -42,7 +43,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                     ref var nameComp = ref entity.GetComponent<NicknameComponent>();
                     nameComp.Nickname = actor.GetClass().GetName();
 #if TESTING
-                    MarkerUtils.CreateMarkerForCharacter(entity);
+                    MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity));
 #endif
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);
                 }
