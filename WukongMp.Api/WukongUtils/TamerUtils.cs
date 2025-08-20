@@ -7,6 +7,7 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -73,7 +74,7 @@ namespace WukongMp.Api.WukongUtils
                 var entity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
                 if (entity == null)
                 {
-                    SpawningUtils.CreateMonsterInEcs(guid, actor, 2, actor.PathName);
+                    SpawningUtils.CreateMonsterInEcs(guid, actor, Constants.DefaultMonsterTeamId, actor.PathName);
                 }
                 else
                 {
