@@ -19,7 +19,6 @@ public class WukongChatter : IDisposable
     private readonly ClientState _state;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
-    private readonly WukongGameplaySettings _gameplaySettings;
 
     private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
     private const char Separator = ' ';
@@ -29,8 +28,7 @@ public class WukongChatter : IDisposable
         WukongConnectionManager connection,
         ClientState state,
         WukongPlayerState playerState,
-        WukongRpcCallbacks rpc,
-        WukongGameplaySettings gameplaySettings
+        WukongRpcCallbacks rpc
     )
     {
         Logging.LogDebug("Initializing WukongChatter");
@@ -39,7 +37,6 @@ public class WukongChatter : IDisposable
         _state = state;
         _playerState = playerState;
         _rpc = rpc;
-        _gameplaySettings = gameplaySettings;
 
         _connection.OnMasterClientChanged += OnMasterClientChanged;
         _state.OnJoinedArea += OnJoinedAreaHandler;
@@ -84,7 +81,6 @@ public class WukongChatter : IDisposable
         _commands.Add("/giveup", new WukongChatterCommand(RequestGiveUp));
         _commands.Add("/master", new WukongChatterCommand(RequestNewMasterClient));
         _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
-        _commands.Add("/hp_scaling", new WukongChatterCommand(SetMonsterHpScaling));
     }
 
     private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -181,24 +177,6 @@ public class WukongChatter : IDisposable
             if (playerEntity == null)
                 return;
             playerEntity.Value.GetState().IsSpectator = isSpectator;
-        }
-    }
-
-    private void SetMonsterHpScaling(ReadOnlyMemory<string> args)
-    {
-        if (args.Length == 1)
-        {
-            var hpScaling = args.Span[0];
-
-            if (int.TryParse(hpScaling, out var scaling))
-            {
-                _gameplaySettings.SetMonsterHpScaling(scaling);
-                SendServerMessage(nameof(Texts.SetMonsterHpScaling), scaling.ToString());
-            }
-            else
-            {
-                ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidCommand}: \"{hpScaling}\"");
-            }
         }
     }
 

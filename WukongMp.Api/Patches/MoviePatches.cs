@@ -195,6 +195,7 @@ public static class PatchTickForMovieSystem
                     localMain.IsWaitingForSequence = false;
                     localMain.IsJoiningSequence = false;
                     localMain.WaitingSequenceId = 0;
+                    localMain.LastSyncableSequenceId = peakRequest.SequenceID;
                 }
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
@@ -236,5 +237,41 @@ public static class PatchTickForMovieSystem
         }
 
         return false;
+    }
+}
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchOnSkipCurrentCameraMovie
+{
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BGS_MovieSystem:OnSkipCurrentCameraMovie");
+    }
+
+    public static bool Prefix(GameStateSystemBase __instance)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        if (DI.Instance.PlayerState.LocalMainCharacter == null)
+            return true;
+
+        var movieSystemType = __instance.GetType();
+        MethodInfo getter = AccessTools.PropertyGetter(movieSystemType, "MovieData");
+        BGC_MovieData movieData = (BGC_MovieData)getter.Invoke(__instance, null);
+        var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
+
+        if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().LastSyncableSequenceId == sequenceId)
+        {
+            Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
+            InfoMessageWidget.Instance.SetVisibility(true);
+            InfoMessageWidget.Instance.SetText("Wait for other players");
+            DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
+            return false;
+        }
+
+        Logging.LogDebug("Skipping local movie with sequenceId {Id}", sequenceId);
+        return true;
     }
 }

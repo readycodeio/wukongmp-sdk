@@ -56,7 +56,6 @@ namespace WukongMp.Api.WukongUtils
             ref var localTamerComp = ref tamerEntity.GetLocalTamer();
             ref var tamerComp = ref tamerEntity.GetTamer();
 
-            Logging.LogDebug("Spawn monster immediately for tamer: {Guid}", tamerComp.Guid);
             var bgsEvents = BGS_EventCollectionCS.Get(localTamerComp.Tamer);
             bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
         }

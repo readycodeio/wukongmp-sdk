@@ -1,4 +1,6 @@
-﻿using b1;
+﻿using System;
+using System.Reflection;
+using b1;
 using HarmonyLib;
 using System;
 using System.Reflection;
@@ -101,7 +103,7 @@ namespace WukongMp.Api.Patches
                     var tamerEntity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
                     if (tamerEntity == null)
                     {
-                        SpawningUtils.CreateMonsterInEcs(guid, __instance, 2, __instance.PathName);
+                        SpawningUtils.CreateMonsterInEcs(guid, __instance, Constants.DefaultMonsterTeamId, __instance.PathName);
                     }
                     else
                     {
@@ -370,7 +372,6 @@ namespace WukongMp.Api.Patches
 
             if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGoHome)
             {
-                Logging.LogTrace("Trying change state to {State}", EventTag.ToString());
                 return false;
             }
 
@@ -393,7 +394,7 @@ namespace WukongMp.Api.Patches
 
     [HarmonyPatch(typeof(BUS_MovementSystem), "TickForMonster")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchMovementTickForMonstere
+    public class PatchMovementTickForMonster
     {
         public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem? __instance, BUC_MovementData ___MovementData)
         {

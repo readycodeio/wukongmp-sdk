@@ -49,7 +49,7 @@ public class IpcHelpers
             return [];
         }
 
-        Logging.LogDebug("Reading handshake file: {FilePath}", filePath);
+        Logging.LogInformation("Reading handshake file: {FilePath}", filePath);
         var lines = File.ReadAllLines(filePath);
         var data = new Dictionary<string, string>();
 
@@ -63,11 +63,11 @@ public class IpcHelpers
                 var key = match.Groups["key"].Value.Trim();
                 var value = match.Groups["value"].Value.Trim();
                 data[key] = value;
-                Logging.LogDebug("Parsed {Key}={Value}", key, value);
+                Logging.LogInformation("Parsed {Key}={Value}", key, value);
             }
             else
             {
-                Logging.LogWarning("Failed to parse line: {Line}", line);
+                Logging.LogError("Failed to parse line: {Line}", line);
             }
         }
 
@@ -75,7 +75,7 @@ public class IpcHelpers
         try
         {
             File.Delete(filePath);
-            Logging.LogDebug("Deleted handshake file: {FilePath}", filePath);
+            Logging.LogInformation("Deleted handshake file: {FilePath}", filePath);
         }
         catch (Exception ex)
         {

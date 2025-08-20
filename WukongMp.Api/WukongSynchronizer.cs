@@ -50,6 +50,8 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new DespawnDeadTamerMarkersSystem());
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
+        _syncGroup.Add(new ScaleMonsterHpSystem());
+        _syncGroup.Add(new SyncMonsterTeamSystem());
 
         _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
         _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState, Logger));

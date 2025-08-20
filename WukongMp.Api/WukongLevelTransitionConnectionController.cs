@@ -44,7 +44,7 @@ public class WukongLevelTransitionConnectionController : IDisposable
     {
         Debug.Assert(_connection.RequestedAreaId != null);
         
-        Logging.LogInformation("Initializing widgets");
+        Logging.LogDebug("Initializing widgets");
         ModWidgetsUtils.SpawnWidgetManagerActor();
         ModWidgetsUtils.InitializeWidgets();
 
@@ -60,7 +60,7 @@ public class WukongLevelTransitionConnectionController : IDisposable
     {
         _connection.LeaveArea();
         
-        Logging.LogInformation("Deinitializing widgets");
+        Logging.LogDebug("Deinitializing widgets");
         ModWidgetsUtils.DeinitializeWidgets();
     }
     

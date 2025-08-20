@@ -382,7 +382,7 @@ namespace WukongMp.Api.Patches
                         }
                         else
                         {
-                            Logging.LogWarning("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
+                            Logging.LogDebug("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
                         }
 
                         return;
@@ -627,7 +627,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchDoDamageLogic
     {
-        public static void Postfix(BUS_BeAttackedComp __instance, AActor Attacker)
+        public static void Postfix(BUS_BeAttackedComp __instance, AActor? Attacker)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -760,7 +760,6 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
-            Logging.LogWarning("BUS_QuestDynamicObstacleComp.EnableCollision called for {Guid}", guid);
 
             return !DisabledCollidersData.IsDisabled(guid);
         }

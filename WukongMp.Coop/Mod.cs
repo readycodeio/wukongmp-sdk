@@ -96,7 +96,7 @@ namespace WukongMp.Coop
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
-            _logger.LogDebug("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
+            _logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
@@ -123,13 +123,13 @@ namespace WukongMp.Coop
 #if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () => 
             { 
-                Logging.LogWarning("Alt + Y: Disable threading");
+                Logging.LogDebug("Alt + Y: Disable threading");
                 GameUtils.DisableThreading();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () => 
             {
-                Logging.LogWarning("Alt + U: Enable threading");
+                Logging.LogDebug("Alt + U: Enable threading");
                 GameUtils.EnableThreading();
             });
 
@@ -156,7 +156,7 @@ namespace WukongMp.Coop
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
             {
                 _logger.LogDebug("Alt + S");
-                CutsceneUtils.SkipCurrentCutscene();
+                CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>

@@ -19,7 +19,6 @@ public struct MarkerComponent : IComponent
         {
             if (_markerActor != null && _markerActor.IsNullOrDestroyed())
             {
-                Logging.LogTrace("Marker actor is destroyed");
                 return null;
             }
 

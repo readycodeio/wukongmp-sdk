@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using b1;
 using ReadyM.Api.Multiplayer.Idents;
 using WukongMp.Api.DTO;
@@ -52,9 +52,25 @@ public static class CutsceneUtils
         }
     }
 
-    public static void SkipCurrentCutscene()
+    public static void RequestSkipCurrentCutscene()
     {
         BGUFunctionLibraryCS.SkipCurrentSequence(GameUtils.GetWorld());
+    }
+
+    public static void SkipCutscene(int sequenceId)
+    {
+        BGC_MovieData movieData = BGU_DataUtil.GetGameStateReadonlyData<BGC_MovieData>(GameUtils.GetWorld());
+        MovieInstance cameraMovieInstance = movieData.CameraMovieInstance;
+        if (cameraMovieInstance != null && cameraMovieInstance.CanSkipMovie() && cameraMovieInstance.SequenceId == sequenceId)
+        {
+            Logging.LogDebug("Skipping cutscene with sequenceId: {SequenceId}", sequenceId);
+            cameraMovieInstance.SkipMovie();
+        }
+        else
+        {
+            Logging.LogWarning("Cannot skip cutscene, either not playing or sequenceId does not match. Current sequenceId: {CurrentSequenceId}, Requested: {RequestedSequenceId}",
+                cameraMovieInstance?.SequenceId, sequenceId);
+        }
     }
 
     public static bool CheckAllPlayersWaitingForCutscene(int sequenceId)

@@ -20,7 +20,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 
         if (allTamers is null)
         {
-            Logging.LogWarning("Failed to find all tamers in the world.");
+            Logging.LogError("Failed to find all tamers in the world.");
             return;
         }
 
@@ -46,12 +46,9 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
 #endif
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);
                 }
-                else
-                {
-                    // spawn tamer
-                    Logging.LogDebug("Matching tamer not found for guid: {Guid}, spawning...", tamerComp.Guid);
-                    // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
-                }
+
+                // TODO: else spawn tamer?
+                // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
             }
         });
     }

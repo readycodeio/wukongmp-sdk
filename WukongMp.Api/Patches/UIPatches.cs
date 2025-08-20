@@ -139,7 +139,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Prefix(int NewPageID, string Source, ChangeReason Reason, object exParam)
         {
-            Logging.LogDebug("ShowPage: {NewPageID}, {Source}, {Reason}, {ExParam}", NewPageID, Source, Reason, exParam);
+            Logging.LogInformation("ShowPage: {NewPageID}, {Source}, {Reason}, {ExParam}", NewPageID, Source, Reason, exParam);
         }
     }
 
@@ -264,7 +264,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(string Culture)
         {
-            Logging.LogDebug("Culture changed to: {Culture}", Culture);
+            Logging.LogInformation("Culture changed to: {Culture}", Culture);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(Culture);
         }
     }

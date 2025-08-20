@@ -1,6 +1,7 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
+using System.Reflection;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
@@ -42,7 +43,7 @@ namespace WukongMp.Api.Patches
             if (mainEntity != null)
             {
                 ref var mainComp = ref mainEntity.Value.GetState();
-                
+
                 // set their attributes
                 foreach (var (attr, value) in mainComp.Attributes)
                 {
@@ -96,7 +97,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            
+
             if (!localTamer.IsTamerSynced)
             {
                 Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
@@ -144,7 +145,7 @@ namespace WukongMp.Api.Patches
                 if (mainEntity != null && owner == mainEntity.Value.GetLocalState().Pawn)
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
-                    
+
                     if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
                     {
                         mainComp.Hp = result;
@@ -175,7 +176,7 @@ namespace WukongMp.Api.Patches
             if (mainEntity != null && Constants.SyncedAttributes.Contains(AttrID) && owner == mainEntity.Value.GetLocalState().Pawn)
             {
                 ref var mainComp = ref mainEntity.Value.GetState();
-                
+
                 if (mainComp.Attributes.TryGetAttribute((byte)AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
@@ -188,8 +189,6 @@ namespace WukongMp.Api.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
-
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     mainComp.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
                 }
@@ -224,7 +223,7 @@ namespace WukongMp.Api.Patches
 
             var playerState = DI.Instance.PlayerState;
             var pawnState = DI.Instance.PawnState;
-            
+
             var mainEntity = playerState.LocalMainCharacter;
 
             if (mainEntity != null && character == mainEntity.Value.GetLocalState().Pawn)
@@ -282,7 +281,7 @@ namespace WukongMp.Api.Patches
                 if (otherMainEntity != null)
                 {
                     ref var otherMain = ref otherMainEntity.Value.GetState();
-                    
+
                     var events = BUS_EventCollectionCS.Get(character);
 
                     __instance.IsFlying = otherMain.IsFlying;
@@ -326,7 +325,7 @@ namespace WukongMp.Api.Patches
                     if (tamerEntity.HasValue)
                     {
                         ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                        
+
                         if (!localTamer.IsTamerSynced)
                         {
                             return;
@@ -370,7 +369,7 @@ namespace WukongMp.Api.Patches
         private static void RestrictPlayerLocation(MainCharacterEntity mainEntity, BUC_ABPCharacterData characterData)
         {
             ref var localMainComp = ref mainEntity.GetLocalState();
-            
+
             var distanceSq = localMainComp.SequenceLocation.Vector_DistanceSquared(characterData.ActorLocation);
             if (distanceSq > Constants.RestrictedMovementRadiusSquare)
             {
@@ -394,12 +393,12 @@ namespace WukongMp.Api.Patches
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
                 if (tamerEntity.HasValue)
                 {
-                    Logging.LogWarning("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
+                    Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
 
                     // only clean up own monsters
                     if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     {
-                        Logging.LogWarning("Skipping cleanup for remote monster");
+                        Logging.LogDebug("Skipping cleanup for remote monster");
                         return;
                     }
 
@@ -468,7 +467,7 @@ namespace WukongMp.Api.Patches
             {
                 var mainEntity = playerState.LocalMainCharacter;
                 var netId = mainEntity.Value.GetMeta().NetId;
-                
+
                 DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
                 Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
@@ -492,6 +491,119 @@ namespace WukongMp.Api.Patches
 
             var netId = tamerEntity.Value.GetMeta().NetId;
             DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchBuffBegin
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BuffComp:BuffBegin");
+        }
+
+        public static void Postfix(UActorCompBaseCS __instance, int BuffID, float Duration)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var owner = __instance.GetOwner();
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            {
+                var netId = tamerEntity.Value.GetMeta().NetId;
+                // DI.Instance.Rpc.SendUnitAddBuff(new BuffAddData(netPeer, BuffID, Duration));
+            }
+            else if (GameUtils.GetControlledPawn() == owner)
+            {
+                DI.Instance.Rpc.SendAddBuff(new BuffAddData(BuffID, Duration));
+            }
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchBuffRemove
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BuffComp:BuffRemove");
+        }
+
+        public static void Postfix(UActorCompBaseCS __instance, int BuffID, EBuffEffectTriggerType RemoveTriggerType, int InLayer, bool WithTriggerRemoveEffect)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+
+            var owner = __instance.GetOwner();
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            {
+                var netId = tamerEntity.Value.GetMeta().NetId;
+                // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+            }
+            if (GameUtils.GetControlledPawn() == owner)
+            {
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+            }
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchBuffRemoveImmediately
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BuffComp:BuffRemoveImmediately");
+        }
+
+        public static void Postfix(UActorCompBaseCS __instance, int BuffID, EBuffEffectTriggerType RemoveTriggerType, bool WithTriggerRemoveEffect)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var owner = __instance.GetOwner();
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            {
+                var netId = tamerEntity.Value.GetMeta().NetId;
+                // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+            }
+            if (GameUtils.GetControlledPawn() == owner)
+            {
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+            }
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchBuffAllRemove
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BuffComp:BuffAllRemove");
+        }
+
+        public static void Postfix(UActorCompBaseCS __instance, EBuffEffectTriggerType RemoveTriggerType, bool WithTriggerRemoveEffect)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var owner = __instance.GetOwner();
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            {
+                var netId = tamerEntity.Value.GetMeta().NetId;
+                // DI.Instance.Rpc.SendUnitRemoveAllBuffs(new BuffRemoveAllData(netPeer, RemoveTriggerType, WithTriggerRemoveEffect));
+            }
+            if (GameUtils.GetControlledPawn() == owner)
+            {
+                DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(RemoveTriggerType, WithTriggerRemoveEffect));
+            }
         }
     }
 }

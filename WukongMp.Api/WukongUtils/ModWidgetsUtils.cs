@@ -25,7 +25,7 @@ namespace WukongMp.Api.WukongUtils
                 var widgetManagerActor = BGU_UnrealWorldUtil.SpawnActor(world, widgetManagerActorClass);
                 if (widgetManagerActor != null)
                 {
-                    Logging.LogInformation("UI Manager actor spawned successfully");
+                    Logging.LogDebug("UI Manager actor spawned successfully");
                 }
                 else
                 {

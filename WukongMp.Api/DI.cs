@@ -60,10 +60,10 @@ public class DI
     public WukongPlayerState PlayerState { get; private set; } = null!;
     public WukongPawnState PawnState { get; private set; } = null!;
     public WukongPlayerModeManager ModeManager { get; private set; } = null!;
-    public WukongGameplaySettings GameplaySettings { get; private set; } = null!;
     public WukongPlayerPawnState PlayerPawnState { get; private set; } = null!;
 
     public WukongRpcCallbacks Rpc { get; private set; } = null!;
+    public WukongServerRpcCallbacks ServerRpc { get; private set; } = null!;
     public WukongSaveRelay SaveRelay { get; private set; } = null!;
     public WukongEventBus EventBus { get; private set; } = null!;
 
@@ -161,7 +161,6 @@ public class DI
 
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
-        var gameplaySettings = GameplaySettings = new WukongGameplaySettings(world, areaState);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
@@ -192,7 +191,7 @@ public class DI
         var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
-        var chatter = Chatter = new WukongChatter(connection, state, playerState, rpc, gameplaySettings);
+        var chatter = Chatter = new WukongChatter(connection, state, playerState, rpc);
         var patcher = Patcher = new WukongPatcher();
 
         if (Constants.IsCoop)

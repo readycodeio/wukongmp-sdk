@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
@@ -18,6 +19,8 @@ namespace WukongMp.Api.ECS.Systems;
 /// <param name="state"></param>
 public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
+    private HashSet<string?> NotYetSpawnedGuids = [];
+
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
@@ -41,11 +44,16 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             {
                 TamerUtils.SpawnMonsterLocally(new TamerEntity(entity));
             }
+
             monster = localTamerComp.Tamer?.GetMonster();
             currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
-                Logging.LogError("Monster not yet spawned");
+                if (NotYetSpawnedGuids.Add(tamerComp.Guid))
+                {
+                    Logging.LogError("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
+                }
+
                 return;
             }
 
@@ -54,8 +62,12 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
 
             if (attrs != null)
             {
-                hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-                hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                if (DI.Instance.ClientOwnership.OwnsEntity(entity))
+                {
+                    hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                    hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
+                    teamComp.TeamId = monster.GetTeamIDInCS();
+                }
 #if TESTING
                 hpComp.Hp = 10;
                 attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
@@ -63,18 +75,6 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 attrs.SetFloatValue(EBGUAttrFloat.SkillSuperArmor, 1);
                 attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
 #endif
-
-                if (metaComp.Owner == state.LocalPlayerId && hpComp.HpMult != hpComp.LastMult && hpComp.HpMult != 0)
-                {
-                    hpComp.HpMaxBase *= hpComp.HpMult;
-                    hpComp.Hp *= hpComp.HpMult;
-
-                    attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
-                    attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-
-                    hpComp.LastMult = hpComp.HpMult;
-                    Logging.LogDebug("Monster {Guid} HP scaling set to {Scaling}x", tamerComp.Guid, hpComp.HpMult);
-                }
             }
 
             var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
@@ -96,8 +96,6 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 events.Evt_AIPauseBT.Invoke(true);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
-
-            ClientUtils.RegisterAndSetPlayerTeam(monster, teamComp.TeamId);
 
             localTamerComp.IsMonsterSynced = true;
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);

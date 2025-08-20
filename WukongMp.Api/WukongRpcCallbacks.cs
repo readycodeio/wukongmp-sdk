@@ -1,10 +1,8 @@
-﻿using System;
-using b1;
+﻿using b1;
 using b1.BGW;
 using BtlShare;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Idents;
@@ -12,16 +10,16 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
+using System;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Old;
 using WukongMp.Api.Patches;
-using WukongMp.Api.WukongUtils;
-using WukongMp.Api.NameCompressors;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
@@ -674,5 +672,100 @@ public partial class WukongRpcCallbacks : IDisposable
             self._logger.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", mainComp.CharacterNickName, reason0);
             MagicallyChangeUtils.ResetMagicallyChange(localMainComp.Pawn, reason0);
         }, this, __sender, reason);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    void OnProjectileTarget(PlayerId __sender, ProjectileTargetData targetData)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender, targetData0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            var target = self._pawnState.GetPawnByNetworkId(targetData0.Target);
+            if (target == null)
+            {
+                self._logger.LogNull(nameof(targetData0.Target));
+                return;
+            }
+
+            ProjectileUtils.SetProjectileTarget(localMainComp.Pawn, targetData0.ProjectileName, target, targetData0.SocketName);
+        }, this, __sender, targetData);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    void OnSwitchOneProjectile(PlayerId __sender, ProjectileSwitchData switchData)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender, switchData0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            ProjectileUtils.SwitchProjectileInfo(localMainComp.Pawn, switchData0.ProjectileClassName, switchData0.BulletSwitchID, switchData0.SwitchIdx);
+        }, this, __sender, switchData);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    void OnProjectileDead(PlayerId __sender, ProjectileDeadData data)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            ProjectileUtils.DestroyProjectile(localMainComp.Pawn, data0.ProjectileClassName, data0.Reason);
+        }, this, __sender, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    void OnProjectileMoveMode(PlayerId __sender, ProjectileMoveModeData data)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            ProjectileUtils.SetProjectileModeMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
+        }, this, __sender, data);
     }
 }

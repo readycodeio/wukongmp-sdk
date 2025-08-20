@@ -7,6 +7,7 @@ using BtlB1;
 using CommB1;
 using HarmonyLib;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -156,15 +157,19 @@ namespace WukongMp.Api.Patches
 
                 try
                 {
+                    var timer = Stopwatch.StartNew();
                     var worldDownloadTask = DI.Instance.SaveRelay.DownloadWorldSaveAsync();
                     var playerDownloadTask = DI.Instance.SaveRelay.DownloadPlayerSaveAsync();
 
                     var task = Task.WhenAll(worldDownloadTask, playerDownloadTask);
                     DI.Instance.EcsLoop.Wait(task);
 
+                    timer.Stop();
+                    Logging.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
+
                     if (worldDownloadTask.Result is null)
                     {
-                        Logging.LogWarning("Failed to download world save file from the cloud, will start new game");
+                        Logging.LogInformation("Failed to download world save file from the cloud, will start new game");
                         startNewGame = true;
                     }
                     else
@@ -174,7 +179,7 @@ namespace WukongMp.Api.Patches
 
                     if (playerDownloadTask.Result is null)
                     {
-                        Logging.LogWarning("Player has no save file in the cloud, using default world save");
+                        Logging.LogInformation("Player has no save file in the cloud, using default world save");
                         playerData = worldData;
                     }
                     else
@@ -357,27 +362,31 @@ namespace WukongMp.Api.Patches
             {
                 if (DI.Instance.AreaState.IsMasterClient)
                 {
+                    var worldTimer = Stopwatch.StartNew();
                     var uploadedWorld = await DI.Instance.SaveRelay.UploadWorldSaveAsync(data);
-                    LogSuccess(uploadedWorld, "world save");
+                    LogSuccess(worldTimer, uploadedWorld, "world save");
                 }
 
+                var playerTimer = Stopwatch.StartNew();
                 var uploadedPlayer = await DI.Instance.SaveRelay.UploadPlayerSaveAsync(data);
-                LogSuccess(uploadedPlayer, "player save");
+                LogSuccess(playerTimer, uploadedPlayer, "player save");
             });
 
             __result = true;
             return false;
         }
 
-        private static void LogSuccess(bool success, string name)
+        private static void LogSuccess(Stopwatch stopwatch, bool success, string name)
         {
+            stopwatch.Stop();
+
             if (success)
             {
-                Logging.LogInformation("Blob uploaded successfully: {Name}", name);
+                Logging.LogInformation("Blob uploaded successfully: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
             }
             else
             {
-                Logging.LogError("Failed to upload blob: {Name}", name);
+                Logging.LogError("Failed to upload blob: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
             }
         }
     }
@@ -421,7 +430,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(UActorCompBaseCS __instance, int RebirthPointID)
         {
-            Logging.LogDebug("BirthPointID updated: {Id}", RebirthPointID);
+            Logging.LogInformation("BirthPointID updated: {Id}", RebirthPointID);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointID);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
@@ -437,12 +446,12 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(UActorCompBaseCS __instance, int BirthPointID)
         {
-            Logging.LogWarning("BirthPointID updated: {Id}", BirthPointID);
+            Logging.LogInformation("BirthPointID updated: {Id}", BirthPointID);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(BirthPointID);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
-                Logging.LogWarning("MapId: {Id}", fUStRebirthPointDesc.MapID);
-                Logging.LogWarning("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+                Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
             }
         }
     }
@@ -453,12 +462,12 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(UActorCompBaseCS __instance, int RebirthPointId)
         {
-            Logging.LogWarning("BirthPointID updated: {Id}", RebirthPointId);
+            Logging.LogInformation("BirthPointID updated: {Id}", RebirthPointId);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointId);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
-                Logging.LogWarning("MapId: {Id}", fUStRebirthPointDesc.MapID);
-                Logging.LogWarning("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+                Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
             }
         }
     }
