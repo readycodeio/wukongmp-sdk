@@ -1,8 +1,9 @@
-﻿using System;
+﻿using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Api.Multiplayer.Idents;
@@ -10,6 +11,7 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
 using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.Tamers;
@@ -23,6 +25,8 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 {
     private readonly WukongAreaState _areaState;
     private readonly SystemGroup _syncGroup;
+    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
+    private readonly ClientState _state;
 
     public WukongSynchronizer(
         ArchetypeEventRouter archetypeEvent,
@@ -42,11 +46,13 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, logger)
     {
         _areaState = areaState;
+        _wukongArchetype = wukongArchetype;
+        _state = state;
 
         State.OnJoinedArea += OnJoinedAreaHandler;
-        
+
         _syncGroup = new SystemGroup("Sync");
-        
+
         _syncGroup.Add(new SpawnTamersSystem(state));
         _syncGroup.Add(new DespawnDeadTamerMarkersSystem());
         _syncGroup.Add(new SyncTamersSystem());
@@ -69,9 +75,38 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
     protected override void OnDispose()
     {
         State.OnJoinedArea -= OnJoinedAreaHandler;
-        
+
         EcsLoop.RemoveSystem(_syncGroup);
         base.OnDispose();
+    }
+
+    protected override void OnOwnershipChanged(Entity entity)
+    {
+        var meta = entity.GetComponent<MetadataComponent>();
+        if (meta.Archetype != _wukongArchetype.MonsterArchetype)
+            return;
+
+        // if we are now the owner of a monster, we must re-enable its AI
+        var localTamerComp = entity.GetComponent<LocalTamerComponent>();
+        if (localTamerComp.Tamer == null)
+        {
+            Logging.LogError("LocalTamerComponent.Tamer is null for entity {EntityId}", meta.NetId);
+            return;
+        }
+
+        var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
+        if (events == null)
+        {
+            Logging.LogError("events are null");
+            return;
+        }
+
+        if (meta.Owner == _state.LocalPlayerId)
+        {
+            events.Evt_AIPerceptionSetting.Invoke(true);
+            events.Evt_AIPauseBT.Invoke(false);
+            Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+        }
     }
 
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)

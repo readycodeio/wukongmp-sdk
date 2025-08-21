@@ -19,7 +19,7 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// <param name="state"></param>
 public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
-    private HashSet<string?> NotYetSpawnedGuids = [];
+    private readonly HashSet<string?> _notYetSpawnedGuids = [];
 
     protected override void OnUpdate()
     {
@@ -49,7 +49,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
-                if (NotYetSpawnedGuids.Add(tamerComp.Guid))
+                if (_notYetSpawnedGuids.Add(tamerComp.Guid))
                 {
                     Logging.LogError("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
                 }
