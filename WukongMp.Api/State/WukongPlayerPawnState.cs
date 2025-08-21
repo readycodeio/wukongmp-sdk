@@ -76,16 +76,16 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
         }
 
         logger.LogDebug("DESPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
-        logger.LogDebug("Other main character marker: {Actor}", entry.MarkerActor?.GetName());
-        logger.LogDebug("Other main character pawn: {Pawn}", entry.Pawn?.PathName);
 
-        if (entry.MarkerActor != null)
+        if (!entry.MarkerActor.IsNullOrDestroyed())
         {
+            logger.LogDebug("Other main character marker: {Actor}", entry.MarkerActor?.GetName());
             BGU_UnrealWorldUtil.DestroyActor(entry.MarkerActor);
         }
 
-        if (entry.Pawn != null)
+        if (!entry.Pawn.IsNullOrDestroyed())
         {
+            logger.LogDebug("Other main character pawn: {Pawn}", entry.Pawn?.PathName);
             BGU_UnrealWorldUtil.DestroyActor(entry.Pawn);
         }
         else
