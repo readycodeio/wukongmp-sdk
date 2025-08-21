@@ -14,8 +14,8 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
     {
         if (isSpectator)
             return HandleBecameSpectator(playerEntity, mainEntity);
-        else
-            return HandleStoppedBeingSpectator(playerEntity, mainEntity);
+
+        return HandleStoppedBeingSpectator(playerEntity, mainEntity);
     }
 
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
@@ -27,7 +27,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         var isHidden = localMainComp.Pawn?.Hidden == true;
         if (isHidden)
             return false;
-        
+
         if (isMyself)
             UIUtils.SetHudVisibility(false);
 
@@ -53,7 +53,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         var isVisible = localMainComp.Pawn?.Hidden == false;
         if (isVisible)
             return false;
-        
+
         if (isMyself)
             UIUtils.SetHudVisibility(true);
 
@@ -67,7 +67,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             if (areaEntity != null)
             {
                 ref var room = ref areaEntity.Value.GetRoom();
-                
+
                 if (room.InMatchmaking)
                 {
                     PvPUtils.SetupMatchmakingUi();
@@ -97,7 +97,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         var isVisible = localMainComp.Pawn?.Hidden == false;
         if (isVisible == visible)
             return false;
-        
+
         Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerComp.NickName, visible);
 
         if (localMainComp.Pawn == null)
@@ -110,7 +110,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         localMainComp.MarkerActor?.SetActorHiddenInGame(!visible);
         return true;
     }
-    
+
     public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
         ref var playerComp = ref playerEntity.GetState();

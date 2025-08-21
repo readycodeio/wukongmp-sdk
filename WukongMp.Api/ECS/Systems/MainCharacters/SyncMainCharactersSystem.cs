@@ -51,11 +51,17 @@ public class SyncMainCharactersSystem(
     private void SyncMainCharacterStateBase(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
         ref var playerComp = ref playerEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
 
         var isSpectator = playerComp.IsSpectator;
-        if (modeManager.HandleBecameSpectator(playerEntity, mainEntity, isSpectator))
+
+        if (isSpectator != localMainComp.IsSpectatorLocally)
         {
-            Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerComp.PlayerId, isSpectator);
+            localMainComp.IsSpectatorLocally = isSpectator;
+            if (modeManager.HandleBecameSpectator(playerEntity, mainEntity, isSpectator))
+            {
+                Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerComp.PlayerId, isSpectator);
+            }
         }
     }
 

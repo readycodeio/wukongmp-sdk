@@ -12,6 +12,8 @@ public struct LocalMainCharacterComponent : IComponent
     private BGUCharacterCS? _pawn;
 
     public bool IsPlayerSynced;
+
+    public bool IsSpectatorLocally;
     
     [Ignore]
     public BGUCharacterCS? Pawn
