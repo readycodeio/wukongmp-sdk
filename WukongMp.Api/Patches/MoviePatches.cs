@@ -112,7 +112,7 @@ public static class PatchRequestPlayMovie
         if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
         {
             Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
-            foreach (var playerId in DI.Instance.State.AllPlayers)
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
             {
                 var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
                 if (mainEntity == null)
@@ -124,7 +124,7 @@ public static class PatchRequestPlayMovie
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
-                foreach (var playerId in DI.Instance.State.AllPlayers)
+                foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
                 {
                     var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
                     if (mainEntity == null)
