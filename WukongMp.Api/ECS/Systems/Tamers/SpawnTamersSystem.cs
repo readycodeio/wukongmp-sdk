@@ -67,14 +67,11 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                     teamComp.TeamId = monster.GetTeamIDInCS();
-                }
 #if TESTING
-                hpComp.Hp = 10;
-                attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-                attrs.SetFloatValue(EBGUAttrFloat.Shield, 1);
-                attrs.SetFloatValue(EBGUAttrFloat.SkillSuperArmor, 1);
-                attrs.SetFloatValue(EBGUAttrFloat.BlockCollapseArmor, 1);
+                    hpComp.Hp = 10;
+                    attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
 #endif
+                }
             }
 
             var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
