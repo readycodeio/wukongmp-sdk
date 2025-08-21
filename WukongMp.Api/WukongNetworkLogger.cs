@@ -30,7 +30,7 @@ public class WukongNetworkLogger(
         }
         else
         {
-            logger.LogDebug("No local player state found.");
+            logger.LogWarning("No local player state found.");
         }
 
         // dump player state to console for each connected player
@@ -41,17 +41,16 @@ public class WukongNetworkLogger(
         }
 
         // dump synced monsters
-        world.Query<MetadataComponent>().ForEachEntity((ref MetadataComponent metaComp, Entity entity) =>
-        {
-            logger.LogDebug("Entity {NetId}: {Entity}", metaComp.NetId, entity.DebugJSON);
-        });
+        world.Query<MetadataComponent>().ForEachEntity((ref MetadataComponent metaComp, Entity entity) => { logger.LogDebug("Entity {NetId} (owner {Owner}): {Entity}", metaComp.NetId, metaComp.Owner, entity.DebugJSON); });
 
         // print team hostility info
         var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
-
-        foreach (var (teamId, relation) in teamRelationData.TeamHostileInfos)
+        if (teamRelationData != null)
         {
-            logger.LogDebug("Team {TeamId} hostility: {HostileTeams}", teamId, string.Join(", ", relation.HostileTeamIDs));
+            foreach (var (teamId, relation) in teamRelationData.TeamHostileInfos)
+            {
+                logger.LogDebug("Team {TeamId} hostility: {HostileTeams}", teamId, string.Join(", ", relation.HostileTeamIDs));
+            }
         }
 
         // dump perf info
@@ -62,7 +61,7 @@ public class WukongNetworkLogger(
         }
         else
         {
-            logger.LogDebug("Perf log is null");
+            logger.LogWarning("Perf log is null");
         }
     }
 }
