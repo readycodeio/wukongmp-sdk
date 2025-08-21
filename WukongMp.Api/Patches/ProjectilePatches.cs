@@ -55,10 +55,14 @@ public class PatchOnSwitchBulletTarget
             }
             else
             {
-                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(InnerTarget);
                 if (tamerEntity.HasValue)
                 {
                     newTargetId = tamerEntity.Value.GetMeta().NetId;
+                }
+                else
+                {
+                    Logging.LogError("Could not find tamer entity for projectile target");
                 }
             }
             Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", ProjectileActor.GetClass().GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, InnerTarget.GetName());
