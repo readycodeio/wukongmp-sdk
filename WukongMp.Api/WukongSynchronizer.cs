@@ -88,14 +88,15 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         // if we are now the owner of a monster, we must re-enable its AI
         var localTamerComp = entity.GetComponent<LocalTamerComponent>();
+
+        if (!localTamerComp.IsMonsterSynced)
+            return;
+
         if (localTamerComp.Tamer == null)
         {
             Logging.LogError("LocalTamerComponent.Tamer is null for entity {EntityId}", meta.NetId);
             return;
         }
-
-        if (!localTamerComp.IsMonsterSynced)
-            return;
 
         var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
         if (events == null)
