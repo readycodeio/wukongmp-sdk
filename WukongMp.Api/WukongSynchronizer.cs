@@ -94,6 +94,9 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
             return;
         }
 
+        if (!localTamerComp.IsMonsterSynced)
+            return;
+
         var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
         if (events == null)
         {
