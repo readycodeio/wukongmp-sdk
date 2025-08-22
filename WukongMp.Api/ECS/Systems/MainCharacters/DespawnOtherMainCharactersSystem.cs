@@ -110,20 +110,15 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         if (playerId == _playerState.LocalPlayerId)
             return;
 
-        _pendingDeleteEvents.Add(new PendingDeleteEvent
-        {
-            PlayerId = playerId,
-        });
-
-        _updateLoop.Scheduler.Schedule((_, world, id) =>
+        _updateLoop.Scheduler.Schedule((buffer, world, id) =>
         {
             world
-                .Query<MetadataComponent, MainCharacterComponent>()
-                .ForEachEntity((ref MetadataComponent meta, ref MainCharacterComponent main, Entity _) =>
+                .Query<MainCharacterComponent>()
+                .ForEachEntity((ref MainCharacterComponent main, Entity entity) =>
                 {
                     if (main.PlayerId == id)
                     {
-                        meta.Owner = id; // HACK: Fix leaving player's main character ownership
+                        buffer.DeleteEntity(entity.Id);
                     }
                 });
         }, _store, playerId);
