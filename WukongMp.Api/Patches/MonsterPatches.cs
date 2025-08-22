@@ -89,7 +89,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(BUTamerActor __instance)
         {
-            if (!DI.Instance.AreaState.InRoom)
+            if (!DI.Instance.AreaState.InRoom || !DI.Instance.EventBus.IsGameplayLevel)
                 return;
 
             if (DI.Instance.AreaState.IsMasterClient)
