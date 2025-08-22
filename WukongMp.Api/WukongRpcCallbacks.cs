@@ -263,7 +263,7 @@ public partial class WukongRpcCallbacks : IDisposable
             var pawn = self._pawnState.GetPawnByNetworkId(data0.Character);
             if (pawn == null)
             {
-                self._logger.LogNull(nameof(data0.Character));
+                self._logger.LogNullDebug(nameof(data0.Character));
                 return;
             }
 
@@ -323,7 +323,7 @@ public partial class WukongRpcCallbacks : IDisposable
             var character = self._pawnState.GetPawnByNetworkId(affected0);
             if (character == null)
             {
-                self._logger.LogNull(nameof(affected0));
+                self._logger.LogNullDebug(nameof(affected0));
                 return;
             }
 
@@ -467,7 +467,7 @@ public partial class WukongRpcCallbacks : IDisposable
             var pawn = self._pawnState.GetPawnByNetworkId(data0.NetId);
             if (pawn == null)
             {
-                self._logger.LogNull(nameof(data0.NetId));
+                self._logger.LogNullDebug(nameof(data0.NetId));
                 return;
             }
 
@@ -502,7 +502,10 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (montage == null)
             {
-                self._logger.LogWarning("Montage not found: {Montage}", fullMontagePath);
+                if (!fullMontagePath.Contains("Engine/Transient.AnimMontage"))
+                {
+                    self._logger.LogWarning("Montage not found: {Montage}", fullMontagePath);
+                }
                 return;
             }
 
@@ -528,7 +531,7 @@ public partial class WukongRpcCallbacks : IDisposable
             var pawn = self._pawnState.GetPawnByNetworkId(data0.NetworkId);
             if (pawn == null)
             {
-                self._logger.LogNull(nameof(data0.NetworkId));
+                self._logger.LogNullDebug(nameof(data0.NetworkId));
                 return;
             }
 

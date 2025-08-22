@@ -51,7 +51,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             {
                 if (_notYetSpawnedGuids.Add(tamerComp.Guid))
                 {
-                    Logging.LogError("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
+                    Logging.LogInformation("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
                 }
 
                 return;

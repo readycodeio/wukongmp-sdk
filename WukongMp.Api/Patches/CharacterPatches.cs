@@ -66,7 +66,7 @@ namespace WukongMp.Api.Patches
 
                 if (!set.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
                 {
-                    Logging.LogWarning("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, set);
+                    Logging.LogDebug("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, set);
                 }
 
                 if (mainComp.IsDead)

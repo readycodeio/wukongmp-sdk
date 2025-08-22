@@ -10,7 +10,7 @@ public static class NpcLocomotionUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for pawn {PathName}", character?.PathName);
+            Logging.LogDebug("Failed to get event collection for pawn {PathName}", character?.PathName);
             return;
         }
 
@@ -23,7 +23,7 @@ public static class NpcLocomotionUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for pawn {PathName}", character?.PathName);
+            Logging.LogDebug("Failed to get event collection for pawn {PathName}", character?.PathName);
             return;
         }
 
@@ -36,7 +36,7 @@ public static class NpcLocomotionUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for character {Pawn}", character?.PathName);
+            Logging.LogDebug("Failed to get event collection for character {Pawn}", character?.PathName);
             return;
         }
 
@@ -49,7 +49,7 @@ public static class NpcLocomotionUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for pawn {PathName}", character?.PathName);
+            Logging.LogDebug("Failed to get event collection for pawn {PathName}", character?.PathName);
             return;
         }
 

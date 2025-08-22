@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using b1;
 using Friflo.Engine.ECS;
@@ -128,6 +129,7 @@ namespace WukongMp.Api.Patches
                 var tamer = __instance.InstancePtr.Get();
 
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
+                var monsterGuid = BGU_DataUtil.GetActorGuid(tamer.GetMonster());
                 var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
                 if (tamerEntity.HasValue)
                 {
@@ -139,9 +141,9 @@ namespace WukongMp.Api.Patches
                         DI.Instance.Rpc.SendUnitSpawned(meta.NetId);
                     }
                 }
-                else
+                else if (!EnvironmentMonsters.MonsterNames.Any(monsterGuid.Contains))
                 {
-                    Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamer.GetMonster()));
+                    Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
                 }
             }
             catch (Exception e)

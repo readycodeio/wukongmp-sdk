@@ -11,7 +11,7 @@ public static class BuffUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for character {Character}", character?.GetName());
+            Logging.LogDebug("Failed to get event collection for character {Character}", character?.GetName());
             return;
         }
 
@@ -24,7 +24,7 @@ public static class BuffUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for character {Character}", character?.GetName());
+            Logging.LogDebug("Failed to get event collection for character {Character}", character?.GetName());
             return;
         }
 
@@ -37,7 +37,7 @@ public static class BuffUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for character {Character}", character?.GetName());
+            Logging.LogDebug("Failed to get event collection for character {Character}", character?.GetName());
             return;
         }
 
