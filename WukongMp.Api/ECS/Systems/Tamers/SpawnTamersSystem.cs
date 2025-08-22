@@ -38,7 +38,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 return;
             }
 
-            var currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
+            var currentPhase = localTamerComp.Tamer?.CurrentRef?.Phase;
             var monster = localTamerComp.Tamer?.GetMonster();
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
@@ -46,7 +46,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             }
 
             monster = localTamerComp.Tamer?.GetMonster();
-            currentPhase = localTamerComp.Tamer?.CurrentRef.Phase;
+            currentPhase = localTamerComp.Tamer?.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 if (_notYetSpawnedGuids.Add(tamerComp.Guid))
