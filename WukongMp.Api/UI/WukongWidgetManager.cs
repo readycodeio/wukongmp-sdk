@@ -90,7 +90,7 @@ public class WukongWidgetManager : IDisposable
         }
     }
 
-    private void RefreshWidgets()
+    public void RefreshWidgets()
     {
         LobbyStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);

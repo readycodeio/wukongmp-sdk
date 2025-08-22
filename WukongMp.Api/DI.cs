@@ -181,6 +181,7 @@ public class DI
             relayClient,
             ecsLoop,
             eventBus,
+            widgetManager,
             logger);
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer, widgetManager);
 

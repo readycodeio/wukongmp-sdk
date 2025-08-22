@@ -14,6 +14,7 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
@@ -33,6 +34,7 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     private readonly DefaultPlayerArchetypeRegistration _playerArchetype;
     private readonly WukongPlayerPawnState _playerPawnState;
     private readonly WukongEventBus _eventBus;
+    private readonly WukongWidgetManager _widgetManager;
     private readonly IClientEcsUpdateLoop _updateLoop;
     private readonly Store _store;
     private readonly ILogger _logger;
@@ -46,6 +48,7 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         DefaultPlayerArchetypeRegistration playerArchetype,
         WukongPlayerPawnState playerPawnState,
         IClientEcsUpdateLoop updateLoop,
+        WukongWidgetManager widgetManager,
         Store store,
         WukongEventBus eventBus,
         ILogger logger)
@@ -58,6 +61,7 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         _updateLoop = updateLoop;
         _store = store;
         _eventBus = eventBus;
+        _widgetManager = widgetManager;
         _logger = logger;
 
         _archetypeEvent[_playerArchetype.PlayerArchetype].OnEntityDelete += OnPlayerGlobalEntityDeletedHandler;
@@ -134,5 +138,7 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         }
 
         _pendingDeleteEvents.Clear();
+
+        _widgetManager.RefreshWidgets();
     }
 }

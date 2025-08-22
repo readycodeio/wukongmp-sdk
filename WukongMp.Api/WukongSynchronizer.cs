@@ -20,6 +20,7 @@ using WukongMp.Api.ECS.Systems.MainCharacters;
 using WukongMp.Api.ECS.Systems.Tamers;
 using WukongMp.Api.Old;
 using WukongMp.Api.State;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
@@ -47,6 +48,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
         WukongEventBus eventBus,
+        WukongWidgetManager widgetManager,
         ILogger logger)
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, logger)
     {
@@ -68,7 +70,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
         _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState, Logger));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, Logger));
-        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerArchetype, playerPawnState, ecsLoop, world, eventBus, Logger));
+        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerArchetype, playerPawnState, ecsLoop, widgetManager, world, eventBus, Logger));
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
 
         _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));
