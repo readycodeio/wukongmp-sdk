@@ -1,6 +1,7 @@
 ﻿using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
@@ -60,7 +61,8 @@ public class SyncMainCharactersSystem(
             localMainComp.IsSpectatorLocally = isSpectator;
             if (modeManager.HandleBecameSpectator(playerEntity, mainEntity, isSpectator))
             {
-                Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerComp.PlayerId, isSpectator);
+                var playerId = playerEntity.Entity.GetComponent<MetadataComponent>().Owner;
+                Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
             }
         }
     }

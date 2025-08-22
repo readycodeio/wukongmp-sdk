@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
@@ -844,9 +845,9 @@ public partial class WukongPVP : IDisposable
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
-        ref var player = ref playerEntity.Value.GetState();
-        var spawnPosition = GetSpawnPosition(player.PlayerId);
-        var data = new PlayerTransformData(player.PlayerId, spawnPosition, FRotator.ZeroRotator);
+        var playerId = playerEntity.Value.Entity.GetComponent<MetadataComponent>().Owner;
+        var spawnPosition = GetSpawnPosition(playerId);
+        var data = new PlayerTransformData(playerId, spawnPosition, FRotator.ZeroRotator);
         _rpc.OnBroadcastPlayerTransform(data);
     }
     

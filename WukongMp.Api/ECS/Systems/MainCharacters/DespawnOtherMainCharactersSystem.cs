@@ -4,6 +4,7 @@ using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.ECS.Archetypes;
@@ -100,9 +101,7 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
             return;
         }
 
-        var playerEntity = new PlayerEntity(evt.Entity);
-        ref var playerComp = ref playerEntity.GetState();
-        var playerId = playerComp.PlayerId;
+        var playerId = evt.Entity.GetComponent<MetadataComponent>().Owner;
 
         if (playerId == _playerState.LocalPlayerId)
             return;
