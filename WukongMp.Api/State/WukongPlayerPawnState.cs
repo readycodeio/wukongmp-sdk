@@ -19,7 +19,6 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
     {
         public AActor? MarkerActor;
         public BGUCharacterCS? Pawn;
-        public string CharacterNickName;
     }
 
     private readonly Dictionary<PlayerId, Entry> _entries = [];
@@ -53,13 +52,11 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
             return;
 
         var marker = MarkerUtils.CreateMarkerForCharacter(mainEntity.Value); // 3D marker above player
-        var nickname = mainEntity.Value.GetState().CharacterNickName;
 
         var entry = new Entry
         {
             MarkerActor = marker,
             Pawn = pawn,
-            CharacterNickName = nickname
         };
 
         _entries.Add(playerId, entry);
@@ -95,15 +92,6 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
         }
 
         DI.Instance.Logger.LogDebug("DELETE OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
-
-        // FIXME: This seems to be the wrong scope. At the very least it shouldn't be using the nickname as the identifier?
-        // LobbyStatusWidget.Instance.RemovePlayerFromTeams(entry.CharacterNickName);
-
-        // FIXME: This seems to be the wrong scope. Player removal should trigger `RemovePlayerPawn` and related actions not the 
-        // other way around.
-
-        // LobbyStatusWidget.Instance.SetReadyCount(state.AllPlayers.Select(playerState.GetPlayerById).Count(x => x?.GetState().IsReadyForPvP == true));
-        // CoopStatusWidget.Instance.RemovePlayer(entry.CharacterNickName);
 
         world.Query<TamerComponent>().Each(new ClearPlayerTamerRefCountJob(playerId));
     }

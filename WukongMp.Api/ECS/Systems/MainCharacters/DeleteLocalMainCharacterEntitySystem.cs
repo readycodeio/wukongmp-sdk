@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
 /// <summary>
 /// Deletes the MainCharacterEntity corresponding to the locally controlled pawn when the pawn gets destroyed.

@@ -8,7 +8,7 @@ using WukongMp.Api.Old;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
 public class SyncMainCharactersSystem(
     WukongPlayerState playerState,

@@ -10,7 +10,7 @@ using WukongMp.Api.Old;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
 /// <summary>
 /// Spawns pawns for the MainCharacterEntities corresponding to other players. Doesn't affect the MainCharacterEntity
