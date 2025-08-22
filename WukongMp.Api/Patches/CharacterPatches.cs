@@ -252,7 +252,7 @@ namespace WukongMp.Api.Patches
                     main.IsLandingMove = __instance.IsLandingMove;
                 }
 
-                if (main.Velocity.ToFVector().Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
+                if (!main.Velocity.ToFVector().Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
                 {
                     main.Velocity = __instance.Velocity.ToVector3();
                 }
