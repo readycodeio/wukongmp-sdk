@@ -2,6 +2,7 @@
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Managers;
@@ -9,6 +10,7 @@ using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
@@ -33,6 +35,8 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         ArchetypeEventRouter archetypeEvent,
         ClientState state,
         ClientWukongArchetypeRegistration wukongArchetype,
+        DefaultPlayerArchetypeRegistration playerArchetype,
+        Store world,
         WukongAreaState areaState,
         WukongPlayerState playerState,
         WukongPlayerPawnState playerPawnState,
@@ -64,7 +68,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
         _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState, Logger));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, Logger));
-        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, eventBus, Logger));
+        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerArchetype, playerPawnState, ecsLoop, world, eventBus, Logger));
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
 
         _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));

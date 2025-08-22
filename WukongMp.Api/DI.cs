@@ -169,6 +169,8 @@ public class DI
             worldEvent,
             state,
             wukongArchetype,
+            playerArchetype,
+            world,
             areaState,
             playerState,
             playerPawnState,
