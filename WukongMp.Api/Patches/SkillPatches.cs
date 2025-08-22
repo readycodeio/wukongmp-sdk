@@ -847,9 +847,28 @@ public class PatchSpawnAndPossess
         beforeBeginPlayCb(newPawn);
         var actor = (ACharacter)newPawn;
 
+        var mainPlayerPawn = GameUtils.GetControlledPawn();
+        var mainPlayerController = GameUtils.GetPlayerController();
+        bool isNonLocalTransform = false;
+        var cameraRotation = FRotator.ZeroRotator;
+        if (controller != mainPlayerController && mainPlayerPawn != null)
+        {
+            // Set player controller to transforming player
+            isNonLocalTransform = true;
+            cameraRotation = mainPlayerController.GetControlRotation();
+            GameUtils.PossessPawn(mainPlayerController, newPawn, mainPlayerPawn);
+        }
+
         actor.CapsuleComponent.SetGenerateOverlapEvents(false);
         actor.CapsuleComponent.SetGenerateOverlapEvents(false);
         BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(controller, newPawn, spawnTransform);
+
+        if (isNonLocalTransform && mainPlayerPawn != null)
+        {
+            // Set player controller back to main player
+            GameUtils.PossesPawnWithViewTarget(mainPlayerController, mainPlayerPawn, newPawn, cameraRotation);
+            controller.Possess(newPawn);
+        }
 
         if (playerController != null)
         {

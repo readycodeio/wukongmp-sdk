@@ -32,28 +32,35 @@ public static class SpawningUtils
         }
 
         var playerPawnClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WukongClassPath, ELoadResourceType.SyncLoadAndCache);
+
         if (playerPawnClass == null)
         {
             Logging.LogError("Player pawn class is null");
             return null;
         }
 
+        var oldPawn = GameUtils.GetControlledPawn();
+
+        if (oldPawn == null)
+        {
+            Logging.LogError("Old pawn is null");
+            return null;
+        }
+
         var loc = mainComp.Location.ToFVector();
         var rot = mainComp.Rotation.ToFRotator();
 
-        var controllerClass = UClass.GetClass("BGP_AIPlayerControllerB1");
-        if (controllerClass == null)
+        var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
+
+        if (@class == null)
         {
             Logging.LogError("Class is null");
             return null;
         }
-        var newControllerActor = GameUtils.GetWorld()?.SpawnActor(controllerClass, ref loc, ref rot);
-        BGUCharacterCS? newPawn = null;
-        if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
-        {
-            Logging.LogDebug("Spawned new controller");
-            newPawn = SpawnWukong(newController, playerPawnClass, new FTransform(rot, loc));
-        }
+
+        var oldController = GameUtils.GetPlayerController();
+        var controllerCameraRotation = oldController.GetControlRotation();
+        var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
         if (newPawn == null)
         {
@@ -61,8 +68,21 @@ public static class SpawningUtils
             return null;
         }
 
+        GameUtils.PossesPawnWithViewTarget(oldController, oldPawn, newPawn, controllerCameraRotation);
+
+        Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", playerId, newPawn.GetEntityHash());
+
+        var newControllerActor = GameUtils.GetWorld()?.SpawnActor(@class, ref loc, ref rot);
+        if (newControllerActor != null && newControllerActor is BGP_AIPlayerControllerCS newController)
+        {
+            Logging.LogDebug("Spawned new controller");
+            newController.Possess(newPawn);
+        }
+
         // Reset falling timer.
         var events = BUS_EventCollectionCS.Get(newPawn);
+        events.Evt_OnLeaveFalling.Invoke();
+        events = BUS_EventCollectionCS.Get(oldPawn);
         events.Evt_OnLeaveFalling.Invoke();
 
         // get teamId
@@ -124,10 +144,10 @@ public static class SpawningUtils
         return newPawn;
     }
 
-    public static BGUCharacterCS? SpawnWukong(AController controller, UClass pawnClass, FTransform spawnTransform)
+    public static BGUCharacterCS? SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
     {
-        var newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(controller.World, pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
-        controller.Possess(newPawn);
+        var newPawn = BGU_UnrealActorUtil.BGUBeginDeferredActorSpawnFromClass(oldController.World, pawnClass, spawnTransform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as APawn;
+        oldController.Possess(newPawn);
 
         if (newPawn is not BGUCharacterCS newCharacter)
         {
@@ -137,8 +157,9 @@ public static class SpawningUtils
 
         newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
         newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: false);
-        BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(controller, newCharacter, spawnTransform);
-        BPS_GSEventCollection.Get(controller.PlayerState).Evt_BPS_OnControlledPawnChange.Invoke(newCharacter);
+        BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(oldController, newCharacter, spawnTransform);
+        BPS_GSEventCollection.Get(oldController).Evt_BPS_OnControlledPawnChange.Invoke(newCharacter);
+        BGS_EventCollectionCS.Get(oldController)?.Evt_NotifyPossessEntityChanged.Invoke(oldPawn.ToEntity(), newCharacter.ToEntity());
         newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
         newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
         UGSE_ActorFuncLib.UpdateActorOverlaps(newCharacter);

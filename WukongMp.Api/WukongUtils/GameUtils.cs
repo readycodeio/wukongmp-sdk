@@ -34,6 +34,20 @@ namespace WukongMp.Api.WukongUtils
 
         public static bool IsWorldValid() => GetWorld() != null;
 
+        public static void PossesPawnWithViewTarget(ABGPPlayerController controller, APawn possessPawn, APawn unpossessPawn, FRotator controllerRotation)
+        {
+            PossessPawn(controller, possessPawn, unpossessPawn);
+            controller.SetViewTargetWithBlend(possessPawn);
+            controller.SetControlRotation(controllerRotation);
+        }
+
+        public static void PossessPawn(ABGPPlayerController controller, APawn possessPawn, APawn unpossessPawn)
+        {
+            controller.Possess(possessPawn);
+            BPS_GSEventCollection.Get(controller).Evt_BPS_OnControlledPawnChange.Invoke(possessPawn);
+            BGS_EventCollectionCS.Get(controller)?.Evt_NotifyPossessEntityChanged.Invoke(unpossessPawn.ToEntity(), possessPawn.ToEntity());
+        }
+
         public static void EnableThreading()
         {
             Logging.LogDebug("Enabling threading for ECSWorld");
