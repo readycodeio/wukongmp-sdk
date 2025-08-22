@@ -34,7 +34,8 @@ public static class PatchGetOverlapGridIndexList
         FVector2D Location,
         FVector2D SquareSize,
         BGUGridInfo GridInfo,
-        out List<int> OutIndexList)
+        out List<int> OutIndexList,
+        out bool __result)
     {
         OutIndexList = _list ??= new List<int>();
         OutIndexList.Clear();
@@ -70,6 +71,7 @@ public static class PatchGetOverlapGridIndexList
         OutIndexList.Add(num9);
         OutIndexList.Add(num14);
         OutIndexList.Add(num17);
-        return num1 != 0;
+        __result = num1 != 0;
+        return false;
     }
 }
