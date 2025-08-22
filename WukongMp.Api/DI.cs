@@ -162,6 +162,9 @@ public class DI
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
+        
+        var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
+        var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
@@ -176,6 +179,7 @@ public class DI
             playerPawnState,
             modeManager,
             netEntity,
+            clientOwnership,
             jobRegistry,
             netComponentRegistry,
             relayClient,
@@ -187,9 +191,6 @@ public class DI
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor);
-
-        var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
-        var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
         var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
         ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
@@ -238,6 +239,7 @@ public class DI
             netComponentRegistry,
             shimRecorderRelayClient,
             shimEcsLoop,
+            clientOwnership,
             shimRecorderLogger
         );
 

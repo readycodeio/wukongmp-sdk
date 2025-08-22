@@ -43,6 +43,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         WukongPlayerPawnState playerPawnState,
         WukongPlayerModeManager modeManager,
         NetworkedEntityManager netManager,
+        ClientOwnershipManager clientOwnership,
         JobRegistry jobRegistry,
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
@@ -50,7 +51,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         WukongEventBus eventBus,
         WukongWidgetManager widgetManager,
         ILogger logger)
-        : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, logger)
+        : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
     {
         _areaState = areaState;
         _wukongArchetype = wukongArchetype;
