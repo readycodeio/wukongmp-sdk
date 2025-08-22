@@ -9,7 +9,6 @@ using ReadyM.Relay.Client.Blobs;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Client.State;
-using WukongMp.Api.Old;
 
 namespace WukongMp.Api.Shim;
 

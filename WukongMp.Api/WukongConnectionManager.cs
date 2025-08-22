@@ -10,7 +10,6 @@ using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
-using WukongMp.Api.Old;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api;

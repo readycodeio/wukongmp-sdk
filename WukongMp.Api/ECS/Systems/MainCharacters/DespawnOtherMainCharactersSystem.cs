@@ -12,7 +12,6 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Managers;
-using WukongMp.Api.Old;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 

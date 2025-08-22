@@ -6,7 +6,7 @@ using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.Old;
+namespace WukongMp.Api;
 
 public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager)
 {

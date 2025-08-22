@@ -6,7 +6,6 @@ using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Old;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 

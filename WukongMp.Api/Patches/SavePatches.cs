@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches

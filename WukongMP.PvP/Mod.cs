@@ -5,7 +5,6 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
-using WukongMp.Api.Old;
 using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;

@@ -11,7 +11,7 @@ using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.Old;
+namespace WukongMp.Api.Chat;
 
 public class WukongChatter : IDisposable
 {
