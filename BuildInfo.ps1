@@ -34,7 +34,10 @@ $modFiles = @(
     "Microsoft.Bcl.Memory.dll",
     "Microsoft.Bcl.Numerics.dll",
     "System.Reflection.Emit.dll",
-    "System.ComponentModel.Annotations.dll"
+    "System.ComponentModel.Annotations.dll",
+    "Nito.AsyncEx.Context.dll"
+    "Nito.AsyncEx.Tasks.dll"
+    "Nito.Disposables.dll"
 )
 
 $modFilesDebug = @(

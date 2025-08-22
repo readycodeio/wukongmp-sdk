@@ -1,4 +1,5 @@
-﻿using ArchiveB1;
+﻿using System;
+using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
 using B1UI.GSUI;
@@ -12,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
@@ -159,7 +161,8 @@ namespace WukongMp.Api.Patches
                     var worldDownloadTask = DI.Instance.SaveRelay.DownloadWorldSaveAsync();
                     var playerDownloadTask = DI.Instance.SaveRelay.DownloadPlayerSaveAsync();
 
-                    Task.WhenAll(worldDownloadTask, playerDownloadTask).Wait();
+                    var task = Task.WhenAll(worldDownloadTask, playerDownloadTask);
+                    DI.Instance.EcsLoop.Wait(task);
 
                     timer.Stop();
                     Logging.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
@@ -184,7 +187,8 @@ namespace WukongMp.Api.Patches
                         playerData = playerDownloadTask.Result.Content;
                     }
                 }
-                catch (TaskCanceledException)
+                // NOTE: This is typically going to be AggregateException because we download two blobs in parallel
+                catch (Exception ex)
                 {
                     __result = ReadArchiveResult.FileNotExist;
                     OutArchiveData = null;
@@ -344,7 +348,7 @@ namespace WukongMp.Api.Patches
     {
         private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
         {
-            if (!DI.Instance.RelayClient.InRoom || !Constants.IsCoop)
+            if (!DI.Instance.AreaState.InRoom || !Constants.IsCoop)
                 return true;
 
             if (!SlotName.StartsWith("ArchiveSaveFile"))
@@ -356,7 +360,7 @@ namespace WukongMp.Api.Patches
 
             Task.Run(async () =>
             {
-                if (DI.Instance.RelayClient.IsMasterClient)
+                if (DI.Instance.AreaState.IsMasterClient)
                 {
                     var worldTimer = Stopwatch.StartNew();
                     var uploadedWorld = await DI.Instance.SaveRelay.UploadWorldSaveAsync(data);

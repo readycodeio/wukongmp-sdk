@@ -1,14 +1,12 @@
-﻿using System;
-using CSharpModBase;
+﻿using CSharpModBase;
 using CSharpModBase.Input;
-using ReadyM.Relay.Common.ECS;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Old;
+using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -56,6 +54,11 @@ namespace WukongMp.PvP
                     CmdLineParams.Instance.ServerIp!,
                     CmdLineParams.Instance.ServerPort!.Value,
                     CmdLineParams.Instance.UserGuid,
+#if NO_DISCONNECT
+                    true,
+#else
+                    false,
+#endif
                     CmdLineParams.Instance.RecordShimFile!
                 );
             else
@@ -63,7 +66,12 @@ namespace WukongMp.PvP
                     DI.Instance,
                     CmdLineParams.Instance.ServerIp!,
                     CmdLineParams.Instance.ServerPort!.Value,
-                    CmdLineParams.Instance.UserGuid
+                    CmdLineParams.Instance.UserGuid,
+#if NO_DISCONNECT
+                    true
+#else
+                    false
+#endif
                 );
             
             if (!DI.Instance.Patcher.IsPatched)
@@ -92,12 +100,24 @@ namespace WukongMp.PvP
 
             if (!DI.Instance.Connection.IsRunning)
             {
+                DI.Instance.EcsLoop.Start();
+                DI.Instance.ShimEcsLoop.Start();
                 DI.Instance.Connection.Start();
             }
             else
             {
                 _logger.LogInformation("WukongMP is already initialized");
                 return;
+            }
+            
+            if (!DI.Instance.Connection.RequestedConnect)
+            {
+                DI.Instance.Connection.Connect();
+            }
+            
+            if (!DI.Instance.Connection.RequestedConnect)
+            {
+                DI.Instance.Connection.Connect();
             }
 
 #if DEBUG
@@ -123,13 +143,23 @@ namespace WukongMp.PvP
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerId(DI.Instance.Players.LocalPlayerState.PlayerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                
+                var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+                if (mainEntity == null)
+                    return;
+                
+                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(NetworkIdComponent.FromPlayerId(DI.Instance.Players.LocalPlayerState.PlayerId), true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                
+                var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+                if (mainEntity == null)
+                    return;
+                
+                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
@@ -201,16 +231,22 @@ namespace WukongMp.PvP
                 DI.Instance.Patcher.Unpatch();
             }
 
+            if (DI.Instance.Connection.RequestedConnect)
+            {
+                DI.Instance.Connection.Disconnect();
+            }
+            
             if (DI.Instance.Connection.IsRunning)
             {
                 DI.Instance.Connection.Stop();
+                DI.Instance.EcsLoop.Stop();
             }
         }
         
         public object GetReloadContext()
         {
             _logger.LogInformation("GetReloadContext");
-            return (bool?)DI.Instance.RelayClient.InRoom;
+            return (bool?)DI.Instance.AreaState.InRoom;
         }
 
         public void Reload(object? context)

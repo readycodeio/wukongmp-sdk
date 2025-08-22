@@ -1,93 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using b1;
+﻿using b1;
+using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Protocol.Enums;
-using WukongMp.Api.Old;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Client.State;
+using WukongMp.Api.Compat;
+using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongNetworkLogger : IDisposable
+public class WukongNetworkLogger(
+    Store world,
+    ClientState state,
+    WukongAreaState areaState,
+    WukongPlayerState playerState,
+    ILogger logger
+)
 {
-    private readonly ILogger _logger;
-    private readonly Store _world;
-    private readonly RoomStateProxyBase _roomState;
-    private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly IRelayClient _relayClient;
-
-    public WukongNetworkLogger(ILogger logger, Store world, RoomStateProxyBase roomState, WukongPlayerRegistry playerRegistry, IRelayClient relayClient)
-    {
-        _logger = logger;
-        _world = world;
-        _roomState = roomState;
-        _playerRegistry = playerRegistry;
-        _relayClient = relayClient;
-        
-        _relayClient.OnRoomPropertiesChanged += OnRoomPropertiesChanged;
-    }
-
-    public void Dispose()
-    {
-        _relayClient.OnRoomPropertiesChanged -= OnRoomPropertiesChanged;
-    }
-    
-    private void OnRoomPropertiesChanged(Dictionary<object, object?> diff)
-    {
-        if (diff.TryGetValue(RoomProperties.MasterClientId, out var id) && id is PlayerId newMasterId)
-        {
-            _logger.LogInformation("Master client changed to {NewMasterId}", newMasterId);
-        }
-    }
-    
     public void DumpDebugInfo()
     {
         // dump room state
-        Logging.LogDebug("Room state: {State}", _roomState.ToString());
+        logger.LogDebug("Room state: {State}", areaState.ToString());
 
-        if (_playerRegistry.HasLocalPlayerState)
+        if (playerState.LocalPlayerEntity != null)
         {
             // dump player state to console for me
-            Logging.LogDebug("Local player state: {State}", _playerRegistry.LocalPlayerState.ToString());
+            logger.LogDebug("Local player state: {State}", playerState.LocalPlayerEntity.Value.GetState());
         }
         else
         {
-            Logging.LogDebug("No local player state found.");
+            logger.LogWarning("No local player state found.");
         }
-        
+
         // dump player state to console for each connected player
-        foreach (var (id, state) in _playerRegistry.ConnectedPlayers)
+        foreach (var playerId in state.AllPlayers)
         {
-            Logging.LogDebug("Player {PlayerId} state: {State}", id, state.ToString());
+            var playerEntity = playerState.GetPlayerById(playerId);
+            logger.LogDebug("Player {PlayerId} state: {State}", playerId, playerEntity.ToString());
         }
 
         // dump synced monsters
-        _world.Query<NetworkIdComponent>().ForEachEntity((ref netId, entity) =>
-        {
-            Logging.LogDebug("Monster {Entity}: {NetId}", entity.DebugJSON, netId);
-        });
+        world.Query<MetadataComponent>().ForEachEntity((ref MetadataComponent metaComp, Entity entity) => { logger.LogDebug("Entity {NetId} (owner {Owner}): {Entity}", metaComp.NetId, metaComp.Owner, entity.DebugJSON); });
 
         // print team hostility info
         var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
-
-        foreach (var (teamId, relation) in teamRelationData.TeamHostileInfos)
+        if (teamRelationData != null)
         {
-            Logging.LogDebug("Team {TeamId} hostility: {HostileTeams}", teamId, string.Join(", ", relation.HostileTeamIDs));
+            foreach (var (teamId, relation) in teamRelationData.TeamHostileInfos)
+            {
+                logger.LogDebug("Team {TeamId} hostility: {HostileTeams}", teamId, string.Join(", ", relation.HostileTeamIDs));
+            }
         }
 
         // dump perf info
-        var perf = _world.SystemRoot.GetPerfLog();
+        var perf = world.SystemRoot.GetPerfLog();
         if (perf != null)
         {
-            Logging.LogDebug("Perf log:\n{Log}", perf);
+            logger.LogDebug("Perf log:\n{Log}", perf);
         }
         else
         {
-            Logging.LogDebug("Perf log is null");
+            logger.LogWarning("Perf log is null");
         }
     }
 }

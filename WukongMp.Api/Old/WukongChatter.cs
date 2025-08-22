@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ReadyM.Relay.Common;
+using Friflo.Engine.ECS;
+using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.Old.State;
 using WukongMp.Api.Resources;
+using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -14,34 +16,31 @@ namespace WukongMp.Api.Old;
 public class WukongChatter : IDisposable
 {
     private readonly WukongConnectionManager _connection;
-    private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPlayerPropertyManager _playerProperty;
-    private readonly WukongSynchronizer _synchronizer;
+    private readonly ClientState _state;
+    private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
 
-    private string NickName => _playerRegistry.LocalPlayerState.NickName;
+    private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
     private const char Separator = ' ';
     private readonly Dictionary<string, WukongChatterCommand> _commands = new();
 
     public WukongChatter(
         WukongConnectionManager connection,
-        WukongPlayerRegistry playerRegistry,
-        WukongPlayerPropertyManager playerProperty,
-        WukongSynchronizer synchronizer,
+        ClientState state,
+        WukongPlayerState playerState,
         WukongRpcCallbacks rpc
     )
     {
         Logging.LogDebug("Initializing WukongChatter");
         
         _connection = connection;
-        _playerRegistry = playerRegistry;
-        _playerProperty = playerProperty;
-        _synchronizer = synchronizer;
+        _state = state;
+        _playerState = playerState;
         _rpc = rpc;
 
         _connection.OnMasterClientChanged += OnMasterClientChanged;
-        _synchronizer.OnAfterJoinedRoom += OnAfterJoinedRoomHandler;
-        _synchronizer.OnOtherPlayerLeft += OnOtherPlayerLeftHandler;
+        _state.OnJoinedArea += OnJoinedAreaHandler;
+        _state.OnLeftArea += OnLeftAreaHandler;
         
         SetupCommands();
     }
@@ -50,8 +49,8 @@ public class WukongChatter : IDisposable
     {
         Logging.LogDebug("Disposing WukongChatter");
         
-        _synchronizer.OnOtherPlayerLeft -= OnOtherPlayerLeftHandler;
-        _synchronizer.OnAfterJoinedRoom -= OnAfterJoinedRoomHandler;
+        _state.OnLeftArea -= OnLeftAreaHandler;
+        _state.OnJoinedArea -= OnJoinedAreaHandler;
         _connection.OnMasterClientChanged -= OnMasterClientChanged;
     }
 
@@ -92,7 +91,11 @@ public class WukongChatter : IDisposable
             return;
         }
 
-        var teamId = PvPUtils.GetOppositeTeam(_playerRegistry.LocalPlayerState.TeamId);
+        var playerEntity = _playerState.LocalPlayerEntity;
+        if (playerEntity == null)
+            return;
+        
+        var teamId = PvPUtils.GetOppositeTeam(playerEntity.Value.GetState().TeamId);
 
         switch (args.Length)
         {
@@ -117,15 +120,22 @@ public class WukongChatter : IDisposable
 
     private void RequestRebirth(ReadOnlyMemory<string> _)
     {
-        _rpc.SendRebirthPlayer(_connection.RelayClient.PlayerId);
+        var playerId = _connection.PlayerId;
+        if (playerId == null)
+            return;
+        
+        _rpc.SendRebirthPlayer(playerId.Value);
         SendServerMessage("PlayerRequestedRebirth", NickName);
     }
 
     private void RequestPointRebirth(ReadOnlyMemory<string> _)
     {
-        
-        PlayerUtils.TeleportLocalPlayerToRebirthPoint();
-        _rpc.SendRebirthPlayer(_connection.RelayClient.PlayerId);
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        var playerId = mainEntity.GetState().PlayerId;
+        PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
+        _rpc.SendRebirthPlayer(playerId);
         SendServerMessage("PlayerRequestedRebirth", NickName);
     }
 
@@ -142,7 +152,7 @@ public class WukongChatter : IDisposable
 
     private void RequestDisconnect(ReadOnlyMemory<string> _)
     {
-        if (_connection.RelayClient.InRoom)
+        if (_connection.AreaState.InRoom)
         {
             SendServerMessage("PlayerLeft", NickName);
             _connection.Disconnect();
@@ -161,14 +171,12 @@ public class WukongChatter : IDisposable
     {
         if (args.Length == 2)
         {
-            var username = args.Span[0];
             var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
 
-            var player = _playerRegistry.AllConnectedPlayers.FirstOrDefault(x => x.NickName == username);
-            if (player == null)
+            var playerEntity = _playerState.LocalPlayerEntity;
+            if (playerEntity == null)
                 return;
-
-            _playerProperty.SetRemotePlayerProperty(player.PlayerId, nameof(PlayerState.IsSpectator), isSpectator);
+            playerEntity.Value.GetState().IsSpectator = isSpectator;
         }
     }
 
@@ -214,18 +222,25 @@ public class WukongChatter : IDisposable
         ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
     }
     
-    private void OnAfterJoinedRoomHandler()
+    private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
-        Logging.LogDebug("Player {PlayerName} joined the room", _playerRegistry.LocalPlayerState.NickName);
-        SendServerMessage("PlayerJoined", _playerRegistry.LocalPlayerState.NickName);
+        var playerEntity = _playerState.LocalPlayerEntity;
+        if (playerEntity == null)
+            return;
+        ref var player = ref playerEntity.Value.GetState();
+        Logging.LogDebug("Player {PlayerName} joined the room", player.NickName);
+        SendServerMessage("PlayerJoined", player.NickName);
     }
 
-    private void OnOtherPlayerLeftHandler(PlayerId playerId)
+    private void OnLeftAreaHandler(AreaId areaId, Entity entity)
     {
-        if (_connection.RelayClient.IsMasterClient)
+        if (_connection.AreaState.IsMasterClient)
         {
-            var player = _connection.RelayClient.GetPlayerState(playerId)!;
-            var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");
+            var playerEntity = _playerState.LocalPlayerEntity;
+            if (playerEntity == null)
+                return;
+            ref var player = ref playerEntity.Value.GetState();
+            var nickname = player.NickName;
             SendServerMessage("PlayerLeft", nickname);
         }
     }

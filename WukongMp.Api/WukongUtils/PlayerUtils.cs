@@ -2,22 +2,19 @@
 using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Old;
-using WukongMp.Api.Patches;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils
 {
     public static class PlayerUtils
     {
-        public static void TeleportLocalPlayer(FVector location, FRotator rotation, bool sweep)
+        public static void TeleportLocalPlayer(MainCharacterEntity mainEntity, FVector location, FRotator rotation, bool sweep)
         {
-            GameLoopPatch.QueueOnGameThread(() =>
-            {
-                var playerState = DI.Instance.Players.LocalPlayerState;
-                BUS_EventCollectionCS.Get(playerState.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
-                playerState.TeleportFinishFrames = 5;
-                playerState.Pawn?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);
-            }, nameof(TeleportLocalPlayer));
+            ref var localMainComp = ref mainEntity.GetLocalState(); 
+            BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
+            localMainComp.TeleportFinishFrames = 5;
+            localMainComp.Pawn?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);
         }
 
         public static void DisablePlayerInteraction(BGUPlayerCharacterCS playerCharacter)
@@ -58,10 +55,10 @@ namespace WukongMp.Api.WukongUtils
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
 
-        public static void TeleportLocalPlayerToRebirthPoint()
+        public static void TeleportLocalPlayerToRebirthPoint(MainCharacterEntity mainEntity)
         {
             var transform = GetLocalRebirthPointTransform();
-            TeleportLocalPlayer(transform.GetLocation(), transform.GetRotation().Rotator(), false);
+            TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
         }
 
         private static FTransform GetLocalRebirthPointTransform()

@@ -13,7 +13,6 @@ using ResB1;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 using CultureInfo = System.Globalization.CultureInfo;
@@ -26,7 +25,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(ref bool __result)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             __result = true;
@@ -45,10 +44,10 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(DamageNumParam Param)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            if (!DI.Instance.RelayClient.IsMasterClient)
+            if (!DI.Instance.AreaState.IsMasterClient)
                 return false;
 
             DI.Instance.Rpc.SendDamageNum(Param);
@@ -126,7 +125,7 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(ref string __result)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             __result = "00:00";
@@ -161,10 +160,15 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(ref bool __result)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            if (DI.Instance.RoomState.InPvP)
+            var areaState = DI.Instance.AreaState;
+            var areaEntity = areaState.CurrentArea;
+            if (areaEntity == null)
+                return true;
+            
+            if (areaEntity.Value.GetRoom().InPvP)
             {
                 __result = true;
                 return false;
@@ -180,7 +184,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             return false;
@@ -193,7 +197,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(EPauseEvent PauseEvent)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             if (PauseEvent == EPauseEvent.OpenUI || PauseEvent == EPauseEvent.TakePhoto)
@@ -211,7 +215,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             return false;
@@ -230,7 +234,7 @@ namespace WukongMp.Api.Patches
 
         public static bool Prefix(int FuncId)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             InteractionFuncDesc interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
@@ -246,7 +250,7 @@ namespace WukongMp.Api.Patches
     {
         public static bool Prefix(ref List<int> __result)
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             __result = [];

@@ -1,25 +1,53 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common;
+using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.Client.Blobs;
+using ReadyM.Relay.Client.Blobs;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 
 namespace WukongMp.Api;
 
-public class WukongSaveRelay(IRelayClient relayClient)
+public class WukongSaveRelay(IBlobClient blobClient, ILogger logger)
 {
+    public Task<bool> UploadBlobAsync(string name, byte[] content, CancellationToken ct = default)
+    {
+        try
+        {
+            return blobClient.UploadBlobAsync(new BlobInfo(name, content), ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to upload blob: {BlobName}", name);
+            throw new OperationCanceledException("Failed to upload blob", ex);
+        }
+    }
+    
+    public Task<BlobInfo?> DownloadBlobAsync(string name, CancellationToken ct = default)
+    {
+        try
+        {
+            return blobClient.DownloadBlobAsync(name, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to download blob: {BlobName}", name);
+            throw new OperationCanceledException("Failed to download blob", ex);
+        }
+    }
+    
     public Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
-        => relayClient.UploadBlobAsync(new BlobInfo(Constants.CoopWorldArchiveName, content), ct);
+        => UploadBlobAsync(Constants.CoopWorldArchiveName, content, ct);
 
-    public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default) 
-        => relayClient.DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
+    public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default)
+        => DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
 
     public Task<bool> UploadPlayerSaveAsync(byte[] content, CancellationToken ct = default)
-        => relayClient.UploadBlobAsync(new BlobInfo(PlayerSaveName, content), ct);
+        => UploadBlobAsync(PlayerSaveName, content, ct);
 
-    public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default) 
-        => relayClient.DownloadBlobAsync(PlayerSaveName, ct);
+    public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default)
+        => DownloadBlobAsync(PlayerSaveName, ct);
 
     private static string PlayerSaveName => $"player_{CmdLineParams.Instance.UserGuid:N}.sav";
 }

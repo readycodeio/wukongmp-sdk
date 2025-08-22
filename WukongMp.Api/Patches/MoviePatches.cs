@@ -10,7 +10,6 @@ using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.Old;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -27,7 +26,7 @@ public static class PatchRequestPlayMovie
 
     public static bool Prefix(GameStateSystemBase __instance, FPlayMovieRequest Request)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return true;
 
         if (UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID))
@@ -113,18 +112,26 @@ public static class PatchRequestPlayMovie
         if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
         {
             Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
-            foreach (var player in DI.Instance.Players.ConnectedPlayers.Values)
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
             {
-                player.Pawn?.SetActorHiddenInGame(true);
-                player.MarkerActor?.SetActorHiddenInGame(true);
+                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (mainEntity == null)
+                    continue;
+                ref var localMain = ref mainEntity.Value.GetLocalState();
+                localMain.Pawn?.SetActorHiddenInGame(true);
+                localMain.MarkerActor?.SetActorHiddenInGame(true);
             }
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
-                foreach (var player in DI.Instance.Players.ConnectedPlayers.Values)
+                foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
                 {
-                    player.Pawn?.SetActorHiddenInGame(false);
-                    player.MarkerActor?.SetActorHiddenInGame(false);
+                    var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                    if (mainEntity == null)
+                        continue;
+                    ref var localMain = ref mainEntity.Value.GetLocalState();
+                    localMain.Pawn?.SetActorHiddenInGame(false);
+                    localMain.MarkerActor?.SetActorHiddenInGame(false);
                 }
             });
         }
@@ -142,10 +149,10 @@ public static class PatchTickForMovieSystem
 
     public static bool Prefix(GameStateSystemBase __instance, float DeltaTime)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var players = DI.Instance.Players;
+        var playerState = DI.Instance.PlayerState;
 
         // get properties
         var movieSystemType = __instance.GetType();
@@ -177,13 +184,19 @@ public static class PatchTickForMovieSystem
         if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
+            var mainEntity = playerState.LocalMainCharacter;
+            
             if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
-                players.LocalPlayerState.IsWaitingForSequence = false;
-                players.LocalPlayerState.IsJoiningSequence = false;
-                players.LocalPlayerState.WaitingSequenceId = 0;
-                players.LocalPlayerState.LastSyncableSequenceId = peakRequest.SequenceID;
+                if (mainEntity != null)
+                {
+                    ref var localMain = ref mainEntity.Value.GetLocalState();
+                    localMain.IsWaitingForSequence = false;
+                    localMain.IsJoiningSequence = false;
+                    localMain.WaitingSequenceId = 0;
+                    localMain.LastSyncableSequenceId = peakRequest.SequenceID;
+                }
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
@@ -191,15 +204,17 @@ public static class PatchTickForMovieSystem
                     BGW_EventCollection.Get(__instance.GetOwner()).Evt_MarkMoviePlayed(peakRequest.SequenceID);
                 }
             }
-            else if (!players.LocalPlayerState.IsWaitingForSequence)
+            else if (mainEntity?.GetLocalState().IsWaitingForSequence == false)
             {
+                ref var main = ref mainEntity.Value.GetState();
+                ref var localMain = ref mainEntity.Value.GetLocalState();
                 InfoMessageWidget.Instance.SetVisibility(true);
                 InfoMessageWidget.Instance.SetText("Wait for other players");
-                players.LocalPlayerState.IsWaitingForSequence = true;
-                players.LocalPlayerState.SequenceLocation = players.LocalPlayerState.Location;
-                players.LocalPlayerState.WaitingSequenceId = peakRequest.SequenceID;
+                localMain.IsWaitingForSequence = true;
+                localMain.SequenceLocation = main.Location.ToFVector();
+                localMain.WaitingSequenceId = peakRequest.SequenceID;
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
-                DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, players.LocalPlayerState.Location));
+                DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
             }
         }
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())
@@ -236,7 +251,10 @@ public static class PatchOnSkipCurrentCameraMovie
 
     public static bool Prefix(GameStateSystemBase __instance)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        if (DI.Instance.PlayerState.LocalMainCharacter == null)
             return true;
 
         var movieSystemType = __instance.GetType();
@@ -244,8 +262,7 @@ public static class PatchOnSkipCurrentCameraMovie
         BGC_MovieData movieData = (BGC_MovieData)getter.Invoke(__instance, null);
         var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
 
-        var players = DI.Instance.Players;
-        if (players.LocalPlayerState.LastSyncableSequenceId == sequenceId)
+        if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().LastSyncableSequenceId == sequenceId)
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
             InfoMessageWidget.Instance.SetVisibility(true);

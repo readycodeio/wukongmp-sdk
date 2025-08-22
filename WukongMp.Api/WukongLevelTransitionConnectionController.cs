@@ -1,5 +1,8 @@
-﻿using System;
+﻿using b1;
+using ReadyM.Api.Multiplayer.Idents;
+using System;
 using System.Diagnostics;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Old;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -11,16 +14,19 @@ public class WukongLevelTransitionConnectionController : IDisposable
     private readonly WukongEventBus _eventBus;
     private readonly WukongConnectionManager _connection;
     private readonly WukongSynchronizer _synchronizer;
+    private readonly WukongWidgetManager _widgetManager;
 
     public WukongLevelTransitionConnectionController(
         WukongEventBus eventBus,
         WukongConnectionManager connection,
-        WukongSynchronizer synchronizer
+        WukongSynchronizer synchronizer,
+        WukongWidgetManager widgetManager
     )
     {
         _eventBus = eventBus;
         _connection = connection;
         _synchronizer = synchronizer;
+        _widgetManager = widgetManager;
         
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
         _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
@@ -36,18 +42,23 @@ public class WukongLevelTransitionConnectionController : IDisposable
     
     private void OnBeginPlayGameplayLevel()
     {
-        Debug.Assert(!_connection.EnteredRoom);
+        Debug.Assert(_connection.RequestedAreaId != null);
         
         Logging.LogDebug("Initializing widgets");
         ModWidgetsUtils.SpawnWidgetManagerActor();
         ModWidgetsUtils.InitializeWidgets();
 
-        _connection.EnterRoom();
+        var areaId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
+        if (areaId > ushort.MaxValue)
+        {
+            throw new InvalidCastException("AreaId is greater than ushort max value");
+        }
+        _connection.JoinArea(new AreaId((ushort)areaId));
     }
     
     private void OnEndPlayGameplayLevel()
     {
-        _connection.ExitRoom();
+        _connection.LeaveArea();
         
         Logging.LogDebug("Deinitializing widgets");
         ModWidgetsUtils.DeinitializeWidgets();
@@ -55,10 +66,9 @@ public class WukongLevelTransitionConnectionController : IDisposable
     
     private void OnLoadingScreenClose()
     {
-        if (_connection.EnteredRoom)
+        if (_connection.RequestedAreaId != null)
         {
-            ChatWidget.Instance.SetVisibility(true);
-            _synchronizer.Refresh();
+            _widgetManager.ShowInGameWidgets();
         }
     }
 }

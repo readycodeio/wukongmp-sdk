@@ -3,13 +3,12 @@ using System.Collections.Concurrent;
 using System.Threading;
 using b1;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
-using WukongMp.Api.Old;
-using WukongMp.Api.Old.State;
 using static Friflo.Engine.ECS.QueryExtensions;
 
 namespace WukongMp.Api.Patches
@@ -88,7 +87,7 @@ namespace WukongMp.Api.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 RunMontageSync();
-                DI.Instance.UpdateLoop.Tick(default);
+                DI.Instance.EcsLoop.Tick(default);
                 ComponentMonitorManager.Instance.Update();
             }
         }
@@ -113,30 +112,37 @@ namespace WukongMp.Api.Patches
 
         private static void RunMontageSync()
         {
-            if (!DI.Instance.RelayClient.InRoom)
+            if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            SyncPlayerMontage(DI.Instance.Players.LocalPlayerState);
+            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (mainEntity == null)
+                return;
+            
+            SyncPlayerMontage(mainEntity.Value);
 
-            if (DI.Instance.RelayClient.IsMasterClient)
-            {
-                DI.Instance.World.Query<LocalTamerComponent, NetworkIdComponent>().Each(new SyncMontageJob(DI.Instance.Rpc));
-            }
+            var playerId = DI.Instance.State.LocalPlayerId;
+            if (playerId == null)
+                return;
+
+            DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
         }
 
         [Obsolete("To be replaced when we integrate players into ECS")]
-        private static void SyncPlayerMontage(CharacterState characterState)
+        private static void SyncPlayerMontage(MainCharacterEntity mainEntity)
         {
-            if (characterState.Pawn == null)
-                return;
+            ref var localMainComp = ref mainEntity.GetLocalState();
 
-            var montageState = characterState.MontageState;
+            if (localMainComp.Pawn == null)
+                return;
+            
+            var montageState = localMainComp.MontageState;
             if (montageState.LocalAnimationInstance == null)
             {
-                montageState.LocalAnimationInstance = characterState.Pawn.Mesh.GetAnimInstance();
+                montageState.LocalAnimationInstance = localMainComp.Pawn.Mesh.GetAnimInstance();
             }
 
-            var currentMontage = characterState.Pawn.GetCurrentMontage();
+            var currentMontage = localMainComp.Pawn.GetCurrentMontage();
 
             if (currentMontage != null)
             {
@@ -145,21 +151,23 @@ namespace WukongMp.Api.Patches
 
                 bool hasMontageRewound = currentPosition < montageState.LocalMontagePosition && !isNewMontage;
                 bool hasSkippedFrames = currentPosition - montageState.LocalMontagePosition > 0.5f && !isNewMontage;
-
+                
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
-                    DI.Instance.Rpc.SendMontageCallback(NetworkIdComponent.FromPlayerId(characterState.PlayerId), currentMontage, currentPosition, hasMontageRewound);
+                    var netId = mainEntity.GetMeta().NetId;
+                    DI.Instance.Rpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
                 }
 
                 montageState.LocalMontagePosition = currentPosition;
             }
             else if (montageState.LocalMontage != null)
             {
-                DI.Instance.Rpc.SendMontageCancel(NetworkIdComponent.FromPlayerId(characterState.PlayerId));
+                var netId = mainEntity.GetMeta().NetId;
+                DI.Instance.Rpc.SendMontageCancel(netId);
             }
 
             montageState.LocalMontage = currentMontage;
-            characterState.MontageState = montageState;
+            localMainComp.MontageState = montageState;
         }
     }
 }

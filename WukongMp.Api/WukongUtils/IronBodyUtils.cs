@@ -9,12 +9,9 @@ namespace WukongMp.Api.WukongUtils
     {
         public static void TriggerIronBody(BGUCharacterCS pawn)
         {
-            GameLoopPatch.QueueOnGameThread(() =>
-            {
-                Logging.LogDebug("Received trigger iron body for character {Nickname}", pawn.GetName());
-                var playerEvents = BUS_EventCollectionCS.Get(pawn);
-                BGUFunctionLibraryCS.BGUTryCastSpell(pawn, Constants.IronBodySkillId, ECastSkillSourceType.Default);
-            }, nameof(TriggerIronBody));
+            Logging.LogDebug("Received trigger iron body for character {Nickname}", pawn.GetName());
+            var playerEvents = BUS_EventCollectionCS.Get(pawn);
+            BGUFunctionLibraryCS.BGUTryCastSpell(pawn, Constants.IronBodySkillId, ECastSkillSourceType.Default);
         }
     }
 }

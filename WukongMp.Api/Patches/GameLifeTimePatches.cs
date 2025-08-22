@@ -57,20 +57,48 @@ public class PatchOnLateBeginPlay
         return AccessTools.Method("b1.BUS_MiscInitComp:LateBeginPlay");
     }
 
-    public static void Postfix()
+    public static void Postfix(UActorCompBaseCS __instance) // This is called multiple times since each BGUCharacterCS has BUS_MiscInitComp
     {
-        Logging.LogInformation("Late begin play");
+        var owner = __instance.GetOwner();
+        if (owner == GameUtils.GetControlledPawn())
+        {
+            Logging.LogInformation("Local player late begin play");
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BUS_DeadComp), nameof(BUS_DeadComp.OnEndPlay))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchOnPlayerEndPlay
+{
+    public static void Postfix(BUS_DeadComp __instance) // This is called multiple times since each BGUCharacterCS has BUS_DeadComp
+    {
+        var owner = __instance.GetOwner();
+        if (owner == GameUtils.GetControlledPawn())
+        {
+            Logging.LogInformation("Local player end play");
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BPS_LiftTimeSystem), nameof(BPS_LiftTimeSystem.OnBeginPlay))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchOnPlayerControllerBeginPlay
+{
+    public static void Postfix(BPS_LiftTimeSystem __instance) // This is called only for player controller where BPS_LiftTimeSystem is registered
+    {
+        Logging.LogInformation("Player controller begin play");
         DI.Instance.EventBus.TryInvokeBeginPlayGameplayLevel();
     }
 }
 
 [HarmonyPatch(typeof(BPS_LiftTimeSystem), nameof(BPS_LiftTimeSystem.OnEndPlay))]
 [HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnEndPlay
+public class PatchOnPlayerControllerEndPlay
 {
-    public static void Postfix()
+    public static void Postfix(BPS_LiftTimeSystem __instance) // This is called only for player controller where BPS_LiftTimeSystem is registered
     {
-        Logging.LogInformation("End play");
+        Logging.LogInformation("Player controller end play");
         DI.Instance.EventBus.TryInvokeEndPlayGameplayLevel();
     }
 }

@@ -1,11 +1,10 @@
 ﻿using b1;
 using BtlB1;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
 using System.Reflection;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 
 namespace WukongMp.Api.Patches;
 
@@ -20,17 +19,17 @@ public static class PatchComplexSkillDoInteractAction
 
     public static void Prefix(int InteractiveActorID, AActor User, AActor InteractiveActor, FUStInteractionMappingDesc Action)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return;
 
         if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS)
         {
-            var entity = DI.Instance.PawnRegistry.GetMonsterByActor(InteractiveActor);
+            var entity = DI.Instance.PawnState.GetEntityByTamerMonster(InteractiveActor);
             if (entity.HasValue)
             {
-                ref var netComp = ref entity.Value.GetComponent<NetworkIdComponent>();
-                Logging.LogDebug("Sending skill interact for {ActorName} with ID {NetId}.", InteractiveActor.GetName(), netComp.Id);
-                DI.Instance.Rpc.SendTamerSkillInteract(new DTO.SkillInteractData(netComp, Action.ParamsInt[1]));
+                ref var meta = ref entity.Value.GetMeta();
+                Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
+                DI.Instance.Rpc.SendTamerSkillInteract(new DTO.SkillInteractData(meta.NetId, Action.ParamsInt[1]));
             }
         }
     }

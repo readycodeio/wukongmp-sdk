@@ -1,29 +1,31 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
 using BtlShare;
-using Friflo.Engine.ECS;
-using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.State;
-using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.WukongUtils;
 
 public static class SpawningUtils
 {
-    public static PlayerState? SpawnCloneForPlayer(PlayerId playerId)
+    public static BGUCharacterCS? SpawnCloneForPlayer(in PlayerEntity playerEntity, in MainCharacterEntity mainEntity)
     {
-        if (DI.Instance.Players.ConnectedPlayers.ContainsKey(playerId))
+        ref var mainComp = ref mainEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
+        ref readonly var teamComp = ref mainEntity.GetTeam();
+
+        var playerId = mainComp.PlayerId;
+        
+        ref var player = ref playerEntity.GetState();
+        
+        if (localMainComp.HasPawn)
         {
             Logging.LogDebug("Player already exists: {Id}", playerId); // reconnection
             return null;
@@ -45,26 +47,8 @@ public static class SpawningUtils
             return null;
         }
 
-        FVector loc = default;
-        FRotator rot = default;
-
-        var initialProps = DI.Instance.RelayClient.GetPlayerState(playerId)?.Properties;
-
-        if (initialProps == null)
-        {
-            Logging.LogError("Player properties are null at player joining");
-            return null;
-        }
-
-        if (initialProps.TryGetValue(nameof(PlayerState.Location), out var playerLoc))
-        {
-            loc = (FVector)playerLoc;
-        }
-
-        if (initialProps.TryGetValue(nameof(PlayerState.Rotation), out var playerRot))
-        {
-            rot = (FRotator)playerRot;
-        }
+        var loc = mainComp.Location.ToFVector();
+        var rot = mainComp.Rotation.ToFRotator();
 
         var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
 
@@ -102,78 +86,52 @@ public static class SpawningUtils
         events.Evt_OnLeaveFalling.Invoke();
 
         // get teamId
-        var teamId = newPawn.GetTeamIDInCS();
-        if (initialProps.TryGetValue(nameof(PlayerState.TeamId), out var assignedTeamId))
-        {
-            teamId = (int)assignedTeamId;
-        }
+        var teamId = teamComp.TeamId;
 
         // get initial Hp and HpMax
-        if (!initialProps.TryGetValue(nameof(PlayerState.Hp), out var initialHpObj) || initialHpObj is not float initialHp)
-        {
-            Logging.LogError("Joining player did not set initial HP");
-            initialHp = 1000f;
-        }
-        else
-        {
-            Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
-        }
+        var initialHp = mainComp.Hp;
+        Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
 
-        if (!initialProps.TryGetValue($"{Constants.AttributePrefix}{EBGUAttrFloat.HpMaxBase}", out var initialHpMaxObj) || initialHpMaxObj is not float initialHpMaxBase)
-        {
-            Logging.LogError("Joining player did not set initial HPMax");
-            initialHpMaxBase = 1000f;
-        }
-        else
-        {
-            Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
-        }
+        var initialHpMaxBase = mainComp.HpMaxBase;
+        Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
 
-        var playerState = new PlayerState(playerId, newPawn, teamId, initialHp, initialHpMaxBase)
-        {
-            Location = loc,
-            Rotation = rot
-        };
+        localMainComp.Pawn = newPawn;
+        
+        // NOTE: The actor needs to be synchronized to have the right equipment. ECS equipment shouldn't be set to 
+        // actor's equipment. Therefore, the following can be removed
+        // Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
+        // Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
-        // set nickname
-        if (initialProps.TryGetValue(nameof(PlayerState.NickName), out var nickName))
-        {
-            playerState.NickName = (string)nickName;
-            Logging.LogDebug("Setting initial Nickname to {Nickname}", playerState.NickName);
-        }
-        else
-        {
-            Logging.LogError("Initial nickname not provided");
-        }
+        var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(newPawn);
 
-        // set IsReadyForPvP and IsSpectator
-        if (initialProps.TryGetValue(nameof(PlayerState.IsReadyForPvP), out var isReady))
+        if (attrContainer != null)
         {
-            playerState.IsReadyForPvP = (bool)isReady;
-            Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", playerState.IsReadyForPvP);
-        }
-
-        if (initialProps.TryGetValue(nameof(PlayerState.IsSpectator), out var isSpectator))
-        {
-            playerState.IsSpectator = (bool)isSpectator;
-            Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", playerState.IsSpectator);
-        }
-
-        // set attributes
-        foreach (var attr in Constants.SyncedAttributes)
-        {
-            if (initialProps.TryGetValue($"{Constants.AttributePrefix}{attr}", out var value))
+            var setHpMaxBase = attrContainer.SetFloatValue(EBGUAttrFloat.HpMaxBase, initialHpMaxBase);
+            var setHp = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
+            Logging.LogDebug("Set actual Hp / HpMax: {Hp} {HpMax}", setHp, setHpMaxBase);
+            
+            foreach (var attr in Constants.SyncedAttributes)
             {
-                playerState.Attributes[attr] = (float)value;
+                var value = mainComp.Attributes.GetAttribute((byte)attr);
+                attrContainer.SetFloatValue(attr, value);
             }
         }
-
-        // update equipment
-        if (initialProps.TryGetValue(nameof(PlayerState.Equipment), out var eq))
+        else
         {
-            playerState.Equipment = (EquipmentState)eq;
-            EquipmentHelpers.SetRemoteActorEquipment(newPawn, playerState.Equipment);
+            Logging.LogError("Failed to get attribute container from player");
         }
+
+        Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
+        ClientUtils.RegisterAndSetPlayerTeam(newPawn, teamId);
+
+        // NOTE: Nickname already set in ECS. Therefore, the following can be removed
+        Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickName);
+
+        // NOTE: Player properties already set in ECS. Therefore the following can be removed
+        Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", player.IsReadyForPvP);
+        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", player.IsSpectator);
+
+        // FIXME: (refactor) Equipment should be synced on the actor here
 
         // set lock distance
         FUStUnitCommDesc unitCommDesc = BGW_GameDB.GetUnitCommDesc(newPawn.GetResID());
@@ -182,7 +140,7 @@ public static class SpawningUtils
             unitCommDesc.CameraLockDist = 10000;
         }
 
-        return playerState;
+        return newPawn;
     }
 
     public static BGUCharacterCS? SpawnWukong(ABGPPlayerController oldController, UClass pawnClass, FTransform spawnTransform, APawn oldPawn)
@@ -207,16 +165,16 @@ public static class SpawningUtils
         return newCharacter;
     }
 
-    public static void SpawnUnitsMaster(PlayerId playerId, string unitName, int count, int teamId)
+    public static void SpawnUnitsMaster(MainCharacterEntity mainEntity, APawn? pawn, string unitName, int count, int teamId)
     {
-        var playerState = DI.Instance.Players.GetPlayerById(playerId);
-        if (playerState == null || playerState.Pawn == null)
+        if (pawn == null)
         {
-            Logging.LogError("Player not found: {PlayerId}", playerId);
+            Logging.LogError("Pawn is null");
             return;
         }
 
-        var spawnLoc = playerState.Pawn.GetActorLocation() + playerState.Pawn.GetActorForwardVector() * Constants.MonsterSpawnDistance;
+        var spawnLoc = pawn.GetActorLocation() + pawn.GetActorForwardVector() * Constants.MonsterSpawnDistance;
+        
         var startLoc = spawnLoc + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
         var endLoc = spawnLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
 
@@ -257,7 +215,9 @@ public static class SpawningUtils
         }
 
         Notify:
-        DI.Instance.Chatter.SendServerMessage("PlayerSpawned", DI.Instance.Players.LocalPlayerState.NickName, count.ToString(), unitName);
+        // FIXME: This doesn't belong here: single responsibility principle.
+        // Subscribe to events in the chatter object and send the message from there.
+        DI.Instance.Chatter.SendServerMessage("PlayerSpawned", mainEntity.GetState().CharacterNickName, count.ToString(), unitName);
     }
 
     public static void SpawnUnitMaster(string unitName, FVector loc, int teamId)
@@ -272,56 +232,61 @@ public static class SpawningUtils
 
     public static void SpawnUnitLocally(string guid, string unitPath, int teamId, float x, float y, float z)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        Logging.LogDebug("Spawn unit called for {UnitPath}", unitPath);
+
+        if (string.IsNullOrEmpty(unitPath))
+            return;
+
+        var loc = new FVector(x, y, z);
+        var rot = new FRotator();
+
+        var world = GameUtils.GetWorld();
+
+        var unitClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
+        var transform = new FTransform(rot, loc);
+        var tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)unitClass, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
+        if (tamerActor == null)
         {
-            Logging.LogDebug("Spawn unit called for {UnitPath}", unitPath);
+            Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
+            return;
+        }
 
-            if (string.IsNullOrEmpty(unitPath))
-                return;
+        tamerActor.MarkAsSpawnedTamer(null);
+        tamerActor.ExtendConfigComp.ActorResetType = EBGUResetType.Destroy;
 
-            var loc = new FVector(x, y, z);
-            var rot = new FRotator();
+        tamerActor.SpawnedTamerGuid = guid;
+        // Update final guid
+        tamerActor.GetFinalGuid(true);
 
-            var world = GameUtils.GetWorld();
+        Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
+        var characterEntity = CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
 
-            var unitClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
-            var transform = new FTransform(rot, loc);
-            var tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)unitClass, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
-            if (tamerActor == null)
-            {
-                Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
-                return;
-            }
+        ref var transComp = ref characterEntity.GetTranslation();
+        transComp.Position = loc.ToVector3();
+        transComp.Rotation = rot.ToVector3();
 
-            tamerActor.MarkAsSpawnedTamer(null);
-            tamerActor.ExtendConfigComp.ActorResetType = EBGUResetType.Destroy;
+        UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
+        BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
 
-            tamerActor.SpawnedTamerGuid = guid;
-            // Update final guid
-            tamerActor.GetFinalGuid(true);
+        ref var nameComp = ref characterEntity.GetNickname();
+        nameComp.Nickname = "Bot";
 
-            Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
-            var entity = CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
-
-            ref var trans = ref entity.GetComponent<TranslationComponent>();
-            trans.Position = loc.ToVector3();
-            trans.Rotation = rot.ToVector3();
-
-            UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
-            BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
-
-            ref var nameComp = ref entity.GetComponent<NicknameComponent>();
-            nameComp.Nickname = "Bot";
-
-            MarkerUtils.CreateMarkerForCharacter(entity); // 3D marker above monster
-            if (unitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
-            {
-                SetMonkeyBotConfig(tamerActor.GetMonster());
-            }
-        }, nameof(SpawnUnitLocally));
+        MarkerUtils.CreateMarkerForCharacter(characterEntity); // 3D marker above monster
+        if (unitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+        {
+            SetMonkeyBotConfig(tamerActor.GetMonster());
+        }
     }
 
-    public static void SpawnBots()
+    // FIXME: This shouldn't be used, instead figure out the team ID on the callee side
+    public static void SpawnBots(PlayerEntity playerEntity)
+    {
+        var teamId = playerEntity.GetState().TeamId;
+        var oppositeId = PvPUtils.GetOppositeTeam(teamId);
+        SpawnBots(oppositeId);
+    }
+
+    public static void SpawnBots(int teamId)
     {
         for (var i = 0; i < Constants.BotCount; i++)
         {
@@ -331,24 +296,27 @@ public static class SpawningUtils
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             var spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, PvPUtils.GetOppositeTeam(DI.Instance.Players.LocalPlayerState.TeamId));
+            SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, teamId);
         }
     }
 
-    public static Entity CreateMonsterInEcs(string guid, BUTamerActor tamer, int teamId, string unitName)
+    public static TamerEntity CreateMonsterInEcs(string guid, BUTamerActor tamer, int teamId, string unitName)
     {
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
 
-        return DI.Instance.PawnRegistry.CreateNetworkedMonster(
+        var entity = DI.Instance.PawnState.CreateNetworkedMonster(
             new LocalTamerComponent(tamer),
             new TamerComponent
             {
                 Guid = guid,
                 UnitPath = unitName
-            }, new TeamComponent
+            },
+            new TeamComponent
             {
                 TeamId = teamId
             });
+
+        return new TamerEntity(entity);
     }
 
     public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)

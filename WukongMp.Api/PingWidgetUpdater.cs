@@ -1,5 +1,5 @@
 using System;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Client;
 using WukongMp.Api.UI;
 
 namespace WukongMp.Api;

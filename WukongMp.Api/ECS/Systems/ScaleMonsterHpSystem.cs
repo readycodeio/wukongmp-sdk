@@ -1,9 +1,11 @@
-﻿using System;
-using b1;
+﻿using b1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.Wukong.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Systems;
 
@@ -11,15 +13,15 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 {
     protected override void OnUpdate()
     {
-        if (!DI.Instance.RelayClient.IsMasterClient)
-            return; // TODO: Ownership check
+        var areaPlayers = DI.Instance.State.AreaPlayers.Count;
+        var targetScaling = 1 + 1.5f * (areaPlayers - 1);
 
-        var otherPlayers = DI.Instance.Players.ConnectedPlayers.Count;
-        var targetScaling = 1 + 1.5f * otherPlayers;
-
-        Query.ForEachEntity((ref hp, ref localTamer, _) =>
+        Query.ForEachEntity((ref HpComponent hp, ref LocalTamerComponent localTamer, Entity entity) =>
         {
             if (!localTamer.IsMonsterSynced)
+                return;
+
+            if (!DI.Instance.ClientOwnership.OwnsEntity(entity))
                 return;
 
             if (hp.Hp.Equals(0, Constants.FloatComparisonTolerance) && hp.HpMaxBase.Equals(0, Constants.FloatComparisonTolerance))

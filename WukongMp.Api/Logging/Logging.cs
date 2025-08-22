@@ -16,7 +16,11 @@ public static class Logging
 #endif
 
     public static void LogDebug([StructuredMessageTemplate] string? message, params object?[] args)
+#if DEBUG
         => DI.Instance.Logger.LogDebug(message, args);
+#else
+        {}
+#endif
     
     public static void LogInformation([StructuredMessageTemplate] string? message, params object?[] args)
         => DI.Instance.Logger.LogInformation(message, args);

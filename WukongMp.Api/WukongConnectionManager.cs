@@ -1,123 +1,146 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Friflo.Engine.ECS;
 using LiteNetLib;
-using ReadyM.Api.Multiplayer;
-using ReadyM.Relay.Client;
+using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Client.Host;
+using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.State;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api;
 
+[Obsolete]
 public class WukongConnectionManager : IDisposable
 {
-    private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly RoomStateProxy _roomState;
-    private readonly NetworkedStateSynchronizer _synchronizer;
-
+    public RelayClientService RelayClientService { get; }
     public IRelayClient RelayClient { get; }
-    
-    public bool IsRunning { get; private set; }
-    public bool EnteredRoom { get; private set; }
-    
+    public WukongAreaState AreaState { get; }
+    public WukongPlayerState PlayerState { get; }
+
+    private readonly ClientState _state;
+    private readonly ILogger _logger;
+
+    public PlayerId? PlayerId => PlayerState.LocalPlayerId;
+
+    public bool IsRunning
+        => RelayClientService.IsRunning;
+
+    public bool RequestedConnect
+        => RelayClient.RequestedConnect;
+
+    public AreaId? RequestedAreaId
+        => RelayClient.RequestedAreaId;
+
     public event Action<string>? OnMasterClientChanged;
 
-    public WukongConnectionManager(IRelayClient relayClient,
-        WukongPlayerRegistry playerRegistry,
-        NetworkedStateSynchronizer synchronizer,
-        RoomStateProxy roomState)
+    public WukongConnectionManager(RelayClientService relayClientService,
+        ClientState state,
+        WukongPlayerState playerState,
+        WukongAreaState areaState,
+        ILogger logger)
     {
-        _playerRegistry = playerRegistry;
-        _roomState = roomState;
-        _synchronizer = synchronizer;
-        RelayClient = relayClient;
-        
-        RelayClient.OnDisconnected += OnDisconnectedHandler;
+        RelayClientService = relayClientService;
+        RelayClient = relayClientService.RelayClient;
+        AreaState = areaState;
+        PlayerState = playerState;
+        _state = state;
+        _logger = logger;
+
+        _state.OnConnected += OnConnectedHandler;
+        _state.OnDisconnected += OnDisconnectedHandler;
+    }
+
+    private static void OnConnectedHandler(PlayerId player, Entity entity)
+    {
+        entity.GetComponent<PlayerComponent>().NickName = CmdLineParams.Instance.Nickname;
     }
 
     public void Dispose()
     {
-        Stop();
-        RelayClient.OnDisconnected -= OnDisconnectedHandler;
+        _state.OnConnected -= OnConnectedHandler;
+        _state.OnDisconnected -= OnDisconnectedHandler;
     }
 
     public void Start()
     {
-        if (IsRunning)
-            return;
-        IsRunning = true;
-        
-        _synchronizer.Start();
-        RelayClient.Start();
+        RelayClientService.Start();
     }
 
     public void Stop()
     {
-        if (!IsRunning)
-            return;
-        IsRunning = false;
-
-        if (EnteredRoom)
-            ExitRoom();
-        RelayClient.Stop();
-        _synchronizer.Stop();
+        RelayClientService.Stop();
     }
 
-    public void EnterRoom()
+    public void Connect()
     {
-        if (EnteredRoom)
-            return;
-        EnteredRoom = true;
-        
-        RelayClient.EnterRoom();
+        RelayClient.RequestConnect();
     }
 
-    public void ExitRoom()
-    {
-        if (!EnteredRoom)
-            return;
-        EnteredRoom = false;
- 
-        RelayClient.ExitRoom();
-    }
-    
-    public void Reconnect()
-    {
-        if (!IsRunning)
-            return;
-        
-        Logging.LogInformation("Attempting to reconnect...");
-        _ = Task.Run(async () =>
-        {
-            if (EnteredRoom)
-                RelayClient.ExitRoom();
-            if (IsRunning)
-                RelayClient.Stop();
-            await Task.Delay(Constants.ReconnectDelayMs);
-            if (IsRunning)
-                RelayClient.Start();
-            if (EnteredRoom)
-                RelayClient.EnterRoom();
-        });
-    }
-    
     public void Disconnect()
     {
-        if (EnteredRoom)
-            RelayClient.ExitRoom();
-        if (IsRunning)
-            RelayClient.Stop();
+        if (RequestedAreaId != null)
+            LeaveArea();
+        if (RequestedConnect)
+            RelayClient.RequestDisconnect();
     }
-    
+
+    public void JoinArea(AreaId areaId)
+    {
+        RelayClient.RequestJoinArea(areaId);
+    }
+
+    public void LeaveArea()
+    {
+        RelayClient.RequestLeaveArea();
+    }
+
+    public void Reconnect()
+    {
+        Logging.LogInformation("Attempting to reconnect...");
+
+        RelayClient.Scheduler.Schedule(async void (context, self) =>
+        {
+            try
+            {
+                var requestedAreaId = self.RequestedAreaId;
+                var requestedConnect = self.RequestedConnect;
+                if (requestedAreaId != null)
+                    self.LeaveArea();
+                if (requestedConnect)
+                    self.Disconnect();
+                await Task.Delay(Constants.ReconnectDelayMs);
+                if (!requestedConnect)
+                    self.Connect();
+                if (requestedAreaId != null)
+                    self.JoinArea(requestedAreaId.Value);
+            }
+            catch (Exception ex)
+            {
+                self._logger.LogError(ex, "Error while reconnecting");
+            }
+        }, this);
+    }
+
     public void SetMasterClient(string newMasterName)
     {
-        if (RelayClient.IsMasterClient)
+        if (AreaState.IsMasterClient)
         {
-            var newMasterPlayer = _playerRegistry.AllConnectedPlayers.FirstOrDefault(x => x.NickName == newMasterName);
-            if (newMasterPlayer != null)
+            var newMasterPlayerId = _state.AllPlayers.FirstOrDefault(x => PlayerState.GetPlayerById(x)?.GetState().NickName == newMasterName);
+            if (newMasterPlayerId != null)
             {
-                _roomState.MasterClientId = newMasterPlayer.PlayerId;
+                var areaEntity = AreaState.CurrentArea;
+                if (areaEntity != null)
+                {
+                    areaEntity.Value.GetRoom().MasterClient = newMasterPlayerId;
+                }
+
+                // FIXME: We should send this when master client actually changes, not when we request it changing
                 OnMasterClientChanged?.Invoke(newMasterName);
             }
             else
@@ -126,20 +149,22 @@ public class WukongConnectionManager : IDisposable
             }
         }
     }
-    
-    public void OnDisconnectedHandler(DisconnectReason reason)
+
+    public void OnDisconnectedHandler(PlayerId playerId, Entity entity, DisconnectReason disconnectReason)
     {
         Logging.LogInformation("Disconnected");
-        if (reason == DisconnectReason.DisconnectPeerCalled)
+        if (disconnectReason == DisconnectReason.DisconnectPeerCalled)
         {
-            Logging.LogInformation("Disconnected: {Cause}", reason);
+            Logging.LogInformation("Disconnected: {Cause}", disconnectReason);
         }
         else
         {
-            Logging.LogWarning("Disconnected: {Cause}", reason);
+            Logging.LogWarning("Disconnected: {Cause}", disconnectReason);
         }
 
-        if (reason is DisconnectReason.Timeout or DisconnectReason.RemoteConnectionClose)
+        // FIXME: This will only try to reconnect once and immediately which will probably not work if the cause 
+        // is a weak network connection.
+        if (disconnectReason is DisconnectReason.Timeout or DisconnectReason.RemoteConnectionClose)
         {
             Reconnect();
         }

@@ -1,16 +1,17 @@
 ﻿using b1;
 using LiteNetLib.Utils;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Serialization;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Api.Multiplayer.Generators;
+using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct SimpleStateData(NetworkIdComponent netId, EBGUSimpleState simpleState, bool isRemove) : INetSerializable
+public partial struct SimpleStateData(NetworkId netId, EBGUSimpleState simpleState, bool isRemove) : INetSerializable
 {
-    public NetworkIdComponent NetId = netId;
+    public NetworkId NetId = netId;
     public EBGUSimpleState SimpleState = simpleState;
     public bool IsRemove = isRemove;
 }

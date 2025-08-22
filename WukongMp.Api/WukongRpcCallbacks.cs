@@ -1,19 +1,24 @@
 ﻿using b1;
 using b1.BGW;
 using BtlShare;
-using ReadyM.Api.Multiplayer;
+using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Api.Multiplayer.Generators;
+using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.ECS;
-using ReadyM.Relay.Common.Protocol.Enums;
+using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Common.Serialization;
 using System;
-using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.Api;
 using WukongMp.Api.Patches;
+using WukongMp.Api.State;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
@@ -22,22 +27,34 @@ public partial class WukongRpcCallbacks : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
-    private readonly EntityManagerWithLogs _entityManager;
-    private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPawnRegistry _pawnRegistry;
+    private readonly ClientState _state;
+    private readonly WukongAreaState _areaState;
+    private readonly ClientNetworkedEntityState _netEntity;
+    private readonly WukongPlayerState _playerState;
+    private readonly WukongPawnState _pawnState;
+    private readonly IClientEcsUpdateLoop _ecsLoop;
+    private readonly ILogger _logger;
 
     public WukongRpcCallbacks(
         RelaySerializer serializer,
         IRelayClient relayClient,
-        EntityManagerWithLogs entityManager,
-        WukongPlayerRegistry playerRegistry,
-        WukongPawnRegistry pawnRegistry)
+        ClientState state,
+        WukongAreaState areaState,
+        ClientNetworkedEntityState netEntity,
+        WukongPlayerState playerState,
+        WukongPawnState pawnState,
+        IClientEcsUpdateLoop ecsLoop,
+        ILogger logger)
     {
         Serializer = serializer;
         RelayClient = relayClient;
-        _entityManager = entityManager;
-        _playerRegistry = playerRegistry;
-        _pawnRegistry = pawnRegistry;
+        _state = state;
+        _areaState = areaState;
+        _netEntity = netEntity;
+        _playerState = playerState;
+        _pawnState = pawnState;
+        _ecsLoop = ecsLoop;
+        _logger = logger;
 
         InitRpc();
     }
@@ -47,7 +64,7 @@ public partial class WukongRpcCallbacks : IDisposable
         DeInitRpc();
     }
 
-    public void SendMontageCallback(NetworkIdComponent netId, UAnimMontage montage, float position, bool reset)
+    public void SendMontageCallback(NetworkId netId, UAnimMontage montage, float position, bool reset)
     {
         var shortened = Compressors.MontageNameCompressor.Compress(montage.PathName, out var shortMontagePath);
         var data = shortened ? shortMontagePath : montage.PathName;
@@ -55,7 +72,7 @@ public partial class WukongRpcCallbacks : IDisposable
         SendMontageCallback(evData);
     }
 
-    public void SendMontageCancel(NetworkIdComponent netId)
+    public void SendMontageCancel(NetworkId netId)
     {
         var evData = new MontageCallbackData(netId, false, "", 0f, false);
         SendMontageCallback(evData);
@@ -65,7 +82,7 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         var shortened = Compressors.VigorNameCompressor.Compress(config.PathName, out var shortMontagePath);
         var configName = shortened ? shortMontagePath : config.PathName;
-        Logging.LogDebug("Sending magically change for player {PlayerId} with config {Config} and skillID {SkillID}", player, configName, skillID);
+        _logger.LogDebug("Sending magically change for player {PlayerId} with config {Config} and skillID {SkillID}", player, configName, skillID);
         var evData = new MagicallyChangeData(configName, shortened, skillID, recoverSkillID);
         SendTriggerMagicallyChange(evData);
     }
@@ -82,319 +99,394 @@ public partial class WukongRpcCallbacks : IDisposable
             "",
             playMovieRequest.MatchType));
     }
-
-    [RpcEvent(RelayMode.Others)]
+    
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnExitPhantomRush(PlayerId playerId)
     {
-        var playerState = _playerRegistry.GetPlayerById(playerId);
-        if (playerState == null)
+        _ecsLoop.Scheduler.Schedule((_, self, playerId0) =>
         {
-            Logging.LogError("Player not found: {Id}", playerId);
-            return;
-        }
-
-        Logging.LogDebug("Received exit phantom rush for player {Nickname}", playerState.NickName);
-        var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-        playerState.ReceivedPhantomRushExit = true;
-        events?.Evt_RelievePhantomRush.Invoke();
+            if (self._playerState.GetMainCharacterById(playerId0) is not { } mainEntity)
+                return;
+            ref var mainComp = ref mainEntity.GetState();
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            self._logger.LogDebug("Received exit phantom rush for player {Nickname}", mainComp.CharacterNickName);
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            localMainComp.ReceivedPhantomRushExit = true;
+            events?.Evt_RelievePhantomRush.Invoke();
+        }, this, playerId);
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnEndMatchmaking()
     {
-        PvPUtils.OnMatchmakingEnded();
+        _ecsLoop.Scheduler.Schedule(_ =>
+        {
+            PvPUtils.OnMatchmakingEnded();
+        });
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnAddBuff(PlayerId __sender, BuffAddData data)
     {
-        var playerState = _playerRegistry.GetPlayerById(__sender);
-        BuffUtils.AddBuff(playerState?.Pawn, data.BuffId, data.Duration);
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+                return;
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            BuffUtils.AddBuff(localMainComp.Pawn, data0.BuffId, data0.Duration);
+        }, this, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRemoveBuff(PlayerId __sender, BuffRemoveData data)
     {
-        var state = _playerRegistry.GetPlayerById(__sender);
-        BuffUtils.RemoveBuff(state?.Pawn, data.BuffId, data.TriggerType, data.Layer, data.WithTriggerRemoveEffect);
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+                return;
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            BuffUtils.RemoveBuff(localMainComp.Pawn, data0.BuffId, data0.TriggerType, data0.Layer, data0.WithTriggerRemoveEffect);
+        }, this, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRemoveAllBuffs(PlayerId __sender, BuffRemoveAllData data)
     {
-        var playerState = _playerRegistry.GetPlayerById(__sender);
-        BuffUtils.RemoveAllBuffs(playerState?.Pawn, data.TriggerType, data.WithTriggerRemoveEffect);
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+                return;
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            BuffUtils.RemoveAllBuffs(localMainComp.Pawn, data0.TriggerType, data0.WithTriggerRemoveEffect);
+        }, this, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitStateTrigger(StateTriggerData data)
     {
-        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
-        NpcLocomotionUtils.SetStateTrigger(character, data.Trigger, data.Time, data.NeedForceUpdate);
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        {
+            var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
+            NpcLocomotionUtils.SetStateTrigger(character, data0.Trigger, data0.Time, data0.NeedForceUpdate);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitSimpleState(SimpleStateData data)
     {
-        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
-        NpcLocomotionUtils.SetSimpleState(character, data.SimpleState, data.IsRemove);
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        {
+            var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
+            NpcLocomotionUtils.SetSimpleState(character, data0.SimpleState, data0.IsRemove);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnTriggerFsmState(FsmStateData data)
     {
-        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
-        NpcLocomotionUtils.SetFsmState(character, data.FsmStateName);
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        {
+            var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
+            NpcLocomotionUtils.SetFsmState(character, data0.FsmStateName);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnMotionMatchingState(MotionMatchingStateData data)
     {
-        var character = _pawnRegistry.GetPawnByNetworkId(data.NetId);
-        NpcLocomotionUtils.SetMotionMatchingState(character, data.State);
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        {
+            var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
+            NpcLocomotionUtils.SetMotionMatchingState(character, data0.State);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnSummon(UnitSummonData data)
     {
-        GameLoopPatch.QueueOnGameThread(() => { SummonPatch.ExecuteSummon(data.SummonerId, data.SummonId, data.Guid, data.Name, data.TeamId); }, nameof(OnSpawnSummon));
+        _ecsLoop.Scheduler.Schedule((_, data0) =>
+        {
+            SummonPatch.ExecuteSummon(data0.SummonerId, data0.SummonId, data0.Guid, data0.Name, data0.TeamId);
+        }, data);
     }
 
-    [RpcEvent(RelayMode.Master)]
+    [RpcEvent(RelayMode.EntityOwner)]
     internal void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
     {
-        SpawningUtils.SpawnUnitsMaster(__sender, data.UnitName, data.Count, data.TeamId);
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+                return;
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            SpawningUtils.SpawnUnitsMaster(mainEntity, localMainComp.Pawn, data0.UnitName, data0.Count, data0.TeamId);
+        }, this, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayerTransBegin(PlayerId __sender, PlayerTransBeginData data)
     {
-        TransformationUtils.TransformPlayer(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransBeginType);
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+                return;
+            TransformationUtils.TransformPlayer(mainEntity, data0.UnitResId, data0.UnitBornSkillId, data0.EnableBlendViewTarget, data0.TransBeginType);
+        }, this, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayerTransEnd(PlayerId __sender, PlayerTransEndData data)
     {
-        TransformationUtils.TransformPlayerBack(__sender, data.UnitResId, data.UnitBornSkillId, data.EnableBlendViewTarget, data.TransEndType);
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+                return;
+            TransformationUtils.TransformPlayerBack(mainEntity, data0.UnitResId, data0.UnitBornSkillId, data0.EnableBlendViewTarget, data0.TransEndType);
+        }, this, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayMovieRequest(PlayMovieData data)
     {
-        CutsceneUtils.PlayCutscene(data);
+        _ecsLoop.Scheduler.Schedule((_, data0) =>
+        {
+            CutsceneUtils.PlayCutscene(data0);
+        }, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSetTarget(TargetData data)
     {
-        var pawn = _pawnRegistry.GetPawnByNetworkId(data.Character);
-        if (pawn == null)
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
         {
-            Logging.LogNull(nameof(data.Character));
-            return;
-        }
-
-        if (data.ClearTarget)
-        {
-            TargetingApi.ClearTarget(pawn);
-            return;
-        }
-
-        var target = _pawnRegistry.GetPawnByNetworkId(data.Target);
-
-        if (target == null)
-        {
-            Logging.LogNull(nameof(data.Target));
-            return;
-        }
-
-        TargetingApi.SetTarget(pawn, target);
-    }
-
-    [RpcEvent(RelayMode.Others)]
-    internal void OnCastImmobilize(NetworkIdComponent caster)
-    {
-        if (RelayClient.IsMasterClient)
-        {
-            var character = _pawnRegistry.GetPawnByNetworkId(caster);
-            if (character == null)
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Character);
+            if (pawn == null)
             {
-                Logging.LogNull(nameof(caster));
+                self._logger.LogNullDebug(nameof(data0.Character));
                 return;
             }
 
-            ImmobilizeUtils.CastImmobilize(character);
-        }
+            if (data0.ClearTarget)
+            {
+                TargetingUtils.ClearTarget(pawn);
+                return;
+            }
+
+            var target = self._pawnState.GetPawnByNetworkId(data0.Target);
+
+            if (target == null)
+            {
+                self._logger.LogNull(nameof(data0.Target));
+                return;
+            }
+
+            TargetingUtils.SetTarget(pawn, target);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnCastImmobilize(NetworkId caster)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, caster0) =>
+        {
+            if (self._areaState.IsMasterClient)
+            {
+                var character = self._pawnState.GetPawnByNetworkId(caster0);
+                if (character == null)
+                {
+                    self._logger.LogNull(nameof(caster0));
+                    return;
+                }
+
+                ImmobilizeUtils.CastImmobilize(character);
+            }
+        }, this, caster);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnTriggerImmobilize(TriggerImmobilizeData data)
     {
-        var caster = _pawnRegistry.GetPawnByNetworkId(data.PlayerId);
-        var target = _pawnRegistry.GetPawnByNetworkId(data.Target);
-        ImmobilizeUtils.TriggerImmobilize(caster, target, data.GreatSageTalentActiveBuff);
-    }
-
-    [RpcEvent(RelayMode.Others)]
-    internal void OnRelieveImmobilize(NetworkIdComponent affected)
-    {
-        var character = _pawnRegistry.GetPawnByNetworkId(affected);
-        if (character == null)
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
         {
-            Logging.LogNull(nameof(affected));
-            return;
-        }
-
-        ImmobilizeUtils.RelieveImmobilize(character);
+            var caster = self._pawnState.GetPawnByNetworkId(data0.PlayerId);
+            var target = self._pawnState.GetPawnByNetworkId(data0.Target);
+            ImmobilizeUtils.TriggerImmobilize(caster, target, data0.GreatSageTalentActiveBuff);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
-    internal void OnBreakImmobilize(NetworkIdComponent entity)
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnRelieveImmobilize(NetworkId affected)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, affected0) =>
+        {
+            var character = self._pawnState.GetPawnByNetworkId(affected0);
+            if (character == null)
+            {
+                self._logger.LogNullDebug(nameof(affected0));
+                return;
+            }
+
+            ImmobilizeUtils.RelieveImmobilize(character);
+        }, this, affected);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnBreakImmobilize(NetworkId netId)
     {
         // TODO
     }
 
-    [RpcEvent(RelayMode.All, EventCaching.AddToRoomCacheGlobal)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnChatMessage(ChatMessage message)
     {
-        WukongChatter.OnGetMessage(message);
+        _ecsLoop.Scheduler.Schedule((_, message0) =>
+        {
+            WukongChatter.OnGetMessage(message0);
+        }, message);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPhantomRush(PlayerId __sender, ESkillDirection direction)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        _ecsLoop.Scheduler.Schedule((_, self, sender, direction0) =>
         {
-            var playerState = _playerRegistry.GetPlayerById(__sender);
-            if (playerState?.Pawn == null)
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+                return;
+            ref var mainComp = ref mainEntity.GetState();
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
             {
-                Logging.LogError("Player not found: {PlayerId}", __sender);
+                self._logger.LogError("Player not found: {PlayerId}", mainComp.PlayerId);
                 return;
             }
 
-            Logging.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", playerState.NickName, direction);
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
-            events?.Evt_TriggerPhantomRush.Invoke(direction);
+            self._logger.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", mainComp.CharacterNickName, direction0);
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            events?.Evt_TriggerPhantomRush.Invoke(direction0);
 
-            PlayerUtils.ResetCooldown(playerState.Pawn);
-            PlayerUtils.ResetMana(playerState.Pawn);
-        }, nameof(OnPhantomRush));
+            PlayerUtils.ResetCooldown(localMainComp.Pawn);
+            PlayerUtils.ResetMana(localMainComp.Pawn);
+        }, this, __sender, direction);
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     public void OnBroadcastPlayerTransform(PlayerTransformData data)
     {
-        // TODO: Use targeted RPC mode (select which peers to send to)
-        if (data.PlayerId != _playerRegistry.LocalPlayerState.PlayerId)
-            return;
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+            // TODO: Use targeted RPC mode (select which peers to send to)
+            ref var mainComp = ref mainEntity.GetState();
+            if (data0.PlayerId != mainComp.PlayerId)
+                return;
 
-        PlayerUtils.TeleportLocalPlayer(data.Location, data.Rotation, false);
+            PlayerUtils.TeleportLocalPlayer(mainEntity, data0.Location, data0.Rotation, false);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Master)]
+    [RpcEvent(RelayMode.EntityOwner)]
     internal void OnSuicide(PlayerId __sender)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
         {
-            var player = _playerRegistry.GetPlayerById(__sender)?.Pawn;
-            if (player == null)
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
                 return;
 
-            var events = BUS_EventCollectionCS.Get(player);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
             events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            if (RelayClient.IsMasterClient)
+            if (self._areaState.IsMasterClient)
             {
-                events?.Evt_UnitDead.Invoke(player, EDeadReason.Suicide);
+                events?.Evt_UnitDead.Invoke(localMainComp.Pawn, EDeadReason.Suicide);
             }
-        }, nameof(OnSuicide));
+        }, this, __sender);
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnRebirthPlayer(PlayerId playerId)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        _ecsLoop.Scheduler.Schedule((_, self, playerId0) =>
         {
-            Logging.LogDebug("RebirthPlayer for player {PlayerId} called", playerId);
+            self._logger.LogDebug("RebirthPlayer for player {PlayerId} called", playerId0);
 
-            var player = _playerRegistry.GetPlayerById(playerId);
-            if (player == null)
+            if (self._playerState.GetMainCharacterById(playerId0) is not { } mainEntity)
                 return;
 
-            if (player.PlayerId == RelayClient.LocalPlayer.PlayerId)
+            if (playerId0 == self._state.LocalPlayerId)
             {
                 FreeCameraManager.Instance.LeaveFreeCameraMode();
             }
 
-            var events = BUS_EventCollectionCS.Get(player.Pawn);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
             if (events != null)
             {
                 events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
                 events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
                 events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
             }
-        }, nameof(OnRebirthPlayer));
+        }, this, playerId);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnDamageNum(DamageNumParam damageNum)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        _ecsLoop.Scheduler.Schedule((_, damageNum0) =>
         {
             var uiEvt = BGW_UIEventCollection.Get(GameUtils.GetWorld());
-            uiEvt.Evt_UI_ShowHPChangeNum(damageNum);
-        }, nameof(OnDamageNum), BGW_TickGroupMask.TG_PreAnim);
+            uiEvt.Evt_UI_ShowHPChangeNum(damageNum0);
+        }, damageNum);
     }
 
-    [RpcEvent(RelayMode.All)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnTeleportFinish(PlayerId __sender)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
         {
-            var playerState = _playerRegistry.GetPlayerById(__sender);
-            if (playerState == null)
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
-                Logging.LogError("Player not found: {PlayerId}", __sender);
+                self._logger.LogError("Player not found: {PlayerId}", sender);
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(playerState.Pawn);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
             events?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportEnd, -1f);
             events?.Evt_TeleportFinish.Invoke();
-        }, nameof(OnTeleportFinish));
+        }, this, __sender);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     public void OnMontageCallback(MontageCallbackData data)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
         {
-            var id = data.NetId;
-            var pawn = _pawnRegistry.GetPawnByNetworkId(id);
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.NetId);
             if (pawn == null)
             {
-                Logging.LogNull(nameof(data.NetId));
+                self._logger.LogNullDebug(nameof(data0.NetId));
                 return;
             }
 
-            if (string.IsNullOrEmpty(data.MontagePath))
+            if (string.IsNullOrEmpty(data0.MontagePath))
             {
                 pawn.StopAnimMontage(null);
                 return;
             }
 
-            var fullMontagePath = data.Compressed ? Compressors.MontageNameCompressor.Decompress(data.MontagePath) : data.MontagePath;
+            var fullMontagePath = data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.MontagePath) : data0.MontagePath;
 
             var animInstance = pawn.Mesh.GetAnimInstance();
             if (animInstance == null)
             {
-                Logging.LogError("AnimInstance is null");
+                self._logger.LogError("AnimInstance is null");
                 return;
             }
 
             var currentMontage = animInstance.GetCurrentActiveMontage();
 
             // if the same montage is currently playing an no reset flag is given, do not play new montage
-            if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data.Reset)
+            if (currentMontage != null && currentMontage.PathName == fullMontagePath && !data0.Reset)
             {
                 return;
             }
@@ -403,7 +495,10 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (montage == null)
             {
-                Logging.LogWarning("Montage not found: {Montage}", fullMontagePath);
+                if (!fullMontagePath.Contains("Engine/Transient.AnimMontage"))
+                {
+                    self._logger.LogWarning("Montage not found: {Montage}", fullMontagePath);
+                }
                 return;
             }
 
@@ -411,225 +506,261 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (events == null)
             {
-                Logging.LogError("events are null");
+                self._logger.LogError("events are null");
                 return;
             }
 
-            animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data.Position);
+            animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data0.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
-        }, nameof(OnMontageCallback));
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitDead(UnitDeadPacket data)
     {
-        GameLoopPatch.QueueOnGameThread(() =>
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
         {
-            var pawn = _pawnRegistry.GetPawnByNetworkId(data.NetworkId);
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.NetworkId);
             if (pawn == null)
             {
-                Logging.LogNull(nameof(data.NetworkId));
+                self._logger.LogNullDebug(nameof(data0.NetworkId));
                 return;
             }
 
             var events = BUS_EventCollectionCS.Get(pawn);
             if (events == null)
             {
-                Logging.LogError("Failed to get event collection for unit {Unit}", pawn.GetName());
+                self._logger.LogError("Failed to get event collection for unit {Unit}", pawn.GetName());
                 return;
             }
 
-            Logging.LogDebug("OnUnitDead for unit {Unit}", pawn.GetName());
-            events.Evt_UnitDead.Invoke(GameUtils.GetControlledPawn(), data.DeadReason, data.DmgId, data.StiffLevel, null, default, data.IsDotDmg, data.AbnormalType);
-        }, nameof(OnUnitDead));
+            self._logger.LogDebug("OnUnitDead for unit {Unit}", pawn.GetName());
+            events.Evt_UnitDead.Invoke(GameUtils.GetControlledPawn(), data0.DeadReason, data0.DmgId, data0.StiffLevel, null, default, data0.IsDotDmg, data0.AbnormalType);
+        }, this, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnWaitingForSequence(PlayerId __sender, SequenceWaitingData data)
     {
-        CutsceneUtils.SetWaitingForCutsceneStatus(__sender, data);
+        _ecsLoop.Scheduler.Schedule((_, sender, data0) =>
+        {
+            CutsceneUtils.SetWaitingForCutsceneStatus(sender, data0);
+        }, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnIronBodyStart(PlayerId __sender)
     {
-        var player = _playerRegistry.GetPlayerById(__sender);
-        if (player == null)
+        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
         {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-
-        if (player.Pawn == null)
-        {
-            Logging.LogError("Player pawn is null for player {Id}", __sender);
-            return;
-        }
-
-        IronBodyUtils.TriggerIronBody(player.Pawn);
-    }
-
-    [RpcEvent(RelayMode.Master)]
-    void OnUnitSpawned(PlayerId __sender, NetworkIdComponent netEntity)
-    {
-        Logging.LogDebug("OnUnitSpawned called for player {PlayerId} with entity {Entity}", __sender, netEntity);
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
-        {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-
-        if (_entityManager.TryGetEntityByNetworkId(netEntity, out var entity))
-        {
-            TamerUtils.AddSpawnedUnit(player.PlayerId, entity.Value);
-        }
-    }
-
-    [RpcEvent(RelayMode.Master)]
-    void OnUnitDespawn(PlayerId __sender, NetworkIdComponent netEntity)
-    {
-        Logging.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", __sender, netEntity);
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
-        {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-
-        if (_entityManager.TryGetEntityByNetworkId(netEntity, out var entity))
-        {
-            TamerUtils.SubtractSpawnedUnit(player.PlayerId, entity.Value);
-        }
-    }
-
-    [RpcEvent(RelayMode.Others)]
-    void OnTamerSkillInteract(SkillInteractData interactData)
-    {
-        if (DI.Instance.NetManager.TryGetEntityByNetworkId(interactData.InteractiveId, out var entity))
-        {
-            if (entity.HasValue)
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
-                TamerUtils.TriggerSkillInteract(entity.Value, interactData.SkillId);
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
             }
-        }
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            IronBodyUtils.TriggerIronBody(localMainComp.Pawn);
+        }, this, __sender);
     }
 
-    [RpcEvent(RelayMode.Others)]
-    void OnTriggerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
+    [RpcEvent(RelayMode.EntityOwner)]
+    private void OnUnitSpawned(PlayerId __sender, NetworkId netId)
     {
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
+        _ecsLoop.Scheduler.Schedule((_, self, sender, netEntity0) =>
         {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-        if (player.Pawn == null)
-        {
-            Logging.LogError("Player pawn is null for player {Id}", __sender);
-            return;
-        }
+            self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity {Entity}", sender, netEntity0);
+            if (self._playerState.GetMainCharacterById(sender) == null)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
 
-        var fullConfigPath = data.Compressed ? Compressors.VigorNameCompressor.Decompress(data.ConfigAssetName) : data.ConfigAssetName;
-        Logging.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", player.NickName, fullConfigPath, data.SkillID, data.RecoverSkillID);
-        MagicallyChangeUtils.TriggerMagicallyChange(player.Pawn, fullConfigPath, data.SkillID, data.RecoverSkillID);
+            if (self._netEntity.TryGetEntityByNetworkId(netEntity0, out var entity))
+            {
+                TamerUtils.AddSpawnedUnitRefCount(sender, new TamerEntity(entity.Value));
+            }
+        }, this, __sender, netId);
     }
 
-    [RpcEvent(RelayMode.Others)]
-    void OnResetMagicallyChange(PlayerId __sender, EResetReason_MagicallyChange reason)
+    [RpcEvent(RelayMode.EntityOwner)]
+    private void OnUnitDespawn(PlayerId __sender, NetworkId netId)
     {
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
+        _ecsLoop.Scheduler.Schedule((_, self, sender, netEntity0) =>
         {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-        if (player.Pawn == null)
-        {
-            Logging.LogError("Player pawn is null for player {Id}", __sender);
-            return;
-        }
+            self._logger.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", sender, netEntity0);
+            if (self._playerState.GetMainCharacterById(sender) == null)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
 
-        Logging.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", player.NickName, reason);
-        MagicallyChangeUtils.ResetMagicallyChange(player.Pawn, reason);
+            if (self._netEntity.TryGetEntityByNetworkId(netEntity0, out var entity))
+            {
+                TamerUtils.SubtractSpawnedUnitRefCount(sender, new TamerEntity(entity.Value));
+            }
+        }, this, __sender, netId);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnTamerSkillInteract(SkillInteractData interactData)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, interactData0) =>
+        {
+            if (self._netEntity.TryGetEntityByNetworkId(interactData0.InteractiveId, out var entity))
+            {
+                TamerUtils.TriggerSkillInteract(entity.Value, interactData0.SkillId);
+            }
+        }, this, interactData);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnTriggerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+            
+            ref var mainComp = ref mainEntity.GetState();
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            var fullConfigPath = data0.Compressed ? Compressors.VigorNameCompressor.Decompress(data0.ConfigAssetName) : data0.ConfigAssetName;
+            self._logger.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", mainComp.CharacterNickName, fullConfigPath, data0.SkillID, data0.RecoverSkillID);
+            MagicallyChangeUtils.TriggerMagicallyChange(localMainComp.Pawn, fullConfigPath, data0.SkillID, data0.RecoverSkillID);
+        }, this, __sender, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnResetMagicallyChange(PlayerId __sender, EResetReason_MagicallyChange reason)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender, reason0) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+            
+            ref var mainComp = ref mainEntity.GetState();
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            self._logger.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", mainComp.CharacterNickName, reason0);
+            MagicallyChangeUtils.ResetMagicallyChange(localMainComp.Pawn, reason0);
+        }, this, __sender, reason);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileTarget(PlayerId __sender, ProjectileTargetData targetData)
     {
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
+        _ecsLoop.Scheduler.Schedule((_, self, sender, targetData0) =>
         {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-        if (player.Pawn == null)
-        {
-            Logging.LogError("Player pawn is null for player {Id}", __sender);
-            return;
-        }
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
 
-        var target = _pawnRegistry.GetPawnByNetworkId(targetData.Target);
-        if (target == null)
-        {
-            Logging.LogError("Target not found for netID: {NetID}", targetData.Target);
-            return;
-        }
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
 
-        ProjectileUtils.SetProjectileTarget(player.Pawn, targetData.ProjectileName, target, targetData.SocketName);
+            var target = self._pawnState.GetPawnByNetworkId(targetData0.Target);
+            if (target == null)
+            {
+                self._logger.LogNull(nameof(targetData0.Target));
+                return;
+            }
+
+            ProjectileUtils.SetProjectileTarget(localMainComp.Pawn, targetData0.ProjectileName, target, targetData0.SocketName);
+        }, this, __sender, targetData);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnSwitchOneProjectile(PlayerId __sender, ProjectileSwitchData switchData)
     {
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
+        _ecsLoop.Scheduler.Schedule((_, self, sender, switchData0) =>
         {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-        if (player.Pawn == null)
-        {
-            Logging.LogError("Player pawn is null for player {Id}", __sender);
-            return;
-        }
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
 
-        ProjectileUtils.SwitchProjectileInfo(player.Pawn, switchData.ProjectileClassName, switchData.BulletSwitchID, switchData.SwitchIdx);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            ProjectileUtils.SwitchProjectileInfo(localMainComp.Pawn, switchData0.ProjectileClassName, switchData0.BulletSwitchID, switchData0.SwitchIdx);
+        }, this, __sender, switchData);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileDead(PlayerId __sender, ProjectileDeadData data)
     {
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
         {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-        if (player.Pawn == null)
-        {
-            Logging.LogError("Player pawn is null for player {Id}", __sender);
-            return;
-        }
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
 
-        ProjectileUtils.DestroyProjectile(player.Pawn, data.ProjectileClassName, data.Reason);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            ProjectileUtils.DestroyProjectile(localMainComp.Pawn, data0.ProjectileClassName, data0.Reason);
+        }, this, __sender, data);
     }
 
-    [RpcEvent(RelayMode.Others)]
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileMoveMode(PlayerId __sender, ProjectileMoveModeData data)
     {
-        var player = DI.Instance.Players.GetPlayerById(__sender);
-        if (player == null)
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
         {
-            Logging.LogError("Player not found: {Id}", __sender);
-            return;
-        }
-        if (player.Pawn == null)
-        {
-            Logging.LogError("Player pawn is null for player {Id}", __sender);
-            return;
-        }
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
 
-        ProjectileUtils.SetProjectileModeMode(player.Pawn, data.ProjectileClassName, data.MoveMode);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            ProjectileUtils.SetProjectileModeMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
+        }, this, __sender, data);
     }
 }

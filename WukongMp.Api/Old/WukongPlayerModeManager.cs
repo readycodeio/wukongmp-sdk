@@ -1,21 +1,37 @@
-﻿using WukongMp.Api.Configuration;
-using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.State;
+﻿using ReadyM.Relay.Client.State;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Old;
 
-public class WukongPlayerModeManager(WukongPlayerRegistry playerRegistry, RoomStateProxy roomState)
+public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager)
 {
-    public void HandleBecameSpectator(PlayerState playerState)
+    public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
-        var isMyself = playerState.PlayerId == playerRegistry.LocalPlayerState.PlayerId;
+        if (isSpectator)
+            return HandleBecameSpectator(playerEntity, mainEntity);
+
+        return HandleStoppedBeingSpectator(playerEntity, mainEntity);
+    }
+
+    public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
+    {
+        ref var mainComp = ref mainEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
+        var isMyself = mainComp.PlayerId == state.LocalPlayerId;
+
+        var isHidden = localMainComp.Pawn?.Hidden == true;
+        if (isHidden)
+            return false;
 
         if (isMyself)
             UIUtils.SetHudVisibility(false);
 
-        SetPlayerVisibility(playerState, false);
+        SetPlayerVisibility(playerEntity, mainEntity, false);
 
         if (isMyself)
         {
@@ -23,86 +39,100 @@ public class WukongPlayerModeManager(WukongPlayerRegistry playerRegistry, RoomSt
             PvPUtils.SetupSpectatorUi();
         }
 
-        UpdatePlayerTeamUi(playerState);
+        widgetManager.UpdatePlayerTeam(playerEntity);
+        return true;
     }
 
-    public void HandleStoppedBeingSpectator(PlayerState playerState)
+    public bool HandleStoppedBeingSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
-        var isMyself = playerState.PlayerId == playerRegistry.LocalPlayerState.PlayerId;
+        ref var mainComp = ref mainEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
+
+        var isMyself = mainComp.PlayerId == state.LocalPlayerId;
+
+        var isVisible = localMainComp.Pawn?.Hidden == false;
+        if (isVisible)
+            return false;
 
         if (isMyself)
             UIUtils.SetHudVisibility(true);
 
-        SetPlayerVisibility(playerState, true);
+        SetPlayerVisibility(playerEntity, mainEntity, true);
 
         if (isMyself)
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
-            if (roomState.InMatchmaking)
+
+            var areaEntity = areaState.CurrentArea;
+            if (areaEntity != null)
             {
-                PvPUtils.SetupMatchmakingUi();
-            }
-            else if (!roomState.InPvP)
-            {
-                PvPUtils.SetupLobbyUi();
-            }
-            else
-            {
-                LobbyStatusWidget.Instance.SetVisibility(false);
-                CoopStatusWidget.Instance.SetVisibility(false);
+                ref var room = ref areaEntity.Value.GetRoom();
+
+                if (room.InMatchmaking)
+                {
+                    PvPUtils.SetupMatchmakingUi();
+                }
+                else if (!room.InPvP)
+                {
+                    PvPUtils.SetupLobbyUi();
+                }
+                else
+                {
+                    LobbyStatusWidget.Instance.SetVisibility(false);
+                    CoopStatusWidget.Instance.SetVisibility(false);
+                }
             }
         }
 
-        UpdatePlayerTeamUi(playerState);
+        widgetManager.UpdatePlayerTeam(playerEntity);
+
+        return true;
     }
 
-    public void SetPlayerVisibility(PlayerState playerState, bool visible)
+    public bool SetPlayerVisibility(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool visible)
     {
-        Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerState.NickName, visible);
+        ref var localMainComp = ref mainEntity.GetLocalState();
+        ref var playerComp = ref playerEntity.GetState();
 
-        if (playerState.Pawn == null)
+        var isVisible = localMainComp.Pawn?.Hidden == false;
+        if (isVisible == visible)
+            return false;
+
+        Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerComp.NickName, visible);
+
+        if (localMainComp.Pawn == null)
         {
             Logging.LogError("Player pawn is null");
-            return;
+            return false;
         }
 
-        playerState.Pawn.SetActorHiddenInGame(!visible);
-        playerState.MarkerActor?.SetActorHiddenInGame(!visible);
-    }
-    
-    public void UpdatePlayerTeam(PlayerState playerState, int teamId)
-    {
-        Logging.LogDebug("Updating player {Nickname} to team {Team}", playerState.NickName, teamId);
-
-        var player = playerState.Pawn;
-
-        if (player == null)
-        {
-            Logging.LogError("Failed to cast pawn to BGUCharacterCS");
-            return;
-        }
-
-        ClientUtils.RegisterNewPlayerTeam(player, teamId);
-
-        if (playerState.MarkerActor != null)
-        {
-            var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(playerState.TeamId);
-            playerState.MarkerActor.CallFunctionByNameWithArguments($"SetText {playerState.NickName} {teamColor}", true);
-        }
-
-        UpdatePlayerTeamUi(playerState);
+        localMainComp.Pawn.SetActorHiddenInGame(!visible);
+        localMainComp.MarkerActor?.SetActorHiddenInGame(!visible);
+        return true;
     }
 
-    public void UpdatePlayerTeamUi(PlayerState playerState)
+    public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
-        if (Constants.IsCoop)
+        ref var playerComp = ref playerEntity.GetState();
+        ref var mainComp = ref mainEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
+        ref readonly var teamComp = ref mainEntity.GetTeam();
+
+        Logging.LogDebug("Updating player {Nickname} to team {Team}", playerComp.NickName, teamComp.TeamId);
+
+        var pawn = localMainComp.Pawn;
+
+        if (pawn == null)
+            return;
+
+        ClientUtils.RegisterAndSetPlayerTeam(pawn, teamComp.TeamId);
+
+        if (localMainComp.MarkerActor != null)
         {
-            CoopStatusWidget.Instance.RemovePlayer(playerState.NickName);
-            CoopStatusWidget.Instance.AddPlayer(playerState.NickName);
+            var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(teamComp.TeamId);
+            localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
         }
-        else
-        {
-            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerState.NickName, playerState.TeamId, playerState.IsSpectator);
-        }
+
+        widgetManager.UpdatePlayerTeam(playerEntity);
     }
 }

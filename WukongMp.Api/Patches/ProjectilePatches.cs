@@ -1,12 +1,12 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Relay.Common.ECS;
-using System.Collections.Generic;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using System.Reflection;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.Patches;
 
@@ -21,10 +21,12 @@ public class PatchOnSwitchBulletTarget
 
     public static bool Prefix(UActorCompBaseCS __instance, BGUProjectileBaseActor? ProjectileActor, AActor? InnerTarget, string SocketName = "")
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var players = DI.Instance.Players;
+        if (DI.Instance.PlayerState.LocalMainCharacter == null)
+            return true;
+
         var owner = __instance?.GetOwner();
         if (owner.IsNullOrDestroyed())
         {
@@ -37,28 +39,33 @@ public class PatchOnSwitchBulletTarget
             return true;
         }
 
-        if (owner == players.LocalPlayerState.Pawn)
+        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
         {
-            var newTargetId = default(NetworkIdComponent);
+            var newTargetId = default(NetworkId);
             if (InnerTarget is BGUPlayerCharacterCS)
             {
-                var playerState = players.GetPlayerByActor(InnerTarget);
-                if (playerState == null)
+                var mainCharacterEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(InnerTarget);
+
+                if (mainCharacterEntity == null)
                 {
-                    Logging.LogError("Player state not found for actor: {ActorName}", InnerTarget.GetName());
+                    Logging.LogError("Player character entity not found for actor: {ActorName}", InnerTarget.GetName());
                     return false;
                 }
-                newTargetId = NetworkIdComponent.FromPlayerId(playerState.PlayerId);
+                newTargetId = mainCharacterEntity.Value.GetMeta().NetId;
             }
             else
             {
-                var entity = DI.Instance.PawnRegistry.GetMonsterByActor(InnerTarget);
-                if (entity.HasValue)
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(InnerTarget);
+                if (tamerEntity.HasValue)
                 {
-                    newTargetId = entity.Value.GetComponent<NetworkIdComponent>();
+                    newTargetId = tamerEntity.Value.GetMeta().NetId;
+                }
+                else
+                {
+                    Logging.LogError("Could not find tamer entity for projectile target");
                 }
             }
-            Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", ProjectileActor.GetClass().GetName(), players.LocalPlayerState.NickName, InnerTarget.GetName());
+            Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", ProjectileActor.GetClass().GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, InnerTarget.GetName());
             DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(ProjectileActor.GetClass().GetName(), newTargetId, SocketName));
             return true;
         }
@@ -77,10 +84,12 @@ public class PatchOnSwitchBulletInfoIfNeed
 
     public static bool Prefix(UActorCompBaseCS __instance, BGUProjectileBaseActor? ProjectileActor, int BulletSwitchID, int SwitchIdx)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var players = DI.Instance.Players;
+        if (DI.Instance.PlayerState.LocalMainCharacter == null)
+            return true;
+
         var owner = __instance?.GetOwner();
         if (owner.IsNullOrDestroyed())
         {
@@ -93,9 +102,9 @@ public class PatchOnSwitchBulletInfoIfNeed
             return true;
         }
 
-        if (owner == players.LocalPlayerState.Pawn)
+        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
         {
-            Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", ProjectileActor.GetClass().GetName(), players.LocalPlayerState.NickName, BulletSwitchID);
+            Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", ProjectileActor.GetClass().GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, BulletSwitchID);
             DI.Instance.Rpc.SendSwitchOneProjectile(new ProjectileSwitchData(ProjectileActor.GetClass().GetName(), BulletSwitchID, SwitchIdx));
             return true;
         }
@@ -109,13 +118,15 @@ public static class PatchOnProjectileDead
 {
     public static void Postfix(BUS_ProjectileLifeComp __instance, IBUC_MasterData ___MasterData, EBGUBulletDestroyReason Reason)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var players = DI.Instance.Players;
+        if (DI.Instance.PlayerState.LocalMainCharacter == null)
+            return;
+
         var master = ___MasterData.GetMasterActor();
         var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
-        if (projectile != null && players.LocalPlayerState.Pawn == master)
+        if (projectile != null && DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
         {
             Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
             DI.Instance.Rpc.SendProjectileDead(new ProjectileDeadData(projectile.GetClass().GetName(), Reason));
@@ -129,7 +140,7 @@ public static class PatchOnSetMoveMode
 {
     public static void Postfix(BUS_ObjActorMovementComp __instance, EBulletOrMagicFieldMoveModeType MoveMode)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return;
 
         var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
@@ -144,12 +155,14 @@ public static class PatchOnSetMoveMode
             return;
         }
 
-        var players = DI.Instance.Players;
+        if (DI.Instance.PlayerState.LocalMainCharacter == null)
+            return;
+
         var master = masterData.GetMasterActor();
 
-        if (players.LocalPlayerState.Pawn == master)
+        if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
         {
-            Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectile.GetClass().GetName(), players.LocalPlayerState.NickName, MoveMode);
+            Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectile.GetClass().GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, MoveMode);
             DI.Instance.Rpc.SendProjectileMoveMode(new ProjectileMoveModeData(projectile.GetClass().GetName(), MoveMode));
         }
     }
@@ -161,7 +174,7 @@ public static class PatchApplyBySkill_Implement
 {
     public static bool Prefix(int EffectID, AActor? Caster, AActor? Target)
     {
-        if (!DI.Instance.RelayClient.InRoom)
+        if (!DI.Instance.AreaState.InRoom)
             return true;
 
         BGUBulletBaseCS? bGUBulletBaseCS = Target as BGUBulletBaseCS;
@@ -176,9 +189,10 @@ public static class PatchApplyBySkill_Implement
         }
         AActor masterActor = readOnlyData.GetMasterActor();
 
-        var players = DI.Instance.Players;
+        if (DI.Instance.PlayerState.LocalMainCharacter == null)
+            return true;
 
-        if (masterActor is BGUPlayerCharacterCS && players.LocalPlayerState.Pawn != masterActor)
+        if (masterActor is BGUPlayerCharacterCS && masterActor != DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
         {
             Logging.LogDebug("Skipping BUEffectBulletSwitchSelf ApplyBySkill_Implement called for non local player");
             return false;

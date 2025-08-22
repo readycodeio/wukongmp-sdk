@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>preview</LangVersion>
+        <LangVersion>13</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
@@ -15,6 +15,7 @@
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <Platforms>AnyCPU</Platforms>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     
     <ItemGroup>
@@ -160,14 +161,15 @@
         <PackageReference Include="System.Text.Encodings.Web" Version="9.0.6" />
         <PackageReference Include="System.Text.Json" Version="9.0.6" />
         <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+        <PackageReference Include="Nito.AsyncEx.Context" Version="5.1.2" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\readym-gameserver\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj" />
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj" />
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj" />
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Wukong\ReadyM.Relay.Common.Wukong.csproj" />
-        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Relay.Common.Generators\ReadyM.Relay.Common.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>
 
     <ItemGroup>

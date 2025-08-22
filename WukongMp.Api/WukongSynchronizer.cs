@@ -1,430 +1,131 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Reflection;
-using b1;
-using BtlShare;
-using CSharpModBase;
+﻿using b1;
+using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api;
-using ReadyM.Api.Multiplayer;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Managers;
+using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common;
-using ReadyM.Relay.Common.Wukong;
-using UnrealEngine.Runtime;
-using WukongMp.Api.Configuration;
+using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Common.ECS.Archetypes;
+using ReadyM.Relay.Common.ECS.Jobs;
+using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
+using WukongMp.Api.ECS.Systems.MainCharacters;
+using WukongMp.Api.ECS.Systems.Tamers;
 using WukongMp.Api.Old;
-using WukongMp.Api.Old.Api;
-using WukongMp.Api.Old.State;
-using WukongMp.Api.Patches;
+using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongSynchronizer : NetworkedStateSynchronizer, IDisposable
+public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 {
-    private readonly RoomStateProxy _roomState;
-    private readonly WukongPlayerRegistry _playerRegistry;
-    private readonly WukongPlayerPropertyManager _playerProperty;
-    private readonly WukongPlayerModeManager _modeManager;
-    private readonly WukongPlayerPawnManager _playerPawnManager;
-    private readonly WukongRpcCallbacks _rpc;
-    private ArchetypeId _roomConfigArchetype;
-    
+    private readonly WukongAreaState _areaState;
+    private readonly SystemGroup _syncGroup;
+    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
+    private readonly ClientState _state;
+
     public WukongSynchronizer(
+        ArchetypeEventRouter archetypeEvent,
+        ClientState state,
+        ClientWukongArchetypeRegistration wukongArchetype,
+        DefaultPlayerArchetypeRegistration playerArchetype,
         Store world,
-        RoomStateProxy roomState,
-        WukongPlayerRegistry playerRegistry,
-        WukongPlayerPropertyManager playerProperty,
+        WukongAreaState areaState,
+        WukongPlayerState playerState,
+        WukongPlayerPawnState playerPawnState,
         WukongPlayerModeManager modeManager,
-        WukongPlayerPawnManager playerPawnManager,
-        WukongRpcCallbacks rpc,
         NetworkedEntityManager netManager,
+        ClientOwnershipManager clientOwnership,
+        JobRegistry jobRegistry,
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
-        SystemUpdateLoop updateLoop,
-        ISystemRegistry systemRegistry,
+        IClientEcsUpdateLoop ecsLoop,
+        WukongEventBus eventBus,
+        WukongWidgetManager widgetManager,
         ILogger logger)
-        : base(world, netManager, netComponentRegistry, relayClient, updateLoop, logger)
+        : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
     {
-        _roomState = roomState;
-        _playerRegistry = playerRegistry;
-        _playerProperty = playerProperty;
-        _modeManager = modeManager;
-        _playerPawnManager = playerPawnManager;
-        _rpc = rpc;
-        _roomConfigArchetype = systemRegistry.RegisterArchetype(WukongCoreApi.RegisterRoomConfigArchetype);
+        _areaState = areaState;
+        _wukongArchetype = wukongArchetype;
+        _state = state;
 
-        systemRegistry.AddSystem<SyncTamersSystem>();
-        systemRegistry.AddSystem<UpdateMarkersSystem>();
-        systemRegistry.AddSystem<DestroyDeadMonstersMarkersSystem>();
-        systemRegistry.AddSystem(new SyncMonstersSystem(RelayClient));
-        systemRegistry.AddSystem<ScaleMonsterHpSystem>();
-        systemRegistry.AddSystem<SyncMonsterTeamSystem>();
+        State.OnJoinedArea += OnJoinedAreaHandler;
+
+        _syncGroup = new SystemGroup("Sync");
+
+        _syncGroup.Add(new SpawnTamersSystem(state));
+        _syncGroup.Add(new DespawnDeadTamerMarkersSystem());
+        _syncGroup.Add(new SyncTamersSystem());
+        _syncGroup.Add(new UpdateTamerMarkersSystem());
+        _syncGroup.Add(new ScaleMonsterHpSystem());
+        _syncGroup.Add(new SyncMonsterTeamSystem());
+
+        _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
+        _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState, Logger));
+        _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, Logger));
+        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerArchetype, playerPawnState, ecsLoop, widgetManager, world, eventBus, Logger));
+        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
+
+        _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));
+
+        _syncGroup.SetMonitorPerf(true);
+        EcsLoop.AddSystem(_syncGroup);
     }
 
-    [Obsolete("Ideally we should just be able to get rid of this entirely")]
-    public void Refresh()
+    protected override void OnDispose()
     {
-        if (!IsRunning)
+        State.OnJoinedArea -= OnJoinedAreaHandler;
+
+        EcsLoop.RemoveSystem(_syncGroup);
+        base.OnDispose();
+    }
+
+    protected override void OnOwnershipChanged(Entity entity)
+    {
+        var meta = entity.GetComponent<MetadataComponent>();
+        if (meta.Archetype != _wukongArchetype.MonsterArchetype)
             return;
 
-        // NOTE: This shouldn't depend on _roomState.InMatchmaking
-        if (!_roomState.InMatchmaking && _playerRegistry.LocalPlayerState.IsSpectator)
-        {
-            _modeManager.HandleBecameSpectator(_playerRegistry.LocalPlayerState); // TODO: Called twice?
-        }
+        // if we are now the owner of a monster, we must re-enable its AI
+        var localTamerComp = entity.GetComponent<LocalTamerComponent>();
 
-        _modeManager.UpdatePlayerTeamUi(_playerRegistry.LocalPlayerState);
-    }
-
-    protected override void RunOnGameThread(Action action)
-    {
-        GameLoopPatch.QueueOnGameThread(action);
-    }
-    
-    private void SpawnPlayersAlreadyInRoom()
-    {
-        // when joining game, spawn all players already in room
-        foreach (var d in RelayClient.OtherPlayers)
-        {
-            Logging.LogDebug("Other player: {PlayerId}", d.Key);
-            GameLoopPatch.QueueOnGameThread(() => AddPlayer(d.Value.PlayerId), "AddPlayer");
-        }
-    }
-    
-    private void AddPlayer(PlayerId playerId)
-    {
-        var playerState = _playerPawnManager.AddPlayerPawn(playerId);
-
-        if (playerState != null)
-        {
-            var props = RelayClient.GetPlayerState(playerId)?.Properties;
-
-            if (props == null)
-            {
-                Logging.LogError("Player properties are null");
-                return;
-            }
-
-            // set IsSpectator if client should be (joining during fight)
-            var isSpectator = playerState.IsSpectator;
-
-            // set remote player property - IsSpectator
-            if (RelayClient.IsMasterClient)
-            {
-                _playerProperty.SetRemotePlayerProperty(playerId, nameof(PlayerState.IsSpectator), isSpectator);
-            }
-
-            _modeManager.UpdatePlayerTeamUi(playerState);
-        }
-    }
-
-    private void ChangeEquipment(PlayerId playerId, EquipmentState eq)
-    {
-        if (playerId == _playerRegistry.LocalPlayerState.PlayerId)
+        if (!localTamerComp.IsMonsterSynced)
             return;
 
-        if (!_playerRegistry.ConnectedPlayers.TryGetValue(playerId, out var player))
+        if (localTamerComp.Tamer == null)
         {
-            Logging.LogError("Player not found: {PlayerId}", playerId);
+            Logging.LogError("LocalTamerComponent.Tamer is null for entity {EntityId}", meta.NetId);
             return;
         }
 
-        if (player.Pawn == null)
+        var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
+        if (events == null)
         {
+            Logging.LogError("events are null");
             return;
         }
 
-        EquipmentHelpers.SetRemoteActorEquipment(player.Pawn, eq);
+        if (meta.Owner == _state.LocalPlayerId)
+        {
+            events.Evt_AIPerceptionSetting.Invoke(true);
+            events.Evt_AIPauseBT.Invoke(false);
+            Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+        }
     }
 
-    private static readonly Dictionary<string, Action<PlayerState, object>> PlayerSetters = new();
-
-    private static Action<T, object> CreateSetter<T>(string propertyName)
+    private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
-        var property = typeof(T).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
-        if (property == null)
-            throw new InvalidOperationException($"Property '{propertyName}' not found on {typeof(T).Name}.");
-
-        // Create the lambda (T state, object value) => state.Property = (T)value;
-        var stateParam = Expression.Parameter(typeof(T), "state");
-        var valueParam = Expression.Parameter(typeof(object), "value");
-
-        // Cast value to the correct type
-        var convertedValue = Expression.Convert(valueParam, property.PropertyType);
-
-        // Build the assignment: state.Property = (T)value;
-        var body = Expression.Assign(Expression.Property(stateParam, property), convertedValue);
-
-        // Compile the lambda expression
-        return Expression.Lambda<Action<T, object>>(body, stateParam, valueParam).Compile();
-    }
-    
-    private void SetPlayerProperties()
-    {
-        var player = GameUtils.GetControlledPawn();
-
-        if (player == null)
+        if (_areaState.IsMasterClient)
         {
-            Logging.LogError("Failed to get controlled pawn");
-            return;
-        }
-
-        Logging.LogDebug("Setting initial player properties");
-
-        _playerProperty.CachePlayerProperty(nameof(PlayerState.Location), player.GetActorLocation());
-        _playerProperty.CachePlayerProperty(nameof(PlayerState.Rotation), player.GetActorRotation());
-
-        // nickname
-        var nickname = CmdLineParams.Instance.Nickname;
-        _playerProperty.CachePlayerProperty(nameof(PlayerState.NickName), nickname);
-
-        // equipment
-        var eq = EquipmentHelpers.GetCurrentEquipmentStateForActor(player);
-        _playerProperty.CachePlayerProperty(nameof(PlayerState.Equipment), eq);
-
-        // attributes
-        var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(player);
-        foreach (var attr in Constants.SyncedAttributes)
-        {
-            var value = attrs.GetFloatValue(attr);
-            _playerProperty.CachePlayerAttribute(attr, value);
-        }
-
-        // hp
-        var hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-        _playerProperty.CachePlayerProperty(nameof(PlayerState.Hp), hp);
-
-        _playerProperty.SetCachedPlayerProperties();
-        Logging.LogDebug("Finished setting initial player properties");
-    }
-    
-    public void UpdatePlayer(PlayerState playerState, float deltaTime)
-    {
-        playerState.UpdateMarkerPosition();
-
-        if (playerState.TeleportFinishFrames >= 0)
-        {
-            if (playerState.TeleportFinishFrames == 0)
-            {
-                _rpc.SendTeleportFinish();
-            }
-
-            playerState.TeleportFinishFrames--;
+            TamerUtils.DiscoverTamers();
         }
     }
-    
-    #region Event handlers
-    
-    protected override void OnPlayerPropertiesChangedHandler(PlayerId playerId, Dictionary<object, object?> changes)
-    {
-        base.OnPlayerPropertiesChangedHandler(playerId, changes);
-        
-        PlayerState playerState;
-
-        if (playerId == RelayClient.LocalPlayer.PlayerId) // local player
-        {
-            if (!_playerRegistry.HasLocalPlayerState)
-            {
-                Logging.LogWarning("Local player state is null.");
-                return;
-            }
-
-            playerState = _playerRegistry.LocalPlayerState;
-        }
-        else if (!_playerRegistry.ConnectedPlayers.TryGetValue(playerId, out playerState))
-        {
-            return;
-        }
-
-        foreach (var kvp in changes)
-        {
-            if (kvp.Value == null)
-                continue; // we don't really handle property removal
-
-            if (kvp.Key is not string propertyName)
-            {
-                // ignore system properties
-                continue;
-            }
-
-            // attributes have special treatment
-            if (propertyName.StartsWith(Constants.AttributePrefix))
-            {
-                var key = propertyName[Constants.AttributePrefix.Length..];
-
-                if (!Enum.TryParse<EBGUAttrFloat>(key, out var attr))
-                    throw new InvalidOperationException($"Failed to parse attribute key: {key}");
-
-                playerState.Attributes[attr] = (float)kvp.Value;
-                continue;
-            }
-
-            if (!PlayerSetters.TryGetValue(propertyName, out var setter))
-            {
-                setter = CreateSetter<PlayerState>(propertyName);
-                PlayerSetters[propertyName] = setter;
-            }
-
-            setter(playerState, kvp.Value);
-
-            // special handlers for some properties
-            switch (propertyName)
-            {
-                case nameof(PlayerState.Equipment):
-                {
-                    var eq = (EquipmentState)kvp.Value;
-                    GameLoopPatch.QueueOnGameThread(() => ChangeEquipment(playerId, eq), "ChangeEquipment");
-                    break;
-                }
-                case nameof(PlayerState.TeamId):
-                {
-                    var teamId = (int)kvp.Value;
-                    GameLoopPatch.QueueOnGameThread(() => _modeManager.UpdatePlayerTeam(playerState, teamId));
-                    break;
-                }
-                case nameof(PlayerState.IsSpectator):
-                {
-                    var isSpectator = (bool)kvp.Value;
-                    Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
-
-                    Utils.TryRunOnGameThread(() =>
-                    {
-                        if (isSpectator)
-                        {
-                            _modeManager.HandleBecameSpectator(playerState);
-                        }
-                        else
-                        {
-                            _modeManager.HandleStoppedBeingSpectator(playerState);
-                        }
-                    });
-
-                    break;
-                }
-            }
-        }
-    }
-    
-    protected override void OnBeforeJoinedRoomHandler()
-    {
-        Logging.LogInformation("Synchronizer before joined room");
-        
-        int? teamId = null;
-        if (RelayClient.LocalPlayer.Properties.TryGetValue(nameof(PlayerState.TeamId), out var teamIdUntyped))
-            teamId = (int)teamIdUntyped;
-        
-        var controlledPawn = GameUtils.GetControlledPawn();
-
-        if (controlledPawn.IsNullOrDestroyed())
-        {
-            Logging.LogError("Controlled pawn is null or destroyed.");
-            return;
-        }
-
-        var data = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(controlledPawn);
-        var initialHp = data.GetFloatValue(EBGUAttrFloat.Hp);
-        var initialHpMaxBase = data.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-
-        _playerRegistry.LocalPlayerState = new PlayerState(RelayClient.PlayerId, controlledPawn, teamId, initialHp, initialHpMaxBase);
-
-        // get nickname from Relay
-        var playerNickname = (string)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.NickName), CmdLineParams.Instance.Nickname);
-        _playerRegistry.LocalPlayerState.NickName = playerNickname;
-
-        _playerRegistry.LocalPlayerState.IsSpectator = (bool)RelayClient.LocalPlayer.Properties.GetValueOrDefault(nameof(PlayerState.IsSpectator), false);
-
-        SpawnPlayersAlreadyInRoom();
-        _playerPawnManager.UpdateConnectedCount();
-        
-        // FIXME: Move to PVP
-        if (!Constants.IsCoop)
-        {
-            var player = GameUtils.GetControlledPawn();
-            SkillsUtils.DisableVigorSkill(player);
-            SkillsUtils.DisableFaBaoSkill(player);
-        }
-#if TESTING
-        BUC_SpeedCtrlData? speedCtrlData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_SpeedCtrlData, BUC_SpeedCtrlData>(GameUtils.GetControlledPawn()) as BUC_SpeedCtrlData;
-        speedCtrlData?.SetSpeedInfo(10000, 10000, 10000);
-#endif
-        
-        // FIXME: Move to PVP
-        LobbyStatusWidget.Instance.SetMaxConnectedCount(_roomState.MaxPlayers);
-        
-        // FIXME: Move to Coop
-        // TODO: _roomState.MaxPlayers is not set in co-op
-        CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        
-        base.OnBeforeJoinedRoomHandler();
-    }
-
-    protected override void OnAfterJoinedRoomHandler(Dictionary<object, object> initialState)
-    {
-        Logging.LogInformation("Synchronizer after joined room");
-        base.OnAfterJoinedRoomHandler(initialState);
-    }
-
-    protected override void OnOtherPlayerJoinedHandler(PlayerId playerId, Dictionary<object, object> initialState)
-    {
-        base.OnOtherPlayerJoinedHandler(playerId, initialState);
-        
-        Logging.LogInformation("Player {PlayerId} entered the room", playerId);
-        
-        GameLoopPatch.QueueOnGameThread(() => AddPlayer(playerId), "AddPlayer");
-    }
-    
-    protected override void OnOtherPlayerLeftHandler(PlayerId playerId)
-    {
-        base.OnOtherPlayerLeftHandler(playerId);
-        
-        var player = RelayClient.GetPlayerState(playerId)!;
-        var nickname = (string)player.Properties.GetValueOrDefault(nameof(PlayerState.NickName), "Player");
-
-        Logging.LogInformation("Player {Nickname} ({PlayerId}) left the room", nickname, playerId);
-
-        if (_playerRegistry.ConnectedPlayers.Remove(playerId, out var playerState))
-        {
-            GameLoopPatch.QueueOnGameThread(() => _playerPawnManager.RemovePlayerPawn(playerState));
-        }
-        else
-        {
-            Logging.LogWarning("Player {Id} not in ConnectedPlayers.", playerId);
-        }
-    }
-    
-    protected override void OnEnterRoomRequest()
-    {
-        base.OnEnterRoomRequest();
-        
-        SetPlayerProperties();
-    }
-    
-    protected override void OnExitRoomRequest()
-    {
-        base.OnExitRoomRequest();
-        
-        Logging.LogInformation("Exit room callback...");
-
-        // clear the chat window
-        ChatWidget.Instance.ClearMessages();
-
-        // destroy all connected players
-        foreach (var player in _playerRegistry.ConnectedPlayers.Values)
-        {
-            _playerPawnManager.RemovePlayerPawn(player);
-        }
-
-        // clear state
-        _playerRegistry.ConnectedPlayers.Clear();
-        Utils.TryRunOnGameThread(TamerUtils.ClearEcsMonsters);
-        _playerRegistry.ResetLocalPlayer();
-
-        Logging.LogInformation("Exited.");
-    }
-    
-    #endregion
 }

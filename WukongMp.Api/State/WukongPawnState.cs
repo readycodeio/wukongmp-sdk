@@ -1,0 +1,139 @@
+﻿using b1;
+using Friflo.Engine.ECS;
+using Microsoft.Extensions.Logging;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Engine;
+using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
+
+namespace WukongMp.Api.State;
+
+public class WukongPawnState
+{
+    private readonly Store _world;
+    private readonly ClientNetworkedEntityState _netEntity;
+    private readonly ILogger _logger;
+    
+    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
+
+    public WukongPawnState(
+        Store world, 
+        ClientWukongArchetypeRegistration wukongArchetype, 
+        ClientNetworkedEntityState netEntity,
+        ILogger logger)
+    {
+        _world = world;
+        _netEntity = netEntity;
+        _logger = logger;
+
+        _wukongArchetype = wukongArchetype;
+    }
+    
+    public Entity CreateNetworkedMonster(LocalTamerComponent localTamer, TamerComponent tamer, TeamComponent team)
+    {
+        var (entity, netId) = _netEntity.CreateNetworkedAreaEntity(_wukongArchetype.MonsterArchetype, b =>
+        {
+            b.Add(localTamer);
+            b.Add(tamer);
+            b.Add(team);
+        });
+        Logging.LogDebug("Creating local networked monster with {NetId}", netId);
+        return entity;
+    }
+
+    public BGUCharacterCS? GetPawnByNetworkId(NetworkId netId)
+    {
+        if (!_netEntity.TryGetEntityByNetworkId(netId, out var entity))
+            return null;
+        
+        if (entity.Value.TryGetComponent<LocalTamerComponent>(out var localTamer))
+            return localTamer.Pawn;
+
+        if (entity.Value.TryGetComponent<LocalMainCharacterComponent>(out var localMain))
+            return localMain.Pawn;
+
+        return null;
+    }
+
+    public TamerEntity? GetEntityByTamerMonster(AActor? actor)
+    {
+        if (actor == null)
+            return null;
+
+        TamerEntity? result = null;
+
+        var query = _world.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
+        {
+            if (localTamerComp.Pawn == actor)
+            {
+                result = new TamerEntity(entity);
+            }
+        });
+
+        return result;
+    }
+
+    public TamerEntity? GetEntityByTamerGuid(string guid)
+    {
+        TamerEntity? result = null;
+
+        var query = _world.Query<TamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref TamerComponent tamerComp, Entity entity) =>
+        {
+            if (tamerComp.Guid == guid)
+            {
+                result = new TamerEntity(entity);
+            }
+        });
+
+        return result;
+    }
+
+    public TamerEntity? GetByEntityByTamer(BUTamerActor? owner)
+    {
+        if (owner == null)
+            return null;
+
+        TamerEntity? result = null;
+
+        var query = _world.Query<LocalTamerComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
+        {
+            if (localTamerComp.Tamer == owner)
+            {
+                result = new TamerEntity(entity);
+            }
+        });
+
+        return result;
+    }
+
+    public MainCharacterEntity? GetByEntityByPlayerPawn(AActor? owner)
+    {
+        if (owner == null)
+            return null;
+
+        MainCharacterEntity? result = null;
+
+        var query = _world.Query<LocalMainCharacterComponent>();
+        query.ThrowOnStructuralChange = false; // okay because the query is readonly
+        query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
+        {
+            if (!localMainComp.HasPawn)
+                return;
+            
+            if (localMainComp.Pawn == owner)
+                result = new MainCharacterEntity(entity);
+        });
+
+        return result;
+    }
+}

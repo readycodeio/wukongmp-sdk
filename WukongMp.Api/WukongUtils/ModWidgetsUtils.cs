@@ -1,13 +1,10 @@
 ﻿using b1;
 using b1.BGW;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils
@@ -67,7 +64,6 @@ namespace WukongMp.Api.WukongUtils
         public static void InitializeWidgets()
         {
             ChatWidget.Instance.Initialize();
-            ChatWidget.Instance.SetVisibility(false);
             TimerWidget.Instance.Initialize();
             LobbyStatusWidget.Instance.Initialize();
             CoopStatusWidget.Instance.Initialize();
@@ -75,7 +71,6 @@ namespace WukongMp.Api.WukongUtils
             CountdownWidget.Instance.Initialize();
             InfoMessageWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.Initialize();
-            PingIndicatorWidget.Instance.SetVisibility(true);
             FreeCameraControlsWidget.Instance.Initialize();
         }
 
