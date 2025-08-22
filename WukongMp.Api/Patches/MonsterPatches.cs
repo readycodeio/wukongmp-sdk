@@ -381,7 +381,6 @@ namespace WukongMp.Api.Patches
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                 if (localTamer.Pawn != null && !BGU_CommonUtil.IsInFsmState(localTamer.Pawn, EventTag))
                 {
-                    Logging.LogDebug("Sending fsm state {State} for {Actor}", EventTag.ToString(), owner.GetName());
                     var netId = tamerEntity.Value.GetMeta().NetId;
                     DI.Instance.Rpc.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
                 }

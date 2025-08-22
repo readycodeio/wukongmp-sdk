@@ -123,10 +123,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         var pawn = localMainComp.Pawn;
 
         if (pawn == null)
-        {
-            Logging.LogError("Failed to cast pawn to BGUCharacterCS");
             return;
-        }
 
         ClientUtils.RegisterAndSetPlayerTeam(pawn, teamComp.TeamId);
 

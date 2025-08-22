@@ -783,11 +783,11 @@ namespace WukongMp.Api.Patches
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 if (___ChrData.RealWorldVelocity.IsNearlyZero())
                 {
-                    Logging.LogWarning("RealWorldVelocity is nearly zero");
+                    Logging.LogDebug("RealWorldVelocity is nearly zero");
                     localMain.AIPathMoveStuckTimer += DeltaTime;
                     if (localMain.AIPathMoveStuckTimer > Constants.AIPathMoveStuckTimeout)
                     {
-                        Logging.LogWarning("AIPathMove stuck detected, resetting timer");
+                        Logging.LogDebug("AIPathMove stuck detected, resetting timer");
                         localMain.AIPathMoveStuckTimer = 0f;
                         localMain.IsAIPathMoveStuck = true;
                         var events = BUS_EventCollectionCS.Get(__instance.GetOwner());

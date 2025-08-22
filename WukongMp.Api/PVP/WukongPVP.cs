@@ -909,7 +909,7 @@ public partial class WukongPVP : IDisposable
         var ev = (PvPEvent)data[0];
         var winnerTeamId = data[1];
 
-        Logging.LogDebug("Received PvP event: {Event}", ev);
+        Logging.LogInformation("Received PvP event: {Event}", ev);
 
         switch (ev)
         {

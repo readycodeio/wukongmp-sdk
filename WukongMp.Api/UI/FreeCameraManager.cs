@@ -57,7 +57,7 @@ public class FreeCameraManager
         BGW_EnhancedInputMgrV2 bGW_EnhancedInputMgrV = BGW_EnhancedInputMgrV2.Get(world);
         if (bGW_EnhancedInputMgrV.InputModeTracker.InputMode != EGSInputMode.GameOnly)
         {
-            Logging.LogDebug("[FreeCameraManager] Game is currently not in GameOnly mode");
+            Logging.LogError("[FreeCameraManager] Game is currently not in GameOnly mode");
             return;
         }
 
@@ -75,7 +75,7 @@ public class FreeCameraManager
             return;
         }
 
-        Logging.LogDebug("[FreeCameraManager] Entering free camera");
+        Logging.LogInformation("[FreeCameraManager] Entering free camera");
         _freeCameraActor.SetActorHiddenInGame(bNewHidden: false);
         _freeCameraActor.SetActorEnableCollision(bNewActorEnableCollision: true);
         _cacheCameraViewTarget = aBGPPlayerController.GetViewTarget();
@@ -135,7 +135,7 @@ public class FreeCameraManager
             BGU_UnrealWorldUtil.DestroyActor(_freeCameraActor);
         }
 
-        Logging.LogDebug("[FreeCameraManager] Leaving free camera");
+        Logging.LogInformation("[FreeCameraManager] Leaving free camera");
         _freeCameraActor = null;
         _cachePlayerPawn = null;
         _isInFreeCameraMode = false;

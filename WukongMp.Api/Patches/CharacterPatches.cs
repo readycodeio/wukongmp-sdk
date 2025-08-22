@@ -52,7 +52,7 @@ namespace WukongMp.Api.Patches
 
                 if (mainComp.Hp <= -80000)
                 {
-                    Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
+                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
                     return;
                 }
 
@@ -61,7 +61,6 @@ namespace WukongMp.Api.Patches
                     return; // do not reapply the same value
                 }
 
-                Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), mainComp.Hp);
                 var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
 
                 if (!set.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
@@ -434,7 +433,6 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
 
                 DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
-                Logging.LogTrace("Simple state: {State} with isRemove: {Remove} set for: {Actor}", SimpleState, IsRemove, owner.GetName());
             }
         }
     }
@@ -460,7 +458,6 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
 
                 DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
-                Logging.LogTrace("Trigger state {State} triggered for {Actor}", Trigger, owner.GetName());
             }
 
             if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
@@ -469,7 +466,6 @@ namespace WukongMp.Api.Patches
                 var netId = mainEntity.Value.GetMeta().NetId;
 
                 DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
-                Logging.LogTrace("Trigger state {State} triggered for player {Actor}", Trigger, owner.GetName());
             }
         }
     }

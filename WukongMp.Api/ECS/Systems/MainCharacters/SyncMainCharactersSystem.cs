@@ -60,7 +60,7 @@ public class SyncMainCharactersSystem(
             localMainComp.IsSpectatorLocally = isSpectator;
             if (modeManager.HandleBecameSpectator(playerEntity, mainEntity, isSpectator))
             {
-                Logging.LogDebug("Player {Id} spectator status changed: {Spectator}", playerComp.PlayerId, isSpectator);
+                Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerComp.PlayerId, isSpectator);
             }
         }
     }
@@ -81,7 +81,7 @@ public class SyncMainCharactersSystem(
         var pawnTeamId = localMainComp.Pawn!.GetTeamIDInCS();
         if (pawnTeamId != teamComp.TeamId)
         {
-            logger.LogDebug("Assigning team ID {TeamId} to player", teamComp.TeamId);
+            logger.LogInformation("Assigning team ID {TeamId} to player", teamComp.TeamId);
             ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
 
             modeManager.UpdatePlayerTeam(playerEntity, mainEntity);

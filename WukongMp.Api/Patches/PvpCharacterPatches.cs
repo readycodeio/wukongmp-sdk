@@ -53,7 +53,7 @@ namespace WukongMp.Api.Patches
                 // local player (client)
                 if (mainComp.Hp <= -80000)
                 {
-                    Logging.LogWarning("Would set HP to {HP}, but will not (OOB fall damage)", mainComp.Hp);
+                    Logging.LogError("Would set HP to {HP}, but will not (OOB fall damage)", mainComp.Hp);
                     return;
                 }
 
@@ -104,7 +104,7 @@ namespace WukongMp.Api.Patches
 
                     if (mainComp.Hp <= -80000)
                     {
-                        Logging.LogWarning("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
+                        Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
                         return;
                     }
 
@@ -113,7 +113,6 @@ namespace WukongMp.Api.Patches
                         return; // do not reapply the same value
                     }
 
-                    Logging.LogTrace("(remote) Hp change from {From} to {To}", __instance.GetFloatValue(EBGUAttrFloat.Hp), mainComp.Hp);
                     var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
 
                     if (!set.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
@@ -266,8 +265,6 @@ namespace WukongMp.Api.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    Logging.LogTrace("Also updating {DependentAttr} because of {Attr}", calc.finalVal, AttrID);
-
                     var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
                     main.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
                 }

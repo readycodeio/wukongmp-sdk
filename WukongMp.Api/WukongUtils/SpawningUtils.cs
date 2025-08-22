@@ -113,7 +113,6 @@ public static class SpawningUtils
             foreach (var attr in Constants.SyncedAttributes)
             {
                 var value = mainComp.Attributes.GetAttribute((byte)attr);
-                Logging.LogTrace("Setting remote player initial attribute {Attribute} = {Value}", attr, value);
                 attrContainer.SetFloatValue(attr, value);
             }
         }

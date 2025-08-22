@@ -110,7 +110,7 @@ namespace WukongMp.Coop
                 }
                 else
                 {
-                    _logger.LogInformation("WukongMP is already initialized");
+                    _logger.LogError("WukongMP is already initialized");
                     return;
                 }
             
