@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client.Blobs;
 using ReadyM.Relay.Client.Blobs;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Old;
 
 namespace WukongMp.Api;
 

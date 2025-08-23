@@ -1,5 +1,4 @@
 ﻿using UnrealEngine.UMG;
-using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI

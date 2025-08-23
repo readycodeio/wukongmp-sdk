@@ -1,6 +1,6 @@
 using System;
 
-namespace WukongMp.Api.Old;
+namespace WukongMp.Api;
 
 public class WukongEventBus
 {

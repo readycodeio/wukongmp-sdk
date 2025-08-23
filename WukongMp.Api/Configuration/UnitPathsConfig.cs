@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using WukongMp.Api.Old;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Configuration
