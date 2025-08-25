@@ -369,10 +369,10 @@ namespace WukongMp.Api.Patches
         {
             ref var localMainComp = ref mainEntity.GetLocalState();
 
-            var distanceSq = localMainComp.SequenceLocation.Vector_DistanceSquared(characterData.ActorLocation);
+            var distanceSq = localMainComp.JoiningSequenceLocation.Vector_DistanceSquared(characterData.ActorLocation);
             if (distanceSq > Constants.RestrictedMovementRadiusSquare)
             {
-                characterData.ActorLocation = localMainComp.SequenceLocation + Constants.RestrictedMovementRadius * (characterData.ActorLocation - localMainComp.SequenceLocation).GetSafeNormal(); // cast from above
+                characterData.ActorLocation = localMainComp.JoiningSequenceLocation + Constants.RestrictedMovementRadius * (characterData.ActorLocation - localMainComp.JoiningSequenceLocation).GetSafeNormal(); // cast from above
                 localMainComp.Pawn?.SetActorLocation(characterData.ActorLocation, false, out _, true);
             }
         }

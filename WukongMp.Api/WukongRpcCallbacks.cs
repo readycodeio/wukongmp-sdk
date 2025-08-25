@@ -539,13 +539,13 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, data);
     }
 
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnWaitingForSequence(PlayerId __sender, SequenceWaitingData data)
+    [RpcEvent(RelayMode.GlobalOthers)]
+    internal void OnWaitingForSequence(SequenceWaitingData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule((_, data0) =>
         {
-            CutsceneUtils.SetWaitingForCutsceneStatus(sender, data0);
-        }, __sender, data);
+            CutsceneUtils.SetJoiningCutsceneStatus(data0);
+        }, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]

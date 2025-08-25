@@ -132,6 +132,7 @@ public static class PatchRequestPlayMovie
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.Pawn?.SetActorHiddenInGame(false);
                     localMain.MarkerActor?.SetActorHiddenInGame(false);
+                    InfoMessageWidget.Instance.SetVisibility(false);
                 }
             });
         }
@@ -194,7 +195,6 @@ public static class PatchTickForMovieSystem
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.IsWaitingForSequence = false;
                     localMain.IsJoiningSequence = false;
-                    localMain.WaitingSequenceId = 0;
                     localMain.LastSyncableSequenceId = peakRequest.SequenceID;
                 }
 
@@ -210,9 +210,9 @@ public static class PatchTickForMovieSystem
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 InfoMessageWidget.Instance.SetVisibility(true);
                 InfoMessageWidget.Instance.SetText("Wait for other players");
+                main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
-                localMain.SequenceLocation = main.Location.ToFVector();
-                localMain.WaitingSequenceId = peakRequest.SequenceID;
+                localMain.JoiningSequenceLocation = main.Location.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
             }

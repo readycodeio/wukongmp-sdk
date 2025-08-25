@@ -50,8 +50,7 @@ public struct LocalMainCharacterComponent : IComponent
     // FIXME: Move to PlayerComponent?
     public bool IsWaitingForSequence { get; set; }
     public bool IsJoiningSequence { get; set; }
-    public FVector SequenceLocation { get; set; }
-    public int WaitingSequenceId { get; set; }
+    public FVector JoiningSequenceLocation { get; set; }
     public int LastSyncableSequenceId { get; set; }
 
     private AActor? _markerActor;
