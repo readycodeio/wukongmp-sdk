@@ -8,7 +8,7 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGC_SimpleOverlapMgrData), "GetOverlapGridIndexList")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(Constants.DisabledPatches)]
 public static class PatchGetOverlapGridIndexList
 {
     [ThreadStatic] private static List<int>? _list;
