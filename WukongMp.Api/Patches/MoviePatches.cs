@@ -212,6 +212,7 @@ public static class PatchTickForMovieSystem
                 InfoMessageWidget.Instance.SetText("Wait for other players");
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
+                localMain.JoiningSequenceLocation = main.Location.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
             }
