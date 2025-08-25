@@ -56,8 +56,45 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public static class PatchStartGameUi
+    [HarmonyPatchCategory(Constants.CoopPatches)]
+    public static class PatchStartGameUiCoop
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
+        }
+
+        public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
+        {
+            for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
+            {
+                DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
+
+                Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
+
+                if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
+                {
+                    Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
+                    ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
+                }
+                else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
+                {
+                    Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+            }
+
+            __instance.GSAnimKeyToState("GSAKBContinueBtn", "CBtnFocus");
+
+            ___TxtMainName.SetText(FText.FromString(""));
+            ___TxtSubName.SetText(FText.FromString("Wukong Multiplayer Mod"));
+            ___TxtSubName.SetRenderScale(new FVector2D(1.2, 1.2));
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
+    public static class PatchStartGameUiPvP
     {
         private static MethodBase TargetMethod()
         {
