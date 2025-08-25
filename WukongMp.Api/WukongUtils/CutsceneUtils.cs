@@ -30,22 +30,20 @@ public static class CutsceneUtils
         });
     }
 
-    public static void SetWaitingForCutsceneStatus(PlayerId playerId, SequenceWaitingData sequenceWaitingData)
+    public static void SetJoiningCutsceneStatus(SequenceWaitingData sequenceWaitingData)
     {
-        Logging.LogDebug("Setting WaitingForCutsceneStatus for player: {Id}, sequenceId {SequenceId}", playerId, sequenceWaitingData.SequenceID);
-        var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+        Logging.LogDebug("Setting JoiningCutsceneStatus for sequenceId {SequenceId}", sequenceWaitingData.SequenceID);
+        var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
         if (mainEntity == null)
         {
-            Logging.LogError("Player not found: {Id}", playerId);
+            Logging.LogError("Local player not found");
             return;
         }
 
         ref var localMain = ref mainEntity.Value.GetLocalState();
-        
-        localMain.WaitingSequenceId = sequenceWaitingData.SequenceID;
         if (!localMain.IsWaitingForSequence)
         {
-            localMain.SequenceLocation = sequenceWaitingData.SequenceLocation;
+            localMain.JoiningSequenceLocation = sequenceWaitingData.SequenceLocation;
             localMain.IsJoiningSequence = true;
             InfoMessageWidget.Instance.SetVisibility(true);
             InfoMessageWidget.Instance.SetText("Join other players to proceed");
@@ -76,7 +74,7 @@ public static class CutsceneUtils
     public static bool CheckAllPlayersWaitingForCutscene(int sequenceId)
     {
         var playerState = DI.Instance.PlayerState;
-        return DI.Instance.State.AllPlayers.All(p => playerState.GetMainCharacterById(p)?.GetLocalState().WaitingSequenceId == sequenceId);
+        return DI.Instance.State.AllPlayers.All(p => playerState.GetMainCharacterById(p)?.GetState().WaitingSequenceId == sequenceId);
     }
 
     public static void TeleportLocalPlayerToCutsceneLocation()
@@ -88,6 +86,6 @@ public static class CutsceneUtils
         ref var main = ref mainEntity.Value.GetState();
         ref var localMain = ref mainEntity.Value.GetLocalState();
         if (localMain.IsJoiningSequence)
-            PlayerUtils.TeleportLocalPlayer(mainEntity.Value, localMain.SequenceLocation, main.Rotation.ToFRotator(), true);
+            PlayerUtils.TeleportLocalPlayer(mainEntity.Value, localMain.JoiningSequenceLocation, main.Rotation.ToFRotator(), true);
     }
 }
