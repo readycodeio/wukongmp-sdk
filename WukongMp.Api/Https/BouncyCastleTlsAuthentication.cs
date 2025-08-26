@@ -62,19 +62,46 @@ internal class BouncyCastleTlsAuthentication : TlsAuthentication
         var parser = new X509CertificateParser();
         var certs = chain.Select(c => parser.ReadCertificate(c.GetEncoded())).ToList();
 
-        // Verify chain
-        for (var i = 0; i < certs.Count - 1; i++)
-        {
-            certs[i].Verify(certs[i + 1].GetPublicKey());
-        }
+        // Verify chain in any order
 
-        // Last certificate must be signed by a trusted root
-        var trusted = false;
-        foreach (var root in _trustedRoots)
+        // 1. Find all permutations of indices 0 .. certs.Count-1
+        var indices = Enumerable.Range(0, certs.Count).ToArray();
+        var permutations = GetPermutations(indices);
+
+        // 2. Try each permutation until one works
+        var validChain = false;
+        X509Certificate? root = null;
+        X509Certificate? leaf = null;
+        foreach (var perm in permutations)
         {
             try
             {
-                certs[^1].Verify(root.GetPublicKey());
+                for (var i = 0; i < perm.Length - 1; i++)
+                {
+                    certs[perm[i]].Verify(certs[perm[i + 1]].GetPublicKey());
+                }
+
+                validChain = true;
+                leaf = certs[perm[0]];
+                root = certs[perm[^1]];
+                break;
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
+        if (!validChain || root is null || leaf is null)
+            throw new TlsFatalAlert(AlertDescription.bad_certificate);
+
+        // Last certificate must be signed by a trusted root
+        var trusted = false;
+        foreach (var trustedRoot in _trustedRoots)
+        {
+            try
+            {
+                root.Verify(trustedRoot.GetPublicKey());
                 trusted = true;
                 break;
             }
@@ -88,8 +115,27 @@ internal class BouncyCastleTlsAuthentication : TlsAuthentication
             throw new TlsFatalAlert(AlertDescription.bad_certificate);
 
         // Hostname validation
-        if (!VerifyHostname(certs[0]))
+        if (!VerifyHostname(leaf))
             throw new TlsFatalAlert(AlertDescription.bad_certificate);
+    }
+
+    private static IEnumerable<int[]> GetPermutations(int[] list)
+    {
+        if (list.Length == 1)
+        {
+            yield return list;
+            yield break;
+        }
+
+        for (var i = 0; i < list.Length; i++)
+        {
+            var current = list[i];
+            var remaining = list.Where((_, index) => index != i).ToArray();
+            foreach (var perm in GetPermutations(remaining))
+            {
+                yield return new[] { current }.Concat(perm).ToArray();
+            }
+        }
     }
 
     private bool VerifyHostname(X509Certificate cert)
@@ -105,7 +151,8 @@ internal class BouncyCastleTlsAuthentication : TlsAuthentication
                 var genName = GeneralName.GetInstance(entry);
                 if (genName.TagNo == GeneralName.DnsName)
                 {
-                    if (string.Equals(_host, genName.Name.ToString(), StringComparison.OrdinalIgnoreCase))
+                    var withoutWildcard = genName.Name.ToString().Replace("*", "");
+                    if (_host.EndsWith(withoutWildcard))
                         return true;
                 }
             }
