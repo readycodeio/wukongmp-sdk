@@ -18,6 +18,7 @@ public class CmdLineParams
     public int? ServerPort { get; }
     public int? ServerId { get; }
     public Guid UserGuid { get; } = Guid.Empty;
+    public string? JwtToken { get; }
     public string Nickname { get; } = "Player";
     public int LevelId { get; }
 
@@ -40,22 +41,30 @@ public class CmdLineParams
     {
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
+        // REQUIRED: JWT token
+        JwtToken = data.GetValueOrDefault("JWT_TOKEN");
+        if (string.IsNullOrWhiteSpace(JwtToken))
+        {
+            Logging.LogError("Authorization token not provided, launch the game from the ReadyM Launcher.");
+            return;
+        }
+
         // REQUIRED: user GUID
         var guidString = data.GetValueOrDefault("PLAYER_ID");
         if (string.IsNullOrWhiteSpace(guidString))
         {
-            Logging.LogError("GUID not provided, launch the game from the ReadyM Launcher.");
+            Logging.LogError("User ID not provided, launch the game from the ReadyM Launcher.");
             return;
         }
 
         if (Guid.TryParse(guidString, out var guid))
         {
             UserGuid = guid;
-            Logging.LogDebug("User GUID: {Guid}", UserGuid);
+            Logging.LogDebug("User ID: {Guid}", UserGuid);
         }
         else
         {
-            Logging.LogError("Invalid GUID format: {Guid}", guidString);
+            Logging.LogError("Invalid ID format: {Guid}", guidString);
             return;
         }
 

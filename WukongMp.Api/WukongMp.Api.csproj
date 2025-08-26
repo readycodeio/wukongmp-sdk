@@ -142,15 +142,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+        <PackageReference Include="HttpMachine.PCL" Version="5.0.1" />
         <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-        <PackageReference Include="MessagePack" Version="3.1.4" />
-        <PackageReference Include="MessagePack.Annotations" Version="3.1.4" />
-        <PackageReference Include="MessagePackAnalyzer" Version="3.1.4">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="MessagePipe" Version="1.8.1" />
-        <PackageReference Include="MessagePipe.Interprocess" Version="1.8.1" />
         <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.5" />
         <PackageReference Include="Microsoft.Bcl.Numerics" Version="9.0.5" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.6" />

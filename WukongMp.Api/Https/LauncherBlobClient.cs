@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client.Blobs;
 using ReadyM.Relay.Client.Blobs;
 
-namespace WukongMp.Api.IPC;
+namespace WukongMp.Api.Https;
 
 public class LauncherBlobClient(ILogger logger)
     : IBlobClient
@@ -47,14 +47,27 @@ public class LauncherBlobClient(ILogger logger)
         var serverId = CmdLineParams.Instance.ServerId!.Value;
         var nameEscaped = Uri.EscapeDataString(name);
 
-        using var client = new HttpClient();
+        var client = new BouncyCastleHttpsClient();
 
         // Download
-        var response = await client.GetByteArrayAsync($"http://localhost:5005/api/download/{serverId}/{nameEscaped}");
-
-        if (response is null)
+        var linkUrl = new Uri($"https://api.ready.mp/api/server/{serverId}/files/{nameEscaped}");
+        var downloadResponse = await client.GetAsync<DownloadServerFileResponse>(linkUrl, new Dictionary<string, string>
         {
-            logger.LogError("Failed to download blob '{BlobName}' for server {ServerId}", name, serverId);
+            { "Authorization", $"Bearer {CmdLineParams.Instance.JwtToken}" }
+        }, ct);
+
+        if (downloadResponse is null)
+        {
+            logger.LogWarning("Failed to get download URL for blob '{BlobName}' for server {ServerId}", name, serverId);
+            return null;
+        }
+
+        var downloadUrl = new Uri(downloadResponse.DownloadUrl);
+        var response = await BouncyCastleHttpsClient.GetBytesAsync(downloadUrl);
+
+        if (response == null)
+        {
+            logger.LogError("Failed to download blob content '{BlobName}' for server {ServerId}", name, serverId);
             return null;
         }
 

@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
@@ -21,7 +20,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.Coop;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
-using WukongMp.Api.IPC;
+using WukongMp.Api.Https;
 using WukongMp.Api.PVP;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
@@ -131,7 +130,7 @@ public class DI
             new DefaultRelaySerializerRegistration(),
             new WukongSerializerRegistration(),
         ]);
-
+        
         var relayClient = RelayClient = new HotSwappableRelayClient();
         var blobClient = BlobClient = new LauncherBlobClient(logger);
         var netEntity = NetEntity = new NetworkedEntityManager(world, logger, relayClient);
