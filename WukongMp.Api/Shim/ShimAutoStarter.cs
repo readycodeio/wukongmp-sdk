@@ -25,7 +25,7 @@ public class ShimAutoStarter : IDisposable
     
     private readonly ShimRelayRecorder _recorder;
     private readonly IRelayClient _recorderRelayClient;
-    private readonly IBlobClient _recorderBlobClient;
+    private readonly IBlobClient _recorderRelayBlobClient;
     private readonly RelayClientService _recorderRelayService;
     
     public bool ShouldAutoRecord { get; set; }
@@ -42,7 +42,7 @@ public class ShimAutoStarter : IDisposable
         IClientEcsUpdateLoop shimEcsLoop,
         ShimPlaybackRelayClient playbackClient,
         ShimRelayRecorder recorder,
-        BlobClient recorderBlobClient,
+        BlobClient recorderRelayBlobClient,
         RelayClientService recorderRelayService,
         ILogger logger
     )
@@ -57,7 +57,7 @@ public class ShimAutoStarter : IDisposable
         
         _recorder = recorder;
         _recorderRelayClient = _recorder.AttachedRelayClient;
-        _recorderBlobClient = recorderBlobClient;
+        _recorderRelayBlobClient = recorderRelayBlobClient;
         _recorderRelayService = recorderRelayService;
         
         _logger = logger;
@@ -174,7 +174,7 @@ public class ShimAutoStarter : IDisposable
         _recorderRelayClient.RequestJoinArea(areaId.Value);
         
         _logger.LogDebug("Requesting saves to record the results for shim");
-        var recordSaveRelay = new WukongSaveRelay(_recorderBlobClient, _logger);
+        var recordSaveRelay = new WukongSaveRelay(_recorderRelayBlobClient, _logger);
         var worldSave = await recordSaveRelay.DownloadWorldSaveAsync();
         _logger.LogDebug("World save downloaded: {WorldSave}, size {Size} bytes", worldSave?.Name, worldSave?.Content.Length);
         var playerSave = await recordSaveRelay.DownloadPlayerSaveAsync();

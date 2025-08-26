@@ -35,9 +35,12 @@ $modFiles = @(
     "Microsoft.Bcl.Numerics.dll",
     "System.Reflection.Emit.dll",
     "System.ComponentModel.Annotations.dll",
-    "Nito.AsyncEx.Context.dll"
-    "Nito.AsyncEx.Tasks.dll"
-    "Nito.Disposables.dll"
+    "Nito.AsyncEx.Context.dll",
+    "Nito.AsyncEx.Tasks.dll",
+    "Nito.Disposables.dll",
+    "BouncyCastle.Cryptography.dll",
+    "HttpMachine.dll",
+    "IHttpMachine.dll"
 )
 
 $modFilesDebug = @(
@@ -73,6 +76,7 @@ $overridesFilesDebug = @(
 )
 
 $saveFiles = @(
+    "cacert.pem", # root CAs file for HTTPS support
     "ArchiveSaveFile.9.sav" # new game save
 ) # at least one file is required (temporarily) so that the game deson't think we are starting the game from Prologue
 
