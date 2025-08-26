@@ -40,7 +40,7 @@ public class WukongChatter : IDisposable
 
         _connection.OnMasterClientChanged += OnMasterClientChanged;
         _state.OnJoinedArea += OnJoinedAreaHandler;
-        _state.OnLeftArea += OnLeftAreaHandler;
+        _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
         
         SetupCommands();
     }
@@ -49,8 +49,8 @@ public class WukongChatter : IDisposable
     {
         Logging.LogDebug("Disposing WukongChatter");
         
-        _state.OnLeftArea -= OnLeftAreaHandler;
         _state.OnJoinedArea -= OnJoinedAreaHandler;
+        _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
         _connection.OnMasterClientChanged -= OnMasterClientChanged;
     }
 
@@ -221,7 +221,13 @@ public class WukongChatter : IDisposable
         Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
         ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
     }
-    
+
+    private static void SendLocalMessage(string message, string[] placeholders)
+    {
+        var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
+        ChatWidget.Instance.AddMessage(true, "Server", translatedMessage);
+    }
+
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
         var playerEntity = _playerState.LocalPlayerEntity;
@@ -232,16 +238,13 @@ public class WukongChatter : IDisposable
         SendServerMessage("PlayerJoined", player.NickName);
     }
 
-    private void OnLeftAreaHandler(AreaId areaId, Entity entity)
+    private void OnOtherPlayerOutsideAreaHandler(PlayerId arg1, AreaId arg2, ReadyM.Api.Multiplayer.Common.OtherPlayerOutsideAreaReason arg3)
     {
-        if (_connection.AreaState.IsMasterClient)
-        {
-            var playerEntity = _playerState.LocalPlayerEntity;
-            if (playerEntity == null)
-                return;
-            ref var player = ref playerEntity.Value.GetState();
-            var nickname = player.NickName;
-            SendServerMessage("PlayerLeft", nickname);
-        }
+        var playerEntity = _playerState.GetPlayerById(arg1);
+        if (playerEntity == null)
+            return;
+        ref var player = ref playerEntity.Value.GetState();
+        var nickname = player.NickName;
+        SendLocalMessage("PlayerLeft", [nickname]);
     }
 }
