@@ -2,7 +2,6 @@
 using b1.ECS;
 using BtlShare;
 using System;
-using System.Threading.Tasks;
 using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.WukongUtils
@@ -17,14 +16,11 @@ namespace WukongMp.Api.WukongUtils
             {
                 Logging.LogDebug("SetProjectileTarget called for projectile {ProjectileName} with target {TargetName}", projectileName, target.GetName());
                 var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (projectile == null)
+                if (IsProjectileValid(projectile, projectileName, player.GetName()))
                 {
-                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
-                    return;
+                    var events = BUS_EventCollectionCS.Get(projectile);
+                    events?.Evt_SwitchMovementTarget.Invoke(target, socketName);
                 }
-
-                var events = BUS_EventCollectionCS.Get(projectile);
-                events?.Evt_SwitchMovementTarget.Invoke(target, socketName);
             }, nameof(SetProjectileTarget));
         }
 
@@ -34,13 +30,11 @@ namespace WukongMp.Api.WukongUtils
             {
                 Logging.LogDebug("DestroyProjectile called for projectile {ProjectileName} with reason {Reason}", projectileName, reason);
                 var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (projectile == null)
+                if (IsProjectileValid(projectile, projectileName, player.GetName()))
                 {
-                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
-                    return;
+                    var events = BUS_EventCollectionCS.Get(projectile);
+                    events?.Evt_OnProjectileDead.Invoke(reason);
                 }
-                var events = BUS_EventCollectionCS.Get(projectile);
-                events?.Evt_OnProjectileDead.Invoke(reason);
             }, nameof(DestroyProjectile));
         }
 
@@ -50,13 +44,11 @@ namespace WukongMp.Api.WukongUtils
             {
                 Logging.LogDebug("SetProjectileModeMode called for projectile {ProjectileName} with move mode {MoveMode}", projectileName, moveMode);
                 var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (projectile == null)
+                if (IsProjectileValid(projectile, projectileName, player.GetName()))
                 {
-                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
-                    return;
+                    var events = BUS_EventCollectionCS.Get(projectile);
+                    events?.Evt_SetObjMoveMode.Invoke(moveMode);
                 }
-                var events = BUS_EventCollectionCS.Get(projectile);
-                events?.Evt_SetObjMoveMode.Invoke(moveMode);
             }, nameof(SetProjectileModeMode));
         }
 
@@ -66,13 +58,11 @@ namespace WukongMp.Api.WukongUtils
             {
                 Logging.LogDebug("SwitchProjectileInfo called for projectile {ProjectileName} with switch id {MoveMode}", projectileName, bulletSwitchID);
                 var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (projectile == null)
+                if (IsProjectileValid(projectile, projectileName, player.GetName()))
                 {
-                    Logging.LogError("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, player.GetName());
-                    return;
+                    var events = BUS_EventCollectionCS.Get(player);
+                    events?.Evt_OnSwitchOneProjectile.Invoke(projectile, bulletSwitchID, switchIdx, null);
                 }
-                var events = BUS_EventCollectionCS.Get(player);
-                events?.Evt_OnSwitchOneProjectile.Invoke(projectile, bulletSwitchID, switchIdx, null);
             }, nameof(SwitchProjectileInfo));
         }
 
@@ -108,6 +98,17 @@ namespace WukongMp.Api.WukongUtils
         {
             var assembly = typeof(IBUC_ProjectileCtrlData).Assembly;
             _projectileCtrlDataType = assembly.GetType("b1.BUC_ProjectileCtrData", throwOnError: false, ignoreCase: false);
+        }
+
+        private static bool IsProjectileValid(BGUProjectileBaseActor? projectile, string projectileName, string playerName)
+        {
+            if (projectile == null)
+            {
+                // TODO: Not ERROR because we are not handling all projectiles yet.
+                Logging.LogWarning("Projectile not found: {ProjectileName} for player: {PlayerName}", projectileName, playerName);
+                return false;
+            }
+            return true;
         }
     }
 }
