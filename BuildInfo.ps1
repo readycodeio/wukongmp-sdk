@@ -35,9 +35,17 @@ $modFiles = @(
     "Microsoft.Bcl.Numerics.dll",
     "System.Reflection.Emit.dll",
     "System.ComponentModel.Annotations.dll",
-    "Nito.AsyncEx.Context.dll"
-    "Nito.AsyncEx.Tasks.dll"
-    "Nito.Disposables.dll"
+    "Nito.AsyncEx.Context.dll",
+    "Nito.AsyncEx.Tasks.dll",
+    "Nito.Disposables.dll",
+    "MessagePipe.dll",
+    "MessagePipe.Interprocess.dll",
+    "MessagePack.dll",
+    "MessagePack.Annotations.dll",
+    "System.Reflection.Emit.dll",
+    "System.Reflection.Emit.ILGeneration.dll",
+    "System.Reflection.Emit.Lightweight.dll",
+    "System.Threading.Channels.dll"
 )
 
 $modFilesDebug = @(

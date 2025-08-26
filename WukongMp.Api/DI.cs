@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS;
+﻿using System.Net.Http;
+using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
@@ -20,6 +21,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.Coop;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
+using WukongMp.Api.IPC;
 using WukongMp.Api.PVP;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
@@ -41,7 +43,7 @@ public class DI
 
     public RelaySerializer Serializer { get; private set; } = null!;
     public HotSwappableRelayClient RelayClient { get; private set; } = null!;
-    public BlobClient BlobClient { get; set; } = null!;
+    public IBlobClient BlobClient { get; set; } = null!;
     public NetworkedEntityManager NetEntity { get; private set; } = null!;
     public RelayClientService RelayClientService { get; private set; } = null!;
 
@@ -91,7 +93,7 @@ public class DI
     public ClientEcsUpdateLoop ShimEcsLoop { get; set; } = null!;
     public RelayClientService ShimRelayClientService { get; set; } = null!;
     public NetworkedEntityManager ShimNetEntity { get; set; } = null!;
-    public BlobClient ShimBlobClient { get; set; } = null!;
+    public BlobClient ShimRelayBlobClient { get; set; } = null!;
 
     public ShimAutoStarter ShimAuto { get; set; } = null!;
 
@@ -104,7 +106,7 @@ public class DI
     public void Init()
     {
         Logger.LogDebug("Initializing DI...");
-
+        
         var loggerFactory = LoggerFactory;
         var logger = Logger;
 
@@ -131,7 +133,7 @@ public class DI
         ]);
 
         var relayClient = RelayClient = new HotSwappableRelayClient();
-        var blobClient = BlobClient = new BlobClient(relayClient, logger);
+        var blobClient = BlobClient = new LauncherBlobClient(logger);
         var netEntity = NetEntity = new NetworkedEntityManager(world, logger, relayClient);
         var relayClientService = RelayClientService = new RelayClientService(relayClient, logger);
 
@@ -155,13 +157,13 @@ public class DI
         var areaState = AreaState = new WukongAreaState(state);
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
-        
+
         var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState);
 
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
-        
+
         var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
@@ -216,7 +218,7 @@ public class DI
         ]);
         var shimRecorderRelayClient = ShimRecorderRelayClient = new HotSwappableRelayClient();
         var shimRecorderRelayService = ShimRelayClientService = new RelayClientService(shimRecorderRelayClient, shimRecorderLogger);
-        var shimBlobClient = ShimBlobClient = new BlobClient(shimRecorderRelayClient, shimRecorderLogger);
+        var shimBlobClient = ShimRelayBlobClient = new BlobClient(shimRecorderRelayClient, shimRecorderLogger);
         var shimNetEntity = ShimNetEntity = new NetworkedEntityManager(shimWorld, shimRecorderLogger, shimRecorderRelayClient);
 
         var shimEcsLoop = ShimEcsLoop = new ClientEcsUpdateLoop(shimWorld, shimRecorderLogger);

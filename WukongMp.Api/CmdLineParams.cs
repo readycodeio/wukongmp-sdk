@@ -9,32 +9,33 @@ namespace WukongMp.Api;
 public class CmdLineParams
 {
     private static CmdLineParams? _instance;
-    public static CmdLineParams Instance => _instance ??= new ();
+    public static CmdLineParams Instance => _instance ??= new();
 
     public bool ShouldEnableMultiplayer => ServerIp is not null && ServerPort is not null;
 
     public string? ModFolderOverride { get; }
     public string? ServerIp { get; }
     public int? ServerPort { get; }
+    public int? ServerId { get; }
     public Guid UserGuid { get; } = Guid.Empty;
     public string Nickname { get; } = "Player";
     public int LevelId { get; }
 
     public string? ShimDbName { get; }
     public string? ShimDbDir { get; }
-    
+
     public bool RecordShimOnStart
         => RecordShimName != null;
-    
+
     public string? RecordShimName { get; }
     public string? RecordShimFile { get; }
 
     public bool PlayShimOnStart
         => PlayShimName != null;
-    
+
     public string? PlayShimName { get; }
     public string? PlayShimFile { get; }
-    
+
     private CmdLineParams()
     {
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
@@ -57,6 +58,16 @@ public class CmdLineParams
             Logging.LogError("Invalid GUID format: {Guid}", guidString);
             return;
         }
+
+        // REQUIRED: server ID
+        var serverIdString = data.GetValueOrDefault("SERVER_ID");
+        if (string.IsNullOrWhiteSpace(serverIdString))
+        {
+            Logging.LogError("Server ID not provided, launch the game from the ReadyM Launcher.");
+            return;
+        }
+
+        ServerId = int.Parse(serverIdString);
 
         // REQUIRED: server IP and port number
         ServerIp = data.GetValueOrDefault("SERVER_IP");
@@ -102,7 +113,7 @@ public class CmdLineParams
             ModFolderOverride = modFolder;
             Logging.LogDebug("Mod folder: {Folder}", ModFolderOverride);
         }
-        
+
         // OPTIONAL: record shim test
         var shimDb = data.GetValueOrDefault("SHIM_DB");
 
@@ -116,9 +127,9 @@ public class CmdLineParams
             ShimDbName = "Default";
             Logging.LogDebug("Shim DB not provided, using: Default");
         }
-        
+
         ShimDbDir = Path.GetFullPath($"{Constants.ShimFolder}/{ShimDbName}");
-        
+
         // OPTIONAL: record shim test
         var recordShim = data.GetValueOrDefault("RECORD_SHIM");
 
@@ -128,7 +139,7 @@ public class CmdLineParams
             RecordShimFile = Path.GetFullPath($"{ShimDbDir}/{RecordShimName}.shim");
             Logging.LogDebug("Record Shim: {RecordShimFile}", RecordShimFile);
         }
-        
+
         // OPTIONAL: play shim test
         var playShim = data.GetValueOrDefault("PLAY_SHIM");
         if (!string.IsNullOrWhiteSpace(playShim))
