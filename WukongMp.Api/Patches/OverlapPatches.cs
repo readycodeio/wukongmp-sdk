@@ -1,18 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
 using b1;
 using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 
-namespace WukongMp.Api.Patches;
+namespace WukongMp.Common.Patches;
+
+public static class PatchOverlapUtils
+{
+    internal static readonly object OverlapLock = new();
+}
+
+[HarmonyPatch(typeof(BGS_SimpleOverlapMgrSystem), "ThreadFunc")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchThreadFunc
+{
+    public static void Prefix()
+    {
+        Monitor.Enter(PatchOverlapUtils.OverlapLock);
+    }
+    
+    public static void Finalizer()
+    {
+        Monitor.Exit(PatchOverlapUtils.OverlapLock);
+    }
+}
+
+[HarmonyPatch(typeof(BGS_SimpleOverlapMgrSystem), "OnRegisterEntityUpdatenfo")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchOnRegisterEntityUpdatenfo
+{
+    public static void Prefix()
+    {
+        Monitor.Enter(PatchOverlapUtils.OverlapLock);
+    }
+    
+    public static void Finalizer()
+    {
+        Monitor.Exit(PatchOverlapUtils.OverlapLock);
+    }
+}
+
+[HarmonyPatch(typeof(BGS_SimpleOverlapMgrSystem), "OnDeregisterEntity")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchOnDeregisterEntity
+{
+    public static void Prefix()
+    {
+        Monitor.Enter(PatchOverlapUtils.OverlapLock);
+    }
+    
+    public static void Finalizer()
+    {
+        Monitor.Exit(PatchOverlapUtils.OverlapLock);
+    }
+}
 
 [HarmonyPatch(typeof(BGC_SimpleOverlapMgrData), "GetOverlapGridIndexList")]
-[HarmonyPatchCategory(Constants.DisabledPatches)]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
 public static class PatchGetOverlapGridIndexList
 {
     [ThreadStatic] private static List<int>? _list;
-
+    [ThreadStatic] private static Func<BGC_SimpleOverlapMgrData, float>? _getter;
+    
     private static bool IsRectangleOverlap(
         FVector2D StartPoint,
         FVector2D EndPoint,
@@ -39,9 +92,13 @@ public static class PatchGetOverlapGridIndexList
     {
         OutIndexList = _list ??= new List<int>();
         OutIndexList.Clear();
-        var gridSize =
-            AccessTools.FieldRefAccess<BGC_SimpleOverlapMgrData, float>(__instance,
-                "<GridSize>k__BackingField");
+        if (_getter == null)
+        {
+            var getterMethod = __instance.GetType().GetProperty("GridSize", BindingFlags.Instance | BindingFlags.NonPublic)!.GetGetMethod(true);
+            _getter = (Func<BGC_SimpleOverlapMgrData, float>)Delegate.CreateDelegate(typeof(Func<BGC_SimpleOverlapMgrData, float>), getterMethod!);
+        }
+
+        var gridSize = _getter.Invoke(__instance);
         var StartPoint = GridInfo.CenterLocation - new FVector2D(4.5 * (double)gridSize, 4.5 * (double)gridSize);
         var EndPoint = GridInfo.CenterLocation + new FVector2D(4.5 * (double)gridSize, 4.5 * (double)gridSize);
         var OverlapStartPoint = Location - SquareSize;
