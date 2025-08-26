@@ -10,30 +10,8 @@ using ReadyM.Relay.Client.Blobs;
 
 namespace WukongMp.Api.Https;
 
-public class LauncherBlobClient(ILogger logger)
-    : IBlobClient
+public class LauncherBlobClient(ILogger logger) : IBlobClient
 {
-    private bool _webAlreadyInit;
-
-    private void InitWebRequest()
-    {
-        if (_webAlreadyInit)
-            return;
-        _webAlreadyInit = true;
-
-        if (WebRequest.RegisterPrefix("http", GetWebCreator()))
-            logger.LogDebug("Registered http:// prefix");
-        if (WebRequest.RegisterPrefix("https", GetWebCreator()))
-            logger.LogDebug("Registered https:// prefix");
-    }
-
-    private static IWebRequestCreate GetWebCreator()
-    {
-        var type = Type.GetType("System.Net.HttpRequestCreator, System, Version=4.0.0.0,Culture=neutral, PublicKeyToken=b77a5c561934e089");
-        Debug.Assert(type != null);
-        return (IWebRequestCreate)Activator.CreateInstance(type, nonPublic: true);
-    }
-
     public async Task<bool> UploadBlobAsync(BlobInfo blob, CancellationToken ct = default)
     {
         var serverId = CmdLineParams.Instance.ServerId!.Value;
