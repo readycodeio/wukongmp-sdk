@@ -76,6 +76,7 @@ $overridesFilesDebug = @(
 )
 
 $saveFiles = @(
+    "cacert.pem", # root CAs file for HTTPS support
     "ArchiveSaveFile.9.sav" # new game save
 ) # at least one file is required (temporarily) so that the game deson't think we are starting the game from Prologue
 

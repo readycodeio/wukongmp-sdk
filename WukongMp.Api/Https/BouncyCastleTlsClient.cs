@@ -5,11 +5,11 @@ using Org.BouncyCastle.Tls.Crypto;
 
 namespace WukongMp.Api.Https;
 
-internal class MyTlsClient(string host, TlsCrypto crypto) : DefaultTlsClient(crypto)
+internal class BouncyCastleTlsClient(string host, TlsCrypto crypto) : DefaultTlsClient(crypto)
 {
     public override TlsAuthentication GetAuthentication()
     {
-        return new MyTlsAuthentication();
+        return new BouncyCastleTlsAuthentication(host);
     }
 
     public override int[] GetCipherSuites()

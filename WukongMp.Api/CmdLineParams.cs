@@ -18,6 +18,7 @@ public class CmdLineParams
     public int? ServerPort { get; }
     public int? ServerId { get; }
     public Guid UserGuid { get; } = Guid.Empty;
+    public string? ApiBaseUrl { get; }
     public string? JwtToken { get; }
     public string Nickname { get; } = "Player";
     public int LevelId { get; }
@@ -41,6 +42,14 @@ public class CmdLineParams
     {
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
+        // REQUIRED: API base URL
+        ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
+        if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+        {
+            Logging.LogError("API base URL not provided, launch the game from the ReadyM Launcher.");
+            return;
+        }
+        
         // REQUIRED: JWT token
         JwtToken = data.GetValueOrDefault("JWT_TOKEN");
         if (string.IsNullOrWhiteSpace(JwtToken))
