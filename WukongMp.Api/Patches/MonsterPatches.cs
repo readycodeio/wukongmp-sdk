@@ -141,7 +141,7 @@ namespace WukongMp.Api.Patches
                         DI.Instance.Rpc.SendUnitSpawned(meta.NetId);
                     }
                 }
-                else if (!EnvironmentMonsters.MonsterNames.Any(monsterGuid.Contains))
+                else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
                 {
                     Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
                 }
