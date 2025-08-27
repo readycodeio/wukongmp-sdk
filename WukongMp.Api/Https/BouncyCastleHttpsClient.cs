@@ -38,7 +38,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
             if (response.StatusCode is < 200 or >= 300)
                 return default;
 
-            var body = GetResponseBody(response);
+            using var body = GetResponseBody(response);
             return await JsonSerializer.DeserializeAsync<T>(body, JsonOptions, cancellationToken: ct);
         }
         finally
@@ -59,7 +59,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
             if (response.StatusCode is < 200 or >= 300)
                 return null;
 
-            var body = GetResponseBody(response);
+            using var body = GetResponseBody(response);
 
             using var ms = new MemoryStream();
             await body.CopyToAsync(ms);
@@ -87,9 +87,6 @@ public class BouncyCastleHttpsClient(ILogger logger)
         try
         {
             using var tcp = new TcpClient(url.Host, url.Port);
-            tcp.ReceiveTimeout = 30000;
-            tcp.SendTimeout = 30000;
-
             using var stream = tcp.GetStream();
 
             Stream requestStream = stream;
@@ -105,6 +102,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
             }
 
             using var writer = new StreamWriter(requestStream);
+            writer.NewLine = "\r\n";
 
             // Generate boundary
             var boundary = $"----BOUNDARY{DateTime.UtcNow.Ticks}";
@@ -203,9 +201,6 @@ public class BouncyCastleHttpsClient(ILogger logger)
     private async Task<HttpRequestResponse> GetRaw(Uri url, Dictionary<string, string>? headers = null)
     {
         using var tcp = new TcpClient(url.Host, url.Port);
-        tcp.ReceiveTimeout = 30000;
-        tcp.SendTimeout = 30000;
-
         using var stream = tcp.GetStream();
 
         Stream requestStream = stream;
@@ -221,6 +216,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
         }
 
         using var writer = new StreamWriter(requestStream);
+        writer.NewLine = "\r\n";
 
         // Write HTTP request
         await writer.WriteLineAsync($"GET {url.PathAndQuery} HTTP/1.1");
@@ -242,7 +238,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
         using var handler = new HttpParserDelegate();
         using var parser = new HttpCombinedParser(handler);
 
-        var memoryStream = new MemoryStream();
+        using var memoryStream = new MemoryStream();
         try
         {
             await requestStream.CopyToAsync(memoryStream);
@@ -254,21 +250,20 @@ public class BouncyCastleHttpsClient(ILogger logger)
 
         parser.Execute(memoryStream);
 
+        handler.HttpRequestResponse.Body.Position = 0;
         return handler.HttpRequestResponse;
     }
 
     private static Stream GetResponseBody(HttpRequestResponse response)
     {
-        response.Body.Position = 0;
-
         if (!response.Headers.TryGetValue("CONTENT-ENCODING", out var encodings))
             return response.Body;
 
         var encoding = encodings.First().ToLowerInvariant();
         return encoding switch
         {
-            "gzip" => new GZipStream(response.Body, CompressionMode.Decompress, leaveOpen: true),
-            "deflate" => new DeflateStream(response.Body, CompressionMode.Decompress, leaveOpen: true),
+            "gzip" => new GZipStream(response.Body, CompressionMode.Decompress, leaveOpen: false),
+            "deflate" => new DeflateStream(response.Body, CompressionMode.Decompress, leaveOpen: false),
             _ => throw new NotSupportedException($"Unsupported content encoding: {encoding}")
         };
     }
