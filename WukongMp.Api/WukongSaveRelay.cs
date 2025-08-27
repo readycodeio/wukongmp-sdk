@@ -48,5 +48,5 @@ public class WukongSaveRelay(IBlobClient blobClient, ILogger logger)
     public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default)
         => DownloadBlobAsync(PlayerSaveName, ct);
 
-    private static string PlayerSaveName => $"player_{CmdLineParams.Instance.UserGuid:N}.sav";
+    private static string PlayerSaveName => $"player_{LaunchParameters.Instance.UserGuid:N}.sav";
 }

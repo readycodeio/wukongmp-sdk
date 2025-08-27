@@ -6,10 +6,10 @@ using WukongMp.Api.Windows;
 
 namespace WukongMp.Api;
 
-public class CmdLineParams
+public class LaunchParameters
 {
-    private static CmdLineParams? _instance;
-    public static CmdLineParams Instance => _instance ??= new();
+    private static LaunchParameters? _instance;
+    public static LaunchParameters Instance => _instance ??= new LaunchParameters();
 
     public bool ShouldEnableMultiplayer => ServerIp is not null && ServerPort is not null;
 
@@ -38,7 +38,7 @@ public class CmdLineParams
     public string? PlayShimName { get; }
     public string? PlayShimFile { get; }
 
-    private CmdLineParams()
+    private LaunchParameters()
     {
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 

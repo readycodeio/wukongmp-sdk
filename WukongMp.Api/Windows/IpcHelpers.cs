@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -38,6 +39,8 @@ public class IpcHelpers
         return buffer.ToString();
     }
 
+    private static readonly HashSet<string> RedactedKeys = ["JWT_TOKEN"];
+
     public static Dictionary<string, string> ReadAndDeleteIpcHandshakeFile()
     {
         var tempDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReadyM.Launcher");
@@ -63,7 +66,15 @@ public class IpcHelpers
                 var key = match.Groups["key"].Value.Trim();
                 var value = match.Groups["value"].Value.Trim();
                 data[key] = value;
-                Logging.LogInformation("Parsed {Key}={Value}", key, value);
+
+                if (RedactedKeys.Contains(key))
+                {
+                    Logging.LogInformation("Parsed {Key}=<redacted>", key);
+                }
+                else
+                {
+                    Logging.LogInformation("Parsed {Key}={Value}", key, value);
+                }
             }
             else
             {

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -9,12 +12,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using HttpMachine;
 using IHttpMachine.Model;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Tls;
 using Org.BouncyCastle.Tls.Crypto.Impl.BC;
 
 namespace WukongMp.Api.Https;
 
-public class BouncyCastleHttpsClient
+public class BouncyCastleHttpsClient(ILogger logger)
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
@@ -25,32 +29,46 @@ public class BouncyCastleHttpsClient
 
     public async Task<T?> GetAsync<T>(Uri url, Dictionary<string, string>? headers = null, CancellationToken ct = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         await _semaphore.WaitAsync(ct);
         try
         {
             var response = await GetRaw(url, headers);
-            return await JsonSerializer.DeserializeAsync<T>(response.Body, JsonOptions, cancellationToken: ct);
+
+            if (response.StatusCode is < 200 or >= 300)
+                return default;
+
+            var body = GetResponseBody(response);
+            return await JsonSerializer.DeserializeAsync<T>(body, JsonOptions, cancellationToken: ct);
         }
         finally
         {
             _semaphore.Release();
+            logger.LogDebug("GET {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
         }
     }
 
     public async Task<byte[]?> GetBytesAsync(Uri url, Dictionary<string, string>? headers = null, CancellationToken ct = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         await _semaphore.WaitAsync(ct);
         try
         {
             var response = await GetRaw(url, headers);
 
+            if (response.StatusCode is < 200 or >= 300)
+                return null;
+
+            var body = GetResponseBody(response);
+
             using var ms = new MemoryStream();
-            await response.Body.CopyToAsync(ms);
+            await body.CopyToAsync(ms);
             return ms.ToArray();
         }
         finally
         {
             _semaphore.Release();
+            logger.LogDebug("GET bytes from {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
         }
     }
 
@@ -63,10 +81,15 @@ public class BouncyCastleHttpsClient
         Dictionary<string, string>? headers = null,
         CancellationToken ct = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         await _semaphore.WaitAsync(ct);
+
         try
         {
             using var tcp = new TcpClient(url.Host, url.Port);
+            tcp.ReceiveTimeout = 30000;
+            tcp.SendTimeout = 30000;
+
             using var stream = tcp.GetStream();
 
             Stream requestStream = stream;
@@ -109,12 +132,19 @@ public class BouncyCastleHttpsClient
             var fileHeader = Encoding.UTF8.GetBytes(
                 $"--{boundary}\r\n" +
                 $"Content-Disposition: form-data; name=\"{fileFieldName}\"; filename=\"{fileName}\"\r\n" +
-                "Content-Type: application/octet-stream\r\n\r\n"
+                "Content-Type: application/octet-stream\r\n" +
+                "Content-Encoding: gzip\r\n\r\n"
             );
             var endBoundary = Encoding.UTF8.GetBytes($"\r\n--{boundary}--\r\n");
 
             await bodyStream.WriteAsync(fileHeader, 0, fileHeader.Length, ct);
-            await bodyStream.WriteAsync(fileBytes, 0, fileBytes.Length, ct);
+
+            // Compress file bytes with GZip
+            using (var gzip = new GZipStream(bodyStream, CompressionLevel.Optimal, leaveOpen: true))
+            {
+                await gzip.WriteAsync(fileBytes, 0, fileBytes.Length, ct);
+            }
+
             await bodyStream.WriteAsync(endBoundary, 0, endBoundary.Length, ct);
 
             var contentLength = bodyStream.Length;
@@ -166,12 +196,16 @@ public class BouncyCastleHttpsClient
         finally
         {
             _semaphore.Release();
+            logger.LogDebug("PUT multipart to {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
         }
     }
 
     private async Task<HttpRequestResponse> GetRaw(Uri url, Dictionary<string, string>? headers = null)
     {
         using var tcp = new TcpClient(url.Host, url.Port);
+        tcp.ReceiveTimeout = 30000;
+        tcp.SendTimeout = 30000;
+
         using var stream = tcp.GetStream();
 
         Stream requestStream = stream;
@@ -219,7 +253,23 @@ public class BouncyCastleHttpsClient
         }
 
         parser.Execute(memoryStream);
-        handler.HttpRequestResponse.Body.Position = 0;
+
         return handler.HttpRequestResponse;
+    }
+
+    private static Stream GetResponseBody(HttpRequestResponse response)
+    {
+        response.Body.Position = 0;
+
+        if (!response.Headers.TryGetValue("CONTENT-ENCODING", out var encodings))
+            return response.Body;
+
+        var encoding = encodings.First().ToLowerInvariant();
+        return encoding switch
+        {
+            "gzip" => new GZipStream(response.Body, CompressionMode.Decompress, leaveOpen: true),
+            "deflate" => new DeflateStream(response.Body, CompressionMode.Decompress, leaveOpen: true),
+            _ => throw new NotSupportedException($"Unsupported content encoding: {encoding}")
+        };
     }
 }

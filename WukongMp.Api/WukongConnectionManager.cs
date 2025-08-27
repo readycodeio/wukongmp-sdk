@@ -57,7 +57,7 @@ public class WukongConnectionManager : IDisposable
 
     private static void OnConnectedHandler(PlayerId player, Entity entity)
     {
-        entity.GetComponent<PlayerComponent>().NickName = CmdLineParams.Instance.Nickname;
+        entity.GetComponent<PlayerComponent>().NickName = LaunchParameters.Instance.Nickname;
     }
 
     public void Dispose()

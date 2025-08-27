@@ -785,7 +785,7 @@ namespace WukongMp.Api.Patches
                 {
                     Logging.LogDebug("RealWorldVelocity is nearly zero");
                     localMain.AIPathMoveStuckTimer += DeltaTime;
-                    if (localMain.AIPathMoveStuckTimer > Constants.AIPathMoveStuckTimeout)
+                    if (localMain.AIPathMoveStuckTimer > Constants.AiPathMoveStuckTimeout)
                     {
                         Logging.LogDebug("AIPathMove stuck detected, resetting timer");
                         localMain.AIPathMoveStuckTimer = 0f;

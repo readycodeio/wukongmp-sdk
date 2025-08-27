@@ -34,7 +34,7 @@ namespace WukongMp.PvP
         
         public void Init()
         {
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
@@ -42,30 +42,30 @@ namespace WukongMp.PvP
 
             DI.Instance.Init();
 
-            if (CmdLineParams.Instance.PlayShimOnStart)
+            if (LaunchParameters.Instance.PlayShimOnStart)
                 ShimUtils.InitRelayPlayShim(
                     DI.Instance,
-                    CmdLineParams.Instance.PlayShimFile!
+                    LaunchParameters.Instance.PlayShimFile!
                 );
-            else if (CmdLineParams.Instance.RecordShimOnStart)
+            else if (LaunchParameters.Instance.RecordShimOnStart)
                 ShimUtils.InitRelayRecordShim(
                     DI.Instance,
-                    CmdLineParams.Instance.ServerIp!,
-                    CmdLineParams.Instance.ServerPort!.Value,
-                    CmdLineParams.Instance.UserGuid,
+                    LaunchParameters.Instance.ServerIp!,
+                    LaunchParameters.Instance.ServerPort!.Value,
+                    LaunchParameters.Instance.UserGuid,
 #if NO_DISCONNECT
                     true,
 #else
                     false,
 #endif
-                    CmdLineParams.Instance.RecordShimFile!
+                    LaunchParameters.Instance.RecordShimFile!
                 );
             else
                 ShimUtils.InitRelay(
                     DI.Instance,
-                    CmdLineParams.Instance.ServerIp!,
-                    CmdLineParams.Instance.ServerPort!.Value,
-                    CmdLineParams.Instance.UserGuid,
+                    LaunchParameters.Instance.ServerIp!,
+                    LaunchParameters.Instance.ServerPort!.Value,
+                    LaunchParameters.Instance.UserGuid,
 #if NO_DISCONNECT
                     true
 #else
@@ -81,7 +81,7 @@ namespace WukongMp.PvP
 
         public void LateInit()
         {
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
@@ -123,8 +123,8 @@ namespace WukongMp.PvP
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
             {
                 Logging.LogDebug("Alt + 0");
-                if (CmdLineParams.Instance.RecordShimFile != null)
-                    DI.Instance.ShimController.Save(CmdLineParams.Instance.RecordShimFile!);
+                if (LaunchParameters.Instance.RecordShimFile != null)
+                    DI.Instance.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
@@ -220,7 +220,7 @@ namespace WukongMp.PvP
         {
             _logger.LogInformation("DeInit");
 
-            if (!CmdLineParams.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
             {
                 return;
             }

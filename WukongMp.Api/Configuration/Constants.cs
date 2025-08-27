@@ -40,7 +40,7 @@ namespace WukongMp.Api.Configuration
         public const float CutsceneSyncDistance = 2000f;
         public const float RestrictedMovementRadius = 500f;
         public const float RestrictedMovementRadiusSquare = RestrictedMovementRadius * RestrictedMovementRadius;
-        public static float AIPathMoveStuckTimeout = 0.2f; // seconds
+        public const float AiPathMoveStuckTimeout = 0.2f; // seconds
 
         public static readonly List<int> SkillsWhitelist = [10518, -999];
         public const int GourdSkillId = 10530;

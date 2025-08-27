@@ -24,7 +24,7 @@ namespace WukongMp.Api.Configuration
 
         public static LevelSpawnData GetCurrentLevelSpawnData()
         {
-            return GetLevelSpawnData(CmdLineParams.Instance.LevelId);
+            return GetLevelSpawnData(LaunchParameters.Instance.LevelId);
         }
     }
 }
