@@ -16,7 +16,7 @@ public class LauncherBlobClient(ILogger logger) : IBlobClient
         var serverId = CmdLineParams.Instance.ServerId!.Value;
         var nameEscaped = Uri.EscapeDataString(blob.Name);
 
-        var client = new BouncyCastleHttpsClient();
+        var client = new BouncyCastleHttpsClient(logger);
 
         var url = new Uri($"{CmdLineParams.Instance.ApiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
 
@@ -33,7 +33,7 @@ public class LauncherBlobClient(ILogger logger) : IBlobClient
         var serverId = CmdLineParams.Instance.ServerId!.Value;
         var nameEscaped = Uri.EscapeDataString(name);
 
-        var client = new BouncyCastleHttpsClient();
+        var client = new BouncyCastleHttpsClient(logger);
 
         // Download
         var linkUrl = new Uri($"{CmdLineParams.Instance.ApiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
@@ -49,7 +49,7 @@ public class LauncherBlobClient(ILogger logger) : IBlobClient
         }
 
         var downloadUrl = new Uri(downloadResponse!.DownloadUrl);
-        var response = await client.GetBytesAsync(downloadUrl);
+        var response = await client.GetBytesAsync(downloadUrl, ct: ct);
 
         if (response == null)
         {
