@@ -32,6 +32,7 @@ public class PatchOnEnterLevel
         if (world == null)
             return;
         Logging.LogInformation("On enter level: {LevelName}", world.GetCurrentLevelName());
+        DI.Instance.EventBus.InvokeOnLevelLoaded();
     }
 }
 
@@ -45,6 +46,7 @@ public class PatchOnLevelExit
         if (world == null)
             return;
         Logging.LogInformation("On exit level: {LevelName}", world.GetCurrentLevelName());
+        DI.Instance.EventBus.InvokeOnExitLevel();
     }
 }
 

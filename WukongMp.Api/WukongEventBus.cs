@@ -16,6 +16,8 @@ public class WukongEventBus
     public event Action? OnBeginPlayGameplayLevel;
     public event Action? OnEndPlayGameplayLevel;
     public event Action? OnLoadingScreenClose;
+    public event Action? OnLevelLoaded;
+    public event Action? OnExitLevel;
 
     private LevelTransitionPhase _phase;
 
@@ -55,5 +57,17 @@ public class WukongEventBus
     {
         _phase = LevelTransitionPhase.None;
         OnLoadingScreenClose?.Invoke();
+    }
+
+    public void InvokeOnLevelLoaded()
+    {
+        _phase = LevelTransitionPhase.None;
+        OnLevelLoaded?.Invoke();
+    }
+
+    public void InvokeOnExitLevel()
+    {
+        _phase = LevelTransitionPhase.None;
+        OnExitLevel?.Invoke();
     }
 }

@@ -1,12 +1,13 @@
-﻿using System;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
+using System;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
 
@@ -14,16 +15,20 @@ public class WukongWidgetManager : IDisposable
 {
     private readonly ClientState _clientState;
     private readonly WukongPlayerState _playerState;
+    private readonly WukongEventBus _eventBus;
 
-    public WukongWidgetManager(ClientState pawnState, WukongPlayerState playerState)
+    public WukongWidgetManager(ClientState pawnState, WukongPlayerState playerState, WukongEventBus eventBus)
     {
         _clientState = pawnState;
         _playerState = playerState;
+        _eventBus = eventBus;
 
         _clientState.OnJoinedArea += OnJoinedArea;
         _clientState.OnDisconnected += OnDisconnected;
         _clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
         _clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
+        _eventBus.OnLevelLoaded += OnLevelLoaded;
+        _eventBus.OnExitLevel += OnExitLevel;
     }
 
     private void OnJoinedArea(AreaId arg1, Entity arg2)
@@ -49,6 +54,8 @@ public class WukongWidgetManager : IDisposable
         _clientState.OnDisconnected -= OnDisconnected;
         _clientState.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
         _clientState.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
+        _eventBus.OnLevelLoaded -= OnLevelLoaded;
+        _eventBus.OnExitLevel -= OnExitLevel;
     }
 
     public void UpdatePlayerTeam(PlayerEntity playerEntity)
@@ -104,5 +111,19 @@ public class WukongWidgetManager : IDisposable
         CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
         PingIndicatorWidget.Instance.SetVisibility(true);
         ChatWidget.Instance.SetVisibility(true);
+    }
+
+    private void OnLevelLoaded()
+    {
+        Logging.LogDebug("Initializing widgets");
+        ModWidgetsUtils.SpawnWidgetManagerActor();
+        ModWidgetsUtils.InitializeWidgets();
+        ChatWidget.Instance.SetVisibility(false);
+    }
+
+    private void OnExitLevel()
+    {
+        Logging.LogDebug("Deinitializing widgets");
+        ModWidgetsUtils.DeinitializeWidgets();
     }
 }
