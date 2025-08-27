@@ -157,7 +157,7 @@ public class DI
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
-        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState);
+        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, eventBus);
 
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);

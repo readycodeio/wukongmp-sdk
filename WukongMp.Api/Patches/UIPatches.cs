@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using b1;
+﻿using b1;
 using b1.Localization;
 using b1.UI.Comm;
 using B1UI.GSSvc;
@@ -10,10 +6,15 @@ using B1UI.GSUI;
 using GSE.GSUI;
 using HarmonyLib;
 using ResB1;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using CultureInfo = System.Globalization.CultureInfo;
 
@@ -74,8 +75,17 @@ namespace WukongMp.Api.Patches
 
                 if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
-                    Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                    ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
+                    if (DI.Instance.State.IsConnected)
+                    {
+                        Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
+                        ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
+                    }
+                    else
+                    {
+                        ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                        InfoMessageWidget.Instance.SetVisibility(true);
+                        InfoMessageWidget.Instance.SetText("Disconnected");
+                    }
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
                 {

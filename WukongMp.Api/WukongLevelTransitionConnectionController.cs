@@ -41,10 +41,6 @@ public class WukongLevelTransitionConnectionController : IDisposable
     private void OnBeginPlayGameplayLevel()
     {
         Debug.Assert(_connection.RequestedAreaId != null);
-        
-        Logging.LogDebug("Initializing widgets");
-        ModWidgetsUtils.SpawnWidgetManagerActor();
-        ModWidgetsUtils.InitializeWidgets();
 
         var areaId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
         if (areaId > ushort.MaxValue)
@@ -57,9 +53,6 @@ public class WukongLevelTransitionConnectionController : IDisposable
     private void OnEndPlayGameplayLevel()
     {
         _connection.LeaveArea();
-        
-        Logging.LogDebug("Deinitializing widgets");
-        ModWidgetsUtils.DeinitializeWidgets();
     }
     
     private void OnLoadingScreenClose()

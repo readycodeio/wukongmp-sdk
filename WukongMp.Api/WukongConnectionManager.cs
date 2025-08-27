@@ -107,17 +107,15 @@ public class WukongConnectionManager : IDisposable
         {
             try
             {
-                var requestedAreaId = self.RequestedAreaId;
-                var requestedConnect = self.RequestedConnect;
-                if (requestedAreaId != null)
+                if (self.RequestedAreaId != null)
                     self.LeaveArea();
-                if (requestedConnect)
+                if (self.RequestedConnect)
                     self.Disconnect();
                 await Task.Delay(Constants.ReconnectDelayMs);
-                if (!requestedConnect)
+                if (!self.RequestedConnect)
                     self.Connect();
-                if (requestedAreaId != null)
-                    self.JoinArea(requestedAreaId.Value);
+                if (self.RequestedAreaId != null)
+                    self.JoinArea(self.RequestedAreaId.Value);
             }
             catch (Exception ex)
             {
@@ -159,12 +157,6 @@ public class WukongConnectionManager : IDisposable
         else
         {
             Logging.LogWarning("Disconnected: {Cause}", disconnectReason);
-        }
-
-        // FIXME: This will only try to reconnect once and immediately which will probably not work if the cause 
-        // is a weak network connection.
-        if (disconnectReason is DisconnectReason.Timeout or DisconnectReason.RemoteConnectionClose)
-        {
             Reconnect();
         }
     }

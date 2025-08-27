@@ -111,8 +111,10 @@ public static class SpawningUtils
             
             foreach (var attr in Constants.SyncedAttributes)
             {
-                var value = mainComp.Attributes.GetAttribute((byte)attr);
-                attrContainer.SetFloatValue(attr, value);
+                if (mainComp.Attributes.TryGetAttribute((byte)attr, out var value))
+                {
+                    attrContainer.SetFloatValue(attr, value);
+                }
             }
         }
         else
