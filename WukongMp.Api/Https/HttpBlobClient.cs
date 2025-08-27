@@ -9,7 +9,7 @@ using ReadyM.Relay.Client.Blobs;
 
 namespace WukongMp.Api.Https;
 
-public class LauncherBlobClient(ILogger logger) : IBlobClient
+public class HttpBlobClient(ILogger logger) : IBlobClient
 {
     public async Task<bool> UploadBlobAsync(BlobInfo blob, CancellationToken ct = default)
     {

@@ -132,7 +132,7 @@ public class DI
         ]);
         
         var relayClient = RelayClient = new HotSwappableRelayClient();
-        var blobClient = BlobClient = new LauncherBlobClient(logger);
+        var blobClient = BlobClient = new HttpBlobClient(logger);
         var netEntity = NetEntity = new NetworkedEntityManager(world, logger, relayClient);
         var relayClientService = RelayClientService = new RelayClientService(relayClient, logger);
 

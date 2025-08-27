@@ -87,6 +87,9 @@ public class BouncyCastleHttpsClient(ILogger logger)
         try
         {
             using var tcp = new TcpClient(url.Host, url.Port);
+            tcp.ReceiveTimeout = 30000;
+            tcp.SendTimeout = 30000;
+
             using var stream = tcp.GetStream();
 
             Stream requestStream = stream;
@@ -200,6 +203,9 @@ public class BouncyCastleHttpsClient(ILogger logger)
     private async Task<HttpRequestResponse> GetRaw(Uri url, Dictionary<string, string>? headers = null)
     {
         using var tcp = new TcpClient(url.Host, url.Port);
+        tcp.ReceiveTimeout = 30000;
+        tcp.SendTimeout = 30000;
+
         using var stream = tcp.GetStream();
 
         Stream requestStream = stream;
@@ -220,7 +226,6 @@ public class BouncyCastleHttpsClient(ILogger logger)
         await writer.WriteLineAsync($"GET {url.PathAndQuery} HTTP/1.1");
         await writer.WriteLineAsync($"Host: {url.Host}:{url.Port}");
         await writer.WriteLineAsync("Connection: close");
-        await writer.WriteLineAsync("Accept-Encoding: gzip, deflate");
 
         if (headers != null)
         {
