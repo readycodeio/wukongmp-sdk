@@ -33,9 +33,9 @@ public class BouncyCastleHttpsClient(ILogger logger)
         await _semaphore.WaitAsync(ct);
         try
         {
-            var response = await GetRaw(url, headers);
+            var response = await GetRawAsync(url, headers, ct);
 
-            if (response.StatusCode is < 200 or >= 300)
+            if (response is null || response.StatusCode is < 200 or >= 300)
                 return default;
 
             using var body = GetResponseBody(response);
@@ -54,9 +54,9 @@ public class BouncyCastleHttpsClient(ILogger logger)
         await _semaphore.WaitAsync(ct);
         try
         {
-            var response = await GetRaw(url, headers);
+            var response = await GetRawAsync(url, headers, ct);
 
-            if (response.StatusCode is < 200 or >= 300)
+            if (response is null || response.StatusCode is < 200 or >= 300)
                 return null;
 
             using var body = GetResponseBody(response);
@@ -198,7 +198,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
         }
     }
 
-    private async Task<HttpRequestResponse> GetRaw(Uri url, Dictionary<string, string>? headers = null)
+    private async Task<HttpRequestResponse?> GetRawAsync(Uri url, Dictionary<string, string>? headers = null, CancellationToken ct = default)
     {
         using var tcp = new TcpClient(url.Host, url.Port);
         using var stream = tcp.GetStream();
@@ -238,17 +238,59 @@ public class BouncyCastleHttpsClient(ILogger logger)
         using var handler = new HttpParserDelegate();
         using var parser = new HttpCombinedParser(handler);
 
-        using var memoryStream = new MemoryStream();
-        try
+        var buffer = new byte[8192];
+        // We will collect any leftover bytes into a MemoryStream only if the parser requires it.
+        // But the parser.Execute can be called on small chunks.
+        while (!ct.IsCancellationRequested)
         {
-            await requestStream.CopyToAsync(memoryStream);
-        }
-        catch (TlsNoCloseNotifyException)
-        {
-            // ignored
+            int bytesRead;
+            try
+            {
+                bytesRead = await requestStream.ReadAsync(buffer, 0, buffer.Length, ct);
+            }
+            catch (IOException) when (tcp.Client?.Connected == false)
+            {
+                // remote closed; stop reading
+                break;
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (TlsNoCloseNotifyException)
+            {
+                // Some TLS implementations throw on missing close_notify; treat as EOF
+                break;
+            }
+
+            if (bytesRead == 0)
+                break; // remote closed connection
+
+            // Feed the parser with the chunk we just read
+            using var chunkStream = new MemoryStream(buffer, 0, bytesRead, writable: false);
+            parser.Execute(chunkStream);
+
+            // If we have a response and Content-Length header, stop when we've read enough
+            if (handler.HttpRequestResponse is not null)
+            {
+                if (handler.HttpRequestResponse.Headers.TryGetValue("CONTENT-LENGTH", out var vals) &&
+                    long.TryParse(vals.FirstOrDefault(), out var expectedLength))
+                {
+                    if (handler.HttpRequestResponse.Body.Length >= expectedLength)
+                        break;
+                }
+                else
+                {
+                    // No content-length but the parser set the response once complete.
+                    break;
+                }
+            }
         }
 
-        parser.Execute(memoryStream);
+        if (handler.HttpRequestResponse is null)
+        {
+            return null;
+        }
 
         handler.HttpRequestResponse.Body.Position = 0;
         return handler.HttpRequestResponse;
