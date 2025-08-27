@@ -321,7 +321,7 @@ public static class SpawningUtils
     public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
     {
         // TODO: For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
-        if (CmdLineParams.Instance.LevelId == 0)
+        if (LaunchParameters.Instance.LevelId == 0)
         {
             return InTargetLocation;
         }

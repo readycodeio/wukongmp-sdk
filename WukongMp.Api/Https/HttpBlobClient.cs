@@ -13,16 +13,16 @@ public class HttpBlobClient(ILogger logger) : IBlobClient
 {
     public async Task<bool> UploadBlobAsync(BlobInfo blob, CancellationToken ct = default)
     {
-        var serverId = CmdLineParams.Instance.ServerId!.Value;
+        var serverId = LaunchParameters.Instance.ServerId!.Value;
         var nameEscaped = Uri.EscapeDataString(blob.Name);
 
         var client = new BouncyCastleHttpsClient(logger);
 
-        var url = new Uri($"{CmdLineParams.Instance.ApiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
+        var url = new Uri($"{LaunchParameters.Instance.ApiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
 
         var status = await client.PutMultipartAsync(url, [], "file", blob.Name, blob.Content, new Dictionary<string, string>
         {
-            { "Authorization", $"Bearer {CmdLineParams.Instance.JwtToken}" }
+            { "Authorization", $"Bearer {LaunchParameters.Instance.JwtToken}" }
         }, ct);
 
         return status is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous;
@@ -30,16 +30,16 @@ public class HttpBlobClient(ILogger logger) : IBlobClient
 
     public async Task<BlobInfo?> DownloadBlobAsync(string name, CancellationToken ct = default)
     {
-        var serverId = CmdLineParams.Instance.ServerId!.Value;
+        var serverId = LaunchParameters.Instance.ServerId!.Value;
         var nameEscaped = Uri.EscapeDataString(name);
 
         var client = new BouncyCastleHttpsClient(logger);
 
         // Download
-        var linkUrl = new Uri($"{CmdLineParams.Instance.ApiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
+        var linkUrl = new Uri($"{LaunchParameters.Instance.ApiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
         var downloadResponse = await client.GetAsync<DownloadServerFileResponse>(linkUrl, new Dictionary<string, string>
         {
-            { "Authorization", $"Bearer {CmdLineParams.Instance.JwtToken}" }
+            { "Authorization", $"Bearer {LaunchParameters.Instance.JwtToken}" }
         }, ct);
 
         if (string.IsNullOrWhiteSpace(downloadResponse?.DownloadUrl))
