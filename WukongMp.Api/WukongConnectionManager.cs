@@ -157,12 +157,6 @@ public class WukongConnectionManager : IDisposable
         else
         {
             Logging.LogWarning("Disconnected: {Cause}", disconnectReason);
-        }
-
-        // FIXME: This will only try to reconnect once and immediately which will probably not work if the cause 
-        // is a weak network connection.
-        if (disconnectReason is DisconnectReason.Timeout or DisconnectReason.RemoteConnectionClose)
-        {
             Reconnect();
         }
     }
