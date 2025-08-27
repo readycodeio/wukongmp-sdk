@@ -47,6 +47,9 @@ public class WukongWidgetManager : IDisposable
         var nickname = new PlayerEntity(entity).GetState().NickName;
         CoopStatusWidget.Instance.RemovePlayer(nickname);
         RefreshWidgets();
+
+        InfoMessageWidget.Instance.SetVisibility(true);
+        InfoMessageWidget.Instance.SetText("Disconnected");
     }
 
     public void Dispose()
