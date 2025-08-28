@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using WukongMp.Api.Configuration;
@@ -78,7 +79,7 @@ namespace WukongMp.Api.Patches
             }
         }
 
-        public static void Postfix(int TickGroup)
+        public static void Postfix(float DeltaSeconds, int TickGroup)
         {
             var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
 
@@ -87,7 +88,7 @@ namespace WukongMp.Api.Patches
             if (mask == BGW_TickGroupMask.TG_OnTick)
             {
                 RunMontageSync();
-                DI.Instance.EcsLoop.Tick(default);
+                DI.Instance.EcsLoop.Tick(DeltaSeconds);
                 ComponentMonitorManager.Instance.Update();
             }
         }
@@ -118,7 +119,7 @@ namespace WukongMp.Api.Patches
             var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (mainEntity == null)
                 return;
-            
+
             SyncPlayerMontage(mainEntity.Value);
 
             var playerId = DI.Instance.State.LocalPlayerId;
@@ -135,7 +136,7 @@ namespace WukongMp.Api.Patches
 
             if (localMainComp.Pawn == null)
                 return;
-            
+
             var montageState = localMainComp.MontageState;
             if (montageState.LocalAnimationInstance == null)
             {
@@ -151,7 +152,7 @@ namespace WukongMp.Api.Patches
 
                 bool hasMontageRewound = currentPosition < montageState.LocalMontagePosition && !isNewMontage;
                 bool hasSkippedFrames = currentPosition - montageState.LocalMontagePosition > 0.5f && !isNewMontage;
-                
+
                 if (isNewMontage || hasMontageRewound || hasSkippedFrames)
                 {
                     var netId = mainEntity.GetMeta().NetId;
