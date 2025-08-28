@@ -14,7 +14,7 @@ public class RespawnMainCharacterSystem(
     ILogger logger
 ) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
-    private readonly float _delaySeconds = 10;
+    private const float DelaySeconds = 10;
     private float _elapsedSeconds;
 
     protected override void OnUpdate()
@@ -28,12 +28,6 @@ public class RespawnMainCharacterSystem(
                 return;
 
             players++;
-
-            // once HP > 0, respawning must have finished
-            if (!mainComp.IsDead)
-            {
-                localMainComp.IsRespawning = false;
-            }
 
             // count players who are dead and not yet respawning
             allDead &= mainComp.IsDead && !localMainComp.IsRespawning;
@@ -62,10 +56,12 @@ public class RespawnMainCharacterSystem(
         if (localMainComp.IsRespawning)
         {
             _elapsedSeconds += Tick.deltaTime;
-            if (_elapsedSeconds > _delaySeconds)
+            if (_elapsedSeconds > DelaySeconds)
             {
                 var maxComp = 0;
                 Query.ForEachEntity((ref LocalMainCharacterComponent _, ref MainCharacterComponent mainComp, Entity _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
+
+                localMainComp.IsRespawning = false;
                 rpc.SendPartyRespawn(maxComp);
             }
         }
