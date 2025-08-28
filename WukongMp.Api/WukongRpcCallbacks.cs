@@ -1,6 +1,6 @@
-﻿using b1;
+﻿using System;
+using b1;
 using b1.BGW;
-using BtlShare;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -10,7 +10,6 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
-using System;
 using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
 using WukongMp.Api.DTO;
@@ -745,6 +744,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
 
             PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+            localMainComp.IsRespawning = false;
         }, this, birthPointId);
     }
 }
