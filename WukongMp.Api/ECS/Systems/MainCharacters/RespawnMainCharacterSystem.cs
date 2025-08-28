@@ -5,11 +5,15 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
 public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger logger) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
+    private readonly float _delaySeconds = 10;
+    private float _elapsedSeconds = 0;
+
     protected override void OnUpdate()
     {
         var allDead = true;
@@ -45,9 +49,19 @@ public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger l
             logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, playerState.LocalPlayerId);
 
             ref var localMainComp = ref mainEntity.Value.GetLocalState();
-            localMainComp.IsRespawning = true;
-
-            BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_UnitRebirth.Invoke(ERebirthType.RebirthPoint);
+            if (!localMainComp.IsRespawning)
+            {
+                localMainComp.IsRespawning = true;
+                _elapsedSeconds = 0;
+            }
+            else
+            {
+                _elapsedSeconds += Tick.deltaTime;
+                if (_elapsedSeconds > _delaySeconds)
+                {
+                    PlayerUtils.RebirthPlayer(localMainComp.Pawn);
+                }
+            }
         }
     }
 }

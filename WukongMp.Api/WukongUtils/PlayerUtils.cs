@@ -2,8 +2,8 @@
 using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -59,6 +59,12 @@ namespace WukongMp.Api.WukongUtils
         {
             var transform = GetLocalRebirthPointTransform();
             TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
+        }
+
+        public static void RebirthPlayer(BGUCharacterCS? playerPawn)
+        {
+            FreeCameraManager.Instance.LeaveFreeCameraMode();
+            BUS_EventCollectionCS.Get(playerPawn)?.Evt_UnitRebirth.Invoke(ERebirthType.RebirthPoint);
         }
 
         private static FTransform GetLocalRebirthPointTransform()
