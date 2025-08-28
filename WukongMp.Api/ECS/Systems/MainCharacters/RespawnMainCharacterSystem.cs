@@ -12,7 +12,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger logger) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
     private readonly float _delaySeconds = 10;
-    private float _elapsedSeconds = 0;
+    private float _elapsedSeconds;
 
     protected override void OnUpdate()
     {

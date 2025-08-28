@@ -167,10 +167,7 @@ public class WukongChatter : IDisposable
             ref var localMainComp = ref mainEntity.GetLocalState();
             var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
             events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            if (self._areaState.IsMasterClient)
-            {
-                events?.Evt_UnitDead.Invoke(localMainComp.Pawn, EDeadReason.Suicide);
-            }
+            events?.Evt_UnitDead.Invoke(localMainComp.Pawn, EDeadReason.Suicide);
         }, this);
     }
 
