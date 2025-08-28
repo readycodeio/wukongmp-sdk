@@ -9,6 +9,7 @@ using WukongMp.Api.State;
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
 public class RespawnMainCharacterSystem(
+    WukongAreaState areaState,
     WukongPlayerState playerState,
     WukongRpcCallbacks rpc,
     ILogger logger
@@ -19,6 +20,9 @@ public class RespawnMainCharacterSystem(
 
     protected override void OnUpdate()
     {
+        if (!areaState.IsMasterClient)
+            return;
+
         var allDead = true;
         var players = 0;
 
