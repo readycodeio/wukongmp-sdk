@@ -469,7 +469,10 @@ namespace WukongMp.Api.Patches
 
             ref var localMain = ref mainEntity.Value.GetLocalState();
             if (localMain.IsRespawning)
+            {
+                localMain.IsRespawning = false;
                 return true;
+            }
 
             return false;
         }

@@ -745,7 +745,6 @@ public partial class WukongRpcCallbacks : IDisposable
 
             localMainComp.IsRespawning = true;
             PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
-            localMainComp.IsRespawning = false;
         }, this, birthPointId);
     }
 }
