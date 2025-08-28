@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using b1;
+using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -17,8 +21,10 @@ public class WukongChatter : IDisposable
 {
     private readonly WukongConnectionManager _connection;
     private readonly ClientState _state;
+    private readonly WukongAreaState _areaState;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
+    private readonly IClientEcsUpdateLoop _ecsLoop;
 
     private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
     private const char Separator = ' ';
@@ -27,16 +33,20 @@ public class WukongChatter : IDisposable
     public WukongChatter(
         WukongConnectionManager connection,
         ClientState state,
+        WukongAreaState areaState,
         WukongPlayerState playerState,
-        WukongRpcCallbacks rpc
+        WukongRpcCallbacks rpc,
+        IClientEcsUpdateLoop ecsLoop
     )
     {
         Logging.LogDebug("Initializing WukongChatter");
 
         _connection = connection;
         _state = state;
+        _areaState = areaState;
         _playerState = playerState;
         _rpc = rpc;
+        _ecsLoop = ecsLoop;
 
         _connection.OnMasterClientChanged += OnMasterClientChanged;
         _state.OnJoinedArea += OnJoinedAreaHandler;
@@ -147,7 +157,21 @@ public class WukongChatter : IDisposable
     private void RequestGiveUp(ReadOnlyMemory<string> _)
     {
         SendServerMessage("PlayerGaveUp", NickName);
-        _rpc.SendSuicide();
+
+        // no need to send an RPC event since in co-op all players are authoritative over their HP
+        _ecsLoop.Scheduler.Schedule((_, self) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
+            if (self._areaState.IsMasterClient)
+            {
+                events?.Evt_UnitDead.Invoke(localMainComp.Pawn, EDeadReason.Suicide);
+            }
+        }, this);
     }
 
     private void RequestReconnect(ReadOnlyMemory<string> _)

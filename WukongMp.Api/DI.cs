@@ -196,7 +196,7 @@ public class DI
         ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
-        var chatter = Chatter = new WukongChatter(connection, state, playerState, rpc);
+        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
         var patcher = Patcher = new WukongPatcher();
 
         if (Constants.IsCoop)
