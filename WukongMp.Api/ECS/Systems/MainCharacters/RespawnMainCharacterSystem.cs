@@ -15,10 +15,6 @@ public class RespawnMainCharacterSystem(
     ILogger logger
 ) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
-    private const float DelaySeconds = 1;
-    private float _elapsedSeconds;
-    private bool _isCountingDown;
-
     protected override void OnUpdate()
     {
         if (!areaState.IsMasterClient)
@@ -51,25 +47,14 @@ public class RespawnMainCharacterSystem(
         ref var localMainComp = ref mainEntity.Value.GetLocalState();
 
         // if all players are dead, respawn the local player
-        if (players > 0 && allDead && !_isCountingDown && !localMainComp.IsRespawning)
+        if (players > 0 && allDead && !localMainComp.IsRespawning)
         {
             logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, playerState.LocalPlayerId);
-            _elapsedSeconds = 0;
-            _isCountingDown = true;
-        }
+            var maxComp = 0;
+            Query.ForEachEntity((ref LocalMainCharacterComponent _, ref MainCharacterComponent mainComp, Entity _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
 
-        if (_isCountingDown)
-        {
-            _elapsedSeconds += Tick.deltaTime;
-            if (_elapsedSeconds > DelaySeconds)
-            {
-                var maxComp = 0;
-                Query.ForEachEntity((ref LocalMainCharacterComponent _, ref MainCharacterComponent mainComp, Entity _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
-
-                _isCountingDown = false;
-                localMainComp.IsRespawning = true;
-                rpc.SendPartyRespawn(maxComp);
-            }
+            localMainComp.IsRespawning = true;
+            rpc.SendPartyRespawn(maxComp);
         }
     }
 }
