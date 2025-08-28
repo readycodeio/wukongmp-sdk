@@ -21,9 +21,10 @@ public class SpawnOtherMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerPawnState playerPawn,
     WukongEventBus eventBus,
+    ClientOwnershipManager ownershipManager,
     ILogger logger
 )
-    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent, TeamComponent>
+    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
     protected override void OnUpdate()
     {
@@ -44,7 +45,6 @@ public class SpawnOtherMainCharactersSystem(
         Query.ForEachEntity((
             ref LocalMainCharacterComponent localMainComp,
             ref MainCharacterComponent mainComp,
-            ref TeamComponent teamComp,
             Entity entity) =>
         {
             if (mainComp.PlayerId == playerId)
@@ -55,7 +55,7 @@ public class SpawnOtherMainCharactersSystem(
             var mainEntity = new MainCharacterEntity(entity);
 
             var playerEntity = playerState.GetPlayerById(mainComp.PlayerId);
-            if (playerEntity == null)
+            if (playerEntity == null && ownershipManager.OwnsEntity(entity))
             {
                 // orphan player character entity after disconnection (missing global player entity)
                 CommandBuffer.DeleteEntity(entity.Id);
