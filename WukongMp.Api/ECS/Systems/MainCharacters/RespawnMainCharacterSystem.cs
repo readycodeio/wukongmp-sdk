@@ -29,7 +29,7 @@ public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger l
             }
 
             // count players who are dead and not yet respawning
-            allDead |= mainComp.IsDead && !localMainComp.IsRespawning;
+            allDead &= mainComp.IsDead && !localMainComp.IsRespawning;
         });
 
         // if all players are dead, respawn the local player
