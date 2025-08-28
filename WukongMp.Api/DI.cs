@@ -105,7 +105,7 @@ public class DI
     public void Init()
     {
         Logger.LogDebug("Initializing DI...");
-        
+
         var loggerFactory = LoggerFactory;
         var logger = Logger;
 
@@ -130,7 +130,7 @@ public class DI
             new DefaultRelaySerializerRegistration(),
             new WukongSerializerRegistration(),
         ]);
-        
+
         var relayClient = RelayClient = new HotSwappableRelayClient();
         var blobClient = BlobClient = new HttpBlobClient(logger);
         var netEntity = NetEntity = new NetworkedEntityManager(world, logger, relayClient);
@@ -168,6 +168,11 @@ public class DI
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
+
+        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
+        ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
+        var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
+
         var synchronizer = Synchronizer = new WukongSynchronizer(
             worldEvent,
             state,
@@ -186,15 +191,12 @@ public class DI
             ecsLoop,
             eventBus,
             widgetManager,
+            rpc,
             logger);
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer, widgetManager);
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor);
-
-        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
-        ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
-        var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
         var patcher = Patcher = new WukongPatcher();
