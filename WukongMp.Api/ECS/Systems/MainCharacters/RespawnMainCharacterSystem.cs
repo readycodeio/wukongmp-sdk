@@ -36,31 +36,28 @@ public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger l
             allDead &= mainComp.IsDead && !localMainComp.IsRespawning;
         });
 
+        var mainEntity = playerState.LocalMainCharacter;
+        if (!mainEntity.HasValue)
+        {
+            logger.LogWarning("Skipping respawn, no local main character entity");
+            return;
+        }
+        ref var localMainComp = ref mainEntity.Value.GetLocalState();
+
         // if all players are dead, respawn the local player
         if (allDead && players > 0)
         {
-            var mainEntity = playerState.LocalMainCharacter;
-            if (!mainEntity.HasValue)
-            {
-                logger.LogWarning("Skipping respawn, no local main character entity");
-                return;
-            }
-
             logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, playerState.LocalPlayerId);
+            localMainComp.IsRespawning = true;
+            _elapsedSeconds = 0;
+        }
 
-            ref var localMainComp = ref mainEntity.Value.GetLocalState();
-            if (!localMainComp.IsRespawning)
+        if (localMainComp.IsRespawning)
+        {
+            _elapsedSeconds += Tick.deltaTime;
+            if (_elapsedSeconds > _delaySeconds)
             {
-                localMainComp.IsRespawning = true;
-                _elapsedSeconds = 0;
-            }
-            else
-            {
-                _elapsedSeconds += Tick.deltaTime;
-                if (_elapsedSeconds > _delaySeconds)
-                {
-                    PlayerUtils.RebirthPlayer(localMainComp.Pawn);
-                }
+                PlayerUtils.RebirthPlayer(localMainComp.Pawn);
             }
         }
     }
