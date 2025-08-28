@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS;
+﻿using b1;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
@@ -46,7 +47,7 @@ public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger l
             ref var localMainComp = ref mainEntity.Value.GetLocalState();
             localMainComp.IsRespawning = true;
 
-            // TODO: Actual respawn logic
+            BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_UnitRebirth.Invoke(ERebirthType.RebirthPoint);
         }
     }
 }
