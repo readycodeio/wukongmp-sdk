@@ -731,4 +731,20 @@ public partial class WukongRpcCallbacks : IDisposable
             ProjectileUtils.SetProjectileModeMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
         }, this, __sender, data);
     }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    private void OnPartyRespawn(int birthPointId)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, shrineId) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            var localMainComp = mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+        }, this, birthPointId);
+    }
 }

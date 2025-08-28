@@ -309,7 +309,7 @@ namespace WukongMp.Api.Patches
     public class PatchArchiveReadWriter
     {
         public static bool DisableArchiveSave;
-        
+
         public static bool Prefix(Dictionary<string, ArchiveAsyncRequest> ___PendingRequests)
         {
             if (Constants.IsCoop)
@@ -429,12 +429,20 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(UActorCompBaseCS __instance, int RebirthPointID)
         {
-            Logging.LogInformation("BirthPointID updated: {Id}", RebirthPointID);
+            Logging.LogInformation("Rebirth point as current birth point ID updated: {Id}", RebirthPointID);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointID);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
                 Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
                 Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+
+                // update RebirthPointId in ECS if this is the local player
+                var owner = __instance.GetOwner();
+                var playerState = DI.Instance.PlayerState;
+                if (owner != null && owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+                {
+                    playerState.LocalMainCharacter.Value.GetState().RebirthPointId = RebirthPointID;
+                }
             }
         }
     }
@@ -445,7 +453,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(UActorCompBaseCS __instance, int BirthPointID)
         {
-            Logging.LogInformation("BirthPointID updated: {Id}", BirthPointID);
+            Logging.LogInformation("Current birth point ID updated: {Id}", BirthPointID);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(BirthPointID);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
@@ -461,12 +469,20 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(UActorCompBaseCS __instance, int RebirthPointId)
         {
-            Logging.LogInformation("BirthPointID updated: {Id}", RebirthPointId);
+            Logging.LogInformation("Rebirth point ID updated: {Id}", RebirthPointId);
             FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(RebirthPointId);
             if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
             {
                 Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
                 Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(__instance.GetOwner()));
+
+                // update RebirthPointId in ECS if this is the local player
+                var owner = __instance.GetOwner();
+                var playerState = DI.Instance.PlayerState;
+                if (owner != null && owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+                {
+                    playerState.LocalMainCharacter.Value.GetState().RebirthPointId = RebirthPointId;
+                }
             }
         }
     }

@@ -1,15 +1,18 @@
-﻿using b1;
+﻿using System;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
-using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger logger) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
+public class RespawnMainCharacterSystem(
+    WukongPlayerState playerState,
+    WukongRpcCallbacks rpc,
+    ILogger logger
+) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
     private readonly float _delaySeconds = 10;
     private float _elapsedSeconds;
@@ -42,6 +45,7 @@ public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger l
             logger.LogWarning("Skipping respawn, no local main character entity");
             return;
         }
+
         ref var localMainComp = ref mainEntity.Value.GetLocalState();
 
         // if all players are dead, respawn the local player
@@ -57,7 +61,9 @@ public class RespawnMainCharacterSystem(WukongPlayerState playerState, ILogger l
             _elapsedSeconds += Tick.deltaTime;
             if (_elapsedSeconds > _delaySeconds)
             {
-                PlayerUtils.RebirthPlayer(localMainComp.Pawn);
+                var maxComp = 0;
+                Query.ForEachEntity((ref LocalMainCharacterComponent _, ref MainCharacterComponent mainComp, Entity _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
+                rpc.SendPartyRespawn(maxComp);
             }
         }
     }

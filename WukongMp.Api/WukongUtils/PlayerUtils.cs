@@ -11,7 +11,7 @@ namespace WukongMp.Api.WukongUtils
     {
         public static void TeleportLocalPlayer(MainCharacterEntity mainEntity, FVector location, FRotator rotation, bool sweep)
         {
-            ref var localMainComp = ref mainEntity.GetLocalState(); 
+            ref var localMainComp = ref mainEntity.GetLocalState();
             BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
             localMainComp.TeleportFinishFrames = 5;
             localMainComp.Pawn?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);
@@ -61,9 +61,10 @@ namespace WukongMp.Api.WukongUtils
             TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
         }
 
-        public static void RebirthPlayer(BGUCharacterCS? playerPawn)
+        public static void RebirthPlayer(BGUCharacterCS playerPawn, int rebirthPointId)
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
+            BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
             BUS_EventCollectionCS.Get(playerPawn)?.Evt_UnitRebirth.Invoke(ERebirthType.RebirthPoint);
         }
 
