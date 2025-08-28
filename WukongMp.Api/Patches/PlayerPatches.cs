@@ -614,7 +614,7 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            if (!Constants.IsCoop)
+            if (Constants.IsPvP)
             {
                 InControlData.ArmLength = Constants.CameraArmLength;
                 InControlData.ArmTargetOffset = FVector.ZeroVector;

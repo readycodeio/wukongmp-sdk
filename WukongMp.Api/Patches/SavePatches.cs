@@ -126,7 +126,7 @@ namespace WukongMp.Api.Patches
                 }
             }
 
-            if (!Constants.IsCoop)
+            if (Constants.IsPvP)
             {
                 // Read archive with our world state.
                 var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
@@ -288,7 +288,7 @@ namespace WukongMp.Api.Patches
 
             SavePatchesData.RedirectSaveFiles = false;
 
-            if (!Constants.IsCoop)
+            if (Constants.IsPvP)
             {
                 OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
                 OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
@@ -347,7 +347,7 @@ namespace WukongMp.Api.Patches
     {
         private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
         {
-            if (!DI.Instance.AreaState.InRoom || !Constants.IsCoop)
+            if (!DI.Instance.AreaState.InRoom || Constants.IsPvP)
                 return true;
 
             if (!SlotName.StartsWith("ArchiveSaveFile"))

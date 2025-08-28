@@ -32,7 +32,7 @@ public class WukongChatter : IDisposable
     )
     {
         Logging.LogDebug("Initializing WukongChatter");
-        
+
         _connection = connection;
         _state = state;
         _playerState = playerState;
@@ -41,14 +41,14 @@ public class WukongChatter : IDisposable
         _connection.OnMasterClientChanged += OnMasterClientChanged;
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
-        
+
         SetupCommands();
     }
 
     public void Dispose()
     {
         Logging.LogDebug("Disposing WukongChatter");
-        
+
         _state.OnJoinedArea -= OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
         _connection.OnMasterClientChanged -= OnMasterClientChanged;
@@ -73,14 +73,19 @@ public class WukongChatter : IDisposable
 
     private void SetupCommands()
     {
-        _commands.Add("/spawn", new WukongChatterCommand(RequestSpawn));
         _commands.Add("/reconnect", new WukongChatterCommand(RequestReconnect));
+        _commands.Add("/giveup", new WukongChatterCommand(RequestGiveUp));
+        if (Constants.IsPvP)
+        {
+            _commands.Add("/spawn", new WukongChatterCommand(RequestSpawn)); // TODO: Enable in PvP
+        }
+#if DEBUG
         _commands.Add("/disconnect", new WukongChatterCommand(RequestDisconnect));
         _commands.Add("/rebirth", new WukongChatterCommand(RequestRebirth));
         _commands.Add("/rebirth_point", new WukongChatterCommand(RequestPointRebirth));
-        _commands.Add("/giveup", new WukongChatterCommand(RequestGiveUp));
         _commands.Add("/master", new WukongChatterCommand(RequestNewMasterClient));
         _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
+#endif
     }
 
     private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -94,7 +99,7 @@ public class WukongChatter : IDisposable
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
-        
+
         var teamId = PvPUtils.GetOppositeTeam(playerEntity.Value.GetState().TeamId);
 
         switch (args.Length)
@@ -123,7 +128,7 @@ public class WukongChatter : IDisposable
         var playerId = _connection.PlayerId;
         if (playerId == null)
             return;
-        
+
         _rpc.SendRebirthPlayer(playerId.Value);
         SendServerMessage("PlayerRequestedRebirth", NickName);
     }
