@@ -51,7 +51,7 @@ public class RespawnMainCharacterSystem(
         ref var localMainComp = ref mainEntity.Value.GetLocalState();
 
         // if all players are dead, respawn the local player
-        if (allDead && players > 0 && !localMainComp.IsRespawning)
+        if (players > 0 && allDead && !_isCountingDown && !localMainComp.IsRespawning)
         {
             logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, playerState.LocalPlayerId);
             _elapsedSeconds = 0;
