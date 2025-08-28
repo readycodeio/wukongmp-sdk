@@ -39,6 +39,9 @@ public class RespawnMainCharacterSystem(
             allDead &= mainComp.IsDead && !localMainComp.IsRespawning;
         });
 
+        if (players == 0)
+            return;
+
         var mainEntity = playerState.LocalMainCharacter;
         if (!mainEntity.HasValue)
         {
