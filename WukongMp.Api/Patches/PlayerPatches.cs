@@ -462,6 +462,15 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
+            var playerState = DI.Instance.PlayerState;
+            var mainEntity = playerState.LocalMainCharacter;
+            if (!mainEntity.HasValue)
+                return false;
+
+            ref var localMain = ref mainEntity.Value.GetLocalState();
+            if (localMain.IsRespawning)
+                return true;
+
             return false;
         }
     }

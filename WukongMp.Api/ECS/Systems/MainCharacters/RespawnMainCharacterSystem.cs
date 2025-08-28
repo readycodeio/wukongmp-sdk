@@ -15,7 +15,7 @@ public class RespawnMainCharacterSystem(
     ILogger logger
 ) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
-    private const float DelaySeconds = 10;
+    private const float DelaySeconds = 1;
     private float _elapsedSeconds;
     private bool _isCountingDown;
 

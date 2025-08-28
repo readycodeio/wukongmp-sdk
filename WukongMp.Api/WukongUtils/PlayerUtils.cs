@@ -65,7 +65,9 @@ namespace WukongMp.Api.WukongUtils
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
             BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
-            BUS_EventCollectionCS.Get(playerPawn)?.Evt_UnitRebirth.Invoke(ERebirthType.RebirthPoint);
+            var uiControlData = BGU_DataUtil.GetReadOnlyData<BUC_UIControlData>(playerPawn);
+            uiControlData.SetActiveDeathUI(NewValue: true);
+            BGW_UIEventCollection.Get(playerPawn)?.Evt_UI_ActiveDeathUI(B1: true);
         }
 
         private static FTransform GetLocalRebirthPointTransform()
