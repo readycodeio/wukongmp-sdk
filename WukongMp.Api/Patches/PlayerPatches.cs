@@ -1,14 +1,13 @@
-﻿using System.Collections.Generic;
-using b1;
+﻿using b1;
+using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
+using ReadyM.Api.Multiplayer.ECS.Values;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.ECS.Values;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -455,10 +454,15 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(UIDeath), "DoShowIn")]
+    [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchUIDeath
+    public class PatchOnUnitTriggerDead
     {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_UIControlSystemV2:OnUnitTriggerDead");
+        }
+
         public static bool Prefix()
         {
             if (!DI.Instance.AreaState.InRoom)
@@ -558,7 +562,7 @@ namespace WukongMp.Api.Patches
 
             NetworkId newTargetId = default;
             var clearTarget = true;
-            string name = string.Empty;
+            string name = "null (Clear target)";
 
             var newTargetPlayerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(NewTargetInfo?.LockTargetActor);
             var newTargetMonsterEntity = DI.Instance.PawnState.GetEntityByTamerMonster(NewTargetInfo?.LockTargetActor);
@@ -578,7 +582,7 @@ namespace WukongMp.Api.Patches
             else if (newTargetMonsterEntity.HasValue)
             {
                 newTargetId = newTargetMonsterEntity.Value.GetMeta().NetId;
-                name = newTargetMonsterEntity.Value.GetNickname().Nickname;
+                name = newTargetMonsterEntity.Value.GetTamer().Guid ?? "Unknown monster";
                 clearTarget = false;
             }
 
@@ -595,7 +599,7 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetNickname().Nickname, name);
+                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetTamer().Guid ?? "Unknown monster", name);
 
                 var meta = tamerEntity.Value.GetMeta();
                 DI.Instance.Rpc.SendSetTarget(new TargetData(meta.NetId, newTargetId, clearTarget));
@@ -614,7 +618,7 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            if (!Constants.IsCoop)
+            if (Constants.IsPvP)
             {
                 InControlData.ArmLength = Constants.CameraArmLength;
                 InControlData.ArmTargetOffset = FVector.ZeroVector;
@@ -824,6 +828,22 @@ namespace WukongMp.Api.Patches
                 __instance.StepFinish();
                 return false;
             }
+
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(B1BattleLogicSvc), "RebirthPointRest")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnRebirthPointRest
+    {
+        public static bool Prefix(InteractStepMatchPos __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            BPC_RebirthPointData rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
+            DI.Instance.Rpc.SendRestAtShrine(rebirthPointData.CurrentBirthPoint.PointID);
 
             return true;
         }

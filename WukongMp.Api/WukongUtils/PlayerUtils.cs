@@ -2,8 +2,8 @@
 using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -11,7 +11,7 @@ namespace WukongMp.Api.WukongUtils
     {
         public static void TeleportLocalPlayer(MainCharacterEntity mainEntity, FVector location, FRotator rotation, bool sweep)
         {
-            ref var localMainComp = ref mainEntity.GetLocalState(); 
+            ref var localMainComp = ref mainEntity.GetLocalState();
             BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
             localMainComp.TeleportFinishFrames = 5;
             localMainComp.Pawn?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);
@@ -43,6 +43,7 @@ namespace WukongMp.Api.WukongUtils
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_ResetSkillCD.Invoke();
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.CurEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(playerPawn, EBGUAttrFloat.TransEnergyMax));
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(playerPawn, EBGUAttrFloat.VigorEnergyMax));
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.FabaoEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(playerPawn, EBGUAttrFloat.FabaoEnergyMax));
         }
@@ -59,6 +60,31 @@ namespace WukongMp.Api.WukongUtils
         {
             var transform = GetLocalRebirthPointTransform();
             TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
+        }
+
+        public static void RebirthPlayer(BGUCharacterCS playerPawn, int rebirthPointId)
+        {
+            FreeCameraManager.Instance.LeaveFreeCameraMode();
+            BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
+            var uiControlData = BGU_DataUtil.GetReadOnlyData<BUC_UIControlData>(playerPawn);
+            uiControlData.SetActiveDeathUI(NewValue: true);
+            BGW_UIEventCollection.Get(playerPawn)?.Evt_UI_ActiveDeathUI(B1: true);
+        }
+
+        public static void RebirthPlayerInPlace(BGUCharacterCS playerPawn)
+        {
+            var events = BUS_EventCollectionCS.Get(playerPawn);
+            if (events != null)
+            {
+                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
+                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
+                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
+            }
+        }
+
+        public static void RestPlayer(BGUCharacterCS playerPawn)
+        {
+            BUS_EventCollectionCS.Get(playerPawn)?.Evt_TriggerPlayerRest.Invoke();
         }
 
         private static FTransform GetLocalRebirthPointTransform()

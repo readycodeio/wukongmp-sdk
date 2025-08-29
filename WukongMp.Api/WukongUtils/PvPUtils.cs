@@ -23,7 +23,7 @@ public static class PvPUtils
         if (!IsAfterLoadingScreen)
             return;
 
-        if (!Constants.IsCoop)
+        if (Constants.IsPvP)
         {
             GameMessageWidget.Instance.SetVisibility(true);
             GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
@@ -46,7 +46,7 @@ public static class PvPUtils
         GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
         GameMessageWidget.Instance.SetSecondText(Texts.MatchmakingInProgress);
         GameMessageWidget.Instance.SetThirdText("");
-        if (!Constants.IsCoop)
+        if (Constants.IsPvP)
         {
             LobbyStatusWidget.Instance.SetVisibility(true);
         }
@@ -61,7 +61,7 @@ public static class PvPUtils
         if (!IsAfterLoadingScreen)
             return;
 
-        if (!Constants.IsCoop)
+        if (Constants.IsPvP)
         {
             GameMessageWidget.Instance.SetVisibility(true);
             GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);

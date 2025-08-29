@@ -1,6 +1,6 @@
-﻿using b1;
+﻿using System;
+using b1;
 using b1.BGW;
-using BtlShare;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -10,7 +10,6 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
-using System;
 using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
 using WukongMp.Api.DTO;
@@ -99,7 +98,7 @@ public partial class WukongRpcCallbacks : IDisposable
             "",
             playMovieRequest.MatchType));
     }
-    
+
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnExitPhantomRush(PlayerId playerId)
     {
@@ -119,10 +118,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnEndMatchmaking()
     {
-        _ecsLoop.Scheduler.Schedule(_ =>
-        {
-            PvPUtils.OnMatchmakingEnded();
-        });
+        _ecsLoop.Scheduler.Schedule(_ => { PvPUtils.OnMatchmakingEnded(); });
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -204,10 +200,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnSummon(UnitSummonData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, data0) =>
-        {
-            SummonPatch.ExecuteSummon(data0.SummonerId, data0.SummonId, data0.Guid, data0.Name, data0.TeamId);
-        }, data);
+        _ecsLoop.Scheduler.Schedule((_, data0) => { SummonPatch.ExecuteSummon(data0.SummonerId, data0.SummonId, data0.Guid, data0.Name, data0.TeamId); }, data);
     }
 
     [RpcEvent(RelayMode.EntityOwner)]
@@ -247,10 +240,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayMovieRequest(PlayMovieData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, data0) =>
-        {
-            CutsceneUtils.PlayCutscene(data0);
-        }, data);
+        _ecsLoop.Scheduler.Schedule((_, data0) => { CutsceneUtils.PlayCutscene(data0); }, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -338,10 +328,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnChatMessage(ChatMessage message)
     {
-        _ecsLoop.Scheduler.Schedule((_, message0) =>
-        {
-            WukongChatter.OnGetMessage(message0);
-        }, message);
+        _ecsLoop.Scheduler.Schedule((_, message0) => { WukongChatter.OnGetMessage(message0); }, message);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -384,24 +371,6 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, data);
     }
 
-    [RpcEvent(RelayMode.EntityOwner)]
-    internal void OnSuicide(PlayerId __sender)
-    {
-        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
-        {
-            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
-                return;
-
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
-            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
-            if (self._areaState.IsMasterClient)
-            {
-                events?.Evt_UnitDead.Invoke(localMainComp.Pawn, EDeadReason.Suicide);
-            }
-        }, this, __sender);
-    }
-
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnRebirthPlayer(PlayerId playerId)
     {
@@ -418,12 +387,9 @@ public partial class WukongRpcCallbacks : IDisposable
             }
 
             ref var localMainComp = ref mainEntity.GetLocalState();
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
-            if (events != null)
+            if (localMainComp.Pawn != null)
             {
-                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
-                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
-                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
+                PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
             }
         }, this, playerId);
     }
@@ -499,6 +465,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 {
                     self._logger.LogWarning("Montage not found: {Montage}", fullMontagePath);
                 }
+
                 return;
             }
 
@@ -542,10 +509,23 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.GlobalOthers)]
     internal void OnWaitingForSequence(SequenceWaitingData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, data0) =>
+        _ecsLoop.Scheduler.Schedule((_, self, data0) => 
         {
             CutsceneUtils.SetJoiningCutsceneStatus(data0);
-        }, data);
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            if (mainEntity.GetState().IsDead)
+            {
+                FreeCameraManager.Instance.LeaveFreeCameraMode();
+                PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
+                CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
+            }
+        }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -630,7 +610,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 self._logger.LogError("Player not found: {Id}", sender);
                 return;
             }
-            
+
             ref var mainComp = ref mainEntity.GetState();
             ref var localMainComp = ref mainEntity.GetLocalState();
             if (localMainComp.Pawn == null)
@@ -655,7 +635,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 self._logger.LogError("Player not found: {Id}", sender);
                 return;
             }
-            
+
             ref var mainComp = ref mainEntity.GetState();
             ref var localMainComp = ref mainEntity.GetLocalState();
             if (localMainComp.Pawn == null)
@@ -762,5 +742,48 @@ public partial class WukongRpcCallbacks : IDisposable
 
             ProjectileUtils.SetProjectileModeMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
         }, this, __sender, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    private void OnPartyRespawn(int birthPointId)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, shrineId) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            localMainComp.IsRespawning = true;
+            PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+            localMainComp.IsRespawning = false;
+        }, this, birthPointId);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnRestAtShrine(int birthPointId)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, shrineId) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            if (mainEntity.GetState().IsDead)
+            {
+                localMainComp.IsRespawning = true;
+                PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+                localMainComp.IsRespawning = false;
+            }
+            else
+            {
+                PlayerUtils.RestPlayer(localMainComp.Pawn);
+            }
+        }, this, birthPointId);
     }
 }

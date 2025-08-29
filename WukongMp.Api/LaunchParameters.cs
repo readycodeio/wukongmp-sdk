@@ -107,7 +107,7 @@ public class LaunchParameters
             return;
         }
 
-        if (!Constants.IsCoop)
+        if (Constants.IsPvP)
         {
             // REQUIRED: Level ID
             var level = data.GetValueOrDefault("LEVEL_ID");

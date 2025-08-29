@@ -39,6 +39,7 @@ public struct LocalMainCharacterComponent : IComponent
     public bool HasPawn
         => !_pawn.IsNullOrDestroyed();
         
+    public bool IsRespawning { get; set; }
     public bool RunImmobilizePatches { get; set; }
     public MontageState MontageState { get; set; }
         

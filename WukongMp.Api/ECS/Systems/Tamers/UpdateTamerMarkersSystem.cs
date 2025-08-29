@@ -2,6 +2,7 @@
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
