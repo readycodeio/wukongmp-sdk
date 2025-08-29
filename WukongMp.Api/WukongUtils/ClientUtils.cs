@@ -64,7 +64,7 @@ public static class ClientUtils
 
         if (_setter == null)
         {
-            var setterMethod = actor.GetType().GetProperty("TeamIDInCS", BindingFlags.Instance | BindingFlags.NonPublic)!.GetSetMethod(true);
+            var setterMethod = typeof(BGUCharacterCS).GetProperty("TeamIDInCS", BindingFlags.Instance | BindingFlags.NonPublic)!.GetSetMethod(true);
             _setter = (Action<BGUCharacterCS, int>)Delegate.CreateDelegate(typeof(Action<BGUCharacterCS, int>), setterMethod!);
         }
         _setter.Invoke(actor, newTeamId);
