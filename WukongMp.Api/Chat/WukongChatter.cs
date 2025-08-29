@@ -85,14 +85,14 @@ public class WukongChatter : IDisposable
     {
         _commands.Add("/reconnect", new WukongChatterCommand(RequestReconnect));
         _commands.Add("/giveup", new WukongChatterCommand(RequestGiveUp));
+        _commands.Add("/rebirth", new WukongChatterCommand(RequestRebirth));
+        _commands.Add("/rebirth_point", new WukongChatterCommand(RequestPointRebirth));
         if (Constants.IsPvP)
         {
             _commands.Add("/spawn", new WukongChatterCommand(RequestSpawn)); // TODO: Enable in PvP
         }
 #if DEBUG
         _commands.Add("/disconnect", new WukongChatterCommand(RequestDisconnect));
-        _commands.Add("/rebirth", new WukongChatterCommand(RequestRebirth));
-        _commands.Add("/rebirth_point", new WukongChatterCommand(RequestPointRebirth));
         _commands.Add("/master", new WukongChatterCommand(RequestNewMasterClient));
         _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
 #endif
