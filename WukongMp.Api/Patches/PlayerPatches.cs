@@ -454,7 +454,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(UIDeath), "DoShowIn")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchUIDeath
     {
         public static bool Prefix()
@@ -476,6 +476,24 @@ namespace WukongMp.Api.Patches
                 localMain.IsRespawning = false;
                 return true;
             }
+
+            return false;
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUnitTriggerDead
+    {
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_UIControlSystemV2:OnUnitTriggerDead");
+        }
+
+        public static bool Prefix()
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
 
             return false;
         }
