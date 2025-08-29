@@ -589,7 +589,7 @@ namespace WukongMp.Api.Patches
 
             NetworkId newTargetId = default;
             var clearTarget = true;
-            string name = string.Empty;
+            string name = "null (Clear target)";
 
             var newTargetPlayerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(NewTargetInfo?.LockTargetActor);
             var newTargetMonsterEntity = DI.Instance.PawnState.GetEntityByTamerMonster(NewTargetInfo?.LockTargetActor);
@@ -609,7 +609,7 @@ namespace WukongMp.Api.Patches
             else if (newTargetMonsterEntity.HasValue)
             {
                 newTargetId = newTargetMonsterEntity.Value.GetMeta().NetId;
-                name = newTargetMonsterEntity.Value.GetNickname().Nickname;
+                name = newTargetMonsterEntity.Value.GetTamer().Guid ?? "Unknown monster";
                 clearTarget = false;
             }
 
@@ -626,7 +626,7 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetNickname().Nickname, name);
+                Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetTamer().Guid ?? "Unknown monster", name);
 
                 var meta = tamerEntity.Value.GetMeta();
                 DI.Instance.Rpc.SendSetTarget(new TargetData(meta.NetId, newTargetId, clearTarget));
