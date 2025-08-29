@@ -86,6 +86,9 @@ public static class CutsceneUtils
         ref var main = ref mainEntity.Value.GetState();
         ref var localMain = ref mainEntity.Value.GetLocalState();
         if (localMain.IsJoiningSequence)
+        {
+            Logging.LogInformation("Trying to teleport player to cutscene location: {Location}", localMain.JoiningSequenceLocation.ToString());
             PlayerUtils.TeleportLocalPlayer(mainEntity.Value, localMain.JoiningSequenceLocation, main.Rotation.ToFRotator(), true);
+        }
     }
 }

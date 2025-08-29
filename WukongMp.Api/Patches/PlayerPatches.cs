@@ -454,34 +454,6 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(UIDeath), "DoShowIn")]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
-    public class PatchUIDeath
-    {
-        public static bool Prefix()
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return true;
-
-            Logging.LogDebug("DoShowIn called");
-
-            var playerState = DI.Instance.PlayerState;
-            var mainEntity = playerState.LocalMainCharacter;
-            if (!mainEntity.HasValue)
-                return false;
-
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-            if (localMain.IsRespawning)
-            {
-                Logging.LogDebug("DoShowIn returns true");
-                localMain.IsRespawning = false;
-                return true;
-            }
-
-            return false;
-        }
-    }
-
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitTriggerDead
@@ -584,9 +556,6 @@ namespace WukongMp.Api.Patches
                 Logging.LogError("Owner is null or destroyed");
                 return false;
             }
-
-            if (!owner.GetName().Contains("Unit_Player_Wukong"))
-                Logging.LogDebug("SetTargetToData called for {Owner}", owner.GetName());
 
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return true;
