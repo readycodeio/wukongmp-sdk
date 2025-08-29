@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
-using b1;
+﻿using b1;
+using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Values;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -858,6 +859,22 @@ namespace WukongMp.Api.Patches
                 __instance.StepFinish();
                 return false;
             }
+
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(B1BattleLogicSvc), "RebirthPointRest")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnRebirthPointRest
+    {
+        public static bool Prefix(InteractStepMatchPos __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            BPC_RebirthPointData rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
+            DI.Instance.Rpc.SendRestAtShrine(rebirthPointData.CurrentBirthPoint.PointID);
 
             return true;
         }
