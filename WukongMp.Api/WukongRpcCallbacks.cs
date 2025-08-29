@@ -739,7 +739,7 @@ public partial class WukongRpcCallbacks : IDisposable
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
 
-            var localMainComp = mainEntity.GetLocalState();
+            ref var localMainComp = ref mainEntity.GetLocalState();
             if (localMainComp.Pawn == null)
                 return;
 
