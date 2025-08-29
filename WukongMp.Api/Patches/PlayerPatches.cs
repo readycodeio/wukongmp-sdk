@@ -583,6 +583,7 @@ namespace WukongMp.Api.Patches
                 Logging.LogError("Owner is null or destroyed");
                 return false;
             }
+            Logging.LogDebug("SetTargetToData called for {Owner}", owner.GetName());
 
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return true;
