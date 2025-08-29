@@ -602,4 +602,21 @@ namespace WukongMp.Api.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(BGUCharacterCS), "SetTeamIDInCS")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchSetTeamIDInCS
+    {
+        public static void Postfix(BGUCharacterCS __instance, int NewTeamID)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance);
+            if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                return;
+
+            tamerEntity.Value.SetTeam(new ReadyM.Relay.Common.Wukong.ECS.Components.TeamComponent() { TeamId = NewTeamID });
+        }
+    }
 }

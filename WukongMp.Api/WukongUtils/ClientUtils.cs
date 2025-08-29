@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
-using b1;
+﻿using b1;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace WukongMp.Api.WukongUtils;
 
 public static class ClientUtils
 {
+    private static Action<BGUCharacterCS, int>? _setter;
+
     public static void RegisterTeamHostility(int team1, int team2)
     {
         var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
@@ -58,6 +62,12 @@ public static class ClientUtils
             teamRelationData.TeamHostileInfos.Add(newTeamId, newRelationInfo);
         }
 
+        if (_setter == null)
+        {
+            var setterMethod = typeof(BGUCharacterCS).GetProperty("TeamIDInCS", BindingFlags.Instance | BindingFlags.NonPublic)!.GetSetMethod(true);
+            _setter = (Action<BGUCharacterCS, int>)Delegate.CreateDelegate(typeof(Action<BGUCharacterCS, int>), setterMethod!);
+        }
+        _setter.Invoke(actor, newTeamId);
         actor.SetTeamIDInCS(newTeamId);
     }
 }
