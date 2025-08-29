@@ -748,4 +748,29 @@ public partial class WukongRpcCallbacks : IDisposable
             localMainComp.IsRespawning = false;
         }, this, birthPointId);
     }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnRestAtShrine(int birthPointId)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, shrineId) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            if (mainEntity.GetState().IsDead)
+            {
+                localMainComp.IsRespawning = true;
+                PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+                localMainComp.IsRespawning = false;
+            }
+            else
+            {
+                // TODO: other players rest too
+            }
+        }, this, birthPointId);
+    }
 }
