@@ -521,8 +521,9 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (mainEntity.GetState().IsDead)
             {
-                CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
+                FreeCameraManager.Instance.LeaveFreeCameraMode();
                 PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
+                CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             }
         }, this, data);
     }
