@@ -43,6 +43,7 @@ namespace WukongMp.Api.WukongUtils
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_ResetSkillCD.Invoke();
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.CurEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(playerPawn, EBGUAttrFloat.TransEnergyMax));
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(playerPawn, EBGUAttrFloat.VigorEnergyMax));
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.FabaoEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(playerPawn, EBGUAttrFloat.FabaoEnergyMax));
         }
@@ -68,6 +69,22 @@ namespace WukongMp.Api.WukongUtils
             var uiControlData = BGU_DataUtil.GetReadOnlyData<BUC_UIControlData>(playerPawn);
             uiControlData.SetActiveDeathUI(NewValue: true);
             BGW_UIEventCollection.Get(playerPawn)?.Evt_UI_ActiveDeathUI(B1: true);
+        }
+
+        public static void RebirthPlayerInPlace(BGUCharacterCS playerPawn)
+        {
+            var events = BUS_EventCollectionCS.Get(playerPawn);
+            if (events != null)
+            {
+                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
+                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
+                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
+            }
+        }
+
+        public static void RestPlayer(BGUCharacterCS playerPawn)
+        {
+            BUS_EventCollectionCS.Get(playerPawn)?.Evt_TriggerPlayerRest.Invoke();
         }
 
         private static FTransform GetLocalRebirthPointTransform()

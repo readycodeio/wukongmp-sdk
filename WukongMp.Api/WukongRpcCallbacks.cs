@@ -387,12 +387,9 @@ public partial class WukongRpcCallbacks : IDisposable
             }
 
             ref var localMainComp = ref mainEntity.GetLocalState();
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
-            if (events != null)
+            if (localMainComp.Pawn != null)
             {
-                events.Evt_OnLeaveFalling.Invoke(); // Reset falling timer.
-                events.Evt_RebirthTeleportFinish.Invoke(ERebirthType.RebirthPoint); // Rest state and play anim montage.
-                events.Evt_TriggerTeleportResetPlayer.Invoke(); // Reset player stats, will set IsDead flag to false.
+                PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
             }
         }, this, playerId);
     }
@@ -512,7 +509,22 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.GlobalOthers)]
     internal void OnWaitingForSequence(SequenceWaitingData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, data0) => { CutsceneUtils.SetJoiningCutsceneStatus(data0); }, data);
+        _ecsLoop.Scheduler.Schedule((_, self, data0) => 
+        {
+            CutsceneUtils.SetJoiningCutsceneStatus(data0);
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            if (mainEntity.GetState().IsDead)
+            {
+                CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
+                PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
+            }
+        }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -769,7 +781,7 @@ public partial class WukongRpcCallbacks : IDisposable
             }
             else
             {
-                // TODO: other players rest too
+                PlayerUtils.RestPlayer(localMainComp.Pawn);
             }
         }, this, birthPointId);
     }
