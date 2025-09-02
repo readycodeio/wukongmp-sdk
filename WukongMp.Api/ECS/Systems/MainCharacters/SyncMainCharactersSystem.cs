@@ -16,7 +16,7 @@ public class SyncMainCharactersSystem(
     WukongEventBus eventBus,
     ILogger logger
 )
-    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent, TeamComponent>
+    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
     protected override void OnUpdate()
     {
@@ -26,7 +26,6 @@ public class SyncMainCharactersSystem(
         Query.ForEachEntity((
             ref LocalMainCharacterComponent localMainComp,
             ref MainCharacterComponent mainComp,
-            ref TeamComponent teamComp,
             Entity entity) =>
         {
             if (localMainComp.Pawn == null)
