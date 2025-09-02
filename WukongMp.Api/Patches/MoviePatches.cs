@@ -34,42 +34,46 @@ public static class PatchRequestPlayMovie
             return false; // Skip the request if the sequence has already been played
         }
 
-        var Owner = __instance.GetOwner();
+        var owner = __instance.GetOwner();
         // get methods
         var movieSystemType = __instance.GetType();
-        MethodInfo OnPlayMovieInstance = AccessTools.Method(movieSystemType, "OnPlayMovieInstance");
+        var onPlayMovieInstance = AccessTools.Method(movieSystemType, "OnPlayMovieInstance");
 
-        FMovieSceneSequencePlaybackSettings fMovieSceneSequencePlaybackSettings = default(FMovieSceneSequencePlaybackSettings);
-        fMovieSceneSequencePlaybackSettings.AutoPlay = false;
-        fMovieSceneSequencePlaybackSettings.PlayRate = 1f;
-        fMovieSceneSequencePlaybackSettings.StartTime = 0f;
-        fMovieSceneSequencePlaybackSettings.RandomStartTime = false;
-        fMovieSceneSequencePlaybackSettings.RestoreState = false;
-        fMovieSceneSequencePlaybackSettings.DisableMovementInput = true;
-        fMovieSceneSequencePlaybackSettings.DisableLookAtInput = Request.bDisableLookAtInput;
-        fMovieSceneSequencePlaybackSettings.HidePlayer = Request.bHidePlayer;
-        fMovieSceneSequencePlaybackSettings.HideHud = Request.bHideHud;
-        fMovieSceneSequencePlaybackSettings.DisableCameraCuts = !Request.bDisablePlayerControl;
-        fMovieSceneSequencePlaybackSettings.PauseAtEnd = false;
-        FMovieSceneSequencePlaybackSettings playbackSettings = fMovieSceneSequencePlaybackSettings;
-        FLevelSequenceCameraSettings fLevelSequenceCameraSettings = default(FLevelSequenceCameraSettings);
-        fLevelSequenceCameraSettings.AspectRatioAxisConstraint = EAspectRatioAxisConstraint.AspectRatio_MaintainXFOV;
-        fLevelSequenceCameraSettings.OverrideAspectRatioAxisConstraint = false;
-        FLevelSequenceCameraSettings cameraSettings = fLevelSequenceCameraSettings;
-        FMovieGraphPlaySettings fMovieGraphPlaySettings = default(FMovieGraphPlaySettings);
-        fMovieGraphPlaySettings.PlaybackSettings = playbackSettings;
-        fMovieGraphPlaySettings.CameraSettings = cameraSettings;
-        fMovieGraphPlaySettings.bUsePlayerCamera = !Request.bDisablePlayerControl;
-        fMovieGraphPlaySettings.bTriggerMonsterGoHome = false;
-        FMovieGraphPlaySettings inPlaySettings = fMovieGraphPlaySettings;
-        MovieInstance movieInstance = MovieInstance.Create(Owner, Request.SequenceID, inPlaySettings);
+        FMovieSceneSequencePlaybackSettings fMovieSceneSequencePlaybackSettings = new()
+        {
+            AutoPlay = false,
+            PlayRate = 1f,
+            StartTime = 0f,
+            RandomStartTime = false,
+            RestoreState = false,
+            DisableMovementInput = true,
+            DisableLookAtInput = Request.bDisableLookAtInput,
+            HidePlayer = Request.bHidePlayer,
+            HideHud = Request.bHideHud,
+            DisableCameraCuts = !Request.bDisablePlayerControl,
+            PauseAtEnd = false
+        };
+        FLevelSequenceCameraSettings fLevelSequenceCameraSettings = new()
+        {
+            AspectRatioAxisConstraint = EAspectRatioAxisConstraint.AspectRatio_MaintainXFOV,
+            OverrideAspectRatioAxisConstraint = false
+        };
+        FMovieGraphPlaySettings fMovieGraphPlaySettings = new()
+        {
+            PlaybackSettings = fMovieSceneSequencePlaybackSettings,
+            CameraSettings = fLevelSequenceCameraSettings,
+            bUsePlayerCamera = !Request.bDisablePlayerControl,
+            bTriggerMonsterGoHome = false
+        };
+        MovieInstance movieInstance = MovieInstance.Create(owner, Request.SequenceID, fMovieGraphPlaySettings);
         if (movieInstance == null)
         {
             Request.BeforePlayFinishCallback?.Invoke();
             Request.MovieFinishCallback?.Invoke();
             return false;
         }
-        AActor actorByGuid = BGU_DataUtil.GetActorByGuid(Owner, Request.OverlapBoxGuid);
+
+        AActor actorByGuid = BGU_DataUtil.GetActorByGuid(owner, Request.OverlapBoxGuid);
         if (actorByGuid != null)
         {
             movieInstance.OverlapGuid = Request.OverlapBoxGuid;
@@ -78,21 +82,25 @@ public static class PatchRequestPlayMovie
             {
                 movieInstance.PointAPos = ((USceneComponent)componentsByTag[0]).GetWorldTransform();
             }
+
             componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass(typeof(USceneComponent)), B1GlobalFNames.MatchPointB);
             if (componentsByTag.Count > 0)
             {
                 movieInstance.PointBPos = ((USceneComponent)componentsByTag[0]).GetWorldTransform();
             }
+
             movieInstance.MatchingPosType = Request.MatchType;
         }
         else
         {
             movieInstance.OverlapGuid = "";
         }
+
         if (Request.BeforePlayFinishCallback != null)
         {
             movieInstance.BeforePlayFinishCallBack = (Action)Delegate.Combine(movieInstance.BeforePlayFinishCallBack, Request.BeforePlayFinishCallback);
         }
+
         if (Request.MovieFinishCallback != null)
         {
             movieInstance.MovieFinishCallBack = (Action)Delegate.Combine(movieInstance.MovieFinishCallBack, Request.MovieFinishCallback);
@@ -100,7 +108,7 @@ public static class PatchRequestPlayMovie
 
         SetCallbacks(Request.SequenceID, movieInstance);
 
-        OnPlayMovieInstance?.Invoke(__instance, [Request.SequenceID, movieInstance]);
+        onPlayMovieInstance?.Invoke(__instance, [Request.SequenceID, movieInstance]);
 
         return false;
     }
@@ -121,13 +129,14 @@ public static class PatchRequestPlayMovie
                 localMain.Pawn?.SetActorHiddenInGame(true);
                 localMain.MarkerActor?.SetActorHiddenInGame(true);
             }
+
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
                 foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
                 {
                     var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                    if (mainEntity == null)
+                    if (!mainEntity.HasValue)
                         continue;
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.Pawn?.SetActorHiddenInGame(false);
@@ -174,6 +183,7 @@ public static class PatchTickForMovieSystem
         {
             return false;
         }
+
         if (AnimationSyncData.IsPlayerInAnimationSyncing(__instance.GetOwner()))
         {
             MovieData.bAllSeqCantSkip = true;
@@ -182,11 +192,12 @@ public static class PatchTickForMovieSystem
         {
             MovieData.bAllSeqCantSkip = false;
         }
+
         if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
             var mainEntity = playerState.LocalMainCharacter;
-            
+
             if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
@@ -217,10 +228,12 @@ public static class PatchTickForMovieSystem
                 DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
             }
         }
+
         foreach (TStrongObjectPtr<MovieInstance> item in MovieData.MovieInstances.Values.ToList())
         {
             item.Get()?.OnTick(DeltaTime);
         }
+
         if (MovieData.TransBackTimeForPreviewMovie > 1E-08f)
         {
             MovieData.TransBackTimeForPreviewMovie -= DeltaTime;
@@ -230,6 +243,7 @@ public static class PatchTickForMovieSystem
                 OnFinishTransBackMethod?.Invoke(__instance, null);
             }
         }
+
         TickForDefeatSlowTimeMethod?.Invoke(__instance, [DeltaTime]);
         if (GSGameplayCVar.CVar_AutoSkipMovies.GetValueInGameThread() != 0 && MovieData.IsCanSkip())
         {
