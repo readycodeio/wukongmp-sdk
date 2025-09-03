@@ -540,6 +540,7 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
                 // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
+
             if (GameUtils.GetControlledPawn() == owner)
             {
                 DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
@@ -568,6 +569,7 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
                 // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
             }
+
             if (GameUtils.GetControlledPawn() == owner)
             {
                 DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
@@ -596,6 +598,7 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
                 // DI.Instance.Rpc.SendUnitRemoveAllBuffs(new BuffRemoveAllData(netPeer, RemoveTriggerType, WithTriggerRemoveEffect));
             }
+
             if (GameUtils.GetControlledPawn() == owner)
             {
                 DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(RemoveTriggerType, WithTriggerRemoveEffect));

@@ -305,8 +305,11 @@ namespace WukongMp.Api.Patches
             return AccessTools.Method("b1.BUS_BattleStateComp:OnEnableCanUpdateHatred");
         }
 
-        public static bool Prefix(UActorCompBaseCS __instance, bool bEnable)
+        public static bool Prefix(UActorCompBaseCS? __instance, bool bEnable)
         {
+            if (__instance == null)
+                return true;
+
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 

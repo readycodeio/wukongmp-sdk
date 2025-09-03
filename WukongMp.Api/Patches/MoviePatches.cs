@@ -157,8 +157,11 @@ public static class PatchTickForMovieSystem
         return AccessTools.Method("b1.BGS_MovieSystem:TickForMovieSystem");
     }
 
-    public static bool Prefix(GameStateSystemBase __instance, float DeltaTime)
+    public static bool Prefix(GameStateSystemBase? __instance, float DeltaTime)
     {
+        if (__instance == null)
+            return true;
+
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
