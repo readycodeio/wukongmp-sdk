@@ -42,9 +42,12 @@ namespace WukongMp.Api.Configuration
         public const float AiPathMoveStuckTimeout = 0.2f; // seconds
 
         public static readonly List<int> SkillsWhitelist = [10518, -999];
-        public static readonly HashSet<int> InstantTriggerSequences = [
-            30105200 // act 3 boss, end of first phase
+
+        public static readonly HashSet<int> InstantTriggerSequences =
+        [
+            30105200, 30105331, 30105401, 30105321 // act 3 boss, end of first phase
         ];
+
         public const int GourdSkillId = 10530;
         public const int ImmobilizeSkillId = 10518;
         public const int ConsumableBuffSkillId = 10913;
