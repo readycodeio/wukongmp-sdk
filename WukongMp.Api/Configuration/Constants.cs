@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using BtlShare;
-using ReadyM.Api.Multiplayer.Idents;
 using WukongMp.Api.Helpers;
 
 namespace WukongMp.Api.Configuration

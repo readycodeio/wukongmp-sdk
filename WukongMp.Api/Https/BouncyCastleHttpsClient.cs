@@ -44,7 +44,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
         finally
         {
             _semaphore.Release();
-            logger.LogDebug("GET {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
+            logger.LogInformation("GET {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
         }
     }
 
@@ -68,7 +68,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
         finally
         {
             _semaphore.Release();
-            logger.LogDebug("GET bytes from {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
+            logger.LogInformation("GET bytes from {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
         }
     }
 
@@ -194,7 +194,7 @@ public class BouncyCastleHttpsClient(ILogger logger)
         finally
         {
             _semaphore.Release();
-            logger.LogDebug("PUT multipart to {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
+            logger.LogInformation("PUT multipart to {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
         }
     }
 
