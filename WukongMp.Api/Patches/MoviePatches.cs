@@ -229,6 +229,14 @@ public static class PatchTickForMovieSystem
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
+                
+                // some cutscenes cannot be triggered for multiple players
+                // e.g. 3rd act boss attacks one player causing him to enter a cutscene,
+                // but other players are stuck since they are not attacked
+                if (Constants.InstantTriggerSequences.Contains(peakRequest.SequenceID))
+                {
+                    DI.Instance.Rpc.SendPlayMovieRequest(peakRequest);
+                }
             }
         }
 
