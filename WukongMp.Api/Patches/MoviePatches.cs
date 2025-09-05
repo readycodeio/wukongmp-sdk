@@ -29,11 +29,6 @@ public static class PatchRequestPlayMovie
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        if (UBGWFunctionLibraryCS.HasSequenceAlreadyPlayed(__instance.GetOwner(), Request.SequenceID))
-        {
-            return false; // Skip the request if the sequence has already been played
-        }
-
         var owner = __instance.GetOwner();
         // get methods
         var movieSystemType = __instance.GetType();
@@ -77,13 +72,13 @@ public static class PatchRequestPlayMovie
         if (actorByGuid != null)
         {
             movieInstance.OverlapGuid = Request.OverlapBoxGuid;
-            List<UActorComponent> componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass(typeof(USceneComponent)), B1GlobalFNames.MatchPointA);
+            List<UActorComponent> componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass<USceneComponent>(), B1GlobalFNames.MatchPointA);
             if (componentsByTag.Count > 0)
             {
                 movieInstance.PointAPos = ((USceneComponent)componentsByTag[0]).GetWorldTransform();
             }
 
-            componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass(typeof(USceneComponent)), B1GlobalFNames.MatchPointB);
+            componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass<USceneComponent>(), B1GlobalFNames.MatchPointB);
             if (componentsByTag.Count > 0)
             {
                 movieInstance.PointBPos = ((USceneComponent)componentsByTag[0]).GetWorldTransform();
@@ -187,14 +182,7 @@ public static class PatchTickForMovieSystem
             return false;
         }
 
-        if (AnimationSyncData.IsPlayerInAnimationSyncing(__instance.GetOwner()))
-        {
-            MovieData.bAllSeqCantSkip = true;
-        }
-        else
-        {
-            MovieData.bAllSeqCantSkip = false;
-        }
+        MovieData.bAllSeqCantSkip = AnimationSyncData.IsPlayerInAnimationSyncing(__instance.GetOwner());
 
         if (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
         {
@@ -215,7 +203,6 @@ public static class PatchTickForMovieSystem
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
                     RequestPlayMovieMethod?.Invoke(__instance, [GlobalMovieData.PlayMovieRequestQueue.Dequeue()]);
-                    BGW_EventCollection.Get(__instance.GetOwner()).Evt_MarkMoviePlayed(peakRequest.SequenceID);
                 }
             }
             else if (mainEntity?.GetLocalState().IsWaitingForSequence == false)
@@ -229,7 +216,7 @@ public static class PatchTickForMovieSystem
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
-                
+
                 // some cutscenes cannot be triggered for multiple players
                 // e.g. 3rd act boss attacks one player causing him to enter a cutscene,
                 // but other players are stuck since they are not attacked
