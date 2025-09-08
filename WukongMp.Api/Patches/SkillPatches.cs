@@ -11,6 +11,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -739,10 +740,18 @@ public class PatchOnTransBeginSpawnNewOne
 
         var playerState = DI.Instance.PlayerState;
 
-        if (__instance.GetOwner() == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        var pawn = __instance.GetOwner();
+        if (pawn == playerState.LocalMainCharacter?.GetLocalState().Pawn)
         {
             Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
             DI.Instance.Rpc.SendPlayerTransBegin(new PlayerTransBeginData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
+        }
+
+        var entity = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+        if (entity != null)
+        {
+            ref var mainComp = ref entity.Value.GetState();
+            mainComp.IsTransformed = true;
         }
     }
 }
@@ -760,16 +769,37 @@ public class PatchOnTransBackSpawnNewOne
         int ToReplaceUnitResID,
         int ToReplaceUnitBornSkillID,
         bool EnableBlendViewTarget,
-        EPlayerTransEndType TransEndType)
+        EPlayerTransEndType TransEndType,
+        out MainCharacterEntity? __state)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+        {
+            __state = null;
+            return;
+        }
+
+        var playerState = DI.Instance.PlayerState;
+        var pawn = __instance.GetOwner();
+        if (pawn == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        {
+            Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
+            DI.Instance.Rpc.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
+        }
+
+        __state = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+    }
+
+    public static void Postfix(UActorCompBaseCS __instance, MainCharacterEntity? __state)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var playerState = DI.Instance.PlayerState;
-        if (__instance.GetOwner() == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        if (__state != null)
         {
-            Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            DI.Instance.Rpc.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
+            ref var mainComp = ref __state.Value.GetState();
+            mainComp.IsTransformed = false;
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(__state.Value.GetLocalState().Pawn);
+            mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
         }
     }
 }

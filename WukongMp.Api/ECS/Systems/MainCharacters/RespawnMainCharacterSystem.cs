@@ -31,7 +31,7 @@ public class RespawnMainCharacterSystem(
             players++;
 
             // count players who are dead and not yet respawning
-            allDead &= mainComp.IsDead && !localMainComp.IsRespawning;
+            allDead &= mainComp.IsDead && !mainComp.IsTransformed && !localMainComp.IsRespawning;
         });
 
         if (players == 0)

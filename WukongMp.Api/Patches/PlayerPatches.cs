@@ -335,6 +335,10 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
+            var playerState = DI.Instance.PlayerState;
+            if (playerState.LocalMainCharacter?.GetState().IsTransformed == true)
+                return;
+
             __state = true;
 
             if (DI.Instance.AreaState is
@@ -412,6 +416,9 @@ namespace WukongMp.Api.Patches
             if (!__state)
                 return; // skipped prefix
 
+            if (DeadReason == EDeadReason.PlayerTrans)
+                return;
+
             var playerState = DI.Instance.PlayerState;
             var owner = __instance.GetOwner();
 
@@ -425,6 +432,9 @@ namespace WukongMp.Api.Patches
             {
                 return;
             }
+
+            if (playerState.LocalMainCharacter?.GetState().IsTransformed == true)
+                return;
 
             if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
