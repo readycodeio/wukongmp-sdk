@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using b1.GSMUI.GSWidget;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
@@ -214,7 +215,7 @@ namespace WukongMp.Api.Patches
             var areaEntity = areaState.CurrentArea;
             if (areaEntity == null)
                 return true;
-            
+
             if (areaEntity.Value.GetRoom().InPvP)
             {
                 __result = true;
@@ -275,7 +276,7 @@ namespace WukongMp.Api.Patches
     {
         public static MethodBase TargetMethod()
         {
-            var specializedType = typeof(FMenuHelper<EShrineMenuTag>); 
+            var specializedType = typeof(FMenuHelper<EShrineMenuTag>);
             return specializedType.GetMethod("RegisterFunc")!;
         }
 
@@ -290,7 +291,7 @@ namespace WukongMp.Api.Patches
                    && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge;
         }
     }
-    
+
     [HarmonyPatch(typeof(GSEUtil), "GetCanTeleportGroupMapList")]
     [HarmonyPatchCategory(Constants.PvpPatches)]
     public class PatchGetCanTeleportGroupMapList
@@ -313,6 +314,55 @@ namespace WukongMp.Api.Patches
         {
             Logging.LogInformation("Culture changed to: {Culture}", Culture);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(Culture);
+        }
+    }
+
+    [HarmonyPatch(typeof(GSProcBar), "SetParamValue")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class ThreadSafeHealthBarPatch
+    {
+        // add a semaphore to make SetParamValue thread safe
+        // this is a writing method
+        public static readonly ReaderWriterLockSlim GsProcBarSemaphore = new();
+
+        public static void Prefix()
+        {
+            GsProcBarSemaphore.EnterWriteLock();
+        }
+
+        public static void Postfix()
+        {
+            GsProcBarSemaphore.ExitWriteLock();
+        }
+    }
+
+    [HarmonyPatch(typeof(GSProcBar), "GetParamValue")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class ThreadSafeHealthBarPatch2
+    {
+        public static void Prefix()
+        {
+            ThreadSafeHealthBarPatch.GsProcBarSemaphore.EnterReadLock();
+        }
+
+        public static void Postfix()
+        {
+            ThreadSafeHealthBarPatch.GsProcBarSemaphore.ExitReadLock();
+        }
+    }
+
+    [HarmonyPatch(typeof(GSProcBar), "SetParamPercent")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class ThreadSafeHealthBarPatch3
+    {
+        public static void Prefix()
+        {
+            ThreadSafeHealthBarPatch.GsProcBarSemaphore.EnterReadLock();
+        }
+
+        public static void Postfix()
+        {
+            ThreadSafeHealthBarPatch.GsProcBarSemaphore.ExitReadLock();
         }
     }
 }
