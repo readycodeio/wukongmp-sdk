@@ -50,6 +50,7 @@ namespace WukongMp.Api.Configuration
 
         public const int GourdSkillId = 10530;
         public const int ImmobilizeSkillId = 10518;
+        public const int IncenseTrailTalismanSkillId = 10909;
         public const int ConsumableBuffSkillId = 10913;
         public const int IronBodySkillId = 10505;
 
