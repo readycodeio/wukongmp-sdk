@@ -176,7 +176,7 @@ namespace WukongMp.Api.Patches
             return AttrID != EBGUAttrFloat.Hp || DI.Instance.AreaState.IsMasterClient;
         }
 
-        public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
+        public static void Postfix(BUS_AttrComp __instance, BUC_AttrContainer ___AttrContainer, EBGUAttrFloat AttrID)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -190,7 +190,7 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var result = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(AttrID);
+            var result = ___AttrContainer.GetFloatValue(AttrID);
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
@@ -239,7 +239,7 @@ namespace WukongMp.Api.Patches
 
                     ref var hpComp = ref tamerEntity.Value.GetHp();
 
-                    hpComp.HpMaxBase = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                    hpComp.HpMaxBase = ___AttrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = result;
                 }
 
@@ -265,7 +265,7 @@ namespace WukongMp.Api.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
+                    var finalVal = ___AttrContainer.GetFloatValue(calc.finalVal);
                     main.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
                 }
             }

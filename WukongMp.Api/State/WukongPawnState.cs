@@ -96,7 +96,7 @@ public class WukongPawnState
         return result;
     }
 
-    public TamerEntity? GetByEntityByTamer(BUTamerActor? owner)
+    public TamerEntity? GetByEntityByTamer(ABGUTamerBase? owner)
     {
         if (owner == null)
             return null;

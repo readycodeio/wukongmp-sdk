@@ -339,12 +339,12 @@ namespace WukongMp.Api.Patches
             return AccessTools.Method("b1.BUS_TeamIDManageComp:OnResetTeamID");
         }
 
-        public static bool Prefix(UActorCompBaseCS __instance)
+        public static bool Prefix(BGUCharacterCS ___OwnerAsCharacterCS)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            var teamId = Traverse.Create(__instance).Field<BGUCharacterCS>("OwnerAsCharacterCS").Value.GetTeamIDInCS();
+            var teamId = ___OwnerAsCharacterCS.GetTeamIDInCS();
             return !Constants.AvailableTeamIds.Contains(teamId);
         }
     }
