@@ -40,6 +40,7 @@ namespace WukongMp.Api.Configuration
         public const float RestrictedMovementRadius = 500f;
         public const float RestrictedMovementRadiusSquare = RestrictedMovementRadius * RestrictedMovementRadius;
         public const float AiPathMoveStuckTimeout = 0.2f; // seconds
+        public const float MonsterUpdateTargetTime = 7; // seconds
 
         public static readonly List<int> SkillsWhitelist = [10518, -999];
 
