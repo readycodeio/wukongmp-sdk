@@ -121,8 +121,8 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         if (meta.Owner == _state.LocalPlayerId)
         {
-            events.Evt_AIPerceptionSetting.Invoke(true);
             events.Evt_AIPauseBT.Invoke(false);
+            events.Evt_AIPerceptionSetting.Invoke(true);
             Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
         }
     }
