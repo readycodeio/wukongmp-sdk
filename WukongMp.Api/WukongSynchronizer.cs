@@ -69,7 +69,6 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new SyncMonsterTeamSystem());
 
         _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
-        _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState, Logger));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
         _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, widgetManager, eventBus, Logger));
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
