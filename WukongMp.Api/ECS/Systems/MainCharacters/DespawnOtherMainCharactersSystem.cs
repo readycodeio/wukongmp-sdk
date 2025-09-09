@@ -30,7 +30,6 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     private readonly ArchetypeEventRouter _archetypeEvent;
     private readonly WukongPlayerState _playerState;
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
-    private readonly DefaultPlayerArchetypeRegistration _playerArchetype;
     private readonly WukongPlayerPawnState _playerPawnState;
     private readonly WukongEventBus _eventBus;
     private readonly WukongWidgetManager _widgetManager;
@@ -42,7 +41,6 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         ArchetypeEventRouter archetypeEvent,
         WukongPlayerState playerState,
         ClientWukongArchetypeRegistration wukongArchetype,
-        DefaultPlayerArchetypeRegistration playerArchetype,
         WukongPlayerPawnState playerPawnState,
         WukongWidgetManager widgetManager,
         WukongEventBus eventBus,
@@ -51,7 +49,6 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         _archetypeEvent = archetypeEvent;
         _playerState = playerState;
         _wukongArchetype = wukongArchetype;
-        _playerArchetype = playerArchetype;
         _playerPawnState = playerPawnState;
         _eventBus = eventBus;
         _widgetManager = widgetManager;
@@ -62,7 +59,7 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
 
     public void Dispose()
     {
-        _archetypeEvent[_playerArchetype.PlayerArchetype].OnEntityDelete -= OnEntityDeleteHandler;
+        _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
     }
 
     private void OnEntityDeleteHandler(EntityDelete evt)

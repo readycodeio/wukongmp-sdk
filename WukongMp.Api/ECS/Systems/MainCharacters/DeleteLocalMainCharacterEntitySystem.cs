@@ -13,14 +13,15 @@ public class DeleteLocalMainCharacterEntitySystem(WukongPlayerState playerState,
 {
     protected override void OnUpdateGroup()
     {
-        var pawn = GameUtils.GetControlledPawn();
-        var mainEntity = playerState.LocalMainCharacter;
-
-        if (pawn.IsNullOrDestroyed() && mainEntity != null)
-        {
-            logger.LogDebug("DELETING LOCAL MAIN CHARACTER ENTITY");
-            // NOTE: Controlled pawn doesn't exist (perhaps unloading scene) so we need to bring ECS up to date
-            playerState.DeleteLocalMainCharacter();
-        }
+        // TODO: Delete?
+        // var pawn = GameUtils.GetControlledPawn();
+        // var mainEntity = playerState.LocalMainCharacter;
+        //
+        // if (pawn.IsNullOrDestroyed() && mainEntity != null)
+        // {
+        //     logger.LogDebug("DELETING LOCAL MAIN CHARACTER ENTITY");
+        //     // NOTE: Controlled pawn doesn't exist (perhaps unloading scene) so we need to bring ECS up to date
+        //     playerState.DeleteLocalMainCharacter();
+        // }
     }
 }
