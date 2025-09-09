@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using BtlShare;
-using ReadyM.Api.Multiplayer.Idents;
 using WukongMp.Api.Helpers;
 
 namespace WukongMp.Api.Configuration
@@ -43,8 +42,15 @@ namespace WukongMp.Api.Configuration
         public const float AiPathMoveStuckTimeout = 0.2f; // seconds
 
         public static readonly List<int> SkillsWhitelist = [10518, -999];
+
+        public static readonly HashSet<int> InstantTriggerSequences =
+        [
+            30105200  // act 3 boss, end of first phase
+        ];
+
         public const int GourdSkillId = 10530;
         public const int ImmobilizeSkillId = 10518;
+        public const int IncenseTrailTalismanSkillId = 10909;
         public const int ConsumableBuffSkillId = 10913;
         public const int IronBodySkillId = 10505;
 

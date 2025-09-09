@@ -11,7 +11,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
 
-public class WukongWidgetManager : IDisposable
+public sealed class WukongWidgetManager : IDisposable
 {
     private readonly ClientState _clientState;
     private readonly WukongPlayerState _playerState;
@@ -24,7 +24,7 @@ public class WukongWidgetManager : IDisposable
         _eventBus = eventBus;
 
         _clientState.OnJoinedArea += OnJoinedArea;
-        _clientState.OnConnected +=OnConnected; ;
+        _clientState.OnConnected += OnConnected;
         _clientState.OnDisconnected += OnDisconnected;
         _clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
         _clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
@@ -103,15 +103,21 @@ public class WukongWidgetManager : IDisposable
         ModWidgetsUtils.SpawnWidgetManagerActor();
         ModWidgetsUtils.InitializeWidgets();
         ChatWidget.Instance.SetVisibility(false);
+
+        if (!_clientState.IsConnected)
+        {
+            InfoMessageWidget.Instance.SetVisibility(true);
+            InfoMessageWidget.Instance.SetText("Disconnected");
+        }
     }
 
-    private void OnExitLevel()
+    private static void OnExitLevel()
     {
         Logging.LogDebug("Deinitializing widgets");
         ModWidgetsUtils.DeinitializeWidgets();
     }
 
-    private void OnJoinedArea(AreaId arg1, Entity arg2)
+    private void OnJoinedArea(AreaId area, Entity areaEntity)
     {
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity.HasValue)
@@ -122,11 +128,14 @@ public class WukongWidgetManager : IDisposable
         RefreshWidgets();
     }
 
-    private void OnDisconnected(PlayerId playerId, Entity entity, DisconnectReason reason)
+    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
-        var nickname = new PlayerEntity(entity).GetState().NickName;
-        CoopStatusWidget.Instance.RemovePlayer(nickname);
-        RefreshWidgets();
+        if (entity.HasValue)
+        {
+            var nickname = new PlayerEntity(entity.Value).GetState().NickName;
+            CoopStatusWidget.Instance.RemovePlayer(nickname);
+            RefreshWidgets();
+        }
 
         InfoMessageWidget.Instance.SetVisibility(true);
         InfoMessageWidget.Instance.SetText("Disconnected");
@@ -139,6 +148,7 @@ public class WukongWidgetManager : IDisposable
         {
             CoopStatusWidget.Instance.AddPlayer(playerEntity.Value.GetState().NickName);
         }
+
         RefreshWidgets();
         InfoMessageWidget.Instance.SetVisibility(false);
     }

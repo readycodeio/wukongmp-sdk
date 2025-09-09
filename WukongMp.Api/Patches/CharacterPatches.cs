@@ -2,6 +2,7 @@
 using BtlShare;
 using HarmonyLib;
 using System.Reflection;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
@@ -117,11 +118,45 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch(typeof(CharacterAttrDataInitTemplate), nameof(CharacterAttrDataInitTemplate.InitDataPreBeginPlay))]
+    [HarmonyPatchCategory(Constants.CoopPatches)]
+    public static class PatchTamerStatResetOnBeginPlay
+    {
+        public static void Postfix(AActor ___Owner)
+        {
+            if (___Owner is not BGU_CharacterAI ai)
+                return;
+
+            var tamer = ai.GetTamerOwner();
+
+            if (tamer.IsNullOrDestroyed())
+                return; // no tamer
+
+            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
+
+            if (!tamerEntity.HasValue)
+                return; // not found
+
+            if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                return; // not owned
+
+            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+
+            if (!localTamer.IsTamerSynced)
+                return; // not synced
+
+            ref var hpComp = ref tamerEntity.Value.GetHp();
+
+            hpComp.HpMultiplier = 1; // Reset multiplier so that the HP scaling system will re-scale it again
+        }
+    }
+
+
     [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
     [HarmonyPatchCategory(Constants.CoopPatches)]
     public static class CoopPatchHp
     {
-        public static void Postfix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
+        public static void Postfix(BUS_AttrComp __instance, BUC_AttrContainer ___AttrContainer, EBGUAttrFloat AttrID)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -135,7 +170,7 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var result = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(AttrID);
+            var result = ___AttrContainer.GetFloatValue(AttrID);
 
             var mainEntity = playerState.LocalMainCharacter;
 
@@ -167,7 +202,7 @@ namespace WukongMp.Api.Patches
 
                     ref var hpComp = ref tamerEntity.Value.GetHp();
 
-                    hpComp.HpMaxBase = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                    hpComp.HpMaxBase = ___AttrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = result;
                 }
             }
@@ -188,7 +223,7 @@ namespace WukongMp.Api.Patches
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
                 if (valid)
                 {
-                    var finalVal = Traverse.Create(__instance).Field<BUC_AttrContainer>("AttrContainer").Value.GetFloatValue(calc.finalVal);
+                    var finalVal = ___AttrContainer.GetFloatValue(calc.finalVal);
                     mainComp.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
                 }
             }
@@ -540,6 +575,7 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
                 // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
+
             if (GameUtils.GetControlledPawn() == owner)
             {
                 DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
@@ -568,6 +604,7 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
                 // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
             }
+
             if (GameUtils.GetControlledPawn() == owner)
             {
                 DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
@@ -596,6 +633,7 @@ namespace WukongMp.Api.Patches
                 var netId = tamerEntity.Value.GetMeta().NetId;
                 // DI.Instance.Rpc.SendUnitRemoveAllBuffs(new BuffRemoveAllData(netPeer, RemoveTriggerType, WithTriggerRemoveEffect));
             }
+
             if (GameUtils.GetControlledPawn() == owner)
             {
                 DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(RemoveTriggerType, WithTriggerRemoveEffect));

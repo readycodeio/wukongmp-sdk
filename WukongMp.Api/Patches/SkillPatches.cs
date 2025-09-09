@@ -11,6 +11,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -44,7 +45,7 @@ public static class PatchTriggerItemSkill
 {
     public static bool Prefix(BUS_PlayerInputActionComp __instance)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (Constants.IsCoop)
             return true;
 
         var areaState = DI.Instance.AreaState;
@@ -56,17 +57,23 @@ public static class PatchTriggerItemSkill
 
         var areaEntity = areaState.CurrentArea;
         ref var room = ref areaEntity.Value.GetRoom();
-        
-        if (!room.GourdAllowed && !room.ConsumablesAllowed)
-        {
-            return false;
-        }
-        else if (room.GourdAllowed && lastSkill == Constants.GourdSkillId)
+
+        if (room.GourdAllowed && lastSkill == Constants.GourdSkillId)
         {
             return true;
         }
 
-        return room.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId;
+        if (room.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId)
+        {
+            return true;
+        }
+
+        if (room.IncenseTrailTalismanAllowed && lastSkill == Constants.IncenseTrailTalismanSkillId)
+        {
+            return true;
+        }
+
+        return false;
     }
 }
 
@@ -85,7 +92,7 @@ public static class PatchDoPoleDrink
             return true;
 
         var areaState = DI.Instance.AreaState;
-        
+
         // FIXME: We no longer need the `InRoom` check because this is the same as checking isf `areaState.CurrentArea` is not null
         if (areaState.CurrentArea == null)
             return true;
@@ -147,7 +154,7 @@ public static class PatchOnCastImmobilize
                 return false;
 
             ref var castingMain = ref castingMainEntity.Value.GetState();
-            
+
             // Broadcast that you have cast a spell
             if (castingMain.PlayerId == playerState.LocalMainCharacter?.GetState().PlayerId)
             {
@@ -319,7 +326,7 @@ public static class PatchRelieveImmobilized
         if (mainEntity != null)
         {
             ref var localMain = ref mainEntity.Value.GetLocalState();
-            
+
             if (!localMain.RunImmobilizePatches)
             {
                 return false;
@@ -405,13 +412,13 @@ public static class PatchOnTriggerPhantomRush
 
         var playerState = DI.Instance.PlayerState;
         var areaState = DI.Instance.AreaState;
-        
+
         var areaEntity = areaState.CurrentArea;
         if (areaEntity == null)
             return true;
-        
+
         ref var room = ref areaEntity.Value.GetRoom();
-        
+
         if (!room.PhantomRushAllowed)
         {
             return false;
@@ -599,7 +606,7 @@ public static class PatchExitPhantomRush
 
         ref var main = ref mainEntity.Value.GetState();
         ref var localMain = ref mainEntity.Value.GetLocalState();
-        
+
         if ((DI.Instance.AreaState.IsMasterClient || owner == localMain.Pawn) && !localMain.ReceivedPhantomRushExit)
         {
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", main.CharacterNickName);
@@ -609,7 +616,7 @@ public static class PatchExitPhantomRush
 
         var playerId = main.PlayerId;
         var playerEntity = DI.Instance.PlayerState.GetPlayerById(playerId);
-        
+
         if (mainEntity != playerState.LocalMainCharacter && playerEntity.HasValue)
         {
             DI.Instance.ModeManager.SetPlayerVisibility(playerEntity.Value, mainEntity.Value, true);
@@ -679,7 +686,7 @@ public static class TransformationPatch
 
         ref var main = ref mainEntity.Value.GetState();
         ref var localMain = ref mainEntity.Value.GetLocalState();
-        
+
         localMain.Pawn = newOwner;
         // update equipment
         EquipmentUtils.SetActorEquipment(newOwner, main.Equipment);
@@ -732,11 +739,19 @@ public class PatchOnTransBeginSpawnNewOne
             return;
 
         var playerState = DI.Instance.PlayerState;
-        
-        if (__instance.GetOwner() == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+
+        var pawn = __instance.GetOwner();
+        if (pawn == playerState.LocalMainCharacter?.GetLocalState().Pawn)
         {
             Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
             DI.Instance.Rpc.SendPlayerTransBegin(new PlayerTransBeginData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
+        }
+
+        var entity = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+        if (entity != null)
+        {
+            ref var mainComp = ref entity.Value.GetState();
+            mainComp.IsTransformed = true;
         }
     }
 }
@@ -754,16 +769,37 @@ public class PatchOnTransBackSpawnNewOne
         int ToReplaceUnitResID,
         int ToReplaceUnitBornSkillID,
         bool EnableBlendViewTarget,
-        EPlayerTransEndType TransEndType)
+        EPlayerTransEndType TransEndType,
+        out MainCharacterEntity? __state)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+        {
+            __state = null;
+            return;
+        }
+
+        var playerState = DI.Instance.PlayerState;
+        var pawn = __instance.GetOwner();
+        if (pawn == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        {
+            Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
+            DI.Instance.Rpc.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
+        }
+
+        __state = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+    }
+
+    public static void Postfix(UActorCompBaseCS __instance, MainCharacterEntity? __state)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var playerState = DI.Instance.PlayerState;
-        if (__instance.GetOwner() == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        if (__state != null)
         {
-            Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            DI.Instance.Rpc.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
+            ref var mainComp = ref __state.Value.GetState();
+            mainComp.IsTransformed = false;
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(__state.Value.GetLocalState().Pawn);
+            mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
         }
     }
 }
@@ -1048,6 +1084,7 @@ public static class PatchOnSweepCheckHit
                 return false;
             }
         }
+
         return true;
     }
 }

@@ -10,7 +10,7 @@ public class ClientWukongArchetypeRegistration : IArchetypeRegistration
 {
     public ArchetypeId MonsterArchetype { get; private set; }
     public ArchetypeId MainCharacterArchetype { get; private set; }
-    
+
     public void Register(Store world)
     {
         MonsterArchetype = world.RegisterArchetype(b =>
@@ -19,6 +19,7 @@ public class ClientWukongArchetypeRegistration : IArchetypeRegistration
             b.Add<LocalTamerComponent>();
             b.Add<MarkerComponent>();
         });
+
         MainCharacterArchetype = world.RegisterArchetype(b =>
         {
             WukongComponentUtils.SetupServerMainCharacterArchetype(b);

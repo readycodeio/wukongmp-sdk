@@ -62,7 +62,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup = new SystemGroup("Sync");
 
         _syncGroup.Add(new SpawnTamersSystem(state));
-        _syncGroup.Add(new DespawnDeadTamerMarkersSystem());
+        _syncGroup.Add(new OnTamerDeadSystem());
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
         _syncGroup.Add(new ScaleMonsterHpSystem());

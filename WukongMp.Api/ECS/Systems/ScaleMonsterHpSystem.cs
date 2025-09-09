@@ -4,6 +4,7 @@ using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using System;
+using Microsoft.Extensions.Logging;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 
@@ -27,9 +28,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
             if (hp.Hp.Equals(0, Constants.FloatComparisonTolerance) && hp.HpMaxBase.Equals(0, Constants.FloatComparisonTolerance))
                 return; // no need to scale if monster is not active
 
-            hp.CurrentMultiplier = targetScaling;
-
-            if (Math.Abs(hp.CurrentMultiplier - hp.LastMultiplier) > Constants.FloatComparisonTolerance)
+            if (Math.Abs(targetScaling - hp.HpMultiplier) > Constants.FloatComparisonTolerance)
             {
                 if (localTamer.Pawn == null)
                     return;
@@ -38,13 +37,15 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
                 var currentHp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                 var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
 
-                hp.HpMaxBase = maxHp / hp.LastMultiplier * hp.CurrentMultiplier;
-                hp.Hp = currentHp / hp.LastMultiplier * hp.CurrentMultiplier;
+                hp.HpMaxBase = maxHp / hp.HpMultiplier * targetScaling;
+                hp.Hp = currentHp / hp.HpMultiplier * targetScaling;
 
                 attrs.SetFloatValue(EBGUAttrFloat.HpMaxBase, hp.HpMaxBase);
                 attrs.SetFloatValue(EBGUAttrFloat.Hp, hp.Hp);
 
-                hp.LastMultiplier = hp.CurrentMultiplier;
+                hp.HpMultiplier = targetScaling;
+
+                DI.Instance.Logger.LogDebug("Scaled monster HP to {Hp}/{HpMaxBase} (x{Multiplier}) for {Players} players", hp.Hp, hp.HpMaxBase, targetScaling, areaPlayers);
             }
         });
     }

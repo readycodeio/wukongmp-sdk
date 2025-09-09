@@ -147,7 +147,7 @@ public class WukongConnectionManager : IDisposable
         }
     }
 
-    public void OnDisconnectedHandler(PlayerId playerId, Entity entity, DisconnectReason disconnectReason)
+    public void OnDisconnectedHandler(PlayerId playerId, Entity? entity, DisconnectReason disconnectReason)
     {
         Logging.LogInformation("Disconnected");
         if (disconnectReason == DisconnectReason.DisconnectPeerCalled)

@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Friflo.Engine.ECS", "readym
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Friflo.Engine.ECS.Boost", "readym-gameserver\src\Friflo.Engine.ECS\src\ECS.Boost\Friflo.Engine.ECS.Boost.csproj", "{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteNetLib", "readym-gameserver\src\LiteNetLib\LiteNetLib\LiteNetLib.csproj", "{7AD17E33-CD1B-403A-8C72-647D1080A2E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +123,14 @@ Global
 		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
 		{0E60381D-FAB3-433F-A75B-052E5E6F4C4E}.Testing|Any CPU.Build.0 = Debug|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.NoDisconnect|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.NoDisconnect|Any CPU.Build.0 = Debug|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AD17E33-CD1B-403A-8C72-647D1080A2E3}.Testing|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
