@@ -1,6 +1,7 @@
 ﻿using ReadyM.Api.ECS.Registry;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
+using ReadyM.Relay.Common.ECS.Tags;
 using ReadyM.Relay.Common.Wukong.ECS.Registry;
 using WukongMp.Api.ECS.Components;
 

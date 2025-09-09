@@ -71,7 +71,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
         _syncGroup.Add(new DeleteLocalMainCharacterEntitySystem(playerState, Logger));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
-        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerArchetype, playerPawnState, ecsLoop, widgetManager, world, eventBus, Logger));
+        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerArchetype, playerPawnState, widgetManager, eventBus, Logger));
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
         _syncGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
 
@@ -92,9 +92,15 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
     protected override void OnOwnershipChanged(Entity entity)
     {
         var meta = entity.GetComponent<MetadataComponent>();
-        if (meta.Archetype != _wukongArchetype.MonsterArchetype)
-            return;
 
+        if (meta.Archetype == _wukongArchetype.MonsterArchetype)
+        {
+            OnMonsterOwned(entity, meta);
+        }
+    }
+
+    private void OnMonsterOwned(Entity entity, MetadataComponent meta)
+    {
         // if we are now the owner of a monster, we must re-enable its AI
         var localTamerComp = entity.GetComponent<LocalTamerComponent>();
 
