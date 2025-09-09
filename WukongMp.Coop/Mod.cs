@@ -122,14 +122,14 @@ namespace WukongMp.Coop
 #if DEBUG
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () => 
             { 
-                Logging.LogDebug("Alt + Y: Disable threading");
-                GameUtils.DisableThreading();
+                Logging.LogDebug("Alt + Y: Show colliders markers");
+                DebugUtils.ShowMarkersForInvisibleWalls(4000);
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () => 
             {
-                Logging.LogDebug("Alt + U: Enable threading");
-                GameUtils.EnableThreading();
+                Logging.LogDebug("Alt + U: Remove colliders markers");
+                DebugUtils.DestroyTmpMarkerActors();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
