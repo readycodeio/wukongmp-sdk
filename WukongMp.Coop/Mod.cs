@@ -4,6 +4,7 @@ using System.Reflection;
 using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
+using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Shim;
@@ -145,6 +146,7 @@ namespace WukongMp.Coop
                 try
                 {
                     DI.Instance.NetLogger.DumpDebugInfo();
+                    DI.Instance.RelayClient.LogEventStats();
                 }
                 catch (Exception ex)
                 {
