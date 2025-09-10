@@ -30,12 +30,9 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     private readonly ArchetypeEventRouter _archetypeEvent;
     private readonly WukongPlayerState _playerState;
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
-    private readonly DefaultPlayerArchetypeRegistration _playerArchetype;
     private readonly WukongPlayerPawnState _playerPawnState;
     private readonly WukongEventBus _eventBus;
     private readonly WukongWidgetManager _widgetManager;
-    private readonly IClientEcsUpdateLoop _updateLoop;
-    private readonly Store _store;
     private readonly ILogger _logger;
 
     private readonly List<PendingDeleteEvent> _pendingDeleteEvents = [];
@@ -44,33 +41,25 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         ArchetypeEventRouter archetypeEvent,
         WukongPlayerState playerState,
         ClientWukongArchetypeRegistration wukongArchetype,
-        DefaultPlayerArchetypeRegistration playerArchetype,
         WukongPlayerPawnState playerPawnState,
-        IClientEcsUpdateLoop updateLoop,
         WukongWidgetManager widgetManager,
-        Store store,
         WukongEventBus eventBus,
         ILogger logger)
     {
         _archetypeEvent = archetypeEvent;
         _playerState = playerState;
         _wukongArchetype = wukongArchetype;
-        _playerArchetype = playerArchetype;
         _playerPawnState = playerPawnState;
-        _updateLoop = updateLoop;
-        _store = store;
         _eventBus = eventBus;
         _widgetManager = widgetManager;
         _logger = logger;
 
-        _archetypeEvent[_playerArchetype.PlayerArchetype].OnEntityDelete += OnPlayerGlobalEntityDeletedHandler;
         _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete += OnEntityDeleteHandler;
     }
 
     public void Dispose()
     {
-        _archetypeEvent[_playerArchetype.PlayerArchetype].OnEntityDelete -= OnEntityDeleteHandler;
-        _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete -= OnPlayerGlobalEntityDeletedHandler;
+        _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
     }
 
     private void OnEntityDeleteHandler(EntityDelete evt)
@@ -92,35 +81,6 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         {
             PlayerId = mainComp.PlayerId,
         });
-    }
-
-    // TODO: This is a temporary workaround for ungraceful disconnections where the Player-scoped entity is deleted
-    // but the Area-scoped MainCharacterEntity is not. Ideally, OnEntityDeleteHandler should always be sufficient.
-    private void OnPlayerGlobalEntityDeletedHandler(EntityDelete evt)
-    {
-        if (_playerState.LocalPlayerId == null)
-        {
-            _logger.LogWarning("Local player ID is null, cannot despawn other main characters.");
-            return;
-        }
-
-        var playerId = evt.Entity.GetComponent<MetadataComponent>().Owner;
-
-        if (playerId == _playerState.LocalPlayerId)
-            return;
-
-        _updateLoop.Scheduler.Schedule((buffer, world, id) =>
-        {
-            world
-                .Query<MainCharacterComponent>()
-                .ForEachEntity((ref MainCharacterComponent main, Entity entity) =>
-                {
-                    if (main.PlayerId == id)
-                    {
-                        buffer.DeleteEntity(entity.Id);
-                    }
-                });
-        }, _store, playerId);
     }
 
     protected override void OnUpdateGroup()

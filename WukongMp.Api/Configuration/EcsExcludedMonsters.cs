@@ -15,6 +15,7 @@ namespace WukongMp.Api.Configuration
             "szlc_crane",
             "SZLC_WildBoar",
             "UGuid.LYS.LittleFox",
+            "UGuid.PSD.EmptyUnit",
             // Wukong summons (pluck of many and phantom rush)
             "monkeysummon_pr",
             "monkeysummon_fs"
