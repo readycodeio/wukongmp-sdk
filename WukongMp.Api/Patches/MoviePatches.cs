@@ -210,7 +210,7 @@ public static class PatchTickForMovieSystem
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 InfoMessageWidget.Instance.SetVisibility(true);
-                InfoMessageWidget.Instance.SetText("Wait for other players");
+                InfoMessageWidget.Instance.SetText(Resources.Texts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
@@ -278,7 +278,7 @@ public static class PatchOnSkipCurrentCameraMovie
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
             InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText("Wait for other players");
+            InfoMessageWidget.Instance.SetText(Resources.Texts.WaitForOtherPlayers);
             DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
             return false;
         }
