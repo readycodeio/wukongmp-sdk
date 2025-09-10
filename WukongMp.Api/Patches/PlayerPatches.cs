@@ -301,7 +301,7 @@ namespace WukongMp.Api.Patches
                 main.Equipment = main.Equipment.WithSetItem(EquipPosition.FromGame(), EquipID);
             }
 
-            return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer"); // TODO: Exact comparison
+            return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer") || owner.GetName().Contains("monkeysummon"); // TODO: Exact comparison
         }
     }
 
