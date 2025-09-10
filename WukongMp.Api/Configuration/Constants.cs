@@ -46,7 +46,8 @@ namespace WukongMp.Api.Configuration
 
         public static readonly HashSet<int> InstantTriggerSequences =
         [
-            30105200  // act 3 boss, end of first phase
+            20220031, // act 2 Drunken Boar death cutscene
+            30105200, // act 3 boss, end of first phase
         ];
 
         public const int GourdSkillId = 10530;
