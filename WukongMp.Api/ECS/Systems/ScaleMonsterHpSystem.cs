@@ -34,6 +34,13 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
                     return;
 
                 var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(localTamer.Pawn);
+                
+                if (attrs == null)
+                {
+                    DI.Instance.Logger.LogWarning("Failed to get AttrContainer for entity {Entity}", entity);
+                    return;
+                }
+                
                 var currentHp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                 var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
 
