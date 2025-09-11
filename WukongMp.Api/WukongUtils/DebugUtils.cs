@@ -1,6 +1,8 @@
 ﻿using b1;
+using b1.BGU.BUAnim;
 using b1.BGW;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -112,5 +114,101 @@ public static class DebugUtils
     public static void ShowMarkersForInvisibleWalls(float radius)
     {
         AddMarkerToActors(GetInvisibleWallsAroundPlayer(radius));
+    }
+
+    public static void ResetPlayersAnimation()
+    {
+        foreach (var playerId in DI.Instance.State.AllPlayers)
+        {
+            if (playerId != DI.Instance.PlayerState.LocalPlayerId)
+            {
+                var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (characterEntity == null)
+                    return;
+
+                var character = characterEntity.Value.GetLocalState().Pawn;
+                if (character != null)
+                    ResetActorAnimation(character);
+            }
+        }
+    }
+
+    public static void DumpPlayersAnimationDebugInfo()
+    {
+        foreach (var playerId in DI.Instance.State.AllPlayers)
+        {
+            var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+            if (characterEntity == null)
+                return;
+
+            var character = characterEntity.Value.GetLocalState().Pawn;
+            if (character != null)
+                DumpActorAnimationDebugInfo(character);
+        }
+    }
+
+    public static void DumpActorAnimationDebugInfo(AActor pawn)
+    {
+        BUC_ABPHelperData animationHelperData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPHelperData>(pawn);
+        var animInst = animationHelperData.AnimInst;
+        if (!(animInst == null) && animInst is BUAnimHumanoidCS bUAnimHumanoidCS)
+        {
+            UAnimInstance linkedAnimGraphInstanceByTag = bUAnimHumanoidCS.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.Move);
+            if (!linkedAnimGraphInstanceByTag.IsNullOrDestroyed())
+            {
+                var playerLocomotionAnimInst = linkedAnimGraphInstanceByTag.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.PlayerLocomotion);
+                LogAllProperties(linkedAnimGraphInstanceByTag);
+                LogAllProperties(playerLocomotionAnimInst);
+            }
+        }
+        LogCurveValues(animationHelperData);
+        LogStateMachineWeights(animationHelperData);
+    }
+
+    private static void LogAllProperties(object component)
+    {
+        foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(component))
+        {
+            if (descriptor == null)
+                continue;
+
+            if (descriptor.PropertyType.IsAssignableFrom(typeof(UBlendSpace)) || descriptor.PropertyType.IsAssignableFrom(typeof(UAnimSequence)))
+                continue;
+
+            var value = descriptor.GetValue(component);
+            if (value == null)
+                continue;
+
+            Logging.LogDebug("{ObjectName} property name: {Name}, value: {Value}", component.GetType().Name, descriptor.Name, value.ToString());
+        }
+    }
+
+    private static void LogStateMachineWeights(BUC_ABPHelperData animationHelperData)
+    {
+        foreach(var property in animationHelperData.StateMachineWeights)
+        {
+            foreach(var weight in property.Value)
+            {
+                Logging.LogDebug("StateMachineName: {StateMachineName}, stateName: {StateName}, value: {Value}", property.Key.ToString(), weight.ToString(), weight.Value);
+            }
+        }
+    }
+
+    private static void LogCurveValues(BUC_ABPHelperData animationHelperData)
+    {
+        foreach (var curve in animationHelperData.FloatCurveValues)
+        {
+            Logging.LogDebug("Curve name: {Name}, value {Value}", curve.Key.ToString(), curve.Value);
+        }
+    }
+
+    public static void ResetActorAnimation(BGUCharacterCS player)
+    {
+        BUS_EventCollectionCS.Get(player)?.Evt_ResetABPSetting.Invoke();
+    }
+
+    public static void ResetActorStatus(BGUCharacterCS player)
+    {
+        BUS_EventCollectionCS.Get(player)?.Evt_ResetActorStatusPre.Invoke(EResetActorReason.Rebirth);
     }
 }

@@ -171,26 +171,28 @@ namespace WukongMp.Coop
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
 
+            Utils.RegisterKeyBind(Key.J, () =>
+            {
+                _logger.LogDebug("J (Dump anim info)");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
+            });
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
+            });
 
-                var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-                if (mainEntity == null)
-                    return;
-                
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+            Utils.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
+            {
+                _logger.LogDebug("Shift + J");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
-                
-                var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-                if (mainEntity == null)
-                    return;
-                
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                DebugUtils.ResetPlayersAnimation();
             });
 #endif
             Utils.RegisterKeyBind(Key.J, () =>
