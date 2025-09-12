@@ -258,4 +258,16 @@
   <data name="YouAreReady" xml:space="preserve">
     <value>你已准备好战斗</value>
   </data>
+  <data name="JoinOtherPlayersToProceed" xml:space="preserve">
+    <value>加入其他玩家继续</value>
+  </data>
+  <data name="WaitForOtherPlayers" xml:space="preserve">
+    <value>等待其他玩家</value>
+  </data>
+  <data name="InvalidCommand" xml:space="preserve">
+    <value>无效命令：{0}</value>
+  </data>
+  <data name="SetMonsterHpScaling" xml:space="preserve">
+    <value>设置怪物生命值缩放：{0}x</value>
+  </data>
 </root>

@@ -541,14 +541,19 @@ namespace WukongMp.Api.Patches
 
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                // DI.Instance.Rpc.SendUnitAddBuff(new BuffAddData(netPeer, BuffID, Duration));
+                DI.Instance.Rpc.SendAddBuff(new BuffAddData(netId, BuffID, Duration));
+                return;
             }
-            else if (GameUtils.GetControlledPawn() == owner)
+
+            var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
             {
-                DI.Instance.Rpc.SendAddBuff(new BuffAddData(BuffID, Duration));
+                var myId = myEntity.Value.GetMeta().NetId;
+                DI.Instance.Rpc.SendAddBuff(new BuffAddData(myId, BuffID, Duration));
             }
         }
     }
@@ -572,12 +577,15 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                return;
             }
 
-            if (GameUtils.GetControlledPawn() == owner)
+            var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
             {
-                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                var myId = myEntity.Value.GetMeta().NetId;
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
         }
     }
@@ -601,12 +609,15 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                // DI.Instance.Rpc.SendUnitRemoveBuff(new BuffRemoveData(netPeer, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                return;
             }
 
-            if (GameUtils.GetControlledPawn() == owner)
+            var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
             {
-                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                var myId = myEntity.Value.GetMeta().NetId;
+                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
             }
         }
     }
@@ -630,12 +641,15 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                // DI.Instance.Rpc.SendUnitRemoveAllBuffs(new BuffRemoveAllData(netPeer, RemoveTriggerType, WithTriggerRemoveEffect));
+                DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(netId, RemoveTriggerType, WithTriggerRemoveEffect));
+                return;
             }
 
-            if (GameUtils.GetControlledPawn() == owner)
+            var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
             {
-                DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(RemoveTriggerType, WithTriggerRemoveEffect));
+                var myId = myEntity.Value.GetMeta().NetId;
+                DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(myId, RemoveTriggerType, WithTriggerRemoveEffect));
             }
         }
     }

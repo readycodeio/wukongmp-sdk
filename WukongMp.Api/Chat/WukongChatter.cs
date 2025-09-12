@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using b1;
+using B1UI;
 using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
@@ -92,6 +93,7 @@ public class WukongChatter : IDisposable
             _commands.Add("/spawn", new WukongChatterCommand(RequestSpawn)); // TODO: Enable in PvP
         }
 #if DEBUG
+        _commands.Add("/play", new WukongChatterCommand(PlayCutscene));
         _commands.Add("/disconnect", new WukongChatterCommand(RequestDisconnect));
         _commands.Add("/master", new WukongChatterCommand(RequestNewMasterClient));
         _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
@@ -152,6 +154,14 @@ public class WukongChatter : IDisposable
         PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
         _rpc.SendRebirthPlayer(playerId);
         SendServerMessage("PlayerRequestedRebirth", NickName);
+    }
+
+    private void PlayCutscene(ReadOnlyMemory<string> args)
+    {
+        if (args.Length == 1 && int.TryParse(args.Span[0], out var seqId))
+        {
+            GSG.GMSvc.GMTeleportToTargetSequence(seqId);
+        }
     }
 
     private void RequestGiveUp(ReadOnlyMemory<string> _)

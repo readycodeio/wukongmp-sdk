@@ -301,7 +301,7 @@ namespace WukongMp.Api.Patches
                 main.Equipment = main.Equipment.WithSetItem(EquipPosition.FromGame(), EquipID);
             }
 
-            return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer"); // TODO: Exact comparison
+            return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer") || owner.GetName().Contains("monkeysummon"); // TODO: Exact comparison
         }
     }
 
@@ -729,7 +729,7 @@ namespace WukongMp.Api.Patches
             if (!mainEntity.HasValue)
                 return true;
 
-            return !(mainEntity?.GetLocalState().Pawn == __instance.GetOwner() && playerEntity?.GetState().IsSpectator == true);
+            return !(mainEntity.Value.GetLocalState().Pawn == __instance.GetOwner() && playerEntity?.GetState().IsSpectator == true);
         }
     }
 

@@ -124,13 +124,15 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnAddBuff(PlayerId __sender, BuffAddData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
         {
-            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
+
+            if (pawn == null)
                 return;
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            BuffUtils.AddBuff(localMainComp.Pawn, data0.BuffId, data0.Duration);
-        }, this, __sender, data);
+
+            BuffUtils.AddBuff(pawn, data0.BuffId, data0.Duration);
+        }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -138,10 +140,12 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
         {
-            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
+
+            if (pawn == null)
                 return;
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            BuffUtils.RemoveBuff(localMainComp.Pawn, data0.BuffId, data0.TriggerType, data0.Layer, data0.WithTriggerRemoveEffect);
+
+            BuffUtils.RemoveBuff(pawn, data0.BuffId, data0.TriggerType, data0.Layer, data0.WithTriggerRemoveEffect);
         }, this, __sender, data);
     }
 
@@ -150,10 +154,12 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
         {
-            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
+
+            if (pawn == null)
                 return;
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            BuffUtils.RemoveAllBuffs(localMainComp.Pawn, data0.TriggerType, data0.WithTriggerRemoveEffect);
+
+            BuffUtils.RemoveAllBuffs(pawn, data0.TriggerType, data0.WithTriggerRemoveEffect);
         }, this, __sender, data);
     }
 
@@ -509,7 +515,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.GlobalOthers)]
     internal void OnWaitingForSequence(SequenceWaitingData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) => 
+        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
         {
             CutsceneUtils.SetJoiningCutsceneStatus(data0);
             if (self._playerState.LocalMainCharacter is not { } mainEntity)

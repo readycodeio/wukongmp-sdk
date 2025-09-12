@@ -1,10 +1,8 @@
-﻿using System;
-using b1;
+﻿using b1;
 using b1.BGW;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils;
@@ -40,7 +38,6 @@ public static class MarkerUtils
         markerComp.MarkerActor = playerMarkerActor;
     }
 
-    [Obsolete]
     public static AActor? CreateMarkerForCharacter(MainCharacterEntity mainEntity)
     {
         var world = GameUtils.GetWorld();

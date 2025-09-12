@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using b1;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
@@ -15,22 +14,8 @@ namespace WukongMp.Api.State;
 // deal with placing and removing pawns.
 public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, ILogger logger)
 {
-    private struct Entry
-    {
-        public AActor? MarkerActor;
-        public BGUCharacterCS? Pawn;
-    }
-
-    private readonly Dictionary<PlayerId, Entry> _entries = [];
-
     public void AddPlayerPawn(PlayerId playerId)
     {
-        if (_entries.ContainsKey(playerId))
-        {
-            logger.LogWarning("Attempted to add player pawn for {PlayerId} but it already exists in entries.", playerId);
-            return;
-        }
-
         logger.LogDebug("SPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
 
         var playerEntity = playerState.GetPlayerById(playerId);
@@ -49,49 +34,41 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
 
         var pawn = SpawningUtils.SpawnCloneForPlayer(playerEntity.Value, mainEntity.Value);
         if (pawn == null)
+        {
+            logger.LogError("Failed to spawn pawn for player {PlayerId}.", playerId);
             return;
+        }
 
         var marker = MarkerUtils.CreateMarkerForCharacter(mainEntity.Value); // 3D marker above player
-
-        var entry = new Entry
+        if (marker == null)
         {
-            MarkerActor = marker,
-            Pawn = pawn,
-        };
-
-        _entries.Add(playerId, entry);
+            logger.LogError("Failed to create marker for player {PlayerId}.", playerId);
+            return;
+        }
 
         logger.LogDebug("Spawn successful: {PlayerId}", playerId);
     }
 
-    public void RemovePlayerPawn(PlayerId playerId)
+    public void RemovePlayerPawn(PlayerId playerId, BGUCharacterCS? playerPawn, AActor? playerMarker)
     {
-        if (!_entries.Remove(playerId, out var entry))
-        {
-            logger.LogWarning("Attempted to remove player pawn for {PlayerId} but it was not found in entries.", playerId);
-            return;
-        }
-
         logger.LogDebug("DESPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
 
-        if (!entry.MarkerActor.IsNullOrDestroyed())
+        if (!playerMarker.IsNullOrDestroyed())
         {
-            logger.LogDebug("Other main character marker: {Actor}", entry.MarkerActor?.GetName());
-            BGU_UnrealWorldUtil.DestroyActor(entry.MarkerActor);
+            logger.LogDebug("Other main character marker: {Actor}", playerMarker?.GetName());
+            BGU_UnrealWorldUtil.DestroyActor(playerMarker);
         }
 
-        if (!entry.Pawn.IsNullOrDestroyed())
+        if (!playerPawn.IsNullOrDestroyed())
         {
-            logger.LogDebug("Other main character pawn: {Pawn}", entry.Pawn?.PathName);
-            BGU_UnrealWorldUtil.DestroyActor(entry.Pawn);
+            logger.LogDebug("Other main character pawn: {Pawn}", playerPawn?.PathName);
+            BGU_UnrealWorldUtil.DestroyActor(playerPawn);
         }
         else
         {
             logger.LogWarning("Attempted to remove player pawn for {PlayerId} but it was already null.", playerId);
             return;
         }
-
-        DI.Instance.Logger.LogDebug("DELETE OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
 
         world.Query<TamerComponent>().Each(new ClearPlayerTamerRefCountJob(playerId));
     }

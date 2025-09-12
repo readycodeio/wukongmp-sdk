@@ -15,8 +15,12 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
     protected override void OnUpdate()
     {
         var areaPlayers = DI.Instance.State.AreaPlayers.Count;
-        var targetScaling = 1 + 1.5f * (areaPlayers - 1);
 
+#if DEBUG
+        const float targetScaling = .5f;
+#else
+        var targetScaling = 1 + 1.5f * (areaPlayers - 1);
+#endif
         Query.ForEachEntity((ref HpComponent hp, ref LocalTamerComponent localTamer, Entity entity) =>
         {
             if (!localTamer.IsMonsterSynced)
@@ -34,6 +38,13 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
                     return;
 
                 var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(localTamer.Pawn);
+
+                if (attrs == null)
+                {
+                    DI.Instance.Logger.LogWarning("Failed to get AttrContainer for entity {Entity}", entity);
+                    return;
+                }
+
                 var currentHp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                 var maxHp = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
 

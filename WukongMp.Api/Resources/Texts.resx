@@ -267,4 +267,10 @@
   <data name="SetMonsterHpScaling" xml:space="preserve">
     <value>Set monster HP scaling: {0}x</value>
   </data>
+  <data name="JoinOtherPlayersToProceed" xml:space="preserve">
+    <value>Join other players to proceed</value>
+  </data>
+  <data name="WaitForOtherPlayers" xml:space="preserve">
+    <value>Wait for other players</value>
+  </data>
 </root>

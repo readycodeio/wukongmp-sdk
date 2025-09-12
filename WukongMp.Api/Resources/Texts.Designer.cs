@@ -204,6 +204,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Join other players to proceed.
+        /// </summary>
+        internal static string JoinOtherPlayersToProceed {
+            get {
+                return ResourceManager.GetString("JoinOtherPlayersToProceed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Master client: {0}.
         /// </summary>
         internal static string MasterClient {
@@ -497,6 +506,15 @@ namespace WukongMp.Api.Resources {
         internal static string WaitForEnd {
             get {
                 return ResourceManager.GetString("WaitForEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wait for other players.
+        /// </summary>
+        internal static string WaitForOtherPlayers {
+            get {
+                return ResourceManager.GetString("WaitForOtherPlayers", resourceCulture);
             }
         }
         

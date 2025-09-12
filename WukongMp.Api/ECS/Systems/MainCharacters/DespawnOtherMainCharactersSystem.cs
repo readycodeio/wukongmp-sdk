@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Idents;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.ECS.Archetypes;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Managers;
@@ -25,6 +22,8 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     private struct PendingDeleteEvent
     {
         public PlayerId PlayerId;
+        public BGUCharacterCS? PlayerCharacter;
+        public AActor? PlayerMarker;
     }
 
     private readonly ArchetypeEventRouter _archetypeEvent;
@@ -71,15 +70,19 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         }
 
         var mainEntity = new MainCharacterEntity(evt.Entity);
-        ref var mainComp = ref mainEntity.GetState();
+        var mainComp = mainEntity.GetState();
 
         var playerId = mainComp.PlayerId;
         if (playerId == _playerState.LocalPlayerId)
             return;
 
+        var localComp = mainEntity.GetLocalState();
+
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
-            PlayerId = mainComp.PlayerId,
+            PlayerId = playerId,
+            PlayerCharacter = localComp.Pawn,
+            PlayerMarker = localComp.MarkerActor
         });
     }
 
@@ -93,7 +96,7 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
             _logger.LogDebug("ATTEMPTING TO DESPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", pending.PlayerId);
 
             // NOTE: Currently it safely handles removing characters that are already despawned
-            _playerPawnState.RemovePlayerPawn(pending.PlayerId);
+            _playerPawnState.RemovePlayerPawn(pending.PlayerId, pending.PlayerCharacter, pending.PlayerMarker);
         }
 
         _pendingDeleteEvents.Clear();
