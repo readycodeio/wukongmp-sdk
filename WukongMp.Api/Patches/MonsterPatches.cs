@@ -134,12 +134,8 @@ namespace WukongMp.Api.Patches
                 if (tamerEntity.HasValue)
                 {
                     ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                    if (!localTamer.IsLocallySpawned)
-                    {
-                        localTamer.IsLocallySpawned = true;
-                        var meta = tamerEntity.Value.GetMeta();
-                        DI.Instance.Rpc.SendUnitSpawned(meta.NetId);
-                    }
+                    var metadata = tamerEntity.Value.GetMeta();
+                    TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
                 }
                 else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
                 {

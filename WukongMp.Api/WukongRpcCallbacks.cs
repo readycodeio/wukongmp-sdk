@@ -209,7 +209,7 @@ public partial class WukongRpcCallbacks : IDisposable
         _ecsLoop.Scheduler.Schedule((_, data0) => { SummonPatch.ExecuteSummon(data0.SummonerId, data0.SummonId, data0.Guid, data0.Name, data0.TeamId); }, data);
     }
 
-    [RpcEvent(RelayMode.EntityOwner)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)] // TODO: Check if this is the right relay mode for this event
     internal void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
     {
         _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>

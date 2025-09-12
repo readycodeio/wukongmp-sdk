@@ -107,15 +107,23 @@ public class WukongConnectionManager : IDisposable
         {
             try
             {
+                var areaId = self.RequestedAreaId;
+
                 if (self.RequestedAreaId != null)
                     self.LeaveArea();
                 if (self.RequestedConnect)
                     self.Disconnect();
+                
                 await Task.Delay(Constants.ReconnectDelayMs);
+                
                 if (!self.RequestedConnect)
                     self.Connect();
-                if (self.RequestedAreaId != null)
-                    self.JoinArea(self.RequestedAreaId.Value);
+                
+                if (areaId.HasValue)
+                {
+                    await Task.Delay(Constants.ReconnectDelayMs);
+                    self.JoinArea(areaId.Value);
+                }
             }
             catch (Exception ex)
             {

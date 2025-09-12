@@ -170,7 +170,7 @@ public class DI
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
         var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
-        ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
+        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
         var synchronizer = Synchronizer = new WukongSynchronizer(
@@ -196,7 +196,7 @@ public class DI
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer, widgetManager);
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
-        var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor);
+        var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
         var patcher = Patcher = new WukongPatcher();

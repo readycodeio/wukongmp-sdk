@@ -273,4 +273,7 @@
   <data name="WaitForOtherPlayers" xml:space="preserve">
     <value>Wait for other players</value>
   </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
 </root>
