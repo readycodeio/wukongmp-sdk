@@ -1,15 +1,16 @@
 using System;
 using ReadyM.Api.Multiplayer.Client;
-using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
 public class PingWidgetUpdater : IDisposable
 {
     private readonly NetworkPingMonitor _pingMonitor;
+    private readonly WukongServerRpcCallbacks _rpc;
     
-    public PingWidgetUpdater(NetworkPingMonitor pingMonitor)
+    public PingWidgetUpdater(NetworkPingMonitor pingMonitor, WukongServerRpcCallbacks rpc)
     {
+        _rpc = rpc;
         _pingMonitor = pingMonitor;
         _pingMonitor.OnPingUpdated += HandlePingUpdated;
     }
@@ -19,8 +20,9 @@ public class PingWidgetUpdater : IDisposable
         _pingMonitor.OnPingUpdated -= HandlePingUpdated;
     }
     
-    private void HandlePingUpdated(int ping)
+    private void HandlePingUpdated(int _)
     {
-        PingIndicatorWidget.Instance.SetPingValue(ping);
+        // we ignore LiteNetLib ping, instead showing the RPC ping that we send ourselves
+        _rpc.SendPing();
     }
 }

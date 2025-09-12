@@ -4,6 +4,8 @@ using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Serialization;
 using System;
+using System.Diagnostics;
+using b1.EventDelDefine;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -44,5 +46,20 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
             InfoMessageWidget.Instance.SetVisibility(false);
             CutsceneUtils.SkipCutscene(sequenceId0);
         }, this, sequenceId);
+    }
+
+    private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
+
+    [ServerRpcEvent("Ping")]
+    private void OnPing(long timestamp)
+    {
+        var now = PingStopwatch.ElapsedMilliseconds;
+        var rtt = now - timestamp;
+        PingIndicatorWidget.Instance.SetPingValue(rtt);
+    }
+
+    public void SendPing()
+    {
+        SendPing(PingStopwatch.ElapsedMilliseconds);
     }
 }

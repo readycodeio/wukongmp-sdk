@@ -10,7 +10,7 @@ namespace WukongMp.Api.UI
 
         private PingIndicatorWidget() : base(Constants.PingWidgetName) { }
 
-        public void SetPingValue(int pingMs)
+        public void SetPingValue(long pingMs)
         {
             GameWidget?.CallFunctionByNameWithArguments($"SetPingValue {pingMs}", true);
         }
