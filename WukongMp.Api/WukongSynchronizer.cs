@@ -14,6 +14,7 @@ using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.MainCharacters;
@@ -30,6 +31,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
     private readonly SystemGroup _syncGroup;
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
     private readonly ClientState _state;
+    private readonly Store _world;
 
     public WukongSynchronizer(
         ArchetypeEventRouter archetypeEvent,
@@ -56,8 +58,10 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _areaState = areaState;
         _wukongArchetype = wukongArchetype;
         _state = state;
+        _world = world;
 
         State.OnJoinedArea += OnJoinedAreaHandler;
+        JobRegistry.OnApplySnapshot += OnApplySnapshot;
 
         _syncGroup = new SystemGroup("Sync");
 
@@ -84,6 +88,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
     protected override void OnDispose()
     {
         State.OnJoinedArea -= OnJoinedAreaHandler;
+        JobRegistry.OnApplySnapshot -= OnApplySnapshot;
 
         EcsLoop.RemoveSystem(_syncGroup);
         base.OnDispose();
@@ -134,5 +139,10 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         {
             TamerUtils.DiscoverTamers();
         }
+    }
+
+    private void OnApplySnapshot()
+    {
+        _world.Query<LocalTamerComponent, MetadataComponent>().Each(new DiscoverLocallySpawnedMonsters());
     }
 }

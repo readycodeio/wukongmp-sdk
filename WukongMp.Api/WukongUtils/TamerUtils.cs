@@ -8,6 +8,7 @@ using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Configuration;
+using ReadyM.Api.Multiplayer.ECS.Components;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -80,6 +81,15 @@ namespace WukongMp.Api.WukongUtils
                 {
                     Logging.LogDebug("Monster already exists in ECS: {Entity}", entity.ToString());
                 }
+            }
+        }
+
+        public static void MarkMonsterLocallySpawned(ref LocalTamerComponent localTamer, MetadataComponent metadata)
+        {
+            if (!localTamer.IsLocallySpawned)
+            {
+                localTamer.IsLocallySpawned = true;
+                DI.Instance.Rpc.SendUnitSpawned(metadata.NetId);
             }
         }
 
