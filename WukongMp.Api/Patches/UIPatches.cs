@@ -85,7 +85,7 @@ namespace WukongMp.Api.Patches
                     {
                         ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                         InfoMessageWidget.Instance.SetVisibility(true);
-                        InfoMessageWidget.Instance.SetText("Disconnected");
+                        InfoMessageWidget.Instance.SetText(Texts.Disconnected);
                     }
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())

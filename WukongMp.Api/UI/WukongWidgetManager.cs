@@ -6,6 +6,7 @@ using ReadyM.Relay.Client.State;
 using System;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -110,7 +111,7 @@ public sealed class WukongWidgetManager : IDisposable
         if (!_clientState.IsConnected)
         {
             InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText("Disconnected");
+            InfoMessageWidget.Instance.SetText(Texts.Disconnected);
         }
     }
 
@@ -145,7 +146,7 @@ public sealed class WukongWidgetManager : IDisposable
     private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
         InfoMessageWidget.Instance.SetVisibility(true);
-        InfoMessageWidget.Instance.SetText("Disconnected");
+        InfoMessageWidget.Instance.SetText(Texts.Disconnected);
     }
 
     private void OnConnected(PlayerId playerId, Entity entity)

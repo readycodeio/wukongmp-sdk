@@ -270,4 +270,7 @@
   <data name="SetMonsterHpScaling" xml:space="preserve">
     <value>设置怪物生命值缩放：{0}x</value>
   </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>与服务器断开连接</value>
+  </data>
 </root>
