@@ -136,7 +136,7 @@ public sealed class WukongWidgetManager : IDisposable
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity.HasValue)
         {
-            CoopStatusWidget.Instance.AddPlayer(playerEntity.Value.GetState().NickName);
+            CoopStatusWidget.Instance.RemovePlayer(playerEntity.Value.GetState().NickName);
         }
 
         RefreshWidgets();
