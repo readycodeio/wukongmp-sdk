@@ -49,6 +49,9 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
+            if (Param.AttackerTeamType == EDmgNumUITeamType.Enemy)
+                return true;
+
             if (!DI.Instance.AreaState.IsMasterClient)
                 return false;
 
