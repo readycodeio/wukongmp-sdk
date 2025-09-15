@@ -135,7 +135,11 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
-        if (_areaState.IsMasterClient)
+        var isFirst = _areaState.IsMasterClient;
+
+        Logger.LogDebug("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
+
+        if (isFirst)
         {
             TamerUtils.DiscoverTamers();
         }

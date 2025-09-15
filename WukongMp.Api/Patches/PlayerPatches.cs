@@ -341,8 +341,7 @@ namespace WukongMp.Api.Patches
 
             __state = true;
 
-            if (DI.Instance.AreaState is
-                { IsMasterClient: true, CurrentArea.Room: { InPvP: true, InCombatRound: true } })
+            if (Constants.IsPvP && DI.Instance.AreaState is { IsMasterClient: true, CurrentArea.Room: { InPvP: true, InCombatRound: true } })
             {
                 if (Attacker != owner)
                 {
