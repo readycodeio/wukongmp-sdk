@@ -899,6 +899,11 @@ public class PatchSpawnAndPossess
         actor.CapsuleComponent.SetGenerateOverlapEvents(false);
         BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(controller, newPawn, spawnTransform);
 
+        if (isNonLocalTransform && newPawn is BGUCharacterCS newCharacter)
+        {
+            BGW_EventCollection.Get(GameUtils.GetWorld())?.Evt_RemoveActorGuid2Entity(newCharacter, BGU_DataUtil.GetActorGuid(newCharacter), newCharacter.GetResID());
+        }
+
         if (isNonLocalTransform && mainPlayerPawn != null)
         {
             // Set player controller back to main player
