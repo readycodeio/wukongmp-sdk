@@ -51,8 +51,10 @@ namespace WukongMp.Api.Configuration
         
         public static readonly HashSet<int> SoloPlaySequences =
         [
-            90005018, // Feng-Tail General
+            90005015, // Feng-Tail General
+            90005016, // Feng-Tail General
             90005017, // Feng-Tail General
+            90005018, // Feng-Tail General
         ];
 
         public const int GourdSkillId = 10530;
