@@ -530,7 +530,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUC_TargetInfoData), "IsSupportMultiLockTarget")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
     public static class PatchIsSupportMultiLockTarget
     {
         public static bool Prefix(ref bool __result)
