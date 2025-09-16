@@ -207,6 +207,12 @@ public static class PatchTickForMovieSystem
             }
             else if (mainEntity?.GetLocalState().IsWaitingForSequence == false)
             {
+                // Some cutscenes can be played solo even in multiplayer, e.g. holding on to the Feng-Tail General
+                if (Constants.SoloPlaySequences.Contains(peakRequest.SequenceID))
+                {
+                    return true;
+                }
+                
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 InfoMessageWidget.Instance.SetVisibility(true);

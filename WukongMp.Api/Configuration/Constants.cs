@@ -48,6 +48,12 @@ namespace WukongMp.Api.Configuration
         [
             30105200, // act 3 boss, end of first phase
         ];
+        
+        public static readonly HashSet<int> SoloPlaySequences =
+        [
+            90005018, // Feng-Tail General
+            90005017, // Feng-Tail General
+        ];
 
         public const int GourdSkillId = 10530;
         public const int ImmobilizeSkillId = 10518;
