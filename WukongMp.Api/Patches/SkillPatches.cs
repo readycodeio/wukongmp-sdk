@@ -1105,6 +1105,10 @@ public static class PatchSetCloudInputEnable
 
         var players = DI.Instance.PlayerState;
         var cloudMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_CloudMoveData>(players.LocalMainCharacter?.GetLocalState().Pawn);
+        if (cloudMoveData == null)
+        {
+            return true;
+        }
         return cloudMoveData.IsCloudMoveEnabled == bEnable;
     }
 }
