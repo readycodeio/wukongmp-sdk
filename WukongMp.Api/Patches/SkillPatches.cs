@@ -1088,3 +1088,18 @@ public static class PatchOnSweepCheckHit
         return true;
     }
 }
+
+[HarmonyPatch(typeof(FInputMappingContextProcessor), nameof(FInputMappingContextProcessor.SetCloudInputEnable))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchSetCloudInputEnable
+{
+    public static bool Prefix(bool bEnable)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var players = DI.Instance.PlayerState;
+        var cloudMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_CloudMoveData>(players.LocalMainCharacter?.GetLocalState().Pawn);
+        return cloudMoveData.IsCloudMoveEnabled == bEnable;
+    }
+}
