@@ -18,7 +18,7 @@ namespace WukongMp.Coop
     {
         public string Name => "WukongMp co-op";
         public string Version => "1.0.0";
-        
+
         private ILogger _logger = null!;
 
         public bool IsDebug
@@ -27,12 +27,11 @@ namespace WukongMp.Coop
 #else
             => false;
 #endif
-        
+
         public void SetLoggerFactory(ILoggerFactory loggerFactory)
         {
             DI.Instance.InitLogging(loggerFactory);
             _logger = DI.Instance.Logger;
-            
         }
 
         public void Init()
@@ -61,6 +60,7 @@ namespace WukongMp.Coop
 #else
                     false,
 #endif
+                    false,
                     LaunchParameters.Instance.RecordShimFile!
                 );
             else
@@ -70,6 +70,11 @@ namespace WukongMp.Coop
                     LaunchParameters.Instance.ServerPort!.Value,
                     LaunchParameters.Instance.UserGuid,
 #if NO_DISCONNECT
+                    true,
+#else
+                    false,
+#endif
+#if DEBUG
                     true
 #else
                     false
@@ -113,21 +118,21 @@ namespace WukongMp.Coop
                     _logger.LogError("WukongMP is already initialized");
                     return;
                 }
-            
+
                 if (!DI.Instance.Connection.RequestedConnect)
                 {
                     DI.Instance.Connection.Connect();
                 }
             });
-            
+
 #if DEBUG
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () => 
-            { 
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
+            {
                 Logging.LogDebug("Alt + Y: Show colliders markers");
                 DebugUtils.ShowMarkersForInvisibleWalls(4000);
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () => 
+            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () =>
             {
                 Logging.LogDebug("Alt + U: Remove colliders markers");
                 DebugUtils.DestroyTmpMarkerActors();
@@ -139,7 +144,7 @@ namespace WukongMp.Coop
                 if (LaunchParameters.Instance.RecordShimFile != null)
                     DI.Instance.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
             });
-            
+
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 _logger.LogDebug("Alt + C");
@@ -237,27 +242,27 @@ namespace WukongMp.Coop
             {
                 return;
             }
-            
+
             Utils.TryRunOnGameThread(() =>
             {
                 if (DI.Instance.Connection.RequestedConnect)
                 {
                     DI.Instance.Connection.Disconnect();
                 }
-            
+
                 if (DI.Instance.Connection.IsRunning)
                 {
                     DI.Instance.Connection.Stop();
                     DI.Instance.EcsLoop.Stop();
                 }
-                
+
                 if (DI.Instance.Patcher.IsPatched)
                 {
                     DI.Instance.Patcher.Unpatch();
                 }
             });
         }
-        
+
         public object GetReloadContext()
         {
             _logger.LogInformation("GetReloadContext");
