@@ -1,5 +1,6 @@
 ﻿using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
@@ -16,17 +17,16 @@ public class WukongAreaState(ClientState state)
         get
         {
             var areaEntity = state.CurrentAreaEntity;
-            if (areaEntity == null)
-                // FIXME: Is this correct?
+            if (!areaEntity.HasValue)
                 return false;
             
-            var roomComponent = areaEntity.Value.GetComponent<RoomComponent>();
-            return roomComponent.MasterClient == state.LocalPlayerId;
+            var areaComp = areaEntity.Value.GetComponent<AreaScopeComponent>();
+            return areaComp.MasterClient == state.LocalPlayerId;
         }
     }
 
     public PlayerId? MasterClientId
-        => CurrentArea?.GetRoom().MasterClient;
+        => CurrentArea?.ScopeComponent.MasterClient;
     
     public AreaEntity? CurrentArea
     {

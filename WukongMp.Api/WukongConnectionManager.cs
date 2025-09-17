@@ -36,8 +36,6 @@ public class WukongConnectionManager : IDisposable
     public AreaId? RequestedAreaId
         => RelayClient.RequestedAreaId;
 
-    public event Action<string>? OnMasterClientChanged;
-
     public WukongConnectionManager(RelayClientService relayClientService,
         ClientState state,
         WukongPlayerState playerState,
@@ -113,12 +111,12 @@ public class WukongConnectionManager : IDisposable
                     self.LeaveArea();
                 if (self.RequestedConnect)
                     self.Disconnect();
-                
+
                 await Task.Delay(Constants.ReconnectDelayMs);
-                
+
                 if (!self.RequestedConnect)
                     self.Connect();
-                
+
                 if (areaId.HasValue)
                 {
                     await Task.Delay(Constants.ReconnectDelayMs);
@@ -130,29 +128,6 @@ public class WukongConnectionManager : IDisposable
                 self._logger.LogError(ex, "Error while reconnecting");
             }
         }, this);
-    }
-
-    public void SetMasterClient(string newMasterName)
-    {
-        if (AreaState.IsMasterClient)
-        {
-            var newMasterPlayerId = _state.AllPlayers.FirstOrDefault(x => PlayerState.GetPlayerById(x)?.GetState().NickName == newMasterName);
-            if (newMasterPlayerId != null)
-            {
-                var areaEntity = AreaState.CurrentArea;
-                if (areaEntity != null)
-                {
-                    areaEntity.Value.GetRoom().MasterClient = newMasterPlayerId;
-                }
-
-                // FIXME: We should send this when master client actually changes, not when we request it changing
-                OnMasterClientChanged?.Invoke(newMasterName);
-            }
-            else
-            {
-                Logging.LogError("Player {PlayerName} not found", newMasterName);
-            }
-        }
     }
 
     public void OnDisconnectedHandler(PlayerId playerId, Entity? entity, DisconnectReason disconnectReason)
