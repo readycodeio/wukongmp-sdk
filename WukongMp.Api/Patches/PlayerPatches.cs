@@ -335,10 +335,6 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var playerState = DI.Instance.PlayerState;
-            if (playerState.LocalMainCharacter?.GetState().IsTransformed == true)
-                return;
-
             __state = true;
 
             if (Constants.IsPvP && DI.Instance.AreaState is { IsMasterClient: true, CurrentArea.RoomComponent: { InPvP: true, InCombatRound: true } })
@@ -432,12 +428,12 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (playerState.LocalMainCharacter?.GetState().IsTransformed == true)
-                return;
-
             if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
-                FreeCameraManager.Instance.EnterFreeCameraMode();
+                if (playerState.LocalMainCharacter?.GetState().IsTransformed == false)
+                {
+                    FreeCameraManager.Instance.EnterFreeCameraMode();
+                }
                 return;
             }
 
