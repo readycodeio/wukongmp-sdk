@@ -515,19 +515,13 @@ namespace WukongMp.Api.Patches
                 return;
 
             var owner = __instance.GetOwner();
-            var playerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
-            if (playerEntity.HasValue)
-            {
-                var netId = playerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
-            }
-
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-            {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
-            }
+
+            if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                return;
+
+            var netId = tamerEntity.Value.GetMeta().NetId;
+            DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
         }
     }
 
