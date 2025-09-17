@@ -150,15 +150,37 @@ public static class DebugUtils
     public static void DumpActorAnimationDebugInfo(AActor pawn)
     {
         BUC_ABPHelperData animationHelperData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPHelperData>(pawn);
+        BUC_ABPCommonSettingData commonData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPCommonSettingData>(pawn);
+        Logging.LogDebug("FinalABPMoveMode: {MoveMode}", commonData.FinalABPMoveMode);
+        Logging.LogDebug("HasValidMoveAnimConfig: {IsValid}", animationHelperData.HasValidMoveAnimConfig(EMoveSpeedLevel.Run, bLockMove: true));
+
         var animInst = animationHelperData.AnimInst;
         if (!(animInst == null) && animInst is BUAnimHumanoidCS bUAnimHumanoidCS)
         {
-            UAnimInstance linkedAnimGraphInstanceByTag = bUAnimHumanoidCS.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.Move);
-            if (!linkedAnimGraphInstanceByTag.IsNullOrDestroyed())
+            UAnimInstance moveAnimGraphInstance = bUAnimHumanoidCS.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.Move);
+            if (!moveAnimGraphInstance.IsNullOrDestroyed())
             {
-                var playerLocomotionAnimInst = linkedAnimGraphInstanceByTag.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.PlayerLocomotion);
-                LogAllProperties(linkedAnimGraphInstanceByTag);
-                LogAllProperties(playerLocomotionAnimInst);
+                LogAllProperties(moveAnimGraphInstance);
+                var playerLocomotionAnimInst = moveAnimGraphInstance.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.PlayerLocomotion);
+                if (!playerLocomotionAnimInst.IsNullOrDestroyed())
+                {
+                    LogAllProperties(playerLocomotionAnimInst);
+                }
+                var advancedMonsterLocomotionAnimInst = moveAnimGraphInstance.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.AdvancedMonsterLocomotion);
+                if (!advancedMonsterLocomotionAnimInst.IsNullOrDestroyed())
+                {
+                    LogAllProperties(advancedMonsterLocomotionAnimInst);
+                }
+                var monsterLocomotionAnimInst = moveAnimGraphInstance.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.MonsterLocomotion);
+                if (!monsterLocomotionAnimInst.IsNullOrDestroyed())
+                {
+                    LogAllProperties(monsterLocomotionAnimInst);
+                }
+                var motionMatchingAnimInst = moveAnimGraphInstance.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.MotionMatching);
+                if (!motionMatchingAnimInst.IsNullOrDestroyed())
+                {
+                    LogAllProperties(motionMatchingAnimInst);
+                }
             }
         }
         LogCurveValues(animationHelperData);
