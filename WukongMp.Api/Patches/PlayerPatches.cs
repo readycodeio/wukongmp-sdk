@@ -853,4 +853,64 @@ namespace WukongMp.Api.Patches
             return true;
         }
     }
+
+    [HarmonyPatch(typeof(BUC_ABPMotionMatchingData), "UpdatePlayerMotionMatchingState")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchUpdatePlayerMotionMatchingState
+    {
+        public static bool Prefix(
+            BUC_ABPMotionMatchingData __instance,
+            AActor Owner,
+            IBUC_TargetInfoData ___TargetInfoData,
+            IBUC_UnitStateData ___UnitStateData,
+            IBUC_PlayerCameraData ___CameraData,
+            EMoveSpeedLevel ___MMMoveSpeedState)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            if (Owner == null)
+            {
+                return false;
+            }
+            ACharacter? aCharacter = Owner as ACharacter;
+            if (aCharacter == null || aCharacter is not BGUPlayerCharacterCS)
+            {
+                return false;
+            }
+            bool flag = false;
+            if (___TargetInfoData != null)
+            {
+                UnitLockTargetInfo targetInfo = ___TargetInfoData.GetTargetInfo();
+                if (targetInfo != null && targetInfo.LockTargetActor != null && targetInfo.LockTargetWayType == ELockTargetWayType.Manual)
+                {
+                    flag = true;
+                }
+            }
+            if (___UnitStateData != null && ___UnitStateData.HasState(EBGUUnitState.ShooterMode))
+            {
+                flag = true;
+            }
+            if (___CameraData != null && ___CameraData.IsInG4Mode())
+            {
+                flag = true;
+            }
+            switch (___MMMoveSpeedState)
+            {
+                case EMoveSpeedLevel.Walk:
+                    __instance.TargetMMState = (flag ? EState_MM.LockWalk : EState_MM.FreeWalk);
+                    break;
+                case EMoveSpeedLevel.Run:
+                    __instance.TargetMMState = (flag ? EState_MM.LockRun : EState_MM.FreeRun);
+                    break;
+                case EMoveSpeedLevel.Sprint:
+                    __instance.TargetMMState = (flag ? EState_MM.LockSprint : EState_MM.FreeSprint);
+                    break;
+                default:
+                    __instance.TargetMMState = (flag ? EState_MM.Lock : EState_MM.Free);
+                    break;
+            }
+            return false;
+        }
+    }
 }
