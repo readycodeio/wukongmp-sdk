@@ -331,7 +331,6 @@ namespace WukongMp.Api.Patches
                         // without these 5 lines the character will not jump
                         __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
                         __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
-                        __instance.MovementComp.MovementMode = EMovementMode.MOVE_None;
 
                         events.Evt_StopCurrentMove.Invoke();
                         events.Evt_MovementForceStop.Invoke();

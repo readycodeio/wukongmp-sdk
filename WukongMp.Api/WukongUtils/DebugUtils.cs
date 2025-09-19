@@ -158,6 +158,8 @@ public static class DebugUtils
         BUC_ABPBasicData basicData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPBasicData>(pawn);
         BUC_ABPCharacterData characterData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPCharacterData>(pawn);
         BUC_ABPBGUCharacterData bguCharacterData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPBGUCharacterData>(pawn);
+
+        Logging.LogDebug("Animation debug info for: {Name}", pawn.GetName());
         Logging.LogDebug("FinalABPMoveMode: {MoveMode}", commonData.FinalABPMoveMode);
         Logging.LogDebug("HasValidMoveAnimConfig: {IsValid}", animationHelperData.HasValidMoveAnimConfig(EMoveSpeedLevel.Run, bLockMove: true));
 
@@ -170,6 +172,7 @@ public static class DebugUtils
         LogAllProperties(advancedMonsterLocomotionData);
         LogAllProperties(basicData);
         LogAllProperties(characterData);
+        LogAllProperties(characterData.MovementComp);
         LogAllProperties(bguCharacterData);
 
         var animInst = animationHelperData.AnimInst;
