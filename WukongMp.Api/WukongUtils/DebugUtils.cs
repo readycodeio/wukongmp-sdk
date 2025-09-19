@@ -155,15 +155,22 @@ public static class DebugUtils
         BUC_ABPPlayerLocomotionData playerLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPPlayerLocomotionData>(pawn);
         BUC_ABPCommonLocomotionData commonLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPCommonLocomotionData>(pawn);
         BUC_ABPAdvancedMonsterLocomotionData advancedMonsterLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPAdvancedMonsterLocomotionData>(pawn);
+        BUC_ABPBasicData basicData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPBasicData>(pawn);
+        BUC_ABPCharacterData characterData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPCharacterData>(pawn);
+        BUC_ABPBGUCharacterData bguCharacterData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPBGUCharacterData>(pawn);
         Logging.LogDebug("FinalABPMoveMode: {MoveMode}", commonData.FinalABPMoveMode);
         Logging.LogDebug("HasValidMoveAnimConfig: {IsValid}", animationHelperData.HasValidMoveAnimConfig(EMoveSpeedLevel.Run, bLockMove: true));
 
         LogAllProperties(animationHelperData);
         LogAllProperties(commonData);
         LogAllProperties(motionMatchingData);
+        LogAllProperties(motionMatchingData.CurrentAA);
         LogAllProperties(playerLocomotionData);
         LogAllProperties(commonLocomotionData);
         LogAllProperties(advancedMonsterLocomotionData);
+        LogAllProperties(basicData);
+        LogAllProperties(characterData);
+        LogAllProperties(bguCharacterData);
 
         var animInst = animationHelperData.AnimInst;
         if (!(animInst == null) && animInst is BUAnimHumanoidCS bUAnimHumanoidCS)
