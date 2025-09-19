@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Values;
@@ -151,7 +152,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUC_ABPJumpV2Data), nameof(BUC_ABPJumpV2Data.Update))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchJumpData
     {
         public static void Postfix(
@@ -911,6 +912,44 @@ namespace WukongMp.Api.Patches
                     break;
             }
             return false;
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BUS_JumpComp), "TriggerJumpSkill", typeof(ESkillDirection), typeof(FVector2D))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchTriggerJumpSkill
+{
+    public static void Prefix(BUS_JumpComp __instance, ESkillDirection StartJumpDir, FVector2D CurrentInputVector)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var owner = __instance.GetOwner();
+        var playerState = DI.Instance.PlayerState;
+
+        if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        {
+            DI.Instance.Rpc.SendStartJump(new StartJumpData(StartJumpDir, CurrentInputVector));
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BUS_JumpComp), "OnReleased")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchJumpOnReleased
+{
+    public static void Prefix(BUS_JumpComp __instance)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var owner = __instance.GetOwner();
+        var playerState = DI.Instance.PlayerState;
+
+        if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        {
+            DI.Instance.Rpc.SendStopJump();
         }
     }
 }

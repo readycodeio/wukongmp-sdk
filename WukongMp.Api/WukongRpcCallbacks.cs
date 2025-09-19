@@ -792,4 +792,48 @@ public partial class WukongRpcCallbacks : IDisposable
             }
         }, this, birthPointId);
     }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnStartJump(PlayerId __sender, StartJumpData jumpData)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender, data) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            PlayerUtils.StartJump(localMainComp.Pawn, jumpData.StartJumpDir, jumpData.InputVector);
+        }, this, __sender, jumpData);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnStopJump(PlayerId __sender)
+    {
+        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
+        {
+            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            {
+                self._logger.LogError("Player not found: {Id}", sender);
+                return;
+            }
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+            {
+                self._logger.LogError("Player pawn is null for player {Id}", sender);
+                return;
+            }
+
+            PlayerUtils.StopJump(localMainComp.Pawn);
+        }, this, __sender);
+    }
 }
