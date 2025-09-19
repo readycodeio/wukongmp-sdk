@@ -410,7 +410,7 @@ public partial class WukongPVP : IDisposable
     
     public void SwitchReadyStateMulti()
     {
-        if (_areaState.InRoom && _areaState.CurrentArea is { Room: { InPvP: false, InMatchmaking: false } } && _state.AllPlayers.Count > 0)
+        if (_areaState.InRoom && _areaState.CurrentArea is { RoomComponent: { InPvP: false, InMatchmaking: false } } && _state.AllPlayers.Count > 0)
         {
             SwitchReadyState();
         }
@@ -418,7 +418,7 @@ public partial class WukongPVP : IDisposable
 
     public void SwitchReadyStateSingle()
     {
-        if (_areaState.InRoom && _areaState.CurrentArea is { Room: { InPvP: false, InMatchmaking: false } } && _state.AllPlayers.Count == 0)
+        if (_areaState.InRoom && _areaState.CurrentArea is { RoomComponent: { InPvP: false, InMatchmaking: false } } && _state.AllPlayers.Count == 0)
         {
             SwitchReadyState();
         }
@@ -438,7 +438,7 @@ public partial class WukongPVP : IDisposable
         if (_playerState.LocalPlayerEntity == null)
             return;
         
-        if (force || (_areaState.InRoom && _playerState.LocalPlayerEntity.Value.GetState().IsReadyForPvP == false && _areaState.CurrentArea is { Room: { InPvP: false, InMatchmaking: false } }))
+        if (force || (_areaState.InRoom && _playerState.LocalPlayerEntity.Value.GetState().IsReadyForPvP == false && _areaState.CurrentArea is { RoomComponent: { InPvP: false, InMatchmaking: false } }))
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();

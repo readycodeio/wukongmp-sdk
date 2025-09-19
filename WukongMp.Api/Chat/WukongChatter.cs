@@ -49,7 +49,6 @@ public class WukongChatter : IDisposable
         _rpc = rpc;
         _ecsLoop = ecsLoop;
 
-        _connection.OnMasterClientChanged += OnMasterClientChanged;
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
 
@@ -62,12 +61,6 @@ public class WukongChatter : IDisposable
 
         _state.OnJoinedArea -= OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
-        _connection.OnMasterClientChanged -= OnMasterClientChanged;
-    }
-
-    private void OnMasterClientChanged(string newMasterName)
-    {
-        SendServerMessage("MasterClient", newMasterName);
     }
 
     public void ProcessMessage(string message)
@@ -95,7 +88,6 @@ public class WukongChatter : IDisposable
 #if DEBUG
         _commands.Add("/play", new WukongChatterCommand(PlayCutscene));
         _commands.Add("/disconnect", new WukongChatterCommand(RequestDisconnect));
-        _commands.Add("/master", new WukongChatterCommand(RequestNewMasterClient));
         _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
 #endif
     }
@@ -192,14 +184,6 @@ public class WukongChatter : IDisposable
         {
             SendServerMessage("PlayerLeft", NickName);
             _connection.Disconnect();
-        }
-    }
-
-    private void RequestNewMasterClient(ReadOnlyMemory<string> args)
-    {
-        if (args.Length == 1)
-        {
-            _connection.SetMasterClient(args.Span[0]);
         }
     }
 

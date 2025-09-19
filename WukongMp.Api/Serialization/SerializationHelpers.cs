@@ -22,6 +22,20 @@ public static class SerializationHelpers
         return new FVector(x, y, z);
     }
 
+    public static void SerializeFVector2D(NetDataWriter outStream, object obj)
+    {
+        var vec = (FVector2D)obj;
+        outStream.Put(vec.X);
+        outStream.Put(vec.Y);
+    }
+
+    public static object DeserializeFVector2D(NetDataReader inStream)
+    {
+        var x = inStream.GetFloat();
+        var y = inStream.GetFloat();
+        return new FVector2D(x, y);
+    }
+
     public static void SerializeFRotator(NetDataWriter outStream, object obj)
     {
         var vec = (FRotator)obj;

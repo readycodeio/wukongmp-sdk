@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Values;
@@ -151,7 +152,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUC_ABPJumpV2Data), nameof(BUC_ABPJumpV2Data.Update))]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchJumpData
     {
         public static void Postfix(
@@ -335,14 +336,9 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            var playerState = DI.Instance.PlayerState;
-            if (playerState.LocalMainCharacter?.GetState().IsTransformed == true)
-                return;
-
             __state = true;
 
-            if (DI.Instance.AreaState is
-                { IsMasterClient: true, CurrentArea.Room: { InPvP: true, InCombatRound: true } })
+            if (Constants.IsPvP && DI.Instance.AreaState is { IsMasterClient: true, CurrentArea.RoomComponent: { InPvP: true, InCombatRound: true } })
             {
                 if (Attacker != owner)
                 {
@@ -433,12 +429,12 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (playerState.LocalMainCharacter?.GetState().IsTransformed == true)
-                return;
-
             if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
             {
-                FreeCameraManager.Instance.EnterFreeCameraMode();
+                if (playerState.LocalMainCharacter?.GetState().IsTransformed == false)
+                {
+                    FreeCameraManager.Instance.EnterFreeCameraMode();
+                }
                 return;
             }
 
@@ -531,7 +527,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUC_TargetInfoData), "IsSupportMultiLockTarget")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
     public static class PatchIsSupportMultiLockTarget
     {
         public static bool Prefix(ref bool __result)
@@ -856,6 +852,104 @@ namespace WukongMp.Api.Patches
             DI.Instance.Rpc.SendRestAtShrine(rebirthPointData.CurrentBirthPoint.PointID);
 
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUC_ABPMotionMatchingData), "UpdatePlayerMotionMatchingState")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchUpdatePlayerMotionMatchingState
+    {
+        public static bool Prefix(
+            BUC_ABPMotionMatchingData __instance,
+            AActor Owner,
+            IBUC_TargetInfoData ___TargetInfoData,
+            IBUC_UnitStateData ___UnitStateData,
+            IBUC_PlayerCameraData ___CameraData,
+            EMoveSpeedLevel ___MMMoveSpeedState)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            if (Owner == null)
+            {
+                return false;
+            }
+            ACharacter? aCharacter = Owner as ACharacter;
+            if (aCharacter == null || aCharacter is not BGUPlayerCharacterCS)
+            {
+                return false;
+            }
+            bool flag = false;
+            if (___TargetInfoData != null)
+            {
+                UnitLockTargetInfo targetInfo = ___TargetInfoData.GetTargetInfo();
+                if (targetInfo != null && targetInfo.LockTargetActor != null && targetInfo.LockTargetWayType == ELockTargetWayType.Manual)
+                {
+                    flag = true;
+                }
+            }
+            if (___UnitStateData != null && ___UnitStateData.HasState(EBGUUnitState.ShooterMode))
+            {
+                flag = true;
+            }
+            if (___CameraData != null && ___CameraData.IsInG4Mode())
+            {
+                flag = true;
+            }
+            switch (___MMMoveSpeedState)
+            {
+                case EMoveSpeedLevel.Walk:
+                    __instance.TargetMMState = (flag ? EState_MM.LockWalk : EState_MM.FreeWalk);
+                    break;
+                case EMoveSpeedLevel.Run:
+                    __instance.TargetMMState = (flag ? EState_MM.LockRun : EState_MM.FreeRun);
+                    break;
+                case EMoveSpeedLevel.Sprint:
+                    __instance.TargetMMState = (flag ? EState_MM.LockSprint : EState_MM.FreeSprint);
+                    break;
+                default:
+                    __instance.TargetMMState = (flag ? EState_MM.Lock : EState_MM.Free);
+                    break;
+            }
+            return false;
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BUS_JumpComp), "TriggerJumpSkill", typeof(ESkillDirection), typeof(FVector2D))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchTriggerJumpSkill
+{
+    public static void Prefix(BUS_JumpComp __instance, ESkillDirection StartJumpDir, FVector2D CurrentInputVector)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var owner = __instance.GetOwner();
+        var playerState = DI.Instance.PlayerState;
+
+        if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        {
+            DI.Instance.Rpc.SendStartJump(new StartJumpData(StartJumpDir, CurrentInputVector));
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BUS_JumpComp), "OnReleased")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchJumpOnReleased
+{
+    public static void Prefix(BUS_JumpComp __instance)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var owner = __instance.GetOwner();
+        var playerState = DI.Instance.PlayerState;
+
+        if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        {
+            DI.Instance.Rpc.SendStopJump();
         }
     }
 }

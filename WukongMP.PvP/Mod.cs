@@ -25,13 +25,13 @@ namespace WukongMp.PvP
 #else
             => false;
 #endif
-        
+
         public void SetLoggerFactory(ILoggerFactory loggerFactory)
         {
             DI.Instance.InitLogging(loggerFactory);
             _logger = DI.Instance.Logger;
         }
-        
+
         public void Init()
         {
             if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
@@ -58,6 +58,7 @@ namespace WukongMp.PvP
 #else
                     false,
 #endif
+                    false,
                     LaunchParameters.Instance.RecordShimFile!
                 );
             else
@@ -67,12 +68,17 @@ namespace WukongMp.PvP
                     LaunchParameters.Instance.ServerPort!.Value,
                     LaunchParameters.Instance.UserGuid,
 #if NO_DISCONNECT
+                    true,
+#else
+                    false,
+#endif
+#if DEBUG
                     true
 #else
                     false
 #endif
                 );
-            
+
             if (!DI.Instance.Patcher.IsPatched)
             {
                 DI.Instance.Patcher.Patch();
@@ -108,12 +114,12 @@ namespace WukongMp.PvP
                 _logger.LogInformation("WukongMP is already initialized");
                 return;
             }
-            
+
             if (!DI.Instance.Connection.RequestedConnect)
             {
                 DI.Instance.Connection.Connect();
             }
-            
+
             if (!DI.Instance.Connection.RequestedConnect)
             {
                 DI.Instance.Connection.Connect();
@@ -142,22 +148,22 @@ namespace WukongMp.PvP
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
-                
+
                 var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
                 if (mainEntity == null)
                     return;
-                
+
                 DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
 
             Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
-                
+
                 var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
                 if (mainEntity == null)
                     return;
-                
+
                 DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
@@ -234,14 +240,14 @@ namespace WukongMp.PvP
             {
                 DI.Instance.Connection.Disconnect();
             }
-            
+
             if (DI.Instance.Connection.IsRunning)
             {
                 DI.Instance.Connection.Stop();
                 DI.Instance.EcsLoop.Stop();
             }
         }
-        
+
         public object GetReloadContext()
         {
             _logger.LogInformation("GetReloadContext");

@@ -163,6 +163,9 @@ public static class SpawningUtils
         newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
         newCharacter.CapsuleComponent.SetGenerateOverlapEvents(bInGenerateOverlapEvents: true);
         UGSE_ActorFuncLib.UpdateActorOverlaps(newCharacter);
+
+        BGW_EventCollection.Get(GameUtils.GetWorld())?.Evt_RemoveActorGuid2Entity(newCharacter, BGU_DataUtil.GetActorGuid(newCharacter), newCharacter.GetResID());
+
         return newCharacter;
     }
 

@@ -87,6 +87,16 @@ namespace WukongMp.Api.WukongUtils
             BUS_EventCollectionCS.Get(playerPawn)?.Evt_TriggerPlayerRest.Invoke();
         }
 
+        public static void StartJump(BGUCharacterCS playerPawn, ESkillDirection startJumpDir, FVector2D inputVector)
+        {
+            BUS_EventCollectionCS.Get(playerPawn)?.Evt_TriggerJumpSkill.Invoke(startJumpDir, inputVector);
+        }
+
+        public static void StopJump(BGUCharacterCS playerPawn)
+        {
+            BUS_EventCollectionCS.Get(playerPawn).Evt_Jump_OnReleased.Invoke();
+        }
+
         private static FTransform GetLocalRebirthPointTransform()
         {
             BPC_RebirthPointData rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());

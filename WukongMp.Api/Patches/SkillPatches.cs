@@ -899,6 +899,11 @@ public class PatchSpawnAndPossess
         actor.CapsuleComponent.SetGenerateOverlapEvents(false);
         BGU_UnrealActorUtil.BGUFinishSpawningActorAndECSBeginPlay(controller, newPawn, spawnTransform);
 
+        if (isNonLocalTransform && newPawn is BGUCharacterCS newCharacter)
+        {
+            BGW_EventCollection.Get(GameUtils.GetWorld())?.Evt_RemoveActorGuid2Entity(newCharacter, BGU_DataUtil.GetActorGuid(newCharacter), newCharacter.GetResID());
+        }
+
         if (isNonLocalTransform && mainPlayerPawn != null)
         {
             // Set player controller back to main player
@@ -1086,5 +1091,24 @@ public static class PatchOnSweepCheckHit
         }
 
         return true;
+    }
+}
+
+[HarmonyPatch(typeof(FInputMappingContextProcessor), nameof(FInputMappingContextProcessor.SetCloudInputEnable))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchSetCloudInputEnable
+{
+    public static bool Prefix(bool bEnable)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var players = DI.Instance.PlayerState;
+        var cloudMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_CloudMoveData>(players.LocalMainCharacter?.GetLocalState().Pawn);
+        if (cloudMoveData == null)
+        {
+            return true;
+        }
+        return cloudMoveData.IsCloudMoveEnabled == bEnable;
     }
 }
