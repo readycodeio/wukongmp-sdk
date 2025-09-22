@@ -58,7 +58,6 @@ namespace WukongMp.PvP
 #else
                     false,
 #endif
-                    false,
                     LaunchParameters.Instance.RecordShimFile!
                 );
             else
@@ -68,11 +67,6 @@ namespace WukongMp.PvP
                     LaunchParameters.Instance.ServerPort!.Value,
                     LaunchParameters.Instance.UserGuid,
 #if NO_DISCONNECT
-                    true,
-#else
-                    false,
-#endif
-#if DEBUG
                     true
 #else
                     false
