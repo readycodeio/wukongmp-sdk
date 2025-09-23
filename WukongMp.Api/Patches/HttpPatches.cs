@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using HarmonyLib;
+using PreludeLib.Attributes;
 using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Patches;
@@ -15,6 +16,7 @@ public class HttpPatches
     {
         private static bool _connectionInit;
 
+        [HarmonyTargetMethodHint("System.Net.ServicePointManager", "FindServicePoint", typeof(Uri), typeof(IWebProxy))]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("System.Net.ServicePointManager:FindServicePoint", [

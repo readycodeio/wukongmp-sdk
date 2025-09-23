@@ -3,6 +3,7 @@ using B1UI;
 using HarmonyLib;
 using System;
 using System.Reflection;
+using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
@@ -54,6 +55,7 @@ public class PatchOnLevelExit
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public class PatchOnLateBeginPlay
 {
+    [HarmonyTargetMethodHint("b1.BUS_MiscInitComp", "LateBeginPlay")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUS_MiscInitComp:LateBeginPlay");
@@ -109,10 +111,10 @@ public class PatchOnPlayerControllerEndPlay
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public class PatchOnLoadingScreenClose
 {
+    [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnLoadingScreenClose")]
     private static MethodBase TargetMethod()
     {
-        var innerType = AccessTools.Inner(typeof(BGW_LoadingTipsMgr), "FLoadingScreenTimeTracker");
-        return AccessTools.Method(innerType, "OnLoadingScreenClose");
+        return AccessTools.Method("B1UI.GSUI.UIStartGame:OnLoadingScreenClose");
     }
 
     public static void Postfix()

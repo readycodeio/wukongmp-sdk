@@ -11,6 +11,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using b1.GSMUI.GSWidget;
+using PreludeLib.Attributes;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
@@ -39,6 +40,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class UiPatches
     {
+        [HarmonyTargetMethodHint("b1.BUS_UIControlSystemV2", "OnDisplayDamageNumUI")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_UIControlSystemV2:OnDisplayDamageNumUI");
@@ -61,6 +63,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.CoopPatches)]
     public static class PatchStartGameUiCoop
     {
+        [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
@@ -107,6 +110,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.PvpPatches)]
     public static class PatchStartGameUiPvP
     {
+        [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
@@ -166,6 +170,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBossRushTimerCountdown
     {
+        [HarmonyTargetMethodHint("B1UI.GSUI.UIBossRushTime", "GetRemainTimeStr")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("B1UI.GSUI.UIBossRushTime:GetRemainTimeStr");

@@ -6,6 +6,7 @@ using b1.BGW;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
+using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
@@ -81,6 +82,7 @@ public static class PatchTriggerItemSkill
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchDoPoleDrink
 {
+    [HarmonyTargetMethodHint("b1.BUS_PoleDrinkComp", "DoPoleDrink")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUS_PoleDrinkComp:DoPoleDrink");
@@ -108,6 +110,7 @@ public static class PatchDoPoleDrink
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchFaBaoSkill
 {
+    [HarmonyTargetMethodHint("b1.BUIACastFaBaoSkill", "OnTriggerInputAction")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUIACastFaBaoSkill:OnTriggerInputAction");
@@ -652,6 +655,7 @@ public static class PatchBuffPlayerWinePartnerAttr
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class TransformationPatch
 {
+    [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "TransferData")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUS_PlayerTransComp:TransferData");
@@ -723,9 +727,10 @@ public class PatchLogs4
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnTransBeginSpawnNewOne
 {
-    private static IEnumerable<MethodBase> TargetMethods()
+    [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "OnTransBeginSpawnNewOne")]
+    private static MethodBase TargetMethod()
     {
-        yield return AccessTools.Method("b1.BUS_PlayerTransComp:OnTransBeginSpawnNewOne");
+        return AccessTools.Method("b1.BUS_PlayerTransComp:OnTransBeginSpawnNewOne");
     }
 
     public static void Prefix(
@@ -759,9 +764,10 @@ public class PatchOnTransBeginSpawnNewOne
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnTransBackSpawnNewOne
 {
-    private static IEnumerable<MethodBase> TargetMethods()
+    [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "OnTransBackSpawnNewOne")]
+    private static MethodBase TargetMethod()
     {
-        yield return AccessTools.Method("b1.BUS_PlayerTransComp:OnTransBackSpawnNewOne");
+        return AccessTools.Method("b1.BUS_PlayerTransComp:OnTransBackSpawnNewOne");
     }
 
     public static void Prefix(
@@ -807,9 +813,10 @@ public class PatchOnTransBackSpawnNewOne
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchSpawnAndPossess
 {
-    private static IEnumerable<MethodBase> TargetMethods()
+    [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "SpawnAndPossessTransUnit")]
+    private static MethodBase TargetMethod()
     {
-        yield return AccessTools.Method("b1.BUS_PlayerTransComp:SpawnAndPossessTransUnit");
+        return AccessTools.Method("b1.BUS_PlayerTransComp:SpawnAndPossessTransUnit");
     }
 
     public static bool Prefix(
@@ -1072,6 +1079,7 @@ public static class PatchPendingReset
 [HarmonyPatchCategory(Constants.CoopPatches)]
 public static class PatchOnSweepCheckHit
 {
+    [HarmonyTargetMethodHint("b1.BUS_SweepCheckHitComp", "OnSweepCheckHit")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUS_SweepCheckHitComp:OnSweepCheckHit");
@@ -1109,6 +1117,7 @@ public static class PatchSetCloudInputEnable
         {
             return true;
         }
+
         return cloudMoveData.IsCloudMoveEnabled == bEnable;
     }
 }

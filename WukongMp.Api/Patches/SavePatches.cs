@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using PreludeLib.Attributes;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
@@ -48,6 +49,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchUIArchives
     {
+        [HarmonyTargetMethodHint("B1UI.GSUI.UIArchives", "LoadArchive")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("B1UI.GSUI.UIArchives:LoadArchive");

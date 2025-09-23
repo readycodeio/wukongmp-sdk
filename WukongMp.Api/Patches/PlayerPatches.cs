@@ -8,6 +8,7 @@ using ReadyM.Api.Multiplayer.ECS.Values;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
@@ -464,6 +465,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitTriggerDead
     {
+        [HarmonyTargetMethodHint("b1.BUS_UIControlSystemV2", "OnUnitTriggerDead")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_UIControlSystemV2:OnUnitTriggerDead");
@@ -544,6 +546,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchSetTargetToData
     {
+        [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "SetTargetToData")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BattleStateComp:SetTargetToData");
@@ -747,6 +750,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchSetAllUnitCannotDead
     {
+        [HarmonyTargetMethodHint("b1.BIS_DeathManager", "SetAllUnitCannotDead")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BIS_DeathManager:SetAllUnitCannotDead");

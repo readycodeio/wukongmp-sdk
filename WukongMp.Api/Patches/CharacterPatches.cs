@@ -556,6 +556,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffRemove
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffRemove")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffRemove");
@@ -588,6 +589,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffRemoveImmediately
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffRemoveImmediately")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffRemoveImmediately");
@@ -620,6 +622,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffAllRemove
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffAllRemove")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffAllRemove");

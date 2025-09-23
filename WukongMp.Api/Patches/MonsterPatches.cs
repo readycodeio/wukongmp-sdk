@@ -4,6 +4,7 @@ using System.Reflection;
 using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
+using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
@@ -18,6 +19,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerManagerTick
     {
+        [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnTickWithGroup")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BGS_TamerManagerSystem:OnTickWithGroup");
@@ -70,6 +72,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnRegisterTamer
     {
+        [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnRegisterTamer")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BGS_TamerManagerSystem:OnRegisterTamer");
@@ -296,6 +299,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnEnableCanUpdateHatred
     {
+        [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "OnEnableCanUpdateHatred")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BattleStateComp:OnEnableCanUpdateHatred");
@@ -330,6 +334,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class TamerResetPatch
     {
+        [HarmonyTargetMethodHint("b1.BUS_TeamIDManageComp", "OnResetTeamID")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_TeamIDManageComp:OnResetTeamID");

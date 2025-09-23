@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
@@ -19,6 +20,7 @@ namespace WukongMp.Api.Patches;
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchRequestPlayMovie
 {
+    [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "RequestPlayMovie")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BGS_MovieSystem:RequestPlayMovie");
@@ -147,6 +149,7 @@ public static class PatchRequestPlayMovie
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchTickForMovieSystem
 {
+    [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "TickForMovieSystem")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BGS_MovieSystem:TickForMovieSystem");
@@ -262,6 +265,7 @@ public static class PatchTickForMovieSystem
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnSkipCurrentCameraMovie
 {
+    [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "OnSkipCurrentCameraMovie")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BGS_MovieSystem:OnSkipCurrentCameraMovie");
