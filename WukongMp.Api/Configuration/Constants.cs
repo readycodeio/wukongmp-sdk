@@ -47,8 +47,9 @@ namespace WukongMp.Api.Configuration
         public static readonly HashSet<int> InstantTriggerSequences =
         [
             30105200, // act 3 boss, end of first phase
+            62103371, 62103351, 62103321, 62103301 // 4 heavenly kings, lute guy
         ];
-        
+
         public static readonly HashSet<int> SoloPlaySequences =
         [
             90005015, // Feng-Tail General
