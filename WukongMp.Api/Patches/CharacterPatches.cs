@@ -2,6 +2,7 @@
 using BtlShare;
 using HarmonyLib;
 using System.Reflection;
+using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -521,6 +522,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffBegin
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffBegin")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffBegin");

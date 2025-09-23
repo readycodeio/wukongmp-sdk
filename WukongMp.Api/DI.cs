@@ -1,7 +1,7 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using PreludeLib.Runtime.Backend.HarmonyDetour;
 using PreludeLib.Runtime.Public;
+using PreludeLib.Runtime.Backend.WeaverCallback;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
@@ -81,7 +81,7 @@ public class DI
     public WukongChatter Chatter { get; private set; } = null!;
 
     public RuntimePrelude Prelude { get; private set; } = null!;
-    public RuntimeHarmonyBackend PreludeBackend { get; private set; } = null!;
+    public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
     
     public WukongPVP? PVP { get; private set; }
@@ -206,8 +206,9 @@ public class DI
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
 
-        var preludeBackend = PreludeBackend = new RuntimeHarmonyBackend(logger);
-        var prelude = Prelude = new RuntimePrelude(preludeBackend);
+        var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
+        var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
+        var prelude = Prelude = new RuntimePrelude(preludeBackend, runtimeLogger);
         var patcher = Patcher = new WukongPatcher(prelude);
 
         if (Constants.IsCoop)
