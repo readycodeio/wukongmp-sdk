@@ -33,7 +33,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
         {
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
-            if (localTamerComp.IsMonsterSynced || !tamerComp.ShouldBeSpawned)
+            if (localTamerComp.IsMonsterActive || !tamerComp.ShouldBeSpawned)
             {
                 return;
             }
@@ -94,7 +94,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
 
-            localTamerComp.IsMonsterSynced = true;
+            localTamerComp.IsMonsterActive = true;
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
         });
     }

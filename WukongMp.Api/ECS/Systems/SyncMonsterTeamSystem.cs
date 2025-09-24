@@ -12,7 +12,7 @@ public class SyncMonsterTeamSystem : QuerySystem<TeamComponent, LocalTamerCompon
     {
         Query.ForEachEntity((ref TeamComponent team, ref LocalTamerComponent localTamer, Entity entity) =>
         {
-            if (!localTamer.IsMonsterSynced || localTamer.Pawn == null)
+            if (!localTamer.IsMonsterActive || localTamer.Pawn == null)
                 return;
 
             if (team.TeamId != localTamer.Pawn.GetTeamIDInCS())

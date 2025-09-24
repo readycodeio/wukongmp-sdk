@@ -17,7 +17,7 @@ public sealed class OnTamerDeadSystem : QuerySystem<HpComponent, LocalTamerCompo
             Entity entity) =>
         {
             // TODO: We set IsMonsterSynced = false on unit dead so this system never does anything
-            if (localTamerComp.IsMonsterSynced && hpComp.Hp <= 0)
+            if (localTamerComp.IsMonsterActive && hpComp.Hp <= 0)
             {
                 if (!markerComp.DestroyQueued)
                 {

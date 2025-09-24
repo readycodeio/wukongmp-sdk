@@ -23,7 +23,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 #endif
         Query.ForEachEntity((ref HpComponent hp, ref LocalTamerComponent localTamer, Entity entity) =>
         {
-            if (!localTamer.IsMonsterSynced)
+            if (!localTamer.IsMonsterActive)
                 return;
 
             if (!DI.Instance.ClientOwnership.OwnsEntity(entity))

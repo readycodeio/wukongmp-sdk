@@ -192,7 +192,7 @@ namespace WukongMp.Api.Patches
                 if (!tamer.ShouldBeSpawned)
                 {
                     Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
-                    localTamer.IsMonsterSynced = false;
+                    localTamer.IsMonsterActive = false;
                     return true;
                 }
 

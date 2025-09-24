@@ -443,7 +443,7 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue)
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                localTamer.IsMonsterSynced = false;
+                localTamer.IsMonsterActive = false;
                 localTamer.IsLocallySpawned = false;
 
                 TamerUtils.ClearSpawnedUnitRefCount(tamerEntity.Value);
