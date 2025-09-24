@@ -21,6 +21,7 @@ using EquipPosition = BtlB1.EquipPosition;
 
 namespace WukongMp.Api.Patches
 {
+    // runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBGUPlayerAnimation
@@ -101,6 +102,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    // runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPPlayerLocomotionData), nameof(BUC_ABPPlayerLocomotionData.Update))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchPlayerLocomotion
