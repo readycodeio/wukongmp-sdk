@@ -1,7 +1,6 @@
 ﻿using b1;
 using B1UI;
 using HarmonyLib;
-using System;
 using System.Reflection;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
@@ -111,10 +110,11 @@ public class PatchOnPlayerControllerEndPlay
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public class PatchOnLoadingScreenClose
 {
-    [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnLoadingScreenClose")]
+    [HarmonyTargetMethodHint("b1.BGW_LoadingTipsMgr.FLoadingScreenTimeTracker", "OnLoadingScreenClose")]
     private static MethodBase TargetMethod()
     {
-        return AccessTools.Method("B1UI.GSUI.UIStartGame:OnLoadingScreenClose");
+        var innerType = AccessTools.Inner(typeof(BGW_LoadingTipsMgr), "FLoadingScreenTimeTracker");
+        return AccessTools.Method(innerType, "OnLoadingScreenClose");
     }
 
     public static void Postfix()
