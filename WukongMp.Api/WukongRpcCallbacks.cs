@@ -746,7 +746,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
             }
 
-            ProjectileUtils.SetProjectileModeMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
+            ProjectileUtils.SetProjectileMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
         }, this, __sender, data);
     }
 

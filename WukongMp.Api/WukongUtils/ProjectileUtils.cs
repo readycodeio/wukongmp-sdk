@@ -2,7 +2,6 @@
 using b1.ECS;
 using BtlShare;
 using System;
-using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -12,58 +11,67 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SetProjectileTarget(BGUCharacterCS player, string projectileName, BGUCharacterCS target, string socketName)
         {
-            GameLoopPatch.QueueOnGameThread(() =>
+            if (player.IsNullOrDestroyed())
             {
-                Logging.LogDebug("SetProjectileTarget called for projectile {ProjectileName} with target {TargetName}", projectileName, target.GetName());
-                var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (IsProjectileValid(projectile, projectileName, player.GetName()))
-                {
-                    var events = BUS_EventCollectionCS.Get(projectile);
-                    events?.Evt_SwitchMovementTarget.Invoke(target, socketName);
-                }
-            }, nameof(SetProjectileTarget));
+                // TODO: Remove after verification that this caused problems.
+                Logging.LogWarning("Player is null in SwitchProjectileInfo");
+                return;
+            }
+            Logging.LogDebug("SetProjectileTarget called for projectile {ProjectileName} with target {TargetName}", projectileName, target.GetName());
+            var projectile = GetPlayerProjectileByName(player, projectileName);
+            if (IsProjectileValid(projectile, projectileName, player.GetName()))
+            {
+                var events = BUS_EventCollectionCS.Get(projectile);
+                events?.Evt_SwitchMovementTarget.Invoke(target, socketName);
+            }
         }
 
         public static void DestroyProjectile(BGUCharacterCS player, string projectileName, EBGUBulletDestroyReason reason)
         {
-            GameLoopPatch.QueueOnGameThread(() =>
+            if (player.IsNullOrDestroyed())
             {
-                Logging.LogDebug("DestroyProjectile called for projectile {ProjectileName} with reason {Reason}", projectileName, reason);
-                var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (IsProjectileValid(projectile, projectileName, player.GetName()))
-                {
-                    var events = BUS_EventCollectionCS.Get(projectile);
-                    events?.Evt_OnProjectileDead.Invoke(reason);
-                }
-            }, nameof(DestroyProjectile));
+                Logging.LogWarning("Player is null in SwitchProjectileInfo");
+                return;
+            }
+            Logging.LogDebug("DestroyProjectile called for projectile {ProjectileName} with reason {Reason}", projectileName, reason);
+            var projectile = GetPlayerProjectileByName(player, projectileName);
+            if (IsProjectileValid(projectile, projectileName, player.GetName()))
+            {
+                var events = BUS_EventCollectionCS.Get(projectile);
+                events?.Evt_OnProjectileDead.Invoke(reason);
+            }
         }
 
-        public static void SetProjectileModeMode(BGUCharacterCS player, string projectileName, EBulletOrMagicFieldMoveModeType moveMode)
+        public static void SetProjectileMode(BGUCharacterCS player, string projectileName, EBulletOrMagicFieldMoveModeType moveMode)
         {
-            GameLoopPatch.QueueOnGameThread(() =>
+            if (player.IsNullOrDestroyed())
             {
-                Logging.LogDebug("SetProjectileModeMode called for projectile {ProjectileName} with move mode {MoveMode}", projectileName, moveMode);
-                var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (IsProjectileValid(projectile, projectileName, player.GetName()))
-                {
-                    var events = BUS_EventCollectionCS.Get(projectile);
-                    events?.Evt_SetObjMoveMode.Invoke(moveMode);
-                }
-            }, nameof(SetProjectileModeMode));
+                Logging.LogWarning("Player is null in SwitchProjectileInfo");
+                return;
+            }
+            Logging.LogDebug("SetProjectileMode called for projectile {ProjectileName} with move mode {MoveMode}", projectileName, moveMode);
+            var projectile = GetPlayerProjectileByName(player, projectileName);
+            if (IsProjectileValid(projectile, projectileName, player.GetName()))
+            {
+                var events = BUS_EventCollectionCS.Get(projectile);
+                events?.Evt_SetObjMoveMode.Invoke(moveMode);
+            }
         }
 
         public static void SwitchProjectileInfo(BGUCharacterCS player, string projectileName, int bulletSwitchID, int switchIdx)
         {
-            GameLoopPatch.QueueOnGameThread(() =>
+            if (player.IsNullOrDestroyed())
             {
-                Logging.LogDebug("SwitchProjectileInfo called for projectile {ProjectileName} with switch id {MoveMode}", projectileName, bulletSwitchID);
-                var projectile = GetPlayerProjectileByName(player, projectileName);
-                if (IsProjectileValid(projectile, projectileName, player.GetName()))
-                {
-                    var events = BUS_EventCollectionCS.Get(player);
-                    events?.Evt_OnSwitchOneProjectile.Invoke(projectile, bulletSwitchID, switchIdx, null);
-                }
-            }, nameof(SwitchProjectileInfo));
+                Logging.LogWarning("Player is null in SwitchProjectileInfo");
+                return;
+            }
+            Logging.LogDebug("SwitchProjectileInfo called for projectile {ProjectileName} with switch id {MoveMode}", projectileName, bulletSwitchID);
+            var projectile = GetPlayerProjectileByName(player, projectileName);
+            if (IsProjectileValid(projectile, projectileName, player.GetName()))
+            {
+                var events = BUS_EventCollectionCS.Get(player);
+                events?.Evt_OnSwitchOneProjectile.Invoke(projectile, bulletSwitchID, switchIdx, null);
+            }
         }
 
         private static BGUProjectileBaseActor? GetPlayerProjectileByName(BGUCharacterCS player, string projectileName)
