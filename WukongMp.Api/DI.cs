@@ -165,7 +165,7 @@ public class DI
 
         var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, eventBus);
 
-        var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, ecsLoop, logger);
+        var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
 

@@ -17,7 +17,6 @@ public class WukongPawnState
 {
     private readonly Store _world;
     private readonly ClientNetworkedEntityState _netEntity;
-    private readonly IClientEcsUpdateLoop _ecsUpdateLoop;
     private readonly ILogger _logger;
 
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
@@ -26,12 +25,10 @@ public class WukongPawnState
         Store world,
         ClientWukongArchetypeRegistration wukongArchetype,
         ClientNetworkedEntityState netEntity,
-        IClientEcsUpdateLoop ecsUpdateLoop,
         ILogger logger)
     {
         _world = world;
         _netEntity = netEntity;
-        _ecsUpdateLoop = ecsUpdateLoop;
         _logger = logger;
 
         _wukongArchetype = wukongArchetype;
@@ -70,7 +67,7 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        _world.WorldLock.EnterReadLock();
         try
         {
             var query = _world.Query<LocalTamerComponent>();
@@ -84,7 +81,7 @@ public class WukongPawnState
         }
         finally
         {
-            _ecsUpdateLoop.WorldLock.ExitReadLock();
+            _world.WorldLock.ExitReadLock();
         }
 
         return result;
@@ -94,7 +91,7 @@ public class WukongPawnState
     {
         TamerEntity? result = null;
 
-        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        _world.WorldLock.EnterReadLock();
         try
         {
             var query = _world.Query<TamerComponent>();
@@ -108,7 +105,7 @@ public class WukongPawnState
         }
         finally
         {
-            _ecsUpdateLoop.WorldLock.ExitReadLock();
+            _world.WorldLock.ExitReadLock();
         }
 
         return result;
@@ -121,7 +118,7 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        _world.WorldLock.EnterReadLock();
         try
         {
             var query = _world.Query<LocalTamerComponent>();
@@ -135,7 +132,7 @@ public class WukongPawnState
         }
         finally
         {
-            _ecsUpdateLoop.WorldLock.ExitReadLock();
+            _world.WorldLock.ExitReadLock();
         }
 
         return result;
@@ -148,8 +145,7 @@ public class WukongPawnState
 
         MainCharacterEntity? result = null;
 
-
-        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        _world.WorldLock.EnterReadLock();
         try
         {
             var query = _world.Query<LocalMainCharacterComponent>();
@@ -164,9 +160,8 @@ public class WukongPawnState
         }
         finally
         {
-            _ecsUpdateLoop.WorldLock.ExitReadLock();
+            _world.WorldLock.ExitReadLock();
         }
-
 
         return result;
     }

@@ -108,9 +108,4 @@ public class WukongPlayerState
         });
         return new MainCharacterEntity(result.Entity);
     }
-
-    public void DeleteLocalMainCharacter()
-    {
-        LocalMainCharacter?.Entity.DeleteEntity();
-    }
 }
