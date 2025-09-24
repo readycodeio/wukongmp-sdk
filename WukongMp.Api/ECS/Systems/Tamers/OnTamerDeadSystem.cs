@@ -3,7 +3,6 @@ using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
-using WukongMp.Api.Patches;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
@@ -26,13 +25,9 @@ public sealed class OnTamerDeadSystem : QuerySystem<HpComponent, LocalTamerCompo
                     markerComp.DestroyQueued = true;
 
                     var markerActor = markerComp.MarkerActor;
-                    if (markerActor != null)
+                    if (!markerActor.IsNullOrDestroyed())
                     {
-                        GameLoopPatch.QueueOnGameThread(() =>
-                        {
-                            // NOTE: Could have been destroyed since the moment the action was scheduled
-                            if (!markerActor.IsNullOrDestroyed()) BGU_UnrealWorldUtil.DestroyActor(markerActor);
-                        }, "DestroyMarkerActor");
+                        BGU_UnrealWorldUtil.DestroyActor(markerActor);
                     }
                 }
             }

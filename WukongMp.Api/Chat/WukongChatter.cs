@@ -161,7 +161,7 @@ public class WukongChatter : IDisposable
         SendServerMessage("PlayerGaveUp", NickName);
 
         // no need to send an RPC event since in co-op all players are authoritative over their HP
-        _ecsLoop.Scheduler.Schedule((_, self) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
