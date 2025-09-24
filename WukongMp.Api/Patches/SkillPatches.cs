@@ -5,6 +5,7 @@ using b1;
 using b1.BGW;
 using BtlB1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
@@ -776,7 +777,7 @@ public class PatchOnTransBackSpawnNewOne
         int ToReplaceUnitBornSkillID,
         bool EnableBlendViewTarget,
         EPlayerTransEndType TransEndType,
-        out MainCharacterEntity? __state)
+        out object? __state)
     {
         if (!DI.Instance.AreaState.InRoom)
         {
@@ -795,16 +796,17 @@ public class PatchOnTransBackSpawnNewOne
         __state = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
     }
 
-    public static void Postfix(UActorCompBaseCS __instance, MainCharacterEntity? __state)
+    public static void Postfix(UActorCompBaseCS __instance, object? __state)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        if (__state != null)
+        var state = (MainCharacterEntity?)__state;
+        if (state.HasValue)
         {
-            ref var mainComp = ref __state.Value.GetState();
+            ref var mainComp = ref state.Value.GetState();
             mainComp.IsTransformed = false;
-            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(__state.Value.GetLocalState().Pawn);
+            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Value.GetLocalState().Pawn);
             mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
         }
     }
