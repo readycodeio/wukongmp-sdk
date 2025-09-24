@@ -3,6 +3,7 @@ using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -16,23 +17,26 @@ public class WukongPawnState
 {
     private readonly Store _world;
     private readonly ClientNetworkedEntityState _netEntity;
+    private readonly IClientEcsUpdateLoop _ecsUpdateLoop;
     private readonly ILogger _logger;
-    
+
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
 
     public WukongPawnState(
-        Store world, 
-        ClientWukongArchetypeRegistration wukongArchetype, 
+        Store world,
+        ClientWukongArchetypeRegistration wukongArchetype,
         ClientNetworkedEntityState netEntity,
+        IClientEcsUpdateLoop ecsUpdateLoop,
         ILogger logger)
     {
         _world = world;
         _netEntity = netEntity;
+        _ecsUpdateLoop = ecsUpdateLoop;
         _logger = logger;
 
         _wukongArchetype = wukongArchetype;
     }
-    
+
     public Entity CreateNetworkedMonster(LocalTamerComponent localTamer, TamerComponent tamer, TeamComponent team)
     {
         var (entity, netId) = _netEntity.CreateNetworkedAreaEntity(_wukongArchetype.MonsterArchetype, b =>
@@ -49,7 +53,7 @@ public class WukongPawnState
     {
         if (!_netEntity.TryGetEntityByNetworkId(netId, out var entity))
             return null;
-        
+
         if (entity.Value.TryGetComponent<LocalTamerComponent>(out var localTamer))
             return localTamer.Pawn;
 
@@ -66,15 +70,22 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        var query = _world.Query<LocalTamerComponent>();
-        query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
+        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        try
         {
-            if (localTamerComp.Pawn == actor)
+            var query = _world.Query<LocalTamerComponent>();
+            query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
             {
-                result = new TamerEntity(entity);
-            }
-        });
+                if (localTamerComp.Pawn == actor)
+                {
+                    result = new TamerEntity(entity);
+                }
+            });
+        }
+        finally
+        {
+            _ecsUpdateLoop.WorldLock.ExitReadLock();
+        }
 
         return result;
     }
@@ -83,15 +94,22 @@ public class WukongPawnState
     {
         TamerEntity? result = null;
 
-        var query = _world.Query<TamerComponent>();
-        query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref TamerComponent tamerComp, Entity entity) =>
+        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        try
         {
-            if (tamerComp.Guid == guid)
+            var query = _world.Query<TamerComponent>();
+            query.ForEachEntity((ref TamerComponent tamerComp, Entity entity) =>
             {
-                result = new TamerEntity(entity);
-            }
-        });
+                if (tamerComp.Guid == guid)
+                {
+                    result = new TamerEntity(entity);
+                }
+            });
+        }
+        finally
+        {
+            _ecsUpdateLoop.WorldLock.ExitReadLock();
+        }
 
         return result;
     }
@@ -103,15 +121,22 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        var query = _world.Query<LocalTamerComponent>();
-        query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
+        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        try
         {
-            if (localTamerComp.Tamer == owner)
+            var query = _world.Query<LocalTamerComponent>();
+            query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
             {
-                result = new TamerEntity(entity);
-            }
-        });
+                if (localTamerComp.Tamer == owner)
+                {
+                    result = new TamerEntity(entity);
+                }
+            });
+        }
+        finally
+        {
+            _ecsUpdateLoop.WorldLock.ExitReadLock();
+        }
 
         return result;
     }
@@ -123,16 +148,25 @@ public class WukongPawnState
 
         MainCharacterEntity? result = null;
 
-        var query = _world.Query<LocalMainCharacterComponent>();
-        query.ThrowOnStructuralChange = false; // okay because the query is readonly
-        query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
+
+        _ecsUpdateLoop.WorldLock.EnterReadLock();
+        try
         {
-            if (!localMainComp.HasPawn)
-                return;
-            
-            if (localMainComp.Pawn == owner)
-                result = new MainCharacterEntity(entity);
-        });
+            var query = _world.Query<LocalMainCharacterComponent>();
+            query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
+            {
+                if (!localMainComp.HasPawn)
+                    return;
+
+                if (localMainComp.Pawn == owner)
+                    result = new MainCharacterEntity(entity);
+            });
+        }
+        finally
+        {
+            _ecsUpdateLoop.WorldLock.ExitReadLock();
+        }
+
 
         return result;
     }
