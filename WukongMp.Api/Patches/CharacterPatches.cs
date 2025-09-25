@@ -667,4 +667,32 @@ namespace WukongMp.Api.Patches
             tamerEntity.Value.SetTeam(new ReadyM.Relay.Common.Wukong.ECS.Components.TeamComponent() { TeamId = NewTeamID });
         }
     }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchBeAttackedDeadEventSettlementProcess
+    {
+        [HarmonyTargetMethodHint("b1.BUS_BeAttackedComp.BeAttackedEvent_Dead", "EventSettlementProcess")]
+        private static MethodBase TargetMethod()
+        {
+            var innerType = AccessTools.Inner(typeof(BUS_BeAttackedComp), "BeAttackedEvent_Dead");
+            return AccessTools.Method(innerType, "EventSettlementProcess");
+        }
+
+        public static bool Prefix(BGUCharacterCS ___VictimChr)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___VictimChr);
+            if (!tamerEntity.HasValue)
+                return true;
+
+            // Owned entity - do not trigger unit dead
+            if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                return false;
+
+            return true;
+        }
+    }
 }
