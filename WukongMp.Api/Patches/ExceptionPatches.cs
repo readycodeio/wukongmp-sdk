@@ -17,12 +17,6 @@ public class ExceptionPatches
     public static void Postfix(Exception e)
     {
         Logging.LogCritical(e);
-        Logging.LogWarning("Last query stack traces:");
-
-        foreach (var kvp in QueryEntities.LastQueryTraces)
-        {
-            Logging.LogWarning("ID {EntityId}: {StackTrace}", kvp.Key, kvp.Value);
-        }
 #if DEBUG
         Debugger.Break();
 #endif
