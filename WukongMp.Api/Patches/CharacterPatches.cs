@@ -664,7 +664,7 @@ namespace WukongMp.Api.Patches
             if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
-            tamerEntity.Value.SetTeam(new ReadyM.Relay.Common.Wukong.ECS.Components.TeamComponent() { TeamId = NewTeamID });
+            tamerEntity.Value.SetTeam(new TeamComponent { TeamId = NewTeamID });
         }
     }
 

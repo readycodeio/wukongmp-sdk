@@ -39,7 +39,6 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 {
                     localTamerComp.Tamer = actor;
                     localTamerComp.IsTamerSynced = true;
-
 #if TESTING
                     ref var nameComp = ref entity.GetComponent<NicknameComponent>();
                     nameComp.Nickname = actor.GetClass().GetName();
