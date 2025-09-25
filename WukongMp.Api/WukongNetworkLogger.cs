@@ -41,7 +41,9 @@ public class WukongNetworkLogger(
         }
 
         // dump synced monsters
+        world.WorldLock.EnterReadLock();
         world.Query<MetadataComponent>().ForEachEntity((ref MetadataComponent metaComp, Entity entity) => { logger.LogDebug("Entity {NetId} (owner {Owner}): {Entity}", metaComp.NetId, metaComp.Owner, entity.DebugJSON); });
+        world.WorldLock.ExitReadLock();
 
         // print team hostility info
         var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());

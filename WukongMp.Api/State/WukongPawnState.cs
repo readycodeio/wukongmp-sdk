@@ -67,9 +67,9 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        _world.WorldLock.EnterReadLock();
         try
         {
+            _world.WorldLock.EnterReadLock();
             var query = _world.Query<LocalTamerComponent>();
             query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
             {
@@ -91,9 +91,9 @@ public class WukongPawnState
     {
         TamerEntity? result = null;
 
-        _world.WorldLock.EnterReadLock();
         try
         {
+            _world.WorldLock.EnterReadLock();
             var query = _world.Query<TamerComponent>();
             query.ForEachEntity((ref TamerComponent tamerComp, Entity entity) =>
             {
@@ -118,9 +118,9 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        _world.WorldLock.EnterReadLock();
         try
         {
+            _world.WorldLock.EnterReadLock();
             var query = _world.Query<LocalTamerComponent>();
             query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
             {
@@ -145,9 +145,9 @@ public class WukongPawnState
 
         MainCharacterEntity? result = null;
 
-        _world.WorldLock.EnterReadLock();
         try
         {
+            _world.WorldLock.EnterReadLock();
             var query = _world.Query<LocalMainCharacterComponent>();
             query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
             {

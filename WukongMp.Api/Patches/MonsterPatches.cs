@@ -30,40 +30,48 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((
-                ref LocalTamerComponent localTamerComp,
-                ref TranslationComponent transComp,
-                Entity entity) =>
+            try
             {
-                if (!localTamerComp.IsTamerSynced || !localTamerComp.IsTamerValid || localTamerComp.Pawn == null)
-                    return;
-
-                if (DI.Instance.ClientOwnership.OwnsEntity(entity))
+                DI.Instance.World.WorldLock.EnterReadLock();
+                DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((
+                    ref LocalTamerComponent localTamerComp,
+                    ref TranslationComponent transComp,
+                    Entity entity) =>
                 {
-                    // send updates for owned monsters
-                    transComp.Position = localTamerComp.Pawn.GetActorLocation().ToVector3();
-                    transComp.Rotation = localTamerComp.Pawn.GetActorRotation().ToVector3();
-                }
-                else
-                {
-                    // apply updates for monsters owned by other players
-                    var events = BUS_EventCollectionCS.Get(localTamerComp.Pawn);
-
-                    if (events == null)
+                    if (!localTamerComp.IsTamerSynced || !localTamerComp.IsTamerValid || localTamerComp.Pawn == null)
                         return;
 
-                    var pos = transComp.Position.ToFVector();
-                    var rot = transComp.Rotation.ToFRotator();
-
-                    var posChanged = !pos.Equals(localTamerComp.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance);
-                    var rotChanged = !rot.Equals(localTamerComp.Pawn.GetActorRotation(), Constants.FloatComparisonTolerance);
-
-                    if (posChanged || rotChanged)
+                    if (DI.Instance.ClientOwnership.OwnsEntity(entity))
                     {
-                        events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        // send updates for owned monsters
+                        transComp.Position = localTamerComp.Pawn.GetActorLocation().ToVector3();
+                        transComp.Rotation = localTamerComp.Pawn.GetActorRotation().ToVector3();
                     }
-                }
-            });
+                    else
+                    {
+                        // apply updates for monsters owned by other players
+                        var events = BUS_EventCollectionCS.Get(localTamerComp.Pawn);
+
+                        if (events == null)
+                            return;
+
+                        var pos = transComp.Position.ToFVector();
+                        var rot = transComp.Rotation.ToFRotator();
+
+                        var posChanged = !pos.Equals(localTamerComp.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance);
+                        var rotChanged = !rot.Equals(localTamerComp.Pawn.GetActorRotation(), Constants.FloatComparisonTolerance);
+
+                        if (posChanged || rotChanged)
+                        {
+                            events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                        }
+                    }
+                });
+            }
+            finally
+            {
+                DI.Instance.World.WorldLock.ExitReadLock();
+            }
         }
     }
 
