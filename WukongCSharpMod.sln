@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Friflo.Engine.ECS.Boost", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteNetLib", "readym-gameserver\src\LiteNetLib\LiteNetLib\LiteNetLib.csproj", "{7AD17E33-CD1B-403A-8C72-647D1080A2E3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Tests", "WukongMp.Tests\WukongMp.Tests.csproj", "{C5253CFC-E177-5AAA-14BB-167FA43339A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
