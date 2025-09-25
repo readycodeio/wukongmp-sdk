@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -15,6 +17,15 @@ public class ExceptionPatches
     public static void Postfix(Exception e)
     {
         Logging.LogCritical(e);
+        Logging.LogWarning("Last query stack traces:");
+
+        foreach (var kvp in QueryEntities.LastQueryTraces)
+        {
+            Logging.LogWarning("ID {EntityId}: {StackTrace}", kvp.Key, kvp.Value);
+        }
+#if DEBUG
+        Debugger.Break();
+#endif
     }
 }
 

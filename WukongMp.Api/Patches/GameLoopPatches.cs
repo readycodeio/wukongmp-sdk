@@ -1,5 +1,4 @@
-﻿using System;
-using b1;
+﻿using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Components;
