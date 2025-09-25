@@ -32,7 +32,10 @@ public static class ReceiveTickPatch
         {
             RunMontageSync();
             DI.Instance.EcsLoop.Tick(DeltaSeconds);
+#if DEBUG
+            DI.Instance.TestsRunner.Update(DeltaSeconds);
             ComponentMonitorManager.Instance.Update();
+#endif
         }
     }
 

@@ -27,6 +27,7 @@ using WukongMp.Api.PVP;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
 using WukongMp.Api.State;
+using WukongMp.Api.Tests;
 using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
@@ -101,6 +102,8 @@ public class DI
     public BlobClient ShimRelayBlobClient { get; set; } = null!;
 
     public ShimAutoStarter ShimAuto { get; set; } = null!;
+
+    public TestsRunner TestsRunner { get; set; } = null!;
 
     public void InitLogging(ILoggerFactory loggerFactory)
     {
@@ -286,6 +289,10 @@ public class DI
             shimRecorderRelayService,
             shimLogger
         );
+
+        // ---
+
+        TestsRunner = new TestsRunner(eventBus, logger);
 
         // ---
 
