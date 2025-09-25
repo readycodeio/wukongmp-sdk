@@ -30,8 +30,7 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            DI.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((
-                ref MetadataComponent metaComp,
+            DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((
                 ref LocalTamerComponent localTamerComp,
                 ref TranslationComponent transComp,
                 Entity entity) =>
@@ -61,7 +60,7 @@ namespace WukongMp.Api.Patches
 
                     if (posChanged || rotChanged)
                     {
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
+                        events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
                 }
             });

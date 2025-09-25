@@ -906,7 +906,6 @@ public partial class WukongPVP : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnPvpEvent(int[] data)
     {
-        // TODO: Not QueueOnGameThread, why?
         var ev = (PvPEvent)data[0];
         var winnerTeamId = data[1];
 

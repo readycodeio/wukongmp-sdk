@@ -81,7 +81,7 @@ namespace WukongMp.Api.Patches
                     }
 
                     Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
                 }
 
                 return;

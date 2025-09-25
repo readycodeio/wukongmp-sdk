@@ -438,6 +438,7 @@ namespace WukongMp.Api.Patches
                 {
                     FreeCameraManager.Instance.EnterFreeCameraMode();
                 }
+
                 return;
             }
 
@@ -665,7 +666,7 @@ namespace WukongMp.Api.Patches
                 if (hp <= 0)
                 {
                     var events = BUS_EventCollectionCS.Get(owner);
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(Attacker, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    events.Evt_UnitDead.Invoke(Attacker, EDeadReason.SkillDamage);
                 }
             }
         }
@@ -880,11 +881,13 @@ namespace WukongMp.Api.Patches
             {
                 return false;
             }
+
             ACharacter? aCharacter = Owner as ACharacter;
             if (aCharacter == null || aCharacter is not BGUPlayerCharacterCS)
             {
                 return false;
             }
+
             bool flag = false;
             if (___TargetInfoData != null)
             {
@@ -894,14 +897,17 @@ namespace WukongMp.Api.Patches
                     flag = true;
                 }
             }
+
             if (___UnitStateData != null && ___UnitStateData.HasState(EBGUUnitState.ShooterMode))
             {
                 flag = true;
             }
+
             if (___CameraData != null && ___CameraData.IsInG4Mode())
             {
                 flag = true;
             }
+
             switch (___MMMoveSpeedState)
             {
                 case EMoveSpeedLevel.Walk:
@@ -917,6 +923,7 @@ namespace WukongMp.Api.Patches
                     __instance.TargetMMState = (flag ? EState_MM.Lock : EState_MM.Free);
                     break;
             }
+
             return false;
         }
     }

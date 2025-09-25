@@ -49,7 +49,7 @@ namespace WukongMp.Api.Patches
             {
                 var mainEntity = playerState.LocalMainCharacter;
                 ref var mainComp = ref mainEntity.Value.GetState();
-                
+
                 // local player (client)
                 if (mainComp.Hp <= -80000)
                 {
@@ -84,7 +84,7 @@ namespace WukongMp.Api.Patches
 
                     Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
 
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
                 }
             }
             else
@@ -95,7 +95,7 @@ namespace WukongMp.Api.Patches
                 if (mainEntity != null)
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
-                    
+
                     // set their attributes
                     foreach (var (attr, value) in mainComp.Attributes)
                     {
@@ -131,7 +131,7 @@ namespace WukongMp.Api.Patches
                         }
 
                         Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                        events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
                     }
                 }
                 else
@@ -200,10 +200,10 @@ namespace WukongMp.Api.Patches
                     var mainEntity = playerState.LocalMainCharacter;
                     if (!mainEntity.HasValue)
                         return;
-                    
+
                     ref var mainComp = ref mainEntity.Value.GetState();
                     ref var localMainComp = ref mainEntity.Value.GetLocalState();
-                    
+
                     // I was damaged, set my Hp
                     if (owner == localMainComp.Pawn)
                     {
@@ -220,7 +220,7 @@ namespace WukongMp.Api.Patches
                     if (remoteMainEntity != null)
                     {
                         ref var remoteMain = ref remoteMainEntity.Value.GetState();
-                        
+
                         if (!remoteMain.Hp.Equals(result, Constants.FloatComparisonTolerance))
                         {
                             remoteMain.Hp = result;
@@ -252,7 +252,7 @@ namespace WukongMp.Api.Patches
             {
                 var mainEntity = playerState.LocalMainCharacter;
                 ref var main = ref mainEntity.Value.GetState();
-                
+
                 if (main.Attributes.TryGetAttribute((byte)AttrID, out var existing)
                     && existing.Equals(result, Constants.FloatComparisonTolerance))
                 {
