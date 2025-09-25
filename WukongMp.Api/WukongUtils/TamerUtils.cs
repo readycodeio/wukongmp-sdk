@@ -95,6 +95,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void ClearEcsMonsters()
         {
+            // TODO: WorldLock?
             DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent _, Entity entity) =>
             {
                 DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(entity.Id);

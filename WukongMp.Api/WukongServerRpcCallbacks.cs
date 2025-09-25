@@ -40,7 +40,7 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     [ServerRpcEvent("SkipMovie")]
     private void OnSkipMovie(int sequenceId)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sequenceId0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sequenceId0) =>
         {
             self._logger.LogDebug("Received skip movie event from server, sequence id: {Id}", sequenceId0);
             InfoMessageWidget.Instance.SetVisibility(false);

@@ -8,6 +8,7 @@ using ReadyM.Api.Multiplayer.ECS.Values;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
@@ -20,6 +21,7 @@ using EquipPosition = BtlB1.EquipPosition;
 
 namespace WukongMp.Api.Patches
 {
+    // runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBGUPlayerAnimation
@@ -100,6 +102,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    // runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPPlayerLocomotionData), nameof(BUC_ABPPlayerLocomotionData.Update))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchPlayerLocomotion
@@ -435,6 +438,7 @@ namespace WukongMp.Api.Patches
                 {
                     FreeCameraManager.Instance.EnterFreeCameraMode();
                 }
+
                 return;
             }
 
@@ -442,7 +446,7 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue)
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                localTamer.IsMonsterSynced = false;
+                localTamer.IsMonsterActive = false;
                 localTamer.IsLocallySpawned = false;
 
                 TamerUtils.ClearSpawnedUnitRefCount(tamerEntity.Value);
@@ -464,6 +468,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitTriggerDead
     {
+        [HarmonyTargetMethodHint("b1.BUS_UIControlSystemV2", "OnUnitTriggerDead")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_UIControlSystemV2:OnUnitTriggerDead");
@@ -544,6 +549,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchSetTargetToData
     {
+        [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "SetTargetToData")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BattleStateComp:SetTargetToData");
@@ -660,7 +666,7 @@ namespace WukongMp.Api.Patches
                 if (hp <= 0)
                 {
                     var events = BUS_EventCollectionCS.Get(owner);
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead.Invoke(Attacker, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    events.Evt_UnitDead.Invoke(Attacker, EDeadReason.SkillDamage);
                 }
             }
         }
@@ -747,6 +753,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchSetAllUnitCannotDead
     {
+        [HarmonyTargetMethodHint("b1.BIS_DeathManager", "SetAllUnitCannotDead")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BIS_DeathManager:SetAllUnitCannotDead");
@@ -874,11 +881,13 @@ namespace WukongMp.Api.Patches
             {
                 return false;
             }
+
             ACharacter? aCharacter = Owner as ACharacter;
             if (aCharacter == null || aCharacter is not BGUPlayerCharacterCS)
             {
                 return false;
             }
+
             bool flag = false;
             if (___TargetInfoData != null)
             {
@@ -888,14 +897,17 @@ namespace WukongMp.Api.Patches
                     flag = true;
                 }
             }
+
             if (___UnitStateData != null && ___UnitStateData.HasState(EBGUUnitState.ShooterMode))
             {
                 flag = true;
             }
+
             if (___CameraData != null && ___CameraData.IsInG4Mode())
             {
                 flag = true;
             }
+
             switch (___MMMoveSpeedState)
             {
                 case EMoveSpeedLevel.Walk:
@@ -911,6 +923,7 @@ namespace WukongMp.Api.Patches
                     __instance.TargetMMState = (flag ? EState_MM.Lock : EState_MM.Free);
                     break;
             }
+
             return false;
         }
     }

@@ -1,35 +1,37 @@
+using PreludeLib.Common;
+using PreludeLib.Runtime.Public;
 using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api;
 
-public class WukongPatcher() : HarmonyPatcherBase("ReadyM.WukongMp")
+public class WukongPatcher(RuntimePrelude prelude) : PreludePatcherBase("ReadyM.WukongMp", prelude)
 {
     protected override void OnPatch()
     {
         base.OnPatch();
 
-        Harmony.PatchCategory(Constants.GlobalPatches);
-        Logging.LogInformation("Patched Harmony category: {Category}", Constants.GlobalPatches);
+        Prelude.ScanAndPatchCategory(new(Constants.GlobalPatches));
+        Logging.LogInformation("Patched Prelude category: {Category}", Constants.GlobalPatches);
         
-        Harmony.PatchCategory(Constants.ConnectedPatches);
-        Logging.LogInformation("Patched Harmony category: {Category}", Constants.ConnectedPatches);
+        Prelude.ScanAndPatchCategory(new(Constants.ConnectedPatches));
+        Logging.LogInformation("Patched Prelude category: {Category}", Constants.ConnectedPatches);
 
-        const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-        Harmony.PatchCategory(category);
-        Logging.LogInformation("Patched Harmony WukongMpMod {Patch}", category);
+        var category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
+        Prelude.ScanAndPatchCategory(new(category));
+        Logging.LogInformation("Patched Prelude WukongMpMod {Patch}", category);
     }
     
     protected override void OnUnpatch()
     {
-        const string category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-        Harmony.UnpatchCategory(category);
-        Logging.LogInformation("Unpatched Harmony WukongMpMod {Patch}", category);
+        var category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
+        Prelude.UnpatchCategory(new(category));
+        Logging.LogInformation("Unpatched Prelude WukongMpMod {Patch}", category);
         
-        Harmony.UnpatchCategory(Constants.ConnectedPatches);
-        Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.ConnectedPatches);
+        Prelude.UnpatchCategory(new(Constants.ConnectedPatches));
+        Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.ConnectedPatches);
 
-        Harmony.UnpatchCategory(Constants.GlobalPatches);
-        Logging.LogInformation("Unpatched Harmony category: {Category}", Constants.GlobalPatches);
+        Prelude.UnpatchCategory(new(Constants.GlobalPatches));
+        Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.GlobalPatches);
         
         base.OnUnpatch();
     }

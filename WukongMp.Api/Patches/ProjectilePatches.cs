@@ -3,6 +3,7 @@ using BtlShare;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using System.Reflection;
+using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -14,6 +15,7 @@ namespace WukongMp.Api.Patches;
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnSwitchBulletTarget
 {
+    [HarmonyTargetMethodHint("b1.BUS_ProjectileCtrComp", "OnSwitchBulletTarget")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUS_ProjectileCtrComp:OnSwitchBulletTarget");
@@ -77,6 +79,7 @@ public class PatchOnSwitchBulletTarget
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnSwitchBulletInfoIfNeed
 {
+    [HarmonyTargetMethodHint("b1.BUS_ProjectileCtrComp", "SwitchBulletInfoIfNeed")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUS_ProjectileCtrComp:SwitchBulletInfoIfNeed");

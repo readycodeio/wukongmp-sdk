@@ -10,7 +10,7 @@ namespace WukongMp.Api.ECS.Components;
 public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
 {
     public bool IsTamerSynced;
-    public bool IsMonsterSynced;
+    public bool IsMonsterActive;
     public bool RunImmobilizePatches;
     public MontageState MontageState;
     public bool IsLocallySpawned;
@@ -29,7 +29,7 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     {
         get
         {
-            if (!IsMonsterSynced)
+            if (!IsMonsterActive)
             {
                 return null;
             }

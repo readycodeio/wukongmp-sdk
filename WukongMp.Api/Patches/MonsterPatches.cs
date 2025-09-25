@@ -4,6 +4,7 @@ using System.Reflection;
 using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
+using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
@@ -18,6 +19,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerManagerTick
     {
+        [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnTickWithGroup")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BGS_TamerManagerSystem:OnTickWithGroup");
@@ -28,8 +30,7 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            DI.Instance.World.Query<MetadataComponent, LocalTamerComponent, TranslationComponent>().ForEachEntity((
-                ref MetadataComponent metaComp,
+            DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((
                 ref LocalTamerComponent localTamerComp,
                 ref TranslationComponent transComp,
                 Entity entity) =>
@@ -59,7 +60,7 @@ namespace WukongMp.Api.Patches
 
                     if (posChanged || rotChanged)
                     {
-                        GameLoopPatch.QueueOnGameThread(() => { events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true); });
+                        events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
                 }
             });
@@ -70,6 +71,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnRegisterTamer
     {
+        [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnRegisterTamer")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BGS_TamerManagerSystem:OnRegisterTamer");
@@ -189,7 +191,7 @@ namespace WukongMp.Api.Patches
                 if (!tamer.ShouldBeSpawned)
                 {
                     Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
-                    localTamer.IsMonsterSynced = false;
+                    localTamer.IsMonsterActive = false;
                     return true;
                 }
 
@@ -296,6 +298,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnEnableCanUpdateHatred
     {
+        [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "OnEnableCanUpdateHatred")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BattleStateComp:OnEnableCanUpdateHatred");
@@ -330,6 +333,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class TamerResetPatch
     {
+        [HarmonyTargetMethodHint("b1.BUS_TeamIDManageComp", "OnResetTeamID")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_TeamIDManageComp:OnResetTeamID");

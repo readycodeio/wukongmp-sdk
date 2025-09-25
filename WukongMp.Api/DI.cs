@@ -1,5 +1,7 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
+using PreludeLib.Runtime.Public;
+using PreludeLib.Runtime.Backend.WeaverCallback;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
@@ -77,14 +79,18 @@ public class DI
     public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
 
     public WukongChatter Chatter { get; private set; } = null!;
+
+    public RuntimePrelude Prelude { get; private set; } = null!;
+    public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
+    
     public WukongPVP? PVP { get; private set; }
     public WukongCoop? Coop { get; private set; }
     public WukongWidgetManager WidgetManager { get; private set; } = null!;
 
     public ShimRelayMessageParser ShimParser { get; private set; } = null!;
     public ShimReplayDependencyTracker ShimDepTracker { get; set; } = null!;
-    public ShimReplayDependencyTracker shimReplayDependencyTracker { get; private set; } = null!;
+    public ShimReplayDependencyTracker ShimReplayDependencyTracker { get; private set; } = null!;
     public HotSwappableRelayClient ShimRecorderRelayClient { get; set; } = null!;
     public ShimRelayRecorder ShimRecorder { get; private set; } = null!;
     public ShimController ShimController { get; private set; } = null!;
@@ -199,7 +205,11 @@ public class DI
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
-        var patcher = Patcher = new WukongPatcher();
+
+        var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
+        var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
+        var prelude = Prelude = new RuntimePrelude(preludeBackend, runtimeLogger);
+        var patcher = Patcher = new WukongPatcher(prelude);
 
         if (Constants.IsCoop)
             Coop = new WukongCoop(serializer, relayClient, areaState, playerState, synchronizer);

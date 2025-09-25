@@ -102,7 +102,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnExitPhantomRush(PlayerId playerId)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, playerId0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, playerId0) =>
         {
             if (self._playerState.GetMainCharacterById(playerId0) is not { } mainEntity)
                 return;
@@ -124,7 +124,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnAddBuff(PlayerId __sender, BuffAddData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
 
@@ -138,7 +138,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRemoveBuff(PlayerId __sender, BuffRemoveData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
 
@@ -152,7 +152,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRemoveAllBuffs(PlayerId __sender, BuffRemoveAllData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
 
@@ -166,7 +166,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitStateTrigger(StateTriggerData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
             NpcLocomotionUtils.SetStateTrigger(character, data0.Trigger, data0.Time, data0.NeedForceUpdate);
@@ -176,7 +176,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitSimpleState(SimpleStateData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
             NpcLocomotionUtils.SetSimpleState(character, data0.SimpleState, data0.IsRemove);
@@ -186,7 +186,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnTriggerFsmState(FsmStateData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
             NpcLocomotionUtils.SetFsmState(character, data0.FsmStateName);
@@ -196,7 +196,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnMotionMatchingState(MotionMatchingStateData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var character = self._pawnState.GetPawnByNetworkId(data0.NetId);
             NpcLocomotionUtils.SetMotionMatchingState(character, data0.State);
@@ -206,13 +206,13 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnSummon(UnitSummonData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, data0) => { SummonPatch.ExecuteSummon(data0.SummonerId, data0.SummonId, data0.Guid, data0.Name, data0.TeamId); }, data);
+        _ecsLoop.Scheduler.Schedule(static (_, data0) => { SummonPatch.ExecuteSummon(data0.SummonerId, data0.SummonId, data0.Guid, data0.Name, data0.TeamId); }, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)] // TODO: Check if this is the right relay mode for this event
     internal void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
                 return;
@@ -224,7 +224,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayerTransBegin(PlayerId __sender, PlayerTransBeginData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
                 return;
@@ -235,7 +235,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayerTransEnd(PlayerId __sender, PlayerTransEndData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
                 return;
@@ -246,13 +246,13 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPlayMovieRequest(PlayMovieData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, data0) => { CutsceneUtils.PlayCutscene(data0); }, data);
+        _ecsLoop.Scheduler.Schedule(static (_, data0) => { CutsceneUtils.PlayCutscene(data0); }, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSetTarget(TargetData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var pawn = self._pawnState.GetPawnByNetworkId(data0.Character);
             if (pawn == null)
@@ -282,7 +282,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnCastImmobilize(NetworkId caster)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, caster0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, caster0) =>
         {
             if (self._areaState.IsMasterClient)
             {
@@ -301,7 +301,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnTriggerImmobilize(TriggerImmobilizeData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var caster = self._pawnState.GetPawnByNetworkId(data0.PlayerId);
             var target = self._pawnState.GetPawnByNetworkId(data0.Target);
@@ -312,7 +312,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnRelieveImmobilize(NetworkId affected)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, affected0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, affected0) =>
         {
             var character = self._pawnState.GetPawnByNetworkId(affected0);
             if (character == null)
@@ -334,13 +334,13 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnChatMessage(ChatMessage message)
     {
-        _ecsLoop.Scheduler.Schedule((_, message0) => { WukongChatter.OnGetMessage(message0); }, message);
+        _ecsLoop.Scheduler.Schedule(static (_, message0) => { WukongChatter.OnGetMessage(message0); }, message);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnPhantomRush(PlayerId __sender, ESkillDirection direction)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, direction0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, direction0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
                 return;
@@ -364,7 +364,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     public void OnBroadcastPlayerTransform(PlayerTransformData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
@@ -380,7 +380,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnRebirthPlayer(PlayerId playerId)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, playerId0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, playerId0) =>
         {
             self._logger.LogDebug("RebirthPlayer for player {PlayerId} called", playerId0);
 
@@ -403,7 +403,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnDamageNum(DamageNumParam damageNum)
     {
-        _ecsLoop.Scheduler.Schedule((_, damageNum0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, damageNum0) =>
         {
             var uiEvt = BGW_UIEventCollection.Get(GameUtils.GetWorld());
             uiEvt.Evt_UI_ShowHPChangeNum(damageNum0);
@@ -413,7 +413,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnTeleportFinish(PlayerId __sender)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -431,7 +431,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     public void OnMontageCallback(MontageCallbackData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var pawn = self._pawnState.GetPawnByNetworkId(data0.NetId);
             if (pawn == null)
@@ -491,7 +491,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnUnitDead(UnitDeadPacket data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             var pawn = self._pawnState.GetPawnByNetworkId(data0.NetworkId);
             if (pawn == null)
@@ -515,7 +515,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.GlobalOthers)]
     internal void OnWaitingForSequence(SequenceWaitingData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             CutsceneUtils.SetJoiningCutsceneStatus(data0);
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
@@ -537,7 +537,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnIronBodyStart(PlayerId __sender)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -559,7 +559,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.EntityOwner)]
     private void OnUnitSpawned(PlayerId __sender, NetworkId netId)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, netEntity0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, netEntity0) =>
         {
             self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity {Entity}", sender, netEntity0);
             if (self._playerState.GetMainCharacterById(sender) == null)
@@ -578,7 +578,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.EntityOwner)]
     private void OnUnitDespawn(PlayerId __sender, NetworkId netId)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, netEntity0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, netEntity0) =>
         {
             self._logger.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", sender, netEntity0);
             if (self._playerState.GetMainCharacterById(sender) == null)
@@ -597,7 +597,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnTamerSkillInteract(SkillInteractData interactData)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, interactData0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, interactData0) =>
         {
             if (self._netEntity.TryGetEntityByNetworkId(interactData0.InteractiveId, out var entity))
             {
@@ -609,7 +609,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnTriggerMagicallyChange(PlayerId __sender, MagicallyChangeData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -634,7 +634,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnResetMagicallyChange(PlayerId __sender, EResetReason_MagicallyChange reason)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, reason0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, reason0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -658,7 +658,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileTarget(PlayerId __sender, ProjectileTargetData targetData)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, targetData0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, targetData0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -687,7 +687,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnSwitchOneProjectile(PlayerId __sender, ProjectileSwitchData switchData)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, switchData0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, switchData0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -709,7 +709,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileDead(PlayerId __sender, ProjectileDeadData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -731,7 +731,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileMoveMode(PlayerId __sender, ProjectileMoveModeData data)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -746,14 +746,14 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
             }
 
-            ProjectileUtils.SetProjectileModeMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
+            ProjectileUtils.SetProjectileMode(localMainComp.Pawn, data0.ProjectileClassName, data0.MoveMode);
         }, this, __sender, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnPartyRespawn(int birthPointId)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, shrineId) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, shrineId) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
@@ -771,7 +771,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRestAtShrine(int birthPointId)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, shrineId) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, shrineId) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
@@ -796,7 +796,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnStartJump(PlayerId __sender, StartJumpData jumpData)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender, data) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender, jumpData0) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {
@@ -811,14 +811,14 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
             }
 
-            PlayerUtils.StartJump(localMainComp.Pawn, jumpData.StartJumpDir, jumpData.InputVector);
+            PlayerUtils.StartJump(localMainComp.Pawn, jumpData0.StartJumpDir, jumpData0.InputVector);
         }, this, __sender, jumpData);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnStopJump(PlayerId __sender)
     {
-        _ecsLoop.Scheduler.Schedule((_, self, sender) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, sender) =>
         {
             if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
             {

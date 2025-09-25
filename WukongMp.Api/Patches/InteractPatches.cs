@@ -2,6 +2,7 @@
 using BtlB1;
 using HarmonyLib;
 using System.Reflection;
+using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
@@ -12,6 +13,7 @@ namespace WukongMp.Api.Patches;
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchComplexSkillDoInteractAction
 {
+    [HarmonyTargetMethodHint("b1.BUIAComplexSkill", "DoInteractAction")]
     private static MethodBase TargetMethod()
     {
         return AccessTools.Method("b1.BUIAComplexSkill:DoInteractAction");

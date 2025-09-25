@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using b1;
+﻿using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Components;
@@ -10,165 +7,121 @@ using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
-using static Friflo.Engine.ECS.QueryExtensions;
 
-namespace WukongMp.Api.Patches
+namespace WukongMp.Api.Patches;
+
+[HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class ReceiveTickPatch
 {
-    public static class GameLoopPatch
+    public static void Prefix(ref int TickGroup)
     {
-        public static readonly ConcurrentDictionary<BGW_TickGroupMask, ConcurrentQueue<(Action Action, string? Name)>> CustomTickGroupActionQueues = new();
+        var mask = CustomTickGroupToTickGroupMask(TickGroup);
 
-        /// OBSOLETE: Should be replaced by some ECS command queue
-        public static void QueueOnGameThread(Action action, string? name = null, BGW_TickGroupMask tickGroup = BGW_TickGroupMask.TG_OnTick)
+        if (mask == BGW_TickGroupMask.TG_None)
         {
-            if (tickGroup is BGW_TickGroupMask.TG_LateTick or BGW_TickGroupMask.TG_ThreadTick)
-            {
-                Logging.LogError("Tick group {Mask} is not supported for queued actions", tickGroup);
-                return;
-            }
-
-            CustomTickGroupActionQueues.AddOrUpdate(tickGroup, _ => new ConcurrentQueue<(Action, string?)>([(action, name)]), (_, queue) =>
-            {
-                queue.Enqueue((action, name));
-                return queue;
-            });
-        }
-
-        public static BGW_TickGroupMask CustomTickGroupToTickGroupMask(int tickGroup)
-        {
-            switch (tickGroup)
-            {
-                case 0:
-                    return BGW_TickGroupMask.TG_OnTick;
-                case 1:
-                    return BGW_TickGroupMask.TG_None;
-                case 2:
-                    return BGW_TickGroupMask.TG_AfterAnim;
-                case 3:
-                    return BGW_TickGroupMask.TG_None;
-                case 4:
-                    return BGW_TickGroupMask.TG_PostPhysics;
-                case 5:
-                    return BGW_TickGroupMask.TG_PostUpdateWork;
-                case 101:
-                    return BGW_TickGroupMask.TG_PreAnim;
-                case 111:
-                    return BGW_TickGroupMask.TG_BeforeStartPhsic;
-                case 141:
-                    return BGW_TickGroupMask.TG_BeforePostPhsic;
-                case 151:
-                    return BGW_TickGroupMask.TG_BeforePostUpdateWork;
-                default:
-                    Logging.LogError("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
-                    return BGW_TickGroupMask.TG_None;
-            }
+            TickGroup = 3;
         }
     }
 
-    [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
-    [HarmonyPatchCategory(Constants.GlobalPatches)]
-    public static class ReceiveTickPatch
+    public static void Postfix(float DeltaSeconds, int TickGroup)
     {
-        public static void Prefix(ref int TickGroup)
-        {
-            var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+        var mask = CustomTickGroupToTickGroupMask(TickGroup);
 
-            if (mask == BGW_TickGroupMask.TG_None)
-            {
-                TickGroup = 3;
-            }
+        if (mask == BGW_TickGroupMask.TG_OnTick)
+        {
+            RunMontageSync();
+            DI.Instance.EcsLoop.Tick(DeltaSeconds);
+            ComponentMonitorManager.Instance.Update();
+        }
+    }
+
+    private static void RunMontageSync()
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+        if (mainEntity == null)
+            return;
+
+        SyncPlayerMontage(mainEntity.Value);
+
+        var playerId = DI.Instance.State.LocalPlayerId;
+        if (playerId == null)
+            return;
+
+        DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
+    }
+
+    private static void SyncPlayerMontage(MainCharacterEntity mainEntity)
+    {
+        ref var localMainComp = ref mainEntity.GetLocalState();
+
+        if (localMainComp.Pawn == null)
+            return;
+
+        var montageState = localMainComp.MontageState;
+        if (montageState.LocalAnimationInstance == null)
+        {
+            montageState.LocalAnimationInstance = localMainComp.Pawn.Mesh.GetAnimInstance();
         }
 
-        public static void Postfix(float DeltaSeconds, int TickGroup)
+        var currentMontage = localMainComp.Pawn.GetCurrentMontage();
+
+        if (currentMontage != null)
         {
-            var mask = GameLoopPatch.CustomTickGroupToTickGroupMask(TickGroup);
+            bool isNewMontage = montageState.LocalMontage != currentMontage;
+            float currentPosition = montageState.LocalAnimationInstance.Montage_GetPosition(currentMontage);
 
-            RunQueuedActions(mask);
+            bool hasMontageRewound = currentPosition < montageState.LocalMontagePosition && !isNewMontage;
+            bool hasSkippedFrames = currentPosition - montageState.LocalMontagePosition > 0.5f && !isNewMontage;
 
-            if (mask == BGW_TickGroupMask.TG_OnTick)
-            {
-                RunMontageSync();
-                DI.Instance.EcsLoop.Tick(DeltaSeconds);
-                ComponentMonitorManager.Instance.Update();
-            }
-        }
-
-        private static void RunQueuedActions(BGW_TickGroupMask mask)
-        {
-            if (!GameLoopPatch.CustomTickGroupActionQueues.TryGetValue(mask, out var queue))
-                return;
-
-            while (queue.TryDequeue(out var item))
-            {
-                try
-                {
-                    item.Action();
-                }
-                catch (Exception e)
-                {
-                    Logging.LogException(e);
-                }
-            }
-        }
-
-        private static void RunMontageSync()
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return;
-
-            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (mainEntity == null)
-                return;
-
-            SyncPlayerMontage(mainEntity.Value);
-
-            var playerId = DI.Instance.State.LocalPlayerId;
-            if (playerId == null)
-                return;
-
-            DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
-        }
-
-        [Obsolete("To be replaced when we integrate players into ECS")]
-        private static void SyncPlayerMontage(MainCharacterEntity mainEntity)
-        {
-            ref var localMainComp = ref mainEntity.GetLocalState();
-
-            if (localMainComp.Pawn == null)
-                return;
-
-            var montageState = localMainComp.MontageState;
-            if (montageState.LocalAnimationInstance == null)
-            {
-                montageState.LocalAnimationInstance = localMainComp.Pawn.Mesh.GetAnimInstance();
-            }
-
-            var currentMontage = localMainComp.Pawn.GetCurrentMontage();
-
-            if (currentMontage != null)
-            {
-                bool isNewMontage = montageState.LocalMontage != currentMontage;
-                float currentPosition = montageState.LocalAnimationInstance.Montage_GetPosition(currentMontage);
-
-                bool hasMontageRewound = currentPosition < montageState.LocalMontagePosition && !isNewMontage;
-                bool hasSkippedFrames = currentPosition - montageState.LocalMontagePosition > 0.5f && !isNewMontage;
-
-                if (isNewMontage || hasMontageRewound || hasSkippedFrames)
-                {
-                    var netId = mainEntity.GetMeta().NetId;
-                    DI.Instance.Rpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
-                }
-
-                montageState.LocalMontagePosition = currentPosition;
-            }
-            else if (montageState.LocalMontage != null)
+            if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
                 var netId = mainEntity.GetMeta().NetId;
-                DI.Instance.Rpc.SendMontageCancel(netId);
+                DI.Instance.Rpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
             }
 
-            montageState.LocalMontage = currentMontage;
-            localMainComp.MontageState = montageState;
+            montageState.LocalMontagePosition = currentPosition;
+        }
+        else if (montageState.LocalMontage != null)
+        {
+            var netId = mainEntity.GetMeta().NetId;
+            DI.Instance.Rpc.SendMontageCancel(netId);
+        }
+
+        montageState.LocalMontage = currentMontage;
+        localMainComp.MontageState = montageState;
+    }
+
+    private static BGW_TickGroupMask CustomTickGroupToTickGroupMask(int tickGroup)
+    {
+        switch (tickGroup)
+        {
+            case 0:
+                return BGW_TickGroupMask.TG_OnTick;
+            case 1:
+                return BGW_TickGroupMask.TG_None;
+            case 2:
+                return BGW_TickGroupMask.TG_AfterAnim;
+            case 3:
+                return BGW_TickGroupMask.TG_None;
+            case 4:
+                return BGW_TickGroupMask.TG_PostPhysics;
+            case 5:
+                return BGW_TickGroupMask.TG_PostUpdateWork;
+            case 101:
+                return BGW_TickGroupMask.TG_PreAnim;
+            case 111:
+                return BGW_TickGroupMask.TG_BeforeStartPhsic;
+            case 141:
+                return BGW_TickGroupMask.TG_BeforePostPhsic;
+            case 151:
+                return BGW_TickGroupMask.TG_BeforePostUpdateWork;
+            default:
+                Logging.LogError("CustomTickGroup_To_BGWTickGroupMask : unknown tickgroup");
+                return BGW_TickGroupMask.TG_None;
         }
     }
 }

@@ -2,6 +2,7 @@
 using BtlShare;
 using HarmonyLib;
 using System.Reflection;
+using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -80,7 +81,7 @@ namespace WukongMp.Api.Patches
                     }
 
                     Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
-                    GameLoopPatch.QueueOnGameThread(() => { events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage); }, "Evt_UnitDead");
+                    events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
                 }
 
                 return;
@@ -521,6 +522,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffBegin
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffBegin")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffBegin");
@@ -554,6 +556,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffRemove
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffRemove")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffRemove");
@@ -586,6 +589,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffRemoveImmediately
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffRemoveImmediately")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffRemoveImmediately");
@@ -618,6 +622,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchBuffAllRemove
     {
+        [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffAllRemove")]
         private static MethodBase TargetMethod()
         {
             return AccessTools.Method("b1.BUS_BuffComp:BuffAllRemove");
@@ -659,7 +664,35 @@ namespace WukongMp.Api.Patches
             if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
-            tamerEntity.Value.SetTeam(new ReadyM.Relay.Common.Wukong.ECS.Components.TeamComponent() { TeamId = NewTeamID });
+            tamerEntity.Value.SetTeam(new TeamComponent { TeamId = NewTeamID });
+        }
+    }
+
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchBeAttackedDeadEventSettlementProcess
+    {
+        [HarmonyTargetMethodHint("b1.BUS_BeAttackedComp.BeAttackedEvent_Dead", "EventSettlementProcess")]
+        private static MethodBase TargetMethod()
+        {
+            var innerType = AccessTools.Inner(typeof(BUS_BeAttackedComp), "BeAttackedEvent_Dead");
+            return AccessTools.Method(innerType, "EventSettlementProcess");
+        }
+
+        public static bool Prefix(BGUCharacterCS ___VictimChr)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___VictimChr);
+            if (!tamerEntity.HasValue)
+                return true;
+
+            // Owned entity - do not trigger unit dead
+            if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                return false;
+
+            return true;
         }
     }
 }

@@ -19,6 +19,19 @@
     </PropertyGroup>
     
     <ItemGroup>
+        <Reference Include="Harmony">
+            <HintPath>Core\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="PreludeLib">
+            <HintPath>Core\PreludeLib.dll</HintPath>
+        </Reference>
+        <Reference Include="CSharpModBase">
+            <HintPath>Core\CSharpModBase.dll</HintPath>
+        </Reference>
+        <Reference Include="CSharpModBase">
+            <HintPath>Core\CSharpModBaseV2.dll</HintPath>
+        </Reference>
+
         <Reference Include="b1.Managed">
             <HintPath>Game\b1.Managed.dll</HintPath>
         </Reference>
@@ -28,20 +41,11 @@
         <Reference Include="b1.NativePlugins">
             <HintPath>Game\b1.NativePlugins.dll</HintPath>
         </Reference>
-        <Reference Include="Harmony">
-            <HintPath>Core\0Harmony.dll</HintPath>
-        </Reference>
         <Reference Include="B1UI_GSE.Script">
             <HintPath>Game\B1UI_GSE.Script.dll</HintPath>
         </Reference>
         <Reference Include="BtlSvr.Main">
             <HintPath>Game\BtlSvr.Main.dll</HintPath>
-        </Reference>
-        <Reference Include="CSharpModBase">
-            <HintPath>Core\CSharpModBase.dll</HintPath>
-        </Reference>
-        <Reference Include="CSharpModBase">
-            <HintPath>Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
         <Reference Include="Diana.Client.Common">
             <HintPath>Game\Diana.Client.Common.dll</HintPath>
@@ -87,9 +91,6 @@
         </Reference>
         <Reference Include="ILRuntime.Mono.Cecil.Pdb">
             <HintPath>Game\ILRuntime.Mono.Cecil.Pdb.dll</HintPath>
-        </Reference>
-        <Reference Include="LiteNetLib">
-            <HintPath>Game\LiteNetLib.dll</HintPath>
         </Reference>
         <Reference Include="LitJson">
             <HintPath>Game\LitJson.dll</HintPath>
