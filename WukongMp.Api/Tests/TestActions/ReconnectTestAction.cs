@@ -1,6 +1,6 @@
-﻿namespace WukongMp.Api.Tests
+﻿namespace WukongMp.Api.Tests.TestActions
 {
-    internal class ReconnectionTest : TestBase
+    internal class ReconnectTestAction : TestActionBase, IGameplayTestAction
     {
         private enum InnerState
         {

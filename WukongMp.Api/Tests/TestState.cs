@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.Tests
 {
-    internal enum TestState : byte
+    public enum TestState : byte
     {
         Running,
         Failed,

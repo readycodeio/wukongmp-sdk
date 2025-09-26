@@ -1,13 +1,9 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
 using CSharpModBase;
-using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.Shim;
-using WukongMp.Api.UI;
-using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Testing
 {
@@ -118,7 +114,7 @@ namespace WukongMp.Testing
 
                 if (!DI.Instance.TestsRunner.IsRunning)
                 {
-                    DI.Instance.TestsRunner.Init();
+                    DI.Instance.TestsRunner.Init(new Api.Tests.TestActionSequences.ReconnectTestsSequence(DI.Instance.Logger)); 
                     DI.Instance.TestsRunner.Start();
                 }
             });

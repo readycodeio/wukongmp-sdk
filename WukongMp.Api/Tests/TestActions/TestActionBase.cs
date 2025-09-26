@@ -1,6 +1,6 @@
-﻿namespace WukongMp.Api.Tests
+﻿namespace WukongMp.Api.Tests.TestActions
 {
-    internal abstract class TestBase
+    public abstract class TestActionBase
     {
         public string Description { get; set; } = "";
         protected float Timeout { get; set; } = 10; // seconds

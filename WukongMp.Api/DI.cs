@@ -292,7 +292,7 @@ public class DI
 
         // ---
 
-        TestsRunner = new TestsRunner(eventBus, logger);
+        TestsRunner = new TestsRunner(logger);
 
         // ---
 
