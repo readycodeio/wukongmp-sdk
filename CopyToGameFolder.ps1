@@ -12,8 +12,7 @@ if (-not $ModVariant -or -not $Configuration) {
 
 . ./BuildInfo.ps1
 
-$steamDir = Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Valve\Steam" -Name "InstallPath" | Select-Object -ExpandProperty InstallPath
-$destRoot = "$steamDir/steamapps/common/BlackMythWukong/b1/Binaries/Win64/CSharpLoader"
+$destRoot = Join-Path $env:APPDATA "ReadyM.Launcher/server_profiles/Black Myth Wukong/ReadyM_WukongMP_Cooperative/CSharpLoader"
 
 # Perform copies
 foreach ($item in $devFiles) {
