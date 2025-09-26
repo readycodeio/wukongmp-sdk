@@ -12,7 +12,7 @@ if (-not $ModVariant -or -not $Configuration) {
 
 . ./BuildInfo.ps1
 
-$destRoot = Join-Path $env:APPDATA "ReadyM.Launcher/server_profiles/Black Myth Wukong/ReadyM_WukongMP_Cooperative/CSharpLoader"
+$destRoot = Join-Path $env:APPDATA "ReadyM.Launcher/game_modes/Black Myth Wukong Co-op/CSharpLoader"
 
 # Perform copies
 foreach ($item in $devFiles) {
