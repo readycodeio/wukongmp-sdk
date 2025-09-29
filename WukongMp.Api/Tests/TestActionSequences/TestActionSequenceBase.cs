@@ -36,7 +36,7 @@ namespace WukongMp.Api.Tests.TestActionSequences
             {
                 for (int i = 0; i < repetitions; i++)
                 {
-                    EnueueTestAction(instance);
+                    EnueueTestActionInstance(instance);
                 }
             }
             else
@@ -45,7 +45,7 @@ namespace WukongMp.Api.Tests.TestActionSequences
             }
         }
 
-        protected void EnueueTestAction(TestActionBase testAction)
+        protected void EnueueTestActionInstance(TestActionBase testAction)
         {
             _testsToRun.Enqueue(testAction);
             _logger.LogDebug("Enqueued test: {TestName}", testAction.GetType().Name);
