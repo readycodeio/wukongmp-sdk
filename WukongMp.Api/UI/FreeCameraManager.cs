@@ -66,6 +66,11 @@ public class FreeCameraManager
         if (_freeCameraActor.IsNullOrDestroyed())
         {
             var freeCameraActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(FreeCameraActorPath, ELoadResourceType.SyncLoadAndCache);
+            if (freeCameraActorClass == null)
+            {
+                Logging.LogError("[FreeCameraManager] FreeCameraActor class is null");
+                return;
+            }
             _freeCameraActor = world.SpawnActor(freeCameraActorClass, ref cameraLocation, ref cameraRotation);
         }
 

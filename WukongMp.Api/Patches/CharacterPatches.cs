@@ -533,6 +533,9 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
+            if (UnsynchronizedBuffsData.Ids.Contains(BuffID))
+                return;
+
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
@@ -567,6 +570,9 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
+            if (UnsynchronizedBuffsData.Ids.Contains(BuffID))
+                return;
+
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
@@ -598,6 +604,9 @@ namespace WukongMp.Api.Patches
         public static void Postfix(UActorCompBaseCS __instance, int BuffID, EBuffEffectTriggerType RemoveTriggerType, bool WithTriggerRemoveEffect)
         {
             if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (UnsynchronizedBuffsData.Ids.Contains(BuffID))
                 return;
 
             var owner = __instance.GetOwner();
