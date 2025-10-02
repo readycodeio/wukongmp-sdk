@@ -206,7 +206,13 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnSummon(UnitSummonData data)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, data0) => { SummonPatch.ExecuteSummon(data0.SummonerId, data0.SummonId, data0.Guid, data0.Name, data0.TeamId); }, data);
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) => 
+        {
+            var summoner = self._pawnState.GetPawnByNetworkId(data0.SummonerId);
+            data0.ServantReq.Summoner = summoner;
+            SpawningUtils.SpawnSummonedUnit(data0.ServantReq);
+
+        }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)] // TODO: Check if this is the right relay mode for this event

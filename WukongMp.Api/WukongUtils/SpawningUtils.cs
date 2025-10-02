@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using b1;
 using b1.BGW;
@@ -354,6 +355,47 @@ public static class SpawningUtils
         }
 
         return result;
+    }
+
+    public static void SpawnSummonedUnit(FServantReq servantReq)
+    {
+        var world = GameUtils.GetWorld();
+        if (world == null || servantReq.TamerTemplate == null)
+        {
+            return;
+        }
+        BUTamerActor? bUTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, servantReq.TamerTemplate, servantReq.BornTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
+        if (bUTamerActor == null)
+        {
+            return;
+        }
+        if (servantReq.SafeClampToLand)
+        {
+            FVector fVector = BGUFuncLibActorTransformCS.BGUGetActorLocation(bUTamerActor);
+            float scaledCapsuleHalfHeight = bUTamerActor.CapsuleComponent.GetScaledCapsuleHalfHeight();
+            float scaledCapsuleRadius = bUTamerActor.CapsuleComponent.GetScaledCapsuleRadius();
+            FVector start = fVector + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+            FVector end = fVector - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+            List<AActor> list = [bUTamerActor];
+            if (USystemLibrary.CapsuleTraceSingleByProfile(world, start, end, scaledCapsuleRadius, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, list, EDrawDebugTrace.None, out var OutHit, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 3f))
+            {
+                FVector newLocation = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(in OutHit.ImpactPoint) + FVector.UpVector * scaledCapsuleHalfHeight;
+                BGUFuncLibActorTransformCS.BGUSetActorLocation(bUTamerActor, newLocation, bSweep: false, bTeleport: false);
+            }
+        }
+        bUTamerActor.SpawnedTamerGuid = servantReq.ServantTamerGuid;
+        bUTamerActor.MarkAsServant();
+        bUTamerActor.GetFinalGuid();
+        BPS_EventCollectionCS.GetLocal(world).Evt_SendServantReq.Invoke(servantReq);
+        if (B1Global.GIsBossRushMode)
+        {
+            IBIC_BossRushBattleData gameInstanceReadonlyData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_BossRushBattleData, BIC_BossRushBattleData>(world);
+            if (gameInstanceReadonlyData != null && gameInstanceReadonlyData.ServantPropertyOverrideList.TryGetValue(servantReq.SummonID, out var value))
+            {
+                bUTamerActor.ApplyServantPropertyOverride(value);
+            }
+        }
+        UBGUFunctionLibrary.BGUFinishSpawningActor(bUTamerActor, servantReq.BornTransform);
     }
 
     private static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)

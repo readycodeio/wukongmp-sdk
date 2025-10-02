@@ -133,4 +133,20 @@ public class WukongPawnState
 
         return result;
     }
+
+    public NetworkId? GetNetworkIdByActor(AActor? owner)
+    {
+        var playerEntity = GetByEntityByPlayerPawn(owner);
+        if (playerEntity.HasValue)
+        {
+            return playerEntity.Value.GetMeta().NetId;
+        }
+        var tamerEntity = GetEntityByTamerMonster(owner);
+        if (tamerEntity.HasValue)
+        {
+            return tamerEntity.Value.GetMeta().NetId;
+        }
+        return null;
+    }
+
 }
