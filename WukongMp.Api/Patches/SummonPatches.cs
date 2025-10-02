@@ -4,6 +4,7 @@ using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
@@ -22,58 +23,27 @@ namespace WukongMp.Api.Patches
                 if (InServantReq.ServantType == EServantType.PhantomRush || InServantReq.ServantType == EServantType.NeutralAnimSpawn || InServantReq.ServantType == EServantType.Clone)
                     return true;
 
+                __result = null;
                 if (DI.Instance.AreaState.IsMasterClient)
                 {
-                    // Original implementation
-                    if (World == null || TamerClass.Value == null)
+                    var tamerActor = SpawningUtils.BeginDeferredSummonSpawn(World, TamerClass, InTransform, InServantReq.SummonID, SafeClampToLand);
+                    if (tamerActor == null)
                     {
                         __result = null;
                         return false;
                     }
-                    if (BGWGameInstanceCS.TickingGameInstNetMode(World) == EGameInstNetMode.Client)
-                    {
-                        __result = null;
-                        return false;
-                    }
-                    BUTamerActor? bUTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(World, TamerClass.Value, InTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
-                    if (bUTamerActor == null)
-                    {
-                        __result = null;
-                        return false;
-                    }
-                    if (SafeClampToLand)
-                    {
-                        FVector fVector = BGUFuncLibActorTransformCS.BGUGetActorLocation(bUTamerActor);
-                        float scaledCapsuleHalfHeight = bUTamerActor.CapsuleComponent.GetScaledCapsuleHalfHeight();
-                        float scaledCapsuleRadius = bUTamerActor.CapsuleComponent.GetScaledCapsuleRadius();
-                        FVector start = fVector + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
-                        FVector end = fVector - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
-                        List<AActor> list = [bUTamerActor];
-                        if (USystemLibrary.CapsuleTraceSingleByProfile(World, start, end, scaledCapsuleRadius, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, list, EDrawDebugTrace.None, out var OutHit, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 3f))
-                        {
-                            FVector newLocation = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(in OutHit.ImpactPoint) + FVector.UpVector * scaledCapsuleHalfHeight;
-                            BGUFuncLibActorTransformCS.BGUSetActorLocation(bUTamerActor, newLocation, bSweep: false, bTeleport: false);
-                        }
-                    }
-                    bUTamerActor.MarkAsServant();
-                    InServantReq.ServantTamerGuid = bUTamerActor.GetFinalGuid();
+                    tamerActor.MarkAsServant();
+                    InServantReq.ServantTamerGuid = tamerActor.GetFinalGuid();
                     BPS_EventCollectionCS.GetLocal(World).Evt_SendServantReq.Invoke(InServantReq);
-                    if (B1Global.GIsBossRushMode)
-                    {
-                        IBIC_BossRushBattleData gameInstanceReadonlyData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_BossRushBattleData, BIC_BossRushBattleData>(World);
-                        if (gameInstanceReadonlyData != null && gameInstanceReadonlyData.ServantPropertyOverrideList.TryGetValue(InServantReq.SummonID, out var value))
-                        {
-                            bUTamerActor.ApplyServantPropertyOverride(value);
-                        }
-                    }
-                    UBGUFunctionLibrary.BGUFinishSpawningActor(bUTamerActor, InTransform);
+                    UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, InTransform);
                     __result = InServantReq.ServantTamerGuid;
+
                     // Add spawned monster to the ECS and send spawn request
-                    SpawningUtils.CreateMonsterInEcs(__result, bUTamerActor, Constants.DefaultMonsterTeamId, bUTamerActor.PathName);
+                    SpawningUtils.CreateMonsterInEcs(__result, tamerActor, Constants.DefaultMonsterTeamId, tamerActor.PathName);
                     var summonerNetId = DI.Instance.PawnState.GetNetworkIdByActor(InServantReq.Summoner);
                     if (summonerNetId.HasValue)
                     {
-                        DI.Instance.Rpc.SendSpawnSummon(new DTO.UnitSummonData(summonerNetId.Value, InServantReq));
+                        DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
                     }
                 }
                 return false;

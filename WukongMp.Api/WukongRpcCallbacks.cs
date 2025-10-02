@@ -204,14 +204,11 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnSpawnSummon(UnitSummonData data)
+    internal void OnSpawnSummon(SummonRequestData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) => 
         {
-            var summoner = self._pawnState.GetPawnByNetworkId(data0.SummonerId);
-            data0.ServantReq.Summoner = summoner;
-            SpawningUtils.SpawnSummonedUnit(data0.ServantReq);
-
+            SpawningUtils.SpawnSummonedUnitWithGuid(data0.ToGame());
         }, this, data);
     }
 

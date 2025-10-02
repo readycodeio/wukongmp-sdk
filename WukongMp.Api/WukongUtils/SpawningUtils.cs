@@ -357,45 +357,52 @@ public static class SpawningUtils
         return result;
     }
 
-    public static void SpawnSummonedUnit(FServantReq servantReq)
+    public static BUTamerActor? BeginDeferredSummonSpawn(UWorld? world, TSubclassOf<BUTamerActor> tamerClass, FTransform transform, int summonId, bool safeClampToLand = false)
     {
-        var world = GameUtils.GetWorld();
-        if (world == null || servantReq.TamerTemplate == null)
+        if (world == null || tamerClass.Value == null)
         {
-            return;
+            return null;
         }
-        BUTamerActor? bUTamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, servantReq.TamerTemplate, servantReq.BornTransform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
-        if (bUTamerActor == null)
+        BUTamerActor? tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, tamerClass.Value, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
+        if (tamerActor == null)
         {
-            return;
+            return null;
         }
-        if (servantReq.SafeClampToLand)
+        if (safeClampToLand)
         {
-            FVector fVector = BGUFuncLibActorTransformCS.BGUGetActorLocation(bUTamerActor);
-            float scaledCapsuleHalfHeight = bUTamerActor.CapsuleComponent.GetScaledCapsuleHalfHeight();
-            float scaledCapsuleRadius = bUTamerActor.CapsuleComponent.GetScaledCapsuleRadius();
+            FVector fVector = BGUFuncLibActorTransformCS.BGUGetActorLocation(tamerActor);
+            float scaledCapsuleHalfHeight = tamerActor.CapsuleComponent.GetScaledCapsuleHalfHeight();
+            float scaledCapsuleRadius = tamerActor.CapsuleComponent.GetScaledCapsuleRadius();
             FVector start = fVector + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
             FVector end = fVector - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
-            List<AActor> list = [bUTamerActor];
+            List<AActor> list = [tamerActor];
             if (USystemLibrary.CapsuleTraceSingleByProfile(world, start, end, scaledCapsuleRadius, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, list, EDrawDebugTrace.None, out var OutHit, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 3f))
             {
                 FVector newLocation = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(in OutHit.ImpactPoint) + FVector.UpVector * scaledCapsuleHalfHeight;
-                BGUFuncLibActorTransformCS.BGUSetActorLocation(bUTamerActor, newLocation, bSweep: false, bTeleport: false);
+                BGUFuncLibActorTransformCS.BGUSetActorLocation(tamerActor, newLocation, bSweep: false, bTeleport: false);
             }
         }
-        bUTamerActor.SpawnedTamerGuid = servantReq.ServantTamerGuid;
-        bUTamerActor.MarkAsServant();
-        bUTamerActor.GetFinalGuid();
-        BPS_EventCollectionCS.GetLocal(world).Evt_SendServantReq.Invoke(servantReq);
         if (B1Global.GIsBossRushMode)
         {
             IBIC_BossRushBattleData gameInstanceReadonlyData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_BossRushBattleData, BIC_BossRushBattleData>(world);
-            if (gameInstanceReadonlyData != null && gameInstanceReadonlyData.ServantPropertyOverrideList.TryGetValue(servantReq.SummonID, out var value))
+            if (gameInstanceReadonlyData != null && gameInstanceReadonlyData.ServantPropertyOverrideList.TryGetValue(summonId, out var value))
             {
-                bUTamerActor.ApplyServantPropertyOverride(value);
+                tamerActor.ApplyServantPropertyOverride(value);
             }
         }
-        UBGUFunctionLibrary.BGUFinishSpawningActor(bUTamerActor, servantReq.BornTransform);
+        return tamerActor;
+    }
+
+    public static void SpawnSummonedUnitWithGuid(FServantReq servantReq)
+    {
+        var world = GameUtils.GetWorld();
+        var tamerActor = BeginDeferredSummonSpawn(world, servantReq.TamerTemplate, servantReq.BornTransform, servantReq.SummonID, servantReq.SafeClampToLand);
+        if (tamerActor == null)
+            return;
+        tamerActor.SpawnedTamerGuid = servantReq.ServantTamerGuid;
+        tamerActor.MarkAsServant();
+        BPS_EventCollectionCS.GetLocal(world).Evt_SendServantReq.Invoke(servantReq);
+        UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, servantReq.BornTransform);
     }
 
     private static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
