@@ -41,7 +41,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 
                 if (attrs == null)
                 {
-                    DI.Instance.Logger.LogWarning("Failed to get AttrContainer for entity {Entity}", entity);
+                    DI.Instance.Logger.LogWarning("Failed to get AttrContainer for pawn {Pawn}", localTamer.Pawn.GetName());
                     return;
                 }
 
