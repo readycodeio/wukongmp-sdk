@@ -17,7 +17,7 @@ public static class PatchRequestSpawnServant
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        if (InServantReq.ServantType == EServantType.PhantomRush || InServantReq.ServantType == EServantType.NeutralAnimSpawn || InServantReq.ServantType == EServantType.Clone)
+        if (InServantReq.ServantType == EServantType.NeutralAnimSpawn)
             return true;
 
         __result = null;
@@ -36,11 +36,8 @@ public static class PatchRequestSpawnServant
 
             // Add spawned monster to the ECS and send spawn request
             SpawningUtils.CreateMonsterInEcs(__result, tamerActor, Constants.DefaultMonsterTeamId, tamerActor.PathName);
-            var summonerNetId = DI.Instance.PawnState.GetNetworkIdByActor(InServantReq.Summoner);
-            if (summonerNetId.HasValue)
-            {
-                DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
-            }
+            Logging.LogDebug("Sending SpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", InServantReq.Summoner?.GetName() ?? "Null", InServantReq.ServantTamerGuid, InServantReq.TamerTemplate.GetName());
+            DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
         }
         return false;
     }
