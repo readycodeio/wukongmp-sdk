@@ -63,7 +63,8 @@ public class HttpBlobClient(ILogger logger) : IBlobClient
                 { "x-ms-blob-type", "BlockBlob" },
                 { "x-ms-version", "2025-07-05" },
                 { "Content-Encoding", "gzip" },
-                // { "Content-MD5", Convert.ToBase64String(md5checksum) }
+                { "x-ms-blob-content-encoding", "gzip" },
+                { "Content-MD5", Convert.ToBase64String(md5checksum) }
             };
             var status = await client.PutBytesAsync(uploadUri, headers, gzippedContent, ct);
             return status is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous;
