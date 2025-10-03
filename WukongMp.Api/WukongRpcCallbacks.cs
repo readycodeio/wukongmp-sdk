@@ -208,6 +208,7 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) => 
         {
+            self._logger.LogDebug("Received OnSpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", data0.SummonerId, data0.SummonGuid, data0.SummonClassPath);
             SpawningUtils.SpawnSummonedUnitWithGuid(data0.ToGame());
         }, this, data);
     }

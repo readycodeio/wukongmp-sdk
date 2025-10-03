@@ -396,9 +396,14 @@ public static class SpawningUtils
     public static void SpawnSummonedUnitWithGuid(FServantReq servantReq)
     {
         var world = GameUtils.GetWorld();
+
         var tamerActor = BeginDeferredSummonSpawn(world, servantReq.TamerTemplate, servantReq.BornTransform, servantReq.SummonID, servantReq.SafeClampToLand);
         if (tamerActor == null)
+        {
+            Logging.LogDebug("Cannot spawn tamer {Name}", servantReq.TamerTemplate.GetName());
             return;
+        }
+        Logging.LogDebug("Spawned tamer {Name} with type {Type}", servantReq.TamerTemplate.GetName(), servantReq.ServantType);
         tamerActor.SpawnedTamerGuid = servantReq.ServantTamerGuid;
         tamerActor.MarkAsServant();
         BPS_EventCollectionCS.GetLocal(world).Evt_SendServantReq.Invoke(servantReq);
