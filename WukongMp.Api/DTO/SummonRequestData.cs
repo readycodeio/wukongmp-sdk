@@ -28,23 +28,23 @@ public partial struct SummonRequestData(NetworkId summonerId, string summonGuid,
     public float AliveTime;
     public NetworkId CatchTargetId;
 
-    //public float DelayBornTime;
-    //public string BornMontagePath = "";
-    //public int BornSkill;
-    //public float DelayEffectTime;
-    //public float DelaySummonTime;
-    //public bool IsSummonerAsMaster;
-    //public EquipmentState EquipmentState;
-    //public float InitSpeed;
-    //public string BornEffectPath = "";
-    //public List<string> DisappearMontagePathList = [];
-    //public float DestroyDelayTime;
+    public float DelayBornTime;
+    public string BornMontagePath = "";
+    public int BornSkill;
+    public float DelayEffectTime;
+    public float DelaySummonTime;
+    public bool IsSummonerAsMaster;
+    public EquipmentState EquipmentState;
+    public float InitSpeed;
+    public string BornEffectPath = "";
+    public List<string> DisappearMontagePathList = [];
+    public float DestroyDelayTime;
 
     public SummonRequestData(
         NetworkId summonerId, string summonGuid, string summonClassPath, FVector location, FRotator rotation, bool safeClampToLand, int summonId,
-        Guid summonInstanceId, EServantType servantType, EServantSearchTargetType searchTargetType, string cooperativeSCGuid, float aliveTime, NetworkId catchTargetId
-        //float delayBornTime, string bornMontagePath, int bornSkill, float delayEffectTime, float delaySummonTime, bool isSummonerAsMaster,
-        //EquipmentState equipmentState, float initSpeed, string bornEffectPath, List<string> disappearMontagePathList, float destroyDelayTime) 
+        Guid summonInstanceId, EServantType servantType, EServantSearchTargetType searchTargetType, string cooperativeSCGuid, float aliveTime, NetworkId catchTargetId,
+        float delayBornTime, string bornMontagePath, int bornSkill, float delayEffectTime, float delaySummonTime, bool isSummonerAsMaster,
+        EquipmentState equipmentState, float initSpeed, string bornEffectPath, List<string> disappearMontagePathList, float destroyDelayTime
         ) : this(summonerId, summonGuid, summonClassPath)
     {
         Location=location;
@@ -57,17 +57,17 @@ public partial struct SummonRequestData(NetworkId summonerId, string summonGuid,
         CooperativeSCGuid=cooperativeSCGuid;
         AliveTime=aliveTime;
         CatchTargetId=catchTargetId;
-        //DelayBornTime=delayBornTime;
-        //BornMontagePath=bornMontagePath;
-        //BornSkill=bornSkill;
-        //DelayEffectTime=delayEffectTime;
-        //DelaySummonTime=delaySummonTime;
-        //IsSummonerAsMaster=isSummonerAsMaster;
-        //EquipmentState=equipmentState;
-        //InitSpeed=initSpeed;
-        //BornEffectPath=bornEffectPath;
-        //DisappearMontagePathList=disappearMontagePathList;
-        //DestroyDelayTime=destroyDelayTime;
+        DelayBornTime=delayBornTime;
+        BornMontagePath=bornMontagePath;
+        BornSkill=bornSkill;
+        DelayEffectTime=delayEffectTime;
+        DelaySummonTime=delaySummonTime;
+        IsSummonerAsMaster=isSummonerAsMaster;
+        EquipmentState=equipmentState;
+        InitSpeed=initSpeed;
+        BornEffectPath=bornEffectPath;
+        DisappearMontagePathList=disappearMontagePathList;
+        DestroyDelayTime=destroyDelayTime;
     }
 
     public void Serialize(NetDataWriter writer)
@@ -87,19 +87,19 @@ public partial struct SummonRequestData(NetworkId summonerId, string summonGuid,
         writer.Put(AliveTime);
         writer.Put(CatchTargetId);
 
-        //writer.Put(DelayBornTime);
-        //writer.Put(BornMontagePath);
-        //writer.Put(BornSkill);
-        //writer.Put(DelayEffectTime);
-        //writer.Put(DelaySummonTime);
-        //writer.Put(IsSummonerAsMaster);
-        //EquipmentState.Serialize(writer);
-        //writer.Put(InitSpeed);
-        //writer.Put(BornEffectPath);
-        //writer.Put(DisappearMontagePathList.Count);
-        //foreach (var path in DisappearMontagePathList)
-        //    writer.Put(path);
-        //writer.Put(DestroyDelayTime);
+        writer.Put(DelayBornTime);
+        writer.Put(BornMontagePath);
+        writer.Put(BornSkill);
+        writer.Put(DelayEffectTime);
+        writer.Put(DelaySummonTime);
+        writer.Put(IsSummonerAsMaster);
+        EquipmentState.Serialize(writer);
+        writer.Put(InitSpeed);
+        writer.Put(BornEffectPath);
+        writer.Put(DisappearMontagePathList.Count);
+        foreach (var path in DisappearMontagePathList)
+            writer.Put(path);
+        writer.Put(DestroyDelayTime);
     }
 
     public void Deserialize(NetDataReader reader)
@@ -119,20 +119,21 @@ public partial struct SummonRequestData(NetworkId summonerId, string summonGuid,
         AliveTime = reader.GetFloat();
         CatchTargetId = reader.Get<NetworkId>();
 
-        //DelayBornTime = reader.GetFloat();
-        //BornMontagePath = reader.GetString();
-        //BornSkill = reader.GetInt();
-        //DelayEffectTime = reader.GetFloat();
-        //DelaySummonTime = reader.GetFloat();
-        //IsSummonerAsMaster = reader.GetBool();
-        //EquipmentState = (EquipmentState)EquipmentState.DeserializeUntyped(reader);
-        //InitSpeed = reader.GetFloat();
-        //BornEffectPath = reader.GetString();      
-        //var count = reader.GetInt();
-        //for (var i = 0; i < count; i++)
-        //{
-        //    DisappearMontagePathList.Add(reader.GetString());
-        //}
-        //DestroyDelayTime = reader.GetFloat();
+        DelayBornTime = reader.GetFloat();
+        BornMontagePath = reader.GetString();
+        BornSkill = reader.GetInt();
+        DelayEffectTime = reader.GetFloat();
+        DelaySummonTime = reader.GetFloat();
+        IsSummonerAsMaster = reader.GetBool();
+        EquipmentState.Deserialize(reader);
+        InitSpeed = reader.GetFloat();
+        BornEffectPath = reader.GetString();
+        var count = reader.GetInt();
+        DisappearMontagePathList = [];
+        for (var i = 0; i < count; i++)
+        {
+            DisappearMontagePathList.Add(reader.GetString());
+        }
+        DestroyDelayTime = reader.GetFloat();
     }
 }
