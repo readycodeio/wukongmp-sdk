@@ -65,3 +65,24 @@ public static class PatchRequestSpawnServant
         }
     }
 }
+
+[HarmonyPatch(typeof(FTamerRef), "OnUnload")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchTamerUnload
+{
+    public static void Postfix(FTamerRef __instance)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        if (__instance.TamerType != ETamerType.Summoned)
+            return;
+
+        var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(__instance.InstancePtr.Value);
+        if (tamerEntity.HasValue)
+        {
+            Logging.LogDebug("Deleting tamer entity from ECS: {Entity} (OnUnload)", tamerEntity.Value.ToString());
+            DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
+        }
+    }
+}
