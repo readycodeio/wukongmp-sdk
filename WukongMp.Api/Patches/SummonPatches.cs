@@ -107,7 +107,7 @@ public class PatchTamerUnload
             return;
 
         var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(__instance.InstancePtr.Value);
-        if (tamerEntity.HasValue)
+        if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
         {
             Logging.LogDebug("Deleting tamer entity from ECS: {Entity} (OnUnload)", tamerEntity.Value.ToString());
             DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
