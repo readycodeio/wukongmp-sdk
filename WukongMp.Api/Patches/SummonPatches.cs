@@ -4,6 +4,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -17,11 +18,11 @@ public static class PatchRequestSpawnServant
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        if (InServantReq.ServantType == EServantType.NeutralAnimSpawn)
+        if (InServantReq.ServantType == EServantType.NeutralAnimSpawn || InServantReq.ServantType == EServantType.PhantomRush)
             return true;
 
         __result = null;
-        if (DI.Instance.AreaState.IsMasterClient)
+        if (CanSummon(InServantReq.Summoner))
         {
             var tamerActor = SpawningUtils.BeginDeferredSummonSpawn(World, TamerClass, InTransform, InServantReq.SummonID, SafeClampToLand);
             if (tamerActor == null)
@@ -40,5 +41,27 @@ public static class PatchRequestSpawnServant
             DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
         }
         return false;
+    }
+
+    private static bool CanSummon(AActor summoner)
+    {
+        var localCharacter = DI.Instance.PlayerState.LocalMainCharacter;
+        if (localCharacter == null) 
+        { 
+            return false;
+        }
+        var summonerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(summoner);
+        if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
+        {
+            return true; // Local player summons.
+        }
+        else if (summonerEntity.HasValue)
+        {
+            return false; // Other player summons.
+        }
+        else // Summoner is not a player e.g. spawn point
+        {
+            return DI.Instance.AreaState.IsMasterClient;
+        }
     }
 }
