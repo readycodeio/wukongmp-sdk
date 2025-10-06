@@ -37,7 +37,7 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
             var tamer = Tamer;
             if (tamer == null)
             {
-                Logging.LogWarning("Tamer is null or destroyed in getPawn");
+                Logging.LogDebug("Tamer is null or destroyed in getPawn");
                 return null;
             }
 
