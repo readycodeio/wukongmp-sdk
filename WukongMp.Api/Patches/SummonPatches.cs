@@ -1,10 +1,12 @@
 ﻿using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System.Numerics;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -22,7 +24,7 @@ public static class PatchRequestSpawnServant
             return true;
 
         __result = null;
-        if (CanSummon(InServantReq.Summoner))
+        if (CanSummon(InServantReq.Summoner, InTransform.GetLocation()))
         {
             var tamerActor = SpawningUtils.BeginDeferredSummonSpawn(World, TamerClass, InTransform, InServantReq.SummonID, SafeClampToLand);
             if (tamerActor == null)
@@ -43,7 +45,7 @@ public static class PatchRequestSpawnServant
         return false;
     }
 
-    private static bool CanSummon(AActor summoner)
+    private static bool CanSummon(AActor summoner, FVector summonLocation)
     {
         var localCharacter = DI.Instance.PlayerState.LocalMainCharacter;
         if (localCharacter == null) 
@@ -61,7 +63,33 @@ public static class PatchRequestSpawnServant
         }
         else // Summoner is not a player e.g. spawn point
         {
-            return DI.Instance.AreaState.IsMasterClient;
+            if (DI.Instance.PlayerState.LocalPlayerId == null)
+                return false;
+
+            var localPlayerId = DI.Instance.PlayerState.LocalPlayerId.Value;
+            var localPosition = localCharacter.Value.GetState().Location;
+            var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
+            var squaredSpawnOwnershipDistance = Constants.SpawnOwnershipDistance * Constants.SpawnOwnershipDistance;
+            if (squaredDistanceToSummon > squaredSpawnOwnershipDistance)
+            {
+                return DI.Instance.AreaState.IsMasterClient; // Distant summon -> master as owner
+            }
+
+            // Check if master or another player with lower id is nearby
+            bool canSpawn = true;
+            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
+            ref MainCharacterComponent playerComp, Entity entity) =>
+            {
+                if (entity == localCharacter.Value.Entity)
+                    return;
+
+                var squaredDistance = Vector3.DistanceSquared(localPosition, playerComp.Location);
+                if (squaredDistance < squaredSpawnOwnershipDistance && (DI.Instance.AreaState.MasterClientId == playerComp.PlayerId || playerComp.PlayerId.RawValue < localPlayerId.RawValue))
+                {
+                    canSpawn = false;
+                }
+            });
+            return canSpawn;
         }
     }
 }
