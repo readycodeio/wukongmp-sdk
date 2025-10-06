@@ -72,6 +72,133 @@ public class BouncyCastleHttpsClient(ILogger logger)
         }
     }
 
+    /// <summary>
+    /// Performs a PUT request to upload raw byte data, suitable for Azure Blob Storage with a SAS URL.
+    /// </summary>
+    /// <param name="url">The request URL, including SAS token if applicable.</param>
+    /// <param name="headers">Required headers, e.g., "x-ms-blob-type: BlockBlob".</param>
+    /// <param name="fileBytes">The raw file content to upload.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>The HTTP status code of the response.</returns>
+    public async Task<HttpStatusCode> PutBytesAsync(
+        Uri url,
+        Dictionary<string, string> headers,
+        byte[] fileBytes,
+        CancellationToken ct = default)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        await _semaphore.WaitAsync(ct);
+
+        try
+        {
+            using var tcp = new TcpClient(url.Host, url.Port);
+            using var stream = tcp.GetStream();
+
+            Stream requestStream = stream;
+
+            if (url.Scheme == "https")
+            {
+                // Setup TLS connection using BouncyCastle
+                var crypto = new BcTlsCrypto();
+                var protocol = new BouncyCastleTlsClient(url.Host, crypto);
+                var tls = new TlsClientProtocol(stream);
+                tls.Connect(protocol);
+                requestStream = tls.Stream; // Use TLS stream for https
+            }
+
+            // Use ASCII encoding for headers and leave the stream open for the body
+            using var writer = new StreamWriter(requestStream);
+            writer.NewLine = "\r\n";
+
+            // Write HTTP request line and headers
+            await writer.WriteLineAsync($"PUT {url.PathAndQuery} HTTP/1.1");
+            if (url is { Scheme: "http", Port: 80 } or { Scheme: "https", Port: 443 })
+                await writer.WriteLineAsync($"Host: {url.Host}");
+            else
+                await writer.WriteLineAsync($"Host: {url.Host}:{url.Port}");
+            await writer.WriteLineAsync("Connection: close");
+            await writer.WriteLineAsync("Accept: application/xml, application/json, text/plain, */*");
+            await writer.WriteLineAsync($"Content-Length: {fileBytes.Length}");
+            await writer.WriteLineAsync("Content-Type: application/octet-stream");
+
+            foreach (var header in headers)
+                await writer.WriteLineAsync($"{header.Key}: {header.Value}");
+
+            await writer.WriteLineAsync(); // End of headers
+            await writer.FlushAsync();
+
+            // Write body (the file bytes)
+            await requestStream.WriteAsync(fileBytes, 0, fileBytes.Length, ct);
+            await requestStream.FlushAsync(ct);
+
+            // Read response
+            using var handler = new HttpParserDelegate();
+            using var parser = new HttpCombinedParser(handler);
+
+            var buffer = new byte[8192];
+            while (!ct.IsCancellationRequested)
+            {
+                int bytesRead;
+                try
+                {
+                    // Read the next chunk of data from the network
+                    bytesRead = await requestStream.ReadAsync(buffer, 0, buffer.Length, ct);
+                }
+                catch (TlsNoCloseNotifyException)
+                {
+                    // Treat a missing close_notify as the end of the stream
+                    break;
+                }
+                catch (IOException) when (tcp.Client?.Connected == false)
+                {
+                    // The remote side closed the connection
+                    break;
+                }
+
+                if (bytesRead == 0)
+                {
+                    // End of stream
+                    break;
+                }
+
+                // Feed the chunk to the parser immediately.
+                // The parser will build the response internally.
+                using var chunkStream = new MemoryStream(buffer, 0, bytesRead, writable: false);
+                parser.Execute(chunkStream);
+
+                if (!parser.ShouldKeepAlive)
+                {
+                    if (handler.HttpRequestResponse is null)
+                    {
+                        handler.OnMessageEnd(parser);
+                    }
+
+                    break;
+                }
+
+                if (handler.HttpRequestResponse is not null)
+                {
+                    break;
+                }
+            }
+
+            // Now, handler.HttpRequestResponse is populated correctly, even for errors.
+            if (handler.HttpRequestResponse is null)
+            {
+                // This might happen if the server closes the connection without sending a valid response.
+                logger.LogWarning("No valid HTTP response received for PUT to {Url}", url.ToString());
+                return HttpStatusCode.ServiceUnavailable; // Or another appropriate status
+            }
+
+            return (HttpStatusCode)handler.HttpRequestResponse.StatusCode;
+        }
+        finally
+        {
+            _semaphore.Release();
+            logger.LogInformation("PUT bytes to {Url} completed in {ElapsedMilliseconds} ms", url.ToString(), stopwatch.ElapsedMilliseconds);
+        }
+    }
+
     public async Task<HttpStatusCode> PutMultipartAsync(
         Uri url,
         Dictionary<string, object>? fields,
