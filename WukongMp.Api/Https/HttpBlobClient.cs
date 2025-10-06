@@ -48,22 +48,24 @@ public class HttpBlobClient(ILogger logger) : IBlobClient
         {
             // compress the blob with GZIP
             using var stream = new System.IO.MemoryStream();
-            using var gzip = new GZipStream(stream, CompressionLevel.Optimal, true);
-            await gzip.WriteAsync(blob.Content, 0, blob.Content.Length, ct);
-            byte[] gzippedContent = stream.ToArray();
-            
-            var md5checksum = MD5.Create().ComputeHash(gzippedContent);
+            using (var gzip = new GZipStream(stream, CompressionLevel.Optimal, true))
+            {
+                await gzip.WriteAsync(blob.Content, 0, blob.Content.Length, ct);
+            }
+
+            var gzippedContent = stream.ToArray();
+            var md5Checksum = MD5.Create().ComputeHash(gzippedContent);
 
             // this is a SAS URL for Azure Blob Storage
             var uploadUri = new Uri(uploadUrl);
-            
+
             // https://learn.microsoft.com/en-us/rest/api/storageservices/put-blob?tabs=microsoft-entra-id#request-headers-all-blob-types
             var headers = new Dictionary<string, string>
             {
                 { "x-ms-blob-type", "BlockBlob" },
                 { "x-ms-version", "2025-07-05" },
-                { "Content-Encoding", "gzip" },
-                { "Content-MD5", Convert.ToBase64String(md5checksum) }
+                { "x-ms-blob-content-encoding", "gzip" },
+                { "Content-MD5", Convert.ToBase64String(md5Checksum) }
             };
             var status = await client.PutBytesAsync(uploadUri, headers, gzippedContent, ct);
             return status is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous;

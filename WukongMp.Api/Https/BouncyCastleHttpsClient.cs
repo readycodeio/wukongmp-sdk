@@ -117,8 +117,9 @@ public class BouncyCastleHttpsClient(ILogger logger)
             else
                 await writer.WriteLineAsync($"Host: {url.Host}:{url.Port}");
             await writer.WriteLineAsync("Connection: close");
-            await writer.WriteLineAsync("Accept: application/json, text/plain, */*");
+            await writer.WriteLineAsync("Accept: application/xml, application/json, text/plain, */*");
             await writer.WriteLineAsync($"Content-Length: {fileBytes.Length}");
+            await writer.WriteLineAsync("Content-Type: application/octet-stream");
 
             foreach (var header in headers)
                 await writer.WriteLineAsync($"{header.Key}: {header.Value}");
