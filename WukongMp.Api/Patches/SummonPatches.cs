@@ -66,17 +66,20 @@ public static class PatchRequestSpawnServant
             if (DI.Instance.PlayerState.LocalPlayerId == null)
                 return false;
 
+            if (DI.Instance.AreaState.IsMasterClient)
+                return true;
+
             var localPlayerId = DI.Instance.PlayerState.LocalPlayerId.Value;
             var localPosition = localCharacter.Value.GetState().Location;
             var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
             var squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
             if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
             {
-                return DI.Instance.AreaState.IsMasterClient; // Distant summon -> master as owner
+                return false; // Distant summon -> master as owner
             }
 
             // Check if master or another player with lower id is nearby
-            bool canSpawn = true;
+            bool canSummon = true;
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
             ref MainCharacterComponent playerComp, Entity entity) =>
             {
@@ -86,10 +89,10 @@ public static class PatchRequestSpawnServant
                 var squaredDistance = Vector3.DistanceSquared(localPosition, playerComp.Location);
                 if (squaredDistance < squaredSpawnOwnershipRadius && (DI.Instance.AreaState.MasterClientId == playerComp.PlayerId || playerComp.PlayerId.RawValue < localPlayerId.RawValue))
                 {
-                    canSpawn = false;
+                    canSummon = false;
                 }
             });
-            return canSpawn;
+            return canSummon;
         }
     }
 }
