@@ -966,3 +966,23 @@ public class PatchJumpOnReleased
         }
     }
 }
+
+[HarmonyPatch(typeof(BUS_PlayerInputActionComp), "CheckCanSelectTarget")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchCheckCanSelectTarget
+{
+    public static bool Prefix(AActor Player, ref bool __result)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var actor = Player as ACharacter;
+        if (actor != null && actor.GetController() == null)
+        {
+            __result = false;
+            return false;
+        }
+
+        return true;
+    }
+}
