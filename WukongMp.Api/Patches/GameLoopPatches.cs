@@ -2,6 +2,7 @@
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
@@ -54,7 +55,7 @@ public static class ReceiveTickPatch
         if (playerId == null)
             return;
 
-        DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
+        DI.Instance.World.Query<LocalTamerComponent, MetadataComponent, TamerComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
     }
 
     private static void SyncPlayerMontage(MainCharacterEntity mainEntity)
