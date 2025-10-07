@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System;
+using b1;
 using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlShare;
@@ -8,6 +9,7 @@ using ReadyM.Api.Multiplayer.ECS.Values;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -984,5 +986,20 @@ public class PatchCheckCanSelectTarget
         }
 
         return true;
+    }
+}
+
+[HarmonyPatch(typeof(PlayerWukongAttrDataInit), nameof(PlayerWukongAttrDataInit.SetAttrTransAfterActiveTalent))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchSetAttrTransAfterActiveTalent
+{
+    public static Exception? Finalizer(Exception? __exception)
+    {
+        if (__exception != null)
+        {
+            DI.Instance.Logger.LogError(__exception, "Exception in SetAttrTransAfterActiveTalent");
+        }
+
+        return null;
     }
 }
