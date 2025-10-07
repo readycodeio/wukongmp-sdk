@@ -55,7 +55,7 @@ public static class ReceiveTickPatch
         if (playerId == null)
             return;
 
-        DI.Instance.World.Query<LocalTamerComponent, MetadataComponent, TamerComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
+        DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
     }
 
     private static void SyncPlayerMontage(MainCharacterEntity mainEntity)

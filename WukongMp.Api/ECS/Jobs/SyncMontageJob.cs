@@ -6,18 +6,15 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayerId) : IEach<LocalTamerComponent, MetadataComponent, TamerComponent>
+public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayerId) : IEach<LocalTamerComponent, MetadataComponent>
 {
-    public void Execute(ref LocalTamerComponent tamerComponent, ref MetadataComponent meta, ref TamerComponent tamer)
+    public void Execute(ref LocalTamerComponent tamerComponent, ref MetadataComponent meta)
     {
         if (meta.Owner != ownerPlayerId)
             return;
 
         if (tamerComponent.Pawn == null)
-        {
-            Logging.LogDebug("Pawn is null for tamer with guid {Guid}", tamer.Guid);
             return;
-        }    
 
         var montageState = tamerComponent.MontageState;
         if (montageState.LocalAnimationInstance == null)
