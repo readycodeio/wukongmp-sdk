@@ -1,19 +1,23 @@
 ﻿using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayerId) : IEach<LocalTamerComponent, MetadataComponent>
+public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayerId) : IEach<LocalTamerComponent, MetadataComponent, TamerComponent>
 {
-    public void Execute(ref LocalTamerComponent tamerComponent, ref MetadataComponent meta)
+    public void Execute(ref LocalTamerComponent tamerComponent, ref MetadataComponent meta, ref TamerComponent tamer)
     {
         if (meta.Owner != ownerPlayerId)
             return;
 
         if (tamerComponent.Pawn == null)
+        {
+            Logging.LogDebug("Pawn is null for tamer with guid {Guid}", tamer.Guid);
             return;
+        }    
 
         var montageState = tamerComponent.MontageState;
         if (montageState.LocalAnimationInstance == null)
