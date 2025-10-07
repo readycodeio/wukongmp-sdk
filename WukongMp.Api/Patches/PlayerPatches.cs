@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System;
+using b1;
 using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlShare;
@@ -8,6 +9,7 @@ using ReadyM.Api.Multiplayer.ECS.Values;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -964,5 +966,40 @@ public class PatchJumpOnReleased
         {
             DI.Instance.Rpc.SendStopJump();
         }
+    }
+}
+
+[HarmonyPatch(typeof(BUS_PlayerInputActionComp), "CheckCanSelectTarget")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchCheckCanSelectTarget
+{
+    public static bool Prefix(AActor Player, ref bool __result)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var actor = Player as ACharacter;
+        if (actor != null && actor.GetController() == null)
+        {
+            __result = false;
+            return false;
+        }
+
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(PlayerWukongAttrDataInit), nameof(PlayerWukongAttrDataInit.SetAttrTransAfterActiveTalent))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchSetAttrTransAfterActiveTalent
+{
+    public static Exception? Finalizer(Exception? __exception)
+    {
+        if (__exception != null)
+        {
+            DI.Instance.Logger.LogError(__exception, "Exception in SetAttrTransAfterActiveTalent");
+        }
+
+        return null;
     }
 }

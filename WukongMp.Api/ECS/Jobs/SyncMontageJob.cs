@@ -1,6 +1,7 @@
 ﻿using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;

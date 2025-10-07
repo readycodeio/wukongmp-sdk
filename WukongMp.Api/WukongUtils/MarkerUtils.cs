@@ -42,8 +42,13 @@ public static class MarkerUtils
     {
         var world = GameUtils.GetWorld();
         var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
-        var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
+        if (playerMarkerActorClass == null)
+        {
+            Logging.LogError("Cannot load player marker class");
+            return null;
+        }
 
+        var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
         if (playerMarkerActor == null)
         {
             Logging.LogError("Cannot spawn player marker actor");

@@ -8,6 +8,8 @@ using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
+using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
@@ -89,6 +91,8 @@ public class WukongChatter : IDisposable
         _commands.Add("/play", new WukongChatterCommand(PlayCutscene));
         _commands.Add("/disconnect", new WukongChatterCommand(RequestDisconnect));
         _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
+        _commands.Add("/teleport", new WukongChatterCommand(Teleport));
+        _commands.Add("/openlevel", new WukongChatterCommand(OpenLevel));
 #endif
     }
 
@@ -199,6 +203,26 @@ public class WukongChatter : IDisposable
             playerEntity.Value.GetState().IsSpectator = isSpectator;
         }
     }
+
+    private void Teleport(ReadOnlyMemory<string> args)
+    {
+        if (args.Length == 1 && int.TryParse(args.Span[0], out var birthpointId))
+        {
+            BPS_EventCollectionCS.Get(GameUtils.GetControlledPawn()?.PlayerState).Evt_BPS_TeleportTo.Invoke(ETeleportTypeV2.RebirthPointTeleportOnly, new TeleportParam_RebirthPoint
+            {
+                RebirthPointId = birthpointId
+            }, EPlayerTeleportReason.RebirthPoint);
+        }
+    }
+
+    private void OpenLevel(ReadOnlyMemory<string> args)
+    {
+        if (args.Length == 1)
+        { 
+            UGameplayStatics.OpenLevel(GameUtils.GetWorld(), new FName(args.Span[0]));
+        }
+    }
+
 
     private bool TryHandleCommand(string message)
     {

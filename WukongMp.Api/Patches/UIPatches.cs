@@ -1,17 +1,19 @@
 ﻿using b1;
+using b1.BGW;
+using b1.GSMUI.GSWidget;
 using b1.Localization;
 using b1.UI.Comm;
 using B1UI.GSSvc;
 using B1UI.GSUI;
 using GSE.GSUI;
 using HarmonyLib;
+using PreludeLib.Attributes;
 using ResB1;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using b1.GSMUI.GSWidget;
-using PreludeLib.Attributes;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
@@ -79,16 +81,24 @@ namespace WukongMp.Api.Patches
 
                 if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
                 {
-                    if (DI.Instance.State.IsConnected)
+                    var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
+                    if (widgetManagerActorClass == null)
                     {
-                        Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                        ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
+                        ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                        UIUtils.ShowTip(Texts.MissingPak);
+                        Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                     }
-                    else
+                    else if (!DI.Instance.State.IsConnected)
                     {
                         ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                         InfoMessageWidget.Instance.SetVisibility(true);
                         InfoMessageWidget.Instance.SetText(Texts.Disconnected);
+                        Logging.LogError("Disconnected. Could not continue game.");
+                    }
+                    else
+                    {
+                        Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
+                        ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
                     }
                 }
                 else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
