@@ -276,4 +276,7 @@
   <data name="Disconnected" xml:space="preserve">
     <value>Disconnected</value>
   </data>
+  <data name="MissingPak" xml:space="preserve">
+    <value>WukongMP.pak is missing</value>
+  </data>
 </root>
