@@ -1,8 +1,5 @@
 ﻿using b1;
-using Friflo.Engine.ECS;
 using HarmonyLib;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System.Numerics;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -24,7 +21,7 @@ public static class PatchRequestSpawnServant
             return true;
 
         __result = null;
-        if (CanSummon(InServantReq.Summoner, InTransform.GetLocation()))
+        if (SpawningUtils.CanSummon(InServantReq.Summoner, InTransform.GetLocation()))
         {
             var tamerActor = SpawningUtils.BeginDeferredSummonSpawn(World, TamerClass, InTransform, InServantReq.SummonID, SafeClampToLand);
             if (tamerActor == null)
@@ -43,57 +40,6 @@ public static class PatchRequestSpawnServant
             DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
         }
         return false;
-    }
-
-    private static bool CanSummon(AActor summoner, FVector summonLocation)
-    {
-        var localCharacter = DI.Instance.PlayerState.LocalMainCharacter;
-        if (localCharacter == null) 
-        { 
-            return false;
-        }
-        var summonerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(summoner);
-        if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
-        {
-            return true; // Local player summons.
-        }
-        else if (summonerEntity.HasValue)
-        {
-            return false; // Other player summons.
-        }
-        else // Summoner is not a player e.g. spawn point
-        {
-            if (DI.Instance.PlayerState.LocalPlayerId == null)
-                return false;
-
-            if (DI.Instance.AreaState.IsMasterClient)
-                return true;
-
-            var localPlayerId = DI.Instance.PlayerState.LocalPlayerId.Value;
-            var localPosition = localCharacter.Value.GetState().Location;
-            var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
-            var squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
-            if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
-            {
-                return false; // Distant summon -> master as owner
-            }
-
-            // Check if master or another player with lower id is nearby
-            bool canSummon = true;
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-            ref MainCharacterComponent playerComp, Entity entity) =>
-            {
-                if (entity == localCharacter.Value.Entity)
-                    return;
-
-                var squaredDistance = Vector3.DistanceSquared(localPosition, playerComp.Location);
-                if (squaredDistance < squaredSpawnOwnershipRadius && (DI.Instance.AreaState.MasterClientId == playerComp.PlayerId || playerComp.PlayerId.RawValue < localPlayerId.RawValue))
-                {
-                    canSummon = false;
-                }
-            });
-            return canSummon;
-        }
     }
 }
 
@@ -115,5 +61,21 @@ public class PatchTamerUnload
             Logging.LogDebug("Deleting tamer entity from ECS: {Entity} (OnUnload)", tamerEntity.Value.ToString());
             DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
         }
+    }
+}
+
+[HarmonyPatch(typeof(BGS_SummonManagerSystem), "RequestSummon")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchRequestSummon
+{
+    public static bool Prefix(FSummonReq InSummonReq)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        if (InSummonReq.SummonType == ESummonType.NeutralAnimSpawn || InSummonReq.SummonType == ESummonType.PhantomRush)
+            return true;
+
+        return SpawningUtils.CanSummon(InSummonReq.Summoner, InSummonReq.HitLocation);
     }
 }
