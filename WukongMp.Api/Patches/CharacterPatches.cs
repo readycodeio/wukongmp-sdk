@@ -295,6 +295,10 @@ namespace WukongMp.Api.Patches
                 if (!main.MoveAcceleration.ToFVector().Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
                 {
                     main.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
+                    if (main.MoveAcceleration.ToFVector().Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                    {
+                        Logging.LogDebug("main.MoveAcceleration is zero in BUC_ABPCharacterData.Update_GameThread postfix");
+                    }
                 }
 
                 if (!main.Location.ToFVector().Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
@@ -333,6 +337,7 @@ namespace WukongMp.Api.Patches
                     __instance.MoveAcceleration = otherMain.MoveAcceleration.ToFVector();
                     if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
+                        Logging.LogDebug("Setting __instance.MoveAcceleration = zero in BUC_ABPCharacterData.Update_GameThread postfix");
                         __instance.MoveAcceleration = FVector.ZeroVector;
                         otherMain.MoveAcceleration = FVector.ZeroVector.ToVector3();
                     }
