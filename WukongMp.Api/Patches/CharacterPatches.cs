@@ -384,6 +384,23 @@ namespace WukongMp.Api.Patches
 
                             var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
 
+                            if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                            {
+                                __instance.Velocity = FVector.ZeroVector;
+                                anim.Velocity = FVector.ZeroVector.ToVector3();
+
+                                __instance.MovementComp.Velocity = new FVector(0, 0, __instance.MovementComp.Velocity.Z);
+                                __instance.RealWorldVelocity = new FVector(0, 0, __instance.RealWorldVelocity.Z);
+
+                                events.Evt_StopCurrentMove.Invoke();
+                                events.Evt_MovementForceStop.Invoke();
+                            }
+                            if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                            {
+                                __instance.MoveAcceleration = FVector.ZeroVector;
+                                anim.MoveAcceleration = FVector.ZeroVector.ToVector3();
+                            }
+
                             ref var trans = ref tamerEntity.Value.GetTranslation();
                             var location = trans.Position.ToFVector();
                             var rotation = trans.Rotation.ToFRotator();
