@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using b1;
+﻿using b1;
 using b1.BGW;
 using BtlShare;
+using Friflo.Engine.ECS;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -408,6 +410,57 @@ public static class SpawningUtils
         tamerActor.MarkAsServant();
         BPS_EventCollectionCS.GetLocal(world).Evt_SendServantReq.Invoke(servantReq);
         UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, servantReq.BornTransform);
+    }
+
+    public static bool CanSummon(AActor summoner, FVector summonLocation)
+    {
+        var localCharacter = DI.Instance.PlayerState.LocalMainCharacter;
+        if (localCharacter == null)
+        {
+            return false;
+        }
+        var summonerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(summoner);
+        if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
+        {
+            return true; // Local player summons.
+        }
+        else if (summonerEntity.HasValue)
+        {
+            return false; // Other player summons.
+        }
+        else // Summoner is not a player e.g. spawn point
+        {
+            if (DI.Instance.PlayerState.LocalPlayerId == null)
+                return false;
+
+            if (DI.Instance.AreaState.IsMasterClient)
+                return true;
+
+            var localPlayerId = DI.Instance.PlayerState.LocalPlayerId.Value;
+            var localPosition = localCharacter.Value.GetState().Location;
+            var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
+            var squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
+            if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
+            {
+                return false; // Distant summon -> master as owner
+            }
+
+            // Check if master or another player with lower id is nearby
+            bool canSummon = true;
+            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
+            ref MainCharacterComponent playerComp, Entity entity) =>
+            {
+                if (entity == localCharacter.Value.Entity)
+                    return;
+
+                var squaredDistance = Vector3.DistanceSquared(localPosition, playerComp.Location);
+                if (squaredDistance < squaredSpawnOwnershipRadius && (DI.Instance.AreaState.MasterClientId == playerComp.PlayerId || playerComp.PlayerId.RawValue < localPlayerId.RawValue))
+                {
+                    canSummon = false;
+                }
+            });
+            return canSummon;
+        }
     }
 
     private static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
