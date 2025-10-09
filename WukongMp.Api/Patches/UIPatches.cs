@@ -381,6 +381,7 @@ public class ThreadSafeHealthBarPatch3
     }
 }
 
+[HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnInfoChange
 {

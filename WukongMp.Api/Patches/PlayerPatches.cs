@@ -110,16 +110,16 @@ namespace WukongMp.Api.Patches
     public class PatchPlayerLocomotion
     {
         public static void Prefix(
-           BUC_ABPPlayerLocomotionData __instance,
-           AActor Owner,
-           IBUC_ABPCommonSettingData CommonData,
-           IBUC_ABPBasicData BasicData,
-           IBUC_ABPCharacterData ChrData,
-           IBUC_ABPBGUCharacterData BGUData,
-           IBUC_ABPCommonLocomotionData LocomotionData,
-           IBUC_ABPSpecialMoveData SpecialMoveData,
-           IBUC_ABPHelperData HelperData,
-           float DeltaTime)
+            BUC_ABPPlayerLocomotionData __instance,
+            AActor Owner,
+            IBUC_ABPCommonSettingData CommonData,
+            IBUC_ABPBasicData BasicData,
+            IBUC_ABPCharacterData ChrData,
+            IBUC_ABPBGUCharacterData BGUData,
+            IBUC_ABPCommonLocomotionData LocomotionData,
+            IBUC_ABPSpecialMoveData SpecialMoveData,
+            IBUC_ABPHelperData HelperData,
+            float DeltaTime)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -888,6 +888,21 @@ namespace WukongMp.Api.Patches
             }
 
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractStepMatchPos), "OnTick")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchInteractStepMatchPosOnTick
+    {
+        public static Exception? Finalizer(Exception? __exception)
+        {
+            if (__exception != null)
+            {
+                DI.Instance.Logger.LogError(__exception, "Exception in InteractStepMatchPos.OnTick");
+            }
+
+            return null;
         }
     }
 
