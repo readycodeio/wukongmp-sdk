@@ -13,13 +13,15 @@ public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlay
         if (meta.Owner != ownerPlayerId)
             return;
 
-        if (tamerComponent.Pawn == null)
+        if (tamerComponent.Pawn == null || tamerComponent.Pawn.Mesh == null)
             return;
 
         var montageState = tamerComponent.MontageState;
         if (montageState.LocalAnimationInstance == null)
         {
             montageState.LocalAnimationInstance = tamerComponent.Pawn.Mesh.GetAnimInstance();
+            if (montageState.LocalAnimationInstance == null)
+                return;
         }
 
         var currentMontage = tamerComponent.Pawn.GetCurrentMontage();

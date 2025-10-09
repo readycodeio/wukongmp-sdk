@@ -99,7 +99,7 @@ public static class ProjectileUtils
 
         foreach (var projectile in projectileCtrData.ProjectileList)
         {
-            if (projectile.GetClass().GetName() == projectileName)
+            if (projectile?.GetClass()?.GetName() == projectileName)
             {
                 return projectile;
             }

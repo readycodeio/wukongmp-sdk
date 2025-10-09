@@ -29,7 +29,7 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
                 markerComp.MarkerActor.SetActorLocation(transComp.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
             }
 #if TESTING
-            string title = localTamerComp.Tamer?.GetClass().GetName() ?? "";
+            string title = localTamerComp.Tamer?.GetClass()?.GetName() ?? "";
             if (localTamerComp.Pawn != null)
             {
                 markerComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.BlueTeamColor}", true);
