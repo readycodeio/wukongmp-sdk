@@ -147,11 +147,35 @@ namespace WukongMp.Api.Patches
             else
             {
                 var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
-                if (!mainEntity.HasValue)
-                    return;
+                if (mainEntity.HasValue)
+                {
+                    ref var mainComp = ref mainEntity.Value.GetState();
+                    __instance.bShouldWaitRotateFinished = mainComp.ShouldWaitRotateFinished;
+                }
+                else
+                {
+                    // maybe it's a monkey summon monster
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(Owner);
+                    if (tamerEntity.HasValue)
+                    {
+                        ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                        if (!localTamer.IsTamerSynced)
+                        {
+                            return;
+                        }
 
-                ref var mainComp = ref mainEntity.Value.GetState();
-                __instance.bShouldWaitRotateFinished = mainComp.ShouldWaitRotateFinished;
+                        if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                        {
+                            ref var anim = ref tamerEntity.Value.GetAnimation();
+                            anim.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
+                        }
+                        else
+                        {
+                            ref var anim = ref tamerEntity.Value.GetAnimation();
+                            __instance.bShouldWaitRotateFinished = anim.ShouldWaitRotateFinished;
+                        }
+                    }
+                }
             }
         }
     }
