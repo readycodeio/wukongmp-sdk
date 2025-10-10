@@ -395,15 +395,6 @@ namespace WukongMp.Api.Patches
                             {
                                 events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                             }
-                            if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
-                            {
-                                __instance.Velocity = FVector.ZeroVector;
-                                anim.Velocity = FVector.ZeroVector.ToVector3();
-                                __instance.MoveAcceleration = FVector.ZeroVector;
-                                anim.MoveAcceleration = FVector.ZeroVector.ToVector3();
-                                __instance.LastVelocity = FVector.ZeroVector;
-                                __instance.MovementComp.Velocity = FVector.ZeroVector;
-                            }
                         }
                     }
                 }
