@@ -109,49 +109,6 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchPlayerLocomotion
     {
-        public static void Prefix(
-            BUC_ABPPlayerLocomotionData __instance,
-            AActor Owner,
-            IBUC_ABPCommonSettingData CommonData,
-            IBUC_ABPBasicData BasicData,
-            IBUC_ABPCharacterData ChrData,
-            IBUC_ABPBGUCharacterData BGUData,
-            IBUC_ABPCommonLocomotionData LocomotionData,
-            IBUC_ABPSpecialMoveData SpecialMoveData,
-            IBUC_ABPHelperData HelperData,
-            float DeltaTime)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return;
-
-            if (Owner is not BGUCharacterCS)
-                return;
-
-            if (Owner.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return;
-            }
-
-            var playerState = DI.Instance.PlayerState;
-
-            if (Owner != playerState.LocalMainCharacter?.GetLocalState().Pawn)
-            {
-                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
-                if (!mainEntity.HasValue)
-                    return;
-
-                ref var mainComp = ref mainEntity.Value.GetState();
-                if (ChrData is BUC_ABPCharacterData characterData
-                    && mainComp.MoveAcceleration.ToFVector().Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance)
-                    && !mainComp.MoveAcceleration.ToFVector().Equals(characterData.MoveAcceleration, Constants.FloatComparisonTolerance))
-                {
-                    Logging.LogDebug("Setting characterData.MoveAcceleration = zero in BUC_ABPPlayerLocomotionData.Update prefix");
-                    characterData.MoveAcceleration = FVector.ZeroVector;
-                }
-            }
-        }
-
         public static void Postfix(
             BUC_ABPPlayerLocomotionData __instance,
             AActor Owner,
@@ -190,11 +147,35 @@ namespace WukongMp.Api.Patches
             else
             {
                 var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
-                if (!mainEntity.HasValue)
-                    return;
+                if (mainEntity.HasValue)
+                {
+                    ref var mainComp = ref mainEntity.Value.GetState();
+                    __instance.bShouldWaitRotateFinished = mainComp.ShouldWaitRotateFinished;
+                }
+                else
+                {
+                    // maybe it's a monkey summon monster
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(Owner);
+                    if (tamerEntity.HasValue)
+                    {
+                        ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                        if (!localTamer.IsTamerSynced)
+                        {
+                            return;
+                        }
 
-                ref var mainComp = ref mainEntity.Value.GetState();
-                __instance.bShouldWaitRotateFinished = mainComp.ShouldWaitRotateFinished;
+                        if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                        {
+                            ref var anim = ref tamerEntity.Value.GetAnimation();
+                            anim.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
+                        }
+                        else
+                        {
+                            ref var anim = ref tamerEntity.Value.GetAnimation();
+                            __instance.bShouldWaitRotateFinished = anim.ShouldWaitRotateFinished;
+                        }
+                    }
+                }
             }
         }
     }

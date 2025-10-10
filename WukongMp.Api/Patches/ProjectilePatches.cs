@@ -67,8 +67,12 @@ public class PatchOnSwitchBulletTarget
                     Logging.LogError("Could not find tamer entity for projectile target");
                 }
             }
-            Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", ProjectileActor.GetClass().GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, InnerTarget.GetName());
-            DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(ProjectileActor.GetClass().GetName(), newTargetId, SocketName));
+            var projectileClass = ProjectileActor.GetClass();
+            if (projectileClass != null)
+            {
+                Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, InnerTarget.GetName());
+                DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(projectileClass.GetName(), newTargetId, SocketName));
+            }
             return true;
         }
         return true;
@@ -107,8 +111,12 @@ public class PatchOnSwitchBulletInfoIfNeed
 
         if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
         {
-            Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", ProjectileActor.GetClass().GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, BulletSwitchID);
-            DI.Instance.Rpc.SendSwitchOneProjectile(new ProjectileSwitchData(ProjectileActor.GetClass().GetName(), BulletSwitchID, SwitchIdx));
+            var projectileClass = ProjectileActor.GetClass();
+            if (projectileClass != null)
+            {
+                Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, BulletSwitchID);
+                DI.Instance.Rpc.SendSwitchOneProjectile(new ProjectileSwitchData(projectileClass.GetName(), BulletSwitchID, SwitchIdx));
+            }
             return true;
         }
         return true;
@@ -131,8 +139,12 @@ public static class PatchOnProjectileDead
         var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
         if (projectile != null && DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
         {
-            Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
-            DI.Instance.Rpc.SendProjectileDead(new ProjectileDeadData(projectile.GetClass().GetName(), Reason));
+            var projectileClass = projectile.GetClass();
+            if (projectileClass != null)
+            {
+                Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
+                DI.Instance.Rpc.SendProjectileDead(new ProjectileDeadData(projectileClass.GetName(), Reason));
+            }
         }
     }
 }
@@ -165,8 +177,12 @@ public static class PatchOnSetMoveMode
 
         if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
         {
-            Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectile.GetClass().GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, MoveMode);
-            DI.Instance.Rpc.SendProjectileMoveMode(new ProjectileMoveModeData(projectile.GetClass().GetName(), MoveMode));
+            var projectileClass = projectile.GetClass();
+            if (projectileClass != null)
+            {
+                Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, MoveMode);
+                DI.Instance.Rpc.SendProjectileMoveMode(new ProjectileMoveModeData(projectileClass.GetName(), MoveMode));
+            }
         }
     }
 }

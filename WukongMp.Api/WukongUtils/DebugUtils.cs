@@ -70,7 +70,11 @@ public static class DebugUtils
 
         foreach (var actor in allActors)
         {
-            var className = actor.GetClass().GetName();
+            if (actor == null)
+                continue;
+            var className = actor.GetClass()?.GetName();
+            if (className == null)
+                continue;
             var distance = FVector.Distance(actor.GetActorLocation(), playerLocation);
             if (distance < radius && className.Contains("BP_DynamicObstcle"))
             {

@@ -41,7 +41,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                     localTamerComp.IsTamerSynced = true;
 #if TESTING
                     ref var nameComp = ref entity.GetComponent<NicknameComponent>();
-                    nameComp.Nickname = actor.GetClass().GetName();
+                    nameComp.Nickname = actor.GetClass()?.GetName();
                     MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity));
 #endif
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);

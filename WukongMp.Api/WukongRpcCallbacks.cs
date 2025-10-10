@@ -452,6 +452,11 @@ public partial class WukongRpcCallbacks : IDisposable
 
             var fullMontagePath = data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.MontagePath) : data0.MontagePath;
 
+            if (pawn.Mesh == null)
+            {
+                self._logger.LogError("pawn.Mesh is null");
+                return;
+            }
             var animInstance = pawn.Mesh.GetAnimInstance();
             if (animInstance == null)
             {

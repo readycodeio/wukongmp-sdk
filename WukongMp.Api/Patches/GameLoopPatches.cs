@@ -62,13 +62,15 @@ public static class ReceiveTickPatch
     {
         ref var localMainComp = ref mainEntity.GetLocalState();
 
-        if (localMainComp.Pawn == null)
+        if (localMainComp.Pawn == null || localMainComp.Pawn.Mesh == null)
             return;
 
         var montageState = localMainComp.MontageState;
         if (montageState.LocalAnimationInstance == null)
         {
             montageState.LocalAnimationInstance = localMainComp.Pawn.Mesh.GetAnimInstance();
+            if (montageState.LocalAnimationInstance == null)
+                return;
         }
 
         var currentMontage = localMainComp.Pawn.GetCurrentMontage();

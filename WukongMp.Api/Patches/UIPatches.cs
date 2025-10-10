@@ -258,12 +258,15 @@ public class PatchUISetGamePaused
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchSetGamePause
 {
-    public static bool Prefix(EPauseEvent PauseEvent)
+    public static bool Prefix(EPauseEvent PauseEvent, bool bPause)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!DI.Instance.Connection.IsRunning)
             return true;
 
-        if (PauseEvent == EPauseEvent.OpenUI || PauseEvent == EPauseEvent.TakePhoto)
+        if (!bPause)
+            return true; // always allow unpausing
+        
+        if (PauseEvent is EPauseEvent.OpenUI or EPauseEvent.TakePhoto)
         {
             return false;
         }
