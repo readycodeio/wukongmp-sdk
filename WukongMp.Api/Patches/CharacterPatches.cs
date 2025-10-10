@@ -402,6 +402,7 @@ namespace WukongMp.Api.Patches
                                 __instance.MoveAcceleration = FVector.ZeroVector;
                                 anim.MoveAcceleration = FVector.ZeroVector.ToVector3();
                                 __instance.LastVelocity = FVector.ZeroVector;
+                                __instance.MovementComp.Velocity = FVector.ZeroVector;
                             }
                         }
                     }
