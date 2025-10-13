@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using b1.GSMUI;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
@@ -265,7 +266,7 @@ public class PatchSetGamePause
 
         if (!bPause)
             return true; // always allow unpausing
-        
+
         if (PauseEvent is EPauseEvent.OpenUI or EPauseEvent.TakePhoto)
         {
             return false;
@@ -402,5 +403,21 @@ public static class PatchOnInfoChange
         }
 
         return null;
+    }
+}
+
+[HarmonyPatch(typeof(GSMUITickMgr), nameof(GSMUITickMgr.DoGSTicking))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchDoGSTicking
+{
+    public static void Prefix(List<IGSMUITickable> ___TickingQueue)
+    {
+        for (var i = ___TickingQueue.Count - 1; i >= 0; --i)
+        {
+            if (___TickingQueue[i] == null)
+            {
+                ___TickingQueue.RemoveAt(i);
+            }
+        }
     }
 }
