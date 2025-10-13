@@ -1,6 +1,10 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading;
 using b1;
 using b1.BGW;
+using b1.GSMUI;
 using b1.GSMUI.GSWidget;
 using b1.Localization;
 using b1.UI.Comm;
@@ -10,11 +14,6 @@ using GSE.GSUI;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using ResB1;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using b1.GSMUI;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
@@ -395,14 +394,22 @@ public static class PatchOnInfoChange
         return AccessTools.Method("B1UI.GSUI.UILoadingAdaptor:OnInfoChange");
     }
 
-    public static Exception? Finalizer(Exception? __exception)
+    public static bool Prefix(ChangeReason Reason, FLoadingAdaptorInfo NewValue, UObject ___WorldContext)
     {
-        if (__exception != null)
+        if (Reason == ChangeReason.UiInit)
+            return true;
+
+        var chapterDesc = GameDBRuntime.GetChapterDescByLevelId(NewValue.TargetLevelId);
+        if (chapterDesc == null)
         {
-            Logging.LogError("Exception in OnInfoChange: {Exception}", __exception);
+            return true;
         }
 
-        return null;
+        if (!NewValue.IsFadeIn)
+            return true;
+
+        int curLevelId = BGUFuncLibMap.GetCurLevelId(___WorldContext);
+        return NewValue.TargetLevelId != curLevelId;
     }
 }
 
