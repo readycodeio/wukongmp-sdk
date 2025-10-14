@@ -89,8 +89,9 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
 
             if (metaComp.Owner != state.LocalPlayerId)
             {
-                events.Evt_AIPerceptionSetting.Invoke(false);
                 events.Evt_AIPauseBT.Invoke(true);
+                events.Evt_AIPauseFsm.Invoke(true);
+                events.Evt_AIPerceptionSetting.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
 
