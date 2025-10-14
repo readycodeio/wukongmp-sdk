@@ -292,6 +292,7 @@ public class PatchOnClickOpenMapUI
 [HarmonyPatchCategory(Constants.PvpPatches)]
 public class PatchShrineRegisterFunc
 {
+    [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
     public static MethodBase TargetMethod()
     {
         var specializedType = typeof(FMenuHelper<EShrineMenuTag>);

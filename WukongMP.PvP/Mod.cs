@@ -100,7 +100,6 @@ namespace WukongMp.PvP
             if (!DI.Instance.Connection.IsRunning)
             {
                 DI.Instance.EcsLoop.Start();
-                DI.Instance.ShimEcsLoop.Start();
                 DI.Instance.Connection.Start();
             }
             else

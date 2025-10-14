@@ -345,7 +345,7 @@ public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
 }
 
 [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.SaveDataToSlot))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(Constants.CoopPatches)]
 public class PatchGSWindowsPlatformSaveGame
 {
     private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)

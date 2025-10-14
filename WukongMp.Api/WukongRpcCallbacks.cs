@@ -213,7 +213,7 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, data);
     }
 
-    [RpcEvent(RelayMode.AreaOfInterestAll)] // TODO: Check if this is the right relay mode for this event
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>

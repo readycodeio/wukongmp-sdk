@@ -5,7 +5,6 @@ using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -15,6 +14,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
+    // TODO: Duplication of character patch?
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerManagerTick

@@ -95,8 +95,11 @@ public sealed class WukongWidgetManager : IDisposable
 
     public void ShowInGameWidgets()
     {
-        CoopStatusWidget.Instance.SetVisibility(true);
-        CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+        if (Constants.IsCoop)
+        {
+            CoopStatusWidget.Instance.SetVisibility(true);
+            CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+        }
         PingIndicatorWidget.Instance.SetVisibility(true);
         ChatWidget.Instance.SetVisibility(true);
     }

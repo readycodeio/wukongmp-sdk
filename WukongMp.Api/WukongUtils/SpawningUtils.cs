@@ -235,6 +235,8 @@ public static class SpawningUtils
         var guid = Guid.NewGuid().ToString();
 
         Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
+        //TODO: Send spawn to others with known guid
+
         SpawnUnitLocally(guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
     }
 
@@ -284,14 +286,6 @@ public static class SpawningUtils
         {
             SetMonkeyBotConfig(tamerActor.GetMonster());
         }
-    }
-
-    // FIXME: This shouldn't be used, instead figure out the team ID on the callee side
-    public static void SpawnBots(PlayerEntity playerEntity)
-    {
-        var teamId = playerEntity.GetState().TeamId;
-        var oppositeId = PvPUtils.GetOppositeTeam(teamId);
-        SpawnBots(oppositeId);
     }
 
     public static void SpawnBots(int teamId)

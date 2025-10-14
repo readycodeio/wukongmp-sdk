@@ -191,19 +191,20 @@ public partial class WukongPVP : IDisposable
             teamIndex[teamsIds[i]] = i;
         }
 
-        foreach (var (playerId, _, mainEntity) in playerEntities)
+        foreach (var (playerId, playerEntity, mainEntity) in playerEntities)
         {
             ref var localMainComp = ref mainEntity.GetLocalState();
-            ref readonly var teamComp = ref mainEntity.GetTeam();
+            //ref readonly var teamComp = ref mainEntity.GetTeam();
+            var team = playerEntity.GetState().TeamId;
             
-            var teamBaseAngle = teamIndex[teamComp.TeamId] * teamAngleStep;
-            var memberIndex = teamMemberIndex[teamComp.TeamId];
+            var teamBaseAngle = teamIndex[team] * teamAngleStep;
+            var memberIndex = teamMemberIndex[team];
 
             var angle = teamBaseAngle + (memberIndex + 1) * entityOffsetAngle;
             var x = center.X + radius * MathF.Cos(angle);
             var y = center.Y + radius * MathF.Sin(angle);
 
-            teamMemberIndex[teamComp.TeamId]++;
+            teamMemberIndex[team]++;
             var newPlayerLocation = SpawningUtils.AdjustSpawnLocation(localMainComp.Pawn, new FVector(x, y, center.Z));
             var payload = new PlayerTransformData(playerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
             _rpc.SendBroadcastPlayerTransform(payload);
@@ -354,7 +355,11 @@ public partial class WukongPVP : IDisposable
             // FIXME: Is there any way to get rid of having those checks all over the place? Seems very tedious,
             // and it handles a fringe case where somehow the player got disconnected.
             if (_playerState.LocalPlayerEntity != null)
-                SpawningUtils.SpawnBots(_playerState.LocalPlayerEntity.Value);
+            {
+                var teamId = _playerState.LocalPlayerEntity.Value.GetState().TeamId;
+                var oppositeId = PvPUtils.GetOppositeTeam(teamId);
+                _ecsLoop.Scheduler.Schedule(static (_, oppositeId0) => { SpawningUtils.SpawnBots(oppositeId0); }, oppositeId);
+            }
         }
     }
 
@@ -445,6 +450,12 @@ public partial class WukongPVP : IDisposable
             ref var player = ref playerEntity.Value.GetState();
             var teamId = PvPUtils.GetOppositeTeam(player.TeamId);
             player.TeamId = teamId;
+
+            var mainCharacter = _playerState.LocalMainCharacter;
+            mainCharacter.Value.SetTeam(new TeamComponent()
+            {
+                TeamId = teamId,
+            });
         }
     }
     
@@ -848,9 +859,12 @@ public partial class WukongPVP : IDisposable
         if (playerEntity == null)
             return;
         var playerId = playerEntity.Value.Entity.GetComponent<MetadataComponent>().Owner;
-        var spawnPosition = GetSpawnPosition(playerId);
-        var data = new PlayerTransformData(playerId, spawnPosition, FRotator.ZeroRotator);
-        _rpc.OnBroadcastPlayerTransform(data);
+        ref var player = ref playerEntity.Value.GetState();
+        player.TeamId = GetSmallerTeamId();
+        Logging.LogDebug("Assigned team {Id} for player", player.TeamId);
+        //var spawnPosition = GetSpawnPosition(playerId);
+        //var data = new PlayerTransformData(playerId, spawnPosition, FRotator.ZeroRotator);
+        //_rpc.OnBroadcastPlayerTransform(data);
     }
     
     private void OnOtherPlayerInsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerInsideAreaReason arg3)

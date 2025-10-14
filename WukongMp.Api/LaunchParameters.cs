@@ -42,20 +42,26 @@ public class LaunchParameters
     {
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
-        // REQUIRED: API base URL
-        ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
-        if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+        if (Constants.IsCoop)
         {
-            Logging.LogError("API base URL not provided, launch the game from the ReadyM Launcher.");
-            return;
+            // REQUIRED: API base URL
+            ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
+            if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+            {
+                Logging.LogError("API base URL not provided, launch the game from the ReadyM Launcher.");
+                return;
+            }
         }
-        
-        // REQUIRED: JWT token
-        JwtToken = data.GetValueOrDefault("JWT_TOKEN");
-        if (string.IsNullOrWhiteSpace(JwtToken))
+
+        if (Constants.IsCoop)
         {
-            Logging.LogError("Authorization token not provided, launch the game from the ReadyM Launcher.");
-            return;
+            // REQUIRED: JWT token
+            JwtToken = data.GetValueOrDefault("JWT_TOKEN");
+            if (string.IsNullOrWhiteSpace(JwtToken))
+            {
+                Logging.LogError("Authorization token not provided, launch the game from the ReadyM Launcher.");
+                return;
+            }
         }
 
         // REQUIRED: user GUID
@@ -77,15 +83,18 @@ public class LaunchParameters
             return;
         }
 
-        // REQUIRED: server ID
-        var serverIdString = data.GetValueOrDefault("SERVER_ID");
-        if (string.IsNullOrWhiteSpace(serverIdString))
+        if (Constants.IsCoop)
         {
-            Logging.LogError("Server ID not provided, launch the game from the ReadyM Launcher.");
-            return;
-        }
+            // REQUIRED: server ID
+            var serverIdString = data.GetValueOrDefault("SERVER_ID");
+            if (string.IsNullOrWhiteSpace(serverIdString))
+            {
+                Logging.LogError("Server ID not provided, launch the game from the ReadyM Launcher.");
+                return;
+            }
 
-        ServerId = int.Parse(serverIdString);
+            ServerId = int.Parse(serverIdString);
+        }
 
         // REQUIRED: server IP and port number
         ServerIp = data.GetValueOrDefault("SERVER_IP");
