@@ -404,7 +404,7 @@ namespace WukongMp.Api.Patches
                                 await Task.Delay(5000);
                                 Utils.TryRunOnGameThread(() =>
                                 {
-                                    SpawningUtils.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId);
+                                    SpawningUtils.SpawnUnitAsOwner(CharacterKind.DaSheng2, location, teamId);
                                     _pendingDaSheng--;
                                 });
                             });

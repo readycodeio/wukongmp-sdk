@@ -97,7 +97,7 @@ namespace WukongMp.Api.Patches
 
             if (DI.Instance.AreaState.IsMasterClient)
             {
-                if (__instance.TamerType != ETamerType.Summoned)
+                if (__instance.TamerType != ETamerType.Summoned && __instance.TamerType != ETamerType.Spawned)
                 {
                     var guid = BGU_DataUtil.GetActorGuid(__instance);
                     var tamerEntity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
@@ -138,8 +138,17 @@ namespace WukongMp.Api.Patches
                     ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                     var metadata = tamerEntity.Value.GetMeta();
                     TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
+
+                    if (Constants.IsPvP && __instance.TamerType == ETamerType.Spawned)
+                    {
+                        MarkerUtils.CreateMarkerForCharacter(tamerEntity.Value); // 3D marker above monster
+                        if (tamerEntity.Value.GetTamer().UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+                        {
+                            SpawningUtils.SetMonkeyBotConfig(tamer.GetMonster());
+                        }
+                    }
                 }
-                else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
+                else// if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
                 {
                     Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
                 }

@@ -450,12 +450,6 @@ public partial class WukongPVP : IDisposable
             ref var player = ref playerEntity.Value.GetState();
             var teamId = PvPUtils.GetOppositeTeam(player.TeamId);
             player.TeamId = teamId;
-
-            var mainCharacter = _playerState.LocalMainCharacter;
-            mainCharacter.Value.SetTeam(new TeamComponent()
-            {
-                TeamId = teamId,
-            });
         }
     }
     

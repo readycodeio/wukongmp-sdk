@@ -213,15 +213,12 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, data);
     }
 
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnSpawnUnits(PlayerId __sender, UnitSpawnRequestData data)
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnSpawnUnit(PlayerId __sender, UnitSpawnRequestData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
         {
-            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
-                return;
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            SpawningUtils.SpawnUnitsMaster(mainEntity, localMainComp.Pawn, data0.UnitName, data0.Count, data0.TeamId);
+            SpawningUtils.SpawnUnitLocally(data0.Guid, data0.UnitName, data0.TeamId, data0.Location);
         }, this, __sender, data);
     }
 
