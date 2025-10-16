@@ -119,6 +119,8 @@ public static class ReceiveTickPatch
                 return BGW_TickGroupMask.TG_PostUpdateWork;
             case 101:
                 return BGW_TickGroupMask.TG_PreAnim;
+            case 102:
+                return BGW_TickGroupMask.TG_DuringMovement;
             case 111:
                 return BGW_TickGroupMask.TG_BeforeStartPhysic;
             case 141:
