@@ -373,7 +373,7 @@ public static class SpawningUtils
         }
         if (safeClampToLand)
         {
-            FVector fVector = BGUFuncLibActorTransformCS.BGUGetActorLocation(tamerActor);
+            FVector fVector = tamerActor.BGUGetActorLocation();
             float scaledCapsuleHalfHeight = tamerActor.CapsuleComponent.GetScaledCapsuleHalfHeight();
             float scaledCapsuleRadius = tamerActor.CapsuleComponent.GetScaledCapsuleRadius();
             FVector start = fVector + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
@@ -382,7 +382,7 @@ public static class SpawningUtils
             if (USystemLibrary.CapsuleTraceSingleByProfile(world, start, end, scaledCapsuleRadius, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, list, EDrawDebugTrace.None, out var OutHit, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 3f))
             {
                 FVector newLocation = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(in OutHit.ImpactPoint) + FVector.UpVector * scaledCapsuleHalfHeight;
-                BGUFuncLibActorTransformCS.BGUSetActorLocation(tamerActor, newLocation, bSweep: false, bTeleport: false);
+                tamerActor.BGUSetActorLocation(newLocation, bSweep: false, bTeleport: false);
             }
         }
         if (B1Global.GIsBossRushMode)

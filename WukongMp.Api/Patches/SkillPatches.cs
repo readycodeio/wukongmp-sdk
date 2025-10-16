@@ -199,7 +199,7 @@ public static class PatchOnCastImmobilize
         {
             List<int> list = [cachedDesc.RangeRadius];
             AActor owner2 = __instance.GetOwner();
-            FVector baseLoc = BGUFuncLibActorTransformCS.BGUGetActorLocation(aBGUCharacter);
+            FVector baseLoc = aBGUCharacter.BGUGetActorLocation();
             int targetFilter = cachedDesc.TargetFilter;
             int targetTypeFilter = cachedDesc.TargetTypeFilter;
             int affiliationTypeFilter = cachedDesc.AffiliationTypeFilter;

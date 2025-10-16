@@ -55,7 +55,7 @@ namespace WukongMp.Api.DTO
             {
                 Summoner = summoner,
                 SummonID = value.SummonId,
-                SummonInstanceID = GameplayTagExtension.ConvertToCalliopeGuid(value.SummonInstanceId),
+                SummonInstanceID = value.SummonInstanceId.ConvertToCalliopeGuid(),
                 ServantTamerGuid = value.SummonGuid,
                 ServantType = value.ServantType,
                 SearchTargetType = value.SearchTargetType,
@@ -65,7 +65,7 @@ namespace WukongMp.Api.DTO
                 TamerTemplate = tamerTemplate,
                 SafeClampToLand = value.SafeClampToLand,
                 CatchTarget = target,
-
+                BirthBuffIDs = [],
                 MasterActor = value.IsSummonerAsMaster ? summoner : null,
                 DelayBornTime = value.DelayBornTime,
                 BornMontage = bornMontage,
@@ -120,7 +120,7 @@ namespace WukongMp.Api.DTO
                 Rotation = value.BornTransform.GetRotation().Rotator(),
                 SafeClampToLand = value.SafeClampToLand,
                 SummonId = value.SummonID,
-                SummonInstanceId = GameplayTagExtension.ConvertToGuid(value.SummonInstanceID),
+                SummonInstanceId = value.SummonInstanceID.ConvertToGuid(),
                 ServantType = value.ServantType,
                 SearchTargetType = value.SearchTargetType,
                 CooperativeSCGuid = value.CooperativeSCGuid,

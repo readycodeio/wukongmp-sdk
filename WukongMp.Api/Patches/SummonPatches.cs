@@ -17,7 +17,7 @@ public static class PatchRequestSpawnServant
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        if (InServantReq.ServantType == EServantType.NeutralAnimSpawn || InServantReq.ServantType == EServantType.PhantomRush)
+        if (InServantReq.ServantType is EServantType.NeutralAnimSpawn or EServantType.PhantomRush)
             return true;
 
         __result = null;
