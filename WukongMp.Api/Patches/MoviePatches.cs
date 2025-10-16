@@ -74,7 +74,7 @@ public static class PatchRequestPlayMovie
         if (actorByGuid != null)
         {
             movieInstance.OverlapGuid = Request.OverlapBoxGuid;
-            List<UActorComponent> componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass<USceneComponent>(), B1GlobalFNames.MatchPointA);
+            var componentsByTag = actorByGuid.GetComponentsByTag(UClass.GetClass<USceneComponent>(), B1GlobalFNames.MatchPointA);
             if (componentsByTag.Count > 0)
             {
                 movieInstance.PointAPos = ((USceneComponent)componentsByTag[0]).GetWorldTransform();

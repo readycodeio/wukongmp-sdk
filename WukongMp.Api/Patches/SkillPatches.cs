@@ -139,6 +139,8 @@ public static class PatchOnCastImmobilize
         BUC_CastImmobilizeData CastImmobilizeData = (BUC_CastImmobilizeData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "TargetInfoData");
         IBUC_TargetInfoData TargetInfoData = (IBUC_TargetInfoData)getter.Invoke(__instance, null);
+        getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "PassiveSkillData");
+        IBUC_PassiveSkillData PassiveSkillData = (IBUC_PassiveSkillData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "BuffData");
         IBUC_BuffData BuffData = (IBUC_BuffData)getter.Invoke(__instance, null);
 
@@ -174,8 +176,7 @@ public static class PatchOnCastImmobilize
             ConfigID = CastImmobilizeData.ResId;
         }
 
-        FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc = CastImmobilizeData.GetCachedImmobilizeConfigDesc(ConfigID);
-        if (cachedImmobilizeConfigDesc == null || BGW_LogUtil.LogIfNull(__instance.GetOwner() as ABGUCharacter, "CurCharacter is null"))
+        if (!PassiveSkillData.TryGetCachedDesc<FUStImmobilizeSkillConfigDesc>(ConfigID, out var cachedDesc) || BGW_LogUtil.LogIfNull(castingCharacter as ABGUCharacter, "CurCharacter is null"))
         {
             return false;
         }
@@ -186,30 +187,22 @@ public static class PatchOnCastImmobilize
             aBGUCharacter = TargetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
         }
 
-        if (BGW_LogUtil.LogIfNull(aBGUCharacter, "CurrentTarget As BGUCharacter is null") || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedImmobilizeConfigDesc.AffiliationTypeFilter))
+        if (aBGUCharacter == null || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedDesc.AffiliationTypeFilter))
         {
             Logging.LogDebug("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
             return false;
         }
 
-        DebugHelper.AssertNotNull(aBGUCharacter, "CurrentTarget As BGUCharacter is null");
-        int num = cachedImmobilizeConfigDesc.TargetCount <= 0 ? 1 : cachedImmobilizeConfigDesc.TargetCount;
-        List<AActor> outActors = [];
+        int num = ((cachedDesc.TargetCount <= 0) ? 1 : cachedDesc.TargetCount);
+        List<AActor> outActors = new();
         if (num > 1)
         {
-            List<int> list = [cachedImmobilizeConfigDesc.RangeRadius];
+            List<int> list = [cachedDesc.RangeRadius];
             AActor owner2 = __instance.GetOwner();
-
-            if (owner2.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return false;
-            }
-
-            FVector baseLoc = aBGUCharacter.BGUGetActorLocation();
-            int targetFilter = cachedImmobilizeConfigDesc.TargetFilter;
-            int targetTypeFilter = cachedImmobilizeConfigDesc.TargetTypeFilter;
-            int affiliationTypeFilter = cachedImmobilizeConfigDesc.AffiliationTypeFilter;
+            FVector baseLoc = BGUFuncLibActorTransformCS.BGUGetActorLocation(aBGUCharacter);
+            int targetFilter = cachedDesc.TargetFilter;
+            int targetTypeFilter = cachedDesc.TargetTypeFilter;
+            int affiliationTypeFilter = cachedDesc.AffiliationTypeFilter;
             IList<int> Prams = list;
             BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out outActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in Prams);
         }
@@ -237,7 +230,7 @@ public static class PatchOnCastImmobilize
             if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.ImmueImmobilizing))
             {
                 int actorResID = BGU_DataUtil.GetActorResID(item);
-                UBGWDataAsset? fXAssetByResID = AssetUtils.GetFxAssetByResId(castingCharacter, cachedImmobilizeConfigDesc.FailedFXs, actorResID, CastImmobilizeData.ResId);
+                var fXAssetByResID = ImmobilizeUtils.GetFxAssetByResId(castingCharacter, cachedDesc.FailedFXs, actorResID, CastImmobilizeData.ResId, CastImmobilizeData);
                 if (fXAssetByResID != null)
                 {
                     BUS_EventCollectionCS.Get(item)?.Evt_RequestSpawnFXByDispConfigDA.Invoke(fXAssetByResID, out var _);
@@ -253,8 +246,8 @@ public static class PatchOnCastImmobilize
                 continue;
             }
 
-            var hasBuff = BuffData.HasBuff(cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff);
-            ImmobilizeConfigInstance immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(item, castingCharacter, cachedImmobilizeConfigDesc, CastImmobilizeData.ResId, hasBuff);
+            var hasBuff = BuffData.HasBuff(cachedDesc.GreatSageTalentActiveBuff);
+            ImmobilizeConfigInstance immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(item, castingCharacter, cachedDesc, CastImmobilizeData.ResId, hasBuff, CastImmobilizeData);
             BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
 
             // broadcast
