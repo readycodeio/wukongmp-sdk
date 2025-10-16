@@ -32,8 +32,12 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             ref LocalTamerComponent localTamerComp,
             Entity entity) =>
         {
-            if (!localTamerComp.IsTamerSynced)
+            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
                 return;
+
+            var monster = localTamerComp.Tamer?.GetMonster();
+            if (monster != null && !localTamerComp.IsLocallySpawned)
+                TamerUtils.MarkMonsterLocallySpawned(ref localTamerComp, metaComp);
 
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
@@ -42,15 +46,14 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 return;
             }
 
-            var currentPhase = localTamerComp.Tamer?.CurrentRef?.Phase;
-            var monster = localTamerComp.Tamer?.GetMonster();
+            var currentPhase = localTamerComp.Tamer!.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 TamerUtils.SpawnMonsterLocally(new TamerEntity(entity));
             }
 
-            monster = localTamerComp.Tamer?.GetMonster();
-            currentPhase = localTamerComp.Tamer?.CurrentRef?.Phase;
+            monster = localTamerComp.Tamer.GetMonster();
+            currentPhase = localTamerComp.Tamer.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 if (_notYetSpawnedGuids.Add(tamerComp.Guid))
@@ -98,6 +101,15 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 events.Evt_AIPauseFsm.Invoke(true);
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
+            }
+
+            if (Constants.IsPvP && localTamerComp.Tamer.TamerType == ETamerType.Spawned)
+            {
+                MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity)); // 3D marker above monster
+                if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+                {
+                    SpawningUtils.SetMonkeyBotConfig(monster);
+                }
             }
 
             localTamerComp.IsMonsterActive = true;

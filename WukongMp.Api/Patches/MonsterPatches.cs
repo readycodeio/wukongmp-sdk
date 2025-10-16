@@ -118,44 +118,29 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerLoad
     {
+        // TODO: This patch could be removed - logic moved to SpawnTamersSystem
         public static void Postfix(FTamerRef __instance)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            try
+            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
+                return;
+
+            var tamer = __instance.InstancePtr.Get();
+
+            Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
+            var monsterGuid = BGU_DataUtil.GetActorGuid(tamer.GetMonster());
+            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
+            if (tamerEntity.HasValue)
             {
-                if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
-                    return;
-
-                var tamer = __instance.InstancePtr.Get();
-
-                Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
-                var monsterGuid = BGU_DataUtil.GetActorGuid(tamer.GetMonster());
-                var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
-                if (tamerEntity.HasValue)
-                {
-                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                    var metadata = tamerEntity.Value.GetMeta();
-                    TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
-
-                    if (Constants.IsPvP && __instance.TamerType == ETamerType.Spawned)
-                    {
-                        MarkerUtils.CreateMarkerForCharacter(tamerEntity.Value); // 3D marker above monster
-                        if (tamerEntity.Value.GetTamer().UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
-                        {
-                            SpawningUtils.SetMonkeyBotConfig(tamer.GetMonster());
-                        }
-                    }
-                }
-                else// if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
-                {
-                    Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
-                }
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                var metadata = tamerEntity.Value.GetMeta();
+                TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
             }
-            catch (Exception e)
+            else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
             {
-                Logging.LogException(e);
+                Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
             }
         }
     }
