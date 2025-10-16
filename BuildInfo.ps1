@@ -18,13 +18,13 @@ $overrideDestDir = "Mods/Overrides"
 # Define the files to copy
 
 $modFiles = @(
-    "WukongMp.Api.dll", 
-    "WukongMpMod.dll", 
-    "ReadyM.Api.dll", 
-    "ReadyM.Api.Multiplayer.dll", 
-    "ReadyM.Relay.Client.dll", 
-    "ReadyM.Relay.Common.dll", 
-    "ReadyM.Relay.Common.Wukong.dll", 
+    "WukongMp.Api.dll",
+    "WukongMpMod.dll",
+    "ReadyM.Api.dll",
+    "ReadyM.Api.Multiplayer.dll",
+    "ReadyM.Relay.Client.dll",
+    "ReadyM.Relay.Common.dll",
+    "ReadyM.Relay.Common.Wukong.dll",
     "Friflo.Engine.ECS.dll",
     "Friflo.Engine.ECS.Boost.dll",
     "Friflo.Json.Burst.dll",
@@ -80,6 +80,12 @@ $saveFiles = @(
     "ArchiveSaveFile.9.sav" # new game save
 ) # at least one file is required (temporarily) so that the game deson't think we are starting the game from Prologue
 
+
+if ($ModVariant -eq 'PvP')
+{
+    $saveFiles += "ArchiveSaveFile.0.sav" # PvP save
+}
+
 # List of culture codes
 $cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
 
@@ -96,33 +102,45 @@ $devFiles = $modFiles + @(
     @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
 )
 
-function CopyFiles($files, $sourceDir, $destDir) {
+function CopyFiles($files, $sourceDir, $destDir)
+{
     # Create the destination directory if it doesn't exist
-    if (!(Test-Path -Path $destDir)) {
+    if (!(Test-Path -Path $destDir))
+    {
         New-Item -ItemType Directory -Path $destDir -Force
     }
-    
+
     # Copy each file to the destination directory
-    foreach ($file in $files) {
+    foreach ($file in $files)
+    {
         $sourceFile = Join-Path -Path $sourceDir -ChildPath $file
         $destFile = Join-Path -Path $destDir -ChildPath $file
-        if ($file -eq "*") {
-            if (Test-Path -Path $destDir) {
+        if ($file -eq "*")
+        {
+            if (Test-Path -Path $destDir)
+            {
                 Remove-Item -Path $destDir -Recurse -Force
             }
             New-Item -ItemType Directory -Path $destDir -Force
             Copy-Item -Path $sourceFile -Destination $destDir -Recurse -Force
             Write-Output "Copied $file to $destDir (recursive)"
-        } elseif (Test-Path -Path $sourceFile -PathType Leaf) {
+        }
+        elseif (Test-Path -Path $sourceFile -PathType Leaf)
+        {
             Copy-Item -Path $sourceFile -Destination $destFile -Force
             Write-Output "Copied $file to $destDir"
-        } elseif (Test-Path -Path $sourceFile -PathType Container) {
-            if (Test-Path -Path $destFile) {
+        }
+        elseif (Test-Path -Path $sourceFile -PathType Container)
+        {
+            if (Test-Path -Path $destFile)
+            {
                 Remove-Item -Path $destFile -Recurse -Force
             }
             Copy-Item -Path $sourceFile -Destination $destFile -Recurse -Force
             Write-Output "Copied $file to $destDir (recursive)"
-        } else {
+        }
+        else
+        {
             Write-Output "[Error] $file does not exist in $sourceDir"
         }
     }
