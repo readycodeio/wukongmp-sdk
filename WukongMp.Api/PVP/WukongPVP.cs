@@ -839,6 +839,7 @@ public partial class WukongPVP : IDisposable
         Logging.LogInformation("Joined room");
 
         SetUpRoom();
+        LobbyStatusWidget.Instance.SetConnectedCount(OtherPlayers.Count(x => x.Player.GetState().IsReadyForPvP));
         LobbyStatusWidget.Instance.SetReadyCount(OtherPlayers.Count(x => x.Player.GetState().IsReadyForPvP));
         SetupMatchmaking();
 
