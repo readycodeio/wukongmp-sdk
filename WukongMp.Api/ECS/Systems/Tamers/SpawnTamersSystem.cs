@@ -6,6 +6,7 @@ using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
@@ -31,6 +32,9 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             ref LocalTamerComponent localTamerComp,
             Entity entity) =>
         {
+            if (!localTamerComp.IsTamerSynced)
+                return;
+
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
             if (localTamerComp.IsMonsterActive || !tamerComp.ShouldBeSpawned)
@@ -66,7 +70,8 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 {
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                    teamComp.TeamId = monster.GetTeamIDInCS();
+                    if (Constants.IsCoop)
+                        teamComp.TeamId = monster.GetTeamIDInCS();
 #if TESTING
                     hpComp.Hp = 10;
                     attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
