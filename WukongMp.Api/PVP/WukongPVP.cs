@@ -687,7 +687,7 @@ public partial class WukongPVP : IDisposable
         }
     }
 
-    private FVector GetSpawnPosition(PlayerId playerId)
+    private FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId)
     {
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -698,21 +698,14 @@ public partial class WukongPVP : IDisposable
         
         int maxPlayersCount = areaEntity.Value.GetRoom().MaxPlayers;
 
-        float angle = playerId.RawValue / (float)maxPlayersCount * 2f * FMath.PI;
+        float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
         float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
         float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
 
         var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
         var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-
-        var mainEntity = _playerState.GetMainCharacterById(playerId);
-        if (mainEntity == null)
-        {
-            Logging.LogError("Main character entity for player {PlayerId} is null", playerId);
-            return FVector.ZeroVector;
-        }
         
-        return SpawningUtils.AdjustSpawnLocation(mainEntity.Value.GetLocalState().Pawn, baseLocation);
+        return SpawningUtils.AdjustSpawnLocation(pawn, baseLocation);
     }
     
     private void SetupAddedPlayer(PlayerId playerId)
@@ -856,9 +849,9 @@ public partial class WukongPVP : IDisposable
         ref var player = ref playerEntity.Value.GetState();
         player.TeamId = GetSmallerTeamId();
         Logging.LogDebug("Assigned team {Id} for player", player.TeamId);
-        //var spawnPosition = GetSpawnPosition(playerId);
-        //var data = new PlayerTransformData(playerId, spawnPosition, FRotator.ZeroRotator);
-        //_rpc.OnBroadcastPlayerTransform(data);
+        var spawnPosition = GetSpawnPosition(GameUtils.GetControlledPawn(), playerId.RawValue);
+        var data = new PlayerTransformData(playerId, spawnPosition, FRotator.ZeroRotator);
+        _rpc.OnBroadcastPlayerTransform(data);
     }
     
     private void OnOtherPlayerInsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerInsideAreaReason arg3)
