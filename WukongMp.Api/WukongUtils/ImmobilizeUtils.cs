@@ -1,7 +1,10 @@
 ﻿using b1;
+using b1.BGW;
 using b1.ECS;
 using BtlB1;
+using System.Collections.Generic;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -31,15 +34,16 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         }
 
         var castImmobilizeData = (BUC_CastImmobilizeData)caster.GetDataByChunk(TypeManager.GetTypeIndex<BUC_CastImmobilizeData>());
+        var passiveSkillData = (BUC_PassiveSkillData)caster.GetDataByChunk(TypeManager.GetTypeIndex<BUC_PassiveSkillData>());
 
-        var cachedImmobilizeConfigDesc = castImmobilizeData.GetCachedImmobilizeConfigDesc(castImmobilizeData.ResId);
+        passiveSkillData.TryGetCachedDesc<FUStImmobilizeSkillConfigDesc>(castImmobilizeData.ResId, out var cachedImmobilizeConfigDesc);
         if (cachedImmobilizeConfigDesc == null)
         {
             Logging.LogError("cachedImmobilizeConfigDesc is null");
             return;
         }
 
-        var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff);
+        var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
         BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
     }
 
@@ -66,7 +70,7 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         playerEvents?.Evt_RelieveImmobilized.Invoke();
     }
 
-    public static ImmobilizeConfigInstance CreateImmobilizeConfig(AActor character, AActor casterActor, FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc, int castImmobilizeDataResId, bool hasBuff)
+    public static ImmobilizeConfigInstance CreateImmobilizeConfig(AActor character, AActor casterActor, FUStImmobilizeSkillConfigDesc cachedImmobilizeConfigDesc, int castImmobilizeDataResId, bool hasBuff, BUC_CastImmobilizeData castImmobilizeData)
     {
         var immobilizeConfigInstance = new ImmobilizeConfigInstance();
         var actorResID3 = BGU_DataUtil.GetActorResID(character);
@@ -76,12 +80,12 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         immobilizeConfigInstance.RepeatedImmobilizedDef = cachedImmobilizeConfigDesc.RepeatedImmobilizedDef * 0.0001f;
         immobilizeConfigInstance.CasterActor = casterActor;
         immobilizeConfigInstance.bEnableGreatSageTalent = cachedImmobilizeConfigDesc.GreatSageTalentActiveBuff > 0 && hasBuff;
-        immobilizeConfigInstance.BeginFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, castImmobilizeDataResId);
-        immobilizeConfigInstance.AlmostEndFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, castImmobilizeDataResId);
-        immobilizeConfigInstance.EndFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, castImmobilizeDataResId);
-        immobilizeConfigInstance.QuickFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, castImmobilizeDataResId);
+        immobilizeConfigInstance.BeginFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BeginFXs, actorResID3, castImmobilizeDataResId, castImmobilizeData);
+        immobilizeConfigInstance.AlmostEndFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.AlmostEndFXs, actorResID3, castImmobilizeDataResId, castImmobilizeData);
+        immobilizeConfigInstance.EndFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.EndFXs, actorResID3, castImmobilizeDataResId, castImmobilizeData);
+        immobilizeConfigInstance.QuickFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.QuickEndFXs, actorResID3, castImmobilizeDataResId, castImmobilizeData);
         immobilizeConfigInstance.BreakingFXsTriggerRatio = cachedImmobilizeConfigDesc.BreakingFXsTriggerRatio * 0.0001f;
-        immobilizeConfigInstance.BreakingFX = AssetUtils.GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, castImmobilizeDataResId);
+        immobilizeConfigInstance.BreakingFX = GetFxAssetByResId(character, cachedImmobilizeConfigDesc.BreakingFXs, actorResID3, castImmobilizeDataResId, castImmobilizeData);
         foreach (var beginEffect in cachedImmobilizeConfigDesc.BeginEffects)
         {
             immobilizeConfigInstance.BeginEffects.Add(new FSpellEffectForData(beginEffect));
@@ -103,5 +107,37 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         }
 
         return immobilizeConfigInstance;
+    }
+
+    public static UBGWDataAsset? GetFxAssetByResId(UObject context, IList<FPlayFXByResID> fXs, int targetResId, int ownerResId, BUC_CastImmobilizeData CastImmobilizeData)
+    {
+        string text = "";
+        foreach (var fx in fXs)
+        {
+            if (fx.ResID == targetResId)
+            {
+                text = fx.FXPathByDBC;
+                break;
+            }
+
+            if (fx.ResID == ownerResId)
+            {
+                text = fx.FXPathByDBC;
+            }
+        }
+
+        if (string.IsNullOrEmpty(text))
+        {
+            return null;
+        }
+
+        UBGWDataAsset uBGWDataAsset = CastImmobilizeData.TryGetDBCFromCache(text);
+        if (uBGWDataAsset == null)
+        {
+            uBGWDataAsset = BGW_PreloadAssetMgr.Get(context).TryGetCachedResourceObj<UBGWDataAsset>(text, ELoadResourceType.SyncLoadAndCache);
+            CastImmobilizeData.TryAddDBCCache(text, uBGWDataAsset);
+        }
+
+        return uBGWDataAsset;
     }
 }
