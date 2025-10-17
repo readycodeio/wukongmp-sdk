@@ -237,7 +237,7 @@ public static class SpawningUtils
             nameComp.Nickname = "Bot";
 
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, locaction.ToString());
-            DI.Instance.Rpc.SendSpawnUnit(new DTO.UnitSpawnRequestData(unitName, guid, teamId, locaction));
+            DI.Instance.Rpc.SendSpawnUnit(new DTO.UnitSpawnData(unitName, guid, teamId, locaction));
         }
     }
 

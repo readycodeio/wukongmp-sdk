@@ -145,10 +145,7 @@ public class WukongChatter : IDisposable
 
         if (shouldSpawn)
         {
-            _ecsLoop.Scheduler.Schedule(static (_, unitName0, count0, teamId0, location0) =>
-            {
-                SpawningUtils.SpawnUnitsAsOwner(unitName0, count0, teamId0, location0);
-            }, unitName, count, teamId, location);
+            _rpc.SendRequestSpawnUnits(new UnitSpawnRequestData(unitName, count, teamId, location));
             SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), args.Span[0]);
         }
     }

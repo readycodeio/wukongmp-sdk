@@ -1,6 +1,7 @@
 ﻿using b1;
 using BtlShare;
 using HarmonyLib;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
@@ -53,41 +54,7 @@ public static class PvpPatchAttrs
             ref var mainComp = ref mainEntity.Value.GetState();
 
             // local player (client)
-            if (mainComp.Hp <= -80000)
-            {
-                Logging.LogError("Would set HP to {HP}, but will not (OOB fall damage)", mainComp.Hp);
-                return;
-            }
-
-            var currentHp = __instance.GetFloatValue(EBGUAttrFloat.Hp);
-
-            if (mainComp.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
-            {
-                return; // do not reapply the same value
-            }
-
-            var setHp = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
-
-            if (!setHp.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
-            {
-                Logging.LogDebug("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, setHp);
-                // NOTE: This branch no longer does anything as ECS entities are propagated automatically
-            }
-
-            if (mainComp.IsDead)
-            {
-                var events = BUS_EventCollectionCS.Get(__instance.Owner);
-
-                if (events == null)
-                {
-                    Logging.LogError("events are null");
-                    return;
-                }
-
-                Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
-
-                events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-            }
+            SyncMainCharacterHp(__instance, ref mainComp);
         }
         else
         {
@@ -104,37 +71,7 @@ public static class PvpPatchAttrs
                     __instance.SetFloatValue((EBGUAttrFloat)attr, value);
                 }
 
-                if (mainComp.Hp <= -80000)
-                {
-                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
-                    return;
-                }
-
-                if (mainComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
-                {
-                    return; // do not reapply the same value
-                }
-
-                var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
-
-                if (!set.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
-                {
-                    Logging.LogDebug("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, set);
-                }
-
-                if (mainComp.IsDead)
-                {
-                    var events = BUS_EventCollectionCS.Get(__instance.Owner);
-
-                    if (events == null)
-                    {
-                        Logging.LogError("events are null");
-                        return;
-                    }
-
-                    Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
-                    events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-                }
+                SyncMainCharacterHp(__instance, ref mainComp);
             }
             else
             {
@@ -163,8 +100,35 @@ public static class PvpPatchAttrs
             }
         }
     }
-}
 
+    private static void SyncMainCharacterHp(BUC_AttrContainer attrContainer, ref MainCharacterComponent mainCharacter)
+    {
+        if (mainCharacter.Hp <= -80000)
+        {
+            Logging.LogError("Would set HP to {HP}, but will not (OOB fall damage)", mainCharacter.Hp);
+            return;
+        }
+
+        var currentHp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
+
+        if (mainCharacter.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
+            return; // do not reapply the same value
+
+        var setHp = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, mainCharacter.Hp);
+
+        if (!setHp.Equals(mainCharacter.Hp, Constants.FloatComparisonTolerance))
+        {
+            Logging.LogDebug("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainCharacter.CharacterNickName, mainCharacter.Hp, setHp);
+        }
+
+        if (mainCharacter.IsDead)
+        {
+            Logging.LogDebug("Applying unit dead for player {PlayerId}", mainCharacter.PlayerId);
+            var events = BUS_EventCollectionCS.Get(attrContainer.Owner);
+            events?.Evt_UnitDead!.Invoke(attrContainer.Owner, EDeadReason.SkillDamage);
+        }
+    }
+}
 
 [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
 [HarmonyPatchCategory(Constants.PvpPatches)]
