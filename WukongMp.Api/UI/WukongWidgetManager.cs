@@ -49,8 +49,7 @@ public sealed class WukongWidgetManager : IDisposable
     public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
     {
         ref var playerComp = ref playerEntity.GetState();
-        var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
-        
+
         if (Constants.IsCoop)
         {
             CoopStatusWidget.Instance.RemovePlayer(playerComp.NickName);
@@ -58,6 +57,7 @@ public sealed class WukongWidgetManager : IDisposable
         }
         else
         {
+            var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
             LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
         }
 
@@ -70,7 +70,19 @@ public sealed class WukongWidgetManager : IDisposable
         if (player.HasValue)
         {
             var nickname = player.Value.GetState().NickName;
-            CoopStatusWidget.Instance.AddPlayer(nickname);
+            if (Constants.IsCoop)
+            {
+                CoopStatusWidget.Instance.AddPlayer(nickname);
+            }
+            else
+            {
+                var main = _playerState.GetMainCharacterById(playerId);
+                if (main.HasValue)
+                {
+                    UpdatePlayerTeam(player.Value, main.Value);
+                }
+            }
+
             RefreshWidgets();
         }
     }
@@ -106,6 +118,7 @@ public sealed class WukongWidgetManager : IDisposable
             LobbyStatusWidget.Instance.SetVisibility(true);
             LobbyStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
         }
+
         PingIndicatorWidget.Instance.SetVisibility(true);
         ChatWidget.Instance.SetVisibility(true);
     }

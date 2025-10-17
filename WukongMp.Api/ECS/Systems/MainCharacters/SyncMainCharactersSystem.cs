@@ -87,7 +87,7 @@ public class SyncMainCharactersSystem(
             if (playerTeamId != mainEntity.GetTeam().TeamId)
             {
                 logger.LogDebug("Assigning team ID {TeamId} to player {Name} from player to character", playerTeamId, playerComp.NickName);
-                mainEntity.SetTeam(new TeamComponent()
+                mainEntity.SetTeam(new TeamComponent
                 {
                     TeamId = playerTeamId,
                 });
