@@ -25,6 +25,9 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
     public ref readonly TeamComponent GetTeam()
         => ref Entity.GetComponent<TeamComponent>();
     
+    public ref PvPComponent GetPvP()
+        => ref Entity.GetComponent<PvPComponent>();
+    
     public void SetTeam(TeamComponent team)
         => Entity.Set(team);
     

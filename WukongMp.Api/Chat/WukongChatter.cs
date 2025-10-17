@@ -219,10 +219,10 @@ public class WukongChatter : IDisposable
         {
             var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
 
-            var playerEntity = _playerState.LocalPlayerEntity;
+            var playerEntity = _playerState.LocalMainCharacter;
             if (playerEntity == null)
                 return;
-            playerEntity.Value.GetState().IsSpectator = isSpectator;
+            playerEntity.Value.GetPvP().IsSpectator = isSpectator;
         }
     }
 

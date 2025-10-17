@@ -39,7 +39,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             PvPUtils.SetupSpectatorUi();
         }
 
-        widgetManager.UpdatePlayerTeam(playerEntity);
+        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
         return true;
     }
 
@@ -84,7 +84,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             }
         }
 
-        widgetManager.UpdatePlayerTeam(playerEntity);
+        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
 
         return true;
     }
@@ -133,6 +133,6 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
         }
 
-        widgetManager.UpdatePlayerTeam(playerEntity);
+        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
     }
 }

@@ -756,7 +756,7 @@ namespace WukongMp.Api.Patches
             if (!mainEntity.HasValue)
                 return true;
 
-            return !(mainEntity.Value.GetLocalState().Pawn == __instance.GetOwner() && playerEntity?.GetState().IsSpectator == true);
+            return !(mainEntity.Value.GetLocalState().Pawn == __instance.GetOwner() && mainEntity.Value.GetPvP().IsSpectator);
         }
     }
 

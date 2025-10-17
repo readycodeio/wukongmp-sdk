@@ -182,11 +182,17 @@ public class DI
         var serverRpc = ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
+        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
+        
+        WukongPVP? pvp = null;
+        if (Constants.IsPvP)
+            pvp = PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, rpc, chatter, ecsLoop, logger);
+        
         var synchronizer = Synchronizer = new WukongSynchronizer(
             worldEvent,
             state,
             wukongArchetype,
-            playerArchetype,
+            pvp,
             world,
             areaState,
             playerState,
@@ -207,7 +213,6 @@ public class DI
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
 
-        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
 
         var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
         var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
@@ -216,8 +221,6 @@ public class DI
 
         if (Constants.IsCoop)
             Coop = new WukongCoop(serializer, relayClient, areaState, playerState, synchronizer);
-        else
-            PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, synchronizer, rpc, chatter, ecsLoop, logger);
 
         // ---
 

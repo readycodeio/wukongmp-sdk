@@ -21,11 +21,10 @@ public static class SpawningUtils
     {
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
+        var pvpComp = mainEntity.GetPvP();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
         var playerId = mainComp.PlayerId;
-        
-        ref var player = ref playerEntity.GetState();
         
         if (localMainComp.HasPawn)
         {
@@ -132,8 +131,8 @@ public static class SpawningUtils
         Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickName);
 
         // NOTE: Player properties already set in ECS. Therefore the following can be removed
-        Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", player.IsReadyForPvP);
-        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", player.IsSpectator);
+        Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", pvpComp.IsReadyForPvP);
+        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
 
         // FIXME: (refactor) Equipment should be synced on the actor here
 

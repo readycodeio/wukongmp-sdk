@@ -46,10 +46,11 @@ public sealed class WukongWidgetManager : IDisposable
         _eventBus.OnExitLevel -= OnExitLevel;
     }
 
-    public void UpdatePlayerTeam(PlayerEntity playerEntity)
+    public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
     {
         ref var playerComp = ref playerEntity.GetState();
-
+        var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
+        
         if (Constants.IsCoop)
         {
             CoopStatusWidget.Instance.RemovePlayer(playerComp.NickName);
@@ -57,7 +58,7 @@ public sealed class WukongWidgetManager : IDisposable
         }
         else
         {
-            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, playerComp.IsSpectator);
+            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
         }
 
         RefreshWidgets();
@@ -90,7 +91,7 @@ public sealed class WukongWidgetManager : IDisposable
         LobbyStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(_clientState.AreaPlayers.Count, _playerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
+        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(_clientState.AreaPlayers.Count, _playerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
     }
 
     public void ShowInGameWidgets()

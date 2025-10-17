@@ -18,7 +18,9 @@ using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.MainCharacters;
+using WukongMp.Api.ECS.Systems.PvP;
 using WukongMp.Api.ECS.Systems.Tamers;
+using WukongMp.Api.PVP;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -37,7 +39,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         ArchetypeEventRouter archetypeEvent,
         ClientState state,
         ClientWukongArchetypeRegistration wukongArchetype,
-        DefaultPlayerArchetypeRegistration playerArchetype,
+        WukongPVP? pvp,
         Store world,
         WukongAreaState areaState,
         WukongPlayerState playerState,
@@ -79,7 +81,10 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
         _syncGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
 
-        _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));
+        if (pvp != null)
+        {
+            _syncGroup.Add(new ReadinessSystem(areaState, pvp));
+        }
 
         _syncGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_syncGroup);
