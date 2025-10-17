@@ -20,7 +20,7 @@ public static class DebugUtils
         // check for presence of a known UE4SS files
         var win64Folder = FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64");
         var dwmApiPath = FPaths.Combine(win64Folder, "dwmapi.dll");
-        var ue4ssFolder = FPaths.Combine(FPaths.ProjectDir, "ue4ss");
+        var ue4ssFolder = FPaths.Combine(win64Folder, "ue4ss");
 
         if (File.Exists(dwmApiPath))
         {
@@ -41,7 +41,8 @@ public static class DebugUtils
                 var mods = Directory.EnumerateDirectories(modsPath);
                 foreach (var mod in mods)
                 {
-                    DI.Instance.Logger.LogInformation("Found UE4SS mod folder: {ModFolder}", mod);
+                    var dirName = Path.GetFileName(mod);
+                    DI.Instance.Logger.LogInformation("Found UE4SS mod folder: {ModFolder}", dirName);
                 }
             }
         }
