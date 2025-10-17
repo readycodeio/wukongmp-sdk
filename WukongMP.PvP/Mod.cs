@@ -111,23 +111,27 @@ namespace WukongMp.PvP
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
             _logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
-            Debug.Assert(DI.Instance.Patcher.IsPatched);
+            // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
+            Utils.TryRunOnGameThread(() =>
+            {
+                Debug.Assert(DI.Instance.Patcher.IsPatched);
 
-            if (!DI.Instance.Connection.IsRunning)
-            {
-                DI.Instance.EcsLoop.Start();
-                DI.Instance.Connection.Start();
-            }
-            else
-            {
-                _logger.LogInformation("WukongMP is already initialized");
-                return;
-            }
+                if (!DI.Instance.Connection.IsRunning)
+                {
+                    DI.Instance.EcsLoop.Start();
+                    DI.Instance.Connection.Start();
+                }
+                else
+                {
+                    _logger.LogInformation("WukongMP is already initialized");
+                    return;
+                }
 
-            if (!DI.Instance.Connection.RequestedConnect)
-            {
-                DI.Instance.Connection.Connect();
-            }
+                if (!DI.Instance.Connection.RequestedConnect)
+                {
+                    DI.Instance.Connection.Connect();
+                }
+            });
 
             if (!DI.Instance.Connection.RequestedConnect)
             {
@@ -240,21 +244,24 @@ namespace WukongMp.PvP
                 return;
             }
 
-            if (DI.Instance.Patcher.IsPatched)
+            Utils.TryRunOnGameThread(() =>
             {
-                DI.Instance.Patcher.Unpatch();
-            }
+                if (DI.Instance.Patcher.IsPatched)
+                {
+                    DI.Instance.Patcher.Unpatch();
+                }
 
-            if (DI.Instance.Connection.RequestedConnect)
-            {
-                DI.Instance.Connection.Disconnect();
-            }
+                if (DI.Instance.Connection.RequestedConnect)
+                {
+                    DI.Instance.Connection.Disconnect();
+                }
 
-            if (DI.Instance.Connection.IsRunning)
-            {
-                DI.Instance.Connection.Stop();
-                DI.Instance.EcsLoop.Stop();
-            }
+                if (DI.Instance.Connection.IsRunning)
+                {
+                    DI.Instance.Connection.Stop();
+                    DI.Instance.EcsLoop.Stop();
+                }
+            });
         }
 
         public object GetReloadContext()
