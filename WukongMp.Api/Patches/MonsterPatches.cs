@@ -114,37 +114,6 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchTamerLoad
-    {
-        // TODO: This patch could be removed - logic moved to SpawnTamersSystem
-        public static void Postfix(FTamerRef __instance)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return;
-
-            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
-                return;
-
-            var tamer = __instance.InstancePtr.Get();
-
-            Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
-            var monsterGuid = BGU_DataUtil.GetActorGuid(tamer.GetMonster());
-            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
-            if (tamerEntity.HasValue)
-            {
-                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                var metadata = tamerEntity.Value.GetMeta();
-                TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
-            }
-            else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
-            {
-                Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
-            }
-        }
-    }
-
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
     [HarmonyPatchCategory(Constants.GlobalPatches)]
     public class PatchCanTurnBack2Loaded
@@ -153,41 +122,6 @@ namespace WukongMp.Api.Patches
         {
             __result = false;
             return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.TurnBack2Loaded))]
-    [HarmonyPatchCategory(Constants.CoopPatches)]
-    public class PatchTurnBack2Loaded
-    {
-        static bool Prefix(FTamerRef __instance)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return true;
-
-            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
-                return true;
-
-            var tamerActor = __instance.InstancePtr.Get();
-
-            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamerActor);
-            if (tamerEntity.HasValue)
-            {
-                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                if (localTamer.IsLocallySpawned)
-                {
-                    localTamer.IsLocallySpawned = false;
-                    ref var meta = ref tamerEntity.Value.GetMeta();
-                    DI.Instance.Rpc.SendUnitDespawn(meta.NetId);
-                }
-
-                return false;
-            }
-            else
-            {
-                Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamerActor.GetMonster()));
-                return true;
-            }
         }
     }
 
