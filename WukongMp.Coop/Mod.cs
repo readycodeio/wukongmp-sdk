@@ -5,6 +5,7 @@ using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -34,9 +35,17 @@ namespace WukongMp.Coop
 
         public void Init()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            Constants.IsCoop = true;
+            
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
+                return;
+            }
+
+            if (!LaunchParameters.Instance.ValidForCoOp)
+            {
+                _logger.LogDebug("Co-op not launching.");
                 return;
             }
 
@@ -81,9 +90,15 @@ namespace WukongMp.Coop
 
         public void LateInit()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
+                return;
+            }
+
+            if (!LaunchParameters.Instance.ValidForCoOp)
+            {
+                _logger.LogDebug("Co-op not launching.");
                 return;
             }
 
@@ -232,7 +247,7 @@ namespace WukongMp.Coop
         {
             _logger.LogInformation("DeInit");
 
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.ValidForCoOp)
             {
                 return;
             }

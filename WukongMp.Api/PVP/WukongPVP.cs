@@ -632,7 +632,6 @@ public partial class WukongPVP : IDisposable
         
         // TODO: set from initial room properties (via server allocation request)
         ref var room = ref areaEntity.Value.GetRoom();
-        room.GameMode = GameMode.Private;
         room.RoundWinners = [];
         room.BotsEnabled = true; // TODO: Selector
         room.MaxPlayers = 10;
@@ -670,21 +669,22 @@ public partial class WukongPVP : IDisposable
         areaEntity.Value.GetRoom().InPvP = false;
     }
     
+    [Obsolete("We do not support matchmaking for now")]
     private void SetupMatchmaking()
     {
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-            return;
-        
-        ref var room = ref areaEntity.Value.GetRoom();
-        if (room.GameMode == GameMode.Private)
-            return;
-
-        if (_areaState.IsMasterClient)
-        {
-            room.InMatchmaking = true;
-            room.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
-        }
+        // var areaEntity = _areaState.CurrentArea;
+        // if (areaEntity == null)
+        //     return;
+        //
+        // ref var room = ref areaEntity.Value.GetRoom();
+        // if (room.GameMode == GameMode.Private)
+        //     return;
+        //
+        // if (_areaState.IsMasterClient)
+        // {
+        //     room.InMatchmaking = true;
+        //     room.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
+        // }
     }
 
     private FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId)

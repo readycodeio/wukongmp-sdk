@@ -12,18 +12,7 @@ if (-not $ModVariant -or -not $Configuration) {
 
 . ./BuildInfo.ps1
 
-# Map ModVariant -> game mode folder name
-$modeFolder = switch -Regex ($ModVariant.ToLower()) {
-    'coop' { 'Black Myth Wukong Co-op'; break }
-    'pvp'  { 'Black Myth Wukong PvP';   break }
-    'tests'  { 'Black Myth Wukong Tests';   break }
-    default {
-        Write-Error "Invalid ModVariant: '$ModVariant'. Expected 'Coop' or 'PvP' or 'Tests'."
-        exit 1
-    }
-}
-
-$destRoot = Join-Path $env:APPDATA "ReadyM.Launcher/game_modes/$modeFolder/CSharpLoader"
+$destRoot = Join-Path $env:APPDATA "ReadyM.Launcher/WukongMP/CSharpLoader"
 
 # Perform copies
 foreach ($item in $devFiles) {

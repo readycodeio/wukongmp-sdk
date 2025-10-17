@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
@@ -34,9 +35,17 @@ namespace WukongMp.PvP
 
         public void Init()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            Constants.IsCoop = false;
+
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
+                return;
+            }
+
+            if (!LaunchParameters.Instance.ValidForPvP)
+            {
+                _logger.LogDebug("Pvp not launching.");
                 return;
             }
 
@@ -81,9 +90,15 @@ namespace WukongMp.PvP
 
         public void LateInit()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
+                return;
+            }
+
+            if (!LaunchParameters.Instance.ValidForPvP)
+            {
+                _logger.LogDebug("Pvp not launching.");
                 return;
             }
 
@@ -219,7 +234,7 @@ namespace WukongMp.PvP
         {
             _logger.LogInformation("DeInit");
 
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.ValidForCoOp)
             {
                 return;
             }

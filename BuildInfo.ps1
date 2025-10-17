@@ -9,17 +9,17 @@ $reflectionOnlySourceDir = "WukongMp.Api/Game"
 $overridesSourceDir = "WukongMp.Api/Game"
 $saveSourceDir = "Deployment"
 
-$modDestDir = "Mods/WukongMpMod"
+$modDestDir = "Mods/WukongMp.$ModVariant"
 $reflectionOnlyDestDir = "Mods/ReflectionOnly"
 $overridesDestDir = "Mods/Overrides"
-$saveDestDir = "Mods/WukongMpMod"
+$saveDestDir = "Mods/WukongMp.$ModVariant"
 $overrideDestDir = "Mods/Overrides"
 
 # Define the files to copy
 
 $modFiles = @(
     "WukongMp.Api.dll",
-    "WukongMpMod.dll",
+    "WukongMp.$ModVariant.dll",
     "ReadyM.Api.dll",
     "ReadyM.Api.Multiplayer.dll",
     "ReadyM.Relay.Client.dll",
@@ -45,7 +45,7 @@ $modFiles = @(
 
 $modFilesDebug = @(
     "WukongMp.Api.pdb",
-    "WukongMpMod.pdb",
+    "WukongMp.$ModVariant.pdb",
     "ReadyM.Api.pdb",
     "ReadyM.Api.Multiplayer.pdb",
     "ReadyM.Relay.Client.pdb",
