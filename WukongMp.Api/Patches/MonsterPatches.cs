@@ -181,20 +181,33 @@ namespace WukongMp.Api.Patches
                     DI.Instance.Rpc.SendUnitDespawn(meta.NetId);
                 }
 
-                ref var tamer = ref tamerEntity.Value.GetTamer();
-                if (!tamer.ShouldBeSpawned)
-                {
-                    Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
-                    localTamer.IsMonsterActive = false;
-                    return true;
-                }
-
                 return false;
             }
             else
             {
                 Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamerActor.GetMonster()));
                 return true;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(FTamerRef), "OnUnload")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTamerUnload
+    {
+        public static void Postfix(FTamerRef __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && Constants.IsPvP))
+            {
+                var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(__instance.InstancePtr.Value);
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                {
+                    Logging.LogDebug("Deleting tamer entity from ECS: {Entity} (OnUnload)", tamerEntity.Value.ToString());
+                    DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
+                }
             }
         }
     }

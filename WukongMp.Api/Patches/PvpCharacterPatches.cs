@@ -273,39 +273,3 @@ public static class PvpPatchHp
         }
     }
 }
-
-[HarmonyPatch(typeof(BGU_UnrealWorldUtil), "DestroyActor")]
-[HarmonyPatchCategory(Constants.PvpPatches)]
-public class PatchDestroyActor
-{
-    public static void Postfix(AActor Actor)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return;
-
-        if (Actor is BGUCharacterCS character)
-        {
-            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
-            if (tamerEntity.HasValue)
-            {
-                Logging.LogDebug("DestroyActor called for not cleaned up monster: {Name}", Actor.GetFullName());
-
-                // only clean up own monsters
-                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-                {
-                    Logging.LogDebug("Skipping cleanup for remote monster");
-                    return;
-                }
-
-                Logging.LogDebug("Cleaning up monster: {Name}", Actor.GetFullName());
-                TamerUtils.CleanupMonster(tamerEntity.Value);
-            }
-
-            var tamer = character.GetTamerOwner();
-            if (tamer != null)
-            {
-                BGU_UnrealWorldUtil.DestroyActor(tamer);
-            }
-        }
-    }
-}

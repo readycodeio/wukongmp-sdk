@@ -11,60 +11,74 @@ public static class MarkerUtils
 {
     public static void CreateMarkerForCharacter(TamerEntity tamerEntity)
     {
-        var world = GameUtils.GetWorld();
-        var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
-        var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
-        if (playerMarkerActor != null)
-        {
-            Logging.LogDebug("Player marker actor spawned successfully");
-        }
-        else
-        {
-            Logging.LogError("Cannot spawn player marker actor");
+        var markerActor = SpawnMarkerActor();
+        if (markerActor == null)
             return;
-        }
 
         ref readonly var teamComp = ref tamerEntity.GetTeam();
         ref var nameComp = ref tamerEntity.GetNickname();
-
-        // TODO: Should be created by the archetype, but it is not due to dynamic delta entity creation
-        if (!tamerEntity.HasMarker())
-            tamerEntity.AddMarker();
-
         ref var markerComp = ref tamerEntity.GetMarker();
 
         var teamColor = PvPUtils.GetTeamColorString(teamComp.TeamId);
-        playerMarkerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamColor}", true);
-        markerComp.MarkerActor = playerMarkerActor;
+        markerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamColor}", true);
+        markerComp.MarkerActor = markerActor;
+        markerComp.DestroyQueued = false;
+    }
+
+    public static void DestroyMarkerForCharacter(TamerEntity tamerEntity)
+    {
+        ref var markerComp = ref tamerEntity.GetMarker();
+
+        if (!markerComp.DestroyQueued)
+        {
+            Logging.LogDebug("Destroying marker for monster {Id}", tamerEntity.Entity.Id);
+            markerComp.DestroyQueued = true;
+
+            var markerActor = markerComp.MarkerActor;
+            if (!markerActor.IsNullOrDestroyed())
+            {
+                BGU_UnrealWorldUtil.DestroyActor(markerActor);
+            }
+
+            markerComp.MarkerActor = null;
+        }
     }
 
     public static AActor? CreateMarkerForCharacter(MainCharacterEntity mainEntity)
     {
-        var world = GameUtils.GetWorld();
-        var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
-        if (playerMarkerActorClass == null)
-        {
-            Logging.LogError("Cannot load player marker class");
+        var markerActor = SpawnMarkerActor();
+        if (markerActor == null)
             return null;
-        }
-
-        var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
-        if (playerMarkerActor == null)
-        {
-            Logging.LogError("Cannot spawn player marker actor");
-            return null;
-        }
-
-        Logging.LogDebug("Player marker actor spawned successfully");
 
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
         var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(teamComp.TeamId);
-        playerMarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
-        localMainComp.MarkerActor = playerMarkerActor;
+        markerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
+        localMainComp.MarkerActor = markerActor;
 
-        return playerMarkerActor;
+        return markerActor;
+    }
+
+    private static AActor? SpawnMarkerActor()
+    {
+        var world = GameUtils.GetWorld();
+        var markerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
+        if (markerActorClass == null)
+        {
+            Logging.LogError("Cannot load marker class");
+            return null;
+        }
+
+        var markerActor = BGU_UnrealWorldUtil.SpawnActor(world, markerActorClass);
+        if (markerActor == null)
+        {
+            Logging.LogError("Cannot spawn marker actor");
+            return null;
+        }
+
+        Logging.LogDebug("Marker actor spawned successfully");
+        return markerActor;
     }
 }

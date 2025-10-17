@@ -398,7 +398,7 @@ public partial class WukongPVP : IDisposable
     
     public void ResetRoundState()
     {
-        Utils.TryRunOnGameThread(TamerUtils.ClearEcsMonsters);
+        _ecsLoop.Scheduler.Schedule((_) => { TamerUtils.DestroyAllTamers(); });
     }
     
     public void SetReadyState(bool isReady)
@@ -993,19 +993,11 @@ public partial class WukongPVP : IDisposable
                 
                 if (!mainEntity.Value.GetState().IsDead)
                 {
-                    Utils.TryRunOnGameThread(() =>
+                    _ecsLoop.Scheduler.Schedule( static (_, mainEntity0) => 
                     {
-                        TamerUtils.DestroyAllTamers();
-                        var events = BUS_EventCollectionCS.Get(mainEntity.Value.GetLocalState().Pawn!);
-
-                        if (events == null)
-                        {
-                            Logging.LogError("events are null");
-                            return;
-                        }
-
-                        events.Evt_TriggerTeleportResetPlayer!.Invoke();
-                    });
+                        var events = BUS_EventCollectionCS.Get(mainEntity0.Value.GetLocalState().Pawn!);
+                        events?.Evt_TriggerTeleportResetPlayer!.Invoke();
+                    }, mainEntity);
                 }
 
                 if (_areaState.IsMasterClient)

@@ -39,12 +39,7 @@ namespace WukongMp.Api.WukongUtils
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
-                if (actor != null && actor.GetMonster() != null)
-                {
-                    BGU_UnrealWorldUtil.DestroyActor(actor.GetMonster());
-                }
-
-                BGU_UnrealWorldUtil.DestroyActor(actor);
+                actor.CurrentRef.DestroyTamer();
             }
         }
 
@@ -91,49 +86,7 @@ namespace WukongMp.Api.WukongUtils
                 localTamer.IsLocallySpawned = true;
                 DI.Instance.Rpc.SendUnitSpawned(metadata.NetId);
             }
-        }
-
-        public static void ClearEcsMonsters()
-        {
-            // TODO: WorldLock?
-            DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent _, Entity entity) =>
-            {
-                DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(entity.Id);
-            });
-        }
-
-        public static void DestroyMonster(TamerEntity tamerEntity)
-        {
-            ref var localTamerComp = ref tamerEntity.GetLocalTamer();
-
-            if (localTamerComp.Tamer == null)
-                return;
-
-            var monsterPawn = localTamerComp.Tamer.GetMonster();
-            if (monsterPawn != null)
-            {
-                var events = BUS_EventCollectionCS.Get(monsterPawn);
-                events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
-                BGU_UnrealWorldUtil.DestroyActor(localTamerComp.Pawn);
-            }
-
-            BGU_UnrealWorldUtil.DestroyActor(localTamerComp.Tamer);
-
-            CleanupMonster(tamerEntity);
-        }
-
-        public static void CleanupMonster(TamerEntity tamerEntity)
-        {
-            ref var markerComp = ref tamerEntity.GetMarker();
-
-            if (markerComp.MarkerActor != null)
-            {
-                BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
-            }
-
-            Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", tamerEntity.ToString());
-            DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Entity.Id);
-        }
+        } 
 
         public static void AddSpawnedUnitRefCount(PlayerId playerId, TamerEntity tamerEntity)
         {

@@ -105,7 +105,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
 
             if (Constants.IsPvP && localTamerComp.Tamer.TamerType == ETamerType.Spawned)
             {
-                MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity)); // 3D marker above monster
+                MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity));
                 if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
                 {
                     SpawningUtils.SetMonkeyBotConfig(monster);
