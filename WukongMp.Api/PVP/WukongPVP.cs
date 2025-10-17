@@ -890,11 +890,11 @@ public partial class WukongPVP : IDisposable
 
                 if (winnerTeamId == Constants.DrawTeamId)
                 {
-                    UIUtils.ShowTip(Texts.RoundDraw);
+                    UiUtils.ShowTip(Texts.RoundDraw, true);
                 }
                 else
                 {
-                    UIUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)));
+                    UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
                 }
 
                 if (winnerTeamId == Constants.DrawTeamId)
@@ -915,11 +915,11 @@ public partial class WukongPVP : IDisposable
             {
                 if (winnerTeamId == Constants.DrawTeamId)
                 {
-                    UIUtils.ShowTip(Texts.TournamentDraw);
+                    UiUtils.ShowTip(Texts.TournamentDraw, true);
                 }
                 else
                 {
-                    UIUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)));
+                    UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
                 }
 
                 // ReSharper disable once AsyncVoidMethod

@@ -85,7 +85,7 @@ public static class PatchStartGameUiCoop
                 if (widgetManagerActorClass == null)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                    UIUtils.ShowTip(Texts.MissingPak);
+                    UiUtils.ShowTip(Texts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
                 else if (!DI.Instance.State.IsConnected)

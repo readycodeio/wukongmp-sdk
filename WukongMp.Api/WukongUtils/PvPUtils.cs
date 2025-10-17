@@ -81,7 +81,7 @@ public static class PvPUtils
         ref var room = ref areaEntity.Value.GetRoom();
         var current = room.CurrentRound;
         var total = room.TournamentRounds;
-        UIUtils.ShowTip(string.Format(Texts.RoundCount, current, total));
+        UiUtils.ShowTip(string.Format(Texts.RoundCount, current, total), true);
     }
 
     public static string GetTeamColorString(int teamId)

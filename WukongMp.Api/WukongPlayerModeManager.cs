@@ -29,7 +29,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             return false;
 
         if (isMyself)
-            UIUtils.SetHudVisibility(false);
+            UiUtils.SetHudVisibility(false);
 
         SetPlayerVisibility(playerEntity, mainEntity, false);
 
@@ -55,7 +55,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             return false;
 
         if (isMyself)
-            UIUtils.SetHudVisibility(true);
+            UiUtils.SetHudVisibility(true);
 
         SetPlayerVisibility(playerEntity, mainEntity, true);
 
