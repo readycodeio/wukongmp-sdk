@@ -103,6 +103,7 @@ namespace WukongMp.PvP
             }
 
             _logger.LogInformation("Init WukongMP mod");
+            DebugUtils.LogUe4SsPresence();
 
             // InformationalVersion from assembly def
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;

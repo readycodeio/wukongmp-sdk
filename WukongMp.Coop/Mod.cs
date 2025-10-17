@@ -36,7 +36,7 @@ namespace WukongMp.Coop
         public void Init()
         {
             Constants.IsCoop = true;
-            
+
             if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
@@ -103,6 +103,7 @@ namespace WukongMp.Coop
             }
 
             _logger.LogInformation("Init WukongMP mod");
+            DebugUtils.LogUe4SsPresence();
 
             // InformationalVersion from assembly def
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
