@@ -63,12 +63,12 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _world = world;
 
         State.OnJoinedArea += OnJoinedAreaHandler;
+        JobRegistry.OnApplySnapshot += OnApplySnapshot;
 
         _syncGroup = new SystemGroup("Sync");
 
         _syncGroup.Add(new SpawnTamersSystem(state));
         _syncGroup.Add(new DespawnTamerSystem());
-        _syncGroup.Add(new MonsterLifeSystem(rpc));
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
         _syncGroup.Add(new ScaleMonsterHpSystem());
@@ -93,6 +93,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
     protected override void OnDispose()
     {
         State.OnJoinedArea -= OnJoinedAreaHandler;
+        JobRegistry.OnApplySnapshot -= OnApplySnapshot;
 
         EcsLoop.RemoveSystem(_syncGroup);
         base.OnDispose();
@@ -148,5 +149,10 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         {
             TamerUtils.DiscoverTamers();
         }
+    }
+
+    private void OnApplySnapshot()
+    {
+        _world.Query<LocalTamerComponent, MetadataComponent>().Each(new DiscoverLocallySpawnedMonsters());
     }
 }

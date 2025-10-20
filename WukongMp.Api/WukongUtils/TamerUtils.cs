@@ -79,6 +79,15 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
+        public static void MarkMonsterLocallySpawned(ref LocalTamerComponent localTamer, MetadataComponent metadata)
+        {
+            if (!localTamer.IsLocallySpawned)
+            {
+                localTamer.IsLocallySpawned = true;
+                DI.Instance.Rpc.SendUnitSpawned(metadata.NetId);
+            }
+        } 
+
         public static void AddSpawnedUnitRefCount(PlayerId playerId, TamerEntity tamerEntity)
         {
             Logging.LogDebug("Adding spawned unit counter for entity: {Entity} for player {Player}", tamerEntity.ToString(), playerId);
@@ -101,6 +110,14 @@ namespace WukongMp.Api.WukongUtils
             {
                 tamerComp.ShouldBeSpawned = false;
             }
+        }
+
+        public static void ClearSpawnedUnitRefCount(TamerEntity tamerEntity)
+        {
+            Logging.LogDebug("Clearing spawned unit counter for entity: {Entity}", tamerEntity.ToString());
+            ref var tamerComp = ref tamerEntity.GetTamer();
+            tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Clear();
+            tamerComp.ShouldBeSpawned = false;
         }
 
         public static void TriggerSkillInteract(Entity entity, int skillId)

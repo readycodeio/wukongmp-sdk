@@ -35,6 +35,10 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
                 return;
 
+            var monster = localTamerComp.Tamer?.GetMonster();
+            if (monster != null && !localTamerComp.IsLocallySpawned)
+                TamerUtils.MarkMonsterLocallySpawned(ref localTamerComp, metaComp);
+
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
             if (localTamerComp.IsMonsterActive || !tamerComp.ShouldBeSpawned)
@@ -42,7 +46,6 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 return;
             }
 
-            var monster = localTamerComp.Tamer?.GetMonster();
             var currentPhase = localTamerComp.Tamer!.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {

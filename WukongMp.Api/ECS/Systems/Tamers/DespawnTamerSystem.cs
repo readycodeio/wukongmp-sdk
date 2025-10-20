@@ -17,8 +17,7 @@ public sealed class DespawnTamerSystem : QuerySystem<LocalTamerComponent, TamerC
             ref MarkerComponent markerComp,
             Entity entity) =>
         {
-            Logging.LogDebug("Monster {Guid}, IsMonsterActive: {IsMonsterActive}, ShouldBeSpawned: {ShouldBeSpawned}", tamerComp.Guid, localTamerComp.IsMonsterActive, tamerComp.ShouldBeSpawned);
-            if (localTamerComp.IsMonsterActive && !tamerComp.ShouldBeSpawned)
+            if (localTamerComp.IsMonsterActive && !localTamerComp.IsLocallySpawned && !tamerComp.ShouldBeSpawned)
             {
                 MarkerUtils.DestroyMarkerForCharacter(new TamerEntity(entity));
                 localTamerComp.IsMonsterActive = false;
