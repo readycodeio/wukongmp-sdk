@@ -1,28 +1,90 @@
-﻿using Friflo.Engine.ECS;
+﻿using System;
+using System.Collections.Generic;
+using b1;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.ECS.Components;
+using Microsoft.Extensions.Logging;
+using UnrealEngine.Engine;
+using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.Managers;
+using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class DespawnTamerSystem : QuerySystem<LocalTamerComponent, TamerComponent, MarkerComponent>
+/// <summary>
+/// Despawns the pawns corresponding to MainCharacterEntities for other players. Doesn't affect the main players' MainCharacterEntity.
+/// </summary>
+public sealed class DespawnTamerSystem : BaseSystem, IDisposable
 {
-    protected override void OnUpdate()
+    private struct PendingDeleteEvent
     {
-        Query.ForEachEntity((
-            ref LocalTamerComponent localTamerComp,
-            ref TamerComponent tamerComp,
-            ref MarkerComponent markerComp,
-            Entity entity) =>
+        public string Guid;
+        public BUTamerActor? Tamer;
+        public AActor? Marker;
+    }
+
+    private readonly ArchetypeEventRouter _archetypeEvent;
+    private readonly WukongPlayerState _playerState;
+    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
+    private readonly WukongEventBus _eventBus;
+    private readonly ILogger _logger;
+
+    private readonly List<PendingDeleteEvent> _pendingDeleteEvents = [];
+
+    public DespawnTamerSystem(
+        ArchetypeEventRouter archetypeEvent,
+        WukongPlayerState playerState,
+        ClientWukongArchetypeRegistration wukongArchetype,
+        WukongEventBus eventBus,
+        ILogger logger)
+    {
+        _archetypeEvent = archetypeEvent;
+        _playerState = playerState;
+        _wukongArchetype = wukongArchetype;
+        _eventBus = eventBus;
+        _logger = logger;
+
+        _archetypeEvent[_wukongArchetype.MonsterArchetype].OnEntityDelete += OnEntityDeleteHandler;
+    }
+
+    public void Dispose()
+    {
+        _archetypeEvent[_wukongArchetype.MonsterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
+    }
+
+    private void OnEntityDeleteHandler(EntityDelete evt)
+    {
+        if (_playerState.LocalPlayerId == null)
         {
-            if (localTamerComp.IsMonsterActive && !localTamerComp.IsLocallySpawned && !tamerComp.ShouldBeSpawned)
-            {
-                MarkerUtils.DestroyMarkerForCharacter(new TamerEntity(entity));
-                localTamerComp.IsMonsterActive = false;
-                Logging.LogDebug("Monster {Guid} despawned", tamerComp.Guid);
-            }
+            _logger.LogWarning("Local player ID is null, cannot despawn monster.");
+            return;
+        }
+
+        var tamerEntity = new TamerEntity(evt.Entity);
+        var tamerComp = tamerEntity.GetTamer();
+        var localTamerComp = tamerEntity.GetLocalTamer();
+        var markerComp = tamerEntity.GetMarker();
+
+        _pendingDeleteEvents.Add(new PendingDeleteEvent
+        {
+            Guid = tamerComp.Guid,
+            Tamer = localTamerComp.Tamer,
+            Marker = markerComp.MarkerActor
         });
+    }
+
+    protected override void OnUpdateGroup()
+    {
+        if (!_eventBus.IsGameplayLevel)
+            return;
+
+        foreach (var pending in _pendingDeleteEvents)
+        {
+            TamerUtils.DestroyTamer(pending.Guid, pending.Tamer, pending.Marker);
+        }
+
+        _pendingDeleteEvents.Clear();
     }
 }

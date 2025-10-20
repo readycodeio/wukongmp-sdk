@@ -2,6 +2,7 @@
 using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
@@ -9,7 +10,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
+public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, MetadataComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;
@@ -25,7 +26,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 .GroupBy(x => x.GetFinalGuid())
                 .ToDictionary(g => g.Key, g => g.Last());
 
-        Query.ForEachEntity((ref TamerComponent tamerComp, ref LocalTamerComponent localTamerComp, Entity entity) =>
+        Query.ForEachEntity((ref TamerComponent tamerComp, ref LocalTamerComponent localTamerComp, ref MetadataComponent metaComp, Entity entity) =>
         {
             if (!localTamerComp.IsTamerSynced)
             {
@@ -39,12 +40,14 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 {
                     localTamerComp.Tamer = actor;
                     localTamerComp.IsTamerSynced = true;
-#if TESTING
-                    ref var nameComp = ref entity.GetComponent<NicknameComponent>();
-                    nameComp.Nickname = actor.GetClass()?.GetName();
-                    MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity));
-#endif
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);
+
+                    var monster = localTamerComp.Tamer.GetMonster();
+                    if (monster != null)
+                    {
+                        Logging.LogDebug("Monster already spawned on the level: {Guid}. Marking as spawned.", tamerComp.Guid);
+                        TamerUtils.MarkMonsterLocallySpawned(ref localTamerComp, metaComp);
+                    }
                 }
 
                 // TODO: else spawn tamer?

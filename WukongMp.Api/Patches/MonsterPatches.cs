@@ -118,7 +118,6 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerLoad
     {
-        // TODO: This patch could be removed - logic moved to SpawnTamersSystem
         public static void Postfix(FTamerRef __instance)
         {
             if (!DI.Instance.AreaState.InRoom)
@@ -174,11 +173,16 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue)
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                if (localTamer.IsLocallySpawned)
+                ref var meta = ref tamerEntity.Value.GetMeta();
+                TamerUtils.MarkMonsterLocallyDespawned(ref localTamer, meta);
+
+                ref var tamer = ref tamerEntity.Value.GetTamer();
+                if (!tamer.ShouldBeSpawned)
                 {
-                    localTamer.IsLocallySpawned = false;
-                    ref var meta = ref tamerEntity.Value.GetMeta();
-                    DI.Instance.Rpc.SendUnitDespawn(meta.NetId);
+                    Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
+                    localTamer.IsMonsterActive = false;
+                    MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
+                    return true;
                 }
 
                 return false;

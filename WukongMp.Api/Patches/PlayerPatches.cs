@@ -472,8 +472,8 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue)
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                localTamer.IsLocallySpawned = false;
-
+                localTamer.IsMonsterActive = false;
+                MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
                 TamerUtils.ClearSpawnedUnitRefCount(tamerEntity.Value);
 
                 if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
