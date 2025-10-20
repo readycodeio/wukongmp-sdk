@@ -20,14 +20,14 @@ public sealed class MonsterLifeSystem(WukongRpcCallbacks rpc) : QuerySystem<Loca
             if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
                 return;
 
-            var phase = localTamerComp.Tamer.CurrentRef.Phase;
-            if (phase == ETamerPhase.Spawned && !localTamerComp.IsLocallySpawned)
+            var monster = localTamerComp.Tamer.GetMonster();
+            if (monster != null && !localTamerComp.IsLocallySpawned)
             {
                 Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
                 localTamerComp.IsLocallySpawned = true;
                 rpc.SendUnitSpawned(metaComp.NetId);
             }
-            else if (phase != ETamerPhase.Spawned && localTamerComp.IsLocallySpawned)
+            else if (monster == null && localTamerComp.IsLocallySpawned)
             {
                 Logging.LogDebug("Monster {Guid} unloaded locally", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
                 localTamerComp.IsLocallySpawned = false;
