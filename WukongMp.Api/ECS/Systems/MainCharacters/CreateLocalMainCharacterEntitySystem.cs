@@ -4,6 +4,7 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
@@ -83,6 +84,12 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
 #endif
         
         localMainComp.IsPlayerSynced = true;
+
+        if (Constants.IsPvP)
+        {
+            var spawnPosition = SpawningUtils.GetSpawnPosition(GameUtils.GetControlledPawn(), mainComp.PlayerId.RawValue, Constants.MaxPlayers);
+            PlayerUtils.TeleportLocalPlayer(mainEntity, spawnPosition, FRotator.ZeroRotator, false);
+        }
 
         Logging.LogDebug("Finished setting initial player properties");
     }

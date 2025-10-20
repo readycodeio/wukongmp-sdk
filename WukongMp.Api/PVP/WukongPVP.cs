@@ -672,27 +672,6 @@ public partial class WukongPVP : IDisposable
         // }
     }
 
-    private FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId)
-    {
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-        {
-            Logging.LogError("No area entity found, cannot get spawn position");
-            return FVector.ZeroVector;
-        }
-
-        int maxPlayersCount = areaEntity.Value.GetRoom().MaxPlayers;
-
-        float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
-        float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
-        float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
-
-        var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-        var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-
-        return SpawningUtils.AdjustSpawnLocation(pawn, baseLocation);
-    }
-
     private void SetupAddedPlayer(PlayerId playerId)
     {
         var playerEntity = _playerState.GetPlayerById(playerId);
@@ -825,9 +804,6 @@ public partial class WukongPVP : IDisposable
         ref var player = ref playerEntity.Value.GetState();
         player.TeamId = GetSmallerTeamId();
         Logging.LogDebug("Assigned team {Id} for player", player.TeamId);
-        var spawnPosition = GetSpawnPosition(GameUtils.GetControlledPawn(), playerId.RawValue);
-        var data = new PlayerTransformData(playerId, spawnPosition, FRotator.ZeroRotator);
-        _rpc.OnBroadcastPlayerTransform(data);
     }
 
     private void OnOtherPlayerInsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerInsideAreaReason arg3)

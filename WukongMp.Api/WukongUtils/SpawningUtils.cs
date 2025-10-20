@@ -316,6 +316,18 @@ public static class SpawningUtils
         return new TamerEntity(entity);
     }
 
+    public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)
+    {
+        float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
+        float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
+        float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
+
+        var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+        var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
+
+        return AdjustSpawnLocation(pawn, baseLocation);
+    }
+
     public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
     {
         // TODO: For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
