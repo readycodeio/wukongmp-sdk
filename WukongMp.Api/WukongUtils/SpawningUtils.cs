@@ -199,7 +199,7 @@ public static class SpawningUtils
         var startX = -((cols - 1) * Constants.MonsterSpawnSpread) / 2f;
         var startY = -((rows - 1) * Constants.MonsterSpawnSpread) / 2f;
 
-        //var placed = 0;
+        var placed = 0;
         for (var row = 0; row < rows; row++)
         {
             for (var col = 0; col < cols; col++)
@@ -208,14 +208,10 @@ public static class SpawningUtils
                 var y = startY + row * Constants.MonsterSpawnSpread;
                 var loc = spawnLocation + new FVector(x, y, 0);
 
-                //var localI = placed;
-                //Task.Run(async () =>
-                //{
-                //    // wait for i * 200ms
-                //    await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                //});
                 SpawnUnitAsOwner(unitName, loc, teamId);
-                //placed++;
+                placed++;
+                if (placed == count)
+                    return;
             }
         }
     }
