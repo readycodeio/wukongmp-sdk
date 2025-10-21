@@ -35,8 +35,6 @@ namespace WukongMp.Coop
 
         public void Init()
         {
-            Constants.IsCoop = true;
-
             if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
@@ -49,6 +47,7 @@ namespace WukongMp.Coop
                 return;
             }
 
+            Constants.IsCoop = true;
             DI.Instance.Init();
 
             if (LaunchParameters.Instance.PlayShimOnStart)

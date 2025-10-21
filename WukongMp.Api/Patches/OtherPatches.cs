@@ -21,6 +21,22 @@ public static class PatchRandomCrashOnMeshAssignedOnTamerReset
     }
 }
 
+[HarmonyPatch(typeof(BUS_OSSCollectComp), "OnOSSCollectBattleData_AiUnit")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchRandomCrashOnOSSCollectBattleData_AiUnit
+{
+    public static Exception? Finalizer(Exception? __exception)
+    {
+        if (__exception != null)
+        {
+            DI.Instance.Logger.LogError(__exception, "Suppressed crash in BUS_OSSCollectComp.OnOSSCollectBattleData_AiUnit");
+        }
+
+        // suppress System.NullReferenceException
+        return null;
+    }
+}
+
 [HarmonyPatch(typeof(FSMState_GI_Loading_NextChapterReqAndArchive), nameof(FSMState_GI_Loading_NextChapterReqAndArchive.OnEnter))]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchFSMState_GI_Loading_NextChapterReqAndArchive

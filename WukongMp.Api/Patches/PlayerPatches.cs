@@ -1035,7 +1035,7 @@ public class PatchSetAttrTransAfterActiveTalent
     {
         if (__exception != null)
         {
-            DI.Instance.Logger.LogError(__exception, "Exception in SetAttrTransAfterActiveTalent");
+            DI.Instance.Logger.LogError(__exception, "Suppressed crash in SetAttrTransAfterActiveTalent");
         }
 
         return null;

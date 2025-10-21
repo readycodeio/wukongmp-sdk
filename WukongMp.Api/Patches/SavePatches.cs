@@ -497,7 +497,7 @@ public class PatchTickSaveArchiveSnapshot
     {
         if (__exception != null)
         {
-            DI.Instance.Logger.LogError(__exception, "Exception in TickSaveArchiveSnapshot");
+            DI.Instance.Logger.LogError(__exception, "Suppressed crash in TickSaveArchiveSnapshot");
         }
 
         return null;
