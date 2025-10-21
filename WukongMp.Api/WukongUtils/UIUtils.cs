@@ -1,26 +1,48 @@
-﻿using B1UI.GSUI;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using B1UI.GSUI;
+using CommB1;
 using GSE.GSUI;
 using UnrealEngine.Runtime;
 
-namespace WukongMp.Api.WukongUtils
+namespace WukongMp.Api.WukongUtils;
+
+public static class UiUtils
 {
-    public static class UiUtils
+    private static CancellationTokenSource _cts = new();
+    private static Task? _tipHideTask;
+
+    public static void ShowTip(string tip, bool autoHide)
     {
-        public static void ShowTip(string tip, bool autoHide)
-        {
-            GenAGPage.ShowPage(39, nameof(ShowTip));
-            var dSSimTipsData = new DSSimTipsData(ETipsType.WarnTips, FText.FromString(tip), InIsCloseAutoHide: autoHide, 5);
-            GenACommTips.SetTipsData(dSSimTipsData, nameof(ShowTip));
-        }
+        GenAGPage.ShowPage(39, nameof(ShowTip));
+        var dSSimTipsData = new DSSimTipsData(ETipsType.WarnTips, FText.FromString(tip), InShowTime: 5);
+        GenACommTips.SetTipsData(dSSimTipsData, nameof(ShowTip));
 
-        public static void HideTip()
+        if (autoHide)
         {
-            GenAGPage.HidePage(39, nameof(ShowTip));
-        }
+            if (_tipHideTask is { IsCompleted: false })
+            {
+                // cancel previous hide task
+                _cts.Cancel();
+                _cts = new CancellationTokenSource();
+            }
 
-        public static void SetHudVisibility(bool visible)
-        {
-            GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
+            _tipHideTask = Task.Run(async () =>
+            {
+                await Task.Delay(5000, _cts.Token);
+                HideTip();
+                _tipHideTask = null;
+            }, _cts.Token);
         }
+    }
+
+    private static void HideTip()
+    {
+        GenAGPage.FadeOutPage(39, nameof(ShowTip));
+    }
+
+    public static void SetHudVisibility(bool visible)
+    {
+        GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
     }
 }
