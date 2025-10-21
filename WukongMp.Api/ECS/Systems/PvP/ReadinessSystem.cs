@@ -1,6 +1,8 @@
 ﻿using System;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Api.Multiplayer.ECS.Managers;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
@@ -18,43 +20,42 @@ public sealed class ReadinessSystem : QuerySystem<PvPComponent>, IDisposable
     private int _lastReadyCount = -1;
     private readonly WukongAreaState _areaState;
     private readonly WukongPVP _pvpUtils;
-    private readonly ArchetypeEventRouter _archetypeEvent;
-    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
+    private readonly NetworkedEntityManager _netEntity;
     private readonly WukongWidgetManager _widgetManager;
     private readonly WukongPlayerState _playerState;
 
     public ReadinessSystem(
         WukongAreaState areaState,
         WukongPVP pvpUtils,
-        ArchetypeEventRouter archetypeEvent,
-        ClientWukongArchetypeRegistration wukongArchetype,
+        NetworkedEntityManager netEntity,
         WukongWidgetManager widgetManager,
         WukongPlayerState playerState)
     {
         _areaState = areaState;
         _pvpUtils = pvpUtils;
-        _archetypeEvent = archetypeEvent;
-        _wukongArchetype = wukongArchetype;
+        _netEntity = netEntity;
         _widgetManager = widgetManager;
         _playerState = playerState;
 
-        archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityCreate += OnMainCharacterCreate;
+        _netEntity.OnRemoteEntityCreated += OnRemoteEntityCreated;
     }
 
-    private void OnMainCharacterCreate(EntityCreate obj)
+    private void OnRemoteEntityCreated(Entity entity)
     {
-        var main = new MainCharacterEntity(obj.Entity);
-        var id = main.GetState().PlayerId;
-        var player = _playerState.GetPlayerById(id);
-        if (player.HasValue)
+        if (entity.TryGetComponent<MainCharacterComponent>(out var main))
         {
-            _widgetManager.UpdatePlayerTeam(player.Value, main);
+            var id = main.PlayerId;
+            var player = _playerState.GetPlayerById(id);
+            if (player.HasValue)
+            {
+                _widgetManager.UpdatePlayerTeam(player.Value, new MainCharacterEntity(entity));
+            }
         }
     }
 
     public void Dispose()
     {
-        _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityCreate -= OnMainCharacterCreate;
+        _netEntity.OnRemoteEntityCreated -= OnRemoteEntityCreated;
     }
 
     protected override void OnUpdate()

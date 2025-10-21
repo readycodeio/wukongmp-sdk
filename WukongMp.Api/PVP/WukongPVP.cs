@@ -706,7 +706,7 @@ public partial class WukongPVP : IDisposable
             pvpComp.IsSpectator = room.InPvP && !pvpComp.IsReadyForPvP;
         }
 
-        if (_state.AreaPlayers.Count == room.MaxPlayers)
+        if (_state.AreaPlayers.Count == Constants.MaxPlayers)
         {
             EndMatchmaking();
         }
