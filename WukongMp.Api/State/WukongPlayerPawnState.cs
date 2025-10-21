@@ -6,6 +6,7 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Jobs;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.State;
@@ -47,6 +48,12 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
         }
 
         logger.LogDebug("Spawn successful: {PlayerId}", playerId);
+        
+        // refresh lobby widget
+        var nickname = mainEntity.Value.GetState().CharacterNickName;
+        var team = playerEntity.Value.GetState().TeamId;
+        var isSpectator = mainEntity.Value.GetPvP().IsSpectator;
+        LobbyStatusWidget.Instance.UpdatePlayerTeam(nickname, team, isSpectator);
     }
 
     public void RemovePlayerPawn(PlayerId playerId, BGUCharacterCS? playerPawn, AActor? playerMarker)
