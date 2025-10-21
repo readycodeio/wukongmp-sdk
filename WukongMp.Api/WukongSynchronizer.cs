@@ -83,7 +83,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         if (pvp != null)
         {
-            _syncGroup.Add(new ReadinessSystem(areaState, pvp));
+            _syncGroup.Add(new ReadinessSystem(areaState, pvp, archetypeEvent, wukongArchetype, widgetManager, playerState));
         }
 
         _syncGroup.SetMonitorPerf(true);

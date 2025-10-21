@@ -74,14 +74,14 @@ public sealed class WukongWidgetManager : IDisposable
             {
                 CoopStatusWidget.Instance.AddPlayer(nickname);
             }
-            else
-            {
-                var main = _playerState.GetMainCharacterById(playerId);
-                if (main.HasValue)
-                {
-                    UpdatePlayerTeam(player.Value, main.Value);
-                }
-            }
+            // else
+            // {
+            //     var main = _playerState.GetMainCharacterById(playerId);
+            //     if (main.HasValue)
+            //     {
+            //         UpdatePlayerTeam(player.Value, main.Value);
+            //     }
+            // }
 
             RefreshWidgets();
         }
