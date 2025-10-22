@@ -87,22 +87,6 @@ public static class PatchDoPoleDrink
     }
 }
 
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchFaBaoSkill
-{
-    [HarmonyTargetMethodHint("b1.BUIACastFaBaoSkill", "OnTriggerInputAction")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BUIACastFaBaoSkill:OnTriggerInputAction");
-    }
-
-    public static bool Prefix()
-    {
-        return Constants.IsCoop;
-    }
-}
-
 [HarmonyPatch(typeof(BUS_CastImmobilizeComp), "OnCastImmobilize")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnCastImmobilize
