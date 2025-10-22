@@ -178,7 +178,7 @@ public class DI
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
-        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
+        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, ecsLoop, logger);
         var serverRpc = ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 

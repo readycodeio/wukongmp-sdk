@@ -31,6 +31,7 @@ public partial class WukongRpcCallbacks : IDisposable
     private readonly ClientNetworkedEntityState _netEntity;
     private readonly WukongPlayerState _playerState;
     private readonly WukongPawnState _pawnState;
+    private readonly ClientOwnershipManager _clientOwnership;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -42,6 +43,7 @@ public partial class WukongRpcCallbacks : IDisposable
         ClientNetworkedEntityState netEntity,
         WukongPlayerState playerState,
         WukongPawnState pawnState,
+        ClientOwnershipManager clientOwnership,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
     {
@@ -52,6 +54,7 @@ public partial class WukongRpcCallbacks : IDisposable
         _netEntity = netEntity;
         _playerState = playerState;
         _pawnState = pawnState;
+        _clientOwnership = clientOwnership;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -574,12 +577,18 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, __sender);
     }
 
-    [RpcEvent(RelayMode.EntityOwner)]
+    // TODO: Find a better way to synchronize this event. If it's sent in entity owner mode, the server may not have the entity's data yet.
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnUnitSpawned(PlayerId __sender, NetworkId netId)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, netEntity0) =>
         {
-            self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity {Entity}", sender, netEntity0);
+            self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity metId: {NetId}", sender, netEntity0);
+            if (!self._clientOwnership.OwnsEntity(netEntity0))
+            {
+                return;
+            }
+
             if (self._playerState.GetMainCharacterById(sender) == null)
             {
                 self._logger.LogError("Player not found: {Id}", sender);

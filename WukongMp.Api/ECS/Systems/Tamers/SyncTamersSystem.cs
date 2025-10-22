@@ -45,7 +45,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                     var monster = localTamerComp.Tamer.GetMonster();
                     if (monster != null)
                     {
-                        Logging.LogDebug("Monster already spawned on the level: {Guid}. Marking as spawned.", tamerComp.Guid);
+                        Logging.LogDebug("Monster already spawned on the level, guid: {Guid}, netId: {NetId}. Marking as spawned.", tamerComp.Guid, metaComp.NetId);
                         TamerUtils.MarkMonsterLocallySpawned(ref localTamerComp, metaComp);
                     }
                 }

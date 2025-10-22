@@ -99,8 +99,8 @@ namespace WukongMp.Api.WukongUtils
 
         public static void AddSpawnedUnitRefCount(PlayerId playerId, TamerEntity tamerEntity)
         {
-            Logging.LogDebug("Adding spawned unit counter for entity: {Entity} for player {Player}", tamerEntity.ToString(), playerId);
             ref var tamerComp = ref tamerEntity.GetTamer();
+            Logging.LogDebug("Adding spawned unit counter for tamer with guid: {Guid} for player {Player}", tamerComp.Guid, playerId);
             tamerComp.ShouldBeSpawned = true;
             tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Add(playerId);
         }
