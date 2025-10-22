@@ -89,7 +89,7 @@ public class PatchStartNewGame
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public class PatchGameArchive
 {
-    public static void Postfix(BGW_GameArchiveMgr __instance, ref ReadArchiveResult __result, int ArchiveId, LoadArchiveSource Source, ref FUStBEDArchivesData? OutArchiveData)
+    public static void Postfix(BGW_GameArchiveMgr __instance, ref ReadArchiveResult __result, int ArchiveId, ref FUStBEDArchivesData? OutArchiveData)
     {
         if (__result != ReadArchiveResult.Success)
         {
@@ -121,7 +121,7 @@ public class PatchGameArchive
             else
             {
                 SavePatchesData.RedirectSaveFiles = true;
-                var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var characterGameArchiveData, out var characterArchiveCanBeRepaired);
+                var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var characterGameArchiveData, out _);
                 if (characterReadArchiveResult == ReadArchiveResult.Success)
                 {
                     OutArchiveData = characterGameArchiveData.GameArchiveData;
@@ -132,7 +132,7 @@ public class PatchGameArchive
         if (Constants.IsPvP)
         {
             // Read archive with our world state.
-            var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out var archiveCanBeRepaired);
+            var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out _);
             if (readArchiveResult != 0)
             {
                 Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
@@ -290,19 +290,6 @@ public class PatchGameArchive
         }
 
         SavePatchesData.RedirectSaveFiles = false;
-
-        if (Constants.IsPvP)
-        {
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Clear();
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5101, Type = SpellType.QiShu }); // Immobilize
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.SpellList.Add(new SpellItem { SpellId = 5201, Type = SpellType.ShenFa }); // Phantom dash
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.WearSoulSkill = null;
-            OutArchiveData.RoleData.RoleCs.Actor.Wear.WearAccessory = null;
-
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5102); // Ring of fire
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5103); // Spell binder
-            OutArchiveData.RoleData.RoleCs.Actor.Progress.SpellList.Remove(5202); // Rock solid
-        }
     }
 }
 

@@ -43,7 +43,7 @@ namespace WukongMp.Api.Configuration
         public const float MonsterUpdateTargetTime = 7; // seconds
         public const float SpawnOwnershipRadius = 7500f; // 75m
 
-        public static readonly List<int> SkillsWhitelist = [10518, -999];
+        public static readonly List<int> SkillsBlacklist = [IncenseTrailTalismanSkillId];
 
         public static readonly HashSet<int> InstantTriggerSequences =
         [

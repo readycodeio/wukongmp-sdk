@@ -26,17 +26,7 @@ public static class PatchTriggerMagicSkill
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        return SkillsUtils.IsSkillWhitelisted(SkillID) && (DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true);
-    }
-}
-
-[HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerVigorSkill")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTriggerVigorSkill
-{
-    public static bool Prefix()
-    {
-        return Constants.IsCoop;
+        return !SkillsUtils.IsSkillBlacklisted(SkillID) && (DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true);
     }
 }
 
@@ -52,29 +42,20 @@ public static class PatchTriggerItemSkill
         var areaState = DI.Instance.AreaState;
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
 
-        // FIXME: We no longer need the `InRoom` check because this is the same as checking isf `areaState.CurrentArea` is not null
         if (areaState.CurrentArea == null)
             return true;
 
         var areaEntity = areaState.CurrentArea;
         ref var room = ref areaEntity.Value.GetRoom();
 
-        if (room.GourdAllowed && lastSkill == Constants.GourdSkillId)
+        switch (lastSkill)
         {
-            return true;
+            case Constants.GourdSkillId when !room.GourdAllowed:
+            case Constants.ConsumableBuffSkillId when !room.ConsumablesAllowed:
+                return false;
+            default:
+                return true;
         }
-
-        if (room.ConsumablesAllowed && lastSkill == Constants.ConsumableBuffSkillId)
-        {
-            return true;
-        }
-
-        if (room.IncenseTrailTalismanAllowed && lastSkill == Constants.IncenseTrailTalismanSkillId)
-        {
-            return true;
-        }
-
-        return false;
     }
 }
 

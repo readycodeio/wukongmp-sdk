@@ -592,6 +592,7 @@ public partial class WukongPVP : IDisposable
         if (areaEntity == null)
             return true;
 
+        // Only Immobilize checked here, Phantom Rush is not a skill in code
         if (skillId == Constants.ImmobilizeSkillId && !areaEntity.Value.GetRoom().ImmobilizeAllowed)
             return false;
 
