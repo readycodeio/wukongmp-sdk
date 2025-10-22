@@ -1,4 +1,7 @@
-﻿using WukongMp.Api.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
@@ -47,6 +50,38 @@ namespace WukongMp.Api.UI
             RemoveFromTeam1(nickName);
             RemoveFromTeam2(nickName);
             RemoveSpectator(nickName);
+        }
+
+        public unsafe void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList)
+        {
+            if (GameWidget == null || SetText_RedTeamList_PropertyAddress == null || SetText_BlueTeamList_PropertyAddress == null || SetText_SpectatorsList_PropertyAddress == null)
+                return;
+
+            GameWidget.CheckDestroyed();
+            if (!SetTeams_IsValid)
+            {
+                NativeReflection.LogInvalidFunctionAccessed("/Game/Mods/CustomLuaMod/WBP_LobbyStatus_C.WBP_LobbyStatus_C:SetTeams");
+                return;
+            }
+
+            byte* ptr = stackalloc byte[(int)(uint)(SetTeams_ParamsSize + 16)];
+            int num = (int)((16L - (long)ptr) & 0xF);
+            byte* ptr2 = ptr + num;
+            System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetTeams_ParamsSize);
+            IntPtr intPtr = new IntPtr(ptr2);
+
+            TArrayCopyMarshaler<string> readTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetText_RedTeamList_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
+            readTeamArrayCopyMarshaler.ToNative(IntPtr.Add(intPtr, SetText_RedTeamList_Offset), redTeamList);
+            TArrayCopyMarshaler<string> blueTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetText_BlueTeamList_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
+            blueTeamArrayCopyMarshaler.ToNative(IntPtr.Add(intPtr, SetText_BlueTeamList_Offset), blueTeamList);
+            TArrayCopyMarshaler<string> spectatorsArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetText_SpectatorsList_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
+            spectatorsArrayCopyMarshaler.ToNative(IntPtr.Add(intPtr, SetText_SpectatorsList_Offset), spectatorsList);
+
+            NativeReflection.InvokeFunctionOptimized(GameWidget.Address, SetTeams_FunctionAddress, intPtr, SetTeams_ParamsSize);
+
+            NativeReflection.DestroyValue_InContainer(SetText_RedTeamList_PropertyAddress.Address, intPtr);
+            NativeReflection.DestroyValue_InContainer(SetText_BlueTeamList_PropertyAddress.Address, intPtr);
+            NativeReflection.DestroyValue_InContainer(SetText_SpectatorsList_PropertyAddress.Address, intPtr);
         }
 
         private void AddToTeam1(string playerName)
@@ -116,6 +151,49 @@ namespace WukongMp.Api.UI
         protected override void PostInitialize()
         {
             SetStaticTexts(Texts.RedTeam, Texts.BlueTeam, Texts.Spectators, Texts.Ready, Texts.Connected, Texts.More);
+        }
+
+        static LobbyStatusWidget()
+        {
+            InitNativeFunctions();
+        }
+
+        private static bool SetTeams_IsValid;
+        private static IntPtr SetTeams_FunctionAddress;
+        private static int SetTeams_ParamsSize;
+
+        private static int SetText_RedTeamList_Offset;
+        private static bool SetText_RedTeamList_IsValid;
+        private static FFieldAddress? SetText_RedTeamList_PropertyAddress;
+
+        private static int SetText_BlueTeamList_Offset;
+        private static bool SetText_BlueTeamList_IsValid;
+        private static FFieldAddress? SetText_BlueTeamList_PropertyAddress;
+
+        private static int SetText_SpectatorsList_Offset;
+        private static bool SetText_SpectatorsList_IsValid;
+        private static FFieldAddress? SetText_SpectatorsList_PropertyAddress;
+
+        public static void InitNativeFunctions()
+        {
+            IntPtr classPtr = NativeReflection.GetClass("/Game/Mods/CustomLuaMod/WBP_LobbyStatus_C.WBP_LobbyStatus_C");
+            SetTeams_FunctionAddress = NativeReflectionCached.GetFunction(classPtr, "SetTeams");
+            SetTeams_ParamsSize = NativeReflection.GetFunctionParamsSize(SetTeams_FunctionAddress);
+
+            NativeReflectionCached.GetPropertyRef(ref SetText_RedTeamList_PropertyAddress, SetTeams_FunctionAddress, "ReadTeamList");
+            SetText_RedTeamList_Offset = NativeReflectionCached.GetPropertyOffset(SetTeams_FunctionAddress, "ReadTeamList");
+            SetText_RedTeamList_IsValid = NativeReflectionCached.ValidatePropertyClass(SetTeams_FunctionAddress, "ReadTeamList", Classes.FArrayProperty);
+
+            NativeReflectionCached.GetPropertyRef(ref SetText_BlueTeamList_PropertyAddress, SetTeams_FunctionAddress, "BlueTeamList");
+            SetText_BlueTeamList_Offset = NativeReflectionCached.GetPropertyOffset(SetTeams_FunctionAddress, "BlueTeamList");
+            SetText_BlueTeamList_IsValid = NativeReflectionCached.ValidatePropertyClass(SetTeams_FunctionAddress, "BlueTeamList", Classes.FArrayProperty);
+
+            NativeReflectionCached.GetPropertyRef(ref SetText_SpectatorsList_PropertyAddress, SetTeams_FunctionAddress, "SpectatorsList");
+            SetText_SpectatorsList_Offset = NativeReflectionCached.GetPropertyOffset(SetTeams_FunctionAddress, "SpectatorsList");
+            SetText_SpectatorsList_IsValid = NativeReflectionCached.ValidatePropertyClass(SetTeams_FunctionAddress, "SpectatorsList", Classes.FArrayProperty);
+
+            SetTeams_IsValid = SetTeams_FunctionAddress != IntPtr.Zero && SetText_RedTeamList_IsValid && SetText_BlueTeamList_IsValid && SetText_SpectatorsList_IsValid;
+            NativeReflection.LogFunctionIsValid("/Game/Mods/CustomLuaMod/WBP_InfoMessage.WBP_InfoMessage_C:SetText", SetTeams_IsValid);
         }
     }
 }
