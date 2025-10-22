@@ -926,6 +926,7 @@ public class PatchOnPostTransBindData
     }
 }
 
+// TODO: Possibly synced by a buff, maybe we can disable this
 [HarmonyPatch(typeof(BUS_IronBodyComp), "OnIronBodyStart")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnIronBodyStart

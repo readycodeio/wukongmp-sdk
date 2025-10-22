@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using B1UI.GSUI;
-using CommB1;
+using CSharpModBase;
 using GSE.GSUI;
 using UnrealEngine.Runtime;
 
@@ -14,35 +14,38 @@ public static class UiUtils
 
     public static void ShowTip(string tip, bool autoHide)
     {
-        GenAGPage.ShowPage(39, nameof(ShowTip));
-        var dSSimTipsData = new DSSimTipsData(ETipsType.WarnTips, FText.FromString(tip), InShowTime: 5);
-        GenACommTips.SetTipsData(dSSimTipsData, nameof(ShowTip));
-
-        if (autoHide)
+        Utils.TryRunOnGameThread(() =>
         {
-            if (_tipHideTask is { IsCompleted: false })
-            {
-                // cancel previous hide task
-                _cts.Cancel();
-                _cts = new CancellationTokenSource();
-            }
+            GenAGPage.ShowPage(39, nameof(ShowTip));
+            var dSSimTipsData = new DSSimTipsData(ETipsType.WarnTips, FText.FromString(tip), InShowTime: 5);
+            GenACommTips.SetTipsData(dSSimTipsData, nameof(ShowTip));
 
-            _tipHideTask = Task.Run(async () =>
+            if (autoHide)
             {
-                await Task.Delay(5000, _cts.Token);
-                HideTip();
-                _tipHideTask = null;
-            }, _cts.Token);
-        }
+                if (_tipHideTask is { IsCompleted: false })
+                {
+                    // cancel previous hide task
+                    _cts.Cancel();
+                    _cts = new CancellationTokenSource();
+                }
+
+                _tipHideTask = Task.Run(async () =>
+                {
+                    await Task.Delay(5000, _cts.Token);
+                    HideTip();
+                    _tipHideTask = null;
+                }, _cts.Token);
+            }
+        });
     }
 
     private static void HideTip()
     {
-        GenAGPage.FadeOutPage(39, nameof(ShowTip));
+        Utils.TryRunOnGameThread(() => { GenAGPage.FadeOutPage(39, nameof(ShowTip)); });
     }
 
     public static void SetHudVisibility(bool visible)
     {
-        GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState");
+        Utils.TryRunOnGameThread(() => { GenABattleMain.SetBattleMainTempHide(!visible, "TickUpdateUIShowState"); });
     }
 }
