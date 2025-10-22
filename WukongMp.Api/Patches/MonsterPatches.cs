@@ -209,7 +209,7 @@ namespace WukongMp.Api.Patches
                 var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(__instance.InstancePtr.Value);
                 if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 {
-                    Logging.LogDebug("Deleting tamer entity from ECS: {Entity} (OnUnload)", tamerEntity.Value.ToString());
+                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (OnUnload)", tamerEntity.Value.Entity.Id);
                     DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
                 }
             }
