@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGU_UnrealWorldUtil), nameof(BGU_UnrealWorldUtil.RequestSpawnServant))]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchRequestSpawnServant
 {
     public static bool Prefix(ref string? __result, UWorld World, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)

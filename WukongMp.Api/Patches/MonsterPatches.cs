@@ -156,7 +156,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.TurnBack2Loaded))]
-    [HarmonyPatchCategory(Constants.CoopPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTurnBack2Loaded
     {
         static bool Prefix(FTamerRef __instance)

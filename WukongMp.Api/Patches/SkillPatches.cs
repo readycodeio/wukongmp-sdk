@@ -927,7 +927,7 @@ public class PatchOnPostTransBindData
 }
 
 [HarmonyPatch(typeof(BUS_IronBodyComp), "OnIronBodyStart")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnIronBodyStart
 {
     public static void Postfix(BUS_IronBodyComp __instance)
@@ -945,7 +945,7 @@ public static class PatchOnIronBodyStart
 }
 
 [HarmonyPatch(typeof(BPS_BattleMainInfoComp), "OnPossessed")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchBattleMainInfoCompOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
@@ -962,7 +962,7 @@ public static class PatchBattleMainInfoCompOnPossessed
 }
 
 [HarmonyPatch(typeof(BPS_InputSystem), "OnPossessed")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchInputSystemOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
@@ -979,7 +979,7 @@ public static class PatchInputSystemOnPossessed
 }
 
 [HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "OnPossessed")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchMultiTargetOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
@@ -996,7 +996,7 @@ public static class PatchMultiTargetOnPossessed
 }
 
 [HarmonyPatch(typeof(BUS_MagicallyChangeComp), "DoCastMagicallyChangeSkill_PendingCast")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchDoCastMagicallyChangeSkill_PendingCast
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset? _Config, int _SkillID, int _RecoverSkillID)
@@ -1017,7 +1017,7 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
 }
 
 [HarmonyPatch(typeof(BUS_MagicallyChangeComp), "PendingReset")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchPendingReset
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, EResetReason_MagicallyChange Reason)
@@ -1035,7 +1035,7 @@ public static class PatchPendingReset
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnSweepCheckHit
 {
     [HarmonyTargetMethodHint("b1.BUS_SweepCheckHitComp", "OnSweepCheckHit")]
