@@ -55,6 +55,11 @@ public sealed class WukongWidgetManager : IDisposable
             CoopStatusWidget.Instance.RemovePlayer(playerComp.NickName);
             CoopStatusWidget.Instance.AddPlayer(playerComp.NickName);
         }
+        else
+        {
+            var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
+            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
+        }
 
         RefreshWidgets();
     }
