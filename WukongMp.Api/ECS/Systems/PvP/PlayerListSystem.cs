@@ -10,12 +10,15 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems.PvP;
 
-public sealed class PlayerListSystem(WukongPlayerState playerState) : QuerySystem<MainCharacterComponent, PvPComponent>
+public sealed class PlayerListSystem(WukongPlayerState playerState, WukongEventBus eventBus) : QuerySystem<MainCharacterComponent, PvPComponent>
 {
     private readonly Stopwatch _timer = Stopwatch.StartNew();
 
     protected override void OnUpdate()
     {
+        if (!eventBus.IsGameplayLevel)
+            return;
+
         if (_timer.Elapsed < TimeSpan.FromSeconds(1))
             return;
 

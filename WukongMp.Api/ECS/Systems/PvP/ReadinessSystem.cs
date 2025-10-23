@@ -11,13 +11,17 @@ namespace WukongMp.Api.ECS.Systems.PvP;
 
 public sealed class ReadinessSystem(
     WukongAreaState areaState,
-    WukongPVP pvpUtils
+    WukongPVP pvpUtils,
+    WukongEventBus eventBus
 ) : QuerySystem<PvPComponent>
 {
     private int _lastReadyCount = -1;
 
     protected override void OnUpdate()
     {
+        if (!eventBus.IsGameplayLevel)
+            return;
+
         var players = 0;
         var readyCount = 0;
 
