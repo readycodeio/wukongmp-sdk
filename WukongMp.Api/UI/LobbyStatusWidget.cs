@@ -45,7 +45,7 @@ namespace WukongMp.Api.UI
             }
         }
 
-        public void RemovePlayerFromTeams(string nickName)
+        private void RemovePlayerFromTeams(string nickName)
         {
             RemoveFromTeam1(nickName);
             RemoveFromTeam2(nickName);
@@ -55,12 +55,14 @@ namespace WukongMp.Api.UI
         public unsafe void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList)
         {
             if (GameWidget == null || SetText_RedTeamList_PropertyAddress == null || SetText_BlueTeamList_PropertyAddress == null || SetText_SpectatorsList_PropertyAddress == null)
+            {
+                Logging.LogError("GameWidget or property address is null in WBP_LobbyStatus_C:SetTeams.");
                 return;
+            }
 
-            GameWidget.CheckDestroyed();
             if (!SetTeams_IsValid)
             {
-                NativeReflection.LogInvalidFunctionAccessed("/Game/Mods/CustomLuaMod/WBP_LobbyStatus_C.WBP_LobbyStatus_C:SetTeams");
+                Logging.LogError("Function WBP_LobbyStatus_C:SetTeams is not valid.");
                 return;
             }
 
@@ -151,6 +153,7 @@ namespace WukongMp.Api.UI
         protected override void PostInitialize()
         {
             SetStaticTexts(Texts.RedTeam, Texts.BlueTeam, Texts.Spectators, Texts.Ready, Texts.Connected, Texts.More);
+            InitNativeFunctions();
         }
 
         static LobbyStatusWidget()
@@ -176,13 +179,13 @@ namespace WukongMp.Api.UI
 
         public static void InitNativeFunctions()
         {
-            IntPtr classPtr = NativeReflection.GetClass("/Game/Mods/CustomLuaMod/WBP_LobbyStatus_C.WBP_LobbyStatus_C");
+            IntPtr classPtr = NativeReflection.GetClass("/Game/Mods/CustomLuaMod/WBP_LobbyStatus.WBP_LobbyStatus_C");
             SetTeams_FunctionAddress = NativeReflectionCached.GetFunction(classPtr, "SetTeams");
             SetTeams_ParamsSize = NativeReflection.GetFunctionParamsSize(SetTeams_FunctionAddress);
 
-            NativeReflectionCached.GetPropertyRef(ref SetText_RedTeamList_PropertyAddress, SetTeams_FunctionAddress, "ReadTeamList");
-            SetText_RedTeamList_Offset = NativeReflectionCached.GetPropertyOffset(SetTeams_FunctionAddress, "ReadTeamList");
-            SetText_RedTeamList_IsValid = NativeReflectionCached.ValidatePropertyClass(SetTeams_FunctionAddress, "ReadTeamList", Classes.FArrayProperty);
+            NativeReflectionCached.GetPropertyRef(ref SetText_RedTeamList_PropertyAddress, SetTeams_FunctionAddress, "RedTeamList");
+            SetText_RedTeamList_Offset = NativeReflectionCached.GetPropertyOffset(SetTeams_FunctionAddress, "RedTeamList");
+            SetText_RedTeamList_IsValid = NativeReflectionCached.ValidatePropertyClass(SetTeams_FunctionAddress, "RedTeamList", Classes.FArrayProperty);
 
             NativeReflectionCached.GetPropertyRef(ref SetText_BlueTeamList_PropertyAddress, SetTeams_FunctionAddress, "BlueTeamList");
             SetText_BlueTeamList_Offset = NativeReflectionCached.GetPropertyOffset(SetTeams_FunctionAddress, "BlueTeamList");
@@ -193,7 +196,8 @@ namespace WukongMp.Api.UI
             SetText_SpectatorsList_IsValid = NativeReflectionCached.ValidatePropertyClass(SetTeams_FunctionAddress, "SpectatorsList", Classes.FArrayProperty);
 
             SetTeams_IsValid = SetTeams_FunctionAddress != IntPtr.Zero && SetText_RedTeamList_IsValid && SetText_BlueTeamList_IsValid && SetText_SpectatorsList_IsValid;
-            NativeReflection.LogFunctionIsValid("/Game/Mods/CustomLuaMod/WBP_InfoMessage.WBP_InfoMessage_C:SetText", SetTeams_IsValid);
+            if (!SetTeams_IsValid)
+                Logging.LogError("Function WBP_LobbyStatus_C:SetTeams is not valid.");
         }
     }
 }
