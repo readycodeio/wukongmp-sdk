@@ -89,7 +89,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                mainEntity = pawnState.GetByEntityByPlayerPawn(Owner);
+                mainEntity = pawnState.GetEntityByPlayerPawn(Owner);
                 if (!mainEntity.HasValue)
                     return;
 
@@ -146,7 +146,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
+                var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Owner);
                 if (mainEntity.HasValue)
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
@@ -219,7 +219,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
+                var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Owner);
                 if (!mainEntity.HasValue)
                     return;
 
@@ -273,7 +273,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
+                var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Owner);
 
                 if (mainEntity.HasValue)
                 {
@@ -371,8 +371,8 @@ namespace WukongMp.Api.Patches
             {
                 if (Attacker != owner)
                 {
-                    var attackerMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Attacker);
-                    var killedMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+                    var attackerMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Attacker);
+                    var killedMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
 
                     if (attackerMainEntity != null && killedMainEntity != null)
                     {
@@ -601,7 +601,7 @@ namespace WukongMp.Api.Patches
             var clearTarget = true;
             string name = "null (Clear target)";
 
-            var newTargetPlayerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(NewTargetInfo?.LockTargetActor);
+            var newTargetPlayerEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(NewTargetInfo?.LockTargetActor);
             var newTargetMonsterEntity = DI.Instance.PawnState.GetEntityByTamerMonster(NewTargetInfo?.LockTargetActor);
 
             if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && !newTargetPlayerEntity.HasValue && !newTargetMonsterEntity.HasValue)

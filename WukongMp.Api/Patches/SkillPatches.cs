@@ -116,7 +116,7 @@ public static class PatchOnCastImmobilize
             return false;
         }
 
-        var castingMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(castingCharacter);
+        var castingMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(castingCharacter);
 
         if (!DI.Instance.AreaState.IsMasterClient)
         {
@@ -215,7 +215,7 @@ public static class PatchOnCastImmobilize
             BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
 
             // broadcast
-            var immobilizedMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(item);
+            var immobilizedMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(item);
             var immobilizedTamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(item);
 
             if ((immobilizedMainEntity != null || immobilizedTamerEntity.HasValue) && castingMainEntity != null)
@@ -268,7 +268,7 @@ public static class PatchRelieveImmobilized
             return false;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
         if (mainEntity == null && !tamerEntity.HasValue)
@@ -328,7 +328,7 @@ public static class PatchOnTriggerImmobilizedBreak
 
         if (DI.Instance.AreaState.IsMasterClient)
         {
-            var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
 
             if (mainEntity != null)
             {
@@ -505,7 +505,7 @@ public static class PatchOnTriggerPhantomRush
             return;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
         if (mainEntity != null && mainEntity != playerState.LocalMainCharacter && playerState.LocalPlayerEntity != null)
         {
             DI.Instance.ModeManager.SetPlayerVisibility(playerState.LocalPlayerEntity.Value, mainEntity.Value, false);
@@ -560,7 +560,7 @@ public static class PatchExitPhantomRush
             return;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
 
         if (mainEntity == null)
             return;
@@ -638,7 +638,7 @@ public static class TransformationPatch
             return;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(oldOwner);
+        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(oldOwner);
 
         if (mainEntity == null)
         {
@@ -710,7 +710,7 @@ public class PatchOnTransBeginSpawnNewOne
             DI.Instance.Rpc.SendPlayerTransBegin(new PlayerTransBeginData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
         }
 
-        var entity = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+        var entity = DI.Instance.PawnState.GetEntityByPlayerPawn(pawn);
         if (entity != null)
         {
             ref var mainComp = ref entity.Value.GetState();
@@ -750,7 +750,7 @@ public class PatchOnTransBackSpawnNewOne
             DI.Instance.Rpc.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
         }
 
-        __state = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+        __state = DI.Instance.PawnState.GetEntityByPlayerPawn(pawn);
     }
 
     public static void Postfix(UActorCompBaseCS __instance, object? __state)

@@ -417,7 +417,7 @@ public static class SpawningUtils
         {
             return false;
         }
-        var summonerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(summoner);
+        var summonerEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(summoner);
         if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
         {
             return true; // Local player summons.

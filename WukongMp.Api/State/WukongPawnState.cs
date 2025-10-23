@@ -95,7 +95,7 @@ public class WukongPawnState
         return result;
     }
 
-    public TamerEntity? GetByEntityByTamer(ABGUTamerBase? owner)
+    public TamerEntity? GetEntityByTamer(ABGUTamerBase? owner)
     {
         if (owner == null)
             return null;
@@ -114,7 +114,7 @@ public class WukongPawnState
         return result;
     }
 
-    public MainCharacterEntity? GetByEntityByPlayerPawn(AActor? owner)
+    public MainCharacterEntity? GetEntityByPlayerPawn(AActor? owner)
     {
         if (owner == null)
             return null;
@@ -136,7 +136,7 @@ public class WukongPawnState
 
     public NetworkId? GetNetworkIdByActor(AActor? owner)
     {
-        var playerEntity = GetByEntityByPlayerPawn(owner);
+        var playerEntity = GetEntityByPlayerPawn(owner);
         if (playerEntity.HasValue)
         {
             return playerEntity.Value.GetMeta().NetId;

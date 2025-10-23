@@ -130,7 +130,7 @@ namespace WukongMp.Api.Patches
 
             Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
             var monsterGuid = BGU_DataUtil.GetActorGuid(tamer.GetMonster());
-            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
             if (tamerEntity.HasValue)
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
@@ -169,7 +169,7 @@ namespace WukongMp.Api.Patches
 
             var tamerActor = __instance.InstancePtr.Get();
 
-            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamerActor);
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamerActor);
             if (tamerEntity.HasValue)
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
@@ -206,7 +206,7 @@ namespace WukongMp.Api.Patches
 
             if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && Constants.IsPvP))
             {
-                var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(__instance.InstancePtr.Value);
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
                 if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 {
                     Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (OnUnload)", tamerEntity.Value.Entity.Id);

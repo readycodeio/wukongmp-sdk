@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -12,6 +13,7 @@ using B1UI.GSSvc;
 using B1UI.GSUI;
 using GSE.GSUI;
 using HarmonyLib;
+using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using ResB1;
 using UnrealEngine.Runtime;
@@ -38,9 +40,39 @@ public static class PatchCanShowDamage
     }
 }
 
+[HarmonyPatch(typeof(BUS_BeAttackedComp), "CanShowDmgNumUI")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchDamageNumberDisplayCheck
+{
+    public static void Postfix(BUS_BeAttackedComp __instance, ref bool __result)
+    {
+        if (!__result)
+            return;
+
+        var owner = __instance.GetOwner();
+
+        if (owner == null)
+            return;
+
+        var entity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+        if (entity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(entity.Value.Entity))
+        {
+            return;
+        }
+
+        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+        if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+        {
+            return;
+        }
+
+        __result = false;
+    }
+}
+
 [HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class UiPatches
+public static class PatchSendDamageNumbers
 {
     [HarmonyTargetMethodHint("b1.BUS_UIControlSystemV2", "OnDisplayDamageNumUI")]
     private static MethodBase TargetMethod()
@@ -48,16 +80,12 @@ public static class UiPatches
         return AccessTools.Method("b1.BUS_UIControlSystemV2:OnDisplayDamageNumUI");
     }
 
-    public static bool Prefix(DamageNumParam Param)
+    public static void Prefix(DamageNumParam Param)
     {
         if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        if (!DI.Instance.AreaState.IsMasterClient)
-            return false;
+            return;
 
         DI.Instance.Rpc.SendDamageNum(Param);
-        return true;
     }
 }
 

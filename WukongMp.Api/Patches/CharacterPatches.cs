@@ -93,7 +93,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                var otherMainEntity = pawnState.GetByEntityByPlayerPawn(character);
+                var otherMainEntity = pawnState.GetEntityByPlayerPawn(character);
 
                 if (otherMainEntity != null)
                 {

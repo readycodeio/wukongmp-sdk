@@ -30,7 +30,7 @@ public static class CoopPatchAttrs
             return; // players own their characters
         }
 
-        var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(__instance.Owner);
+        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(__instance.Owner);
 
         // remote player - sync properties and HP
 
@@ -125,7 +125,7 @@ public static class PatchTamerStatResetOnBeginPlay
         if (tamer.IsNullOrDestroyed())
             return; // no tamer
 
-        var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
+        var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
 
         if (!tamerEntity.HasValue)
             return; // not found

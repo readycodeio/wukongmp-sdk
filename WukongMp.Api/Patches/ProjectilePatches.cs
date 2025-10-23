@@ -46,7 +46,7 @@ public class PatchOnSwitchBulletTarget
             var newTargetId = default(NetworkId);
             if (InnerTarget is BGUPlayerCharacterCS)
             {
-                var mainCharacterEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(InnerTarget);
+                var mainCharacterEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(InnerTarget);
 
                 if (mainCharacterEntity == null)
                 {

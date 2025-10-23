@@ -32,7 +32,7 @@ public static class PvpPatchAttrs
             if (__instance.Owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
                 return;
 
-            var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(__instance.Owner);
+            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(__instance.Owner);
             if (mainEntity != null)
             {
                 ref var mainComp = ref mainEntity.Value.GetState();
@@ -58,7 +58,7 @@ public static class PvpPatchAttrs
         }
         else
         {
-            var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(__instance.Owner);
+            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(__instance.Owner);
 
             // remote player
             if (mainEntity != null)
@@ -182,7 +182,7 @@ public static class PvpPatchHp
                 }
 
                 // remote player was damaged, set his properties
-                var remoteMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+                var remoteMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
                 if (remoteMainEntity != null)
                 {
                     ref var remoteMain = ref remoteMainEntity.Value.GetState();
