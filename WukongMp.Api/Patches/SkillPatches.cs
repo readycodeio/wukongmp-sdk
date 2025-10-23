@@ -26,7 +26,7 @@ public static class PatchTriggerMagicSkill
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        return !SkillsUtils.IsSkillBlacklisted(SkillID) && (DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true);
+        return DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true;
     }
 }
 
@@ -52,6 +52,7 @@ public static class PatchTriggerItemSkill
         {
             case Constants.GourdSkillId when !room.GourdAllowed:
             case Constants.ConsumableBuffSkillId when !room.ConsumablesAllowed:
+            case Constants.IncenseTrailTalismanSkillId:
                 return false;
             default:
                 return true;

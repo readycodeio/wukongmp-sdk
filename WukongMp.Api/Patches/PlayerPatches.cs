@@ -367,7 +367,7 @@ namespace WukongMp.Api.Patches
 
             __state = true;
 
-            if (Constants.IsPvP && DI.Instance.AreaState is { IsMasterClient: true, CurrentArea.RoomComponent: { InPvP: true, InCombatRound: true } })
+            if (Constants.IsPvP && DI.Instance.AreaState is { CurrentArea.RoomComponent: { InPvP: true, InCombatRound: true } })
             {
                 if (Attacker != owner)
                 {
@@ -376,6 +376,9 @@ namespace WukongMp.Api.Patches
 
                     if (attackerMainEntity != null && killedMainEntity != null)
                     {
+                        if (!DI.Instance.ClientOwnership.OwnsEntity(killedMainEntity.Value.Entity))
+                            return;
+
                         ref var attackerMain = ref attackerMainEntity.Value.GetState();
                         ref var killedMain = ref killedMainEntity.Value.GetState();
 
@@ -388,6 +391,9 @@ namespace WukongMp.Api.Patches
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
                 if (tamerEntity.HasValue)
                 {
+                    if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                        return;
+
                     ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                     var tamerClass = localTamer.Tamer?.GetClass();
                     var netId = tamerEntity.Value.GetMeta().NetId;
@@ -481,7 +487,6 @@ namespace WukongMp.Api.Patches
 
                 ref var meta = ref tamerEntity.Value.GetMeta();
 
-                // TODO: send attacker and anim montage
                 var payload = new UnitDeadPacket(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                 DI.Instance.Rpc.SendUnitDead(payload);
                 Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
