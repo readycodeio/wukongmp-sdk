@@ -8,7 +8,7 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class CoopPatchAttrs
 {
     public static void Postfix(BUC_AttrContainer __instance)
@@ -146,7 +146,7 @@ public static class PatchTamerStatResetOnBeginPlay
 
 
 [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class CoopPatchHp
 {
     public static void Postfix(BUS_AttrComp __instance, BUC_AttrContainer ___AttrContainer, EBGUAttrFloat AttrID)
