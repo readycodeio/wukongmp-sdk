@@ -12,6 +12,8 @@ public static class ClientUtils
 
     public static void RegisterTeamHostility(int team1, int team2)
     {
+        if (team1 == team2) return;
+
         var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
 
         EnsureTeamRelationExists(teamRelationData, team1);
