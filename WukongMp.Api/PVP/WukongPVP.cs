@@ -108,14 +108,14 @@ public partial class WukongPVP : IDisposable
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerInsideArea += OnOtherPlayerInsideAreaHandler;
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
-        
+
         InitRpc();
     }
 
     public void Dispose()
     {
         DeInitRpc();
-        
+
         _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
         _state.OnOtherPlayerInsideArea -= OnOtherPlayerInsideAreaHandler;
         _state.OnJoinedArea -= OnJoinedAreaHandler;
@@ -182,7 +182,6 @@ public partial class WukongPVP : IDisposable
         foreach (var (playerId, playerEntity, mainEntity) in playerEntities)
         {
             ref var localMainComp = ref mainEntity.GetLocalState();
-            //ref readonly var teamComp = ref mainEntity.GetTeam();
             var team = playerEntity.GetState().TeamId;
 
             var teamBaseAngle = teamIndex[team] * teamAngleStep;
@@ -317,6 +316,7 @@ public partial class WukongPVP : IDisposable
         GameMessageWidget.Instance.SetVisibility(false);
         CountdownWidget.Instance.StopCountdown();
         TimerWidget.Instance.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, RoundEndedTimeout);
+
         if (!_areaState.IsMasterClient)
             return;
 
@@ -329,7 +329,6 @@ public partial class WukongPVP : IDisposable
         room.InCombatRound = true;
 
         var monsterCount = 0;
-        // TODO: WorldLock?
         _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity _) =>
         {
             if (localTamerComp.IsTamerSynced)
@@ -386,7 +385,7 @@ public partial class WukongPVP : IDisposable
 
     public void ResetRoundState()
     {
-        _ecsLoop.Scheduler.Schedule((_) => { TamerUtils.DestroyAllTamers(); });
+        _ecsLoop.Scheduler.Schedule(_ => { TamerUtils.DestroyAllTamers(); });
     }
 
     public void SetReadyState(bool isReady)
@@ -689,7 +688,7 @@ public partial class WukongPVP : IDisposable
             Logging.LogError("No area entity found, cannot setup added player");
             return;
         }
-        
+
         var mainEntity = _playerState.GetMainCharacterById(playerId);
         if (mainEntity == null)
         {
@@ -825,7 +824,7 @@ public partial class WukongPVP : IDisposable
             });
         }
     }
-    
+
     #endregion
 
     #region RPC
@@ -929,38 +928,11 @@ public partial class WukongPVP : IDisposable
 
                 if (!mainEntity.Value.GetState().IsDead)
                 {
-                    _ecsLoop.Scheduler.Schedule( static (_, mainEntity0) => 
+                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
                     {
-                        var events = BUS_EventCollectionCS.Get(mainEntity0.Value.GetLocalState().Pawn!);
+                        var events = BUS_EventCollectionCS.Get(mainEntity0.GetLocalState().Pawn!);
                         events?.Evt_TriggerTeleportResetPlayer!.Invoke();
-                    }, mainEntity);
-                }
-
-                if (_areaState.IsMasterClient)
-                {
-                    // reset other players' Hp to HpMax if they are not dead
-                    foreach (var d in OtherPlayers)
-                    {
-                        ref var otherMain = ref d.Character.GetState();
-                        ref var otherLocalMain = ref d.Character.GetLocalState();
-
-                        if (!otherMain.IsDead)
-                        {
-                            if (otherLocalMain.Pawn == null)
-                            {
-                                Logging.LogError("Pawn is null in {Patch}", nameof(OnPvpEvent));
-                                return;
-                            }
-
-                            var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(otherLocalMain.Pawn);
-                            if (attrContainer != null)
-                            {
-                                var hpMax = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
-                                attrContainer.SetFloatValue(EBGUAttrFloat.Hp, hpMax);
-                                otherMain.Hp = hpMax;
-                            }
-                        }
-                    }
+                    }, mainEntity.Value);
                 }
 
                 break;

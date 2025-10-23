@@ -236,11 +236,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(
             BUC_ABPBasicData __instance,
-            AActor Owner,
-            IBUC_ABPCharacterData ChrData,
-            IBUC_ABPBGUCharacterData BGUData,
-            IBUC_SpeedCtrlData SpeedCtrlData,
-            float DeltaTime)
+            AActor Owner)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -350,7 +346,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             if (DeadReason == EDeadReason.PlayerTrans)
-                return; // TODO: Camera is broken after transformation, stuck in one direction
+                return;
 
             var owner = __instance.GetOwner();
 
@@ -434,13 +430,9 @@ namespace WukongMp.Api.Patches
         public static void Postfix(
             BUS_DeadComp __instance,
             bool __state,
-            IBUC_SimpleStateData ___SimpleStateData,
-            IBUC_UnitStateData ___UnitStateData,
             EDeadReason DeadReason,
-            AActor Attacker,
             int DmgID = -1,
             int StiffLevel = -1,
-            UAnimMontage? BeAttackedAM = null,
             bool bIsDotDmg = false,
             EAbnormalStateType AbnormalType = EAbnormalStateType.None)
         {

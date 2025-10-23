@@ -209,7 +209,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnSummon(SummonRequestData data)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, data0) => 
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             self._logger.LogDebug("Received OnSpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", data0.SummonerId, data0.SummonGuid, data0.SummonClassPath);
             SpawningUtils.SpawnSummonedUnitWithGuid(data0.ToGame());
@@ -231,10 +231,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnUnit(PlayerId __sender, UnitSpawnData data)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, data0) =>
-        {
-            SpawningUtils.SpawnUnitLocally(data0.Guid, data0.UnitName, data0.TeamId, data0.Location);
-        }, data);
+        _ecsLoop.Scheduler.Schedule(static (_, data0) => { SpawningUtils.SpawnUnitLocally(data0.Guid, data0.UnitName, data0.TeamId, data0.Location); }, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -384,7 +381,7 @@ public partial class WukongRpcCallbacks : IDisposable
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
-            // TODO: Use targeted RPC mode (select which peers to send to)
+
             ref var mainComp = ref mainEntity.GetState();
             if (data0.PlayerId != mainComp.PlayerId)
                 return;
@@ -469,6 +466,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 self._logger.LogError("pawn.Mesh is null");
                 return;
             }
+
             var animInstance = pawn.Mesh.GetAnimInstance();
             if (animInstance == null)
             {
