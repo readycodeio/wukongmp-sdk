@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
@@ -10,13 +11,16 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems.PvP;
 
-public sealed class PlayerListSystem(WukongPlayerState playerState, WukongEventBus eventBus) : QuerySystem<MainCharacterComponent, PvPComponent>
+public sealed class PlayerListSystem(
+    WukongPlayerState playerState,
+    WukongAreaState areaState
+) : QuerySystem<MainCharacterComponent, PvPComponent>
 {
     private readonly Stopwatch _timer = Stopwatch.StartNew();
 
     protected override void OnUpdate()
     {
-        if (!eventBus.IsGameplayLevel)
+        if (!areaState.CurrentArea.HasValue)
             return;
 
         if (_timer.Elapsed < TimeSpan.FromSeconds(1))
@@ -28,29 +32,31 @@ public sealed class PlayerListSystem(WukongPlayerState playerState, WukongEventB
         List<string> blueTeamList = [];
         List<string> spectatorsList = [];
 
-        Query.ForEachEntity((ref MainCharacterComponent mainCharacterComponent, ref PvPComponent pvp, Entity _) =>
-        {
-            var player = playerState.GetPlayerById(mainCharacterComponent.PlayerId);
-            if (player.HasValue)
+        Query
+            .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity)
+            .ForEachEntity((ref MainCharacterComponent mainCharacterComponent, ref PvPComponent pvp, Entity _) =>
             {
-                var team = player.Value.GetState().TeamId;
-                if (pvp.IsSpectator)
+                var player = playerState.GetPlayerById(mainCharacterComponent.PlayerId);
+                if (player.HasValue)
                 {
-                    spectatorsList.Add(mainCharacterComponent.CharacterNickName);
-                    return;
+                    var team = player.Value.GetState().TeamId;
+                    if (pvp.IsSpectator)
+                    {
+                        spectatorsList.Add(mainCharacterComponent.CharacterNickName);
+                        return;
+                    }
+                    else if (team == Constants.AvailableTeamIds[0])
+                    {
+                        redTeamList.Add(mainCharacterComponent.CharacterNickName);
+                        return;
+                    }
+                    else if (team == Constants.AvailableTeamIds[1])
+                    {
+                        blueTeamList.Add(mainCharacterComponent.CharacterNickName);
+                        return;
+                    }
                 }
-                else if (team == Constants.AvailableTeamIds[0])
-                {
-                    redTeamList.Add(mainCharacterComponent.CharacterNickName);
-                    return;
-                }
-                else if (team == Constants.AvailableTeamIds[1])
-                {
-                    blueTeamList.Add(mainCharacterComponent.CharacterNickName);
-                    return;
-                }
-            }
-        });
+            });
 
         LobbyStatusWidget.Instance.SetTeams(redTeamList, blueTeamList, spectatorsList);
         LobbyStatusWidget.Instance.SetConnectedCount(Query.Count);

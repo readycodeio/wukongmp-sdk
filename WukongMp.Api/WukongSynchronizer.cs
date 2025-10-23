@@ -87,8 +87,8 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         if (pvp != null)
         {
-            _syncGroup.Add(new ReadinessSystem(areaState, pvp, eventBus));
-            _syncGroup.Add(new PlayerListSystem(playerState, eventBus));
+            _syncGroup.Add(new ReadinessSystem(areaState, pvp));
+            _syncGroup.Add(new PlayerListSystem(playerState, areaState));
         }
         else
         {

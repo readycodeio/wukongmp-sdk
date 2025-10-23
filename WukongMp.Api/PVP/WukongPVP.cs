@@ -603,12 +603,6 @@ public partial class WukongPVP : IDisposable
     {
         Logging.LogInformation("Joining or creating private room");
 
-        if (!_areaState.IsMasterClient)
-        {
-            Logging.LogInformation("Not master client, skipping initialization");
-            return;
-        }
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
         {

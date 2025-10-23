@@ -1,5 +1,6 @@
 ﻿using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.PVP;
@@ -11,26 +12,27 @@ namespace WukongMp.Api.ECS.Systems.PvP;
 
 public sealed class ReadinessSystem(
     WukongAreaState areaState,
-    WukongPVP pvpUtils,
-    WukongEventBus eventBus
+    WukongPVP pvpUtils
 ) : QuerySystem<PvPComponent>
 {
     private int _lastReadyCount = -1;
 
     protected override void OnUpdate()
     {
-        if (!eventBus.IsGameplayLevel)
+        if (!areaState.CurrentArea.HasValue)
             return;
 
         var players = 0;
         var readyCount = 0;
 
-        Query.ForEachEntity((ref PvPComponent pvp, Entity _) =>
-        {
-            players++;
-            if (pvp.IsReadyForPvP)
-                readyCount++;
-        });
+        Query
+            .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity)
+            .ForEachEntity((ref PvPComponent pvp, Entity _) =>
+            {
+                players++;
+                if (pvp.IsReadyForPvP)
+                    readyCount++;
+            });
 
         if (_lastReadyCount == readyCount)
             return;
