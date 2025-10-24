@@ -17,8 +17,7 @@ namespace WukongMp.Api.WukongUtils
             localMainComp.Pawn?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
             if (setLookAt)
             {
-                Logging.LogDebug("Setting controller rotation");
-                localMainComp.Pawn?.GetController().SetControlRotation(rotation);
+                BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_ResetCameraSpringArmRot.Invoke();
             }
         }
 
