@@ -410,11 +410,11 @@ public partial class WukongPVP : IDisposable
     {
         if (_playerState.LocalMainCharacter == null)
             return;
-        var isReady = _playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP;
+        var newIsReady = !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP;
         var nickname = _playerState.LocalMainCharacter.Value.GetState().CharacterNickName;
-        SetReadyState(!isReady);
-        SwitchReadyState(!isReady);
-        _chatter.SendServerMessage(isReady ? "PlayerIsReady" : "PlayerIsNotReady", nickname);
+        SetReadyState(newIsReady);
+        SwitchReadyState(newIsReady);
+        _chatter.SendServerMessage(newIsReady ? "PlayerIsReady" : "PlayerIsNotReady", nickname);
     }
 
     public void SwitchTeam(bool force = false)
