@@ -136,9 +136,8 @@ public partial class WukongPVP : IDisposable
 
     public async Task StartRoundAsync()
     {
-        if (!_areaState.IsMasterClient)
+        if (!_areaState.OwnsPvpState)
         {
-            Logging.LogError("Only master client can use the lobby manager");
             return;
         }
 
@@ -151,9 +150,8 @@ public partial class WukongPVP : IDisposable
 
     private void PlacePlayers(FVector center, float radius)
     {
-        if (!_areaState.IsMasterClient)
+        if (!_areaState.OwnsPvpState)
         {
-            Logging.LogError("Only master client can use the lobby manager");
             return;
         }
 
@@ -198,7 +196,6 @@ public partial class WukongPVP : IDisposable
 
         if (!_areaState.OwnsPvpState)
         {
-            Logging.LogError("Only master client can use the lobby manager");
             return;
         }
 
@@ -222,7 +219,7 @@ public partial class WukongPVP : IDisposable
         // wait until all players death animations are finished
         await Task.Delay(5000);
 
-        if (!_areaState.IsMasterClient)
+        if (!_areaState.OwnsPvpState)
         {
             Logging.LogDebug("Master client disconnected before finishing EndRoundAsync");
             return;
@@ -285,9 +282,8 @@ public partial class WukongPVP : IDisposable
 
     private async Task ResetHpAndRespawnAllPlayers()
     {
-        if (!_areaState.IsMasterClient)
+        if (!_areaState.OwnsPvpState)
         {
-            Logging.LogError("Only master client can use the lobby manager");
             return;
         }
 
@@ -319,7 +315,7 @@ public partial class WukongPVP : IDisposable
         if (!_areaState.OwnsPvpState)
             return;
 
-        _areaState.OwnedPvpStateRef().InCombatRound = true;
+        _areaState.OwnedPvpStateRef().InPvP = true;
 
         var monsterCount = 0;
         _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity _) =>
@@ -348,7 +344,7 @@ public partial class WukongPVP : IDisposable
     private void RoundEndedTimeout()
     {
         Logging.LogInformation("Round time ended, ending round");
-        if (_areaState.IsMasterClient)
+        if (_areaState.OwnsPvpState)
         {
             Task.Run(async () => await EndRoundAsync(Constants.DrawTeamId));
         }
@@ -363,7 +359,7 @@ public partial class WukongPVP : IDisposable
             return;
 
         if (_areaState.OwnsPvpState)
-            _areaState.OwnedPvpStateRef().InCombatRound = false;
+            _areaState.OwnedPvpStateRef().InPvP = false;
 
         if (_areaState.IsMasterClient)
         {
@@ -627,12 +623,6 @@ public partial class WukongPVP : IDisposable
             return;
         }
 
-        // if (_areaState.IsMasterClient)
-        // {
-        //     areaEntity.Value.GetRoom().InMatchmaking = false;
-        //     _rpc.SendEndMatchmaking();
-        // }
-
         TimerWidget.Instance.StopCountdown();
     }
 
@@ -692,7 +682,7 @@ public partial class WukongPVP : IDisposable
 
     private void OnOtherPlayerOutsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerOutsideAreaReason arg3)
     {
-        if (_areaState.IsMasterClient)
+        if (_areaState.OwnsPvpState)
         {
             _ = Task.Run(async () =>
             {
@@ -708,7 +698,7 @@ public partial class WukongPVP : IDisposable
 
     public void SendPvPEvent(PvPEvent ev, int data = 0)
     {
-        if (!_areaState.IsMasterClient)
+        if (!_areaState.OwnsPvpState)
         {
             Logging.LogError("Only room owner can send start countdown.");
             return;

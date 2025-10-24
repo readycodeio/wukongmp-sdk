@@ -363,7 +363,7 @@ namespace WukongMp.Api.Patches
 
             __state = true;
 
-            if (Constants.IsPvP && DI.Instance.AreaState is { PvpState: { InPvP: true, InCombatRound: true } })
+            if (Constants.IsPvP && DI.Instance.AreaState is { PvpState.InPvP: true })
             {
                 if (Attacker != owner)
                 {
