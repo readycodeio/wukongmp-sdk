@@ -45,7 +45,7 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
 
     public Entity? PvpStateEntity { get; set; }
     
-    public PvPStateComponent? PvpState
+    public PvpStateComponent? PvpState
     {
         get
         {
@@ -55,7 +55,7 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
             if (!PvpStateEntity.HasValue && CurrentArea.HasValue)
             {
                 PvpStateEntity = world
-                    .Query<PvPStateComponent>()
+                    .Query<PvpStateComponent>()
                     .HasValue<InScopeComponent, Entity>(CurrentArea.Value.Entity)
                     .Entities.FirstOrDefault();
             }
@@ -63,15 +63,15 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
             if (PvpStateEntity is { IsNull: true })
                 PvpStateEntity = null;
 
-            return PvpStateEntity?.GetComponent<PvPStateComponent>();
+            return PvpStateEntity?.GetComponent<PvpStateComponent>();
         }
     }
     
-    public delegate void MutatePvpStateAction(ref PvPStateComponent pvpStateComponent);
+    public delegate void MutatePvpStateAction(ref PvpStateComponent pvpStateComponent);
     
     public bool OwnsPvpState => PvpStateEntity.HasValue && clientOwnershipManager.OwnsEntity(PvpStateEntity.Value);
 
-    public ref PvPStateComponent OwnedPvpStateRef()
+    public ref PvpStateComponent OwnedPvpStateRef()
     {
         if (!PvpStateEntity.HasValue)
             throw new InvalidOperationException("No PvP state entity available.");
@@ -79,6 +79,6 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
         if (!clientOwnershipManager.OwnsEntity(PvpStateEntity.Value))
             throw new InvalidOperationException("Client does not own the PvP state entity.");
 
-        return ref PvpStateEntity.Value.GetComponent<PvPStateComponent>();
+        return ref PvpStateEntity.Value.GetComponent<PvpStateComponent>();
     }
 }
