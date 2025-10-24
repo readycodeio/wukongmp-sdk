@@ -43,8 +43,14 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
         }
     }
 
-    public Entity? PvpStateEntity { get; set; }
-    
+    private Entity? _pvpStateEntity;
+
+    public Entity? PvpStateEntity
+    {
+        get => _pvpStateEntity?.IsNull is true ? null : _pvpStateEntity;
+        set => _pvpStateEntity = value;
+    }
+
     public PvpStateComponent? PvpState
     {
         get
@@ -59,16 +65,11 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
                     .HasValue<InScopeComponent, Entity>(CurrentArea.Value.Entity)
                     .Entities.FirstOrDefault();
             }
-            
-            if (PvpStateEntity is { IsNull: true })
-                PvpStateEntity = null;
 
             return PvpStateEntity?.GetComponent<PvpStateComponent>();
         }
     }
-    
-    public delegate void MutatePvpStateAction(ref PvpStateComponent pvpStateComponent);
-    
+
     public bool OwnsPvpState => PvpStateEntity.HasValue && clientOwnershipManager.OwnsEntity(PvpStateEntity.Value);
 
     public ref PvpStateComponent OwnedPvpStateRef()
