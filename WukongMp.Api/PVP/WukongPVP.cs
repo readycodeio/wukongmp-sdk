@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using b1;
+﻿using b1;
 using BtlShare;
+using CommB1;
 using CSharpModBase;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
@@ -19,6 +16,10 @@ using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Values;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Chat;
@@ -667,46 +668,6 @@ public partial class WukongPVP : IDisposable
         // }
     }
 
-    private void SetupAddedPlayer(PlayerId playerId)
-    {
-        var playerEntity = _playerState.GetPlayerById(playerId);
-        if (playerEntity == null)
-        {
-            Logging.LogError("Player entity is null");
-            return;
-        }
-
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-        {
-            Logging.LogError("No area entity found, cannot setup added player");
-            return;
-        }
-
-        var mainEntity = _playerState.GetMainCharacterById(playerId);
-        if (mainEntity == null)
-        {
-            Logging.LogError("Main character entity is null");
-            return;
-        }
-
-        ref var room = ref areaEntity.Value.GetRoom();
-        ref var pvpComp = ref mainEntity.Value.GetPvP();
-
-        // set IsSpectator if client should be (joining during fight)
-        var isSpectator = pvpComp.IsSpectator;
-
-        if (!isSpectator)
-        {
-            pvpComp.IsSpectator = room.InPvP && !pvpComp.IsReadyForPvP;
-        }
-
-        if (_state.AreaPlayers.Count == Constants.MaxPlayers)
-        {
-            EndMatchmaking();
-        }
-    }
-
     [Obsolete("Matchmaking is not supported for now")]
     private void EndMatchmaking()
     {
@@ -778,7 +739,10 @@ public partial class WukongPVP : IDisposable
     private void OnOtherPlayerInsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerInsideAreaReason arg3)
     {
         Logging.LogInformation("Player {PlayerId} entered the room", playerId);
-        SetupAddedPlayer(playerId);
+        if (_state.AreaPlayers.Count == Constants.MaxPlayers)
+        {
+            EndMatchmaking();
+        }
     }
 
     private void OnOtherPlayerOutsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerOutsideAreaReason arg3)
@@ -870,14 +834,8 @@ public partial class WukongPVP : IDisposable
                 // ReSharper disable once AsyncVoidMethod
                 _ecsLoop.Scheduler.Schedule(async void (_, self) =>
                 {
-                    if (self._areaState.IsMasterClient)
-                    {
-                        foreach (var d in self.SpectatingPlayers)
-                        {
-                            d.Character.GetPvP().IsSpectator = false;
-                        }
-                    }
-
+                    if (self._playerState.LocalMainCharacter.HasValue)
+                        self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
                     await Task.Delay(2000);
                     PvPUtils.EndTournament();
                     self.ExitPvP();

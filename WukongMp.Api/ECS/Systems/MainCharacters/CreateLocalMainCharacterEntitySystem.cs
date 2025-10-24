@@ -15,7 +15,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
+public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, WukongAreaState areaState, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
@@ -89,6 +89,17 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         {
             var spawnPosition = SpawningUtils.GetSpawnPosition(GameUtils.GetControlledPawn(), mainComp.PlayerId.RawValue, Constants.MaxPlayers);
             PlayerUtils.TeleportLocalPlayer(mainEntity, spawnPosition, FRotator.ZeroRotator, false);
+
+            var areaEntity = areaState.CurrentArea;
+            if (areaEntity != null)
+            {
+                ref var room = ref areaEntity.Value.GetRoom();
+                ref var pvpComp = ref mainEntity.GetPvP();
+
+                // Set IsSpectator if joining during fight.
+                pvpComp.IsSpectator = room.InPvP;
+                Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+            }
         }
 
         Logging.LogDebug("Finished setting initial player properties");
