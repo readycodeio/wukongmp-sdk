@@ -199,7 +199,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerUnload
     {
-        public static void Postfix(FTamerRef __instance)
+        public static void Prefix(FTamerRef __instance)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;

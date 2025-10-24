@@ -38,7 +38,6 @@ namespace WukongMp.Api.WukongUtils
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
-                actor.CurrentRef.OnUnload();
                 actor.CurrentRef.DestroyTamer();
             }
         }
@@ -140,7 +139,6 @@ namespace WukongMp.Api.WukongUtils
 
         public static void DestroyTamer(string guid, BUTamerActor? tamerActor, AActor? markerActor)
         {
-            tamerActor?.CurrentRef.OnUnload();
             tamerActor?.CurrentRef.DestroyTamer();
             if (!markerActor.IsNullOrDestroyed())
             {
