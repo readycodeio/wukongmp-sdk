@@ -219,7 +219,7 @@ public static class SpawningUtils
     public static void SpawnUnitAsOwner(string unitName, FVector locaction, int teamId)
     {
         var guid = Guid.NewGuid().ToString();
-        var tamerActor = SpawnUnitLocally(guid, unitName, teamId, locaction);
+        var tamerActor = SpawnUnitLocallyByName(guid, unitName, locaction);
         if (tamerActor != null)
         {
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
@@ -233,15 +233,15 @@ public static class SpawningUtils
             nameComp.Nickname = "Bot";
 
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, locaction.ToString());
-            DI.Instance.Rpc.SendSpawnUnit(new DTO.UnitSpawnData(unitName, guid, teamId, locaction));
+            DI.Instance.Rpc.SendSpawnUnit(new DTO.UnitSpawnData(unitName, guid, locaction));
         }
     }
 
-    public static BUTamerActor? SpawnUnitLocally(string guid, string unitName, int teamId, FVector location)
+    public static BUTamerActor? SpawnUnitLocallyByName(string guid, string unitName, FVector location)
     {
         if (!UnitPathsConfig.IsValidUnitName(unitName))
         {
-            Logging.LogError("Invalid unit name in SpawnUnitLocally: {UnitName}", unitName);
+            Logging.LogError("Invalid unit name in SpawnUnitLocallyByName: {UnitName}", unitName);
             return null;
         }
 
@@ -251,6 +251,11 @@ public static class SpawningUtils
         if (string.IsNullOrEmpty(unitPath))
             return null;
 
+        return SpawnUnitLocallyByPath(guid, unitPath, location);
+    }
+
+    public static BUTamerActor? SpawnUnitLocallyByPath(string guid, string unitPath, FVector location)
+    {
         var world = GameUtils.GetWorld();
 
         var unitClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
@@ -271,10 +276,6 @@ public static class SpawningUtils
 
         UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
         Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
-
-       
-        //BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
-
 
         return tamerActor;
     }

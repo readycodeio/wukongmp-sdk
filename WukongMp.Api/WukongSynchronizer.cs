@@ -12,6 +12,8 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Jobs;
@@ -162,6 +164,14 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
     private void OnApplySnapshot()
     {
-        _world.Query<LocalTamerComponent, MetadataComponent>().Each(new DiscoverLocallySpawnedMonsters());
+        if (Constants.IsPvP)
+        {
+            _world.Query<TamerComponent, TranslationComponent>().Each(new SpawnMonstersFromEcs());
+        }
+        else
+        {
+            // TODO: Probably can be deleted.
+            _world.Query<LocalTamerComponent, MetadataComponent>().Each(new DiscoverLocallySpawnedMonsters());
+        }
     }
 }

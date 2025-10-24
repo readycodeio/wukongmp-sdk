@@ -231,7 +231,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnSpawnUnit(PlayerId __sender, UnitSpawnData data)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, data0) => { SpawningUtils.SpawnUnitLocally(data0.Guid, data0.UnitName, data0.TeamId, data0.Location); }, data);
+        _ecsLoop.Scheduler.Schedule(static (_, data0) => { SpawningUtils.SpawnUnitLocallyByName(data0.Guid, data0.UnitName, data0.Location); }, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
