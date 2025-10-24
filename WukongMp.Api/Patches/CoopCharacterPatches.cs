@@ -80,7 +80,6 @@ public static class CoopPatchAttrs
         }
 
         // remote monster - sync HP
-
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance.Owner as BGUCharacterCS);
         if (!tamerEntity.HasValue)
             return;

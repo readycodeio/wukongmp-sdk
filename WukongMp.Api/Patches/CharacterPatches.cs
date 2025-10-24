@@ -228,6 +228,9 @@ namespace WukongMp.Api.Patches
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
+            
+            if (Trigger == EBUStateTrigger.Die)
+                return;
 
             var playerState = DI.Instance.PlayerState;
             var owner = __instance.GetOwner();
@@ -235,11 +238,7 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                if (Trigger == EBUStateTrigger.Die)
-                    return;
-
                 var netId = tamerEntity.Value.GetMeta().NetId;
-
                 DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
             }
 
