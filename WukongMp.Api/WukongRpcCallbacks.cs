@@ -386,7 +386,7 @@ public partial class WukongRpcCallbacks : IDisposable
             if (data0.PlayerId != mainComp.PlayerId)
                 return;
 
-            PlayerUtils.TeleportLocalPlayer(mainEntity, data0.Location, data0.Rotation, false);
+            PlayerUtils.TeleportLocalPlayer(mainEntity, data0.Location, data0.Rotation, true);
         }, this, data);
     }
 

@@ -9,12 +9,16 @@ namespace WukongMp.Api.WukongUtils
 {
     public static class PlayerUtils
     {
-        public static void TeleportLocalPlayer(MainCharacterEntity mainEntity, FVector location, FRotator rotation, bool sweep)
+        public static void TeleportLocalPlayer(MainCharacterEntity mainEntity, FVector location, FRotator rotation, bool setLookAt = true)
         {
             ref var localMainComp = ref mainEntity.GetLocalState();
             BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
             localMainComp.TeleportFinishFrames = 5;
-            localMainComp.Pawn?.SetActorTransform(new FTransform(rotation, location), sweep, out _, true);
+            localMainComp.Pawn?.SetActorTransform(new FTransform(rotation, location), false, out _, true);
+            if (setLookAt)
+            {
+                localMainComp.Pawn?.GetController().SetControlRotation(rotation);
+            }
         }
 
         public static void DisablePlayerInteraction(BGUPlayerCharacterCS playerCharacter)
