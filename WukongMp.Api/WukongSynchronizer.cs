@@ -162,8 +162,11 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
             {
                 PvPUtils.CreatePvpStateEntity();
             }
-            
-            TamerUtils.DiscoverTamers();
+
+            if (Constants.IsCoop)
+            {
+                TamerUtils.DiscoverTamers();
+            }
         }
     }
 
@@ -171,7 +174,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
     {
         if (Constants.IsPvP)
         {
-            _world.Query<TamerComponent, TranslationComponent>().Each(new SpawnMonstersFromEcs());
+            _world.Query<LocalTamerComponent, TamerComponent, TranslationComponent>().Each(new SpawnMonstersFromEcs());
         }
         else
         {
