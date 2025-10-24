@@ -59,6 +59,9 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
                     .HasValue<InScopeComponent, Entity>(CurrentArea.Value.Entity)
                     .Entities.FirstOrDefault();
             }
+            
+            if (PvpStateEntity is { IsNull: true })
+                PvpStateEntity = null;
 
             return PvpStateEntity?.GetComponent<PvPStateComponent>();
         }
