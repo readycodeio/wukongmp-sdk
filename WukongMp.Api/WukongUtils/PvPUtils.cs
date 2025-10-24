@@ -1,9 +1,4 @@
-﻿using System.Linq;
-using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.Configuration;
+﻿using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 
@@ -33,25 +28,6 @@ public static class PvPUtils
             GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
             GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
             GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
-            LobbyStatusWidget.Instance.SetVisibility(true);
-        }
-        else
-        {
-            CoopStatusWidget.Instance.SetVisibility(true);
-        }
-    }
-
-    public static void SetupMatchmakingUi()
-    {
-        if (!IsAfterLoadingScreen)
-            return;
-
-        GameMessageWidget.Instance.SetVisibility(true);
-        GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-        GameMessageWidget.Instance.SetSecondText(Texts.MatchmakingInProgress);
-        GameMessageWidget.Instance.SetThirdText("");
-        if (Constants.IsPvP)
-        {
             LobbyStatusWidget.Instance.SetVisibility(true);
         }
         else

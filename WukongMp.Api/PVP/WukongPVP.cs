@@ -638,20 +638,15 @@ public partial class WukongPVP : IDisposable
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
             return;
-
-        ref var room = ref areaEntity.Value.GetRoom();
-
+        
         PvPUtils.IsAfterLoadingScreen = true;
-        // if (room.InMatchmaking)
-        // {
-        //     var timeDifference = new DateTime(room.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
-        //     TimerWidget.Instance.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
-        //     PvPUtils.SetupMatchmakingUi();
-        // }
-        // else 
         if (_playerState.LocalMainCharacter?.GetPvP().IsSpectator == false)
         {
             PvPUtils.SetupLobbyUi();
+        }
+        else
+        {
+            PvPUtils.SetupSpectatorUi();
         }
     }
 
