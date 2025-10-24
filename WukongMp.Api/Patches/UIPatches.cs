@@ -255,11 +255,7 @@ public class PatchIsShowSettingUiOnly
             return true;
 
         var areaState = DI.Instance.AreaState;
-        var areaEntity = areaState.CurrentArea;
-        if (areaEntity == null)
-            return true;
-
-        if (areaEntity.Value.GetRoom().InPvP)
+        if (areaState.PvpState is { InPvP: true })
         {
             __result = true;
             return false;

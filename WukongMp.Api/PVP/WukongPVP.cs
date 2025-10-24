@@ -127,19 +127,11 @@ public partial class WukongPVP : IDisposable
 
     public void StartPvP()
     {
-        if (!_areaState.IsMasterClient)
-            return;
-
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-            return;
-
-        ref var room = ref areaEntity.Value.GetRoom();
-
-        // clear previous round winners
-        room.RoundWinners = [];
-
-        Task.Run(StartRoundAsync);
+        if (_areaState.OwnsPvpState)
+        {
+            _areaState.OwnedPvpStateRef().RoundWinners = [];
+            Task.Run(StartRoundAsync);
+        }
     }
 
     public async Task StartRoundAsync()
@@ -201,14 +193,16 @@ public partial class WukongPVP : IDisposable
 
     public async Task EndRoundAsync(int winner)
     {
-        if (!_areaState.IsMasterClient)
+        if (_isRoundEnding)
+            return;
+
+        if (!_areaState.OwnsPvpState)
         {
             Logging.LogError("Only master client can use the lobby manager");
             return;
         }
 
-        if (_isRoundEnding)
-            return;
+        ref var pvpState = ref _areaState.OwnedPvpStateRef();
 
         _isRoundEnding = true;
 
@@ -223,7 +217,7 @@ public partial class WukongPVP : IDisposable
         SendPvPEvent(PvPEvent.RoundEnd, winner);
 
         // increment round number
-        areaEntity.Value.GetRoom().SetLastRoundWinnerTeam(winner);
+        pvpState.SetLastRoundWinnerTeam(winner);
 
         // wait until all players death animations are finished
         await Task.Delay(5000);
@@ -237,7 +231,7 @@ public partial class WukongPVP : IDisposable
         await ResetHpAndRespawnAllPlayers();
 
         // resolve tournament
-        var winnersSoFar = areaEntity.Value.GetRoom().RoundWinners.ToList();
+        var winnersSoFar = _areaState.PvpState!.Value.RoundWinners.ToList();
         var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
         // check if only one team is present
@@ -258,7 +252,7 @@ public partial class WukongPVP : IDisposable
         }
 
         // otherwise, check if we have a tie
-        if (areaEntity.Value.GetRoom().CurrentRound > areaEntity.Value.GetRoom().TournamentRounds)
+        if (_areaState.PvpState.Value.CurrentRound > areaEntity.Value.GetRoom().TournamentRounds)
         {
             if (winnersByTeam.Count > 0)
             {
@@ -318,16 +312,14 @@ public partial class WukongPVP : IDisposable
         CountdownWidget.Instance.StopCountdown();
         TimerWidget.Instance.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, RoundEndedTimeout);
 
-        if (!_areaState.IsMasterClient)
-            return;
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
             return;
 
-        ref var room = ref areaEntity.Value.GetRoom();
+        if (!_areaState.OwnsPvpState)
+            return;
 
-        room.InCombatRound = true;
+        _areaState.OwnedPvpStateRef().InCombatRound = true;
 
         var monsterCount = 0;
         _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity _) =>
@@ -366,21 +358,21 @@ public partial class WukongPVP : IDisposable
     {
         TimerWidget.Instance.StopCountdown();
 
-        if (!_areaState.IsMasterClient)
-            return;
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
             return;
 
-        ref var room = ref areaEntity.Value.GetRoom();
+        if (_areaState.OwnsPvpState)
+            _areaState.OwnedPvpStateRef().InCombatRound = false;
 
-        room.InCombatRound = false;
-        foreach (var (playerId, _, mainEntity) in AllPlayers)
+        if (_areaState.IsMasterClient)
         {
-            var events = BUS_EventCollectionCS.Get(mainEntity.GetLocalState().Pawn);
-            events?.Evt_RelieveImmobilized.Invoke();
-            events?.Evt_RelievePhantomRush.Invoke();
+            foreach (var (_, _, mainEntity) in AllPlayers)
+            {
+                var events = BUS_EventCollectionCS.Get(mainEntity.GetLocalState().Pawn);
+                events?.Evt_RelieveImmobilized.Invoke();
+                events?.Evt_RelievePhantomRush.Invoke();
+            }
         }
     }
 
@@ -404,7 +396,7 @@ public partial class WukongPVP : IDisposable
 
     public void SwitchReadyStateMulti()
     {
-        if (_areaState is { InRoom: true, CurrentArea.Room.InPvP: false } && _state.AllPlayers.Count > 0)
+        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count > 0)
         {
             SwitchReadyState();
         }
@@ -412,7 +404,7 @@ public partial class WukongPVP : IDisposable
 
     public void SwitchReadyStateSingle()
     {
-        if (_areaState is { InRoom: true, CurrentArea.Room.InPvP: false } && _state.AllPlayers.Count == 0)
+        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count == 0)
         {
             SwitchReadyState();
         }
@@ -434,7 +426,7 @@ public partial class WukongPVP : IDisposable
         if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null)
             return;
 
-        if (force || (_areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.CurrentArea is { Room.InPvP: false }))
+        if (force || (_areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InPvP: false }))
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
@@ -497,9 +489,6 @@ public partial class WukongPVP : IDisposable
 
     public void EnterPvP()
     {
-        if (!_areaState.IsMasterClient)
-            return;
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
         {
@@ -507,14 +496,12 @@ public partial class WukongPVP : IDisposable
             return;
         }
 
-        areaEntity.Value.GetRoom().InPvP = true;
+        if (_areaState.OwnsPvpState)
+            _areaState.OwnedPvpStateRef().InPvP = true;
     }
 
     public void ExitPvP()
     {
-        if (!_areaState.IsMasterClient)
-            return;
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
         {
@@ -522,14 +509,12 @@ public partial class WukongPVP : IDisposable
             return;
         }
 
-        areaEntity.Value.GetRoom().InPvP = false;
+        if (_areaState.OwnsPvpState)
+            _areaState.OwnedPvpStateRef().InPvP = false;
     }
 
     public void CheckRoundEndCondition()
     {
-        if (!_areaState.IsMasterClient)
-            return;
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
         {
@@ -537,7 +522,7 @@ public partial class WukongPVP : IDisposable
             return;
         }
 
-        if (!areaEntity.Value.GetRoom().InPvP)
+        if (_areaState.PvpState is not { InPvP: true })
             return;
 
         // check if all players but one are dead
@@ -602,22 +587,6 @@ public partial class WukongPVP : IDisposable
         return true;
     }
 
-    private void SetOrGetRoomPropsPVP()
-    {
-        Logging.LogInformation("Joining or creating private room");
-
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-        {
-            Logging.LogError("No area entity found, cannot set room properties");
-            return;
-        }
-
-        // TODO: set from initial room properties (via server allocation request)
-        ref var room = ref areaEntity.Value.GetRoom();
-        room.RoundWinners = [];
-    }
-
     private int GetSmallerTeamId()
     {
         Dictionary<int, int> teamsCount = [];
@@ -640,32 +609,12 @@ public partial class WukongPVP : IDisposable
 
     private void SetUpRoom()
     {
-        if (!_areaState.IsMasterClient)
-            return;
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
             return;
 
-        areaEntity.Value.GetRoom().InPvP = false;
-    }
-
-    [Obsolete("We do not support matchmaking for now")]
-    private void SetupMatchmaking()
-    {
-        // var areaEntity = _areaState.CurrentArea;
-        // if (areaEntity == null)
-        //     return;
-        //
-        // ref var room = ref areaEntity.Value.GetRoom();
-        // if (room.GameMode == GameMode.Private)
-        //     return;
-        //
-        // if (_areaState.IsMasterClient)
-        // {
-        //     room.InMatchmaking = true;
-        //     room.MatchmakingEndTime = DateTime.UtcNow.AddSeconds(Constants.MatchmakingSeconds).Ticks;
-        // }
+        if (_areaState.OwnsPvpState)
+            _areaState.OwnedPvpStateRef().InPvP = false;
     }
 
     [Obsolete("Matchmaking is not supported for now")]
@@ -678,11 +627,11 @@ public partial class WukongPVP : IDisposable
             return;
         }
 
-        if (_areaState.IsMasterClient)
-        {
-            // areaEntity.Value.GetRoom().InMatchmaking = false;
-            _rpc.SendEndMatchmaking();
-        }
+        // if (_areaState.IsMasterClient)
+        // {
+        //     areaEntity.Value.GetRoom().InMatchmaking = false;
+        //     _rpc.SendEndMatchmaking();
+        // }
 
         TimerWidget.Instance.StopCountdown();
     }
@@ -718,19 +667,15 @@ public partial class WukongPVP : IDisposable
 
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
-        SetOrGetRoomPropsPVP();
-
         Logging.LogInformation("Joined room");
 
         SetUpRoom();
         LobbyStatusWidget.Instance.SetConnectedCount(OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP));
         LobbyStatusWidget.Instance.SetReadyCount(OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP));
-        SetupMatchmaking();
 
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
-        var playerId = playerEntity.Value.Entity.GetComponent<MetadataComponent>().Owner;
         ref var player = ref playerEntity.Value.GetState();
         player.TeamId = GetSmallerTeamId();
         Logging.LogDebug("Assigned team {Id} for player", player.TeamId);

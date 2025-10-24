@@ -63,20 +63,14 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
 
-            var areaEntity = areaState.CurrentArea;
-            if (areaEntity != null)
+            if (areaState.PvpState is not { InPvP: true })
             {
-                ref var room = ref areaEntity.Value.GetRoom();
-
-                if (!room.InPvP)
-                {
-                    PvPUtils.SetupLobbyUi();
-                }
-                else
-                {
-                    LobbyStatusWidget.Instance.SetVisibility(false);
-                    CoopStatusWidget.Instance.SetVisibility(false);
-                }
+                PvPUtils.SetupLobbyUi();
+            }
+            else
+            {
+                LobbyStatusWidget.Instance.SetVisibility(false);
+                CoopStatusWidget.Instance.SetVisibility(false);
             }
         }
 

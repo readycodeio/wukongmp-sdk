@@ -1,4 +1,8 @@
-﻿using CSharpModBase;
+﻿using System.Linq;
+using Friflo.Engine.ECS;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Common.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
@@ -75,11 +79,11 @@ public static class PvPUtils
     {
         var areaState = DI.Instance.AreaState;
         var areaEntity = areaState.CurrentArea;
-        if (areaEntity == null)
+        if (areaEntity == null || !areaState.PvpState.HasValue)
             return;
 
         ref var room = ref areaEntity.Value.GetRoom();
-        var current = room.CurrentRound;
+        var current = areaState.PvpState.Value.CurrentRound;
         var total = room.TournamentRounds;
         UiUtils.ShowTip(string.Format(Texts.RoundCount, current, total), true);
     }
@@ -113,5 +117,10 @@ public static class PvPUtils
     {
         Logging.LogInformation("End tournament");
         SetupLobbyUi();
+    }
+    
+    public static void CreatePvpStateEntity()
+    {
+        DI.Instance.AreaState.PvpStateEntity = DI.Instance.ClientNetEntity.CreateNetworkedAreaEntity(DI.Instance.ArchetypeRegistration.PvPStateSingletonArchetype).Entity;
     }
 }

@@ -158,6 +158,11 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         if (isFirst)
         {
+            if (Constants.IsPvP)
+            {
+                PvPUtils.CreatePvpStateEntity();
+            }
+            
             TamerUtils.DiscoverTamers();
         }
     }

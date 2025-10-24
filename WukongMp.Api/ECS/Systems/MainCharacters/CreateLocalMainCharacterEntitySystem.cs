@@ -91,13 +91,12 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
             PlayerUtils.TeleportLocalPlayer(mainEntity, spawnPosition, FRotator.ZeroRotator, false);
 
             var areaEntity = areaState.CurrentArea;
-            if (areaEntity != null)
+            if (areaEntity != null && areaState.PvpState.HasValue)
             {
-                ref var room = ref areaEntity.Value.GetRoom();
                 ref var pvpComp = ref mainEntity.GetPvP();
 
                 // Set IsSpectator if joining during fight.
-                pvpComp.IsSpectator = room.InPvP;
+                pvpComp.IsSpectator = areaState.PvpState.Value.InPvP;
                 Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
             }
         }
