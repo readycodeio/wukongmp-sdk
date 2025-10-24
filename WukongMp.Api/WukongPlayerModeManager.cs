@@ -68,11 +68,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             {
                 ref var room = ref areaEntity.Value.GetRoom();
 
-                if (room.InMatchmaking)
-                {
-                    PvPUtils.SetupMatchmakingUi();
-                }
-                else if (!room.InPvP)
+                if (!room.InPvP)
                 {
                     PvPUtils.SetupLobbyUi();
                 }

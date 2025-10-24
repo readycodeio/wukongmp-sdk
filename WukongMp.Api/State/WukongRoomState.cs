@@ -26,7 +26,7 @@ public class WukongAreaState(ClientState state)
     }
 
     public PlayerId? MasterClientId
-        => CurrentArea?.ScopeComponent.MasterClient;
+        => CurrentArea?.Scope.MasterClient;
     
     public AreaEntity? CurrentArea
     {

@@ -40,8 +40,7 @@ public sealed class ReadinessSystem(
         _lastReadyCount = readyCount;
 
         var allReady = readyCount == players && players > 0;
-
-        if (allReady && (players > 1 || areaState.CurrentArea?.GetRoom().BotsEnabled == true))
+        if (allReady)
         {
             // all players are ready
             GameMessageWidget.Instance.SetMainText(Texts.StartingGame);

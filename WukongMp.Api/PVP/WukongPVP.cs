@@ -337,7 +337,7 @@ public partial class WukongPVP : IDisposable
             }
         });
 
-        if (room.BotsEnabled && !OtherPlayers.Any() && monsterCount == 0)
+        if (!OtherPlayers.Any() && monsterCount == 0)
         {
             // FIXME: Is there any way to get rid of having those checks all over the place? Seems very tedious,
             // and it handles a fringe case where somehow the player got disconnected.
@@ -403,7 +403,7 @@ public partial class WukongPVP : IDisposable
 
     public void SwitchReadyStateMulti()
     {
-        if (_areaState.InRoom && _areaState.CurrentArea is { RoomComponent: { InPvP: false, InMatchmaking: false } } && _state.AllPlayers.Count > 0)
+        if (_areaState is { InRoom: true, CurrentArea.Room.InPvP: false } && _state.AllPlayers.Count > 0)
         {
             SwitchReadyState();
         }
@@ -411,7 +411,7 @@ public partial class WukongPVP : IDisposable
 
     public void SwitchReadyStateSingle()
     {
-        if (_areaState.InRoom && _areaState.CurrentArea is { RoomComponent: { InPvP: false, InMatchmaking: false } } && _state.AllPlayers.Count == 0)
+        if (_areaState is { InRoom: true, CurrentArea.Room.InPvP: false } && _state.AllPlayers.Count == 0)
         {
             SwitchReadyState();
         }
@@ -422,8 +422,10 @@ public partial class WukongPVP : IDisposable
         if (_playerState.LocalMainCharacter == null)
             return;
         var isReady = _playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP;
+        var nickname = _playerState.LocalMainCharacter.Value.GetState().CharacterNickName;
         SetReadyState(!isReady);
         SwitchReadyState(!isReady);
+        _chatter.SendServerMessage(isReady ? "PlayerIsReady" : "PlayerIsNotReady", nickname);
     }
 
     public void SwitchTeam(bool force = false)
@@ -431,7 +433,7 @@ public partial class WukongPVP : IDisposable
         if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null)
             return;
 
-        if (force || (_areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.CurrentArea is { RoomComponent: { InPvP: false, InMatchmaking: false } }))
+        if (force || (_areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.CurrentArea is { Room.InPvP: false }))
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
@@ -613,8 +615,6 @@ public partial class WukongPVP : IDisposable
         // TODO: set from initial room properties (via server allocation request)
         ref var room = ref areaEntity.Value.GetRoom();
         room.RoundWinners = [];
-        room.BotsEnabled = true; // TODO: Selector
-        room.MaxPlayers = 10;
     }
 
     private int GetSmallerTeamId()
@@ -707,6 +707,7 @@ public partial class WukongPVP : IDisposable
         }
     }
 
+    [Obsolete("Matchmaking is not supported for now")]
     private void EndMatchmaking()
     {
         var areaEntity = _areaState.CurrentArea;
@@ -718,39 +719,11 @@ public partial class WukongPVP : IDisposable
 
         if (_areaState.IsMasterClient)
         {
-            areaEntity.Value.GetRoom().InMatchmaking = false;
+            // areaEntity.Value.GetRoom().InMatchmaking = false;
             _rpc.SendEndMatchmaking();
         }
 
         TimerWidget.Instance.StopCountdown();
-    }
-
-    private void NotifyPlayerReadinessChanged(string playerNickname, bool isReady)
-    {
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-            return;
-
-        var readyCount = AllPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP);
-
-        _chatter.SendServerMessage(isReady ? "PlayerIsReady" : "PlayerIsNotReady", playerNickname);
-
-        if (isReady)
-        {
-            if ((_state.OtherPlayers.Count != 0 || _areaState.CurrentArea?.GetRoom().BotsEnabled == true) && readyCount == _state.AllPlayers.Count)
-            {
-                // all players are ready
-                GameMessageWidget.Instance.SetMainText(Texts.StartingGame);
-                CountdownWidget.Instance.StartLobbyCountdown(Constants.CountdownSeconds, StartPvP);
-            }
-        }
-        else
-        {
-            CountdownWidget.Instance.StopCountdown();
-            GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-        }
-
-        LobbyStatusWidget.Instance.SetReadyCount(readyCount);
     }
 
     #region Event Handlers
@@ -769,13 +742,14 @@ public partial class WukongPVP : IDisposable
         ref var room = ref areaEntity.Value.GetRoom();
 
         PvPUtils.IsAfterLoadingScreen = true;
-        if (room.InMatchmaking)
-        {
-            var timeDifference = new DateTime(room.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
-            TimerWidget.Instance.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
-            PvPUtils.SetupMatchmakingUi();
-        }
-        else if (_playerState.LocalMainCharacter?.GetPvP().IsSpectator == false)
+        // if (room.InMatchmaking)
+        // {
+        //     var timeDifference = new DateTime(room.MatchmakingEndTime, DateTimeKind.Utc) - DateTime.UtcNow;
+        //     TimerWidget.Instance.StartCountdown(0, timeDifference.Seconds, EndMatchmaking);
+        //     PvPUtils.SetupMatchmakingUi();
+        // }
+        // else 
+        if (_playerState.LocalMainCharacter?.GetPvP().IsSpectator == false)
         {
             PvPUtils.SetupLobbyUi();
         }
