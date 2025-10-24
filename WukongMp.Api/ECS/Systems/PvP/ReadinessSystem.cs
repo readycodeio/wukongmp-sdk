@@ -26,7 +26,7 @@ public sealed class ReadinessSystem(
         var readyCount = 0;
 
         Query
-            .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity)
+            .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity) // TODO: Doing this every frame is very expensive
             .ForEachEntity((ref PvPComponent pvp, Entity _) =>
             {
                 players++;

@@ -200,13 +200,6 @@ namespace WukongMp.PvP
                     ChatWidget.Instance.ToggleVisibility();
             });
 
-            Utils.RegisterKeyBind(Key.I, () =>
-            {
-                _logger.LogDebug("I");
-                if (!ChatWidget.Instance.HasFocus())
-                    DI.Instance.PVP?.SwitchReadyStateSingle();
-            });
-
             Utils.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");

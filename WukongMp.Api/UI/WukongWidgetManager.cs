@@ -74,14 +74,6 @@ public sealed class WukongWidgetManager : IDisposable
             {
                 CoopStatusWidget.Instance.AddPlayer(nickname);
             }
-            // else
-            // {
-            //     var main = _playerState.GetMainCharacterById(playerId);
-            //     if (main.HasValue)
-            //     {
-            //         UpdatePlayerTeam(player.Value, main.Value);
-            //     }
-            // }
 
             RefreshWidgets();
         }
@@ -103,7 +95,6 @@ public sealed class WukongWidgetManager : IDisposable
         LobbyStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(_clientState.AreaPlayers.Count, _playerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
     }
 
     public void ShowInGameWidgets()

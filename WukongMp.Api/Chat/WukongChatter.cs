@@ -212,7 +212,7 @@ public class WukongChatter : IDisposable
 
     private void SetSpectatorStatus(ReadOnlyMemory<string> args)
     {
-        if (args.Length == 2)
+        if (args.Length == 1)
         {
             var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
 

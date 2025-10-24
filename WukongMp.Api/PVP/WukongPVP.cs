@@ -392,15 +392,7 @@ public partial class WukongPVP : IDisposable
 
     public void SwitchReadyStateMulti()
     {
-        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count > 0)
-        {
-            SwitchReadyState();
-        }
-    }
-
-    public void SwitchReadyStateSingle()
-    {
-        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count == 0)
+        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count > 0 && _playerState.LocalMainCharacter?.GetPvP().IsSpectator is not true)
         {
             SwitchReadyState();
         }
