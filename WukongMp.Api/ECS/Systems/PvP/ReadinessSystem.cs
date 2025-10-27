@@ -22,9 +22,6 @@ public sealed class ReadinessSystem(
         if (!areaState.CurrentArea.HasValue)
             return;
 
-        if (areaState.PvpState is { InPvP: true })
-            return;
-
         var players = 0;
         var readyCount = 0;
 
@@ -42,20 +39,22 @@ public sealed class ReadinessSystem(
             return;
 
         _lastReadyCount = readyCount;
-
-        var allReady = readyCount == players && players > 0;
-        if (allReady)
-        {
-            // all players are ready
-            GameMessageWidget.Instance.SetMainText(Texts.StartingGame);
-            CountdownWidget.Instance.StartLobbyCountdown(Constants.CountdownSeconds, pvpUtils.StartPvP);
-        }
-        else
-        {
-            CountdownWidget.Instance.StopCountdown();
-            GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-        }
-
         LobbyStatusWidget.Instance.SetReadyCount(readyCount);
+
+        if (areaState.PvpState is { InPvP: false })
+        {
+            var allReady = readyCount == players && players > 0;
+            if (allReady)
+            {
+                // all players are ready
+                GameMessageWidget.Instance.SetMainText(Texts.StartingGame);
+                CountdownWidget.Instance.StartLobbyCountdown(Constants.CountdownSeconds, pvpUtils.StartPvP);
+            }
+            else
+            {
+                CountdownWidget.Instance.StopCountdown();
+                GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
+            }
+        }
     }
 }

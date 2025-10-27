@@ -36,8 +36,7 @@ public struct LocalMainCharacterComponent : IComponent
         set => _pawn = value;
     }
 
-    public bool HasPawn
-        => !_pawn.IsNullOrDestroyed();
+    public bool HasPawn => !_pawn.IsNullOrDestroyed();
         
     public bool IsRespawning { get; set; }
     public bool RunImmobilizePatches { get; set; }

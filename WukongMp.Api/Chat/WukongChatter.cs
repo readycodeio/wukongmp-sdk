@@ -214,7 +214,7 @@ public class WukongChatter : IDisposable
     {
         if (args.Length == 1)
         {
-            var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
+            var isSpectator = args.Span[0].Equals("true", StringComparison.OrdinalIgnoreCase);
 
             var playerEntity = _playerState.LocalMainCharacter;
             if (playerEntity == null)

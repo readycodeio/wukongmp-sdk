@@ -27,10 +27,6 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         ref var localMainComp = ref mainEntity.GetLocalState();
         var isMyself = mainComp.PlayerId == state.LocalPlayerId;
 
-        var isHidden = localMainComp.Pawn?.Hidden == true;
-        if (isHidden)
-            return false;
-
         if (isMyself)
         {
             UiUtils.SetHudVisibility(false);
@@ -54,13 +50,8 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
     public bool HandleStoppedBeingSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
 
         var isMyself = mainComp.PlayerId == state.LocalPlayerId;
-
-        var isVisible = localMainComp.Pawn?.Hidden == false;
-        if (isVisible)
-            return false;
 
         if (isMyself)
             UiUtils.SetHudVisibility(true);
