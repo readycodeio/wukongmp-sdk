@@ -1,7 +1,9 @@
 ﻿using System;
 using b1;
+using B1UI;
 using CsB1;
 using GSDispLib;
+using GSE.GSUI;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ResB1;
@@ -65,5 +67,15 @@ public static class PatchFSMState_GI_Loading_NextChapterReqAndArchive
         });
 
         return false;
+    }
+}
+
+[HarmonyPatch(typeof(GSG), "OnTopPageChange")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchGSGOnTopPageChange
+{
+    public static bool Prefix(GSUIPage? NewValue)
+    {
+        return NewValue != null;
     }
 }
