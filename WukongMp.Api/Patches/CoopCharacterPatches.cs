@@ -148,16 +148,18 @@ public static class PatchTamerStatResetOnBeginPlay
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class CoopPatchHp
 {
-    public static bool Prefix(BUS_AttrComp __instance)
+    public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var playerState = DI.Instance.PlayerState;
-        var owner = __instance.GetOwner();
-        var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
-        if (netId.HasValue)
-            return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
+        if (AttrID == EBGUAttrFloat.Hp)
+        {
+            var owner = __instance.GetOwner();
+            var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
+            if (netId.HasValue)
+                return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
+        }
         return true;
     }
 
