@@ -183,7 +183,7 @@ public class DI
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
         var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, ecsLoop, logger);
-        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
+        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
