@@ -13,7 +13,7 @@ namespace WukongMp.Api.ECS.Systems.PvP;
 public sealed class ReadinessSystem(
     WukongAreaState areaState,
     WukongPVP pvpUtils
-) : QuerySystem<PvPComponent>
+) : QuerySystem<PvPComponent, InScopeComponent>
 {
     private int _lastReadyCount = -1;
 
@@ -25,14 +25,15 @@ public sealed class ReadinessSystem(
         var players = 0;
         var readyCount = 0;
 
-        Query
-            .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity) // TODO: Doing this every frame is very expensive
-            .ForEachEntity((ref PvPComponent pvp, Entity _) =>
-            {
-                players++;
-                if (pvp.IsReadyForPvP)
-                    readyCount++;
-            });
+        Query.ForEachEntity((ref PvPComponent pvp, ref InScopeComponent scope, Entity _) =>
+        {
+            if (scope.ScopeEntity != areaState.CurrentArea.Value.Entity)
+                return;
+
+            players++;
+            if (pvp.IsReadyForPvP)
+                readyCount++;
+        });
 
         if (_lastReadyCount == readyCount)
             return;
