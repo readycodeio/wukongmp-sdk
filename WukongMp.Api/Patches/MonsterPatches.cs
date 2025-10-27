@@ -195,7 +195,7 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(FTamerRef), "OnUnload")]
+    [HarmonyPatch(typeof(FTamerRef), "DestroyTamer")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerUnload
     {
@@ -209,28 +209,7 @@ namespace WukongMp.Api.Patches
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
                 if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 {
-                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (OnUnload)", tamerEntity.Value.Entity.Id);
-                    DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
-                }
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(BUTamerActor), "ReceiveEndPlay_Implementation")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchTamerEndPlay
-    {
-        public static void Prefix(BUTamerActor __instance)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return;
-
-            if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && Constants.IsPvP))
-            {
-                var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance);
-                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-                {
-                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (EndPlay)", tamerEntity.Value.Entity.Id);
+                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.Entity.Id);
                     DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
                 }
             }
