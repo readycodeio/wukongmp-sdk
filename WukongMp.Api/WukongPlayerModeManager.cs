@@ -37,7 +37,6 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         }
 
         SetPlayerVisibility(playerEntity, mainEntity, false);
-        SetPlayerCollision(playerEntity, mainEntity, false);
         var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
         events?.Evt_BuffAllRemove.Invoke(EBuffEffectTriggerType.Remove);
 
@@ -46,6 +45,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             FreeCameraManager.Instance.EnterFreeCameraMode();
             PvPUtils.SetupSpectatorUi();
         }
+        SetPlayerCollision(playerEntity, mainEntity, false);
 
         widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
         return true;
