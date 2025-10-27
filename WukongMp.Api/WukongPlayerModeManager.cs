@@ -128,6 +128,8 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
         events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enable);
         events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enable);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_CollisionEnabled, enable);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_CollisionEnabled, enable);
         return true;
     }
 
