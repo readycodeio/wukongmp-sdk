@@ -1,6 +1,7 @@
 ﻿using b1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -39,6 +40,11 @@ namespace WukongMp.Api.WukongUtils
             PossessPawn(controller, possessPawn, unpossessPawn);
             controller.SetViewTargetWithBlend(possessPawn);
             controller.SetControlRotation(controllerRotation);
+            if (FreeCameraManager.Instance.IsInFreeCameraMode)
+            {
+                FreeCameraManager.Instance.LeaveFreeCameraMode();
+                FreeCameraManager.Instance.EnterFreeCameraMode();
+            }
         }
 
         public static void PossessPawn(ABGPPlayerController controller, APawn possessPawn, APawn unpossessPawn)
