@@ -216,6 +216,27 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUTamerActor), "ReceiveEndPlay_Implementation")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTamerEndPlay
+    {
+        public static void Prefix(BUTamerActor __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && Constants.IsPvP))
+            {
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance);
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                {
+                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (EndPlay)", tamerEntity.Value.Entity.Id);
+                    DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
+                }
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnAIPerceptionSetting
