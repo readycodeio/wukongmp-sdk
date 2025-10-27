@@ -515,7 +515,7 @@ public partial class WukongPVP : IDisposable
 
         // check if all players but one are dead
         var playerEntities = AllPvPPlayers.ToList();
-        var aliveTeamIds = playerEntities.Where(p => !p.Character.GetState().IsDead)
+        var aliveTeamIds = playerEntities.Where(p => !p.Character.GetState().IsDead || p.Character.GetState().IsTransformed)
             .Select(x => x.Player.GetState().TeamId)
             .ToList();
 
@@ -630,7 +630,7 @@ public partial class WukongPVP : IDisposable
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
             return;
-        
+
         PvPUtils.IsAfterLoadingScreen = true;
         if (_playerState.LocalMainCharacter?.GetPvP().IsSpectator == false)
         {
