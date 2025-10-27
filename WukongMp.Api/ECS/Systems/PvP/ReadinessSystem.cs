@@ -22,6 +22,9 @@ public sealed class ReadinessSystem(
         if (!areaState.CurrentArea.HasValue)
             return;
 
+        if (areaState.PvpState is { InPvP: true })
+            return;
+
         var players = 0;
         var readyCount = 0;
 
