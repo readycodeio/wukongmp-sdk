@@ -33,12 +33,12 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         if (isMyself)
         {
             UiUtils.SetHudVisibility(false);
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
-            events?.Evt_BuffAllRemove.Invoke(EBuffEffectTriggerType.None);
         }
 
         SetPlayerVisibility(playerEntity, mainEntity, false);
         SetPlayerCollision(playerEntity, mainEntity, false);
+        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        events?.Evt_BuffAllRemove.Invoke(EBuffEffectTriggerType.Remove);
 
         if (isMyself)
         {
@@ -124,8 +124,10 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
 
         localMainComp.Pawn.SetActorEnableCollision(enable);
         var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
-        events.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enable);
-        events.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enable);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enable);
         return true;
     }
 
