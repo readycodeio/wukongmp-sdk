@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
@@ -34,12 +35,19 @@ namespace WukongMp.PvP
 
         public void Init()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
             }
 
+            if (!LaunchParameters.Instance.ValidForPvP)
+            {
+                _logger.LogDebug("Pvp not launching.");
+                return;
+            }
+
+            Constants.IsCoop = false;
             DI.Instance.Init();
 
             if (LaunchParameters.Instance.PlayShimOnStart)
@@ -81,13 +89,20 @@ namespace WukongMp.PvP
 
         public void LateInit()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
             }
 
+            if (!LaunchParameters.Instance.ValidForPvP)
+            {
+                _logger.LogDebug("Pvp not launching.");
+                return;
+            }
+
             _logger.LogInformation("Init WukongMP mod");
+            DebugUtils.LogUe4SsPresence();
 
             // InformationalVersion from assembly def
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
@@ -95,24 +110,27 @@ namespace WukongMp.PvP
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
             _logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
-            Debug.Assert(DI.Instance.Patcher.IsPatched);
+            // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
+            Utils.TryRunOnGameThread(() =>
+            {
+                Debug.Assert(DI.Instance.Patcher.IsPatched);
 
-            if (!DI.Instance.Connection.IsRunning)
-            {
-                DI.Instance.EcsLoop.Start();
-                DI.Instance.ShimEcsLoop.Start();
-                DI.Instance.Connection.Start();
-            }
-            else
-            {
-                _logger.LogInformation("WukongMP is already initialized");
-                return;
-            }
+                if (!DI.Instance.Connection.IsRunning)
+                {
+                    DI.Instance.EcsLoop.Start();
+                    DI.Instance.Connection.Start();
+                }
+                else
+                {
+                    _logger.LogInformation("WukongMP is already initialized");
+                    return;
+                }
 
-            if (!DI.Instance.Connection.RequestedConnect)
-            {
-                DI.Instance.Connection.Connect();
-            }
+                if (!DI.Instance.Connection.RequestedConnect)
+                {
+                    DI.Instance.Connection.Connect();
+                }
+            });
 
             if (!DI.Instance.Connection.RequestedConnect)
             {
@@ -182,13 +200,6 @@ namespace WukongMp.PvP
                     ChatWidget.Instance.ToggleVisibility();
             });
 
-            Utils.RegisterKeyBind(Key.I, () =>
-            {
-                _logger.LogDebug("I");
-                if (!ChatWidget.Instance.HasFocus())
-                    DI.Instance.PVP?.SwitchReadyStateSingle();
-            });
-
             Utils.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
@@ -220,26 +231,29 @@ namespace WukongMp.PvP
         {
             _logger.LogInformation("DeInit");
 
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.ValidForCoOp)
             {
                 return;
             }
 
-            if (DI.Instance.Patcher.IsPatched)
+            Utils.TryRunOnGameThread(() =>
             {
-                DI.Instance.Patcher.Unpatch();
-            }
+                if (DI.Instance.Patcher.IsPatched)
+                {
+                    DI.Instance.Patcher.Unpatch();
+                }
 
-            if (DI.Instance.Connection.RequestedConnect)
-            {
-                DI.Instance.Connection.Disconnect();
-            }
+                if (DI.Instance.Connection.RequestedConnect)
+                {
+                    DI.Instance.Connection.Disconnect();
+                }
 
-            if (DI.Instance.Connection.IsRunning)
-            {
-                DI.Instance.Connection.Stop();
-                DI.Instance.EcsLoop.Stop();
-            }
+                if (DI.Instance.Connection.IsRunning)
+                {
+                    DI.Instance.Connection.Stop();
+                    DI.Instance.EcsLoop.Stop();
+                }
+            });
         }
 
         public object GetReloadContext()

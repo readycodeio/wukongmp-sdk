@@ -98,7 +98,8 @@ public class WukongChatter : IDisposable
 
     private void RequestSpawn(ReadOnlyMemory<string> args)
     {
-        if (!UnitPathsConfig.IsValidMonsterName(args.Span[0]))
+        var unitName = args.Span[0];
+        if (!UnitPathsConfig.IsValidUnitName(unitName))
         {
             ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[0]}\"");
             return;
@@ -108,18 +109,30 @@ public class WukongChatter : IDisposable
         if (playerEntity == null)
             return;
 
+        var characterEntity = _playerState.LocalMainCharacter;
+        if (characterEntity == null)
+            return;
+
         var teamId = PvPUtils.GetOppositeTeam(playerEntity.Value.GetState().TeamId);
+        var playerPawn = characterEntity.Value.GetLocalState().Pawn;
+        if (playerPawn == null)
+            return;
+
+        var location = SpawningUtils.CalculateSpawnLocation(playerPawn.GetActorLocation(), playerPawn.GetActorForwardVector());
+        var count = 0;
+        var shouldSpawn = false;
 
         switch (args.Length)
         {
             case 1:
-                _rpc.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], 1, teamId));
+                count = 1;
+                shouldSpawn = true;
                 break;
             case 2:
             {
-                if (int.TryParse(args.Span[1], out var count))
+                if (int.TryParse(args.Span[1], out count))
                 {
-                    _rpc.SendSpawnUnits(new UnitSpawnRequestData(args.Span[0], count, teamId));
+                    shouldSpawn = true;
                 }
                 else
                 {
@@ -128,6 +141,12 @@ public class WukongChatter : IDisposable
 
                 break;
             }
+        }
+
+        if (shouldSpawn)
+        {
+            _rpc.SendRequestSpawnUnits(new UnitSpawnRequestData(unitName, count, teamId, location));
+            SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), args.Span[0]);
         }
     }
 
@@ -193,14 +212,14 @@ public class WukongChatter : IDisposable
 
     private void SetSpectatorStatus(ReadOnlyMemory<string> args)
     {
-        if (args.Length == 2)
+        if (args.Length == 1)
         {
-            var isSpectator = args.Span[1].Equals("true", StringComparison.OrdinalIgnoreCase);
+            var isSpectator = args.Span[0].Equals("true", StringComparison.OrdinalIgnoreCase);
 
-            var playerEntity = _playerState.LocalPlayerEntity;
+            var playerEntity = _playerState.LocalMainCharacter;
             if (playerEntity == null)
                 return;
-            playerEntity.Value.GetState().IsSpectator = isSpectator;
+            playerEntity.Value.GetPvP().IsSpectator = isSpectator;
         }
     }
 

@@ -3,6 +3,7 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
@@ -52,7 +53,7 @@ public class SyncMainCharactersSystem(
         ref var playerComp = ref playerEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
 
-        var isSpectator = playerComp.IsSpectator;
+        var isSpectator = mainEntity.GetPvP().IsSpectator;
 
         if (isSpectator != localMainComp.IsSpectatorLocally)
         {
@@ -63,11 +64,35 @@ public class SyncMainCharactersSystem(
                 Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
             }
         }
+
+        ref readonly var teamComp = ref mainEntity.GetTeam();
+        var pawnTeamId = localMainComp.Pawn!.GetTeamIDInCS();
+        if (pawnTeamId != teamComp.TeamId)
+        {
+            logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.NickName);
+            ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
+
+            modeManager.UpdatePlayerTeam(playerEntity, mainEntity);
+        }
     }
 
     private void SyncLocalMainCharacterState(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
         SyncMainCharacterStateBase(playerEntity, mainEntity);
+
+        if (Constants.IsPvP)
+        {
+            ref var playerComp = ref playerEntity.GetState();
+            var playerTeamId = playerComp.TeamId;
+            if (playerTeamId != mainEntity.GetTeam().TeamId)
+            {
+                logger.LogDebug("Assigning team ID {TeamId} to player {Name} from player to character", playerTeamId, playerComp.NickName);
+                mainEntity.SetTeam(new TeamComponent
+                {
+                    TeamId = playerTeamId,
+                });
+            }
+        }
     }
 
     private void SyncOtherMainCharacterState(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
@@ -78,14 +103,8 @@ public class SyncMainCharactersSystem(
         ref var localMainComp = ref mainEntity.GetLocalState();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
-        var pawnTeamId = localMainComp.Pawn!.GetTeamIDInCS();
-        if (pawnTeamId != teamComp.TeamId)
-        {
-            logger.LogInformation("Assigning team ID {TeamId} to player", teamComp.TeamId);
-            ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
-
-            modeManager.UpdatePlayerTeam(playerEntity, mainEntity);
-        }
+        if (localMainComp.Pawn == null)
+            return;
 
         var eqCopy = mainComp.Equipment;
         if (eqCopy.IsLocallyDirty)

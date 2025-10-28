@@ -7,26 +7,23 @@ using WukongMp.Api.Serialization;
 namespace WukongMp.Api.DTO;
 
 [DeriveJsonSerializable]
-public partial struct UnitSpawnRequestData(string unitName, int count, int teamId, FVector location) : INetSerializable
+public partial struct UnitSpawnData(string unitName, string guid, FVector location) : INetSerializable
 {
     public string UnitName = unitName;
-    public int Count = count;
-    public int TeamId = teamId;
+    public string Guid = guid;
     public FVector Location = location;
 
     public void Serialize(NetDataWriter writer)
     {
         writer.Put(UnitName);
-        writer.Put(Count);
-        writer.Put(TeamId);
+        writer.Put(Guid);
         SerializationHelpers.SerializeFVector(writer, Location);
     }
 
     public void Deserialize(NetDataReader reader)
     {
         UnitName = reader.GetString();
-        Count = reader.GetInt();
-        TeamId = reader.GetInt();
+        Guid = reader.GetString();
         Location = (FVector)SerializationHelpers.DeserializeFVector(reader);
     }
 }

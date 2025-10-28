@@ -1,14 +1,13 @@
 ﻿using b1;
-using BtlShare;
 using Friflo.Engine.ECS;
-using System.Collections.Generic;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System.Collections.Generic;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Configuration;
-using ReadyM.Api.Multiplayer.ECS.Components;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -39,12 +38,7 @@ namespace WukongMp.Api.WukongUtils
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
-                if (actor != null && actor.GetMonster() != null)
-                {
-                    BGU_UnrealWorldUtil.DestroyActor(actor.GetMonster());
-                }
-
-                BGU_UnrealWorldUtil.DestroyActor(actor);
+                actor.CurrentRef.DestroyTamer();
             }
         }
 
@@ -65,7 +59,7 @@ namespace WukongMp.Api.WukongUtils
         public static void DiscoverTamers()
         {
             Logging.LogDebug("Discovering tamers...");
-            
+
             var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
             foreach (var actor in allActorsOfClass)
             {
@@ -93,52 +87,19 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        public static void ClearEcsMonsters()
+        public static void MarkMonsterLocallyDespawned(ref LocalTamerComponent localTamer, MetadataComponent metadata)
         {
-            // TODO: WorldLock?
-            DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent _, Entity entity) =>
+            if (localTamer.IsLocallySpawned)
             {
-                DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(entity.Id);
-            });
-        }
-
-        public static void DestroyMonster(TamerEntity tamerEntity)
-        {
-            ref var localTamerComp = ref tamerEntity.GetLocalTamer();
-
-            if (localTamerComp.Tamer == null)
-                return;
-
-            var monsterPawn = localTamerComp.Tamer.GetMonster();
-            if (monsterPawn != null)
-            {
-                var events = BUS_EventCollectionCS.Get(monsterPawn);
-                events.Evt_UnitDead.Invoke(null, EDeadReason.OnlyDestroyUnit);
-                BGU_UnrealWorldUtil.DestroyActor(localTamerComp.Pawn);
+                localTamer.IsLocallySpawned = false;
+                DI.Instance.Rpc.SendUnitDespawn(metadata.NetId);
             }
-
-            BGU_UnrealWorldUtil.DestroyActor(localTamerComp.Tamer);
-
-            CleanupMonster(tamerEntity);
-        }
-
-        public static void CleanupMonster(TamerEntity tamerEntity)
-        {
-            ref var markerComp = ref tamerEntity.GetMarker();
-
-            if (markerComp.MarkerActor != null)
-            {
-                BGU_UnrealWorldUtil.DestroyActor(markerComp.MarkerActor);
-            }
-
-            Logging.LogDebug("Deleting entity from ECS: {Entity} (UnitDead)", tamerEntity.ToString());
-            DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Entity.Id);
         }
 
         public static void AddSpawnedUnitRefCount(PlayerId playerId, TamerEntity tamerEntity)
         {
-            Logging.LogDebug("Adding spawned unit counter for entity: {Entity} for player {Player}", tamerEntity.ToString(), playerId);
             ref var tamerComp = ref tamerEntity.GetTamer();
+            Logging.LogDebug("Adding spawned unit counter for tamer with guid: {Guid} for player {Player}", tamerComp.Guid, playerId);
             tamerComp.ShouldBeSpawned = true;
             tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Add(playerId);
         }
@@ -165,6 +126,8 @@ namespace WukongMp.Api.WukongUtils
             ref var tamerComp = ref tamerEntity.GetTamer();
             tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Clear();
             tamerComp.ShouldBeSpawned = false;
+            ref var localTamer = ref tamerEntity.GetLocalTamer();
+            localTamer.IsLocallySpawned = false;
         }
 
         public static void TriggerSkillInteract(Entity entity, int skillId)
@@ -172,6 +135,16 @@ namespace WukongMp.Api.WukongUtils
             Logging.LogDebug("TriggerInteract for entity: {Entity}", entity.ToString());
             ref var localTamerComp = ref entity.GetComponent<LocalTamerComponent>();
             BUS_EventCollectionCS.Get(localTamerComp.Pawn).Evt_UnitCastSkillTryCMultiCast.Invoke(new FCastSkillInfo(skillId, ECastSkillSourceType.Interact));
+        }
+
+        public static void DestroyTamer(string guid, BUTamerActor? tamerActor, AActor? markerActor)
+        {
+            tamerActor?.CurrentRef.DestroyTamer();
+            if (!markerActor.IsNullOrDestroyed())
+            {
+                Logging.LogDebug("Destroying marker for tamer with guid {Guid}", guid);
+                BGU_UnrealWorldUtil.DestroyActor(markerActor);
+            }
         }
     }
 }

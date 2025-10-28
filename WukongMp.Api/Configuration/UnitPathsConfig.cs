@@ -101,9 +101,9 @@ namespace WukongMp.Api.Configuration
             return Configurations[TamerUtils.UnifyUnitName(unitName)];
         }
 
-        public static bool IsValidMonsterName(string enemyName)
+        public static bool IsValidUnitName(string unitName)
         {
-            return Configurations.ContainsKey(TamerUtils.UnifyUnitName(enemyName));
+            return Configurations.ContainsKey(TamerUtils.UnifyUnitName(unitName));
         }
     }
 }

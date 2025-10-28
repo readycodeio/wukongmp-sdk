@@ -12,10 +12,10 @@ public readonly struct AreaEntity(Entity entity) : IComponent
     public bool IsNull
         => Entity.IsNull;
     
-    public RoomComponent RoomComponent
+    public RoomComponent Room
         => Entity.GetComponent<RoomComponent>();
 
-    public ref AreaScopeComponent ScopeComponent
+    public ref AreaScopeComponent Scope
         => ref Entity.GetComponent<AreaScopeComponent>();
 
     public ref MetadataComponent GetMeta()

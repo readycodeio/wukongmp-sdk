@@ -1,4 +1,5 @@
 ﻿using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -6,12 +7,14 @@ namespace WukongMp.Api.WukongUtils
     {
         public static string GetModDirectory()
         {
+            var modName = Constants.IsCoop ? "WukongMp.Coop" : "WukongMp.PvP";
+
             if (LaunchParameters.Instance.ModFolderOverride != null)
             {
-                return FPaths.Combine(LaunchParameters.Instance.ModFolderOverride, "WukongMPMod");
+                return FPaths.Combine(LaunchParameters.Instance.ModFolderOverride, modName);
             }
 
-            return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", "WukongMPMod");
+            return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", modName);
         }
 
         public static string GetSaveFileFullName(string slotName)

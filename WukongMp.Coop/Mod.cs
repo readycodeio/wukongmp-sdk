@@ -5,6 +5,7 @@ using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -34,12 +35,19 @@ namespace WukongMp.Coop
 
         public void Init()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
             }
 
+            if (!LaunchParameters.Instance.ValidForCoOp)
+            {
+                _logger.LogDebug("Co-op not launching.");
+                return;
+            }
+
+            Constants.IsCoop = true;
             DI.Instance.Init();
 
             if (LaunchParameters.Instance.PlayShimOnStart)
@@ -81,13 +89,20 @@ namespace WukongMp.Coop
 
         public void LateInit()
         {
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
             }
 
+            if (!LaunchParameters.Instance.ValidForCoOp)
+            {
+                _logger.LogDebug("Co-op not launching.");
+                return;
+            }
+
             _logger.LogInformation("Init WukongMP mod");
+            DebugUtils.LogUe4SsPresence();
 
             // InformationalVersion from assembly def
             var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
@@ -232,7 +247,7 @@ namespace WukongMp.Coop
         {
             _logger.LogInformation("DeInit");
 
-            if (!LaunchParameters.Instance.ShouldEnableMultiplayer)
+            if (!LaunchParameters.Instance.ValidForCoOp)
             {
                 return;
             }

@@ -4,6 +4,7 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
@@ -14,7 +15,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
+public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, WukongAreaState areaState, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
@@ -83,6 +84,22 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
 #endif
         
         localMainComp.IsPlayerSynced = true;
+
+        if (Constants.IsPvP)
+        {
+            var spawnPosition = SpawningUtils.GetSpawnPosition(GameUtils.GetControlledPawn(), mainComp.PlayerId.RawValue, Constants.MaxPlayers);
+            PlayerUtils.TeleportLocalPlayer(mainEntity, spawnPosition, FRotator.ZeroRotator, false);
+
+            var areaEntity = areaState.CurrentArea;
+            if (areaEntity != null && areaState.PvpState.HasValue)
+            {
+                ref var pvpComp = ref mainEntity.GetPvP();
+
+                // Set IsSpectator if joining during fight.
+                pvpComp.IsSpectator = areaState.PvpState.Value.InPvP;
+                Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+            }
+        }
 
         Logging.LogDebug("Finished setting initial player properties");
     }

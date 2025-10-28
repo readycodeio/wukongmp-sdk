@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGU_UnrealWorldUtil), nameof(BGU_UnrealWorldUtil.RequestSpawnServant))]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchRequestSpawnServant
 {
     public static bool Prefix(ref string? __result, UWorld World, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
@@ -35,32 +35,14 @@ public static class PatchRequestSpawnServant
             __result = InServantReq.ServantTamerGuid;
 
             // Add spawned monster to the ECS and send spawn request
-            SpawningUtils.CreateMonsterInEcs(__result, tamerActor, Constants.DefaultMonsterTeamId, tamerActor.PathName);
+            var summonTeam = Constants.DefaultMonsterTeamId;
+            if (InServantReq.MasterActor is BGUCharacterCS master)
+                summonTeam = master.GetTeamIDInCS();
+            SpawningUtils.CreateMonsterInEcs(__result, tamerActor, summonTeam, tamerActor.PathName);
             Logging.LogDebug("Sending SpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", InServantReq.Summoner?.GetName() ?? "Null", InServantReq.ServantTamerGuid, InServantReq.TamerTemplate.GetName());
             DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
         }
         return false;
-    }
-}
-
-[HarmonyPatch(typeof(FTamerRef), "OnUnload")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerUnload
-{
-    public static void Postfix(FTamerRef __instance)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return;
-
-        if (__instance.TamerType != ETamerType.Summoned)
-            return;
-
-        var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(__instance.InstancePtr.Value);
-        if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-        {
-            Logging.LogDebug("Deleting tamer entity from ECS: {Entity} (OnUnload)", tamerEntity.Value.ToString());
-            DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
-        }
     }
 }
 

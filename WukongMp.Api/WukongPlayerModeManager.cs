@@ -1,6 +1,8 @@
-﻿using ReadyM.Relay.Client.State;
+﻿using b1;
+using BtlShare;
+using ReadyM.Relay.Client.State;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -24,67 +26,54 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         ref var localMainComp = ref mainEntity.GetLocalState();
         var isMyself = mainComp.PlayerId == state.LocalPlayerId;
 
-        var isHidden = localMainComp.Pawn?.Hidden == true;
-        if (isHidden)
-            return false;
-
         if (isMyself)
-            UIUtils.SetHudVisibility(false);
+        {
+            UiUtils.SetHudVisibility(false);
+        }
 
         SetPlayerVisibility(playerEntity, mainEntity, false);
+        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        events?.Evt_BuffAllRemove.Invoke(EBuffEffectTriggerType.Remove);
 
         if (isMyself)
         {
             FreeCameraManager.Instance.EnterFreeCameraMode();
             PvPUtils.SetupSpectatorUi();
         }
+        SetPlayerCollision(playerEntity, mainEntity, false);
 
-        widgetManager.UpdatePlayerTeam(playerEntity);
+        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
         return true;
     }
 
     public bool HandleStoppedBeingSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
 
         var isMyself = mainComp.PlayerId == state.LocalPlayerId;
 
-        var isVisible = localMainComp.Pawn?.Hidden == false;
-        if (isVisible)
-            return false;
-
         if (isMyself)
-            UIUtils.SetHudVisibility(true);
+            UiUtils.SetHudVisibility(true);
 
         SetPlayerVisibility(playerEntity, mainEntity, true);
+        SetPlayerCollision(playerEntity, mainEntity, true);
 
         if (isMyself)
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
 
-            var areaEntity = areaState.CurrentArea;
-            if (areaEntity != null)
+            if (areaState.PvpState is not { InPvP: true })
             {
-                ref var room = ref areaEntity.Value.GetRoom();
-
-                if (room.InMatchmaking)
-                {
-                    PvPUtils.SetupMatchmakingUi();
-                }
-                else if (!room.InPvP)
-                {
-                    PvPUtils.SetupLobbyUi();
-                }
-                else
-                {
-                    LobbyStatusWidget.Instance.SetVisibility(false);
-                    CoopStatusWidget.Instance.SetVisibility(false);
-                }
+                PvPUtils.SetupLobbyUi();
+            }
+            else
+            {
+                LobbyStatusWidget.Instance.SetVisibility(false);
+                CoopStatusWidget.Instance.SetVisibility(false);
             }
         }
 
-        widgetManager.UpdatePlayerTeam(playerEntity);
+        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
 
         return true;
     }
@@ -111,6 +100,30 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         return true;
     }
 
+    private bool SetPlayerCollision(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool enable)
+    {
+        ref var localMainComp = ref mainEntity.GetLocalState();
+        ref var playerComp = ref playerEntity.GetState();
+
+        Logging.LogDebug("Setting player {PlayerName} collision to: {Enabled}", playerComp.NickName, enable);
+
+        if (localMainComp.Pawn == null)
+        {
+            Logging.LogError("Player pawn is null");
+            return false;
+        }
+
+        localMainComp.Pawn.SetActorEnableCollision(enable);
+        var offset = new FVector(0,0, localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 3 * (enable ? 1 : -1));
+        localMainComp.Pawn.SetActorLocation(localMainComp.Pawn.GetActorLocation() + offset, false, out _, true);
+        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enable);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enable);
+        return true;
+    }
+
     public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
     {
         ref var playerComp = ref playerEntity.GetState();
@@ -133,6 +146,6 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
         }
 
-        widgetManager.UpdatePlayerTeam(playerEntity);
+        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
     }
 }

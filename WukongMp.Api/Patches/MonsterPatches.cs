@@ -5,7 +5,6 @@ using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -15,6 +14,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
+    // TODO: Duplication of character patch?
     [HarmonyPatch]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTamerManagerTick
@@ -97,7 +97,7 @@ namespace WukongMp.Api.Patches
 
             if (DI.Instance.AreaState.IsMasterClient)
             {
-                if (__instance.TamerType != ETamerType.Summoned)
+                if (__instance.TamerType != ETamerType.Summoned && __instance.TamerType != ETamerType.Spawned)
                 {
                     var guid = BGU_DataUtil.GetActorGuid(__instance);
                     var tamerEntity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
@@ -123,30 +123,23 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            try
+            if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
+                return;
+
+            var tamer = __instance.InstancePtr.Get();
+
+            Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
+            var monsterGuid = BGU_DataUtil.GetActorGuid(tamer.GetMonster());
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
+            if (tamerEntity.HasValue)
             {
-                if (!__instance.IsMonsterValid() || !__instance.InstancePtr.IsValid())
-                    return;
-
-                var tamer = __instance.InstancePtr.Get();
-
-                Logging.LogDebug("Monster {Guid} waking up locally", BGU_DataUtil.GetActorGuid(tamer));
-                var monsterGuid = BGU_DataUtil.GetActorGuid(tamer.GetMonster());
-                var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamer);
-                if (tamerEntity.HasValue)
-                {
-                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                    var metadata = tamerEntity.Value.GetMeta();
-                    TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
-                }
-                else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
-                {
-                    Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
-                }
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                var metadata = tamerEntity.Value.GetMeta();
+                TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
             }
-            catch (Exception e)
+            else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
             {
-                Logging.LogException(e);
+                Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
             }
         }
     }
@@ -163,7 +156,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.TurnBack2Loaded))]
-    [HarmonyPatchCategory(Constants.CoopPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTurnBack2Loaded
     {
         static bool Prefix(FTamerRef __instance)
@@ -176,22 +169,19 @@ namespace WukongMp.Api.Patches
 
             var tamerActor = __instance.InstancePtr.Get();
 
-            var tamerEntity = DI.Instance.PawnState.GetByEntityByTamer(tamerActor);
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamerActor);
             if (tamerEntity.HasValue)
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                if (localTamer.IsLocallySpawned)
-                {
-                    localTamer.IsLocallySpawned = false;
-                    ref var meta = ref tamerEntity.Value.GetMeta();
-                    DI.Instance.Rpc.SendUnitDespawn(meta.NetId);
-                }
+                ref var meta = ref tamerEntity.Value.GetMeta();
+                TamerUtils.MarkMonsterLocallyDespawned(ref localTamer, meta);
 
                 ref var tamer = ref tamerEntity.Value.GetTamer();
                 if (!tamer.ShouldBeSpawned)
                 {
                     Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
                     localTamer.IsMonsterActive = false;
+                    MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
                     return true;
                 }
 
@@ -201,6 +191,28 @@ namespace WukongMp.Api.Patches
             {
                 Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamerActor.GetMonster()));
                 return true;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(FTamerRef), "DestroyTamer")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTamerUnload
+    {
+        public static void Prefix(FTamerRef __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && Constants.IsPvP))
+            {
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
+                if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                {
+                    tamerEntity.Value.GetLocalTamer().Tamer = null;
+                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.Entity.Id);
+                    DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
+                }
             }
         }
     }

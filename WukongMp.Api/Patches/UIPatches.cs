@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -12,6 +13,7 @@ using B1UI.GSSvc;
 using B1UI.GSUI;
 using GSE.GSUI;
 using HarmonyLib;
+using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using ResB1;
 using UnrealEngine.Runtime;
@@ -38,9 +40,39 @@ public static class PatchCanShowDamage
     }
 }
 
+[HarmonyPatch(typeof(BUS_BeAttackedComp), "CanShowDmgNumUI")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchDamageNumberDisplayCheck
+{
+    public static void Postfix(BUS_BeAttackedComp __instance, ref bool __result)
+    {
+        if (!__result)
+            return;
+
+        var owner = __instance.GetOwner();
+
+        if (owner == null)
+            return;
+
+        var entity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+        if (entity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(entity.Value.Entity))
+        {
+            return;
+        }
+
+        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+        if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+        {
+            return;
+        }
+
+        __result = false;
+    }
+}
+
 [HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class UiPatches
+public static class PatchSendDamageNumbers
 {
     [HarmonyTargetMethodHint("b1.BUS_UIControlSystemV2", "OnDisplayDamageNumUI")]
     private static MethodBase TargetMethod()
@@ -48,16 +80,12 @@ public static class UiPatches
         return AccessTools.Method("b1.BUS_UIControlSystemV2:OnDisplayDamageNumUI");
     }
 
-    public static bool Prefix(DamageNumParam Param)
+    public static void Prefix(DamageNumParam Param)
     {
         if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        if (!DI.Instance.AreaState.IsMasterClient)
-            return false;
+            return;
 
         DI.Instance.Rpc.SendDamageNum(Param);
-        return true;
     }
 }
 
@@ -85,7 +113,7 @@ public static class PatchStartGameUiCoop
                 if (widgetManagerActorClass == null)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                    UIUtils.ShowTip(Texts.MissingPak);
+                    UiUtils.ShowTip(Texts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
                 else if (!DI.Instance.State.IsConnected)
@@ -227,11 +255,7 @@ public class PatchIsShowSettingUiOnly
             return true;
 
         var areaState = DI.Instance.AreaState;
-        var areaEntity = areaState.CurrentArea;
-        if (areaEntity == null)
-            return true;
-
-        if (areaEntity.Value.GetRoom().InPvP)
+        if (areaState.PvpState is { InPvP: true })
         {
             __result = true;
             return false;
@@ -292,6 +316,7 @@ public class PatchOnClickOpenMapUI
 [HarmonyPatchCategory(Constants.PvpPatches)]
 public class PatchShrineRegisterFunc
 {
+    [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
     public static MethodBase TargetMethod()
     {
         var specializedType = typeof(FMenuHelper<EShrineMenuTag>);

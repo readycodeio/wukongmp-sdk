@@ -60,7 +60,7 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         }
         else
         {
-            var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(pawn);
+            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(pawn);
             if (mainEntity != null)
             {
                 mainEntity.Value.GetLocalState().RunImmobilizePatches = true;

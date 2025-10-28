@@ -6,6 +6,7 @@ using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
@@ -31,6 +32,9 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             ref LocalTamerComponent localTamerComp,
             Entity entity) =>
         {
+            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
+                return;
+
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
             if (localTamerComp.IsMonsterActive || !tamerComp.ShouldBeSpawned)
@@ -38,15 +42,15 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 return;
             }
 
-            var currentPhase = localTamerComp.Tamer?.CurrentRef?.Phase;
             var monster = localTamerComp.Tamer?.GetMonster();
+            var currentPhase = localTamerComp.Tamer!.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 TamerUtils.SpawnMonsterLocally(new TamerEntity(entity));
             }
 
-            monster = localTamerComp.Tamer?.GetMonster();
-            currentPhase = localTamerComp.Tamer?.CurrentRef?.Phase;
+            monster = localTamerComp.Tamer.GetMonster();
+            currentPhase = localTamerComp.Tamer.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 if (_notYetSpawnedGuids.Add(tamerComp.Guid))
@@ -66,7 +70,8 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 {
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                    teamComp.TeamId = monster.GetTeamIDInCS();
+                    if (Constants.IsCoop)
+                        teamComp.TeamId = monster.GetTeamIDInCS();
 #if TESTING
                     hpComp.Hp = 10;
                     attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
@@ -93,6 +98,15 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 events.Evt_AIPauseFsm.Invoke(true);
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
+            }
+
+            if (Constants.IsPvP && localTamerComp.Tamer.TamerType == ETamerType.Spawned)
+            {
+                MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity));
+                if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+                {
+                    SpawningUtils.SetMonkeyBotConfig(monster);
+                }
             }
 
             localTamerComp.IsMonsterActive = true;

@@ -89,7 +89,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                mainEntity = pawnState.GetByEntityByPlayerPawn(Owner);
+                mainEntity = pawnState.GetEntityByPlayerPawn(Owner);
                 if (!mainEntity.HasValue)
                     return;
 
@@ -146,7 +146,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
+                var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Owner);
                 if (mainEntity.HasValue)
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
@@ -219,7 +219,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
+                var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Owner);
                 if (!mainEntity.HasValue)
                     return;
 
@@ -236,11 +236,7 @@ namespace WukongMp.Api.Patches
     {
         public static void Postfix(
             BUC_ABPBasicData __instance,
-            AActor Owner,
-            IBUC_ABPCharacterData ChrData,
-            IBUC_ABPBGUCharacterData BGUData,
-            IBUC_SpeedCtrlData SpeedCtrlData,
-            float DeltaTime)
+            AActor Owner)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -273,7 +269,7 @@ namespace WukongMp.Api.Patches
             }
             else
             {
-                var mainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Owner);
+                var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Owner);
 
                 if (mainEntity.HasValue)
                 {
@@ -350,7 +346,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             if (DeadReason == EDeadReason.PlayerTrans)
-                return; // TODO: Camera is broken after transformation, stuck in one direction
+                return;
 
             var owner = __instance.GetOwner();
 
@@ -367,15 +363,18 @@ namespace WukongMp.Api.Patches
 
             __state = true;
 
-            if (Constants.IsPvP && DI.Instance.AreaState is { IsMasterClient: true, CurrentArea.RoomComponent: { InPvP: true, InCombatRound: true } })
+            if (Constants.IsPvP && DI.Instance.AreaState is { PvpState.InPvP: true })
             {
                 if (Attacker != owner)
                 {
-                    var attackerMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(Attacker);
-                    var killedMainEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(owner);
+                    var attackerMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Attacker);
+                    var killedMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
 
                     if (attackerMainEntity != null && killedMainEntity != null)
                     {
+                        if (!DI.Instance.ClientOwnership.OwnsEntity(killedMainEntity.Value.Entity))
+                            return;
+
                         ref var attackerMain = ref attackerMainEntity.Value.GetState();
                         ref var killedMain = ref killedMainEntity.Value.GetState();
 
@@ -388,6 +387,9 @@ namespace WukongMp.Api.Patches
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
                 if (tamerEntity.HasValue)
                 {
+                    if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                        return;
+
                     ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                     var tamerClass = localTamer.Tamer?.GetClass();
                     var netId = tamerEntity.Value.GetMeta().NetId;
@@ -404,7 +406,7 @@ namespace WukongMp.Api.Patches
                                 await Task.Delay(5000);
                                 Utils.TryRunOnGameThread(() =>
                                 {
-                                    SpawningUtils.SpawnUnitMaster(CharacterKind.DaSheng2, location, teamId);
+                                    SpawningUtils.SpawnUnitAsOwner(CharacterKind.DaSheng2, location, teamId);
                                     _pendingDaSheng--;
                                 });
                             });
@@ -428,13 +430,9 @@ namespace WukongMp.Api.Patches
         public static void Postfix(
             BUS_DeadComp __instance,
             bool __state,
-            IBUC_SimpleStateData ___SimpleStateData,
-            IBUC_UnitStateData ___UnitStateData,
             EDeadReason DeadReason,
-            AActor Attacker,
             int DmgID = -1,
             int StiffLevel = -1,
-            UAnimMontage? BeAttackedAM = null,
             bool bIsDotDmg = false,
             EAbnormalStateType AbnormalType = EAbnormalStateType.None)
         {
@@ -473,8 +471,7 @@ namespace WukongMp.Api.Patches
             {
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                 localTamer.IsMonsterActive = false;
-                localTamer.IsLocallySpawned = false;
-
+                MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
                 TamerUtils.ClearSpawnedUnitRefCount(tamerEntity.Value);
 
                 if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
@@ -482,7 +479,6 @@ namespace WukongMp.Api.Patches
 
                 ref var meta = ref tamerEntity.Value.GetMeta();
 
-                // TODO: send attacker and anim montage
                 var payload = new UnitDeadPacket(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                 DI.Instance.Rpc.SendUnitDead(payload);
                 Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
@@ -602,7 +598,7 @@ namespace WukongMp.Api.Patches
             var clearTarget = true;
             string name = "null (Clear target)";
 
-            var newTargetPlayerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(NewTargetInfo?.LockTargetActor);
+            var newTargetPlayerEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(NewTargetInfo?.LockTargetActor);
             var newTargetMonsterEntity = DI.Instance.PawnState.GetEntityByTamerMonster(NewTargetInfo?.LockTargetActor);
 
             if (NewTargetInfo != null && NewTargetInfo.LockTargetActor != null && !newTargetPlayerEntity.HasValue && !newTargetMonsterEntity.HasValue)
@@ -757,7 +753,7 @@ namespace WukongMp.Api.Patches
             if (!mainEntity.HasValue)
                 return true;
 
-            return !(mainEntity.Value.GetLocalState().Pawn == __instance.GetOwner() && playerEntity?.GetState().IsSpectator == true);
+            return !(mainEntity.Value.GetLocalState().Pawn == __instance.GetOwner() && mainEntity.Value.GetPvP().IsSpectator);
         }
     }
 
@@ -1036,7 +1032,7 @@ public class PatchSetAttrTransAfterActiveTalent
     {
         if (__exception != null)
         {
-            DI.Instance.Logger.LogError(__exception, "Exception in SetAttrTransAfterActiveTalent");
+            DI.Instance.Logger.LogError(__exception, "Suppressed crash in SetAttrTransAfterActiveTalent");
         }
 
         return null;

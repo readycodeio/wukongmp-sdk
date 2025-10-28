@@ -46,7 +46,7 @@ public sealed class WukongWidgetManager : IDisposable
         _eventBus.OnExitLevel -= OnExitLevel;
     }
 
-    public void UpdatePlayerTeam(PlayerEntity playerEntity)
+    public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
     {
         ref var playerComp = ref playerEntity.GetState();
 
@@ -57,7 +57,8 @@ public sealed class WukongWidgetManager : IDisposable
         }
         else
         {
-            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, playerComp.IsSpectator);
+            var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
+            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
         }
 
         RefreshWidgets();
@@ -69,7 +70,11 @@ public sealed class WukongWidgetManager : IDisposable
         if (player.HasValue)
         {
             var nickname = player.Value.GetState().NickName;
-            CoopStatusWidget.Instance.AddPlayer(nickname);
+            if (Constants.IsCoop)
+            {
+                CoopStatusWidget.Instance.AddPlayer(nickname);
+            }
+
             RefreshWidgets();
         }
     }
@@ -90,13 +95,21 @@ public sealed class WukongWidgetManager : IDisposable
         LobbyStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
         CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(_clientState.AreaPlayers.Count, _playerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
     }
 
     public void ShowInGameWidgets()
     {
-        CoopStatusWidget.Instance.SetVisibility(true);
-        CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+        if (Constants.IsCoop)
+        {
+            CoopStatusWidget.Instance.SetVisibility(true);
+            CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+        }
+        else if (Constants.IsPvP)
+        {
+            LobbyStatusWidget.Instance.SetVisibility(true);
+            LobbyStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+        }
+
         PingIndicatorWidget.Instance.SetVisibility(true);
         ChatWidget.Instance.SetVisibility(true);
     }

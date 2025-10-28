@@ -20,6 +20,8 @@ public class FreeCameraManager
 
     private FreeCameraManager() {}
 
+    public bool IsInFreeCameraMode => _isInFreeCameraMode;
+
     public void EnterFreeCameraMode()
     {
         var world = GameUtils.GetWorld();

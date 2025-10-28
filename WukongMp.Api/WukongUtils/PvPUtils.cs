@@ -1,5 +1,4 @@
-﻿using CSharpModBase;
-using WukongMp.Api.Configuration;
+﻿using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 
@@ -27,27 +26,8 @@ public static class PvPUtils
         {
             GameMessageWidget.Instance.SetVisibility(true);
             GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalPlayerEntity?.GetState().IsReadyForPvP == true));
+            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
             GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
-            LobbyStatusWidget.Instance.SetVisibility(true);
-        }
-        else
-        {
-            CoopStatusWidget.Instance.SetVisibility(true);
-        }
-    }
-
-    public static void SetupMatchmakingUi()
-    {
-        if (!IsAfterLoadingScreen)
-            return;
-
-        GameMessageWidget.Instance.SetVisibility(true);
-        GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-        GameMessageWidget.Instance.SetSecondText(Texts.MatchmakingInProgress);
-        GameMessageWidget.Instance.SetThirdText("");
-        if (Constants.IsPvP)
-        {
             LobbyStatusWidget.Instance.SetVisibility(true);
         }
         else
@@ -75,13 +55,13 @@ public static class PvPUtils
     {
         var areaState = DI.Instance.AreaState;
         var areaEntity = areaState.CurrentArea;
-        if (areaEntity == null)
+        if (areaEntity == null || !areaState.PvpState.HasValue)
             return;
 
         ref var room = ref areaEntity.Value.GetRoom();
-        var current = room.CurrentRound;
+        var current = areaState.PvpState.Value.CurrentRound;
         var total = room.TournamentRounds;
-        UIUtils.ShowTip(string.Format(Texts.RoundCount, current, total));
+        UiUtils.ShowTip(string.Format(Texts.RoundCount, current, total), true);
     }
 
     public static string GetTeamColorString(int teamId)
@@ -113,5 +93,10 @@ public static class PvPUtils
     {
         Logging.LogInformation("End tournament");
         SetupLobbyUi();
+    }
+    
+    public static void CreatePvpStateEntity()
+    {
+        DI.Instance.AreaState.PvpStateEntity = DI.Instance.ClientNetEntity.CreateNetworkedAreaEntity(DI.Instance.ArchetypeRegistration.PvPStateSingletonArchetype).Entity;
     }
 }

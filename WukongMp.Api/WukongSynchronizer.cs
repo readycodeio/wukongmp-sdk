@@ -12,13 +12,17 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.MainCharacters;
+using WukongMp.Api.ECS.Systems.PvP;
 using WukongMp.Api.ECS.Systems.Tamers;
+using WukongMp.Api.PVP;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -37,7 +41,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         ArchetypeEventRouter archetypeEvent,
         ClientState state,
         ClientWukongArchetypeRegistration wukongArchetype,
-        DefaultPlayerArchetypeRegistration playerArchetype,
+        WukongPVP? pvp,
         Store world,
         WukongAreaState areaState,
         WukongPlayerState playerState,
@@ -66,20 +70,32 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup = new SystemGroup("Sync");
 
         _syncGroup.Add(new SpawnTamersSystem(state));
-        _syncGroup.Add(new OnTamerDeadSystem());
+        _syncGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
-        _syncGroup.Add(new ScaleMonsterHpSystem());
+
+        if (pvp == null)
+        {
+            _syncGroup.Add(new ScaleMonsterHpSystem());
+        }
+
         _syncGroup.Add(new SyncMonsterTeamSystem());
         _syncGroup.Add(new ChangeTamerTargetSystem());
 
-        _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
+        _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, areaState, Logger));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
         _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, widgetManager, eventBus, Logger));
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
-        _syncGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
 
-        _syncGroup.Add(new SyncPlayersSystem(playerState, modeManager));
+        if (pvp != null)
+        {
+            _syncGroup.Add(new ReadinessSystem(areaState, pvp));
+            _syncGroup.Add(new PlayerListSystem(playerState, areaState));
+        }
+        else
+        {
+            _syncGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
+        }
 
         _syncGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_syncGroup);
@@ -142,12 +158,28 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         if (isFirst)
         {
-            TamerUtils.DiscoverTamers();
+            if (Constants.IsPvP)
+            {
+                PvPUtils.CreatePvpStateEntity();
+            }
+
+            if (Constants.IsCoop)
+            {
+                TamerUtils.DiscoverTamers();
+            }
         }
     }
 
     private void OnApplySnapshot()
     {
-        _world.Query<LocalTamerComponent, MetadataComponent>().Each(new DiscoverLocallySpawnedMonsters());
+        if (Constants.IsPvP)
+        {
+            _world.Query<LocalTamerComponent, TamerComponent, TranslationComponent>().Each(new SpawnMonstersFromEcs());
+        }
+        else
+        {
+            // TODO: Probably can be deleted.
+            _world.Query<LocalTamerComponent, MetadataComponent>().Each(new DiscoverLocallySpawnedMonsters());
+        }
     }
 }

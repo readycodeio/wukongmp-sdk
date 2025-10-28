@@ -40,6 +40,7 @@ public class DI
     public ILogger Logger { get; private set; } = null!;
 
     public Store World { get; private set; } = null!;
+    public ClientWukongArchetypeRegistration ArchetypeRegistration { get; private set; } = null!;
     public ArchetypeEventRouter archetypeEvent { get; private set; } = null!;
     public IClientEcsUpdateLoop EcsLoop { get; private set; } = null!;
 
@@ -84,7 +85,7 @@ public class DI
     public RuntimePrelude Prelude { get; private set; } = null!;
     public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
-    
+
     public WukongPVP? PVP { get; private set; }
     public WukongCoop? Coop { get; private set; }
     public WukongWidgetManager WidgetManager { get; private set; } = null!;
@@ -126,8 +127,10 @@ public class DI
         ]);
         var areaArchetype = new DefaultAreaArchetypeRegistration(areaComponentRegistry);
         var playerArchetype = new DefaultPlayerArchetypeRegistration(playerComponentRegistry);
-        var wukongArchetype = new ClientWukongArchetypeRegistration();
+        var wukongArchetype = ArchetypeRegistration = new ClientWukongArchetypeRegistration();
 
+        // TODO: the ArchetypeId on client and server are only in sync because the order of registration is the same
+        // This is fragile and should be fixed
         var world = World = new Store(new EntityStore(), [
             areaArchetype,
             playerArchetype,
@@ -162,31 +165,38 @@ public class DI
         var jobRegistry = JobRegistry = new JobRegistry(netComponentRegistry, netEntity, relayClient, logger);
 
         var state = State = new ClientState(world, netEntity, relayClient, ecsLoop, jobRegistry, areaArchetype, playerArchetype, logger);
-        var areaState = AreaState = new WukongAreaState(state);
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
         var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, eventBus);
 
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
-        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
 
         var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
+        
+        var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
+        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
-        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, ecsLoop, logger);
-        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(serializer, relayClient, ecsLoop, logger);
+        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, ecsLoop, logger);
+        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
+
+        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
+
+        WukongPVP? pvp = null;
+        if (Constants.IsPvP)
+            pvp = PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, rpc, chatter, ecsLoop, logger);
 
         var synchronizer = Synchronizer = new WukongSynchronizer(
             worldEvent,
             state,
             wukongArchetype,
-            playerArchetype,
+            pvp,
             world,
             areaState,
             playerState,
@@ -207,7 +217,6 @@ public class DI
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
 
-        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
 
         var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
         var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
@@ -216,8 +225,6 @@ public class DI
 
         if (Constants.IsCoop)
             Coop = new WukongCoop(serializer, relayClient, areaState, playerState, synchronizer);
-        else
-            PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, synchronizer, rpc, chatter, ecsLoop, logger);
 
         // ---
 

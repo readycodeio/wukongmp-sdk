@@ -1,7 +1,7 @@
 ﻿using ReadyM.Api.ECS.Registry;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
-using ReadyM.Relay.Common.ECS.Tags;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Registry;
 using WukongMp.Api.ECS.Components;
 
@@ -11,6 +11,7 @@ public class ClientWukongArchetypeRegistration : IArchetypeRegistration
 {
     public ArchetypeId MonsterArchetype { get; private set; }
     public ArchetypeId MainCharacterArchetype { get; private set; }
+    public ArchetypeId PvPStateSingletonArchetype { get; private set; }
 
     public void Register(Store world)
     {
@@ -26,5 +27,7 @@ public class ClientWukongArchetypeRegistration : IArchetypeRegistration
             WukongComponentUtils.SetupServerMainCharacterArchetype(b);
             b.Add<LocalMainCharacterComponent>();
         });
+
+        PvPStateSingletonArchetype = world.RegisterArchetype(WukongComponentUtils.SetupServerPvpStateArchetype);
     }
 }

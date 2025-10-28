@@ -42,9 +42,7 @@ namespace WukongMp.Api.Configuration
         public const float AiPathMoveStuckTimeout = 0.2f; // seconds
         public const float MonsterUpdateTargetTime = 7; // seconds
         public const float SpawnOwnershipRadius = 7500f; // 75m
-
-        public static readonly List<int> SkillsWhitelist = [10518, -999];
-
+        
         public static readonly HashSet<int> InstantTriggerSequences =
         [
             30105200, // act 3 boss, end of first phase
@@ -71,9 +69,8 @@ namespace WukongMp.Api.Configuration
         public const int RoundMinutes = 5;
 
         public const int BotCount = 2;
-
-        public const bool IsCoop = true;
-        public const bool IsPvP = !IsCoop;
+        public static bool IsCoop = false;
+        public static bool IsPvP => !IsCoop;
 
         public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";
 

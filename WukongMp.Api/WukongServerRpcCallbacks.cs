@@ -13,18 +13,15 @@ namespace WukongMp.Api;
 
 public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 {
-    protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
     public WukongServerRpcCallbacks(
-        RelaySerializer serializer,
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
     {
-        Serializer = serializer;
         RelayClient = relayClient;
         _ecsLoop = ecsLoop;
         _logger = logger;
@@ -49,10 +46,19 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     }
 
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
+    private static long _lastPingTimestamp;
 
     [ServerRpcEvent("Ping")]
     private void OnPing(long timestamp)
     {
+        if (timestamp != _lastPingTimestamp)
+        {
+            // Outdated ping response, most likely due to packet loss
+            var outdatedRtt = PingStopwatch.ElapsedMilliseconds - timestamp;
+            _logger.LogWarning("Received outdated ping response. Timestamp: {Timestamp}, now: {Now}, RTT: {Rtt}ms", timestamp, PingStopwatch.ElapsedMilliseconds, outdatedRtt);
+            return;
+        }
+
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
         PingIndicatorWidget.Instance.SetPingValue(rtt);
@@ -60,6 +66,7 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 
     public void SendPing()
     {
-        SendPing(PingStopwatch.ElapsedMilliseconds);
+        _lastPingTimestamp = PingStopwatch.ElapsedMilliseconds;
+        SendPing(_lastPingTimestamp);
     }
 }

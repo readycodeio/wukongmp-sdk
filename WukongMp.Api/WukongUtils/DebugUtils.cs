@@ -1,8 +1,10 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using b1;
 using b1.BGU.BUAnim;
 using b1.BGW;
-using System.Collections.Generic;
-using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -11,7 +13,44 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class DebugUtils
 {
-    private static List<AActor> _tmpActors = [];
+    private static readonly List<AActor> TmpActors = [];
+
+    public static void LogUe4SsPresence()
+    {
+        // check for presence of a known UE4SS files
+        var win64Folder = FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64");
+        var dwmApiPath = FPaths.Combine(win64Folder, "dwmapi.dll");
+        var ue4ssFolder = FPaths.Combine(win64Folder, "ue4ss");
+
+        if (File.Exists(dwmApiPath))
+        {
+            DI.Instance.Logger.LogInformation("dwmapi.dll file found at {Path}", dwmApiPath);
+        }
+        else
+        {
+            DI.Instance.Logger.LogInformation("dwmapi.dll file not found");
+        }
+
+        if (Directory.Exists(ue4ssFolder))
+        {
+            DI.Instance.Logger.LogInformation("ue4ss folder found at {Path}", ue4ssFolder);
+            var modsPath = FPaths.Combine(ue4ssFolder, "Mods");
+
+            if (Directory.Exists(modsPath))
+            {
+                var mods = Directory.EnumerateDirectories(modsPath);
+                foreach (var mod in mods)
+                {
+                    var dirName = Path.GetFileName(mod);
+                    DI.Instance.Logger.LogInformation("Found UE4SS mod folder: {ModFolder}", dirName);
+                }
+            }
+        }
+        else
+        {
+            DI.Instance.Logger.LogInformation("ue4ss folder not found");
+        }
+    }
 
     public static UClass? GetDebugCubeActorClass()
     {
@@ -24,8 +63,10 @@ public static class DebugUtils
                 Logging.LogError("Cannot find class of {Class} to spawn", Constants.DebugCubeActorPath);
                 return null;
             }
+
             return debugCubeActorClass;
         }
+
         return null;
     }
 
@@ -40,8 +81,10 @@ public static class DebugUtils
                 Logging.LogError("Cannot find class of {Class} to spawn", Constants.DebugSphereActorPath);
                 return null;
             }
+
             return debugActorClass;
         }
+
         return null;
     }
 
@@ -56,8 +99,10 @@ public static class DebugUtils
                 Logging.LogError("Cannot spawn actor {ActorName}", unrealClass.GetName());
                 return null;
             }
+
             return actor;
         }
+
         return null;
     }
 
@@ -81,6 +126,7 @@ public static class DebugUtils
                 wallActors.Add(actor);
             }
         }
+
         return wallActors;
     }
 
@@ -100,19 +146,21 @@ public static class DebugUtils
                 Logging.LogError("Cannot spawn player marker actor");
                 return;
             }
+
             playerMarkerActor.CallFunctionByNameWithArguments($"SetText {guid} ()", true);
             playerMarkerActor.SetActorLocation(actor.GetActorLocation(), false, out _, true);
-            _tmpActors.Add(playerMarkerActor);
+            TmpActors.Add(playerMarkerActor);
         }
     }
 
     public static void DestroyTmpMarkerActors()
     {
-        foreach (var actor in _tmpActors)
+        foreach (var actor in TmpActors)
         {
             actor.DestroyActor();
         }
-        _tmpActors.Clear();
+
+        TmpActors.Clear();
     }
 
     public static void ShowMarkersForInvisibleWalls(float radius)
@@ -191,16 +239,19 @@ public static class DebugUtils
                 {
                     LogAllProperties(playerLocomotionAnimInst);
                 }
+
                 var advancedMonsterLocomotionAnimInst = moveAnimGraphInstance.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.AdvancedMonsterLocomotion);
                 if (!advancedMonsterLocomotionAnimInst.IsNullOrDestroyed())
                 {
                     LogAllProperties(advancedMonsterLocomotionAnimInst);
                 }
+
                 var monsterLocomotionAnimInst = moveAnimGraphInstance.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.MonsterLocomotion);
                 if (!monsterLocomotionAnimInst.IsNullOrDestroyed())
                 {
                     LogAllProperties(monsterLocomotionAnimInst);
                 }
+
                 var motionMatchingAnimInst = moveAnimGraphInstance.GetLinkedAnimGraphInstanceByTag(B1GlobalFNames.MotionMatching);
                 if (!motionMatchingAnimInst.IsNullOrDestroyed())
                 {
@@ -208,6 +259,7 @@ public static class DebugUtils
                 }
             }
         }
+
         LogCurveValues(animationHelperData);
         LogStateMachineWeights(animationHelperData);
     }
@@ -232,9 +284,9 @@ public static class DebugUtils
 
     private static void LogStateMachineWeights(BUC_ABPHelperData animationHelperData)
     {
-        foreach(var property in animationHelperData.StateMachineWeights)
+        foreach (var property in animationHelperData.StateMachineWeights)
         {
-            foreach(var weight in property.Value)
+            foreach (var weight in property.Value)
             {
                 Logging.LogDebug("StateMachineName: {StateMachineName}, stateName: {StateName}, value: {Value}", property.Key.ToString(), weight.ToString(), weight.Value);
             }

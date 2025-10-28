@@ -11,17 +11,28 @@ public class LaunchParameters
     private static LaunchParameters? _instance;
     public static LaunchParameters Instance => _instance ??= new LaunchParameters();
 
-    public bool ShouldEnableMultiplayer => ServerIp is not null && ServerPort is not null;
+    public bool Valid => ServerIp is not null
+                         && ServerPort is not null
+                         && UserGuid != Guid.Empty;
+
+    public bool ValidForCoOp => Valid && GameMode == "co-op"
+                                      && JwtToken is not null
+                                      && ApiBaseUrl is not null
+                                      && ServerId is not null;
+
+    public bool ValidForPvP => GameMode == "pvp"
+                               && LevelId is not null;
 
     public string? ModFolderOverride { get; }
     public string? ServerIp { get; }
     public int? ServerPort { get; }
     public int? ServerId { get; }
     public Guid UserGuid { get; } = Guid.Empty;
+    public string? GameMode { get; }
     public string? ApiBaseUrl { get; }
     public string? JwtToken { get; }
     public string Nickname { get; } = "Player";
-    public int LevelId { get; }
+    public int? LevelId { get; }
 
     public string? ShimDbName { get; }
     public string? ShimDbDir { get; }
@@ -42,29 +53,22 @@ public class LaunchParameters
     {
         var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
-        // REQUIRED: API base URL
-        ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
-        if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+        // BOTH: Game mode
+        GameMode = data.GetValueOrDefault("GAME_MODE").ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(GameMode))
         {
-            Logging.LogError("API base URL not provided, launch the game from the ReadyM Launcher.");
-            return;
-        }
-        
-        // REQUIRED: JWT token
-        JwtToken = data.GetValueOrDefault("JWT_TOKEN");
-        if (string.IsNullOrWhiteSpace(JwtToken))
-        {
-            Logging.LogError("Authorization token not provided, launch the game from the ReadyM Launcher.");
+            Logging.LogError("Game mode not provided, launch the game from the ReadyM Launcher.");
             return;
         }
 
-        // REQUIRED: user GUID
+        // CO-OP: API base URL
+        ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
+
+        // CO-OP: JWT token
+        JwtToken = data.GetValueOrDefault("JWT_TOKEN");
+
+        // BOTH: user GUID
         var guidString = data.GetValueOrDefault("PLAYER_ID");
-        if (string.IsNullOrWhiteSpace(guidString))
-        {
-            Logging.LogError("User ID not provided, launch the game from the ReadyM Launcher.");
-            return;
-        }
 
         if (Guid.TryParse(guidString, out var guid))
         {
@@ -74,58 +78,36 @@ public class LaunchParameters
         else
         {
             Logging.LogError("Invalid ID format: {Guid}", guidString);
-            return;
         }
 
-        // REQUIRED: server ID
+        // CO-OP: server ID
         var serverIdString = data.GetValueOrDefault("SERVER_ID");
-        if (string.IsNullOrWhiteSpace(serverIdString))
+        if (!string.IsNullOrWhiteSpace(serverIdString) && int.TryParse(serverIdString, out var id))
         {
-            Logging.LogError("Server ID not provided, launch the game from the ReadyM Launcher.");
-            return;
+            ServerId = id;
         }
 
-        ServerId = int.Parse(serverIdString);
-
-        // REQUIRED: server IP and port number
+        // BOTH: server IP and port number
         ServerIp = data.GetValueOrDefault("SERVER_IP");
+
         var serverPort = data.GetValueOrDefault("SERVER_PORT");
-
-        if (string.IsNullOrWhiteSpace(ServerIp) || string.IsNullOrWhiteSpace(serverPort))
+        if (!string.IsNullOrWhiteSpace(serverPort) && int.TryParse(serverPort, out var port))
         {
-            Logging.LogError("Server IP or port not provided, launch the game from the ReadyM Launcher.");
-            return;
+            ServerPort = port;
         }
 
-        ServerPort = int.Parse(serverPort);
+        // BOTH: user nickname
+        Nickname = data.GetValueOrDefault("NICKNAME");
 
-        // REQUIRED: user nickname
-        Nickname = data.GetValueOrDefault("NICKNAME") ?? "";
-        if (string.IsNullOrWhiteSpace(Nickname))
+        // PvP: Level ID
+        var level = data.GetValueOrDefault("LEVEL_ID");
+        if (!string.IsNullOrWhiteSpace(level) && int.TryParse(level, out var levelId))
         {
-            Logging.LogError("Nickname not provided, launch the game from the ReadyM Launcher.");
-            return;
-        }
-
-        if (Constants.IsPvP)
-        {
-            // REQUIRED: Level ID
-            var level = data.GetValueOrDefault("LEVEL_ID");
-            if (!string.IsNullOrWhiteSpace(level))
-            {
-                LevelId = int.Parse(level);
-                Logging.LogDebug("Level ID: {LevelId}", LevelId);
-            }
-            else
-            {
-                Logging.LogError("Level ID not provided, launch the game from the ReadyM Launcher.");
-                return;
-            }
+            LevelId = levelId;
         }
 
         // OPTIONAL: custom mod folder
         var modFolder = data.GetValueOrDefault("MOD_FOLDER");
-
         if (!string.IsNullOrWhiteSpace(modFolder))
         {
             ModFolderOverride = modFolder;

@@ -46,7 +46,7 @@ public class PatchOnSwitchBulletTarget
             var newTargetId = default(NetworkId);
             if (InnerTarget is BGUPlayerCharacterCS)
             {
-                var mainCharacterEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(InnerTarget);
+                var mainCharacterEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(InnerTarget);
 
                 if (mainCharacterEntity == null)
                 {
@@ -124,7 +124,7 @@ public class PatchOnSwitchBulletInfoIfNeed
 }
 
 [HarmonyPatch(typeof(BUS_ProjectileLifeComp), "OnProjectileDead")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnProjectileDead
 {
     public static void Postfix(BUS_ProjectileLifeComp __instance, IBUC_MasterData ___MasterData, EBGUBulletDestroyReason Reason)
@@ -150,7 +150,7 @@ public static class PatchOnProjectileDead
 }
 
 [HarmonyPatch(typeof(BUS_ObjActorMovementComp), "OnSetMoveMode")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchOnSetMoveMode
 {
     public static void Postfix(BUS_ObjActorMovementComp __instance, EBulletOrMagicFieldMoveModeType MoveMode)
@@ -188,7 +188,7 @@ public static class PatchOnSetMoveMode
 }
 
 [HarmonyPatch(typeof(BUEffectBulletSwitchSelf), "ApplyBySkill_Implement")]
-[HarmonyPatchCategory(Constants.CoopPatches)]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchApplyBySkill_Implement
 {
     public static bool Prefix(int EffectID, AActor? Caster, AActor? Target)

@@ -21,11 +21,10 @@ public static class SpawningUtils
     {
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
+        var pvpComp = mainEntity.GetPvP();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
         var playerId = mainComp.PlayerId;
-        
-        ref var player = ref playerEntity.GetState();
         
         if (localMainComp.HasPawn)
         {
@@ -132,8 +131,8 @@ public static class SpawningUtils
         Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickName);
 
         // NOTE: Player properties already set in ECS. Therefore the following can be removed
-        Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", player.IsReadyForPvP);
-        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", player.IsSpectator);
+        Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", pvpComp.IsReadyForPvP);
+        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
 
         // FIXME: (refactor) Equipment should be synced on the actor here
 
@@ -172,20 +171,15 @@ public static class SpawningUtils
         return newCharacter;
     }
 
-    public static void SpawnUnitsMaster(MainCharacterEntity mainEntity, APawn? pawn, string unitName, int count, int teamId)
-    {
-        if (pawn == null)
-        {
-            Logging.LogError("Pawn is null");
-            return;
-        }
 
-        var spawnLoc = pawn.GetActorLocation() + pawn.GetActorForwardVector() * Constants.MonsterSpawnDistance;
-        
+    public static FVector CalculateSpawnLocation(FVector playerLocation, FVector playerForwardVector)
+    {
+        var spawnLoc = playerLocation + playerForwardVector * Constants.MonsterSpawnDistance;
+
         var startLoc = spawnLoc + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
         var endLoc = spawnLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
 
-        // trace vertically for spawn height
+        // Trace vertically for spawn height.
         var hitResultSimple = new FHitResultSimple();
         var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), startLoc, endLoc, ref hitResultSimple);
         if (hit)
@@ -193,7 +187,12 @@ public static class SpawningUtils
             spawnLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
         }
 
-        // spawn in a grid around center point, separated by 200 units
+        return spawnLoc;
+    }
+
+    public static void SpawnUnitsAsOwner(string unitName, int count, int teamId, FVector spawnLocation)
+    {
+        // Spawn in a grid around center point, separated by 200 units.
         var cols = (int)Math.Ceiling(Math.Sqrt(count));
         var rows = (int)Math.Ceiling((float)count / cols);
 
@@ -207,56 +206,65 @@ public static class SpawningUtils
             {
                 var x = startX + col * Constants.MonsterSpawnSpread;
                 var y = startY + row * Constants.MonsterSpawnSpread;
-                var loc = spawnLoc + new FVector(x, y, 0);
+                var loc = spawnLocation + new FVector(x, y, 0);
 
-                var localI = placed;
-                Task.Run(async () =>
-                {
-                    // wait for i * 200ms
-                    await Task.Delay(localI * Constants.MonsterSpawnDelayMs);
-                    SpawnUnitMaster(unitName, loc, teamId);
-                });
+                SpawnUnitAsOwner(unitName, loc, teamId);
                 placed++;
                 if (placed == count)
-                    goto Notify;
+                    return;
             }
         }
-
-        Notify:
-        // FIXME: This doesn't belong here: single responsibility principle.
-        // Subscribe to events in the chatter object and send the message from there.
-        DI.Instance.Chatter.SendServerMessage("PlayerSpawned", mainEntity.GetState().CharacterNickName, count.ToString(), unitName);
     }
 
-    public static void SpawnUnitMaster(string unitName, FVector loc, int teamId)
+    public static void SpawnUnitAsOwner(string unitName, FVector locaction, int teamId)
     {
+        var guid = Guid.NewGuid().ToString();
+        var tamerActor = SpawnUnitLocallyByName(guid, unitName, locaction);
+        if (tamerActor != null)
+        {
+            var unitPath = UnitPathsConfig.GetUnitPath(unitName);
+            var characterEntity = CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
+
+            ref var transComp = ref characterEntity.GetTranslation();
+            transComp.Position = locaction.ToVector3();
+            transComp.Rotation = Vector3.Zero;
+
+            ref var nameComp = ref characterEntity.GetNickname();
+            nameComp.Nickname = "Bot";
+
+            Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, locaction.ToString());
+            DI.Instance.Rpc.SendSpawnUnit(new DTO.UnitSpawnData(unitName, guid, locaction));
+        }
+    }
+
+    public static BUTamerActor? SpawnUnitLocallyByName(string guid, string unitName, FVector location)
+    {
+        if (!UnitPathsConfig.IsValidUnitName(unitName))
+        {
+            Logging.LogError("Invalid unit name in SpawnUnitLocallyByName: {UnitName}", unitName);
+            return null;
+        }
+
+        Logging.LogDebug("Spawn unit called for {UnitName}", unitName);
         var unitPath = UnitPathsConfig.GetUnitPath(unitName);
 
-        var guid = Guid.NewGuid().ToString();
+        if (string.IsNullOrEmpty(unitPath))
+            return null;
 
-        Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, loc.ToCompactString());
-        SpawnUnitLocally(guid, unitPath, teamId, loc.X, loc.Y, loc.Z);
+        return SpawnUnitLocallyByPath(guid, unitPath, location);
     }
 
-    public static void SpawnUnitLocally(string guid, string unitPath, int teamId, float x, float y, float z)
+    public static BUTamerActor? SpawnUnitLocallyByPath(string guid, string unitPath, FVector location)
     {
-        Logging.LogDebug("Spawn unit called for {UnitPath}", unitPath);
-
-        if (string.IsNullOrEmpty(unitPath))
-            return;
-
-        var loc = new FVector(x, y, z);
-        var rot = new FRotator();
-
         var world = GameUtils.GetWorld();
 
         var unitClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(unitPath, ELoadResourceType.SyncLoadAndCache);
-        var transform = new FTransform(rot, loc);
+        var transform = new FTransform(FRotator.ZeroRotator, location);
         var tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)unitClass, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
         if (tamerActor == null)
         {
             Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
-            return;
+            return null;
         }
 
         tamerActor.MarkAsSpawnedTamer(null);
@@ -266,32 +274,10 @@ public static class SpawningUtils
         // Update final guid
         tamerActor.GetFinalGuid(true);
 
-        Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
-        var characterEntity = CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
-
-        ref var transComp = ref characterEntity.GetTranslation();
-        transComp.Position = loc.ToVector3();
-        transComp.Rotation = rot.ToVector3();
-
         UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, transform);
-        BGS_GSEventCollection.Get(tamerActor)?.Evt_TamerBlockingSpawnImmediately.Invoke(guid);
+        Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
 
-        ref var nameComp = ref characterEntity.GetNickname();
-        nameComp.Nickname = "Bot";
-
-        MarkerUtils.CreateMarkerForCharacter(characterEntity); // 3D marker above monster
-        if (unitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
-        {
-            SetMonkeyBotConfig(tamerActor.GetMonster());
-        }
-    }
-
-    // FIXME: This shouldn't be used, instead figure out the team ID on the callee side
-    public static void SpawnBots(PlayerEntity playerEntity)
-    {
-        var teamId = playerEntity.GetState().TeamId;
-        var oppositeId = PvPUtils.GetOppositeTeam(teamId);
-        SpawnBots(oppositeId);
+        return tamerActor;
     }
 
     public static void SpawnBots(int teamId)
@@ -304,7 +290,7 @@ public static class SpawningUtils
 
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             var spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            SpawnUnitMaster(CharacterKind.Monkey, spawnPosition, teamId);
+            SpawnUnitAsOwner(CharacterKind.Monkey, spawnPosition, teamId);
         }
     }
 
@@ -325,6 +311,18 @@ public static class SpawningUtils
             });
 
         return new TamerEntity(entity);
+    }
+
+    public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)
+    {
+        float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
+        float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
+        float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
+
+        var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+        var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
+
+        return AdjustSpawnLocation(pawn, baseLocation);
     }
 
     public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
@@ -420,7 +418,7 @@ public static class SpawningUtils
         {
             return false;
         }
-        var summonerEntity = DI.Instance.PawnState.GetByEntityByPlayerPawn(summoner);
+        var summonerEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(summoner);
         if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
         {
             return true; // Local player summons.
@@ -464,7 +462,7 @@ public static class SpawningUtils
         }
     }
 
-    private static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
+    public static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
     {
         var events = BUS_EventCollectionCS.Get(bGUCharacter);
         if (events != null)
