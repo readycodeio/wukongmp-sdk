@@ -47,6 +47,7 @@ public partial class WukongPVP : IDisposable
     private readonly WukongEventBus _eventBus;
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongChatter _chatter;
+    private readonly ClientOwnershipManager _ownershipManager;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -87,6 +88,7 @@ public partial class WukongPVP : IDisposable
         WukongEventBus eventBus,
         WukongRpcCallbacks rpc,
         WukongChatter chatter,
+        ClientOwnershipManager ownershipManager,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger
     )
@@ -100,6 +102,7 @@ public partial class WukongPVP : IDisposable
         _eventBus = eventBus;
         _rpc = rpc;
         _chatter = chatter;
+        _ownershipManager = ownershipManager;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -307,6 +310,14 @@ public partial class WukongPVP : IDisposable
         GameMessageWidget.Instance.SetVisibility(false);
         CountdownWidget.Instance.StopCountdown();
         TimerWidget.Instance.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, RoundEndedTimeout);
+
+        _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
+        {
+            if (_ownershipManager.OwnsEntity(entity) && localTamerComp.Pawn != null)
+            {
+                TamerUtils.EnableTamer(localTamerComp.Pawn);
+            }
+        });
 
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)

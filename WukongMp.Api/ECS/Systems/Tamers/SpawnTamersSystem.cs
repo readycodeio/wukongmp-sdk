@@ -9,6 +9,7 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
@@ -18,7 +19,7 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// whether they require spawning.
 /// </summary>
 /// <param name="state"></param>
-public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SpawnTamersSystem(ClientState state, WukongAreaState areaState) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private readonly HashSet<string?> _notYetSpawnedGuids = [];
 
@@ -92,12 +93,9 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
             }
 
-            if (metaComp.Owner != state.LocalPlayerId)
+            if (metaComp.Owner != state.LocalPlayerId || (Constants.IsPvP && areaState.PvpState.HasValue && !areaState.PvpState.Value.InPvP))
             {
-                events.Evt_AIPauseBT.Invoke(true);
-                events.Evt_AIPauseFsm.Invoke(true);
-                events.Evt_AIPerceptionSetting.Invoke(false);
-                Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
+                TamerUtils.DisableTamer(monster);
             }
 
             if (Constants.IsPvP && localTamerComp.Tamer.TamerType == ETamerType.Spawned)

@@ -146,5 +146,33 @@ namespace WukongMp.Api.WukongUtils
                 BGU_UnrealWorldUtil.DestroyActor(markerActor);
             }
         }
+
+        public static void EnableTamer(BGUCharacterCS tamerMonster)
+        {
+            var events = BUS_EventCollectionCS.Get(tamerMonster);
+            if (events == null)
+            {
+                Logging.LogError("events are null");
+                return;
+            }
+            events.Evt_AIPauseBT.Invoke(false);
+            events.Evt_AIPauseFsm.Invoke(false);
+            events.Evt_AIPerceptionSetting.Invoke(true);
+            Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(tamerMonster));
+        }
+
+        public static void DisableTamer(BGUCharacterCS tamerMonster)
+        {
+            var events = BUS_EventCollectionCS.Get(tamerMonster);
+            if (events == null)
+            {
+                Logging.LogError("events are null");
+                return;
+            }
+            events.Evt_AIPauseBT.Invoke(true);
+            events.Evt_AIPauseFsm.Invoke(true);
+            events.Evt_AIPerceptionSetting.Invoke(false);
+            Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(tamerMonster));
+        }
     }
 }
