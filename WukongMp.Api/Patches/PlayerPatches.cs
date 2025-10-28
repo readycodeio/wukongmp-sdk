@@ -694,6 +694,22 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_BeAttackedComp), "IsDamageValid")]
+    [HarmonyPatchCategory(Constants.PvpPatches)]
+    public static class PatchIsDamageValid
+    {
+        public static bool Prefix(IBUC_SimpleStateData ___VictimSimpleStateData, ref bool __result)
+        {
+            if (___VictimSimpleStateData.HasSimpleState(EBGUSimpleState.StrongDamageImmue))
+            {
+                __result = false;
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     [HarmonyPatch(typeof(BUS_ParkourMoveCompImpl), "CheckStrideDown")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchCheckStrideDown
