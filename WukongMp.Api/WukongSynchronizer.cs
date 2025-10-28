@@ -69,7 +69,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         _syncGroup = new SystemGroup("Sync");
 
-        _syncGroup.Add(new SpawnTamersSystem(state, areaState));
+        _syncGroup.Add(new SpawnTamersSystem(state));
         _syncGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
@@ -134,15 +134,19 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
             return;
         }
 
-        if (localTamerComp.Pawn == null)
+        var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
+        if (events == null)
         {
-            Logging.LogError("LocalTamerComponent.Pawn is null for entity {EntityId}", meta.NetId);
+            Logging.LogError("events are null");
             return;
         }
 
-        if (meta.Owner == _state.LocalPlayerId && !(Constants.IsPvP && _areaState.PvpState.HasValue && !_areaState.PvpState.Value.InPvP))
+        if (meta.Owner == _state.LocalPlayerId)
         {
-            TamerUtils.EnableTamer(localTamerComp.Pawn);
+            events.Evt_AIPauseBT.Invoke(false);
+            events.Evt_AIPauseFsm.Invoke(false);
+            events.Evt_AIPerceptionSetting.Invoke(true);
+            Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
         }
     }
 

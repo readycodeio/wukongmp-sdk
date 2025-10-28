@@ -190,7 +190,7 @@ public class DI
 
         WukongPVP? pvp = null;
         if (Constants.IsPvP)
-            pvp = PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, rpc, chatter, clientOwnership, ecsLoop, logger);
+            pvp = PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, rpc, chatter, ecsLoop, logger);
 
         var synchronizer = Synchronizer = new WukongSynchronizer(
             worldEvent,
