@@ -4,8 +4,10 @@ using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlShare;
 using CSharpModBase;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -815,8 +817,36 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
-            return !DisabledCollidersData.IsDisabled(guid);
+            var obstacle = __instance.GetOwner();
+
+            List<FVector> playersPositions = [];
+            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
+            ref MainCharacterComponent playerComp, Entity _) =>
+            {
+                playersPositions.Add(playerComp.Location.ToFVector());
+            });
+
+            return AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
+        }
+
+        private static bool AreAllPlayersOnSameSide(FVector obstaclePosition, FVector obstacleForward, List<FVector> playersPositions)
+        {
+            if (playersPositions.Count <= 1)
+                return true;
+
+            float firstDot = FVector.DotProduct(playersPositions[0] - obstaclePosition, obstacleForward);
+            bool isPositive = firstDot > 0f;
+
+            foreach (var position in playersPositions)
+            {
+                float dot = FVector.DotProduct(position - obstaclePosition, obstacleForward);
+                bool currentIsPositive = dot > 0f;
+
+                if (currentIsPositive != isPositive)
+                    return false;
+            }
+
+            return true;
         }
     }
 
