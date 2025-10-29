@@ -64,7 +64,6 @@ namespace WukongMp.Api.WukongUtils
         public static void InitializeWidgets()
         {
             ChatWidget.Instance.Initialize();
-            TimerWidget.Instance.Initialize();
             LobbyStatusWidget.Instance.Initialize();
             CoopStatusWidget.Instance.Initialize();
             GameMessageWidget.Instance.Initialize();
@@ -77,7 +76,6 @@ namespace WukongMp.Api.WukongUtils
         public static void DeinitializeWidgets()
         {
             ChatWidget.Instance.Deinitialize();
-            TimerWidget.Instance.Deinitialize();
             LobbyStatusWidget.Instance.Deinitialize();
             CoopStatusWidget.Instance.Deinitialize();
             GameMessageWidget.Instance.Deinitialize();

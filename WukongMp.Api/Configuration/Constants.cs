@@ -64,9 +64,6 @@ namespace WukongMp.Api.Configuration
         public const int IronBodySkillId = 10505;
 
         public const int CountdownSeconds = 5;
-        public const int MatchmakingSeconds = 45;
-        public const int RoundSeconds = 0;
-        public const int RoundMinutes = 5;
 
         public const int BotCount = 2;
         public static bool IsCoop = false;
