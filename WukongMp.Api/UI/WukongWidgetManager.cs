@@ -111,7 +111,7 @@ public sealed class WukongWidgetManager : IDisposable
         }
 
         PingIndicatorWidget.Instance.SetVisibility(true);
-        ChatWidget.Instance.SetVisibility(true);
+        ChatWidget.Instance.ShowIfNotHidden();
     }
 
     private void OnLevelLoaded()

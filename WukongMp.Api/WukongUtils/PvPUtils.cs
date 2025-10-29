@@ -10,7 +10,6 @@ public static class PvPUtils
 
     public static void OnMatchmakingEnded()
     {
-        TimerWidget.Instance.StopCountdown();
         if (IsAfterLoadingScreen)
         {
             SetupLobbyUi();

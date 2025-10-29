@@ -303,10 +303,8 @@ public partial class WukongPVP : IDisposable
 
     public void StartRound()
     {
-        TimerWidget.Instance.StopCountdown();
         GameMessageWidget.Instance.SetVisibility(false);
         CountdownWidget.Instance.StopCountdown();
-        TimerWidget.Instance.StartCountdown(Constants.RoundMinutes, Constants.RoundSeconds, RoundEndedTimeout);
 
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -338,22 +336,9 @@ public partial class WukongPVP : IDisposable
             }
         }
     }
-
-    // NOTE: Renamed from OnRoundEnded to differentiate between event handlers for dependencies vs callbacks passed
-    // to locally invoked methods.
-    private void RoundEndedTimeout()
-    {
-        Logging.LogInformation("Round time ended, ending round");
-        if (_areaState.OwnsPvpState)
-        {
-            Task.Run(async () => await EndRoundAsync(Constants.DrawTeamId));
-        }
-    }
-
+    
     public void EndRound()
     {
-        TimerWidget.Instance.StopCountdown();
-
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
             return;
@@ -614,8 +599,6 @@ public partial class WukongPVP : IDisposable
             Logging.LogError("No area entity found, cannot end matchmaking");
             return;
         }
-
-        TimerWidget.Instance.StopCountdown();
     }
 
     #region Event Handlers
