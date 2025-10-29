@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
@@ -19,6 +21,7 @@ namespace WukongMp.Api.UI
 
         protected override void PostInitialize()
         {
+            InitNativeFunctions();
             ClearMessages();
             ClearToolTipText();
             SetHelperText(Texts.ChatHelperDescription);
@@ -147,6 +150,57 @@ namespace WukongMp.Api.UI
         private void ClearToolTipText()
         {
             GameWidget?.CallFunctionByNameWithArguments("GetSentMessage", true);
+        }
+
+        public unsafe bool IsVisible()
+        {
+            if (GameWidget == null || IsChatVisible_ReturnValue_PropertyAddress == null)
+            {
+                Logging.LogError("GameWidget or property address is null in WBP_MultiplayerChat_C:IsChatVisible.");
+                return false;
+            }
+
+            if (!IsChatVisible_IsValid)
+            {
+                Logging.LogError("Function WBP_MultiplayerChat_C:IsChatVisible is not valid.");
+                return false;
+            }
+
+            byte* ptr = stackalloc byte[(int)(uint)(IsChatVisible_ParamsSize + 16)];
+            int num = (int)((16L - (long)ptr) & 0xF);
+            byte* ptr2 = ptr + num;
+            System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)IsChatVisible_ParamsSize);
+            IntPtr intPtr = new IntPtr(ptr2);
+
+            NativeReflection.InvokeFunctionOptimized(GameWidget.Address, IsChatVisible_FunctionAddress, intPtr, IsChatVisible_ParamsSize);
+            return BlittableTypeMarshaler<bool>.FromNative(IntPtr.Add(intPtr, IsChatVisible_ReturnValue_Offset), 0, IsChatVisible_ReturnValue_PropertyAddress.Address);
+        }
+
+        static ChatWidget()
+        {
+            InitNativeFunctions();
+        }
+
+        private static bool IsChatVisible_IsValid;
+        private static IntPtr IsChatVisible_FunctionAddress;
+        private static int IsChatVisible_ParamsSize;
+
+        private static bool IsChatVisible_ReturnValue_IsValid;
+        private static FFieldAddress? IsChatVisible_ReturnValue_PropertyAddress;
+        private static int IsChatVisible_ReturnValue_Offset;
+
+        public static void InitNativeFunctions()
+        {
+            IntPtr @class = NativeReflection.GetClass("/Game/Mods/CustomLuaMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C");
+            IsChatVisible_FunctionAddress = NativeReflectionCached.GetFunction(@class, "IsChatVisible");
+            IsChatVisible_ParamsSize = NativeReflection.GetFunctionParamsSize(IsChatVisible_FunctionAddress);
+
+            NativeReflectionCached.GetPropertyRef(ref IsChatVisible_ReturnValue_PropertyAddress, IsChatVisible_FunctionAddress, "ReturnValue");
+            IsChatVisible_ReturnValue_Offset = NativeReflectionCached.GetPropertyOffset(IsChatVisible_FunctionAddress, "ReturnValue");
+            IsChatVisible_ReturnValue_IsValid = NativeReflectionCached.ValidatePropertyClass(IsChatVisible_FunctionAddress, "ReturnValue", Classes.FBoolProperty);
+            IsChatVisible_IsValid = IsChatVisible_FunctionAddress != IntPtr.Zero && IsChatVisible_ReturnValue_IsValid;
+            if (!IsChatVisible_IsValid)
+                Logging.LogError("Function WBP_MultiplayerChat_C:IsChatVisible is not valid.");
         }
     }
 }
