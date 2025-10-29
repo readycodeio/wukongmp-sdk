@@ -218,9 +218,9 @@ namespace WukongMp.Api.UI
             IsChatVisible_FunctionAddress = NativeReflectionCached.GetFunction(@class, "IsChatVisible");
             IsChatVisible_ParamsSize = NativeReflection.GetFunctionParamsSize(IsChatVisible_FunctionAddress);
 
-            NativeReflectionCached.GetPropertyRef(ref IsChatVisible_ReturnValue_PropertyAddress, IsChatVisible_FunctionAddress, "ReturnValue");
-            IsChatVisible_ReturnValue_Offset = NativeReflectionCached.GetPropertyOffset(IsChatVisible_FunctionAddress, "ReturnValue");
-            IsChatVisible_ReturnValue_IsValid = NativeReflectionCached.ValidatePropertyClass(IsChatVisible_FunctionAddress, "ReturnValue", Classes.FBoolProperty);
+            NativeReflectionCached.GetPropertyRef(ref IsChatVisible_ReturnValue_PropertyAddress, IsChatVisible_FunctionAddress, "IsVisible");
+            IsChatVisible_ReturnValue_Offset = NativeReflectionCached.GetPropertyOffset(IsChatVisible_FunctionAddress, "IsVisible");
+            IsChatVisible_ReturnValue_IsValid = NativeReflectionCached.ValidatePropertyClass(IsChatVisible_FunctionAddress, "IsVisible", Classes.FBoolProperty);
             IsChatVisible_IsValid = IsChatVisible_FunctionAddress != IntPtr.Zero && IsChatVisible_ReturnValue_IsValid;
             if (!IsChatVisible_IsValid)
                 Logging.LogError("Function WBP_MultiplayerChat_C:IsChatVisible is not valid.");
