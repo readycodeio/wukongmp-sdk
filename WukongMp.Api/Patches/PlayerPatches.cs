@@ -816,7 +816,6 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
-
             return !DisabledCollidersData.IsDisabled(guid);
         }
     }

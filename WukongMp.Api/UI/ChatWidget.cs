@@ -19,6 +19,8 @@ namespace WukongMp.Api.UI
         private bool _levelLoaded;
         private readonly Queue<string> _commandQueue = new();
 
+        private bool _hiddenManually;
+
         protected override void PostInitialize()
         {
             InitNativeFunctions();
@@ -73,8 +75,20 @@ namespace WukongMp.Api.UI
                 {
                     GameWidget.CallFunctionByNameWithArguments(command, true);
                 }
+            }
 
-                _levelLoaded = true;
+            _levelLoaded = true;
+        }
+
+        public void ShowIfNotHidden()
+        {
+            if (!_hiddenManually)
+            {
+                SetVisibility(true);
+            }
+            else
+            {
+                SetVisibility(false);
             }
         }
 
@@ -103,7 +117,16 @@ namespace WukongMp.Api.UI
 
         public void ToggleVisibility()
         {
-            GameWidget?.CallFunctionByNameWithArguments("ChangeVisibility", true);
+            if (IsVisible())
+            {
+                _hiddenManually = true;
+                SetVisibility(false);
+            }
+            else
+            {
+                _hiddenManually = false;
+                SetVisibility(true);
+            }
         }
 
         public void ClearMessages()
