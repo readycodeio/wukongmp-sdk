@@ -39,14 +39,14 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 return;
             }
 
-            if (!localTamerComp.IsTamerSynced)
+            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
             {
                 return;
             }
 
-            if (localTamerComp.Tamer == null)
+            if (localTamerComp.Tamer.CurrentRef.Phase == ETamerPhase.Dead)
             {
-                Logging.LogWarning("Tamer is null in SpawnTamersSystem, guid {Guid}", tamerComp.Guid);
+                Logging.LogDebug("Tamer is dead, will not spawn, guid {Guid}", tamerComp.Guid);
                 return;
             }
 
