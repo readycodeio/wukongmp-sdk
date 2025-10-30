@@ -396,8 +396,6 @@ namespace WukongMp.Api.Patches
                     return false;
             }
 
-            Logging.LogDebug("OnTriggerFsmEvent with event: {Event}", EventTag.ToString());
-
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))

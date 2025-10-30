@@ -31,7 +31,7 @@ public static class MarkerUtils
 
         if (!markerComp.DestroyQueued)
         {
-            Logging.LogDebug("Destroying marker for monster {Id}", tamerEntity.Entity.Id);
+            Logging.LogDebug("Destroying marker for monster {NetId}, guid {Guid}", tamerEntity.GetMeta().NetId, tamerEntity.GetTamer().Guid);
             markerComp.DestroyQueued = true;
 
             var markerActor = markerComp.MarkerActor;
