@@ -162,9 +162,6 @@
   <data name="InvalidUnitsCount" xml:space="preserve">
     <value>Invalid number of units</value>
   </data>
-  <data name="MasterClient" xml:space="preserve">
-    <value>Master client: {0}</value>
-  </data>
   <data name="MatchmakingInProgress" xml:space="preserve">
     <value>Matchmaking in progress...</value>
   </data>
@@ -261,12 +258,6 @@
   <data name="InvalidCommand" xml:space="preserve">
     <value>Invalid command: {0}</value>
   </data>
-  <data name="OnlyRoomOwnerCanUse" xml:space="preserve">
-    <value>Only room owner can use {0}</value>
-  </data>
-  <data name="SetMonsterHpScaling" xml:space="preserve">
-    <value>Set monster HP scaling: {0}x</value>
-  </data>
   <data name="JoinOtherPlayersToProceed" xml:space="preserve">
     <value>Join other players to proceed</value>
   </data>
@@ -278,5 +269,8 @@
   </data>
   <data name="MissingPak" xml:space="preserve">
     <value>WukongMP.pak is missing</value>
+  </data>
+  <data name="ConnectionRejectedByServer" xml:space="preserve">
+    <value>Connection rejected by server</value>
   </data>
 </root>

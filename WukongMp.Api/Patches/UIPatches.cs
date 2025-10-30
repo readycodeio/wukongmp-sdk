@@ -11,8 +11,10 @@ using b1.Localization;
 using b1.UI.Comm;
 using B1UI.GSSvc;
 using B1UI.GSUI;
+using CSharpModBase;
 using GSE.GSUI;
 using HarmonyLib;
+using LiteNetLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using ResB1;
@@ -119,8 +121,15 @@ public static class PatchStartGameUiCoop
                 else if (!DI.Instance.State.IsConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                    InfoMessageWidget.Instance.SetVisibility(true);
-                    InfoMessageWidget.Instance.SetText(Texts.Disconnected);
+
+                    DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
+                    {
+                        Utils.TryRunOnGameThread(() =>
+                        {
+                            InfoMessageWidget.Instance.SetVisibility(true);
+                            InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                        });
+                    });
                     Logging.LogError("Disconnected. Could not continue game.");
                 }
                 else
