@@ -273,4 +273,7 @@
   <data name="ConnectionRejectedByServer" xml:space="preserve">
     <value>Connection rejected by server</value>
   </data>
+  <data name="SeverePacketLossDetected" xml:space="preserve">
+    <value>Severe packet loss detected!</value>
+  </data>
 </root>

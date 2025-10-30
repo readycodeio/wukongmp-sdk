@@ -465,6 +465,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Severe packet loss detected!.
+        /// </summary>
+        internal static string SeverePacketLossDetected {
+            get {
+                return ResourceManager.GetString("SeverePacketLossDetected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectators.
         /// </summary>
         internal static string Spectators {

@@ -274,4 +274,7 @@
   <data name="JoinOtherPlayersToProceed" xml:space="preserve">
     <value>Dołącz do pozostałych graczy</value>
   </data>
+  <data name="SeverePacketLossDetected" xml:space="preserve">
+    <value>Znaczna utrata pakietów!</value>
+  </data>
 </root>

@@ -273,4 +273,7 @@
   <data name="ConnectionRejectedByServer" xml:space="preserve">
     <value>服务器拒绝连接</value>
   </data>
+  <data name="SeverePacketLossDetected" xml:space="preserve">
+    <value>检测到严重丢包！</value>
+  </data>
 </root>
