@@ -107,7 +107,7 @@ namespace WukongMp.Api.Patches
                     }
                     else
                     {
-                        Logging.LogDebug("Monster already exists in ECS: {Entity}", tamerEntity.ToString());
+                        Logging.LogDebug("Monster already exists in ECS: {NetId}, guid: {Guid}", tamerEntity.Value.GetMeta().NetId, tamerEntity.Value.GetTamer().Guid);
                     }
                 }
             }
