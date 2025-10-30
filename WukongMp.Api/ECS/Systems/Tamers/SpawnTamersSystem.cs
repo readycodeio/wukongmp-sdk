@@ -32,13 +32,21 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
             ref LocalTamerComponent localTamerComp,
             Entity entity) =>
         {
-            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
-                return;
-
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
             if (localTamerComp.IsMonsterActive || !tamerComp.ShouldBeSpawned)
             {
+                return;
+            }
+
+            if (!localTamerComp.IsTamerSynced)
+            {
+                return;
+            }
+
+            if (localTamerComp.Tamer == null)
+            {
+                Logging.LogWarning("Tamer is null in SpawnTamersSystem, guid {Guid}", tamerComp.Guid);
                 return;
             }
 
