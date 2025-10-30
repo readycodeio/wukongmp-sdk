@@ -70,13 +70,16 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup = new SystemGroup("Sync");
 
         _syncGroup.Add(new SpawnTamersSystem(state));
-        _syncGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
 
         if (pvp == null)
         {
             _syncGroup.Add(new ScaleMonsterHpSystem());
+        }
+        else
+        {
+            _syncGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
         }
 
         _syncGroup.Add(new SyncMonsterTeamSystem());

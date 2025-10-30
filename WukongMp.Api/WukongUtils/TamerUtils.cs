@@ -142,7 +142,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void DestroyTamer(string guid, BUTamerActor? tamerActor, AActor? markerActor)
         {
-            tamerActor?.CurrentRef.DestroyTamer();
+            tamerActor?.CurrentRef?.DestroyTamer();
             if (!markerActor.IsNullOrDestroyed())
             {
                 Logging.LogDebug("Destroying marker for tamer with guid {Guid}", guid);
