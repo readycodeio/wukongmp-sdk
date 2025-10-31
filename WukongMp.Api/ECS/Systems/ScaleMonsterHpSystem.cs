@@ -30,7 +30,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, TamerComponent, Loc
                 return;
 
 // #if !DEBUG
-            if (!BGW_GameDB.IsBossGuid(tamer.Guid))
+            if (localTamer.Tamer == null || !BGW_GameDB.IsBossGuid(localTamer.Tamer.GetFinalGuid()))
                 return; // only scale bosses
 // #endif
             if (hp.Hp.Equals(0, Constants.FloatComparisonTolerance) && hp.HpMaxBase.Equals(0, Constants.FloatComparisonTolerance))
