@@ -24,7 +24,8 @@ public sealed class UnloadTamersSystem() : QuerySystem<TamerComponent, LocalTame
             && !localTamerComp.IsLocallySpawned
             && !tamerComp.ShouldBeSpawned
             && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded
-            && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Dead)
+            && !BGUFunctionLibraryCS.BGUHasUnitState(localTamerComp.Pawn, EBGUUnitState.Dead)
+            && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(localTamerComp.Pawn, EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 localTamerComp.Tamer.CurrentRef.TurnBack2Loaded();
             }
