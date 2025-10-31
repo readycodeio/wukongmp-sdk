@@ -825,8 +825,9 @@ namespace WukongMp.Api.Patches
             {
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
-
-            return AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
+            var enableCollider = AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
+            Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
+            return enableCollider;
         }
 
         private static bool AreAllPlayersOnSameSide(FVector obstaclePosition, FVector obstacleForward, List<FVector> playersPositions)
