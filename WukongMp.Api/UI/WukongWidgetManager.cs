@@ -18,6 +18,8 @@ public sealed class WukongWidgetManager : IDisposable
     private readonly WukongPlayerState _playerState;
     private readonly WukongEventBus _eventBus;
 
+    private string _lastDisconnectText = Texts.Disconnected;
+
     public WukongWidgetManager(ClientState pawnState, WukongPlayerState playerState, WukongEventBus eventBus)
     {
         _clientState = pawnState;
@@ -123,8 +125,12 @@ public sealed class WukongWidgetManager : IDisposable
 
         if (!_clientState.IsConnected)
         {
-            InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText(Texts.Disconnected);
+            DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
+            {
+                InfoMessageWidget.Instance.SetVisibility(true);
+                _lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
+                InfoMessageWidget.Instance.SetText(_lastDisconnectText);
+            });
         }
     }
 
@@ -159,7 +165,8 @@ public sealed class WukongWidgetManager : IDisposable
     private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
         InfoMessageWidget.Instance.SetVisibility(true);
-        InfoMessageWidget.Instance.SetText(Texts.Disconnected);
+        _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
+        InfoMessageWidget.Instance.SetText(_lastDisconnectText);
     }
 
     private void OnConnected(PlayerId playerId, Entity entity)

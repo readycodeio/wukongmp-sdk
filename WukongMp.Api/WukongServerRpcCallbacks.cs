@@ -6,6 +6,7 @@ using ReadyM.Relay.Common.Serialization;
 using System;
 using System.Diagnostics;
 using b1.EventDelDefine;
+using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -56,12 +57,16 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
             // Outdated ping response, most likely due to packet loss
             var outdatedRtt = PingStopwatch.ElapsedMilliseconds - timestamp;
             _logger.LogWarning("Received outdated ping response. Timestamp: {Timestamp}, now: {Now}, RTT: {Rtt}ms", timestamp, PingStopwatch.ElapsedMilliseconds, outdatedRtt);
+
+            PingIndicatorWidget.Instance.SetPingValue(999);
+            PingIndicatorWidget.Instance.SetInfoText(Texts.SeverePacketLossDetected);
             return;
         }
 
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
         PingIndicatorWidget.Instance.SetPingValue(rtt);
+        PingIndicatorWidget.Instance.HideInfoText();
     }
 
     public void SendPing()

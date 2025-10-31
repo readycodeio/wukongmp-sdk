@@ -69,6 +69,7 @@ namespace WukongMp.Api.WukongUtils
             GameMessageWidget.Instance.Initialize();
             CountdownWidget.Instance.Initialize();
             InfoMessageWidget.Instance.Initialize();
+            ErrorMessageWidget.Instance.Initialize();
             PingIndicatorWidget.Instance.Initialize();
             FreeCameraControlsWidget.Instance.Initialize();
         }
@@ -81,6 +82,7 @@ namespace WukongMp.Api.WukongUtils
             GameMessageWidget.Instance.Deinitialize();
             CountdownWidget.Instance.Deinitialize();
             InfoMessageWidget.Instance.Deinitialize();
+            ErrorMessageWidget.Instance.Deinitialize();
             PingIndicatorWidget.Instance.Deinitialize();
             FreeCameraControlsWidget.Instance.Deinitialize();
         }

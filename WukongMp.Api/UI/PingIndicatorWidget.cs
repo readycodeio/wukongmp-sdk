@@ -15,6 +15,21 @@ namespace WukongMp.Api.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetPingValue {pingMs}", true);
         }
 
+        public void SetInfoText(string infoText)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetInfoText {infoText}", true);
+        }
+
+        public void ShowInfoText()
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"ShowInfoText", true);
+        }
+
+        public void HideInfoText()
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"HideInfoText", true);
+        }
+
         private void SetPingText(string pingText)
         {
             GameWidget?.CallFunctionByNameWithArguments($"SetPingText {pingText}", true);

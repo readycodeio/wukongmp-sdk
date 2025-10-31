@@ -80,6 +80,7 @@ namespace WukongMp.Api.Configuration
         public const string CountdownWidgetName = "WBP_Countdown_C";
         public const string GameMessageWidgetName = "WBP_GameMessage_C";
         public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
+        public const string ErrorMessageWidgetName = "WBP_ErrorMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
         public const string CoopStatusWidgetName = "WBP_CoopStatus_C";
 

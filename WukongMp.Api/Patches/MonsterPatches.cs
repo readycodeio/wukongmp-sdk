@@ -107,7 +107,7 @@ namespace WukongMp.Api.Patches
                     }
                     else
                     {
-                        Logging.LogDebug("Monster already exists in ECS: {Entity}", tamerEntity.ToString());
+                        Logging.LogDebug("Monster already exists in ECS: {NetId}, guid: {Guid}", tamerEntity.Value.GetMeta().NetId, tamerEntity.Value.GetTamer().Guid);
                     }
                 }
             }
@@ -210,7 +210,7 @@ namespace WukongMp.Api.Patches
                 if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 {
                     tamerEntity.Value.GetLocalTamer().Tamer = null;
-                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.Entity.Id);
+                    Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.GetMeta().NetId);
                     DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
                 }
             }
@@ -395,8 +395,6 @@ namespace WukongMp.Api.Patches
                 if (areaState.PvpState.HasValue && !areaState.PvpState.Value.InPvP)
                     return false;
             }
-
-            Logging.LogDebug("OnTriggerFsmEvent with event: {Event}", EventTag.ToString());
 
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);

@@ -11,8 +11,10 @@ using b1.Localization;
 using b1.UI.Comm;
 using B1UI.GSSvc;
 using B1UI.GSUI;
+using CSharpModBase;
 using GSE.GSUI;
 using HarmonyLib;
+using LiteNetLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using ResB1;
@@ -119,8 +121,15 @@ public static class PatchStartGameUiCoop
                 else if (!DI.Instance.State.IsConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                    InfoMessageWidget.Instance.SetVisibility(true);
-                    InfoMessageWidget.Instance.SetText(Texts.Disconnected);
+
+                    DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
+                    {
+                        Utils.TryRunOnGameThread(() =>
+                        {
+                            InfoMessageWidget.Instance.SetVisibility(true);
+                            InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                        });
+                    });
                     Logging.LogError("Disconnected. Could not continue game.");
                 }
                 else
@@ -156,16 +165,42 @@ public static class PatchStartGameUiPvP
 
     public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
     {
+        var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
+        var hasPak = widgetManagerActorClass != null;
+        var isConnected = DI.Instance.State.IsConnected;
+        if (!hasPak)
+        {
+            UiUtils.ShowTip(Texts.MissingPak, false);
+            Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
+        }
+        else if (!isConnected)
+        {
+            DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
+            {
+                Utils.TryRunOnGameThread(() =>
+                {
+                    InfoMessageWidget.Instance.SetVisibility(true);
+                    InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                });
+            });
+            Logging.LogError("Disconnected. Could not continue game.");
+        }
+
         for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
         {
             DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
+            var buttonName = BtnBase2.Name.Value.ToString();
 
-            Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
+            Logging.LogDebug("Button name: {Name}, id: {Id}", buttonName, BtnBase2.Id.Value);
 
-            if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
+            if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
             {
                 Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
-                if (File.Exists(GameSaveUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+                if (!hasPak || !isConnected)
+                {
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                 {
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
                 }
@@ -179,19 +214,33 @@ public static class PatchStartGameUiPvP
                 var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
                 field?.SetValue(___StartGameBtnList[j].GetBUIButton(), null);
             }
-            else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
+            else if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
             {
                 Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
+                if (!hasPak || !isConnected)
+                {
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+                else
+                {
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
+                }
             }
-            else if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
+            else if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
             {
                 Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
-                ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
+                if (!hasPak || !isConnected)
+                {
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+                else
+                {
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
+                }
             }
-            else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
+            else if (buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
             {
-                Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
+                Logging.LogDebug("UI name desc to hide: {Description}", buttonName);
                 ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
             }
         }
