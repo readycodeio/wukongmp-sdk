@@ -10,7 +10,7 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class ScaleMonsterHpSystem : QuerySystem<HpComponent, TamerComponent, LocalTamerComponent>
+public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
@@ -21,20 +21,22 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, TamerComponent, Loc
 #else
         var targetScaling = 1 + 1.5f * (areaPlayers - 1);
 #endif
-        Query.ForEachEntity((ref HpComponent hp, ref TamerComponent tamer, ref LocalTamerComponent localTamer, Entity entity) =>
+        Query.ForEachEntity((ref HpComponent hp, ref LocalTamerComponent localTamer, Entity entity) =>
         {
-            if (!localTamer.IsMonsterActive)
+            if (!localTamer.IsMonsterActive || localTamer.Pawn == null)
                 return;
 
             if (!DI.Instance.ClientOwnership.OwnsEntity(entity))
                 return;
 
-// #if !DEBUG
-            if (localTamer.Tamer == null || !BGW_GameDB.IsBossGuid(localTamer.Tamer.GetFinalGuid()))
-                return; // only scale bosses
-// #endif
             if (hp.Hp.Equals(0, Constants.FloatComparisonTolerance) && hp.HpMaxBase.Equals(0, Constants.FloatComparisonTolerance))
                 return; // no need to scale if monster is not active
+
+// #if !DEBUG
+            var healthBarType = BGW_GameDB.GetUnitBattleInfoExtendDesc(localTamer.Pawn.GetFinalBattleInfoExtendID()).BloodBarType;
+            if (healthBarType is not (EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar))
+                return;
+// #endif
 
             if (Math.Abs(targetScaling - hp.HpMultiplier) > Constants.FloatComparisonTolerance)
             {
@@ -60,7 +62,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, TamerComponent, Loc
 
                 hp.HpMultiplier = targetScaling;
 
-                DI.Instance.Logger.LogDebug("Scaled monster HP to {Hp}/{HpMaxBase} (x{Multiplier}) for {Players} players", hp.Hp, hp.HpMaxBase, targetScaling, areaPlayers);
+                DI.Instance.Logger.LogDebug("Scaled {MonsterType} HP to {Hp}/{HpMaxBase} (x{Multiplier}) for {Players} players", healthBarType, hp.Hp, hp.HpMaxBase, targetScaling, areaPlayers);
             }
         });
     }
