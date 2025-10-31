@@ -20,7 +20,7 @@ public sealed class UnloadTamersSystem() : QuerySystem<TamerComponent, LocalTame
                 return;
             }
 
-            if (localTamerComp.IsMonsterActive && !tamerComp.ShouldBeSpawned && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded)
+            if (localTamerComp.IsMonsterActive && !localTamerComp.IsLocallySpawned && !tamerComp.ShouldBeSpawned && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded)
             {
                 localTamerComp.Tamer.CurrentRef.TurnBack2Loaded();
             }
