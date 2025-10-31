@@ -23,7 +23,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 #endif
         Query.ForEachEntity((ref HpComponent hp, ref LocalTamerComponent localTamer, Entity entity) =>
         {
-            if (!localTamer.IsMonsterActive || localTamer.Pawn == null)
+            if (!localTamer.IsMonsterActive)
                 return;
 
             if (!DI.Instance.ClientOwnership.OwnsEntity(entity))
@@ -32,16 +32,16 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
             if (hp.Hp.Equals(0, Constants.FloatComparisonTolerance) && hp.HpMaxBase.Equals(0, Constants.FloatComparisonTolerance))
                 return; // no need to scale if monster is not active
 
-// #if !DEBUG
-            var healthBarType = BGW_GameDB.GetUnitBattleInfoExtendDesc(localTamer.Pawn.GetFinalBattleInfoExtendID()).BloodBarType;
-            if (healthBarType is not (EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar))
-                return;
-// #endif
-
             if (Math.Abs(targetScaling - hp.HpMultiplier) > Constants.FloatComparisonTolerance)
             {
                 if (localTamer.Pawn == null)
                     return;
+
+                // #if !DEBUG
+                var healthBarType = BGW_GameDB.GetUnitBattleInfoExtendDesc(localTamer.Pawn.GetFinalBattleInfoExtendID()).BloodBarType;
+                if (healthBarType is not (EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar))
+                    return;
+                // #endif
 
                 var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(localTamer.Pawn);
 
