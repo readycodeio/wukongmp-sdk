@@ -10,7 +10,7 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent>
+public class ScaleMonsterHpSystem : QuerySystem<HpComponent, TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
@@ -21,7 +21,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 #else
         var targetScaling = 1 + 1.5f * (areaPlayers - 1);
 #endif
-        Query.ForEachEntity((ref HpComponent hp, ref LocalTamerComponent localTamer, Entity entity) =>
+        Query.ForEachEntity((ref HpComponent hp, ref TamerComponent tamer, ref LocalTamerComponent localTamer, Entity entity) =>
         {
             if (!localTamer.IsMonsterActive)
                 return;
@@ -29,6 +29,10 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
             if (!DI.Instance.ClientOwnership.OwnsEntity(entity))
                 return;
 
+// #if !DEBUG
+            if (!BGW_GameDB.IsBossGuid(tamer.Guid))
+                return; // only scale bosses
+// #endif
             if (hp.Hp.Equals(0, Constants.FloatComparisonTolerance) && hp.HpMaxBase.Equals(0, Constants.FloatComparisonTolerance))
                 return; // no need to scale if monster is not active
 
