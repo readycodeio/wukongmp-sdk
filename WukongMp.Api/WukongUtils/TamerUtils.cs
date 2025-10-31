@@ -92,7 +92,7 @@ namespace WukongMp.Api.WukongUtils
         {
             if (localTamer.IsLocallySpawned)
             {
-                Logging.LogDebug("Sending UnitDespawmn for tamer with guid: {Guid} (NetId {NetId})", BGU_DataUtil.GetActorGuid(localTamer.Tamer), metadata.NetId);
+                Logging.LogDebug("Sending UnitDespawn for tamer with guid: {Guid} (NetId {NetId})", BGU_DataUtil.GetActorGuid(localTamer.Tamer), metadata.NetId);
                 localTamer.IsLocallySpawned = false;
                 DI.Instance.Rpc.SendUnitDespawn(metadata.NetId);
             }
