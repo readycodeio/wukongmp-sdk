@@ -581,7 +581,7 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, netEntity0) =>
         {
-            self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity metId: {NetId}", sender, netEntity0);
+            self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity netId: {NetId}", sender, netEntity0);
             if (!self._clientOwnership.OwnsEntity(netEntity0))
             {
                 return;

@@ -44,7 +44,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 return;
             }
 
-            if (localTamerComp.Tamer.CurrentRef.Phase == ETamerPhase.Dead)
+            if (localTamerComp.Tamer.CurrentRef?.Phase == ETamerPhase.Dead)
             {
                 Logging.LogDebug("Tamer is dead, will not spawn, guid {Guid}", tamerComp.Guid);
                 return;

@@ -37,6 +37,12 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
                 if (localTamer.Pawn == null)
                     return;
 
+                // #if !DEBUG
+                var healthBarType = BGW_GameDB.GetUnitBattleInfoExtendDesc(localTamer.Pawn.GetFinalBattleInfoExtendID()).BloodBarType;
+                if (healthBarType is not (EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar))
+                    return;
+                // #endif
+
                 var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(localTamer.Pawn);
 
                 if (attrs == null)
@@ -56,7 +62,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 
                 hp.HpMultiplier = targetScaling;
 
-                DI.Instance.Logger.LogDebug("Scaled monster HP to {Hp}/{HpMaxBase} (x{Multiplier}) for {Players} players", hp.Hp, hp.HpMaxBase, targetScaling, areaPlayers);
+                DI.Instance.Logger.LogDebug("Scaled {MonsterType} HP to {Hp}/{HpMaxBase} (x{Multiplier}) for {Players} players", healthBarType, hp.Hp, hp.HpMaxBase, targetScaling, areaPlayers);
             }
         });
     }
