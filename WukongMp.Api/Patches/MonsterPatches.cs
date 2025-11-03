@@ -397,6 +397,22 @@ namespace WukongMp.Api.Patches
             }
 
             var owner = __instance.GetOwner();
+            if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGazeAndSurround)
+            {
+                var anyPlayerAlive = false;
+                DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
+                ref MainCharacterComponent playerComp, Entity _) =>
+                {
+                    if (!playerComp.IsDead)
+                        anyPlayerAlive = true;
+                });
+
+                if (anyPlayerAlive)
+                {
+                    return false;
+                }
+            }
+
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
