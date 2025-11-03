@@ -37,11 +37,15 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
                 if (localTamer.Pawn == null)
                     return;
 
-                // #if !DEBUG
-                var healthBarType = BGW_GameDB.GetUnitBattleInfoExtendDesc(localTamer.Pawn.GetFinalBattleInfoExtendID()).BloodBarType;
+#if !DEBUG
+                var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(localTamer.Pawn.GetFinalBattleInfoExtendID());
+                if (info == null)
+                    return;
+
+                var healthBarType = info.BloodBarType;
                 if (healthBarType is not (EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar))
                     return;
-                // #endif
+#endif
 
                 var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(localTamer.Pawn);
 

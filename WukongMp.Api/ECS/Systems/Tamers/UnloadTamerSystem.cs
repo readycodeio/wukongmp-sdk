@@ -6,7 +6,7 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class UnloadTamersSystem() : QuerySystem<TamerComponent, LocalTamerComponent>
+public sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
@@ -15,7 +15,7 @@ public sealed class UnloadTamersSystem() : QuerySystem<TamerComponent, LocalTame
             ref LocalTamerComponent localTamerComp,
             Entity entity) =>
         {
-            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
+            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null || localTamerComp.Tamer.CurrentRef == null || localTamerComp.Pawn == null)
             {
                 return;
             }
