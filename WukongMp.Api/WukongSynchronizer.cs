@@ -10,7 +10,6 @@ using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
@@ -71,7 +70,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         _syncGroup.Add(new SpawnTamersSystem(state));
         _syncGroup.Add(new SyncTamersSystem());
-        _syncGroup.Add(new UnloadTamersSystem());
+        // _syncGroup.Add(new UnloadTamersSystem()); // TODO: Fix native crashing + Yellowbrow resurrection due to this system being enabled
         _syncGroup.Add(new UpdateTamerMarkersSystem());
 
         if (pvp == null)

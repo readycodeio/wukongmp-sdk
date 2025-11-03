@@ -11,24 +11,42 @@ public sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerC
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref TamerComponent tamerComp, 
+            ref TamerComponent tamerComp,
             ref LocalTamerComponent localTamerComp,
-            Entity entity) =>
+            Entity _) =>
         {
             if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null || localTamerComp.Tamer.CurrentRef == null || localTamerComp.Pawn == null)
             {
                 return;
             }
 
-            if (localTamerComp.IsMonsterActive
-            && !localTamerComp.IsLocallySpawned
-            && !tamerComp.ShouldBeSpawned
-            && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded
-            && !BGUFunctionLibraryCS.BGUHasUnitState(localTamerComp.Pawn, EBGUUnitState.Dead)
-            && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(localTamerComp.Pawn, EBGUSimpleState.PendingDeathInAnimationSyncing))
+            if (localTamerComp is { IsMonsterActive: true, IsLocallySpawned: false }
+                && !tamerComp.ShouldBeSpawned
+                && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded
+                && !BGUFunctionLibraryCS.BGUHasUnitState(localTamerComp.Pawn, EBGUUnitState.Dead)
+                && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(localTamerComp.Pawn, EBGUSimpleState.PendingDeathInAnimationSyncing)
+                && CanTurnBack2Loaded(localTamerComp.Tamer.CurrentRef))
             {
                 localTamerComp.Tamer.CurrentRef.TurnBack2Loaded();
             }
         });
+    }
+
+    private bool CanTurnBack2Loaded(FTamerRef tamerRef)
+    {
+        if (tamerRef.MonsterInstancePtr.IsValid())
+        {
+            BUC_BattleStateData persistentReadOnlyData1 = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_BattleStateData>(tamerRef.MonsterInstancePtr.Get());
+            if (persistentReadOnlyData1 != null && persistentReadOnlyData1.IsUnitInBattle())
+                return false;
+            BUC_PatrolData persistentReadOnlyData2 = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_PatrolData>(tamerRef.MonsterInstancePtr.Get());
+            if (persistentReadOnlyData2 != null && persistentReadOnlyData2.bIsPatroling)
+                return false;
+            BUC_UnitStateData persistentReadOnlyData3 = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_UnitStateData>(tamerRef.MonsterInstancePtr.Get());
+            if (persistentReadOnlyData3 != null && persistentReadOnlyData3.HasState(EBGUUnitState.Dead))
+                return false;
+        }
+
+        return true;
     }
 }
