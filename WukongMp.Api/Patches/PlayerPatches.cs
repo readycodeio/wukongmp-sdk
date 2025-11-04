@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
+using UnrealEngine.NavigationSystem;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
@@ -815,29 +816,48 @@ namespace WukongMp.Api.Patches
             DI.Instance.World.Query<MainCharacterComponent, LocalMainCharacterComponent>().ForEachEntity((
             ref MainCharacterComponent playerComp, ref LocalMainCharacterComponent localComp, Entity _) =>
             {
-                var playerForwardVector = localComp.Pawn?.GetActorForwardVector() ?? FVector.ZeroVector;
-                Logging.LogDebug("Player {Player} forward vector: {Forward}", playerComp.CharacterNickName, playerForwardVector.ToString());
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
 
             MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_QuestDynamicObstacleComp), "CollisionComponents");
             List<TWeakObject<UPrimitiveComponent>> CollisionComponents = (List<TWeakObject<UPrimitiveComponent>>)getter.Invoke(__instance, null);
-
-            var actorForward = obstacle.GetActorForwardVector();
-            var enableCollider = true;
-            Logging.LogDebug("Obstacle forward vector: {Forward}", actorForward);
             foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
             {
                 if (collisionComponent.IsValid())
                 {
                     UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
-                    if (uPrimitiveComponent is UMeshComponent mesh)
+                    if (uPrimitiveComponent is UShapeComponent collision)
                     {
-                        var forward = mesh.GetForwardVector();
-                        Logging.LogDebug("Collision component forward vector: {Forward}", forward);
-                        enableCollider &= AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
-                        if (!enableCollider)
-                            break;
+                        UGSE_NavigationFuncLib.SetCollisionNavAreaClass(collision, UClass.GetClass<UNavArea_Obstacle>());
+                    }
+                }
+            }
+
+            var enableCollider = true;
+            for (int i = 0; i < playersPositions.Count; i++)
+            {
+                for (int j = i + 1; j < playersPositions.Count; j++)
+                {
+                    if (i == j)
+                        continue;
+
+                    var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[i], playersPositions[j], null, null);
+                    if (nav.IsPartial())
+                    {
+                        enableCollider = false;
+                        break;
+                    }
+                }
+            }
+
+            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
+            {
+                if (collisionComponent.IsValid())
+                {
+                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
+                    if (uPrimitiveComponent is UShapeComponent collision)
+                    {
+                        UGSE_NavigationFuncLib.SetCollisionNavAreaClass(collision, UClass.GetClass<UNavArea_Default>());
                     }
                 }
             }
