@@ -916,16 +916,25 @@ namespace WukongMp.Api.Patches
                 return;
 
             var character = ___Context.OwnerController.GetControlledPawn();
-
-            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (!mainEntity.HasValue)
+            var localMainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (!localMainEntity.HasValue)
                 return;
 
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-            if (localMain.Pawn != character)
+            ref var localMainComp = ref localMainEntity.Value.GetLocalState();
+            if (localMainComp.Pawn != character)
                 return;
 
-            PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, false);
+            Logging.LogDebug("InteractStepMatchPos started, disabling collision for all players");
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            {
+                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (mainEntity == null)
+                    continue;
+                ref var localMain = ref mainEntity.Value.GetLocalState();
+                if (localMain.Pawn == null)
+                    continue;
+                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, false);
+            }
         }
     }
 
@@ -939,16 +948,25 @@ namespace WukongMp.Api.Patches
                 return;
 
             var character = ___Context.OwnerController.GetControlledPawn();
-
-            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (!mainEntity.HasValue)
+            var localMainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (!localMainEntity.HasValue)
                 return;
 
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-            if (localMain.Pawn != character)
+            ref var localMainComp = ref localMainEntity.Value.GetLocalState();
+            if (localMainComp.Pawn != character)
                 return;
 
-            PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, true);
+            Logging.LogDebug("InteractStepMatchPos finished, enabling collision for all players");
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            {
+                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (mainEntity == null)
+                    continue;
+                ref var localMain = ref mainEntity.Value.GetLocalState();
+                if (localMain.Pawn == null)
+                    continue;
+                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, true);
+            }
         }
     }
 
