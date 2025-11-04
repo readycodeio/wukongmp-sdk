@@ -18,6 +18,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -804,20 +805,40 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchEnableCollision
     {
-        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
+        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance, List<TWeakObject<UPrimitiveComponent>> ___CollisionComponents)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
             var obstacle = __instance.GetOwner();
-
             List<FVector> playersPositions = [];
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-            ref MainCharacterComponent playerComp, Entity _) =>
+            DI.Instance.World.Query<MainCharacterComponent, LocalMainCharacterComponent>().ForEachEntity((
+            ref MainCharacterComponent playerComp, ref LocalMainCharacterComponent localComp, Entity _) =>
             {
+                var playerForwardVector = localComp.Pawn?.GetActorForwardVector() ?? FVector.ZeroVector;
+                Logging.LogDebug("Player {Player} forward vector: {Forward}", playerComp.CharacterNickName, playerForwardVector.ToString());
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
-            var enableCollider = AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
+
+            var actorForward = obstacle.GetActorForwardVector();
+            var enableCollider = true;
+            Logging.LogDebug("Obstacle forward vector: {Forward}", actorForward);
+            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in ___CollisionComponents)
+            {
+                if (collisionComponent.IsValid())
+                {
+                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
+                    if (uPrimitiveComponent is UMeshComponent mesh)
+                    {
+                        var forward = mesh.GetForwardVector();
+                        Logging.LogDebug("Collision component forward vector: {Forward}", forward);
+                        enableCollider &= AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
+                        if (!enableCollider)
+                            break;
+                    }
+                }
+            }
+
             Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
             return enableCollider;
         }
