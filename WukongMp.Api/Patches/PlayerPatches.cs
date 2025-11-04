@@ -469,16 +469,8 @@ namespace WukongMp.Api.Patches
             }
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue)
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                localTamer.IsMonsterActive = false;
-                MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
-                TamerUtils.MarkMonsterLocallyDespawned(ref tamerEntity.Value.GetLocalTamer(), tamerEntity.Value.GetMeta());
-
-                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-                    return;
-
                 ref var meta = ref tamerEntity.Value.GetMeta();
 
                 var payload = new UnitDeadPacket(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);

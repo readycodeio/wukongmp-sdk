@@ -476,4 +476,36 @@ namespace WukongMp.Api.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.AfterMonsterDead))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchAfterMonsterDead
+    {
+        public static void Prefix(FTamerRef? __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (__instance == null)
+                return;
+
+            if (__instance.Phase == ETamerPhase.Dead)
+                return;
+
+            var monster = __instance.MonsterInstancePtr.Get();
+            if (monster == null)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(monster);
+            if (tamerEntity.HasValue)
+            {
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                ref var meta = ref tamerEntity.Value.GetMeta();
+                localTamer.IsMonsterActive = false;
+                MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
+                TamerUtils.MarkMonsterLocallyDespawned(ref tamerEntity.Value.GetLocalTamer(), tamerEntity.Value.GetMeta());
+                Logging.LogDebug("Unloading monster locally. NetId: {NetId}, guid {Guid} (MonsterDead)", meta.NetId, BGU_DataUtil.GetActorGuid(monster));
+            }
+        }
+    }
 }
