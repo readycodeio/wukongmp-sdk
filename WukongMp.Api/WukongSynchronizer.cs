@@ -70,7 +70,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         _syncGroup.Add(new SpawnTamersSystem(state));
         _syncGroup.Add(new SyncTamersSystem());
-        // _syncGroup.Add(new UnloadTamersSystem()); // TODO: Fix native crashing + Yellowbrow resurrection due to this system being enabled
+        _syncGroup.Add(new UnloadTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
 
         if (pvp == null)

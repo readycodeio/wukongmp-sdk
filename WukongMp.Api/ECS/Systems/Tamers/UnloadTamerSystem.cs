@@ -20,12 +20,9 @@ public sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerC
                 return;
             }
 
-            if (localTamerComp is { IsMonsterActive: true, IsLocallySpawned: false }
+            if (localTamerComp is { IsMonsterActive: true, IsLocallySpawned: false, HasPendingUnload: true }
                 && !tamerComp.ShouldBeSpawned
-                && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded
-                && !BGUFunctionLibraryCS.BGUHasUnitState(localTamerComp.Pawn, EBGUUnitState.Dead)
-                && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(localTamerComp.Pawn, EBGUSimpleState.PendingDeathInAnimationSyncing)
-                && CanTurnBack2Loaded(localTamerComp.Tamer.CurrentRef))
+                && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded)
             {
                 localTamerComp.Tamer.CurrentRef.TurnBack2Loaded();
             }

@@ -175,12 +175,14 @@ namespace WukongMp.Api.Patches
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                 ref var meta = ref tamerEntity.Value.GetMeta();
                 TamerUtils.MarkMonsterLocallyDespawned(ref localTamer, meta);
+                localTamer.HasPendingUnload = true;
 
                 ref var tamer = ref tamerEntity.Value.GetTamer();
                 if (!tamer.ShouldBeSpawned)
                 {
                     Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
                     localTamer.IsMonsterActive = false;
+                    localTamer.HasPendingUnload = false;
                     MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
                     return true;
                 }

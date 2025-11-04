@@ -14,6 +14,7 @@ public struct LocalTamerComponent(BUTamerActor tamer) : IComponent
     public bool RunImmobilizePatches;
     public MontageState MontageState;
     public bool IsLocallySpawned;
+    public bool HasPendingUnload;
 
     private BUTamerActor? _tamer = tamer;
     
