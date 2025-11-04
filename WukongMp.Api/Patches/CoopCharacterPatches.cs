@@ -55,12 +55,7 @@ public static class CoopPatchAttrs
                 return; // do not reapply the same value
             }
 
-            var set = __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
-
-            if (!set.Equals(mainComp.Hp, Constants.FloatComparisonTolerance))
-            {
-                Logging.LogDebug("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainComp.CharacterNickName, mainComp.Hp, set);
-            }
+            __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
 
             if (mainComp.IsDead)
             {

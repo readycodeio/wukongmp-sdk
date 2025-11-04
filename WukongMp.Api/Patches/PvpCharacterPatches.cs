@@ -113,12 +113,7 @@ public static class PvpPatchAttrs
         if (mainCharacter.Hp.Equals(currentHp, Constants.FloatComparisonTolerance))
             return; // do not reapply the same value
 
-        var setHp = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, mainCharacter.Hp);
-
-        if (!setHp.Equals(mainCharacter.Hp, Constants.FloatComparisonTolerance))
-        {
-            Logging.LogDebug("Attempted to set player {PlayerName} HP to {DesiredHp}, instead set to {SetHp}", mainCharacter.CharacterNickName, mainCharacter.Hp, setHp);
-        }
+        attrContainer.SetFloatValue(EBGUAttrFloat.Hp, mainCharacter.Hp);
 
         if (mainCharacter.IsDead)
         {
