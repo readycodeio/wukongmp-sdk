@@ -1,25 +1,12 @@
 #!powershell.exe -ExecutionPolicy Bypass -File
 
+# Static metadata
 $solutionName = "WukongCSharpMod"
 $zipName = "WukongMp"
 
-# Define the source and destination directories
-$modSourceDir = "WukongMp.$ModVariant/bin/$Configuration/netstandard2.0"
-$reflectionOnlySourceDir = "WukongMp.Api/Game"
-$overridesSourceDir = "WukongMp.Api/Game"
-$saveSourceDir = "Deployment"
-
-$modDestDir = "Mods/WukongMp.$ModVariant"
-$reflectionOnlyDestDir = "Mods/ReflectionOnly"
-$overridesDestDir = "Mods/Overrides"
-$saveDestDir = "Mods/WukongMp.$ModVariant"
-$overrideDestDir = "Mods/Overrides"
-
-# Define the files to copy
-
-$modFiles = @(
+# Shared (variant-agnostic) file name lists
+$modFilesCore = @(
     "WukongMp.Api.dll",
-    "WukongMp.$ModVariant.dll",
     "ReadyM.Api.dll",
     "ReadyM.Api.Multiplayer.dll",
     "ReadyM.Relay.Client.dll",
@@ -43,9 +30,8 @@ $modFiles = @(
     "IHttpMachine.dll"
 )
 
-$modFilesDebug = @(
+$modFilesDebugCore = @(
     "WukongMp.Api.pdb",
-    "WukongMp.$ModVariant.pdb",
     "ReadyM.Api.pdb",
     "ReadyM.Api.Multiplayer.pdb",
     "ReadyM.Relay.Client.pdb",
@@ -55,9 +41,7 @@ $modFilesDebug = @(
     "Friflo.Engine.ECS.Boost.pdb"
 )
 
-$reflectionOnlyFiles = @(
-    "*"
-)
+$reflectionOnlyFiles = @("*")
 
 $overridesFiles = @(
     "System.Collections.Immutable.dll",
@@ -75,53 +59,84 @@ $overridesFilesDebug = @(
     "LiteNetLib.pdb"
 )
 
-$saveFiles = @(
-    "cacert.pem", # root CAs file for HTTPS support
-    "ArchiveSaveFile.9.sav" # new game save
-) # at least one file is required (temporarily) so that the game deson't think we are starting the game from Prologue
+# at least one file so the game doesn't think we start from Prologue
+$saveFilesBase = @(
+    "cacert.pem",
+    "ArchiveSaveFile.9.sav"
+)
 
-
-if ($ModVariant -eq 'PvP')
-{
-    $saveFiles += "ArchiveSaveFile.0.sav" # PvP save
-}
-
-# List of culture codes
+# Culture folders (satellite assemblies)
 $cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
 
-$modFiles = @(
-    @($modFiles, $modSourceDir, $modDestDir),
-    @($cultureFolders, $modSourceDir, $modDestDir),
-    @($overridesFiles, $overridesSourceDir, $overridesDestDir),
-    @($saveFiles, $saveSourceDir, $saveDestDir)
-)
+function Get-VariantLists
+{
+    param(
+        [Parameter(Mandatory = $true)][string]$Variant,
+        [Parameter(Mandatory = $true)][string]$Configuration
+    )
 
-$devFiles = $modFiles + @(
-    @($modFilesDebug, $modSourceDir, $modDestDir),
-    @($overridesFilesDebug, $overridesSourceDir, $overridesDestDir),
-    @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
-)
+    # Compute *per-variant* paths
+    $modSourceDir = "WukongMp.$Variant/bin/$Configuration/netstandard2.0"
+    $reflectionOnlySourceDir = "WukongMp.Api/Game"
+    $overridesSourceDir = "WukongMp.Api/Game"
+    $saveSourceDir = "Deployment"
+
+    $modDestDir = "Mods/WukongMp.$Variant"
+    $reflectionOnlyDestDir = "Mods/ReflectionOnly"
+    $overridesDestDir = "Mods/Overrides"
+    $saveDestDir = "Mods/WukongMp.$Variant"
+
+    # Save files (PvP adds PvP save)
+    $saveFiles = @($saveFilesBase)
+    if ($Variant -eq 'PvP')
+    {
+        $saveFiles += "ArchiveSaveFile.0.sav"
+    }
+    
+    # add "WukongMp.$ModVariant.dll" to modFilesCore
+    $modFilesVariant = $modFilesCore + "WukongMp.$Variant.dll"
+    $modFilesDebugVariant = $modFilesDebugCore + "WukongMp.$Variant.pdb"
+
+    # Compose the triplets: @( <files>, <sourceDir>, <destDir> )
+    $modFiles = @(
+        @($modFilesVariant, $modSourceDir, $modDestDir),
+        @($cultureFolders, $modSourceDir, $modDestDir),
+        @($overridesFiles, $overridesSourceDir, $overridesDestDir),
+        @($saveFiles, $saveSourceDir, $saveDestDir)
+    )
+
+    $devFiles = $modFiles + @(
+        @($modFilesDebugVariant, $modSourceDir, $modDestDir),
+        @($overridesFilesDebug, $overridesSourceDir, $overridesDestDir),
+        @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
+    )
+
+    # Return both sets so caller can pick based on configuration
+    return @{
+        Mod = $modFiles
+        Dev = $devFiles
+    }
+}
 
 function CopyFiles($files, $sourceDir, $destDir)
 {
-    # Create the destination directory if it doesn't exist
     if (!(Test-Path -Path $destDir))
     {
-        New-Item -ItemType Directory -Path $destDir -Force
+        New-Item -ItemType Directory -Path $destDir -Force | Out-Null
     }
 
-    # Copy each file to the destination directory
     foreach ($file in $files)
     {
         $sourceFile = Join-Path -Path $sourceDir -ChildPath $file
-        $destFile = Join-Path -Path $destDir -ChildPath $file
+        $destFile = Join-Path -Path $destDir   -ChildPath $file
+
         if ($file -eq "*")
         {
             if (Test-Path -Path $destDir)
             {
                 Remove-Item -Path $destDir -Recurse -Force
             }
-            New-Item -ItemType Directory -Path $destDir -Force
+            New-Item -ItemType Directory -Path $destDir -Force | Out-Null
             Copy-Item -Path $sourceFile -Destination $destDir -Recurse -Force
             Write-Output "Copied $file to $destDir (recursive)"
         }
