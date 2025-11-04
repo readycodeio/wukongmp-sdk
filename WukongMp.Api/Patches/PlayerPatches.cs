@@ -881,7 +881,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(InteractStepMatchPos), "OnInteractMatchingPosFinish")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchOnInteractMatchingPosFinish
     {
         public static bool Prefix(InteractStepMatchPos __instance)
@@ -903,6 +903,52 @@ namespace WukongMp.Api.Patches
             }
 
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractStepMatchPos), "StepBegin")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnInteractStepBegin
+    {
+        public static void Prefix(InteractStepMatchPos __instance, InteractContext ___Context)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var character = ___Context.OwnerController.GetControlledPawn();
+
+            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (!mainEntity.HasValue)
+                return;
+
+            ref var localMain = ref mainEntity.Value.GetLocalState();
+            if (localMain.Pawn != character)
+                return;
+
+            PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, false);
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractStepMatchPos), "StepFinish")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnInteractStepFinish
+    {
+        public static void Prefix(InteractStepMatchPos __instance, InteractContext ___Context)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var character = ___Context.OwnerController.GetControlledPawn();
+
+            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (!mainEntity.HasValue)
+                return;
+
+            ref var localMain = ref mainEntity.Value.GetLocalState();
+            if (localMain.Pawn != character)
+                return;
+
+            PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, true);
         }
     }
 

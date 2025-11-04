@@ -113,5 +113,13 @@ namespace WukongMp.Api.WukongUtils
             UBGWFunctionLibraryCS.GetRebirthPointTransform(GameUtils.GetWorld(), rebirthPointData.CurrentBirthPoint.PointID, out var Transform);
             return Transform;
         }
+
+        public static void EnablePlayerPawnCollision(BGUCharacterCS playerPawn, bool enableCollision)
+        {
+            playerPawn.SetActorEnableCollision(enableCollision);
+            var events = BUS_EventCollectionCS.Get(playerPawn);
+            events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enableCollision);
+            events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enableCollision);
+        }
     }
 }
