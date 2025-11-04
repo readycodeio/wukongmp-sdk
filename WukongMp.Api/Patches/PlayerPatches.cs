@@ -805,7 +805,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchEnableCollision
     {
-        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance, List<TWeakObject<UPrimitiveComponent>> ___CollisionComponents)
+        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return true;
@@ -820,10 +820,13 @@ namespace WukongMp.Api.Patches
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
 
+            MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_QuestDynamicObstacleComp), "CollisionComponents");
+            List<TWeakObject<UPrimitiveComponent>> CollisionComponents = (List<TWeakObject<UPrimitiveComponent>>)getter.Invoke(__instance, null);
+
             var actorForward = obstacle.GetActorForwardVector();
             var enableCollider = true;
             Logging.LogDebug("Obstacle forward vector: {Forward}", actorForward);
-            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in ___CollisionComponents)
+            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
             {
                 if (collisionComponent.IsValid())
                 {
