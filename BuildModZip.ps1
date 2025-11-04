@@ -1,42 +1,16 @@
 #!powershell.exe -ExecutionPolicy Bypass -File
 param (
-    [string[]]$ModVariants,
-    [string]  $Configuration,
-# Back-compat single variant
-    [string]  $ModVariant
+    [string] $Configuration
 )
 
 # Normalize params
 if (-not $Configuration)
 {
-    Write-Host "Usage: .\BuildModZip.ps1 -ModVariants <Coop,PvP> -Configuration <Debug|Release>"
+    Write-Host "Usage: .\BuildModZip.ps1 -Configuration <Debug|Release>"
     Exit 1
 }
 
-if ($ModVariants -and $ModVariant)
-{
-    Write-Error "Please specify either -ModVariants or -ModVariant, not both."
-    Exit 1
-}
-
-if (-not $ModVariants)
-{
-    if ($ModVariant)
-    {
-        $ModVariants = @($ModVariant)
-    }
-    else
-    {
-        # Default: build both
-        $ModVariants = @('Coop', 'PvP')
-    }
-}
-
-# Expand special 'All'
-if ($ModVariants.Count -eq 1 -and $ModVariants[0] -in @('All', 'all'))
-{
-    $ModVariants = @('Coop', 'PvP')
-}
+$ModVariants = @('Coop', 'PvP')
 
 # Source the helper (expects Get-VariantLists and CopyFiles)
 . ./BuildInfo.ps1

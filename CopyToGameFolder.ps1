@@ -1,37 +1,16 @@
 #!powershell.exe -ExecutionPolicy Bypass -File
 param (
-    [string[]]$ModVariants,
-    [string]  $Configuration,
-# Back-compat single variant
-    [string]  $ModVariant
+    [string] $Configuration
 )
 
 # Require Configuration
 if (-not $Configuration) {
-    Write-Host "Usage: .\CopyToGameFolder.ps1 -ModVariants <Coop,PvP> -Configuration <Debug|Release>"
-    Write-Host "   or  .\CopyToGameFolder.ps1 -ModVariant <Coop|PvP> -Configuration <Debug|Release>"
+    Write-Host "Usage: .\CopyToGameFolder.ps1 -Configuration <Debug|Release>"
+    Write-Host "   or  .\CopyToGameFolder.ps1 -Configuration <Debug|Release>"
     Exit 1
 }
 
-# Normalize params
-if ($ModVariants -and $ModVariant) {
-    Write-Error "Please specify either -ModVariants or -ModVariant, not both."
-    Exit 1
-}
-
-if (-not $ModVariants) {
-    if ($ModVariant) {
-        $ModVariants = @($ModVariant)
-    } else {
-        # Default: copy for both variants
-        $ModVariants = @('Coop','PvP')
-    }
-}
-
-# Expand special 'All'
-if ($ModVariants.Count -eq 1 -and $ModVariants[0] -in @('All','all')) {
-    $ModVariants = @('Coop','PvP')
-}
+$ModVariants = @('Coop','PvP')
 
 # Bring in Get-VariantLists + CopyFiles
 . ./BuildInfo.ps1
