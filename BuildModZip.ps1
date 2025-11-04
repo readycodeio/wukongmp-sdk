@@ -89,12 +89,13 @@ foreach ($item in $allFiles)
 }
 
 # 6. Zip files (single ZIP containing all variants)
-$zipPath = Join-Path $outputRoot "$zipBase.zip"
+$zipPath = Join-Path $outputRoot "$zipBase.7z"
 if (Test-Path $zipPath)
 {
     Remove-Item $zipPath -Force
 }
-Compress-Archive -Path (Join-Path $destRoot '*') -DestinationPath $zipPath -Force
+
+7z a -t7z -mx=9 -ms=on -mmt=on $zipPath (Join-Path $destRoot '*')
 Write-Output "Created $( Split-Path $zipPath -Leaf )"
 
 # 7. Open explorer to the output directory
