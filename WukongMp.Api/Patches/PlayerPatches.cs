@@ -812,55 +812,17 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var obstacle = __instance.GetOwner();
+
             List<FVector> playersPositions = [];
-            DI.Instance.World.Query<MainCharacterComponent, LocalMainCharacterComponent>().ForEachEntity((
-            ref MainCharacterComponent playerComp, ref LocalMainCharacterComponent localComp, Entity _) =>
+            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
+            ref MainCharacterComponent playerComp, Entity _) =>
             {
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
+            var enableCollider = AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
 
-            MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_QuestDynamicObstacleComp), "CollisionComponents");
-            List<TWeakObject<UPrimitiveComponent>> CollisionComponents = (List<TWeakObject<UPrimitiveComponent>>)getter.Invoke(__instance, null);
-            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
-            {
-                if (collisionComponent.IsValid())
-                {
-                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
-                    if (uPrimitiveComponent is UShapeComponent collision)
-                    {
-                        UGSE_NavigationFuncLib.SetCollisionNavAreaClass(collision, UClass.GetClass<UNavArea_Obstacle>());
-                    }
-                }
-            }
-
-            var enableCollider = true;
-            for (int i = 0; i < playersPositions.Count; i++)
-            {
-                for (int j = i + 1; j < playersPositions.Count; j++)
-                {
-                    if (i == j)
-                        continue;
-
-                    var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[i], playersPositions[j], null, null);
-                    if (nav.IsPartial())
-                    {
-                        enableCollider = false;
-                        break;
-                    }
-                }
-            }
-
-            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
-            {
-                if (collisionComponent.IsValid())
-                {
-                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
-                    if (uPrimitiveComponent is UShapeComponent collision)
-                    {
-                        UGSE_NavigationFuncLib.SetCollisionNavAreaClass(collision, UClass.GetClass<UNavArea_Default>());
-                    }
-                }
-            }
+            var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
+            enableCollider &= !DisabledCollidersData.IsDisabled(guid);
 
             Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
             return enableCollider;
