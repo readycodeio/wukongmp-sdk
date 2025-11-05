@@ -10,7 +10,6 @@ using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;

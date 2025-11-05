@@ -9,15 +9,18 @@ using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
+using UnrealEngine.NavigationSystem;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -469,16 +472,8 @@ namespace WukongMp.Api.Patches
             }
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue)
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                localTamer.IsMonsterActive = false;
-                MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
-                TamerUtils.MarkMonsterLocallyDespawned(ref tamerEntity.Value.GetLocalTamer(), tamerEntity.Value.GetMeta());
-
-                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-                    return;
-
                 ref var meta = ref tamerEntity.Value.GetMeta();
 
                 var payload = new UnitDeadPacket(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
@@ -825,29 +820,57 @@ namespace WukongMp.Api.Patches
             {
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
-            var enableCollider = AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
+
+            if (playersPositions.Count <= 1)
+                return true;
+
+            var enableCollider = true;
+            for (int i = 1; i < playersPositions.Count; i++)
+            {
+                var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[0], playersPositions[i], null, null);
+                var path = nav.PathPoints.ToList();
+                if (IsPathNearPosition(path, obstacle.GetActorLocation(), Constants.ArenaPortalRadius))
+                {
+                    enableCollider = false;
+                    break;
+                }
+            }
+
             Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
             return enableCollider;
         }
 
-        private static bool AreAllPlayersOnSameSide(FVector obstaclePosition, FVector obstacleForward, List<FVector> playersPositions)
+        private static bool IsPathNearPosition(IList<FVector> pathPoints, FVector worldPos, float radius)
         {
-            if (playersPositions.Count <= 1)
-                return true;
+            if (pathPoints == null || pathPoints.Count == 0 || radius <= 0f)
+                return false;
 
-            float firstDot = FVector.DotProduct(playersPositions[0] - obstaclePosition, obstacleForward);
-            bool isPositive = firstDot > 0f;
+            float radiusSquared = radius * radius;
 
-            foreach (var position in playersPositions)
+            FVector ClosestPointOnSegment(FVector segmentStart, FVector segmentEnd, FVector point)
             {
-                float dot = FVector.DotProduct(position - obstaclePosition, obstacleForward);
-                bool currentIsPositive = dot > 0f;
-
-                if (currentIsPositive != isPositive)
-                    return false;
+                FVector segmentVector = segmentEnd - segmentStart;
+                double segmentLength = segmentVector.SizeSquared();
+                if (segmentLength <= 1e-6f) return segmentStart;
+                double t = FVector.DotProduct(point - segmentStart, segmentVector) / segmentLength;
+                t = FMath.Clamp(t, 0, 1);
+                return segmentStart + t * segmentVector;
             }
 
-            return true;
+            for (int i = 0; i < pathPoints.Count; i++)
+            {
+                if (FVector.DistSquared2D(pathPoints[i], worldPos) <= radiusSquared)
+                    return true;
+            }
+
+            for (int i = 0; i < pathPoints.Count - 1; i++)
+            {
+                FVector closest = ClosestPointOnSegment(pathPoints[i], pathPoints[i + 1], worldPos);
+                if (FVector.DistSquared2D(closest, worldPos) <= radiusSquared)
+                    return true;
+            }
+
+            return false;
         }
     }
 
@@ -889,7 +912,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(InteractStepMatchPos), "OnInteractMatchingPosFinish")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchOnInteractMatchingPosFinish
     {
         public static bool Prefix(InteractStepMatchPos __instance)
@@ -911,6 +934,70 @@ namespace WukongMp.Api.Patches
             }
 
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractStepMatchPos), "StepBegin")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnInteractStepBegin
+    {
+        public static void Prefix(InteractStepMatchPos __instance, InteractContext ___Context)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var character = ___Context.OwnerController.GetControlledPawn();
+            var localMainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (!localMainEntity.HasValue)
+                return;
+
+            ref var localMainComp = ref localMainEntity.Value.GetLocalState();
+            if (localMainComp.Pawn != character)
+                return;
+
+            Logging.LogDebug("InteractStepMatchPos started, disabling collision for all players");
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            {
+                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (mainEntity == null)
+                    continue;
+                ref var localMain = ref mainEntity.Value.GetLocalState();
+                if (localMain.Pawn == null)
+                    continue;
+                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, false);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(InteractStepMatchPos), "StepFinish")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnInteractStepFinish
+    {
+        public static void Prefix(InteractStepMatchPos __instance, InteractContext ___Context)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var character = ___Context.OwnerController.GetControlledPawn();
+            var localMainEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (!localMainEntity.HasValue)
+                return;
+
+            ref var localMainComp = ref localMainEntity.Value.GetLocalState();
+            if (localMainComp.Pawn != character)
+                return;
+
+            Logging.LogDebug("InteractStepMatchPos finished, enabling collision for all players");
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            {
+                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (mainEntity == null)
+                    continue;
+                ref var localMain = ref mainEntity.Value.GetLocalState();
+                if (localMain.Pawn == null)
+                    continue;
+                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, true);
+            }
         }
     }
 

@@ -175,12 +175,14 @@ namespace WukongMp.Api.Patches
                 ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
                 ref var meta = ref tamerEntity.Value.GetMeta();
                 TamerUtils.MarkMonsterLocallyDespawned(ref localTamer, meta);
+                localTamer.HasPendingUnload = true;
 
                 ref var tamer = ref tamerEntity.Value.GetTamer();
                 if (!tamer.ShouldBeSpawned)
                 {
                     Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
                     localTamer.IsMonsterActive = false;
+                    localTamer.HasPendingUnload = false;
                     MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
                     return true;
                 }
@@ -397,6 +399,22 @@ namespace WukongMp.Api.Patches
             }
 
             var owner = __instance.GetOwner();
+            if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGazeAndSurround)
+            {
+                var anyPlayerAlive = false;
+                DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
+                ref MainCharacterComponent playerComp, Entity _) =>
+                {
+                    if (!playerComp.IsDead)
+                        anyPlayerAlive = true;
+                });
+
+                if (anyPlayerAlive)
+                {
+                    return false;
+                }
+            }
+
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
@@ -455,6 +473,38 @@ namespace WukongMp.Api.Patches
                     var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
                     events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
                 }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.AfterMonsterDead))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchAfterMonsterDead
+    {
+        public static void Prefix(FTamerRef? __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (__instance == null)
+                return;
+
+            if (__instance.Phase == ETamerPhase.Dead)
+                return;
+
+            var monster = __instance.MonsterInstancePtr.Get();
+            if (monster == null)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(monster);
+            if (tamerEntity.HasValue)
+            {
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                ref var meta = ref tamerEntity.Value.GetMeta();
+                localTamer.IsMonsterActive = false;
+                MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
+                TamerUtils.MarkMonsterLocallyDespawned(ref tamerEntity.Value.GetLocalTamer(), tamerEntity.Value.GetMeta());
+                Logging.LogDebug("Unloading monster locally. NetId: {NetId}, guid {Guid} (MonsterDead)", meta.NetId, BGU_DataUtil.GetActorGuid(monster));
             }
         }
     }

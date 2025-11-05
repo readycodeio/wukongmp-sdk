@@ -113,14 +113,12 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             return false;
         }
 
-        localMainComp.Pawn.SetActorEnableCollision(enable);
         var offset = new FVector(0,0, localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 3 * (enable ? 1 : -1));
         localMainComp.Pawn.SetActorLocation(localMainComp.Pawn.GetActorLocation() + offset, false, out _, true);
         var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
-        events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enable);
-        events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enable);
+        PlayerUtils.EnablePlayerPawnCollision(localMainComp.Pawn, enable);
         return true;
     }
 

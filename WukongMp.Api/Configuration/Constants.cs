@@ -42,10 +42,10 @@ namespace WukongMp.Api.Configuration
         public const float AiPathMoveStuckTimeout = 0.2f; // seconds
         public const float MonsterUpdateTargetTime = 7; // seconds
         public const float SpawnOwnershipRadius = 7500f; // 75m
+        public const float ArenaPortalRadius = 200f; // 20m
         
         public static readonly HashSet<int> InstantTriggerSequences =
         [
-            30105200, // act 3 boss, end of first phase
             62103371, 62103351, 62103321, 62103301 // 4 heavenly kings, lute guy
         ];
 
