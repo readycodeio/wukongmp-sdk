@@ -9,6 +9,7 @@ using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -819,33 +820,57 @@ namespace WukongMp.Api.Patches
             {
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
-            var enableCollider = AreAllPlayersOnSameSide(obstacle.GetActorLocation(), obstacle.GetActorForwardVector(), playersPositions);
 
-            var guid = BGU_DataUtil.GetActorGuid(__instance.GetOwner());
-            enableCollider &= !DisabledCollidersData.IsDisabled(guid);
+            if (playersPositions.Count <= 1)
+                return true;
+
+            var enableCollider = true;
+            for (int i = 1; i < playersPositions.Count; i++)
+            {
+                var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[0], playersPositions[i], null, null);
+                var path = nav.PathPoints.ToList();
+                if (IsPathNearPosition(path, obstacle.GetActorLocation(), Constants.ArenaPortalRadius))
+                {
+                    enableCollider = false;
+                    break;
+                }
+            }
 
             Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
             return enableCollider;
         }
 
-        private static bool AreAllPlayersOnSameSide(FVector obstaclePosition, FVector obstacleForward, List<FVector> playersPositions)
+        private static bool IsPathNearPosition(IList<FVector> pathPoints, FVector worldPos, float radius)
         {
-            if (playersPositions.Count <= 1)
-                return true;
+            if (pathPoints == null || pathPoints.Count == 0 || radius <= 0f)
+                return false;
 
-            float firstDot = FVector.DotProduct(playersPositions[0] - obstaclePosition, obstacleForward);
-            bool isPositive = firstDot > 0f;
+            float radiusSquared = radius * radius;
 
-            foreach (var position in playersPositions)
+            FVector ClosestPointOnSegment(FVector segmentStart, FVector segmentEnd, FVector point)
             {
-                float dot = FVector.DotProduct(position - obstaclePosition, obstacleForward);
-                bool currentIsPositive = dot > 0f;
-
-                if (currentIsPositive != isPositive)
-                    return false;
+                FVector segmentVector = segmentEnd - segmentStart;
+                double segmentLength = segmentVector.SizeSquared();
+                if (segmentLength <= 1e-6f) return segmentStart;
+                double t = FVector.DotProduct(point - segmentStart, segmentVector) / segmentLength;
+                t = FMath.Clamp(t, 0, 1);
+                return segmentStart + t * segmentVector;
             }
 
-            return true;
+            for (int i = 0; i < pathPoints.Count; i++)
+            {
+                if (FVector.DistSquared2D(pathPoints[i], worldPos) <= radiusSquared)
+                    return true;
+            }
+
+            for (int i = 0; i < pathPoints.Count - 1; i++)
+            {
+                FVector closest = ClosestPointOnSegment(pathPoints[i], pathPoints[i + 1], worldPos);
+                if (FVector.DistSquared2D(closest, worldPos) <= radiusSquared)
+                    return true;
+            }
+
+            return false;
         }
     }
 
