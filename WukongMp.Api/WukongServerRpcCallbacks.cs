@@ -9,6 +9,7 @@ using b1.EventDelDefine;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
+using ReadyM.Api.Multiplayer.Idents;
 
 namespace WukongMp.Api;
 
@@ -44,6 +45,12 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
             InfoMessageWidget.Instance.SetVisibility(false);
             CutsceneUtils.SkipCutscene(sequenceId0);
         }, this, sequenceId);
+    }
+
+    [ServerRpcEvent("MoviePlayed")]
+    private void OnMoviePlayed(int sequenceId, AreaId areaId)
+    {
+        // Do nothing on response from server.
     }
 
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
