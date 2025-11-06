@@ -1,6 +1,9 @@
-﻿using b1;
+﻿using System;
+using b1;
+using B1UI;
+using CommB1;
 using HarmonyLib;
-using System;
+using Microsoft.Extensions.Logging;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -17,7 +20,6 @@ public static class PatchOpenLevel
     }
 }
 
-
 [HarmonyPatch(typeof(BPS_PlayerTeleportSystem), "OnPlayerTeleportTo")]
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public static class PatchOnPlayerTeleportTo
@@ -26,5 +28,27 @@ public static class PatchOnPlayerTeleportTo
     {
         Logging.LogDebug("OnPlayerTeleportTo called with TeleportType {TeleportType}, UserData {UserData}, Reason {Reason}",
             TeleportType, UserData?.ToString() ?? "Empty", Reason);
+    }
+}
+
+[HarmonyPatch(typeof(TaskNodeInstance_ChapterClear), "PlayChapterMovie")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchPlayChapterMovie
+{
+    public static bool Prefix(TaskNodeInstance_ChapterClear __instance)
+    {
+        var getCustomData = AccessTools.PropertyGetter(typeof(TaskNodeInstance_ChapterClear), "CustomData");
+        var customData = (TaskCustom_ChapterClear)getCustomData.Invoke(__instance, null);
+
+        if (customData.ChapterId != GSG.GamePlayer.RoleData.RoleCs.Chapter.CurChapter)
+        {
+            DI.Instance.Logger.LogWarning("Corrupted save detected: TaskNodeInstance_ChapterClear with ChapterId {ChapterId} does not match player's current chapter {CurrentChapter}. Skipping task node.", customData.ChapterId, GSG.GamePlayer.RoleData.RoleCs.Chapter.CurChapter);
+
+            var triggerFirstOutput = AccessTools.Method(typeof(TaskNodeInstance_ChapterClear), "TriggerFirstOutput", [typeof(bool)]);
+            triggerFirstOutput.Invoke(__instance, [true]);
+            return false;
+        }
+
+        return true;
     }
 }
