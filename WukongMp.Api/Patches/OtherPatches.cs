@@ -39,37 +39,6 @@ public static class PatchRandomCrashOnOSSCollectBattleData_AiUnit
     }
 }
 
-[HarmonyPatch(typeof(FSMState_GI_Loading_NextChapterReqAndArchive), nameof(FSMState_GI_Loading_NextChapterReqAndArchive.OnEnter))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchFSMState_GI_Loading_NextChapterReqAndArchive
-{
-    public static bool Prefix(FSMState_GI_Loading_NextChapterReqAndArchive __instance, FSMContext_GI_Loading ___Context)
-    {
-        APlayerController playerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(___Context.OwnerUObj);
-        BTF_EventCollectionCS eventCollectionCs = BTF_EventCollectionCS.Get(playerController.PlayerState);
-        CSMsgChapterEnterNextReq ChapterEnterNext = new CSMsgChapterEnterNextReq();
-        BPC_PlayerRoleData? playerRoleData = BGU_DataUtil.GetReadOnlyData<BPC_PlayerRoleData>(playerController);
-        int? CurChapterCache = playerRoleData?.RoleData.RoleCs.Chapter.CurChapter;
-        eventCollectionCs.Evt_ChapterEnterNextReq(ChapterEnterNext, (Code, Req, Res) =>
-        {
-            if (Code != MsgErrCode.ErrSuccess)
-            {
-                DI.Instance.Logger.LogError(new FSMException(__instance, $"ChapterEnterNextReq Code == {Code}"), "");
-                return;
-            }
-
-            if (playerRoleData == null)
-                return;
-
-            playerRoleData.MapId = ___Context.TargetLevelId;
-            BGW_EventCollection.Get(___Context.OwnerUObj).Evt_NextChapterTravelBegin(CurChapterCache!.Value);
-            __instance.OwningInstance.TriggerEvent(EGI_Loading.Finish);
-        });
-
-        return false;
-    }
-}
-
 [HarmonyPatch(typeof(GSG), "OnTopPageChange")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchGSGOnTopPageChange
