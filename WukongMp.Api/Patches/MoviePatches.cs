@@ -191,8 +191,10 @@ public static class PatchTickForMovieSystem
         {
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
             var mainEntity = playerState.LocalMainCharacter;
+            var areaEntity = DI.Instance.AreaState.CurrentArea;
+            var isMoviePlayedByOthers = areaEntity != null && areaEntity.Value.GetMovie().AlreadyPlayedSequences.Contains(peakRequest.SequenceID);
 
-            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false)
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false || isMoviePlayedByOthers)
             {
                 InfoMessageWidget.Instance.SetVisibility(false);
                 if (mainEntity != null)
@@ -205,7 +207,12 @@ public static class PatchTickForMovieSystem
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
-                    RequestPlayMovieMethod?.Invoke(__instance, [GlobalMovieData.PlayMovieRequestQueue.Dequeue()]);
+                    var movieRequest = GlobalMovieData.PlayMovieRequestQueue.Dequeue();
+                    if (areaEntity != null  && !areaEntity.Value.GetMovie().AlreadyPlayedSequences.Contains(movieRequest.SequenceID))
+                    {
+                        DI.Instance.ServerRpc.SendMoviePlayed(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
+                    }
+                    RequestPlayMovieMethod?.Invoke(__instance, [movieRequest]);
                 }
             }
             else if (mainEntity?.GetLocalState().IsWaitingForSequence == false)

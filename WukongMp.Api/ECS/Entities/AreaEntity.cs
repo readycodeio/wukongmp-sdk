@@ -23,4 +23,7 @@ public readonly struct AreaEntity(Entity entity) : IComponent
 
     public ref RoomComponent GetRoom()
         => ref Entity.GetComponent<RoomComponent>();
+
+    public ref MovieComponent GetMovie()
+        => ref Entity.GetComponent<MovieComponent>();
 }
