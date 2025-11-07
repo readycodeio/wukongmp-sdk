@@ -1001,7 +1001,7 @@ public static class PatchMultiTargetOnPossessed
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchDoCastMagicallyChangeSkill_PendingCast
 {
-    public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset? _Config, int _SkillID, int _RecoverSkillID)
+    public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset? _Config, int _SkillID, int _RecoverSkillID, BUC_MagicallyChangeData ___MagicallyChangeData)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
@@ -1012,7 +1012,7 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
             var playerState = DI.Instance.PlayerState;
             if (DI.Instance.State.LocalPlayerId != null && playerState.LocalMainCharacter?.GetLocalState().Pawn == __instance.GetOwner())
             {
-                DI.Instance.Rpc.SendTriggerMagicallyChange(DI.Instance.State.LocalPlayerId.Value, _Config, _SkillID, _RecoverSkillID);
+                DI.Instance.Rpc.SendTriggerMagicallyChange(DI.Instance.State.LocalPlayerId.Value, _Config, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CastReason);
             }
         }
     }

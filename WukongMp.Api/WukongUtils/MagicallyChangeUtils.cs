@@ -5,7 +5,7 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class MagicallyChangeUtils
 {
-    public static void TriggerMagicallyChange(BGUCharacterCS pawn, string configAssetPath, int skillID, int recoverSkillID)
+    public static void TriggerMagicallyChange(BGUCharacterCS pawn, string configAssetPath, int skillID, int recoverSkillID, ECastReason_MagicallyChange castReason = ECastReason_MagicallyChange.VigorSkill)
     {
         var world = GameUtils.GetWorld();
         UBGWDataAsset config = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UBGWDataAsset>(configAssetPath, ELoadResourceType.SyncLoadAndCache);
@@ -14,8 +14,9 @@ public static class MagicallyChangeUtils
             Logging.LogError("Failed to load MagicallyChangeConfig from path: {Path}", configAssetPath);
             return;
         }
-        Logging.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", pawn.GetName(), configAssetPath, skillID, recoverSkillID);
+        Logging.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}, castReason {CastReason}", pawn.GetName(), configAssetPath, skillID, recoverSkillID, castReason);
         BUC_MagicallyChangeData magicallyChangeData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_MagicallyChangeData, BUC_MagicallyChangeData>(pawn);
+        magicallyChangeData.CastReason = castReason;
         magicallyChangeData.bIsPendingCast = true;
         magicallyChangeData.bIsPendingReset = false;
         magicallyChangeData.PendingConfig = config;
