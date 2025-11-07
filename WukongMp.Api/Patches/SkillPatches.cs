@@ -1008,11 +1008,11 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
 
         if (_Config != null)
         {
-            Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}", _Config.PathName, _SkillID, _RecoverSkillID);
+            Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}, CurVigorSkillID {CurVigorSkillID}", _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID);
             var playerState = DI.Instance.PlayerState;
             if (DI.Instance.State.LocalPlayerId != null && playerState.LocalMainCharacter?.GetLocalState().Pawn == __instance.GetOwner())
             {
-                DI.Instance.Rpc.SendTriggerMagicallyChange(DI.Instance.State.LocalPlayerId.Value, _Config, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CastReason);
+                DI.Instance.Rpc.SendTriggerMagicallyChange(DI.Instance.State.LocalPlayerId.Value, _Config, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason);
             }
         }
     }

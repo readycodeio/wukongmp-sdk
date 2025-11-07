@@ -80,12 +80,12 @@ public partial class WukongRpcCallbacks : IDisposable
         SendMontageCallback(evData);
     }
 
-    public void SendTriggerMagicallyChange(PlayerId player, UBGWDataAsset config, int skillID, int recoverSkillID, ECastReason_MagicallyChange castReason)
+    public void SendTriggerMagicallyChange(PlayerId player, UBGWDataAsset config, int skillID, int recoverSkillID, int curVigorSkillID, ECastReason_MagicallyChange castReason)
     {
         var shortened = Compressors.VigorNameCompressor.Compress(config.PathName, out var shortMontagePath);
         var configName = shortened ? shortMontagePath : config.PathName;
-        _logger.LogDebug("Sending magically change for player {PlayerId} with config {Config}, skillID {SkillID}, recoverSkillID {RecoverSkillId}, castReason {CastReason}", player, configName, skillID, recoverSkillID, castReason);
-        var evData = new MagicallyChangeData(configName, shortened, skillID, recoverSkillID, castReason);
+        _logger.LogDebug("Sending magically change for player {PlayerId} with config {Config}, skillID {SkillID}, recoverSkillID {RecoverSkillId}, curVigorSkillID {CurVigorSkillID}, castReason {CastReason}", player, configName, skillID, recoverSkillID, curVigorSkillID, castReason);
+        var evData = new MagicallyChangeData(configName, shortened, skillID, recoverSkillID, curVigorSkillID, castReason);
         SendTriggerMagicallyChange(evData);
     }
 
@@ -651,8 +651,8 @@ public partial class WukongRpcCallbacks : IDisposable
             }
 
             var fullConfigPath = data0.Compressed ? Compressors.VigorNameCompressor.Decompress(data0.ConfigAssetName) : data0.ConfigAssetName;
-            self._logger.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}", mainComp.CharacterNickName, fullConfigPath, data0.SkillID, data0.RecoverSkillID);
-            MagicallyChangeUtils.TriggerMagicallyChange(localMainComp.Pawn, fullConfigPath, data0.SkillID, data0.RecoverSkillID, data0.CastReason);
+            self._logger.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}, curVigorSkillID {CurVigorSkillID}", mainComp.CharacterNickName, fullConfigPath, data0.SkillID, data0.RecoverSkillID, data0.CurVigorSkillID);
+            MagicallyChangeUtils.TriggerMagicallyChange(localMainComp.Pawn, fullConfigPath, data0.SkillID, data0.RecoverSkillID, data0.CurVigorSkillID, data0.CastReason);
         }, this, __sender, data);
     }
 
