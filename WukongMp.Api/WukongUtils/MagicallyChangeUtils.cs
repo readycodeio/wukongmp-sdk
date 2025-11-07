@@ -8,7 +8,7 @@ public static class MagicallyChangeUtils
     public static void TriggerMagicallyChange(BGUCharacterCS pawn, string configAssetPath, int skillID, int recoverSkillID)
     {
         var world = GameUtils.GetWorld();
-        BGWDataAsset_MagicallyChangeConfig config = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<BGWDataAsset_MagicallyChangeConfig>(configAssetPath, ELoadResourceType.SyncLoadAndCache);
+        UBGWDataAsset config = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UBGWDataAsset>(configAssetPath, ELoadResourceType.SyncLoadAndCache);
         if (config == null)
         {
             Logging.LogError("Failed to load MagicallyChangeConfig from path: {Path}", configAssetPath);
