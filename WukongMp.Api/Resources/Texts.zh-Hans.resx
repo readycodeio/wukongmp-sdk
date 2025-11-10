@@ -168,9 +168,6 @@
   <data name="More" xml:space="preserve">
     <value>排队</value>
   </data>
-  <data name="NewCharacter" xml:space="preserve">
-    <value>初始天命人状态进入</value>
-  </data>
   <data name="Ping" xml:space="preserve">
     <value>网络延迟</value>
   </data>
@@ -216,9 +213,6 @@
   <data name="PressToSwitchTeam" xml:space="preserve">
     <value>按L键切换战斗阵营</value>
   </data>
-  <data name="QuickJoin" xml:space="preserve">
-    <value>快速加入在线房间</value>
-  </data>
   <data name="Ready" xml:space="preserve">
     <value>准备开始</value>
   </data>
@@ -233,9 +227,6 @@
   </data>
   <data name="RoundEndedWinner" xml:space="preserve">
     <value>回合结束。{0}获胜</value>
-  </data>
-  <data name="SelectCharacter" xml:space="preserve">
-    <value>选择独立存档内容进行联机</value>
   </data>
   <data name="Spectators" xml:space="preserve">
     <value>观战排队玩家</value>

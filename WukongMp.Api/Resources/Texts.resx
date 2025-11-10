@@ -168,9 +168,6 @@
   <data name="More" xml:space="preserve">
     <value>more</value>
   </data>
-  <data name="NewCharacter" xml:space="preserve">
-    <value>New Character</value>
-  </data>
   <data name="Ping" xml:space="preserve">
     <value>Ping</value>
   </data>
@@ -216,9 +213,6 @@
   <data name="PressToSwitchTeam" xml:space="preserve">
     <value>Press L to switch team</value>
   </data>
-  <data name="QuickJoin" xml:space="preserve">
-    <value>Quick Join</value>
-  </data>
   <data name="Ready" xml:space="preserve">
     <value>Ready</value>
   </data>
@@ -233,9 +227,6 @@
   </data>
   <data name="RoundEndedWinner" xml:space="preserve">
     <value>Round ended. {0} won</value>
-  </data>
-  <data name="SelectCharacter" xml:space="preserve">
-    <value>Select Character</value>
   </data>
   <data name="Spectators" xml:space="preserve">
     <value>Spectators</value>
