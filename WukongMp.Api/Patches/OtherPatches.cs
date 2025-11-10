@@ -39,6 +39,22 @@ public static class PatchRandomCrashOnOSSCollectBattleData_AiUnit
     }
 }
 
+[HarmonyPatch(typeof(BUS_DeadZoneLogicComp), "PlayerCliffFallRollBack")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchRandomCrashOnPlayerCliffFallRollBack
+{
+    public static Exception? Finalizer(Exception? __exception)
+    {
+        if (__exception != null)
+        {
+            DI.Instance.Logger.LogError(__exception, "Suppressed crash in BUS_DeadZoneLogicComp.PlayerCliffFallRollBack");
+        }
+
+        // suppress System.NullReferenceException
+        return null;
+    }
+}
+
 [HarmonyPatch(typeof(GSG), "OnTopPageChange")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchGSGOnTopPageChange
