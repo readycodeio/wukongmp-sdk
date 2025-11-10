@@ -1,0 +1,173 @@
+﻿using b1;
+using b1.BGW;
+using b1.UI.Comm;
+using B1UI.GSUI;
+using CSharpModBase;
+using GSE.GSUI;
+using HarmonyLib;
+using LiteNetLib;
+using PreludeLib.Attributes;
+using ResB1;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using UnrealEngine.Runtime;
+using UnrealEngine.UMG;
+using WukongMp.Api;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
+using WukongMp.Api.Resources;
+using WukongMp.PvP.Resources;
+
+namespace WukongMp.PvP.Patches;
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchStartGameUiPvp
+{
+    [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
+    }
+
+    public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
+    {
+        var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
+        var hasPak = widgetManagerActorClass != null;
+        var isConnected = DI.Instance.State.IsConnected;
+        if (!hasPak)
+        {
+            UiUtils.ShowTip(Texts.MissingPak, false);
+            Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
+        }
+        else if (!isConnected)
+        {
+            DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
+            {
+                Utils.TryRunOnGameThread(() =>
+                {
+                    InfoMessageWidget.Instance.SetVisibility(true);
+                    InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                });
+            });
+            Logging.LogError(" PvP Disconnected. Could not continue game.");
+        }
+
+        for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
+        {
+            DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
+            var buttonName = BtnBase2.Name.Value.ToString();
+
+            Logging.LogDebug("Button name: {Name}, id: {Id}", buttonName, BtnBase2.Id.Value);
+
+            if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
+            {
+                Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
+                if (!hasPak || !isConnected)
+                {
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+                {
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.QuickJoin));
+                }
+                else
+                {
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+
+                // Clear OnGSButtonUnFocused event form the continue game button.
+                var type = ___StartGameBtnList[j].GetBUIButton().GetType();
+                var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
+                field?.SetValue(___StartGameBtnList[j].GetBUIButton(), null);
+            }
+            else if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
+            {
+                Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
+                if (!hasPak || !isConnected)
+                {
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+                else
+                {
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.NewCharacter));
+                }
+            }
+            else if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
+            {
+                Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
+                if (!hasPak || !isConnected)
+                {
+                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                }
+                else
+                {
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.SelectCharacter));
+                }
+            }
+            else if (buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
+            {
+                Logging.LogDebug("UI name desc to hide: {Description}", buttonName);
+                ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+            }
+        }
+
+        __instance.GSAnimKeyToState("GSAKBContinueBtn", "CBtnFocus");
+
+        ___TxtMainName.SetText(FText.FromString(""));
+        ___TxtSubName.SetText(FText.FromString("Wukong Multiplayer Mod"));
+        ___TxtSubName.SetRenderScale(new FVector2D(1.2, 1.2));
+    }
+}
+
+[HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenMapUI")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchOnClickOpenMapUI
+{
+    public static bool Prefix()
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        return false;
+    }
+}
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchShrineRegisterFunc
+{
+    [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
+    public static MethodBase TargetMethod()
+    {
+        var specializedType = typeof(FMenuHelper<EShrineMenuTag>);
+        return specializedType.GetMethod("RegisterFunc")!;
+    }
+
+    public static bool Prefix(int FuncId)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        InteractionFuncDesc interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
+        return interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.Teleport
+               && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossIterations
+               && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge;
+    }
+}
+
+[HarmonyPatch(typeof(GSEUtil), "GetCanTeleportGroupMapList")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchGetCanTeleportGroupMapList
+{
+    public static bool Prefix(ref List<int> __result)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        __result = [];
+        return false;
+    }
+}

@@ -49,6 +49,7 @@ namespace WukongMp.PvP
 
             Constants.IsCoop = false;
             DI.Instance.Init();
+            PvpDI.Instance.Init(DI.Instance);
 
             if (LaunchParameters.Instance.PlayShimOnStart)
                 ShimUtils.InitRelayPlayShim(

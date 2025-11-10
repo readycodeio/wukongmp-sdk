@@ -16,16 +16,20 @@ public class WukongPatcher(RuntimePrelude prelude) : PreludePatcherBase("ReadyM.
         Prelude.ScanAndPatchCategory(new(Constants.ConnectedPatches));
         Logging.LogInformation("Patched Prelude category: {Category}", Constants.ConnectedPatches);
 
-        var category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-        Prelude.ScanAndPatchCategory(new(category));
-        Logging.LogInformation("Patched Prelude WukongMpMod {Patch}", category);
+        if (Constants.IsCoop)
+        {
+            Prelude.ScanAndPatchCategory(new(Constants.CoopPatches));
+            Logging.LogInformation("Patched Prelude WukongMpMod {Patch}", Constants.CoopPatches);
+        }
     }
     
     protected override void OnUnpatch()
     {
-        var category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-        Prelude.UnpatchCategory(new(category));
-        Logging.LogInformation("Unpatched Prelude WukongMpMod {Patch}", category);
+        if (Constants.IsCoop)
+        {
+            Prelude.UnpatchCategory(new(Constants.CoopPatches));
+            Logging.LogInformation("Unpatched Prelude WukongMpMod {Patch}", Constants.CoopPatches);
+        }
         
         Prelude.UnpatchCategory(new(Constants.ConnectedPatches));
         Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.ConnectedPatches);

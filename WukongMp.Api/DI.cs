@@ -82,6 +82,8 @@ public class DI
 
     public WukongChatter Chatter { get; private set; } = null!;
 
+    public GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
+
     public RuntimePrelude Prelude { get; private set; } = null!;
     public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
@@ -187,6 +189,8 @@ public class DI
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
+
+        var gameplayConfig = GameplayConfiguration = new GameplayConfiguration();
 
         WukongPVP? pvp = null;
         if (Constants.IsPvP)

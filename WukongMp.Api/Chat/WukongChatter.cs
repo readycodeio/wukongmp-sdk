@@ -10,9 +10,7 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -77,77 +75,26 @@ public class WukongChatter : IDisposable
         }
     }
 
-    private void SetupCommands()
+    public void AddCommand(string command, WukongChatterCommand handler)
     {
-        _commands.Add("/reconnect", new WukongChatterCommand(RequestReconnect));
-        _commands.Add("/giveup", new WukongChatterCommand(RequestGiveUp));
-        _commands.Add("/rebirth", new WukongChatterCommand(RequestRebirth));
-        _commands.Add("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
-        if (Constants.IsPvP)
+        if (!_commands.ContainsKey(command))
         {
-            _commands.Add("/spawn", new WukongChatterCommand(RequestSpawn)); // TODO: Enable in PvP
+            _commands.Add(command, handler);
         }
-#if DEBUG
-        _commands.Add("/play", new WukongChatterCommand(PlayCutscene));
-        _commands.Add("/disconnect", new WukongChatterCommand(RequestDisconnect));
-        _commands.Add("/spectator", new WukongChatterCommand(SetSpectatorStatus));
-        _commands.Add("/teleport", new WukongChatterCommand(Teleport));
-        _commands.Add("/openlevel", new WukongChatterCommand(OpenLevel));
-#endif
     }
 
-    private void RequestSpawn(ReadOnlyMemory<string> args)
+    private void SetupCommands()
     {
-        var unitName = args.Span[0];
-        if (!UnitPathsConfig.IsValidUnitName(unitName))
-        {
-            ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[0]}\"");
-            return;
-        }
-
-        var playerEntity = _playerState.LocalPlayerEntity;
-        if (playerEntity == null)
-            return;
-
-        var characterEntity = _playerState.LocalMainCharacter;
-        if (characterEntity == null)
-            return;
-
-        var teamId = PvPUtils.GetOppositeTeam(playerEntity.Value.GetState().TeamId);
-        var playerPawn = characterEntity.Value.GetLocalState().Pawn;
-        if (playerPawn == null)
-            return;
-
-        var location = SpawningUtils.CalculateSpawnLocation(playerPawn.GetActorLocation(), playerPawn.GetActorForwardVector());
-        var count = 0;
-        var shouldSpawn = false;
-
-        switch (args.Length)
-        {
-            case 1:
-                count = 1;
-                shouldSpawn = true;
-                break;
-            case 2:
-            {
-                if (int.TryParse(args.Span[1], out count))
-                {
-                    shouldSpawn = true;
-                }
-                else
-                {
-                    ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
-                }
-
-                break;
-            }
-        }
-
-        if (shouldSpawn)
-        {
-            _rpc.SendRequestSpawnUnits(new UnitSpawnRequestData(unitName, count, teamId, location));
-            SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), args.Span[0]);
-        }
+        AddCommand("/reconnect", new WukongChatterCommand(RequestReconnect));
+        AddCommand("/giveup", new WukongChatterCommand(RequestGiveUp));
+        AddCommand("/rebirth", new WukongChatterCommand(RequestRebirth));
+        AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
+#if DEBUG
+        AddCommand("/play", new WukongChatterCommand(PlayCutscene));
+        AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
+        AddCommand("/teleport", new WukongChatterCommand(Teleport));
+        AddCommand("/openlevel", new WukongChatterCommand(OpenLevel));
+#endif
     }
 
     private void RequestRebirth(ReadOnlyMemory<string> _)
@@ -210,19 +157,6 @@ public class WukongChatter : IDisposable
         }
     }
 
-    private void SetSpectatorStatus(ReadOnlyMemory<string> args)
-    {
-        if (args.Length == 1)
-        {
-            var isSpectator = args.Span[0].Equals("true", StringComparison.OrdinalIgnoreCase);
-
-            var playerEntity = _playerState.LocalMainCharacter;
-            if (playerEntity == null)
-                return;
-            playerEntity.Value.GetPvP().IsSpectator = isSpectator;
-        }
-    }
-
     private void Teleport(ReadOnlyMemory<string> args)
     {
         if (args.Length == 1 && int.TryParse(args.Span[0], out var birthpointId))
@@ -241,7 +175,6 @@ public class WukongChatter : IDisposable
             UGameplayStatics.OpenLevel(GameUtils.GetWorld(), new FName(args.Span[0]));
         }
     }
-
 
     private bool TryHandleCommand(string message)
     {

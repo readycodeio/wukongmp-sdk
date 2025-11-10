@@ -25,12 +25,58 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Reference Include="0Harmony">
+          <HintPath>..\WukongMp.Api\Core\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="b1.Native">
+            <HintPath>..\WukongMp.Api\Game\b1.Native.dll</HintPath>
+        </Reference>
+        <Reference Include="b1.NativePlugins">
+            <HintPath>..\WukongMp.Api\Game\b1.NativePlugins.dll</HintPath>
+        </Reference>
+        <Reference Include="B1UI_GSE.Script">
+            <HintPath>..\WukongMp.Api\Game\B1UI_GSE.Script.dll</HintPath>
+        </Reference>
+        <Reference Include="BtlSvr.Main">
+          <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
+        </Reference>
         <Reference Include="CSharpModBase">
             <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBaseV2">
             <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
+        <Reference Include="PreludeLib">
+          <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
+        </Reference>
+        <Reference Include="Protobuf.RunTime">
+          <HintPath>..\WukongMp.Api\Game\Protobuf.RunTime.dll</HintPath>
+        </Reference>
+        <Reference Include="UnrealEngine">
+          <HintPath>..\WukongMp.Api\Game\UnrealEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnrealEngine.Runtime">
+          <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Resources\PvpTexts.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>PvpTexts.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\PvpTexts.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>PvpTexts.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="WukongUtils\" />
     </ItemGroup>
 
 </Project>

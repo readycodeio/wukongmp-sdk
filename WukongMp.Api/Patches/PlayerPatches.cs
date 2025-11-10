@@ -551,7 +551,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUC_TargetInfoData), "IsSupportMultiLockTarget")]
-    [HarmonyPatchCategory(Constants.PvpPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchIsSupportMultiLockTarget
     {
         public static bool Prefix(ref bool __result)
@@ -559,8 +559,11 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            __result = false;
-            return false;
+            if (!DI.Instance.GameplayConfiguration.IsSupportMultiLockEnabled)
+            {
+                __result = false;
+            }
+            return DI.Instance.GameplayConfiguration.IsSupportMultiLockEnabled;
         }
     }
 
@@ -692,12 +695,12 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUS_BeAttackedComp), "IsDamageValid")]
-    [HarmonyPatchCategory(Constants.PvpPatches)]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchIsDamageValid
     {
         public static bool Prefix(IBUC_SimpleStateData ___VictimSimpleStateData, ref bool __result)
         {
-            if (___VictimSimpleStateData.HasSimpleState(EBGUSimpleState.StrongDamageImmue))
+            if (DI.Instance.GameplayConfiguration.IsStrongDamageImmueEnabled && ___VictimSimpleStateData.HasSimpleState(EBGUSimpleState.StrongDamageImmue))
             {
                 __result = false;
                 return false;
