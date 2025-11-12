@@ -7,6 +7,7 @@ namespace WukongMp.Api
     {
         public event Action<Entity, Entity>? OnUnitDead;
         public event Action<Entity, int>? OnRebirthPointChanged;
+        public event Action<Entity>? OnMonsterSpawned;
 
         public void RaiseOnUnitDead(Entity victimEntity, Entity attackerEntity)
         {
@@ -16,6 +17,11 @@ namespace WukongMp.Api
         public void RaiseOnRebirthPointChanged(Entity playerEntity, int rebirthPointId)
         {
             OnRebirthPointChanged?.Invoke(playerEntity, rebirthPointId);
+        }
+        
+        public void RaiseOnMonsterSpawned(Entity monsterEntity)
+        {
+            OnMonsterSpawned?.Invoke(monsterEntity);
         }
     }
 }

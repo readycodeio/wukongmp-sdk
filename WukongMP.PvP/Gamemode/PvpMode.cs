@@ -127,6 +127,7 @@ public partial class PvpMode : IDisposable
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
 
         _eventRouter.OnUnitDead += OnUnitDead;
+        _eventRouter.OnMonsterSpawned += OnMonsterSpawned;
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
@@ -144,11 +145,26 @@ public partial class PvpMode : IDisposable
         _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
 
         _eventRouter.OnUnitDead -= OnUnitDead;
+        _eventRouter.OnMonsterSpawned -= OnMonsterSpawned;
 
         _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
         _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
         _playerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;
         _rpc.OnPvpEventReceived -= OnPvpEvent;
+    }
+
+    private void OnMonsterSpawned(Entity entity)
+    {
+        var teamComp = entity.GetComponent<TeamComponent>();
+        var tamerComp = entity.GetComponent<TamerComponent>();
+        var localTamerComp = entity.GetComponent<LocalTamerComponent>();
+
+        var teamColor = PvpUtils.GetTeamColorString(teamComp.TeamId);
+        MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity), teamColor);
+        if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+        {
+            SpawningUtils.SetMonkeyBotConfig(localTamerComp.Tamer!.GetMonster());
+        }
     }
 
     private void OnFreeCameraModeChanged(bool enabled)
@@ -775,7 +791,7 @@ public partial class PvpMode : IDisposable
 
         _rpc.SendPvpEvent([(int)ev, data]);
     }
-    
+
     internal void OnPvpEvent(int[] data)
     {
         var ev = (PvpEvent)data[0];

@@ -54,9 +54,6 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                         TamerUtils.MarkMonsterLocallySpawned(ref localTamerComp, metaComp);
                     }
                 }
-
-                // TODO: else spawn tamer?
-                // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
             }
         });
     }

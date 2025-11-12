@@ -30,7 +30,7 @@ namespace WukongMp.Coop
 
             var saveManager = SaveManager = new CoopSaveManager(DI.Logger);
 
-            var coop = Coop = new CoopMode(DI.Serializer, DI.RelayClient, DI.AreaState, DI.PlayerState);
+            var coop = Coop = new CoopMode(DI.Serializer, DI.RelayClient, DI.AreaState, DI.PlayerState, DI.PawnState, DI.GameplayEventRouter);
 
             var synchronizer = Synchronizer = new CoopSynchronizer(
                 DI.ArchetypeEvent,
@@ -50,6 +50,7 @@ namespace WukongMp.Coop
                 DI.EventBus,
                 DI.WidgetManager,
                 DI.Rpc,
+                DI.GameplayEventRouter,
                 DI.Logger);
 
         }

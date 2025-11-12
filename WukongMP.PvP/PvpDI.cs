@@ -51,6 +51,7 @@ namespace WukongMp.PvP
                 DI.EcsLoop,
                 DI.EventBus,
                 DI.WidgetManager,
+                DI.GameplayEventRouter,
                 DI.Logger);
         }
     }

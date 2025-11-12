@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
@@ -18,17 +19,17 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// whether they require spawning.
 /// </summary>
 /// <param name="state"></param>
-public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private readonly HashSet<string?> _notYetSpawnedGuids = [];
 
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref MetadataComponent metaComp, 
-            ref HpComponent hpComp, 
-            ref TeamComponent teamComp, 
-            ref TamerComponent tamerComp, 
+            ref MetadataComponent metaComp,
+            ref HpComponent hpComp,
+            ref TeamComponent teamComp,
+            ref TamerComponent tamerComp,
             ref LocalTamerComponent localTamerComp,
             Entity entity) =>
         {
@@ -108,17 +109,13 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
 
-            if (Constants.IsPvP && localTamerComp.Tamer.TamerType == ETamerType.Spawned)
+            localTamerComp.IsMonsterActive = true;
+
+            if (localTamerComp.Tamer.TamerType == ETamerType.Spawned)
             {
-                var teamColor = PvpUtils.GetTeamColorString(teamComp.TeamId);
-                MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity), teamColor);
-                if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
-                {
-                    SpawningUtils.SetMonkeyBotConfig(monster);
-                }
+                router.RaiseOnMonsterSpawned(entity);
             }
 
-            localTamerComp.IsMonsterActive = true;
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
         });
     }

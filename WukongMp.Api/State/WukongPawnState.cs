@@ -1,12 +1,10 @@
-﻿using b1;
+﻿using System.Diagnostics.CodeAnalysis;
+using b1;
 using Friflo.Engine.ECS;
-using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Values;
-using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System.Diagnostics.CodeAnalysis;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
@@ -14,30 +12,15 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
-public class WukongPawnState
+public class WukongPawnState(
+    Store world,
+    ClientWukongArchetypeRegistration wukongArchetype,
+    ClientNetworkedEntityState netEntity
+)
 {
-    private readonly Store _world;
-    private readonly ClientNetworkedEntityState _netEntity;
-    private readonly ILogger _logger;
-
-    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
-
-    public WukongPawnState(
-        Store world,
-        ClientWukongArchetypeRegistration wukongArchetype,
-        ClientNetworkedEntityState netEntity,
-        ILogger logger)
-    {
-        _world = world;
-        _netEntity = netEntity;
-        _logger = logger;
-
-        _wukongArchetype = wukongArchetype;
-    }
-
     public Entity CreateNetworkedMonster(LocalTamerComponent localTamer, TamerComponent tamer, TeamComponent team)
     {
-        var (entity, netId) = _netEntity.CreateNetworkedAreaEntity(_wukongArchetype.MonsterArchetype, b =>
+        var (entity, netId) = netEntity.CreateNetworkedAreaEntity(wukongArchetype.MonsterArchetype, b =>
         {
             b.Add(localTamer);
             b.Add(tamer);
@@ -79,7 +62,7 @@ public class WukongPawnState
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkId netId)
     {
-        if (!_netEntity.TryGetEntityByNetworkId(netId, out var entity))
+        if (!netEntity.TryGetEntityByNetworkId(netId, out var entity))
             return null;
 
         if (entity.Value.TryGetComponent<LocalTamerComponent>(out var localTamer))
@@ -98,7 +81,7 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        var query = _world.Query<LocalTamerComponent>();
+        var query = world.Query<LocalTamerComponent>();
         query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
         {
             if (localTamerComp.Pawn == actor)
@@ -114,7 +97,7 @@ public class WukongPawnState
     {
         TamerEntity? result = null;
 
-        var query = _world.Query<TamerComponent>();
+        var query = world.Query<TamerComponent>();
         query.ForEachEntity((ref TamerComponent tamerComp, Entity entity) =>
         {
             if (tamerComp.Guid == guid)
@@ -133,7 +116,7 @@ public class WukongPawnState
 
         TamerEntity? result = null;
 
-        var query = _world.Query<LocalTamerComponent>();
+        var query = world.Query<LocalTamerComponent>();
         query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
         {
             if (localTamerComp.Tamer == owner)
@@ -152,7 +135,7 @@ public class WukongPawnState
 
         MainCharacterEntity? result = null;
 
-        var query = _world.Query<LocalMainCharacterComponent>();
+        var query = world.Query<LocalMainCharacterComponent>();
         query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
         {
             if (!localMainComp.HasPawn)
@@ -172,11 +155,13 @@ public class WukongPawnState
         {
             return playerEntity.Value.GetMeta().NetId;
         }
+
         var tamerEntity = GetEntityByTamerMonster(owner);
         if (tamerEntity.HasValue)
         {
             return tamerEntity.Value.GetMeta().NetId;
         }
+
         return null;
     }
 
@@ -191,12 +176,14 @@ public class WukongPawnState
             entity = mainCharacterEntity.Value.Entity;
             return true;
         }
+
         var tamerEntity = GetEntityByTamerMonster(character);
         if (tamerEntity != null)
         {
             entity = tamerEntity.Value.Entity;
             return true;
         }
+
         return false;
     }
 }

@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Components;
@@ -10,7 +11,7 @@ public class TeamColorSystem : QuerySystem<MainCharacterComponent, LocalMainChar
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref mainComp, ref localMainComp, ref teamComp, _) =>
+        Query.ForEachEntity((ref MainCharacterComponent mainComp, ref LocalMainCharacterComponent localMainComp, ref TeamComponent teamComp, Entity _) =>
         {
             if (!localMainComp.HasPawn)
                 return;
