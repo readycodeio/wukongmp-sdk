@@ -2,23 +2,17 @@
 using System.Reflection;
 using System.Threading;
 using b1;
-using b1.BGW;
 using b1.GSMUI;
 using b1.GSMUI.GSWidget;
 using b1.Localization;
 using B1UI.GSSvc;
 using B1UI.GSUI;
-using CSharpModBase;
 using GSE.GSUI;
 using HarmonyLib;
-using LiteNetLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Resources;
-using WukongMp.Api.UI;
-using WukongMp.Api.WukongUtils;
 using CultureInfo = System.Globalization.CultureInfo;
 
 namespace WukongMp.Api.Patches;
@@ -87,68 +81,6 @@ public static class PatchSendDamageNumbers
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.CoopPatches)]
-public static class PatchStartGameUiCoop
-{
-    [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
-    }
-
-    public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
-    {
-        for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
-        {
-            DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
-
-            Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
-
-            if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
-            {
-                var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
-                if (widgetManagerActorClass == null)
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                    UiUtils.ShowTip(Texts.MissingPak, false);
-                    Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
-                }
-                else if (!DI.Instance.State.IsConnected)
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-
-                    DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
-                    {
-                        Utils.TryRunOnGameThread(() =>
-                        {
-                            InfoMessageWidget.Instance.SetVisibility(true);
-                            InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
-                        });
-                    });
-                    Logging.LogError("Disconnected. Could not continue game.");
-                }
-                else
-                {
-                    Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                    ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
-                }
-            }
-            else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
-            {
-                Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
-                ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-            }
-        }
-
-        __instance.GSAnimKeyToState("GSAKBContinueBtn", "CBtnFocus");
-
-        ___TxtMainName.SetText(FText.FromString(""));
-        ___TxtSubName.SetText(FText.FromString("Wukong Multiplayer Mod"));
-        ___TxtSubName.SetRenderScale(new FVector2D(1.2, 1.2));
-    }
-}
-
-[HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchBossRushTimerCountdown
 {
@@ -186,26 +118,6 @@ public class PatchOnChangeSaveTipsStat
     {
         ___RootCon.SetVisibility(ESlateVisibility.Collapsed);
         return false;
-    }
-}
-
-[HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchIsShowSettingUiOnly
-{
-    public static bool Prefix(ref bool __result)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        var areaState = DI.Instance.AreaState;
-        if (areaState.PvpState is { InPvP: true })
-        {
-            __result = true;
-            return false;
-        }
-
-        return true;
     }
 }
 

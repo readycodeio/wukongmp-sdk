@@ -171,3 +171,34 @@ public class PatchGetCanTeleportGroupMapList
         return false;
     }
 }
+
+[HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchOnChangeSaveTipsStat
+{
+    public static bool Prefix(UWidget ___RootCon)
+    {
+        ___RootCon.SetVisibility(ESlateVisibility.Collapsed);
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchIsShowSettingUiOnly
+{
+    public static bool Prefix(ref bool __result)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var areaState = DI.Instance.AreaState;
+        if (areaState.PvpState is { InPvP: true })
+        {
+            __result = true;
+            return false;
+        }
+
+        return true;
+    }
+}
