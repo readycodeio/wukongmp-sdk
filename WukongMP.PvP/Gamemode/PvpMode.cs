@@ -50,6 +50,7 @@ public partial class PvpMode : IDisposable
     private readonly ClientOwnershipManager _clientOwnership;
     private readonly WukongPawnState _pawnState;
     private readonly IClientEcsUpdateLoop _ecsLoop;
+    private readonly FreeCameraManager _freeCameraManager;
     private readonly ILogger _logger;
 
     private int _pendingDaSheng;
@@ -97,6 +98,7 @@ public partial class PvpMode : IDisposable
         ClientOwnershipManager clientOwnership,
         WukongPawnState pawnState,
         IClientEcsUpdateLoop ecsLoop,
+        FreeCameraManager freeCameraManager,
         ILogger logger
     )
     {
@@ -114,6 +116,7 @@ public partial class PvpMode : IDisposable
         _clientOwnership = clientOwnership;
         _pawnState = pawnState;
         _ecsLoop = ecsLoop;
+        _freeCameraManager = freeCameraManager;
         _logger = logger;
 
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
@@ -126,16 +129,7 @@ public partial class PvpMode : IDisposable
         _eventRouter.OnUnitDead += OnUnitDead;
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
-    }
-
-    private void OnPlayerPawnSpawned(MainCharacterEntity mainCharacterEntity, BGUCharacterCS pawn)
-    {
-        var teamColor = PvpUtils.GetTeamColorString(mainCharacterEntity.GetTeam().TeamId);
-        var marker = MarkerUtils.CreateMarkerForCharacter(mainCharacterEntity, teamColor); // 3D marker above player
-        if (marker == null)
-        {
-            _logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickName);
-        }
+        _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
     }
 
     public void Dispose()
@@ -148,6 +142,31 @@ public partial class PvpMode : IDisposable
         _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
 
         _eventRouter.OnUnitDead -= OnUnitDead;
+
+        _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
+        _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
+    }
+
+    private void OnFreeCameraModeChanged(bool enabled)
+    {
+        if (enabled)
+        {
+            PvpUtils.SetupSpectatorUi();
+        }
+        else if (_areaState.PvpState is not { InPvP: true })
+        {
+            PvpUtils.SetupLobbyUi();
+        }
+    }
+
+    private void OnPlayerPawnSpawned(MainCharacterEntity mainCharacterEntity, BGUCharacterCS pawn)
+    {
+        var teamColor = PvpUtils.GetTeamColorString(mainCharacterEntity.GetTeam().TeamId);
+        var marker = MarkerUtils.CreateMarkerForCharacter(mainCharacterEntity, teamColor); // 3D marker above player
+        if (marker == null)
+        {
+            _logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickName);
+        }
     }
 
     public void StartPvP()

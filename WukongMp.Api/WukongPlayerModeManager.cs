@@ -38,7 +38,6 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         if (isMyself)
         {
             FreeCameraManager.Instance.EnterFreeCameraMode();
-            PvpUtils.SetupSpectatorUi();
         }
         SetPlayerCollision(playerEntity, mainEntity, false);
 
@@ -62,11 +61,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
 
-            if (areaState.PvpState is not { InPvP: true })
-            {
-                PvpUtils.SetupLobbyUi();
-            }
-            else
+            if (areaState.PvpState is { InPvP: true })
             {
                 LobbyStatusWidget.Instance.SetVisibility(false);
                 CoopStatusWidget.Instance.SetVisibility(false);

@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System;
+using b1;
 using b1.BGW;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -16,11 +17,13 @@ public class FreeCameraManager
     private const string FreeCameraActorPath = "/Game/Mods/CustomLuaMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
 
     private static FreeCameraManager? _instance;
-    public static FreeCameraManager Instance => _instance ??= new ();
+    public static FreeCameraManager Instance => _instance ??= new();
 
-    private FreeCameraManager() {}
+    private FreeCameraManager() { }
 
     public bool IsInFreeCameraMode => _isInFreeCameraMode;
+
+    public event Action<bool>? OnFreeCameraModeChanged;
 
     public void EnterFreeCameraMode()
     {
@@ -73,6 +76,7 @@ public class FreeCameraManager
                 Logging.LogError("[FreeCameraManager] FreeCameraActor class is null");
                 return;
             }
+
             _freeCameraActor = world.SpawnActor(freeCameraActorClass, ref cameraLocation, ref cameraRotation);
         }
 
@@ -93,6 +97,7 @@ public class FreeCameraManager
         BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.UIAndGame, EGSInputModeChangeReason.Replay);
         _isInFreeCameraMode = true;
         FreeCameraControlsWidget.Instance.SetVisibility(true);
+        OnFreeCameraModeChanged?.Invoke(true);
     }
 
     public void LeaveFreeCameraMode()
@@ -147,6 +152,7 @@ public class FreeCameraManager
         _cachePlayerPawn = null;
         _isInFreeCameraMode = false;
         FreeCameraControlsWidget.Instance.SetVisibility(false);
+        OnFreeCameraModeChanged?.Invoke(false);
     }
 
     public void SwitchFreeCameraMode()

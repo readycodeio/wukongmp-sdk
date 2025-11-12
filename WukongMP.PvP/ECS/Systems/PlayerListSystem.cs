@@ -9,7 +9,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 
-namespace WukongMp.Api.ECS.Systems.PvP;
+namespace WukongMp.PvP.ECS.Systems;
 
 public sealed class PlayerListSystem(
     WukongPlayerState playerState,
