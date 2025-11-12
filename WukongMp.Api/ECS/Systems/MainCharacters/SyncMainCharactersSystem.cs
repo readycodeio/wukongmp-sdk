@@ -7,6 +7,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
@@ -15,6 +16,7 @@ public class SyncMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerModeManager modeManager,
     WukongEventBus eventBus,
+    WukongWidgetManager widgetManager,
     ILogger logger
 )
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
@@ -72,7 +74,7 @@ public class SyncMainCharactersSystem(
             logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.NickName);
             ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
 
-            modeManager.UpdatePlayerTeam(playerEntity, mainEntity);
+            widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
         }
     }
 

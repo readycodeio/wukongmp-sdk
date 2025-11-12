@@ -122,12 +122,6 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, playerId);
     }
 
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnEndMatchmaking()
-    {
-        _ecsLoop.Scheduler.Schedule(_ => { PvpUtils.OnMatchmakingEnded(); });
-    }
-
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnAddBuff(PlayerId __sender, BuffAddData data)
     {
@@ -866,13 +860,11 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, __sender);
     }
 
-#region PvpRPC
+    #region PvpRPC
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnPvpEvent(int[] data)
     {
-
-
         var ev = (PvPEvent)data[0];
         var winnerTeamId = data[1];
 
@@ -881,88 +873,88 @@ public partial class WukongRpcCallbacks : IDisposable
         switch (ev)
         {
             case PvPEvent.RoundStart:
-                {
-                    _ecsLoop.Scheduler.Schedule(_ => PvpUtils.ShowPvPCountDown());
-                    StartRound();
-                    EnablePvP();
-                    EnterPvP();
-                    break;
-                }
+            {
+                _ecsLoop.Scheduler.Schedule(_ => PvpUtils.ShowPvPCountDown());
+                StartRound();
+                EnablePvP();
+                EnterPvP();
+                break;
+            }
             case PvPEvent.RoundEnd:
+            {
+                DisablePvP();
+                EndRound();
+
+                if (winnerTeamId == Constants.DrawTeamId)
                 {
-                    DisablePvP();
-                    EndRound();
-
-                    if (winnerTeamId == Constants.DrawTeamId)
-                    {
-                        UiUtils.ShowTip(Texts.RoundDraw, true);
-                    }
-                    else
-                    {
-                        UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
-                    }
-
-                    if (winnerTeamId == Constants.DrawTeamId)
-                        return;
-
-                    var playerEntity = _playerState.LocalPlayerEntity;
-                    if (playerEntity == null)
-                        return;
-
-                    if (winnerTeamId == playerEntity.Value.GetState().TeamId)
-                    {
-                        AssetUtils.PlayBossDefeatedSound();
-                    }
-
-                    break;
+                    UiUtils.ShowTip(Texts.RoundDraw, true);
                 }
+                else
+                {
+                    UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                }
+
+                if (winnerTeamId == Constants.DrawTeamId)
+                    return;
+
+                var playerEntity = _playerState.LocalPlayerEntity;
+                if (playerEntity == null)
+                    return;
+
+                if (winnerTeamId == playerEntity.Value.GetState().TeamId)
+                {
+                    AssetUtils.PlayBossDefeatedSound();
+                }
+
+                break;
+            }
             case PvPEvent.TournamentEnd:
+            {
+                if (winnerTeamId == Constants.DrawTeamId)
                 {
-                    if (winnerTeamId == Constants.DrawTeamId)
-                    {
-                        UiUtils.ShowTip(Texts.TournamentDraw, true);
-                    }
-                    else
-                    {
-                        UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
-                    }
-
-                    // ReSharper disable once AsyncVoidMethod
-                    _ecsLoop.Scheduler.Schedule(async void (_, self) =>
-                    {
-                        if (self._playerState.LocalMainCharacter.HasValue)
-                            self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
-                        await Task.Delay(2000);
-                        PvpUtils.EndTournament();
-                        self.ExitPvP();
-                        self.SetReadyState(false);
-                    }, this);
-
-                    break;
+                    UiUtils.ShowTip(Texts.TournamentDraw, true);
                 }
+                else
+                {
+                    UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                }
+
+                // ReSharper disable once AsyncVoidMethod
+                _ecsLoop.Scheduler.Schedule(async void (_, self) =>
+                {
+                    if (self._playerState.LocalMainCharacter.HasValue)
+                        self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
+                    await Task.Delay(2000);
+                    PvpUtils.EndTournament();
+                    self.ExitPvP();
+                    self.SetReadyState(false);
+                }, this);
+
+                break;
+            }
             case PvPEvent.ResetStats:
+            {
+                ResetRoundState();
+
+                var mainEntity = _playerState.LocalMainCharacter;
+                if (mainEntity == null)
+                    return;
+
+                if (!mainEntity.Value.GetState().IsDead)
                 {
-                    ResetRoundState();
-
-                    var mainEntity = _playerState.LocalMainCharacter;
-                    if (mainEntity == null)
-                        return;
-
-                    if (!mainEntity.Value.GetState().IsDead)
+                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
                     {
-                        _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
-                        {
-                            var events = BUS_EventCollectionCS.Get(mainEntity0.GetLocalState().Pawn!);
-                            events?.Evt_TriggerTeleportResetPlayer!.Invoke();
-                        }, mainEntity.Value);
-                    }
-
-                    break;
+                        var events = BUS_EventCollectionCS.Get(mainEntity0.GetLocalState().Pawn!);
+                        events?.Evt_TriggerTeleportResetPlayer!.Invoke();
+                    }, mainEntity.Value);
                 }
+
+                break;
+            }
             default:
                 throw new ArgumentOutOfRangeException(nameof(ev));
         }
     }
-#endregion
 
+    #endregion
 }

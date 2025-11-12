@@ -50,7 +50,6 @@ public static class MarkerUtils
 
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
-        ref readonly var teamComp = ref mainEntity.GetTeam();
 
         markerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {color}", true);
         localMainComp.MarkerActor = markerActor;

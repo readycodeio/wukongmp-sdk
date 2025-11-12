@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using WukongMp.Api;
+using WukongMp.Api.UI;
 using WukongMp.PvP.Chat;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Gamemode;
@@ -27,7 +28,7 @@ namespace WukongMp.PvP
             var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.PlayerState, DI.Rpc, DI.GameplayEventRouter, DI.AreaState, DI.PawnState, DI.ClientOwnership);
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
 
-            var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, DI.Logger);
+            var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, FreeCameraManager.Instance, DI.Logger);
 
             var synchronizer = Synchronizer = new PvpSynchronizer(
                 DI.ArchetypeEvent,

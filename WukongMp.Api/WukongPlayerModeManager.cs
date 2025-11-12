@@ -116,29 +116,4 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         PlayerUtils.EnablePlayerPawnCollision(localMainComp.Pawn, enable);
         return true;
     }
-
-    public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
-    {
-        ref var playerComp = ref playerEntity.GetState();
-        ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
-        ref readonly var teamComp = ref mainEntity.GetTeam();
-
-        Logging.LogDebug("Updating player {Nickname} to team {Team}", playerComp.NickName, teamComp.TeamId);
-
-        var pawn = localMainComp.Pawn;
-
-        if (pawn == null)
-            return;
-
-        ClientUtils.RegisterAndSetPlayerTeam(pawn, teamComp.TeamId);
-
-        if (localMainComp.MarkerActor != null)
-        {
-            var teamColor = Constants.IsCoop ? MarkerUtils.WhiteTeamColor : PvpUtils.GetTeamColorString(teamComp.TeamId);
-            localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
-        }
-
-        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
-    }
 }
