@@ -36,13 +36,13 @@ public static class PatchTriggerItemSkill
 {
     public static bool Prefix(BUS_PlayerInputActionComp __instance)
     {
-        if (Constants.IsCoop)
+        var areaState = DI.Instance.AreaState;
+        if (areaState.CurrentArea == null)
             return true;
 
-        var areaState = DI.Instance.AreaState;
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
 
-        if (areaState.CurrentArea == null)
+        if (DI.Instance.GameplayConfiguration.IsSkillEnabled(lastSkill))
             return true;
 
         var areaEntity = areaState.CurrentArea;
