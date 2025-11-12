@@ -17,6 +17,7 @@ namespace WukongMp.PvP
         public PvpGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public PvpSynchronizer Synchronizer { get; private set; } = null!;
         public PvpSaveManager SaveManager { get; private set; } = null!;
+        public WukongPatcher Patcher { get; private set; } = null!;
 
         public PvpMode PVP { get; private set; } = null!;
 
@@ -25,6 +26,8 @@ namespace WukongMp.PvP
             wukongDI.Logger.LogDebug("Initializing PvP DI...");
 
             DI = wukongDI;
+
+            var patcher = Patcher = new PvpPatcher(DI.Prelude);
 
             var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.PlayerState, DI.Rpc, DI.GameplayEventRouter, DI.AreaState, DI.PawnState, DI.ClientOwnership);
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);

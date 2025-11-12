@@ -82,9 +82,9 @@ namespace WukongMp.PvP
 #endif
                 );
 
-            if (!DI.Instance.Patcher.IsPatched)
+            if (!PvpDI.Instance.Patcher.IsPatched)
             {
-                DI.Instance.Patcher.Patch();
+                PvpDI.Instance.Patcher.Patch();
             }
         }
 
@@ -114,7 +114,7 @@ namespace WukongMp.PvP
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
             {
-                Debug.Assert(DI.Instance.Patcher.IsPatched);
+                Debug.Assert(PvpDI.Instance.Patcher.IsPatched);
 
                 if (!DI.Instance.Connection.IsRunning)
                 {
@@ -239,9 +239,9 @@ namespace WukongMp.PvP
 
             Utils.TryRunOnGameThread(() =>
             {
-                if (DI.Instance.Patcher.IsPatched)
+                if (PvpDI.Instance.Patcher.IsPatched)
                 {
-                    DI.Instance.Patcher.Unpatch();
+                    PvpDI.Instance.Patcher.Unpatch();
                 }
 
                 if (DI.Instance.Connection.RequestedConnect)

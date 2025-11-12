@@ -16,6 +16,8 @@ namespace WukongMp.Coop
         public CoopGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public CoopSynchronizer Synchronizer { get; private set; } = null!;
         public CoopSaveManager SaveManager { get; private set; } = null!;
+        public WukongPatcher Patcher { get; private set; } = null!;
+
 
         public CoopMode Coop { get; private set; } = null!;
 
@@ -24,6 +26,8 @@ namespace WukongMp.Coop
             wukongDI.Logger.LogDebug("Initializing Coop DI...");
 
             DI = wukongDI;
+            
+            var patcher = Patcher = new CoopPatcher(DI.Prelude);
 
             var chatter = CoopChatter = new CoopChatter(DI.Chatter);
             var gameplayConfig = GameplayConfiguration = new CoopGameplayConfiguration(DI.GameplayConfiguration);

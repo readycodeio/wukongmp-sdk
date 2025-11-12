@@ -1,10 +1,11 @@
 using System.Reflection;
 using PreludeLib.Runtime.Public;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 
-namespace WukongMp.Api;
+namespace WukongMp.Tests;
 
-public class WukongPatcher(RuntimePrelude prelude) : PreludePatcherBase("ReadyM.WukongMp", prelude)
+public class TestPatcher(RuntimePrelude prelude) : WukongPatcher(prelude)
 {
     protected override void OnPatch()
     {
@@ -15,22 +16,10 @@ public class WukongPatcher(RuntimePrelude prelude) : PreludePatcherBase("ReadyM.
 
         Prelude.ScanAndPatchCategory(Assembly.GetExecutingAssembly(), new(Constants.ConnectedPatches));
         Logging.LogInformation("Patched Prelude category: {Category}", Constants.ConnectedPatches);
-
-        if (Constants.IsCoop)
-        {
-            Prelude.ScanAndPatchCategory(Assembly.GetExecutingAssembly(), new(Constants.CoopPatches));
-            Logging.LogInformation("Patched Prelude WukongMpMod {Patch}", Constants.CoopPatches);
-        }
     }
 
     protected override void OnUnpatch()
     {
-        if (Constants.IsCoop)
-        {
-            Prelude.UnpatchCategory(Assembly.GetExecutingAssembly(), new(Constants.CoopPatches));
-            Logging.LogInformation("Unpatched Prelude WukongMpMod {Patch}", Constants.CoopPatches);
-        }
-
         Prelude.UnpatchCategory(Assembly.GetExecutingAssembly(), new(Constants.ConnectedPatches));
         Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.ConnectedPatches);
 

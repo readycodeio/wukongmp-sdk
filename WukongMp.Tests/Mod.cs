@@ -1,9 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using CSharpModBase;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.Shim;
+using WukongMp.Tests;
 
 namespace WukongMp.Testing
 {
@@ -14,6 +16,9 @@ namespace WukongMp.Testing
         public string Version => "1.0.0";
 
         private ILogger _logger = null!;
+
+        [Obsolete("TODO: Create a test DI container")]
+        private TestPatcher Patcher { get; set; } = null!;
 
         public bool IsDebug
 #if DEBUG
@@ -37,6 +42,7 @@ namespace WukongMp.Testing
             }
 
             DI.Instance.Init();
+            Patcher = new TestPatcher(DI.Instance.Prelude);
 
             if (LaunchParameters.Instance.PlayShimOnStart)
                 ShimUtils.InitRelayPlayShim(
@@ -69,9 +75,9 @@ namespace WukongMp.Testing
 #endif
                 );
 
-            if (!DI.Instance.Patcher.IsPatched)
+            if (!Patcher.IsPatched)
             {
-                DI.Instance.Patcher.Patch();
+                Patcher.Patch();
             }
         }
 
@@ -94,7 +100,7 @@ namespace WukongMp.Testing
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
             {
-                Debug.Assert(DI.Instance.Patcher.IsPatched);
+                Debug.Assert(Patcher.IsPatched);
 
                 if (!DI.Instance.Connection.IsRunning)
                 {
@@ -114,7 +120,7 @@ namespace WukongMp.Testing
 
                 if (!DI.Instance.TestsRunner.IsRunning)
                 {
-                    DI.Instance.TestsRunner.Init(new Api.Tests.TestActionSequences.ReconnectTestsSequence(DI.Instance.Logger)); 
+                    DI.Instance.TestsRunner.Init(new Api.Tests.TestActionSequences.ReconnectTestsSequence(DI.Instance.Logger));
                     DI.Instance.TestsRunner.Start();
                 }
             });
@@ -148,9 +154,9 @@ namespace WukongMp.Testing
                     DI.Instance.EcsLoop.Stop();
                 }
 
-                if (DI.Instance.Patcher.IsPatched)
+                if (Patcher.IsPatched)
                 {
-                    DI.Instance.Patcher.Unpatch();
+                    Patcher.Unpatch();
                 }
             });
         }

@@ -84,7 +84,6 @@ public class DI
 
     public RuntimePrelude Prelude { get; private set; } = null!;
     public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
-    public WukongPatcher Patcher { get; private set; } = null!;
 
 
     public WukongWidgetManager WidgetManager { get; private set; } = null!;
@@ -199,7 +198,6 @@ public class DI
         var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
         var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
         var prelude = Prelude = new RuntimePrelude(preludeBackend, runtimeLogger);
-        var patcher = Patcher = new WukongPatcher(prelude);
 
         // ---
 

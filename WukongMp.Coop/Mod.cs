@@ -82,9 +82,9 @@ namespace WukongMp.Coop
 #endif
                 );
 
-            if (!DI.Instance.Patcher.IsPatched)
+            if (!CoopDI.Instance.Patcher.IsPatched)
             {
-                DI.Instance.Patcher.Patch();
+                CoopDI.Instance.Patcher.Patch();
             }
         }
 
@@ -114,7 +114,7 @@ namespace WukongMp.Coop
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
             {
-                Debug.Assert(DI.Instance.Patcher.IsPatched);
+                Debug.Assert(CoopDI.Instance.Patcher.IsPatched);
 
                 if (!DI.Instance.Connection.IsRunning)
                 {
@@ -266,9 +266,9 @@ namespace WukongMp.Coop
                     DI.Instance.EcsLoop.Stop();
                 }
 
-                if (DI.Instance.Patcher.IsPatched)
+                if (CoopDI.Instance.Patcher.IsPatched)
                 {
-                    DI.Instance.Patcher.Unpatch();
+                    CoopDI.Instance.Patcher.Unpatch();
                 }
             });
         }
