@@ -206,7 +206,7 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
-            if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && Constants.IsPvP))
+            if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.EnableSpawnedTamers))
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
                 if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
@@ -391,11 +391,9 @@ namespace WukongMp.Api.Patches
                 return false;
             }
 
-            if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.AIBattleAttack && Constants.IsPvP)
+            if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.AIBattleAttack && DI.Instance.GameplayConfiguration.ShouldDisableTamerAttack())
             {
-                var areaState = DI.Instance.AreaState;
-                if (areaState.PvpState.HasValue && !areaState.PvpState.Value.InPvP)
-                    return false;
+                return false;
             }
 
             var owner = __instance.GetOwner();

@@ -16,6 +16,8 @@ namespace WukongMp.Coop.Configuration
         {
             _configuration.IsSupportMultiLockEnabled = true;
             _configuration.IsStrongDamageImmueEnabled = false;
+            _configuration.EnableCustomCameraArmLength = false;
+            _configuration.EnableSpawnedTamers = false;
         }
     }
 }
