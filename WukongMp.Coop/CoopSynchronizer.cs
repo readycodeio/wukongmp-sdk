@@ -48,11 +48,11 @@ public class CoopSynchronizer : WukongSynchronizer
         WukongWidgetManager widgetManager,
         WukongRpcCallbacks rpc,
         ILogger logger)
-        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, rpc, logger)
+        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, logger)
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot += OnApplySnapshot;
-        playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
+        PlayerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
 
         _modeGroup = new SystemGroup("Coop");
 
@@ -67,6 +67,7 @@ public class CoopSynchronizer : WukongSynchronizer
     {
         State.OnJoinedArea -= OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot -= OnApplySnapshot;
+        PlayerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
 
         EcsLoop.RemoveSystem(_modeGroup);
         base.OnDispose();

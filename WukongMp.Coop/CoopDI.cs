@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using WukongMp.Api;
-using WukongMp.Coop;
 using WukongMp.Coop.Configuration;
 using WukongMp.Coop.Gamemode;
 using WukongMp.PvP.Chat;

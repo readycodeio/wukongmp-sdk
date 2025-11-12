@@ -48,9 +48,8 @@ public class PvpSynchronizer : WukongSynchronizer
         IClientEcsUpdateLoop ecsLoop,
         WukongEventBus eventBus,
         WukongWidgetManager widgetManager,
-        WukongRpcCallbacks rpc,
         ILogger logger)
-        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, rpc, logger)
+        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, logger)
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot += OnApplySnapshot;

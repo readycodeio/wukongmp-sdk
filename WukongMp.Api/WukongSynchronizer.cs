@@ -24,6 +24,7 @@ namespace WukongMp.Api;
 public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 {
     protected readonly WukongAreaState AreaState;
+    protected readonly WukongPlayerPawnState PlayerPawnState;
     private readonly SystemGroup _syncGroup;
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
     private readonly ClientState _state;
@@ -46,11 +47,11 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         IClientEcsUpdateLoop ecsLoop,
         WukongEventBus eventBus,
         WukongWidgetManager widgetManager,
-        WukongRpcCallbacks rpc,
         ILogger logger)
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
     {
         AreaState = areaState;
+        PlayerPawnState = playerPawnState;
         _wukongArchetype = wukongArchetype;
         _state = state;
         World = world;

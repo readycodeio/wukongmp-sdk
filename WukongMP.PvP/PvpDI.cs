@@ -24,10 +24,10 @@ namespace WukongMp.PvP
 
             DI = wukongDI;
 
-            var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.PlayerState, DI.Rpc);
+            var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.PlayerState, DI.Rpc, DI.GameplayEventRouter, DI.AreaState, DI.PawnState, DI.ClientOwnership);
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration);
 
-            var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.EventBus, DI.Rpc, DI.Chatter, DI.EcsLoop, DI.Logger);
+            var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, DI.Logger);
 
             var synchronizer = Synchronizer = new PvpSynchronizer(
                 DI.ArchetypeEvent,
@@ -47,7 +47,6 @@ namespace WukongMp.PvP
                 DI.EcsLoop,
                 DI.EventBus,
                 DI.WidgetManager,
-                DI.Rpc,
                 DI.Logger);
         }
     }

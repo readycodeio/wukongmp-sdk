@@ -184,14 +184,14 @@ namespace WukongMp.PvP
             {
                 _logger.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
-                    DI.Instance.PVP?.SwitchReadyStateMulti();
+                    PvpDI.Instance.PVP?.SwitchReadyStateMulti();
             });
 
             Utils.RegisterKeyBind(Key.L, () =>
             {
                 _logger.LogDebug("L");
                 if (!ChatWidget.Instance.HasFocus())
-                    DI.Instance.PVP?.SwitchTeam();
+                    PvpDI.Instance.PVP?.SwitchTeam();
             });
 
             Utils.RegisterKeyBind(Key.K, () =>
