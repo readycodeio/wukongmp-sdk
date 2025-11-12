@@ -1,4 +1,5 @@
 ﻿using b1;
+using BtlB1;
 using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -120,6 +121,17 @@ namespace WukongMp.Api.WukongUtils
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enableCollision);
             events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enableCollision);
+        }
+
+        public static void LogRebirthPointChange(AActor worldContext, int rebirthPointID)
+        {
+            Logging.LogInformation("Rebirth point as current birth point ID updated: {Id}", rebirthPointID);
+            FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(rebirthPointID);
+            if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
+            {
+                Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(worldContext));
+            }
         }
     }
 }

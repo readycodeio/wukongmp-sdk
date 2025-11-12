@@ -26,6 +26,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Reference Include="0Harmony">
+            <HintPath>..\WukongMp.Api\Core\0Harmony.dll</HintPath>
+        </Reference>
         <Reference Include="b1.Native">
           <HintPath>..\WukongMp.Api\Game\b1.Native.dll</HintPath>
         </Reference>
@@ -39,10 +42,22 @@
           <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBase">
-            <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
+          <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBaseV2">
-            <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
+          <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
+        </Reference>
+        <Reference Include="Google.Protobuf">
+          <HintPath>..\WukongMp.Api\Game\Google.Protobuf.dll</HintPath>
+        </Reference>
+        <Reference Include="GSE.ProtobufDB">
+          <HintPath>..\WukongMp.Api\Game\GSE.ProtobufDB.dll</HintPath>
+        </Reference>
+        <Reference Include="PreludeLib">
+          <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
+        </Reference>
+        <Reference Include="Protobuf.RunTime">
+          <HintPath>..\WukongMp.Api\Game\Protobuf.RunTime.dll</HintPath>
         </Reference>
         <Reference Include="UnrealEngine">
           <HintPath>..\WukongMp.Api\Game\UnrealEngine.dll</HintPath>

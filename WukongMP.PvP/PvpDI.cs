@@ -16,6 +16,7 @@ namespace WukongMp.PvP
         public PvpChatter PvpChatter { get; private set; } = null!;
         public PvpGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public PvpSynchronizer Synchronizer { get; private set; } = null!;
+        public PvpSaveManager SaveManager { get; private set; } = null!;
 
         public PvpMode PVP { get; private set; } = null!;
 
@@ -27,6 +28,8 @@ namespace WukongMp.PvP
 
             var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.PlayerState, DI.Rpc, DI.GameplayEventRouter, DI.AreaState, DI.PawnState, DI.ClientOwnership);
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
+
+            var saveManager = SaveManager = new PvpSaveManager(DI.Logger);
 
             var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, FreeCameraManager.Instance, DI.Logger);
 

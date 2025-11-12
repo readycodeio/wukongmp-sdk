@@ -1,19 +1,20 @@
-﻿using System;
-using b1;
+﻿using b1;
 using B1UI.GSSvc;
 using B1UI.GSUI;
+using BtlB1;
 using BtlShare;
 using CSharpModBase;
 using Friflo.Engine.ECS;
 using HarmonyLib;
+using Microsoft.Extensions.Logging;
+using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.NavigationSystem;
 using UnrealEngine.Runtime;
@@ -1113,5 +1114,45 @@ public class PatchSetAttrTransAfterActiveTalent
         }
 
         return null;
+    }
+}
+
+[HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnSetRebirthPointAsCurrentBirthPoint")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnSetRebirthPointAsCurrentBirthPoint
+{
+    public static void Postfix(UActorCompBaseCS __instance, int RebirthPointID)
+    {
+        PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), RebirthPointID);
+        var owner = __instance.GetOwner();
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        {
+            DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, RebirthPointID);
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnSetCurrentBirthPoint")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnSetCurrentBirthPoint
+{
+    public static void Postfix(UActorCompBaseCS __instance, int BirthPointID)
+    {
+        PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), BirthPointID);
+    }
+}
+
+[HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnForceSetRebirthPoint")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnForceSetRebirthPoint
+{
+    public static void Postfix(UActorCompBaseCS __instance, int RebirthPointId)
+    {
+        PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), RebirthPointId);
+        var owner = __instance.GetOwner();
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        {
+            DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, RebirthPointId);
+        }
     }
 }

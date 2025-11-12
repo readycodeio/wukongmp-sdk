@@ -46,6 +46,12 @@
         <Reference Include="CSharpModBaseV2">
           <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
+        <Reference Include="Google.Protobuf">
+          <HintPath>..\WukongMp.Api\Game\Google.Protobuf.dll</HintPath>
+        </Reference>
+        <Reference Include="GSE.ProtobufDB">
+          <HintPath>..\WukongMp.Api\Game\GSE.ProtobufDB.dll</HintPath>
+        </Reference>
         <Reference Include="PreludeLib">
           <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
         </Reference>
