@@ -571,20 +571,6 @@ public partial class PvpMode : IDisposable
         }
     }
 
-    public bool IsSkillEnabledInPVP(int skillId)
-    {
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-            return true;
-
-        // Only Immobilize checked here, Phantom Rush is not a skill in code
-        if (skillId == Constants.ImmobilizeSkillId && !areaEntity.Value.GetRoom().ImmobilizeAllowed)
-            return false;
-
-        // more skills here
-        return true;
-    }
-
     private int GetSmallerTeamId()
     {
         Dictionary<int, int> teamsCount = [];

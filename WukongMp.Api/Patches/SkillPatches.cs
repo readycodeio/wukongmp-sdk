@@ -26,7 +26,7 @@ public static class PatchTriggerMagicSkill
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        return DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true;
+        return DI.Instance.GameplayConfiguration.IsSkillEnabled(SkillID);
     }
 }
 

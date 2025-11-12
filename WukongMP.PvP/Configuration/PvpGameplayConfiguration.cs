@@ -25,16 +25,32 @@ namespace WukongMp.PvP.Configuration
             _configuration.EnableSpawnedTamers = true;
 
             _configuration.DisableTamerAttackQuery += ShouldDisableTamerAttack;
+            _configuration.IsSkillEnabledQuery += IsSkillEnabled;
         }
 
         public void Dispose()
         {
             _configuration.DisableTamerAttackQuery -= ShouldDisableTamerAttack;
+            _configuration.IsSkillEnabledQuery -= IsSkillEnabled;
         }
 
         private bool ShouldDisableTamerAttack()
         {
             return _areaState.PvpState.HasValue && !_areaState.PvpState.Value.InPvP;
+        }
+
+        private bool IsSkillEnabled(int skillId)
+        {
+            var areaEntity = _areaState.CurrentArea;
+            if (areaEntity == null)
+                return true;
+
+            // Only Immobilize checked here, Phantom Rush is not a skill in code
+            if (skillId == Constants.ImmobilizeSkillId && !areaEntity.Value.GetRoom().ImmobilizeAllowed)
+                return false;
+
+            // more skills here
+            return true;
         }
     }
 }

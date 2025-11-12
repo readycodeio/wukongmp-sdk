@@ -12,5 +12,8 @@ namespace WukongMp.Api.Configuration
 
         public event Func<bool>? DisableTamerAttackQuery;
         public bool ShouldDisableTamerAttack() => DisableTamerAttackQuery?.Invoke() ?? false;
+
+        public event Func<int, bool>? IsSkillEnabledQuery;
+        public bool IsSkillEnabled(int skillId) => IsSkillEnabledQuery?.Invoke(skillId) ?? true;
     }
 }
