@@ -14,6 +14,7 @@ using System;
 using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.NameCompressors;
@@ -881,7 +882,7 @@ public partial class WukongRpcCallbacks : IDisposable
         {
             case PvPEvent.RoundStart:
                 {
-                    _ecsLoop.Scheduler.Schedule(_ => PvPUtils.ShowPvPCountDown());
+                    _ecsLoop.Scheduler.Schedule(_ => PvpUtils.ShowPvPCountDown());
                     StartRound();
                     EnablePvP();
                     EnterPvP();
@@ -898,7 +899,7 @@ public partial class WukongRpcCallbacks : IDisposable
                     }
                     else
                     {
-                        UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                        UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
                     }
 
                     if (winnerTeamId == Constants.DrawTeamId)
@@ -923,7 +924,7 @@ public partial class WukongRpcCallbacks : IDisposable
                     }
                     else
                     {
-                        UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                        UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
                     }
 
                     // ReSharper disable once AsyncVoidMethod
@@ -932,7 +933,7 @@ public partial class WukongRpcCallbacks : IDisposable
                         if (self._playerState.LocalMainCharacter.HasValue)
                             self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
                         await Task.Delay(2000);
-                        PvPUtils.EndTournament();
+                        PvpUtils.EndTournament();
                         self.ExitPvP();
                         self.SetReadyState(false);
                     }, this);

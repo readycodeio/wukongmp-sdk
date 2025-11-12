@@ -110,7 +110,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
 
             if (Constants.IsPvP && localTamerComp.Tamer.TamerType == ETamerType.Spawned)
             {
-                var teamColor = PvPUtils.GetTeamColorString(teamComp.TeamId);
+                var teamColor = PvpUtils.GetTeamColorString(teamComp.TeamId);
                 MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity), teamColor);
                 if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
                 {

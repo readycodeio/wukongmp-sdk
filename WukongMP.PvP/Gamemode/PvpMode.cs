@@ -27,6 +27,7 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
+using WukongMp.PvP.Configuration;
 using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.Gamemode;
@@ -207,7 +208,7 @@ public partial class PvpMode : IDisposable
             var y = center.Y + radius * MathF.Sin(angle);
 
             teamMemberIndex[team]++;
-            var newPlayerLocation = SpawningUtils.AdjustSpawnLocation(localMainComp.Pawn, new FVector(x, y, center.Z));
+            var newPlayerLocation = PvpUtils.AdjustSpawnLocation(localMainComp.Pawn, new FVector(x, y, center.Z));
             var payload = new PlayerTransformData(playerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
             _rpc.SendBroadcastPlayerTransform(payload);
         }
@@ -356,7 +357,7 @@ public partial class PvpMode : IDisposable
             {
                 var teamId = _playerState.LocalPlayerEntity.Value.GetState().TeamId;
                 var oppositeId = PvpUtils.GetOppositeTeam(teamId);
-                _ecsLoop.Scheduler.Schedule(static (_, oppositeId0) => { SpawningUtils.SpawnBots(oppositeId0); }, oppositeId);
+                _ecsLoop.Scheduler.Schedule(static (_, oppositeId0) => { PvpUtils.SpawnBots(oppositeId0); }, oppositeId);
             }
         }
     }

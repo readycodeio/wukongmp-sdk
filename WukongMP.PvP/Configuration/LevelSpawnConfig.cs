@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
+using WukongMp.Api.Configuration;
 
-namespace WukongMp.Api.Configuration
+namespace WukongMp.PvP.Configuration
 {
     internal static class LevelSpawnConfig
     {

@@ -45,7 +45,7 @@ namespace WukongMp.Api.Tests.TestActions
                     if (_loadMapCompleted)
                     {
                         BGW_EventCollection bGW_EventCollection2 = BGW_EventCollection.Get(GameUtils.GetWorld());
-                        bGW_EventCollection2.Evt_PostLoadMapWithWorld = (b1.EventDelDefine.Del_Void)Delegate.Remove(bGW_EventCollection2.Evt_PostLoadMapWithWorld, new b1.EventDelDefine.Del_Void(OnPostLoadMapWithWorld));
+                        bGW_EventCollection2.Evt_PostLoadMapWithWorld = (b1.EventDelDefine.Del_Void)Delegate.Remove(bGW_EventCollection2.Evt_PostLoadMapWithWorld, new b1.EventDelDefine.Del_Void(OnPostLoadMapWithWorld))!;
                         TransferState(InnerState.WaitForAreaConnection);
                     }
                     break;
