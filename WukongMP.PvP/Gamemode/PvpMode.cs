@@ -130,6 +130,7 @@ public partial class PvpMode : IDisposable
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
+        _playerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
     }
 
     public void Dispose()
@@ -145,6 +146,7 @@ public partial class PvpMode : IDisposable
 
         _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
         _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
+        _playerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;
     }
 
     private void OnFreeCameraModeChanged(bool enabled)
@@ -166,6 +168,22 @@ public partial class PvpMode : IDisposable
         if (marker == null)
         {
             _logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickName);
+        }
+    }
+
+    private void OnMainCharacterEntityInitialized(MainCharacterEntity mainCharacterEntity)
+    {
+        var spawnPosition = PvpUtils.GetSpawnPosition(GameUtils.GetControlledPawn(), mainCharacterEntity.GetState().PlayerId.RawValue, Constants.MaxPlayers);
+        PlayerUtils.TeleportLocalPlayer(mainCharacterEntity, spawnPosition, FRotator.ZeroRotator, false);
+
+        var areaEntity = _areaState.CurrentArea;
+        if (areaEntity != null && _areaState.PvpState.HasValue)
+        {
+            ref var pvpComp = ref mainCharacterEntity.GetPvP();
+
+            // Set IsSpectator if joining during fight.
+            pvpComp.IsSpectator = _areaState.PvpState.Value.InPvP;
+            Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
         }
     }
 
