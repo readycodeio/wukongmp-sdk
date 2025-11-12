@@ -3,16 +3,16 @@ using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.PVP;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
+using WukongMp.PvP.Gamemode;
 
-namespace WukongMp.Api.ECS.Systems.PvP;
+namespace WukongMp.PvP.ECS.Systems;
 
 public sealed class ReadinessSystem(
     WukongAreaState areaState,
-    WukongPVP pvpUtils
+    PvpMode pvpMode
 ) : QuerySystem<PvPComponent, InScopeComponent>
 {
     private int _lastReadyCount = -1;
@@ -48,7 +48,7 @@ public sealed class ReadinessSystem(
             {
                 // all players are ready
                 GameMessageWidget.Instance.SetMainText(Texts.StartingGame);
-                CountdownWidget.Instance.StartLobbyCountdown(Constants.CountdownSeconds, pvpUtils.StartPvP);
+                CountdownWidget.Instance.StartLobbyCountdown(Constants.CountdownSeconds, pvpMode.StartPvP);
             }
             else
             {

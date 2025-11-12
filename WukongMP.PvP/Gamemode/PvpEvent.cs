@@ -1,6 +1,6 @@
-﻿namespace WukongMp.Api.PVP;
+﻿namespace WukongMp.PvP.Gamemode;
 
-public enum PvPEvent
+public enum PvpEvent
 {
     RoundStart,
     RoundEnd,

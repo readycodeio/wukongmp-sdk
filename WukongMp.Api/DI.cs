@@ -19,11 +19,9 @@ using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.ECS.Registry;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Coop;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.Https;
-using WukongMp.Api.PVP;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
 using WukongMp.Api.State;
@@ -41,7 +39,7 @@ public class DI
 
     public Store World { get; private set; } = null!;
     public ClientWukongArchetypeRegistration ArchetypeRegistration { get; private set; } = null!;
-    public ArchetypeEventRouter archetypeEvent { get; private set; } = null!;
+    public ArchetypeEventRouter ArchetypeEvent { get; private set; } = null!;
     public IClientEcsUpdateLoop EcsLoop { get; private set; } = null!;
 
     public RelaySerializer Serializer { get; private set; } = null!;
@@ -70,6 +68,8 @@ public class DI
     public WukongServerRpcCallbacks ServerRpc { get; private set; } = null!;
     public WukongSaveRelay SaveRelay { get; private set; } = null!;
     public WukongEventBus EventBus { get; private set; } = null!;
+    public GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
+    public GameplayEventRouter GameplayEventRouter { get; private set; } = null!;
 
     public WukongNetworkLogger NetLogger { get; private set; } = null!;
     public INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
@@ -82,14 +82,11 @@ public class DI
 
     public WukongChatter Chatter { get; private set; } = null!;
 
-    public GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
-
     public RuntimePrelude Prelude { get; private set; } = null!;
     public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
     public WukongPatcher Patcher { get; private set; } = null!;
 
-    public WukongPVP? PVP { get; private set; }
-    public WukongCoop? Coop { get; private set; }
+
     public WukongWidgetManager WidgetManager { get; private set; } = null!;
 
     public ShimRelayMessageParser ShimParser { get; private set; } = null!;
@@ -139,7 +136,7 @@ public class DI
             wukongArchetype,
         ]);
 
-        var worldEvent = archetypeEvent = new ArchetypeEventRouter(world);
+        var worldEvent = ArchetypeEvent = new ArchetypeEventRouter(world);
         var serializer = Serializer = new RelaySerializer([
             new DefaultRelaySerializerRegistration(),
             new WukongSerializerRegistration(),
@@ -151,6 +148,9 @@ public class DI
         var relayClientService = RelayClientService = new RelayClientService(relayClient, logger);
 
         var eventBus = EventBus = new WukongEventBus();
+
+        var gameplayConfig = GameplayConfiguration = new GameplayConfiguration();
+        var gameplayEventRouter = GameplayEventRouter = new GameplayEventRouter();
 
         var textSerializer = TextSerializer = new TextRelaySerializer([
             new DefaultTextRelaySerializerRegistration(),
@@ -190,33 +190,7 @@ public class DI
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
 
-        var gameplayConfig = GameplayConfiguration = new GameplayConfiguration();
-
-        WukongPVP? pvp = null;
-        if (Constants.IsPvP)
-            pvp = PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, rpc, chatter, ecsLoop, logger);
-
-        var synchronizer = Synchronizer = new WukongSynchronizer(
-            worldEvent,
-            state,
-            wukongArchetype,
-            pvp,
-            world,
-            areaState,
-            playerState,
-            playerPawnState,
-            modeManager,
-            netEntity,
-            clientOwnership,
-            jobRegistry,
-            netComponentRegistry,
-            relayClient,
-            ecsLoop,
-            eventBus,
-            widgetManager,
-            rpc,
-            logger);
-        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer, widgetManager);
+        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, widgetManager);
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
@@ -226,9 +200,6 @@ public class DI
         var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
         var prelude = Prelude = new RuntimePrelude(preludeBackend, runtimeLogger);
         var patcher = Patcher = new WukongPatcher(prelude);
-
-        if (Constants.IsCoop)
-            Coop = new WukongCoop(serializer, relayClient, areaState, playerState, synchronizer);
 
         // ---
 

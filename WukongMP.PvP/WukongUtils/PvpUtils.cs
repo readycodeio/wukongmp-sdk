@@ -4,7 +4,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class PvPUtils
+public static class PvpUtils
 {
     public static bool IsAfterLoadingScreen;
 

@@ -49,6 +49,7 @@ namespace WukongMp.Coop
 
             Constants.IsCoop = true;
             DI.Instance.Init();
+            CoopDI.Instance.Init(DI.Instance);
 
             if (LaunchParameters.Instance.PlayShimOnStart)
                 ShimUtils.InitRelayPlayShim(

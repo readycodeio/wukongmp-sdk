@@ -1,27 +1,23 @@
 ﻿using b1;
-using BtlShare;
-using CommB1;
 using CSharpModBase;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
+using OssB1;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Idents;
-using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -32,9 +28,9 @@ using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.PVP;
+namespace WukongMp.PvP.Gamemode;
 
-public partial class WukongPVP : IDisposable
+public partial class PvpMode : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
@@ -47,6 +43,7 @@ public partial class WukongPVP : IDisposable
     private readonly WukongEventBus _eventBus;
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongChatter _chatter;
+    private readonly GameplayEventRouter _eventRouter;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -77,7 +74,7 @@ public partial class WukongPVP : IDisposable
     public IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> OtherPlayers
         => _state.OtherAreaPlayers.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
 
-    public WukongPVP(
+    public PvpMode(
         Store world,
         RelaySerializer serializer,
         IRelayClient relayClient,
@@ -87,6 +84,7 @@ public partial class WukongPVP : IDisposable
         WukongEventBus eventBus,
         WukongRpcCallbacks rpc,
         WukongChatter chatter,
+        GameplayEventRouter eventRouter,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger
     )
@@ -100,6 +98,7 @@ public partial class WukongPVP : IDisposable
         _eventBus = eventBus;
         _rpc = rpc;
         _chatter = chatter;
+        _eventRouter = eventRouter;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -110,19 +109,20 @@ public partial class WukongPVP : IDisposable
         _state.OnOtherPlayerInsideArea += OnOtherPlayerInsideAreaHandler;
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
 
-        InitRpc();
+        _eventRouter.OnUnitDead += OnUnitDead;
+        rpc.OnPVPEnvt += 
     }
 
     public void Dispose()
     {
-        DeInitRpc();
-
         _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
         _state.OnOtherPlayerInsideArea -= OnOtherPlayerInsideAreaHandler;
         _state.OnJoinedArea -= OnJoinedAreaHandler;
 
         _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
         _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
+
+        _eventRouter.OnUnitDead -= OnUnitDead;
     }
 
     public void StartPvP()
@@ -145,7 +145,7 @@ public partial class WukongPVP : IDisposable
         PlacePlayers(levelData.PvpStartingLocation, levelData.PvpRadius);
         await Task.Delay(100);
 
-        SendPvPEvent(PvPEvent.RoundStart);
+        SendPvPEvent(PvpEvent.RoundStart);
     }
 
     private void PlacePlayers(FVector center, float radius)
@@ -211,7 +211,7 @@ public partial class WukongPVP : IDisposable
         }
 
         // disable pvp until next round
-        SendPvPEvent(PvPEvent.RoundEnd, winner);
+        SendPvPEvent(PvpEvent.RoundEnd, winner);
 
         // increment round number
         pvpState.SetLastRoundWinnerTeam(winner);
@@ -234,7 +234,7 @@ public partial class WukongPVP : IDisposable
         // check if only one team is present
         if (AllPvPPlayers.Select(p => p.Player.GetState().TeamId).Distinct().Count() == 1)
         {
-            SendPvPEvent(PvPEvent.TournamentEnd, winner);
+            SendPvPEvent(PvpEvent.TournamentEnd, winner);
             _isRoundEnding = false;
             return;
         }
@@ -243,7 +243,7 @@ public partial class WukongPVP : IDisposable
         var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > areaEntity.Value.GetRoom().TournamentRounds / 2);
         if (winnerTeam.Key != 0)
         {
-            SendPvPEvent(PvPEvent.TournamentEnd, winnerTeam.Key);
+            SendPvPEvent(PvpEvent.TournamentEnd, winnerTeam.Key);
             _isRoundEnding = false;
             return;
         }
@@ -258,17 +258,17 @@ public partial class WukongPVP : IDisposable
                 var winningTeams = winnersByTeam.Where(t => t.Value == maxWins).Select(t => t.Key).ToList();
                 if (winningTeams.Count == 1)
                 {
-                    SendPvPEvent(PvPEvent.TournamentEnd, winningTeams[0]);
+                    SendPvPEvent(PvpEvent.TournamentEnd, winningTeams[0]);
                 }
                 else
                 {
-                    SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
+                    SendPvPEvent(PvpEvent.TournamentEnd, Constants.DrawTeamId);
                 }
             }
             else
             {
                 // that was the final round
-                SendPvPEvent(PvPEvent.TournamentEnd, Constants.DrawTeamId);
+                SendPvPEvent(PvpEvent.TournamentEnd, Constants.DrawTeamId);
             }
         }
         else
@@ -288,7 +288,7 @@ public partial class WukongPVP : IDisposable
         }
 
         // resurrect dead players and restore health to living ones
-        SendPvPEvent(PvPEvent.ResetStats);
+        SendPvPEvent(PvpEvent.ResetStats);
         foreach (var (playerId, _, mainEntity) in AllPlayers)
         {
             if (mainEntity.GetState().IsDead)
@@ -316,7 +316,7 @@ public partial class WukongPVP : IDisposable
         _areaState.OwnedPvpStateRef().InPvP = true;
 
         var monsterCount = 0;
-        _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity _) =>
+        _world.Query<LocalTamerComponent>().ForEachEntity((ref localTamerComp, _) =>
         {
             if (localTamerComp.IsTamerSynced)
             {
@@ -331,7 +331,7 @@ public partial class WukongPVP : IDisposable
             if (_playerState.LocalPlayerEntity != null)
             {
                 var teamId = _playerState.LocalPlayerEntity.Value.GetState().TeamId;
-                var oppositeId = PvPUtils.GetOppositeTeam(teamId);
+                var oppositeId = PvpUtils.GetOppositeTeam(teamId);
                 _ecsLoop.Scheduler.Schedule(static (_, oppositeId0) => { SpawningUtils.SpawnBots(oppositeId0); }, oppositeId);
             }
         }
@@ -399,11 +399,11 @@ public partial class WukongPVP : IDisposable
         if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null)
             return;
 
-        if (force || (_areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InPvP: false }))
+        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InPvP: false })
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
-            var teamId = PvPUtils.GetOppositeTeam(player.TeamId);
+            var teamId = PvpUtils.GetOppositeTeam(player.TeamId);
             player.TeamId = teamId;
         }
     }
@@ -505,7 +505,7 @@ public partial class WukongPVP : IDisposable
             .ToList();
 
         var aliveMonsters = new List<int>();
-        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref HpComponent hpComp, ref TeamComponent teamComp, Entity _) =>
+        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
         {
             if (hpComp.Hp <= 0)
                 return;
@@ -528,7 +528,7 @@ public partial class WukongPVP : IDisposable
             var aliveTeamId = aliveTeamPlayers.Count > 0 ? aliveTeamPlayers[0].TeamId : Constants.DrawTeamId;
             if (alivePlayersTeams.Count == 0)
             {
-                Task.Run(async () => await EndRoundAsync(PvPUtils.GetOppositeTeam(aliveTeamId)));
+                Task.Run(async () => await EndRoundAsync(PvpUtils.GetOppositeTeam(aliveTeamId)));
             }
             else
             {
@@ -614,14 +614,14 @@ public partial class WukongPVP : IDisposable
         if (areaEntity == null)
             return;
 
-        PvPUtils.IsAfterLoadingScreen = true;
+        PvpUtils.IsAfterLoadingScreen = true;
         if (_playerState.LocalMainCharacter?.GetPvP().IsSpectator == false)
         {
-            PvPUtils.SetupLobbyUi();
+            PvpUtils.SetupLobbyUi();
         }
         else
         {
-            PvPUtils.SetupSpectatorUi();
+            PvpUtils.SetupSpectatorUi();
         }
     }
 
@@ -662,11 +662,78 @@ public partial class WukongPVP : IDisposable
         }
     }
 
+    private void OnUnitDead(Entity victim, Entity attacker)
+    {
+        if (AreaState is { PvpState.InPvP: true })
+        {
+            // move to pvp chatter
+            if (victim != attacker)
+            {
+                var attackerMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Attacker);
+                var killedMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+
+                if (attackerMainEntity != null && killedMainEntity != null)
+                {
+                    if (!DI.Instance.ClientOwnership.OwnsEntity(killedMainEntity.Value.Entity))
+                        return;
+
+                    ref var attackerMain = ref attackerMainEntity.Value.GetState();
+                    ref var killedMain = ref killedMainEntity.Value.GetState();
+
+                    // FIXME: This is not the place to do this. Invert control: it's the chatter that should subscribe to
+                    // game events and that should report messages
+                    DI.Instance.Chatter.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickName, killedMain.CharacterNickName);
+                }
+            }
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (tamerEntity.HasValue)
+            {
+                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                    return;
+
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                var tamerClass = localTamer.Tamer?.GetClass();
+                var netId = tamerEntity.Value.GetMeta().NetId;
+                if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
+                {
+                    var teamId = ownerCharacter.GetTeamIDInCS();
+                    var location = ownerCharacter.GetActorLocation();
+
+                    if (SpawnedDaSheng2.Add(netId))
+                    {
+                        _pendingDaSheng++;
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(5000);
+                            Utils.TryRunOnGameThread(() =>
+                            {
+                                SpawningUtils.SpawnUnitAsOwner(CharacterKind.DaSheng2, location, teamId);
+                                _pendingDaSheng--;
+                            });
+                        });
+                    }
+                    else
+                    {
+                        Logging.LogDebug("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
+                    }
+
+                    return;
+                }
+            }
+
+            if (_pendingDaSheng == 0)
+            {
+                CheckRoundEndCondition();
+            }
+        }
+    }
+
     #endregion
 
     #region RPC
 
-    public void SendPvPEvent(PvPEvent ev, int data = 0)
+    public void SendPvPEvent(PvpEvent ev, int data = 0)
     {
         if (!_areaState.OwnsPvpState)
         {
@@ -676,101 +743,7 @@ public partial class WukongPVP : IDisposable
 
         Logging.LogInformation("Sending PvP event: {Event}", ev);
 
-        SendPvpEvent([(int)ev, data]);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnPvpEvent(int[] data)
-    {
-        var ev = (PvPEvent)data[0];
-        var winnerTeamId = data[1];
-
-        Logging.LogInformation("Received PvP event: {Event}", ev);
-
-        switch (ev)
-        {
-            case PvPEvent.RoundStart:
-            {
-                _ecsLoop.Scheduler.Schedule(_ => PvPUtils.ShowPvPCountDown());
-                StartRound();
-                EnablePvP();
-                EnterPvP();
-                break;
-            }
-            case PvPEvent.RoundEnd:
-            {
-                DisablePvP();
-                EndRound();
-
-                if (winnerTeamId == Constants.DrawTeamId)
-                {
-                    UiUtils.ShowTip(Texts.RoundDraw, true);
-                }
-                else
-                {
-                    UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
-                }
-
-                if (winnerTeamId == Constants.DrawTeamId)
-                    return;
-
-                var playerEntity = _playerState.LocalPlayerEntity;
-                if (playerEntity == null)
-                    return;
-
-                if (winnerTeamId == playerEntity.Value.GetState().TeamId)
-                {
-                    AssetUtils.PlayBossDefeatedSound();
-                }
-
-                break;
-            }
-            case PvPEvent.TournamentEnd:
-            {
-                if (winnerTeamId == Constants.DrawTeamId)
-                {
-                    UiUtils.ShowTip(Texts.TournamentDraw, true);
-                }
-                else
-                {
-                    UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
-                }
-
-                // ReSharper disable once AsyncVoidMethod
-                _ecsLoop.Scheduler.Schedule(async void (_, self) =>
-                {
-                    if (self._playerState.LocalMainCharacter.HasValue)
-                        self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
-                    await Task.Delay(2000);
-                    PvPUtils.EndTournament();
-                    self.ExitPvP();
-                    self.SetReadyState(false);
-                }, this);
-
-                break;
-            }
-            case PvPEvent.ResetStats:
-            {
-                ResetRoundState();
-
-                var mainEntity = _playerState.LocalMainCharacter;
-                if (mainEntity == null)
-                    return;
-
-                if (!mainEntity.Value.GetState().IsDead)
-                {
-                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
-                    {
-                        var events = BUS_EventCollectionCS.Get(mainEntity0.GetLocalState().Pawn!);
-                        events?.Evt_TriggerTeleportResetPlayer!.Invoke();
-                    }, mainEntity.Value);
-                }
-
-                break;
-            }
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ev));
-        }
+        _rpc.SendPvpEvent([(int)ev, data]);
     }
 
     #endregion

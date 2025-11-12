@@ -1,32 +1,28 @@
 ﻿using System;
-using CSharpModBase;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Common.Serialization;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.Coop;
+namespace WukongMp.Coop.Gamemode;
 
-public class WukongCoop : IDisposable
+public class CoopMode : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
     private readonly WukongAreaState _areaState;
     private readonly WukongPlayerState _playerState;
-    private readonly WukongSynchronizer _synchronizer;
 
-    public WukongCoop(
+    public CoopMode(
         RelaySerializer serializer,
         IRelayClient relayClient,
         WukongAreaState areaState,
-        WukongPlayerState playerState,
-        WukongSynchronizer synchronizer
+        WukongPlayerState playerState
     )
     {
         Serializer = serializer; 
         RelayClient = relayClient;
         _areaState = areaState;
         _playerState = playerState;
-        _synchronizer = synchronizer;
         
         // TODO: (refactor) Add job for discovering tamers and creating their corresponding ECS entities
         // Consider marking tamers somehow to avoid repeated iteration over all the actors on the scene

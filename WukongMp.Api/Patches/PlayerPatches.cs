@@ -368,67 +368,11 @@ namespace WukongMp.Api.Patches
 
             __state = true;
 
-            if (Constants.IsPvP && DI.Instance.AreaState is { PvpState.InPvP: true })
+            if (Attacker is BGUCharacterCS attackerCharacter &&
+                DI.Instance.PawnState.TryGetEnityByCharacter(ownerCharacter, out var victimEntity) &&
+                DI.Instance.PawnState.TryGetEnityByCharacter(attackerCharacter, out var attackerEntity))
             {
-                if (Attacker != owner)
-                {
-                    var attackerMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Attacker);
-                    var killedMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-
-                    if (attackerMainEntity != null && killedMainEntity != null)
-                    {
-                        if (!DI.Instance.ClientOwnership.OwnsEntity(killedMainEntity.Value.Entity))
-                            return;
-
-                        ref var attackerMain = ref attackerMainEntity.Value.GetState();
-                        ref var killedMain = ref killedMainEntity.Value.GetState();
-
-                        // FIXME: This is not the place to do this. Invert control: it's the chatter that should subscribe to
-                        // game events and that should report messages
-                        DI.Instance.Chatter.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickName, killedMain.CharacterNickName);
-                    }
-                }
-
-                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-                if (tamerEntity.HasValue)
-                {
-                    if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-                        return;
-
-                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-                    var tamerClass = localTamer.Tamer?.GetClass();
-                    var netId = tamerEntity.Value.GetMeta().NetId;
-                    if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
-                    {
-                        var teamId = ownerCharacter.GetTeamIDInCS();
-                        var location = ownerCharacter.GetActorLocation();
-
-                        if (SpawnedDaSheng2.Add(netId))
-                        {
-                            _pendingDaSheng++;
-                            _ = Task.Run(async () =>
-                            {
-                                await Task.Delay(5000);
-                                Utils.TryRunOnGameThread(() =>
-                                {
-                                    SpawningUtils.SpawnUnitAsOwner(CharacterKind.DaSheng2, location, teamId);
-                                    _pendingDaSheng--;
-                                });
-                            });
-                        }
-                        else
-                        {
-                            Logging.LogDebug("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
-                        }
-
-                        return;
-                    }
-                }
-
-                if (_pendingDaSheng == 0)
-                {
-                    DI.Instance.PVP?.CheckRoundEndCondition();
-                }
+                DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
             }
         }
 

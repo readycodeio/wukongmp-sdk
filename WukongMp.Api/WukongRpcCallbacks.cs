@@ -1,6 +1,6 @@
-﻿using System;
-using b1;
+﻿using b1;
 using b1.BGW;
+using GSE.GSSdk;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -10,12 +10,15 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
+using System;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Patches;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -121,7 +124,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnEndMatchmaking()
     {
-        _ecsLoop.Scheduler.Schedule(_ => { PvPUtils.OnMatchmakingEnded(); });
+        _ecsLoop.Scheduler.Schedule(_ => { PvpUtils.OnMatchmakingEnded(); });
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -861,4 +864,104 @@ public partial class WukongRpcCallbacks : IDisposable
             PlayerUtils.StopJump(localMainComp.Pawn);
         }, this, __sender);
     }
+
+#region PvpRPC
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    internal void OnPvpEvent(int[] data)
+    {
+
+
+        var ev = (PvPEvent)data[0];
+        var winnerTeamId = data[1];
+
+        Logging.LogInformation("Received PvP event: {Event}", ev);
+
+        switch (ev)
+        {
+            case PvPEvent.RoundStart:
+                {
+                    _ecsLoop.Scheduler.Schedule(_ => PvPUtils.ShowPvPCountDown());
+                    StartRound();
+                    EnablePvP();
+                    EnterPvP();
+                    break;
+                }
+            case PvPEvent.RoundEnd:
+                {
+                    DisablePvP();
+                    EndRound();
+
+                    if (winnerTeamId == Constants.DrawTeamId)
+                    {
+                        UiUtils.ShowTip(Texts.RoundDraw, true);
+                    }
+                    else
+                    {
+                        UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                    }
+
+                    if (winnerTeamId == Constants.DrawTeamId)
+                        return;
+
+                    var playerEntity = _playerState.LocalPlayerEntity;
+                    if (playerEntity == null)
+                        return;
+
+                    if (winnerTeamId == playerEntity.Value.GetState().TeamId)
+                    {
+                        AssetUtils.PlayBossDefeatedSound();
+                    }
+
+                    break;
+                }
+            case PvPEvent.TournamentEnd:
+                {
+                    if (winnerTeamId == Constants.DrawTeamId)
+                    {
+                        UiUtils.ShowTip(Texts.TournamentDraw, true);
+                    }
+                    else
+                    {
+                        UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvPUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                    }
+
+                    // ReSharper disable once AsyncVoidMethod
+                    _ecsLoop.Scheduler.Schedule(async void (_, self) =>
+                    {
+                        if (self._playerState.LocalMainCharacter.HasValue)
+                            self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
+                        await Task.Delay(2000);
+                        PvPUtils.EndTournament();
+                        self.ExitPvP();
+                        self.SetReadyState(false);
+                    }, this);
+
+                    break;
+                }
+            case PvPEvent.ResetStats:
+                {
+                    ResetRoundState();
+
+                    var mainEntity = _playerState.LocalMainCharacter;
+                    if (mainEntity == null)
+                        return;
+
+                    if (!mainEntity.Value.GetState().IsDead)
+                    {
+                        _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
+                        {
+                            var events = BUS_EventCollectionCS.Get(mainEntity0.GetLocalState().Pawn!);
+                            events?.Evt_TriggerTeleportResetPlayer!.Invoke();
+                        }, mainEntity.Value);
+                    }
+
+                    break;
+                }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ev));
+        }
+    }
+#endregion
+
 }

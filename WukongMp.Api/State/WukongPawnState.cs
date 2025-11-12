@@ -6,6 +6,7 @@ using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System.Diagnostics.CodeAnalysis;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
@@ -44,6 +45,16 @@ public class WukongPawnState
         });
         Logging.LogDebug("Creating local networked monster with {NetId}", netId);
         return entity;
+    }
+
+    public bool IsTamerEntity(Entity entity)
+    {
+        return entity.HasComponent<TamerComponent>();
+    }
+
+    public bool IsMainCharacterEntity(Entity entity)
+    {
+        return entity.HasComponent<MainCharacterComponent>();
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkId netId)
@@ -149,4 +160,23 @@ public class WukongPawnState
         return null;
     }
 
+    public bool TryGetEnityByCharacter(BGUCharacterCS? character, [NotNullWhen(true)] out Entity? entity)
+    {
+        entity = null;
+        if (character == null)
+            return false;
+        var mainCharacterEntity = GetEntityByPlayerPawn(character);
+        if (mainCharacterEntity != null)
+        {
+            entity = mainCharacterEntity.Value.Entity;
+            return true;
+        }
+        var tamerEntity = GetEntityByTamerMonster(character);
+        if (tamerEntity != null)
+        {
+            entity = tamerEntity.Value.Entity;
+            return true;
+        }
+        return false;
+    }
 }

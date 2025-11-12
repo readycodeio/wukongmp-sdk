@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using b1;
-using B1UI;
 using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
-using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -90,10 +87,7 @@ public class WukongChatter : IDisposable
         AddCommand("/rebirth", new WukongChatterCommand(RequestRebirth));
         AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
 #if DEBUG
-        AddCommand("/play", new WukongChatterCommand(PlayCutscene));
         AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
-        AddCommand("/teleport", new WukongChatterCommand(Teleport));
-        AddCommand("/openlevel", new WukongChatterCommand(OpenLevel));
 #endif
     }
 
@@ -116,14 +110,6 @@ public class WukongChatter : IDisposable
         PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
         _rpc.SendRebirthPlayer(playerId);
         SendServerMessage("PlayerRequestedRebirth", NickName);
-    }
-
-    private void PlayCutscene(ReadOnlyMemory<string> args)
-    {
-        if (args.Length == 1 && int.TryParse(args.Span[0], out var seqId))
-        {
-            GSG.GMSvc.GMTeleportToTargetSequence(seqId);
-        }
     }
 
     private void RequestGiveUp(ReadOnlyMemory<string> _)
@@ -154,25 +140,6 @@ public class WukongChatter : IDisposable
         {
             SendServerMessage("PlayerLeft", NickName);
             _connection.Disconnect();
-        }
-    }
-
-    private void Teleport(ReadOnlyMemory<string> args)
-    {
-        if (args.Length == 1 && int.TryParse(args.Span[0], out var birthpointId))
-        {
-            BPS_EventCollectionCS.Get(GameUtils.GetControlledPawn()?.PlayerState).Evt_BPS_TeleportTo.Invoke(ETeleportTypeV2.RebirthPointTeleportOnly, new TeleportParam_RebirthPoint
-            {
-                RebirthPointId = birthpointId
-            }, EPlayerTeleportReason.RebirthPoint);
-        }
-    }
-
-    private void OpenLevel(ReadOnlyMemory<string> args)
-    {
-        if (args.Length == 1)
-        { 
-            UGameplayStatics.OpenLevel(GameUtils.GetWorld(), new FName(args.Span[0]));
         }
     }
 

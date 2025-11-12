@@ -21,15 +21,34 @@
 
     <ItemGroup>
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" />
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj" />
         <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+        <Reference Include="b1.Native">
+          <HintPath>..\WukongMp.Api\Game\b1.Native.dll</HintPath>
+        </Reference>
+        <Reference Include="b1.NativePlugins">
+          <HintPath>..\WukongMp.Api\Game\b1.NativePlugins.dll</HintPath>
+        </Reference>
+        <Reference Include="B1UI_GSE.Script">
+          <HintPath>..\WukongMp.Api\Game\B1UI_GSE.Script.dll</HintPath>
+        </Reference>
+        <Reference Include="BtlSvr.Main">
+          <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
+        </Reference>
         <Reference Include="CSharpModBase">
             <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBaseV2">
             <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
+        </Reference>
+        <Reference Include="UnrealEngine">
+          <HintPath>..\WukongMp.Api\Game\UnrealEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnrealEngine.Runtime">
+          <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
         </Reference>
     </ItemGroup>
 
