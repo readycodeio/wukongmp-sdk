@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS;
+﻿using b1;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
@@ -13,6 +14,7 @@ using ReadyM.Relay.Common.ECS.Jobs;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
@@ -50,6 +52,7 @@ public class CoopSynchronizer : WukongSynchronizer
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot += OnApplySnapshot;
+        playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
 
         _modeGroup = new SystemGroup("Coop");
 
@@ -67,6 +70,16 @@ public class CoopSynchronizer : WukongSynchronizer
 
         EcsLoop.RemoveSystem(_modeGroup);
         base.OnDispose();
+    }
+
+    private void OnPlayerPawnSpawned(MainCharacterEntity mainCharacterEntity, BGUCharacterCS pawn)
+    {
+        const string whiteTeamColor = "(R=0.9,G=0.9,B=0.9)";
+        var marker = MarkerUtils.CreateMarkerForCharacter(mainCharacterEntity, whiteTeamColor); // 3D marker above player
+        if (marker == null)
+        {
+            Logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickName);
+        }
     }
 
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)

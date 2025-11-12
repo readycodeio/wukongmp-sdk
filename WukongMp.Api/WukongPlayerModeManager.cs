@@ -140,7 +140,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
 
         if (localMainComp.MarkerActor != null)
         {
-            var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(teamComp.TeamId);
+            var teamColor = Constants.IsCoop ? MarkerUtils.WhiteTeamColor : PvPUtils.GetTeamColorString(teamComp.TeamId);
             localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
         }
 

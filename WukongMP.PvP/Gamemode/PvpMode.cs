@@ -27,6 +27,7 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
+using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.Gamemode;
 
@@ -40,6 +41,7 @@ public partial class PvpMode : IDisposable
     private readonly ClientState _state;
     private readonly WukongAreaState _areaState;
     private readonly WukongPlayerState _playerState;
+    private readonly WukongPlayerPawnState _playerPawnState;
     private readonly WukongEventBus _eventBus;
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongChatter _chatter;
@@ -86,6 +88,7 @@ public partial class PvpMode : IDisposable
         ClientState state,
         WukongAreaState areaState,
         WukongPlayerState playerState,
+        WukongPlayerPawnState playerPawnState,
         WukongEventBus eventBus,
         WukongRpcCallbacks rpc,
         WukongChatter chatter,
@@ -102,6 +105,7 @@ public partial class PvpMode : IDisposable
         _state = state;
         _areaState = areaState;
         _playerState = playerState;
+        _playerPawnState = playerPawnState;
         _eventBus = eventBus;
         _rpc = rpc;
         _chatter = chatter;
@@ -119,6 +123,18 @@ public partial class PvpMode : IDisposable
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
 
         _eventRouter.OnUnitDead += OnUnitDead;
+
+        _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
+    }
+
+    private void OnPlayerPawnSpawned(MainCharacterEntity mainCharacterEntity, BGUCharacterCS pawn)
+    {
+        var teamColor = PvpUtils.GetTeamColorString(mainCharacterEntity.GetTeam().TeamId);
+        var marker = MarkerUtils.CreateMarkerForCharacter(mainCharacterEntity, teamColor); // 3D marker above player
+        if (marker == null)
+        {
+            _logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickName);
+        }
     }
 
     public void Dispose()
@@ -344,7 +360,7 @@ public partial class PvpMode : IDisposable
             }
         }
     }
-    
+
     public void EndRound()
     {
         var areaEntity = _areaState.CurrentArea;

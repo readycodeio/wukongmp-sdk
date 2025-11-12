@@ -9,18 +9,16 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class MarkerUtils
 {
-    public static void CreateMarkerForCharacter(TamerEntity tamerEntity)
+    public static void CreateMarkerForCharacter(TamerEntity tamerEntity, string color)
     {
         var markerActor = SpawnMarkerActor();
         if (markerActor == null)
             return;
 
-        ref readonly var teamComp = ref tamerEntity.GetTeam();
         ref var nameComp = ref tamerEntity.GetNickname();
         ref var markerComp = ref tamerEntity.GetMarker();
 
-        var teamColor = PvPUtils.GetTeamColorString(teamComp.TeamId);
-        markerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {teamColor}", true);
+        markerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {color}", true);
         markerComp.MarkerActor = markerActor;
         markerComp.DestroyQueued = false;
     }
@@ -44,7 +42,7 @@ public static class MarkerUtils
         }
     }
 
-    public static AActor? CreateMarkerForCharacter(MainCharacterEntity mainEntity)
+    public static AActor? CreateMarkerForCharacter(MainCharacterEntity mainEntity, string color)
     {
         var markerActor = SpawnMarkerActor();
         if (markerActor == null)
@@ -54,8 +52,7 @@ public static class MarkerUtils
         ref var localMainComp = ref mainEntity.GetLocalState();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
-        var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(teamComp.TeamId);
-        markerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
+        markerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {color}", true);
         localMainComp.MarkerActor = markerActor;
 
         return markerActor;

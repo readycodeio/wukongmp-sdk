@@ -22,6 +22,7 @@ using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.ECS.Systems;
 using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP;
 

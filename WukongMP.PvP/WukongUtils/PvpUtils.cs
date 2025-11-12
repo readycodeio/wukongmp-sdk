@@ -1,11 +1,16 @@
-﻿using WukongMp.Api.Configuration;
+﻿using WukongMp.Api;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.WukongUtils;
+namespace WukongMp.PvP.WukongUtils;
 
 public static class PvpUtils
 {
+    public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
+    public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
+    
     public static bool IsAfterLoadingScreen;
 
     public static void OnMatchmakingEnded()
@@ -66,9 +71,9 @@ public static class PvpUtils
     public static string GetTeamColorString(int teamId)
     {
         if (teamId == Constants.AvailableTeamIds[0])
-            return Constants.RedTeamColor;
+            return RedTeamColor;
         if (teamId == Constants.AvailableTeamIds[1])
-            return Constants.BlueTeamColor;
+            return BlueTeamColor;
         return "";
     }
 
