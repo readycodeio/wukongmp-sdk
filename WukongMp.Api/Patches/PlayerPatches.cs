@@ -340,9 +340,6 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
-        private static int _pendingDaSheng;
-        private static readonly HashSet<NetworkId> SpawnedDaSheng2 = [];
-
         public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData, out bool __state)
         {
             __state = false;

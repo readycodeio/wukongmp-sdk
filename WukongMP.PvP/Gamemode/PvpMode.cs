@@ -2,10 +2,10 @@
 using CSharpModBase;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using OssB1;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
@@ -44,8 +44,13 @@ public partial class PvpMode : IDisposable
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongChatter _chatter;
     private readonly GameplayEventRouter _eventRouter;
+    private readonly ClientOwnershipManager _clientOwnership;
+    private readonly WukongPawnState _pawnState;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
+
+    private int _pendingDaSheng;
+    private readonly HashSet<NetworkId> SpawnedDaSheng2 = [];
 
     private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
     {
@@ -85,6 +90,8 @@ public partial class PvpMode : IDisposable
         WukongRpcCallbacks rpc,
         WukongChatter chatter,
         GameplayEventRouter eventRouter,
+        ClientOwnershipManager clientOwnership,
+        WukongPawnState pawnState,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger
     )
@@ -99,6 +106,8 @@ public partial class PvpMode : IDisposable
         _rpc = rpc;
         _chatter = chatter;
         _eventRouter = eventRouter;
+        _clientOwnership = clientOwnership;
+        _pawnState = pawnState;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -110,7 +119,6 @@ public partial class PvpMode : IDisposable
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
 
         _eventRouter.OnUnitDead += OnUnitDead;
-        rpc.OnPVPEnvt += 
     }
 
     public void Dispose()
@@ -316,7 +324,7 @@ public partial class PvpMode : IDisposable
         _areaState.OwnedPvpStateRef().InPvP = true;
 
         var monsterCount = 0;
-        _world.Query<LocalTamerComponent>().ForEachEntity((ref localTamerComp, _) =>
+        _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity _) =>
         {
             if (localTamerComp.IsTamerSynced)
             {
@@ -505,7 +513,7 @@ public partial class PvpMode : IDisposable
             .ToList();
 
         var aliveMonsters = new List<int>();
-        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
+        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref HpComponent hpComp, ref TeamComponent teamComp, Entity _) =>
         {
             if (hpComp.Hp <= 0)
                 return;
@@ -664,41 +672,21 @@ public partial class PvpMode : IDisposable
 
     private void OnUnitDead(Entity victim, Entity attacker)
     {
-        if (AreaState is { PvpState.InPvP: true })
+        if (_areaState is { PvpState.InPvP: true })
         {
-            // move to pvp chatter
-            if (victim != attacker)
+            if (_pawnState.TryGetTamerEntity(victim, out var victimTamerEntity))
             {
-                var attackerMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Attacker);
-                var killedMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-
-                if (attackerMainEntity != null && killedMainEntity != null)
-                {
-                    if (!DI.Instance.ClientOwnership.OwnsEntity(killedMainEntity.Value.Entity))
-                        return;
-
-                    ref var attackerMain = ref attackerMainEntity.Value.GetState();
-                    ref var killedMain = ref killedMainEntity.Value.GetState();
-
-                    // FIXME: This is not the place to do this. Invert control: it's the chatter that should subscribe to
-                    // game events and that should report messages
-                    DI.Instance.Chatter.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickName, killedMain.CharacterNickName);
-                }
-            }
-
-            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue)
-            {
-                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                if (!_clientOwnership.OwnsEntity(victimTamerEntity.Value.Entity))
                     return;
 
-                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                ref var localTamer = ref victimTamerEntity.Value.GetLocalTamer();
                 var tamerClass = localTamer.Tamer?.GetClass();
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                if (tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
+                var netId = victimTamerEntity.Value.GetMeta().NetId;
+                var character = localTamer.Pawn;
+                if (character != null && tamerClass != null && tamerClass.PathName == UnitPathsConfig.GetUnitPath(CharacterKind.DaSheng))
                 {
-                    var teamId = ownerCharacter.GetTeamIDInCS();
-                    var location = ownerCharacter.GetActorLocation();
+                    var teamId = character.GetTeamIDInCS();
+                    var location = character.GetActorLocation();
 
                     if (SpawnedDaSheng2.Add(netId))
                     {

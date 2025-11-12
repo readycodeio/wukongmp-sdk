@@ -57,6 +57,26 @@ public class WukongPawnState
         return entity.HasComponent<MainCharacterComponent>();
     }
 
+    public bool TryGetTamerEntity(Entity entity, [NotNullWhen(true)] out TamerEntity? tamerEntity)
+    {
+        tamerEntity = null;
+        if (!IsTamerEntity(entity))
+            return false;
+
+        tamerEntity = new TamerEntity(entity);
+        return true;
+    }
+
+    public bool TryGetMainCharacterEntity(Entity entity, [NotNullWhen(true)] out MainCharacterEntity? mainCharacterEntity)
+    {
+        mainCharacterEntity = null;
+        if (!IsMainCharacterEntity(entity))
+            return false;
+
+        mainCharacterEntity = new MainCharacterEntity(entity);
+        return true;
+    }
+
     public BGUCharacterCS? GetPawnByNetworkId(NetworkId netId)
     {
         if (!_netEntity.TryGetEntityByNetworkId(netId, out var entity))
