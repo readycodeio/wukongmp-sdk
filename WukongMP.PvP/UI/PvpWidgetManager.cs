@@ -10,12 +10,14 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.UI
 {
     internal class PvpWidgetManager
     {
         private readonly ClientState _clientState;
+        private readonly WukongPlayerState _playerState;
         public readonly WukongWidgetManager widgetManager;
         private readonly WukongEventBus _eventBus;
         private readonly FreeCameraManager _freeCameraManager;
@@ -26,10 +28,13 @@ namespace WukongMp.PvP.UI
         private readonly GameMessageWidget _gameMessageWidget = new();
         private readonly CountdownWidget _countdownWidget = new();
 
-        public PvpWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState, GameplayEventRouter eventRouter)
+        private bool _isAfterLoadingScreen;
+
+        public PvpWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState, GameplayEventRouter eventRouter)
         {
             this.widgetManager = widgetManager;
             _clientState = clientState;
+            _playerState = playerState;
             _eventBus = eventBus;
             _freeCameraManager = freeCameraManager;
             _areaState = areaState;
@@ -118,6 +123,7 @@ namespace WukongMp.PvP.UI
             DeinitializeWidgets();
 
             widgetManager.OnExitLevel();
+            _isAfterLoadingScreen = false;
         }
 
         private void OnLoadingScreenClose()
@@ -126,6 +132,16 @@ namespace WukongMp.PvP.UI
             {
                 widgetManager.ShowInGameWidgets();
                 ShowInGameWidgets();
+                _isAfterLoadingScreen = true;
+
+                if (_playerState.LocalMainCharacter?.GetPvP().IsSpectator == false)
+                {
+                    SetupLobbyUi();
+                }
+                else
+                {
+                    SetupSpectatorUi();
+                }
             }
         }
 
@@ -145,6 +161,15 @@ namespace WukongMp.PvP.UI
             if (!enabled && _areaState.PvpState is { InPvP: true })
             {
                 _lobbyStatusWidget.SetVisibility(false);
+            }
+
+            if (enabled)
+            {
+                SetupSpectatorUi();
+            }
+            else if (_areaState.PvpState is not { InPvP: true })
+            {
+                SetupLobbyUi();
             }
         }
 
@@ -181,6 +206,30 @@ namespace WukongMp.PvP.UI
         public void UpdateReadyCount(int readyCount)
         {
             _lobbyStatusWidget.SetReadyCount(readyCount);
+        }
+
+        public void SetupLobbyUi()
+        {
+            if (!_isAfterLoadingScreen)
+                return;
+
+            _gameMessageWidget.SetVisibility(true);
+            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
+            _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
+            _lobbyStatusWidget.SetVisibility(true);
+        }
+
+        public void SetupSpectatorUi()
+        {
+            if (!_isAfterLoadingScreen)
+                return;
+
+            _gameMessageWidget.SetVisibility(true);
+            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.SetSecondText(Texts.WaitForEnd);
+            _gameMessageWidget.SetThirdText("");
+            _lobbyStatusWidget.SetVisibility(true);
         }
 
         private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)

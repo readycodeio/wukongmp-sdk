@@ -127,7 +127,6 @@ internal partial class PvpMode : IDisposable
         _logger = logger;
 
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
-        _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
 
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerInsideArea += OnOtherPlayerInsideAreaHandler;
@@ -137,7 +136,6 @@ internal partial class PvpMode : IDisposable
         _eventRouter.OnMonsterSpawned += OnMonsterSpawned;
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
-        _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
         _playerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
         _rpc.OnPvpEventReceived += OnPvpEvent;
     }
@@ -148,14 +146,12 @@ internal partial class PvpMode : IDisposable
         _state.OnOtherPlayerInsideArea -= OnOtherPlayerInsideAreaHandler;
         _state.OnJoinedArea -= OnJoinedAreaHandler;
 
-        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
         _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
 
         _eventRouter.OnUnitDead -= OnUnitDead;
         _eventRouter.OnMonsterSpawned -= OnMonsterSpawned;
 
         _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
-        _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
         _playerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;
         _rpc.OnPvpEventReceived -= OnPvpEvent;
     }
@@ -171,18 +167,6 @@ internal partial class PvpMode : IDisposable
         if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
         {
             SpawningUtils.SetMonkeyBotConfig(localTamerComp.Tamer!.GetMonster());
-        }
-    }
-
-    private void OnFreeCameraModeChanged(bool enabled)
-    {
-        if (enabled)
-        {
-            PvpUtils.SetupSpectatorUi();
-        }
-        else if (_areaState.PvpState is not { InPvP: true })
-        {
-            PvpUtils.SetupLobbyUi();
         }
     }
 
@@ -695,23 +679,6 @@ internal partial class PvpMode : IDisposable
         TamerUtils.DestroyAllTamers();
     }
 
-    private void OnLoadingScreenClose()
-    {
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-            return;
-
-        PvpUtils.IsAfterLoadingScreen = true;
-        if (_playerState.LocalMainCharacter?.GetPvP().IsSpectator == false)
-        {
-            PvpUtils.SetupLobbyUi();
-        }
-        else
-        {
-            PvpUtils.SetupSpectatorUi();
-        }
-    }
-
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
         Logging.LogInformation("Joined room");
@@ -874,7 +841,8 @@ internal partial class PvpMode : IDisposable
                     if (self._playerState.LocalMainCharacter.HasValue)
                         self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
                     await Task.Delay(2000);
-                    PvpUtils.EndTournament();
+                    Logging.LogInformation("End tournament");
+                    self._pvpWidgetManager.SetupLobbyUi();
                     self.ExitPvP();
                     self.SetReadyState(false);
                 }, this);

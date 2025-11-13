@@ -35,7 +35,7 @@ namespace WukongMp.PvP
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
 
             var saveManager = SaveManager = new PvpSaveManager(DI.Logger);
-            var widgetManager = WidgetManager = new PvpWidgetManager(DI.WidgetManager, DI.State, DI.EventBus, FreeCameraManager.Instance, DI.AreaState, DI.GameplayEventRouter);
+            var widgetManager = WidgetManager = new PvpWidgetManager(DI.WidgetManager, DI.State, DI.PlayerState, DI.EventBus, FreeCameraManager.Instance, DI.AreaState, DI.GameplayEventRouter);
 
             var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, FreeCameraManager.Instance, widgetManager, DI.Logger);
 

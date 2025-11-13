@@ -16,32 +16,6 @@ public static class PvpUtils
     public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
     public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
 
-    public static bool IsAfterLoadingScreen;
-
-    public static void SetupLobbyUi()
-    {
-        if (!IsAfterLoadingScreen)
-            return;
-
-        GameMessageWidget.Instance.SetVisibility(true);
-        GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
-        GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
-        LobbyStatusWidget.Instance.SetVisibility(true);
-    }
-
-    public static void SetupSpectatorUi()
-    {
-        if (!IsAfterLoadingScreen)
-            return;
-
-        GameMessageWidget.Instance.SetVisibility(true);
-        GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-        GameMessageWidget.Instance.SetSecondText(Texts.WaitForEnd);
-        GameMessageWidget.Instance.SetThirdText("");
-        LobbyStatusWidget.Instance.SetVisibility(true);
-    }
-
     public static void ShowPvPCountDown()
     {
         var areaState = DI.Instance.AreaState;
@@ -78,12 +52,6 @@ public static class PvpUtils
         if (teamId == Constants.DrawTeamId)
             return teamId;
         return teamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
-    }
-
-    public static void EndTournament()
-    {
-        Logging.LogInformation("End tournament");
-        SetupLobbyUi();
     }
 
     public static void CreatePvpStateEntity()
