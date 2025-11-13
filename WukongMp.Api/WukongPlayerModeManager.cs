@@ -60,12 +60,6 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         if (isMyself)
         {
             FreeCameraManager.Instance.LeaveFreeCameraMode();
-
-            if (areaState.PvpState is { InPvP: true })
-            {
-                LobbyStatusWidget.Instance.SetVisibility(false);
-                CoopStatusWidget.Instance.SetVisibility(false);
-            }
         }
 
         widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);

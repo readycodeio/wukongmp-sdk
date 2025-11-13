@@ -25,12 +25,10 @@ public class WukongLevelTransitionConnectionController : IDisposable
         
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
         _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
-        _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
     }
     
     public void Dispose()
     {
-        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
         _eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevel;
         _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
     }
@@ -50,13 +48,5 @@ public class WukongLevelTransitionConnectionController : IDisposable
     private void OnEndPlayGameplayLevel()
     {
         _connection.LeaveArea();
-    }
-    
-    private void OnLoadingScreenClose()
-    {
-        if (_connection.RequestedAreaId != null)
-        {
-            _widgetManager.ShowInGameWidgets();
-        }
     }
 }

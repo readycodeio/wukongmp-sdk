@@ -1,13 +1,17 @@
 ﻿using Friflo.Engine.ECS;
+using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
+using System.Data.Common;
+using System.Xml;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.PvP.UI
 {
@@ -16,21 +20,35 @@ namespace WukongMp.PvP.UI
         private readonly ClientState _clientState;
         private readonly WukongPlayerState _playerState;
         private readonly WukongWidgetManager _widgetManager;
+        private readonly WukongEventBus _eventBus;
+        private readonly FreeCameraManager _freeCameraManager;
+        private readonly WukongAreaState _areaState;
 
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
         private readonly CountdownWidget _countdownWidget = new();
 
-        public PvpWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState)
+        public PvpWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState)
         {
             _widgetManager = widgetManager;
             _clientState = clientState;
             _playerState = playerState;
+            _eventBus = eventBus;
+            _freeCameraManager = freeCameraManager;
+            _areaState = areaState;
 
             _clientState.OnJoinedArea += OnJoinedArea;
             _clientState.OnLeftArea += OnLeftArea;
             _clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
             _clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
+
+            _clientState.OnConnected += OnConnected;
+            _clientState.OnDisconnected += OnDisconnected;
+            _eventBus.OnLevelLoaded += OnLevelLoaded;
+            _eventBus.OnExitLevel += OnExitLevel;
+            _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
+
+            _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
         }
 
         public void Dispose()
@@ -39,6 +57,14 @@ namespace WukongMp.PvP.UI
             _clientState.OnLeftArea -= OnLeftArea;
             _clientState.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
             _clientState.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
+
+            _clientState.OnConnected -= OnConnected;
+            _clientState.OnDisconnected -= OnDisconnected;
+            _eventBus.OnLevelLoaded -= OnLevelLoaded;
+            _eventBus.OnExitLevel -= OnExitLevel;
+            _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
+
+            _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
         }
 
         public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
@@ -50,11 +76,54 @@ namespace WukongMp.PvP.UI
             RefreshWidgets();
         }
 
-        // TODO: call these
         public void ShowInGameWidgets()
         {
             _lobbyStatusWidget.SetVisibility(true);
             _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
+        }
+
+        private void OnLevelLoaded()
+        {
+            _widgetManager.OnLevelLoaded();
+
+            Logging.LogDebug("Initializing pvp widgets");
+            InitializeWidgets();
+        }
+
+        private void OnExitLevel()
+        {
+            Logging.LogDebug("Deinitializing pvp widgets");
+            DeinitializeWidgets();
+
+            _widgetManager.OnExitLevel();
+        }
+
+        private void OnLoadingScreenClose()
+        {
+            if (_areaState.CurrentArea != null)
+            {
+                _widgetManager.ShowInGameWidgets();
+                ShowInGameWidgets();
+            }
+        }
+
+        private void OnConnected(PlayerId playerId, Entity entity)
+        {
+            _widgetManager.OnConnected(playerId, entity);
+        }
+
+        private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
+        {
+            _widgetManager.OnDisconnected(playerId, entity, reason);
+        }
+
+        private void OnFreeCameraModeChanged(bool enabled)
+        {
+            _widgetManager.OnFreeCameraModeChanged(enabled);
+            if (!enabled && _areaState.PvpState is { InPvP: true })
+            {
+                _lobbyStatusWidget.SetVisibility(false);
+            }
         }
 
         private void InitializeWidgets()

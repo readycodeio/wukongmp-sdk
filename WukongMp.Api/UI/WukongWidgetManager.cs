@@ -1,13 +1,9 @@
 ﻿using Friflo.Engine.ECS;
 using LiteNetLib;
-using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
-using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
-using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
@@ -15,11 +11,10 @@ namespace WukongMp.Api.UI;
 public sealed class WukongWidgetManager : IDisposable
 {
     private readonly ClientState _clientState;
-    private readonly WukongPlayerState _playerState;
-    private readonly WukongEventBus _eventBus;
-    private readonly FreeCameraManager _freeCameraManager;
 
     private string _lastDisconnectText = Texts.Disconnected;
+
+    private bool _isInitialized;
 
     private readonly ChatWidget _chatWidget = new();
     private readonly InfoMessageWidget _infoMessageWidget = new();
@@ -27,34 +22,18 @@ public sealed class WukongWidgetManager : IDisposable
     private readonly PingIndicatorWidget _pingIndicatorWidget = new();
     private readonly FreeCameraControlsWidget _freeCameraControlsWidget = new();
 
-    public WukongWidgetManager(ClientState pawnState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager)
+    public WukongWidgetManager(ClientState clientState)
     {
-        _clientState = pawnState;
-        _playerState = playerState;
-        _eventBus = eventBus;
-        _freeCameraManager = freeCameraManager;
-
-        _clientState.OnConnected += OnConnected;
-        _clientState.OnDisconnected += OnDisconnected;
-        _eventBus.OnLevelLoaded += OnLevelLoaded;
-        _eventBus.OnExitLevel += OnExitLevel;
-
-        _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
-    }
-
-    private void OnFreeCameraModeChanged(bool enabled)
-    {
-        _freeCameraControlsWidget.SetVisibility(enabled);
+        _clientState = clientState;
     }
 
     public void Dispose()
     {
-        _clientState.OnConnected -= OnConnected;
-        _clientState.OnDisconnected -= OnDisconnected;
-        _eventBus.OnLevelLoaded -= OnLevelLoaded;
-        _eventBus.OnExitLevel -= OnExitLevel;
+    }
 
-        _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
+    public void OnFreeCameraModeChanged(bool enabled)
+    {
+        _freeCameraControlsWidget.SetVisibility(enabled);
     }
 
     public void ShowInGameWidgets()
@@ -68,10 +47,9 @@ public sealed class WukongWidgetManager : IDisposable
         _chatWidget.AddMessage(isSystemMessage, sender, message);
     }
 
-    private void OnLevelLoaded()
+    public void OnLevelLoaded()
     {
         Logging.LogDebug("Initializing widgets");
-        ModWidgetsUtils.SpawnWidgetManagerActor(); // this needs to be shared
         InitializeWidgets();
         _chatWidget.SetVisibility(false);
 
@@ -109,39 +87,46 @@ public sealed class WukongWidgetManager : IDisposable
         _infoMessageWidget.SetVisibility(true);
     }
 
-    private void OnExitLevel()
+    public void OnExitLevel()
     {
         Logging.LogDebug("Deinitializing widgets");
         DeinitializeWidgets();
     }
 
-    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
+    public void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
         _infoMessageWidget.SetVisibility(true);
         _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
         _infoMessageWidget.SetText(_lastDisconnectText);
     }
 
-    private void OnConnected(PlayerId playerId, Entity entity)
+    public void OnConnected(PlayerId playerId, Entity entity)
     {
         _infoMessageWidget.SetVisibility(false);
     }
 
-    public void InitializeWidgets()
+    private void InitializeWidgets()
     {
-        _chatWidget.Initialize();
-        _infoMessageWidget.Initialize();
-        _errorMessageWidget.Initialize();
-        _pingIndicatorWidget.Initialize();
-        _freeCameraControlsWidget.Initialize();
+        if (!_isInitialized)
+        {
+            _isInitialized = true;
+            ModWidgetsUtils.SpawnWidgetManagerActor();
+
+            _chatWidget.Initialize();
+            _infoMessageWidget.Initialize();
+            _errorMessageWidget.Initialize();
+            _pingIndicatorWidget.Initialize();
+            _freeCameraControlsWidget.Initialize();
+        }
     }
 
-    public void DeinitializeWidgets()
+    private void DeinitializeWidgets()
     {
         _chatWidget.Deinitialize();
         _infoMessageWidget.Deinitialize();
         _errorMessageWidget.Deinitialize();
         _pingIndicatorWidget.Deinitialize();
         _freeCameraControlsWidget.Deinitialize();
+        _isInitialized = false;
     }
 }

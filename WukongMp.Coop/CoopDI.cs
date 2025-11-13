@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using WukongMp.Api;
+using WukongMp.Api.UI;
 using WukongMp.Coop.Configuration;
 using WukongMp.Coop.Gamemode;
+using WukongMp.Coop.UI;
 using WukongMp.PvP.Chat;
 
 namespace WukongMp.Coop
@@ -16,6 +18,7 @@ namespace WukongMp.Coop
         public CoopGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public CoopSynchronizer Synchronizer { get; private set; } = null!;
         public CoopSaveManager SaveManager { get; private set; } = null!;
+        public CoopWidgetManager WidgetManager { get; private set; } = null!;
         public WukongPatcher Patcher { get; private set; } = null!;
 
 
@@ -33,6 +36,7 @@ namespace WukongMp.Coop
             var gameplayConfig = GameplayConfiguration = new CoopGameplayConfiguration(DI.GameplayConfiguration);
 
             var saveManager = SaveManager = new CoopSaveManager(DI.Logger);
+            var widgetManager = WidgetManager = new CoopWidgetManager(DI.WidgetManager, DI.State, DI.PlayerState, DI.EventBus, FreeCameraManager.Instance, DI.AreaState);
 
             var coop = Coop = new CoopMode(DI.Serializer, DI.RelayClient, DI.AreaState, DI.PlayerState, DI.PawnState, DI.GameplayEventRouter);
 

@@ -1,4 +1,5 @@
 ﻿using Friflo.Engine.ECS;
+using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
@@ -15,18 +16,34 @@ namespace WukongMp.Coop.UI
     {
         private readonly ClientState _clientState;
         private readonly WukongPlayerState _playerState;
+        private readonly WukongEventBus _eventBus;
+        private readonly FreeCameraManager _freeCameraManager;
+        private readonly WukongWidgetManager _widgetManager;
+        private readonly WukongAreaState _areaState;
 
         private readonly CoopStatusWidget _coopStatusWidget = new();
 
-        public CoopWidgetManager(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus)
+        public CoopWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState)
         {
+            _widgetManager = widgetManager;
             _clientState = clientState;
             _playerState = playerState;
+            _eventBus = eventBus;
+            _freeCameraManager = freeCameraManager;
+            _areaState = areaState;
 
             _clientState.OnJoinedArea += OnJoinedArea;
             _clientState.OnLeftArea += OnLeftArea;
             _clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
             _clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
+
+            _clientState.OnConnected += OnConnected;
+            _clientState.OnDisconnected += OnDisconnected;
+            _eventBus.OnLevelLoaded += OnLevelLoaded;
+            _eventBus.OnExitLevel += OnExitLevel;
+            _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
+
+            _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
         }
 
         public void Dispose()
@@ -35,6 +52,14 @@ namespace WukongMp.Coop.UI
             _clientState.OnLeftArea -= OnLeftArea;
             _clientState.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
             _clientState.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
+
+            _clientState.OnConnected -= OnConnected;
+            _clientState.OnDisconnected -= OnDisconnected;
+            _eventBus.OnLevelLoaded -= OnLevelLoaded;
+            _eventBus.OnExitLevel -= OnExitLevel;
+            _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
+
+            _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
         }
 
         public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
@@ -51,6 +76,46 @@ namespace WukongMp.Coop.UI
         {
             _coopStatusWidget.SetVisibility(true);
             _coopStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
+        }
+
+        private void OnLevelLoaded()
+        {
+            _widgetManager.OnLevelLoaded();
+
+            Logging.LogDebug("Initializing pvp widgets");
+            InitializeWidgets();
+        }
+
+        private void OnExitLevel()
+        {
+            Logging.LogDebug("Deinitializing pvp widgets");
+            DeinitializeWidgets();
+
+            _widgetManager.OnExitLevel();
+        }
+
+        private void OnLoadingScreenClose()
+        {
+            if (_areaState.CurrentArea != null)
+            {
+                _widgetManager.ShowInGameWidgets();
+                ShowInGameWidgets();
+            }
+        }
+
+        private void OnConnected(PlayerId playerId, Entity entity)
+        {
+            _widgetManager.OnConnected(playerId, entity);
+        }
+
+        private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
+        {
+            _widgetManager.OnDisconnected(playerId, entity, reason);
+        }
+
+        private void OnFreeCameraModeChanged(bool enabled)
+        {
+            _widgetManager.OnFreeCameraModeChanged(enabled);
         }
 
         private void InitializeWidgets()
