@@ -11,6 +11,7 @@ using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Jobs;
@@ -47,8 +48,9 @@ public class PvpSynchronizer : WukongSynchronizer
         WukongEventBus eventBus,
         WukongWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
+        GameplayConfiguration configuration,
         ILogger logger)
-        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, gameplayEventRouter, logger)
+        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, gameplayEventRouter, configuration, logger)
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot += OnApplySnapshot;

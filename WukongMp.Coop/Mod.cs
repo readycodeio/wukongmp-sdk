@@ -47,7 +47,6 @@ namespace WukongMp.Coop
                 return;
             }
 
-            Constants.IsCoop = true;
             DI.Instance.Init();
             CoopDI.Instance.Init(DI.Instance);
 

@@ -23,6 +23,7 @@ namespace WukongMp.PvP.Configuration
             _configuration.IsStrongDamageImmueEnabled = true;
             _configuration.EnableCustomCameraArmLength = true;
             _configuration.EnableSpawnedTamers = true;
+            _configuration.SyncTamerTeamFromGameToEcs = false;
 
             _configuration.DisableTamerAttackQuery += ShouldDisableTamerAttack;
             _configuration.IsSkillEnabledQuery += IsSkillEnabled;
@@ -36,7 +37,7 @@ namespace WukongMp.PvP.Configuration
 
         private bool ShouldDisableTamerAttack()
         {
-            return _areaState.PvpState.HasValue && !_areaState.PvpState.Value.InPvP;
+            return _areaState.PvpState is { InPvP: false };
         }
 
         private bool IsSkillEnabled(int skillId)

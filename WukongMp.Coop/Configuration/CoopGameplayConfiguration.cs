@@ -18,6 +18,7 @@ namespace WukongMp.Coop.Configuration
             _configuration.IsStrongDamageImmueEnabled = false;
             _configuration.EnableCustomCameraArmLength = false;
             _configuration.EnableSpawnedTamers = false;
+            _configuration.SyncTamerTeamFromGameToEcs = true;
         }
     }
 }

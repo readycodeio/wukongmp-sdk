@@ -17,6 +17,7 @@ public class SyncMainCharactersSystem(
     WukongPlayerModeManager modeManager,
     WukongEventBus eventBus,
     WukongWidgetManager widgetManager,
+    GameplayConfiguration configuration,
     ILogger logger
 )
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
@@ -82,7 +83,7 @@ public class SyncMainCharactersSystem(
     {
         SyncMainCharacterStateBase(playerEntity, mainEntity);
 
-        if (Constants.IsPvP)
+        if (configuration.OverrideLocalPlayerTeamFromGlobalEntity)
         {
             ref var playerComp = ref playerEntity.GetState();
             var playerTeamId = playerComp.TeamId;
@@ -103,7 +104,6 @@ public class SyncMainCharactersSystem(
 
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
-        ref readonly var teamComp = ref mainEntity.GetTeam();
 
         if (localMainComp.Pawn == null)
             return;

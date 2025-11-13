@@ -55,6 +55,7 @@ namespace WukongMp.Coop
                 DI.WidgetManager,
                 DI.Rpc,
                 DI.GameplayEventRouter,
+                DI.GameplayConfiguration,
                 DI.Logger);
 
         }

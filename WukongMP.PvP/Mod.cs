@@ -47,7 +47,6 @@ namespace WukongMp.PvP
                 return;
             }
 
-            Constants.IsCoop = false;
             DI.Instance.Init();
             PvpDI.Instance.Init(DI.Instance);
 

@@ -18,7 +18,7 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// whether they require spawning.
 /// </summary>
 /// <param name="state"></param>
-public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router, GameplayConfiguration configuration) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private readonly HashSet<string?> _notYetSpawnedGuids = [];
 
@@ -78,7 +78,7 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 {
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                    if (Constants.IsCoop)
+                    if (configuration.SyncTamerTeamFromGameToEcs)
                         teamComp.TeamId = monster.GetTeamIDInCS();
 #if TESTING
                     hpComp.Hp = 10;

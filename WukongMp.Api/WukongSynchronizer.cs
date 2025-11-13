@@ -10,6 +10,7 @@ using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Managers;
@@ -48,6 +49,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         WukongEventBus eventBus,
         WukongWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
+        GameplayConfiguration configuration,
         ILogger logger)
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
     {
@@ -59,7 +61,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         _syncGroup = new SystemGroup("Sync");
 
-        _syncGroup.Add(new SpawnTamersSystem(state, gameplayEventRouter));
+        _syncGroup.Add(new SpawnTamersSystem(state, gameplayEventRouter, configuration));
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UnloadTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
@@ -70,7 +72,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
         _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, widgetManager, eventBus, Logger));
-        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, widgetManager, Logger));
+        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, widgetManager, configuration, logger));
 
         _syncGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_syncGroup);
