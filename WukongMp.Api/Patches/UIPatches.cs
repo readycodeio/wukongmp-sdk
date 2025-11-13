@@ -110,17 +110,6 @@ public class PatchShowPage
     }
 }
 
-[HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
-[HarmonyPatchCategory(Constants.DisabledPatches)]
-public class PatchOnChangeSaveTipsStat
-{
-    public static bool Prefix(UWidget ___RootCon)
-    {
-        ___RootCon.SetVisibility(ESlateVisibility.Collapsed);
-        return false;
-    }
-}
-
 [HarmonyPatch(typeof(B1BattleLogicSvc), "UISetGamePaused")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchUISetGamePaused
