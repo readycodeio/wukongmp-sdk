@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
@@ -23,9 +24,9 @@ namespace WukongMp.PvP.UI
         private readonly WukongAreaState _areaState;
         private readonly GameplayEventRouter _eventRouter;
 
-        private readonly LobbyStatusWidget _lobbyStatusWidget = new();
-        private readonly GameMessageWidget _gameMessageWidget = new();
-        private readonly CountdownWidget _countdownWidget = new();
+        private readonly Lazy<LobbyStatusWidget> _lobbyStatusWidget = new();
+        private readonly Lazy<GameMessageWidget> _gameMessageWidget = new();
+        private readonly Lazy<CountdownWidget> _countdownWidget = new();
 
         private bool _isAfterLoadingScreen;
 
@@ -78,34 +79,34 @@ namespace WukongMp.PvP.UI
             ref var playerComp = ref playerEntity.GetState();
 
             var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
-            _lobbyStatusWidget.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
+            _lobbyStatusWidget.Value.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
             RefreshWidgets();
         }
 
         public void SetMainMessage(string message)
         {
-            _gameMessageWidget.SetMainText(message);
+            _gameMessageWidget.Value.SetMainText(message);
         }
 
         public void UpdateRoundCountdown(int minutesLeft, int secondsLeft)
         {
-            _countdownWidget.SetText(secondsLeft);
+            _countdownWidget.Value.SetText(secondsLeft);
         }
 
         public void ShowCountdown()
         {
-            _countdownWidget.SetVisibility(true);
+            _countdownWidget.Value.SetVisibility(true);
         }
 
         public void HideCountdown()
         {
-            _countdownWidget.SetVisibility(false);
+            _countdownWidget.Value.SetVisibility(false);
         }
 
         private void ShowInGameWidgets()
         {
-            _lobbyStatusWidget.SetVisibility(true);
-            _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
+            _lobbyStatusWidget.Value.SetVisibility(true);
+            _lobbyStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
         }
 
         private void OnLevelLoaded()
@@ -159,7 +160,7 @@ namespace WukongMp.PvP.UI
             widgetManager.OnFreeCameraModeChanged(enabled);
             if (!enabled && _areaState.PvpState is { InPvP: true })
             {
-                _lobbyStatusWidget.SetVisibility(false);
+                _lobbyStatusWidget.Value.SetVisibility(false);
             }
 
             if (enabled)
@@ -174,51 +175,51 @@ namespace WukongMp.PvP.UI
 
         private void InitializeWidgets()
         {
-            _lobbyStatusWidget.Initialize();
-            _gameMessageWidget.Initialize();
-            _countdownWidget.Initialize();
+            _lobbyStatusWidget.Value.Initialize();
+            _gameMessageWidget.Value.Initialize();
+            _countdownWidget.Value.Initialize();
         }
 
         private void DeinitializeWidgets()
         {
-            _lobbyStatusWidget.Deinitialize();
-            _gameMessageWidget.Deinitialize();
-            _countdownWidget.Deinitialize();
+            _lobbyStatusWidget.Value.Deinitialize();
+            _gameMessageWidget.Value.Deinitialize();
+            _countdownWidget.Value.Deinitialize();
         }
 
         public void RefreshWidgets()
         {
-            _lobbyStatusWidget.SetConnectedCount(_clientState.AreaPlayers.Count);
+            _lobbyStatusWidget.Value.SetConnectedCount(_clientState.AreaPlayers.Count);
         }
 
         public void StartRound()
         {
-            _gameMessageWidget.SetVisibility(false);
+            _gameMessageWidget.Value.SetVisibility(false);
         }
 
         public void SwitchReadyState(bool isReady)
         {
-            _gameMessageWidget.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(_clientState.AllPlayers.Count, isReady));
+            _gameMessageWidget.Value.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
+            _gameMessageWidget.Value.SetSecondText(TextUtils.GetReadyText(_clientState.AllPlayers.Count, isReady));
         }
 
         public void UpdateReadyCount(int readyCount)
         {
-            _lobbyStatusWidget.SetReadyCount(readyCount);
+            _lobbyStatusWidget.Value.SetReadyCount(readyCount);
         }
 
-        public void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList) => _lobbyStatusWidget.SetTeams(redTeamList, blueTeamList, spectatorsList);
+        public void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList) => _lobbyStatusWidget.Value.SetTeams(redTeamList, blueTeamList, spectatorsList);
         
         public void SetupLobbyUi()
         {
             if (!_isAfterLoadingScreen)
                 return;
 
-            _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
-            _gameMessageWidget.SetThirdText(Texts.PressToSwitchTeam);
-            _lobbyStatusWidget.SetVisibility(true);
+            _gameMessageWidget.Value.SetVisibility(true);
+            _gameMessageWidget.Value.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.Value.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
+            _gameMessageWidget.Value.SetThirdText(Texts.PressToSwitchTeam);
+            _lobbyStatusWidget.Value.SetVisibility(true);
         }
 
         public void SetupSpectatorUi()
@@ -226,11 +227,11 @@ namespace WukongMp.PvP.UI
             if (!_isAfterLoadingScreen)
                 return;
 
-            _gameMessageWidget.SetVisibility(true);
-            _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.SetSecondText(Texts.WaitForEnd);
-            _gameMessageWidget.SetThirdText("");
-            _lobbyStatusWidget.SetVisibility(true);
+            _gameMessageWidget.Value.SetVisibility(true);
+            _gameMessageWidget.Value.SetMainText(Texts.InMultiplayer);
+            _gameMessageWidget.Value.SetSecondText(Texts.WaitForEnd);
+            _gameMessageWidget.Value.SetThirdText("");
+            _lobbyStatusWidget.Value.SetVisibility(true);
         }
 
         private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)

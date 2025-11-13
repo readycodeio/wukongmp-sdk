@@ -22,7 +22,7 @@ namespace WukongMp.Coop.UI
         private readonly WukongAreaState _areaState;
         private readonly GameplayEventRouter _eventRouter;
 
-        private readonly CoopStatusWidget _coopStatusWidget = new();
+        private readonly Lazy<CoopStatusWidget> _coopStatusWidget = new();
 
         public CoopWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState, GameplayEventRouter eventRouter)
         {
@@ -72,16 +72,16 @@ namespace WukongMp.Coop.UI
         {
             ref var playerComp = ref playerEntity.GetState();
 
-            _coopStatusWidget.RemovePlayer(playerComp.NickName);
-            _coopStatusWidget.AddPlayer(playerComp.NickName);
+            _coopStatusWidget.Value.RemovePlayer(playerComp.NickName);
+            _coopStatusWidget.Value.AddPlayer(playerComp.NickName);
 
             RefreshWidgets();
         }
 
         public void ShowInGameWidgets()
         {
-            _coopStatusWidget.SetVisibility(true);
-            _coopStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
+            _coopStatusWidget.Value.SetVisibility(true);
+            _coopStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
         }
 
         private void OnLevelLoaded()
@@ -126,18 +126,18 @@ namespace WukongMp.Coop.UI
 
         private void InitializeWidgets()
         {
-            _coopStatusWidget.Initialize();
+            _coopStatusWidget.Value.Initialize();
         }
 
         private void DeinitializeWidgets()
         {
-            _coopStatusWidget.Deinitialize();
+            _coopStatusWidget.Value.Deinitialize();
         }
 
         public void RefreshWidgets()
         {
-            _coopStatusWidget.SetConnectedCount(_clientState.AreaPlayers.Count);
-            _coopStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);
+            _coopStatusWidget.Value.SetConnectedCount(_clientState.AreaPlayers.Count);
+            _coopStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
         }
 
         private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
@@ -146,7 +146,7 @@ namespace WukongMp.Coop.UI
             if (player.HasValue)
             {
                 var nickname = player.Value.GetState().NickName;
-                _coopStatusWidget.AddPlayer(nickname);
+                _coopStatusWidget.Value.AddPlayer(nickname);
                 RefreshWidgets();
             }
         }
@@ -157,7 +157,7 @@ namespace WukongMp.Coop.UI
             if (player.HasValue)
             {
                 var nickname = player.Value.GetState().NickName;
-                _coopStatusWidget.RemovePlayer(nickname);
+                _coopStatusWidget.Value.RemovePlayer(nickname);
                 RefreshWidgets();
             }
         }
@@ -167,7 +167,7 @@ namespace WukongMp.Coop.UI
             var playerEntity = _playerState.LocalPlayerEntity;
             if (playerEntity.HasValue)
             {
-                _coopStatusWidget.AddPlayer(playerEntity.Value.GetState().NickName);
+                _coopStatusWidget.Value.AddPlayer(playerEntity.Value.GetState().NickName);
                 RefreshWidgets();
             }
         }
@@ -177,7 +177,7 @@ namespace WukongMp.Coop.UI
             var playerEntity = _playerState.LocalPlayerEntity;
             if (playerEntity.HasValue)
             {
-                _coopStatusWidget.RemovePlayer(playerEntity.Value.GetState().NickName);
+                _coopStatusWidget.Value.RemovePlayer(playerEntity.Value.GetState().NickName);
                 RefreshWidgets();
             }
         }
