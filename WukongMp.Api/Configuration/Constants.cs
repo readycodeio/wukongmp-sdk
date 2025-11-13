@@ -61,8 +61,6 @@ namespace WukongMp.Api.Configuration
         public const int CountdownSeconds = 5;
 
         public const int BotCount = 2;
-        public static bool IsCoop = false;
-        public static bool IsPvP => !IsCoop;
 
         public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";
 

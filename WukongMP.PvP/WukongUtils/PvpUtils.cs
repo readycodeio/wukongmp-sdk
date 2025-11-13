@@ -15,34 +15,19 @@ public static class PvpUtils
 {
     public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
     public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
-    
-    public static bool IsAfterLoadingScreen;
 
-    public static void OnMatchmakingEnded()
-    {
-        if (IsAfterLoadingScreen)
-        {
-            SetupLobbyUi();
-        }
-    }
+    public static bool IsAfterLoadingScreen;
 
     public static void SetupLobbyUi()
     {
         if (!IsAfterLoadingScreen)
             return;
 
-        if (Constants.IsPvP)
-        {
-            GameMessageWidget.Instance.SetVisibility(true);
-            GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-            GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
-            GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
-            LobbyStatusWidget.Instance.SetVisibility(true);
-        }
-        else
-        {
-            CoopStatusWidget.Instance.SetVisibility(true);
-        }
+        GameMessageWidget.Instance.SetVisibility(true);
+        GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
+        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
+        GameMessageWidget.Instance.SetThirdText(Texts.PressToSwitchTeam);
+        LobbyStatusWidget.Instance.SetVisibility(true);
     }
 
     public static void SetupSpectatorUi()
@@ -50,14 +35,11 @@ public static class PvpUtils
         if (!IsAfterLoadingScreen)
             return;
 
-        if (Constants.IsPvP)
-        {
-            GameMessageWidget.Instance.SetVisibility(true);
-            GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-            GameMessageWidget.Instance.SetSecondText(Texts.WaitForEnd);
-            GameMessageWidget.Instance.SetThirdText("");
-            LobbyStatusWidget.Instance.SetVisibility(true);
-        }
+        GameMessageWidget.Instance.SetVisibility(true);
+        GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
+        GameMessageWidget.Instance.SetSecondText(Texts.WaitForEnd);
+        GameMessageWidget.Instance.SetThirdText("");
+        LobbyStatusWidget.Instance.SetVisibility(true);
     }
 
     public static void ShowPvPCountDown()
@@ -103,12 +85,12 @@ public static class PvpUtils
         Logging.LogInformation("End tournament");
         SetupLobbyUi();
     }
-    
+
     public static void CreatePvpStateEntity()
     {
         DI.Instance.AreaState.PvpStateEntity = DI.Instance.ClientNetEntity.CreateNetworkedAreaEntity(DI.Instance.ArchetypeRegistration.PvPStateSingletonArchetype).Entity;
     }
-    
+
     public static void SpawnBots(int teamId)
     {
         for (var i = 0; i < Constants.BotCount; i++)
@@ -122,7 +104,7 @@ public static class PvpUtils
             SpawningUtils.SpawnUnitAsOwner(CharacterKind.Monkey, spawnPosition, teamId);
         }
     }
-    
+
     public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)
     {
         float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;

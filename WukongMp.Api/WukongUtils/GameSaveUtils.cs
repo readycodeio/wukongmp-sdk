@@ -1,5 +1,5 @@
-﻿using UnrealEngine.Runtime;
-using WukongMp.Api.Configuration;
+﻿using System.Reflection;
+using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -7,7 +7,7 @@ namespace WukongMp.Api.WukongUtils
     {
         public static string GetModDirectory()
         {
-            var modName = Constants.IsCoop ? "WukongMp.Coop" : "WukongMp.PvP";
+            var modName = Assembly.GetExecutingAssembly().GetName().Name;
 
             if (LaunchParameters.Instance.ModFolderOverride != null)
             {
