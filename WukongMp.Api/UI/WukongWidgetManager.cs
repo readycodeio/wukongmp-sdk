@@ -1,8 +1,8 @@
-﻿using Friflo.Engine.ECS;
+﻿using System;
+using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
-using System;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 
@@ -27,9 +27,7 @@ public sealed class WukongWidgetManager : IDisposable
         _clientState = clientState;
     }
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() { }
 
     public void OnFreeCameraModeChanged(bool enabled)
     {
@@ -40,11 +38,6 @@ public sealed class WukongWidgetManager : IDisposable
     {
         _pingIndicatorWidget.SetVisibility(true);
         _chatWidget.ShowIfNotHidden();
-    }
-
-    public void AddChatMessage(bool isSystemMessage, string sender, string message)
-    {
-        _chatWidget.AddMessage(isSystemMessage, sender, message);
     }
 
     public void OnLevelLoaded()
@@ -129,4 +122,18 @@ public sealed class WukongWidgetManager : IDisposable
         _freeCameraControlsWidget.Deinitialize();
         _isInitialized = false;
     }
+
+    public void ToggleChatVisibility() => _chatWidget.ToggleVisibility();
+    
+    public void AddChatMessage(bool isSystemMessage, string sender, string message) => _chatWidget.AddMessage(isSystemMessage, sender, message);
+
+    public bool ChatHasFocus() => _chatWidget.HasFocus();
+
+    public void SetChatHistoryNext() => _chatWidget.SetHistoryNext();
+    
+    public void SetChatHistoryPrev() => _chatWidget.SetHistoryPrev();
+
+    public void SetChatInputFocus() => _chatWidget.SetInputFocus();
+
+    public string CommitChatMessage() => _chatWidget.CommitMessage();
 }

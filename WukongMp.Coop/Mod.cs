@@ -204,39 +204,39 @@ namespace WukongMp.Coop
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");
-                if (!ChatWidget.Instance.HasFocus())
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
                     CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
             {
                 _logger.LogDebug("K");
-                if (!ChatWidget.Instance.HasFocus())
-                    ChatWidget.Instance.ToggleVisibility();
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    DI.Instance.WidgetManager.ToggleChatVisibility();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
-                ChatWidget.Instance.SetHistoryNext();
+                DI.Instance.WidgetManager.SetChatHistoryNext();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.DOWN, () =>
             {
                 _logger.LogDebug("DOWN");
-                ChatWidget.Instance.SetHistoryPrev();
+                DI.Instance.WidgetManager.SetChatHistoryPrev();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>
             {
                 _logger.LogDebug("ENTER");
-                if (!ChatWidget.Instance.HasFocus())
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
                 {
-                    ChatWidget.Instance.SetInputFocus();
+                    DI.Instance.WidgetManager.SetChatInputFocus();
                 }
                 else
                 {
-                    var message = ChatWidget.Instance.CommitMessage();
+                    var message = DI.Instance.WidgetManager.CommitChatMessage();
                     DI.Instance.Chatter.ProcessMessage(message);
                 }
             });
