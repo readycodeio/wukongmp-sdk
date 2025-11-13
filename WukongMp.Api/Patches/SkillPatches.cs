@@ -42,8 +42,8 @@ public static class PatchTriggerItemSkill
 
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
 
-        if (DI.Instance.GameplayConfiguration.IsSkillEnabled(lastSkill))
-            return true;
+        if (!DI.Instance.GameplayConfiguration.IsSkillEnabled(lastSkill))
+            return false;
 
         var areaEntity = areaState.CurrentArea;
         ref var room = ref areaEntity.Value.GetRoom();
