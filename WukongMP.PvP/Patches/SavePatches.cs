@@ -10,7 +10,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Api;
 
-namespace WukongMp.PvP.Patches; 
+namespace WukongMp.PvP.Patches;
 
 /// Replace Steam save folder with ours.
 [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
@@ -25,7 +25,8 @@ public class PatchWindowsSaveGame
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true;
 
-        __result = GameSaveUtils.GetSaveFileFullName(SlotName);
+        var modAssembly = typeof(PatchWindowsSaveGame).Assembly;
+        __result = GameSaveUtils.GetSaveFileFullName(modAssembly, SlotName);
         return false;
     }
 }

@@ -23,7 +23,8 @@ public class PatchWindowsSaveGame
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true;
 
-        __result = GameSaveUtils.GetSaveFileFullName(SlotName);
+        var modAssembly = typeof(PatchWindowsSaveGame).Assembly;
+        __result = GameSaveUtils.GetSaveFileFullName(modAssembly, SlotName);
         return false;
     }
 }

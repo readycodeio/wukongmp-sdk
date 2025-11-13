@@ -68,7 +68,7 @@ public static class PatchStartGameUiPvp
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                 }
-                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(typeof(PatchStartGameUiPvp).Assembly, GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
                 {
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.QuickJoin));
                 }
