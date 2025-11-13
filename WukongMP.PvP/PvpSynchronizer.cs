@@ -60,7 +60,7 @@ internal class PvpSynchronizer : WukongSynchronizer
 
         _modeGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
         _modeGroup.Add(new ReadinessSystem(areaState, widgetManager, pvpMode));
-        _modeGroup.Add(new PlayerListSystem(playerState, areaState));
+        _modeGroup.Add(new PlayerListSystem(playerState, areaState, widgetManager));
         _modeGroup.Add(new TeamColorSystem());
 
         _modeGroup.SetMonitorPerf(true);

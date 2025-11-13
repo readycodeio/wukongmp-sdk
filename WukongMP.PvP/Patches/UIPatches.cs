@@ -48,8 +48,7 @@ public static class PatchStartGameUiPvp
             {
                 Utils.TryRunOnGameThread(() =>
                 {
-                    InfoMessageWidget.Instance.SetVisibility(true);
-                    InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                    DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
                 });
             });
             Logging.LogError(" PvP Disconnected. Could not continue game.");

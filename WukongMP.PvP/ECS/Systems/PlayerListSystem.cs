@@ -7,13 +7,14 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
+using WukongMp.PvP.UI;
 
 namespace WukongMp.PvP.ECS.Systems;
 
-public sealed class PlayerListSystem(
+internal sealed class PlayerListSystem(
     WukongPlayerState playerState,
-    WukongAreaState areaState
+    WukongAreaState areaState,
+    PvpWidgetManager widgetManager
 ) : QuerySystem<MainCharacterComponent, PvPComponent>
 {
     private readonly Stopwatch _timer = Stopwatch.StartNew();
@@ -58,7 +59,7 @@ public sealed class PlayerListSystem(
                 }
             });
 
-        LobbyStatusWidget.Instance.SetTeams(redTeamList, blueTeamList, spectatorsList);
-        LobbyStatusWidget.Instance.SetConnectedCount(Query.Count);
+        widgetManager.SetTeams(redTeamList, blueTeamList, spectatorsList);
+        widgetManager.RefreshWidgets();
     }
 }

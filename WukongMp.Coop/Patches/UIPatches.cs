@@ -52,8 +52,7 @@ public static class PatchStartGameUiCoop
                     {
                         Utils.TryRunOnGameThread(() =>
                         {
-                            InfoMessageWidget.Instance.SetVisibility(true);
-                            InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                            DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
                         });
                     });
                     Logging.LogError("Disconnected. Could not continue game.");

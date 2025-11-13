@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS;
+﻿using System.Collections.Generic;
+using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
@@ -208,6 +209,8 @@ namespace WukongMp.PvP.UI
             _lobbyStatusWidget.SetReadyCount(readyCount);
         }
 
+        public void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList) => _lobbyStatusWidget.SetTeams(redTeamList, blueTeamList, spectatorsList);
+        
         public void SetupLobbyUi()
         {
             if (!_isAfterLoadingScreen)
