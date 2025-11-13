@@ -68,7 +68,7 @@ internal class PvpChatter : IDisposable
         var unitName = args.Span[0];
         if (!UnitPathsConfig.IsValidUnitName(unitName))
         {
-            ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[0]}\"");
+            _wukongChatter.AddLocalCommandMessage($"${Texts.InvalidUnitName}: \"{args.Span[0]}\"");
             return;
         }
 
@@ -103,7 +103,7 @@ internal class PvpChatter : IDisposable
                     }
                     else
                     {
-                        ChatWidget.Instance.AddMessage(true, "Command", $"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
+                        _wukongChatter.AddLocalCommandMessage($"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
                     }
 
                     break;

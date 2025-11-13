@@ -28,11 +28,12 @@ using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
+using WukongMp.PvP.UI;
 using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.Gamemode;
 
-public partial class PvpMode : IDisposable
+internal partial class PvpMode : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
@@ -51,6 +52,7 @@ public partial class PvpMode : IDisposable
     private readonly WukongPawnState _pawnState;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly FreeCameraManager _freeCameraManager;
+    private readonly PvpWidgetManager _pvpWidgetManager;
     private readonly ILogger _logger;
 
     private int _pendingDaSheng;
@@ -99,6 +101,7 @@ public partial class PvpMode : IDisposable
         WukongPawnState pawnState,
         IClientEcsUpdateLoop ecsLoop,
         FreeCameraManager freeCameraManager,
+        PvpWidgetManager pvpWidgetManager,
         ILogger logger
     )
     {
@@ -117,6 +120,7 @@ public partial class PvpMode : IDisposable
         _pawnState = pawnState;
         _ecsLoop = ecsLoop;
         _freeCameraManager = freeCameraManager;
+        _pvpWidgetManager = pvpWidgetManager;
         _logger = logger;
 
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
@@ -383,8 +387,7 @@ public partial class PvpMode : IDisposable
 
     public void StartRound()
     {
-        GameMessageWidget.Instance.SetVisibility(false);
-        CountdownWidget.Instance.StopCountdown();
+        _pvpWidgetManager.StartRound();
 
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -449,12 +452,6 @@ public partial class PvpMode : IDisposable
         _playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP = isReady;
     }
 
-    public void SwitchReadyState(bool isReady)
-    {
-        GameMessageWidget.Instance.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
-        GameMessageWidget.Instance.SetSecondText(TextUtils.GetReadyText(_state.AllPlayers.Count, isReady));
-    }
-
     public void SwitchReadyStateMulti()
     {
         if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count > 0 && _playerState.LocalMainCharacter?.GetPvP().IsSpectator is not true)
@@ -470,7 +467,7 @@ public partial class PvpMode : IDisposable
         var newIsReady = !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP;
         var nickname = _playerState.LocalMainCharacter.Value.GetState().CharacterNickName;
         SetReadyState(newIsReady);
-        SwitchReadyState(newIsReady);
+        _pvpWidgetManager.SwitchReadyState(newIsReady);
         _chatter.SendServerMessage(newIsReady ? "PlayerIsReady" : "PlayerIsNotReady", nickname);
     }
 
@@ -696,8 +693,7 @@ public partial class PvpMode : IDisposable
         Logging.LogInformation("Joined room");
 
         SetUpRoom();
-        LobbyStatusWidget.Instance.SetConnectedCount(OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP));
-        LobbyStatusWidget.Instance.SetReadyCount(OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP));
+        _pvpWidgetManager.UpdateReadyCount(OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP));
 
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)

@@ -18,15 +18,18 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     protected readonly IRelayClient RelayClient;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
+    private readonly WukongWidgetManager _widgetManager;
 
     public WukongServerRpcCallbacks(
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
-        ILogger logger)
+        ILogger logger,
+        WukongWidgetManager widgetManager)
     {
         RelayClient = relayClient;
         _ecsLoop = ecsLoop;
         _logger = logger;
+        _widgetManager = widgetManager;
 
         InitRpc();
     }
@@ -42,7 +45,7 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         _ecsLoop.Scheduler.Schedule(static (_, self, sequenceId0) =>
         {
             self._logger.LogDebug("Received skip movie event from server, sequence id: {Id}", sequenceId0);
-            InfoMessageWidget.Instance.SetVisibility(false);
+            self._widgetManager.HideInfoMessage();
             CutsceneUtils.SkipCutscene(sequenceId0);
         }, this, sequenceId);
     }
@@ -65,15 +68,13 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
             var outdatedRtt = PingStopwatch.ElapsedMilliseconds - timestamp;
             _logger.LogWarning("Received outdated ping response. Timestamp: {Timestamp}, now: {Now}, RTT: {Rtt}ms", timestamp, PingStopwatch.ElapsedMilliseconds, outdatedRtt);
 
-            PingIndicatorWidget.Instance.SetPingValue(999);
-            PingIndicatorWidget.Instance.SetInfoText(Texts.SeverePacketLossDetected);
+            _widgetManager.SetPacketLossWarning();
             return;
         }
 
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
-        PingIndicatorWidget.Instance.SetPingValue(rtt);
-        PingIndicatorWidget.Instance.HideInfoText();
+        _widgetManager.UpdatePingIndicator(rtt);
     }
 
     public void SendPing()

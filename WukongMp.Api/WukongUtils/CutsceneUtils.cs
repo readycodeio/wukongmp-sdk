@@ -44,8 +44,7 @@ public static class CutsceneUtils
         {
             localMain.JoiningSequenceLocation = sequenceWaitingData.SequenceLocation;
             localMain.IsJoiningSequence = true;
-            InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText(Resources.Texts.JoinOtherPlayersToProceed);
+            DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.JoinOtherPlayersToProceed);
         }
     }
 

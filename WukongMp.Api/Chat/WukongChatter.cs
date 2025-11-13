@@ -22,6 +22,7 @@ public class WukongChatter : IDisposable
     private readonly WukongAreaState _areaState;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
+    private readonly WukongWidgetManager _widgetManager;
     private readonly IClientEcsUpdateLoop _ecsLoop;
 
     private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
@@ -34,6 +35,7 @@ public class WukongChatter : IDisposable
         WukongAreaState areaState,
         WukongPlayerState playerState,
         WukongRpcCallbacks rpc,
+        WukongWidgetManager widgetManager,
         IClientEcsUpdateLoop ecsLoop
     )
     {
@@ -44,10 +46,13 @@ public class WukongChatter : IDisposable
         _areaState = areaState;
         _playerState = playerState;
         _rpc = rpc;
+        _widgetManager = widgetManager;
         _ecsLoop = ecsLoop;
 
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
+
+        _rpc.OnGetChatMessage += OnGetMessage;
 
         SetupCommands();
     }
@@ -58,6 +63,8 @@ public class WukongChatter : IDisposable
 
         _state.OnJoinedArea -= OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
+
+        _rpc.OnGetChatMessage -= OnGetMessage;
     }
 
     public void ProcessMessage(string message)
@@ -172,7 +179,7 @@ public class WukongChatter : IDisposable
         _rpc.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
     }
 
-    public static void OnGetMessage(ChatMessage message)
+    public void OnGetMessage(ChatMessage message)
     {
         var senderNickname = message.IsServer ? "Server" : message.Nickname!;
         var translatedMessage = message.Message;
@@ -182,13 +189,18 @@ public class WukongChatter : IDisposable
         }
 
         Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
-        ChatWidget.Instance.AddMessage(message.IsServer, senderNickname, translatedMessage);
+        _widgetManager.AddChatMessage(message.IsServer, senderNickname, translatedMessage);
     }
 
-    private static void SendLocalMessage(string message, string[] placeholders)
+    private void AddLocalServerMessage(string message, string[] placeholders)
     {
         var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
-        ChatWidget.Instance.AddMessage(true, "Server", translatedMessage);
+        _widgetManager.AddChatMessage(true, "Server", translatedMessage);
+    }
+
+    public void AddLocalCommandMessage(string message)
+    {
+        _widgetManager.AddChatMessage(true, "Command", message);
     }
 
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
@@ -208,6 +220,6 @@ public class WukongChatter : IDisposable
             return;
         ref var player = ref playerEntity.Value.GetState();
         var nickname = player.NickName;
-        SendLocalMessage("PlayerLeft", [nickname]);
+        AddLocalServerMessage("PlayerLeft", [nickname]);
     }
 }

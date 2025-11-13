@@ -4,10 +4,7 @@ namespace WukongMp.Api.UI
 {
     public class InfoMessageWidget : GameWidgetBase
     {
-        private static InfoMessageWidget? _instance;
-        public static InfoMessageWidget Instance => _instance ??= new();
-
-        private InfoMessageWidget() : base(Constants.InfoMessageWidgetName) { }
+        public InfoMessageWidget() : base(Constants.InfoMessageWidgetName) { }
 
         public void SetText(string message)
         {

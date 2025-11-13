@@ -138,7 +138,7 @@ public static class PatchRequestPlayMovie
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.Pawn?.SetActorHiddenInGame(false);
                     localMain.MarkerActor?.SetActorHiddenInGame(false);
-                    InfoMessageWidget.Instance.SetVisibility(false);
+                    DI.Instance.WidgetManager.HideInfoMessage();
                 }
             });
         }
@@ -196,7 +196,7 @@ public static class PatchTickForMovieSystem
 
             if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false || isMoviePlayedByOthers)
             {
-                InfoMessageWidget.Instance.SetVisibility(false);
+                DI.Instance.WidgetManager.HideInfoMessage();
                 if (mainEntity != null)
                 {
                     ref var localMain = ref mainEntity.Value.GetLocalState();
@@ -225,8 +225,7 @@ public static class PatchTickForMovieSystem
                 
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                InfoMessageWidget.Instance.SetVisibility(true);
-                InfoMessageWidget.Instance.SetText(Resources.Texts.WaitForOtherPlayers);
+                DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
@@ -294,8 +293,7 @@ public static class PatchOnSkipCurrentCameraMovie
         if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().LastSyncableSequenceId == sequenceId)
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText(Resources.Texts.WaitForOtherPlayers);
+            DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
             DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
             return false;
         }

@@ -342,10 +342,13 @@ public partial class WukongRpcCallbacks : IDisposable
         // TODO
     }
 
+    [Obsolete("To be removed once per-file RPC is implemented")]
+    public event Action<ChatMessage>? OnGetChatMessage;
+
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnChatMessage(ChatMessage message)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, message0) => { WukongChatter.OnGetMessage(message0); }, message);
+        _ecsLoop.Scheduler.Schedule(static (_, self, message0) => { self.OnGetChatMessage?.Invoke(message0); }, this, message);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]

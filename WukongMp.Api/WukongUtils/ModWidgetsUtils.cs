@@ -5,7 +5,6 @@ using System.Linq;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -59,32 +58,6 @@ namespace WukongMp.Api.WukongUtils
         public static UUserWidget? GetWidget(string widgetName)
         {
             return GetWidgetsByName(widgetName).SingleOrDefault();
-        }
-
-        public static void InitializeWidgets()
-        {
-            ChatWidget.Instance.Initialize();
-            LobbyStatusWidget.Instance.Initialize();
-            CoopStatusWidget.Instance.Initialize();
-            GameMessageWidget.Instance.Initialize();
-            CountdownWidget.Instance.Initialize();
-            InfoMessageWidget.Instance.Initialize();
-            ErrorMessageWidget.Instance.Initialize();
-            PingIndicatorWidget.Instance.Initialize();
-            FreeCameraControlsWidget.Instance.Initialize();
-        }
-
-        public static void DeinitializeWidgets()
-        {
-            ChatWidget.Instance.Deinitialize();
-            LobbyStatusWidget.Instance.Deinitialize();
-            CoopStatusWidget.Instance.Deinitialize();
-            GameMessageWidget.Instance.Deinitialize();
-            CountdownWidget.Instance.Deinitialize();
-            InfoMessageWidget.Instance.Deinitialize();
-            ErrorMessageWidget.Instance.Deinitialize();
-            PingIndicatorWidget.Instance.Deinitialize();
-            FreeCameraControlsWidget.Instance.Deinitialize();
         }
     }
 }

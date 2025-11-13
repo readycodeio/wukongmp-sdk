@@ -5,11 +5,8 @@ using WukongMp.Api.Helpers;
 namespace WukongMp.Api.UI
 {
     public class CountdownWidget : GameWidgetBase
-    {
-        private static CountdownWidget? _instance;
-        public static CountdownWidget Instance => _instance ??= new();
-        
-        private CountdownWidget() : base(Constants.CountdownWidgetName)
+    {      
+        public CountdownWidget() : base(Constants.CountdownWidgetName)
         {
             _countdownTimer.OnTick += (int _, int seconds) => SetText(seconds);
         }

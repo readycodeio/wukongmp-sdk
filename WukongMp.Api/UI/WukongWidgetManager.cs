@@ -17,160 +17,131 @@ public sealed class WukongWidgetManager : IDisposable
     private readonly ClientState _clientState;
     private readonly WukongPlayerState _playerState;
     private readonly WukongEventBus _eventBus;
+    private readonly FreeCameraManager _freeCameraManager;
 
     private string _lastDisconnectText = Texts.Disconnected;
 
-    public WukongWidgetManager(ClientState pawnState, WukongPlayerState playerState, WukongEventBus eventBus)
+    private readonly ChatWidget _chatWidget = new();
+    private readonly InfoMessageWidget _infoMessageWidget = new();
+    private readonly ErrorMessageWidget _errorMessageWidget = new();
+    private readonly PingIndicatorWidget _pingIndicatorWidget = new();
+    private readonly FreeCameraControlsWidget _freeCameraControlsWidget = new();
+
+    public WukongWidgetManager(ClientState pawnState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager)
     {
         _clientState = pawnState;
         _playerState = playerState;
         _eventBus = eventBus;
+        _freeCameraManager = freeCameraManager;
 
-        _clientState.OnJoinedArea += OnJoinedArea;
-        _clientState.OnLeftArea += OnLeftArea;
         _clientState.OnConnected += OnConnected;
         _clientState.OnDisconnected += OnDisconnected;
-        _clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
-        _clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
         _eventBus.OnLevelLoaded += OnLevelLoaded;
         _eventBus.OnExitLevel += OnExitLevel;
+
+        _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
+    }
+
+    private void OnFreeCameraModeChanged(bool enabled)
+    {
+        _freeCameraControlsWidget.SetVisibility(enabled);
     }
 
     public void Dispose()
     {
-        _clientState.OnJoinedArea -= OnJoinedArea;
-        _clientState.OnLeftArea -= OnLeftArea;
         _clientState.OnConnected -= OnConnected;
         _clientState.OnDisconnected -= OnDisconnected;
-        _clientState.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
-        _clientState.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
         _eventBus.OnLevelLoaded -= OnLevelLoaded;
         _eventBus.OnExitLevel -= OnExitLevel;
-    }
 
-    public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
-    {
-        ref var playerComp = ref playerEntity.GetState();
-
-        if (Constants.IsCoop)
-        {
-            CoopStatusWidget.Instance.RemovePlayer(playerComp.NickName);
-            CoopStatusWidget.Instance.AddPlayer(playerComp.NickName);
-        }
-        else
-        {
-            var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
-            LobbyStatusWidget.Instance.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
-        }
-
-        RefreshWidgets();
-    }
-
-    private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
-    {
-        var player = _playerState.GetPlayerById(playerId);
-        if (player.HasValue)
-        {
-            var nickname = player.Value.GetState().NickName;
-            if (Constants.IsCoop)
-            {
-                CoopStatusWidget.Instance.AddPlayer(nickname);
-            }
-
-            RefreshWidgets();
-        }
-    }
-
-    private void OnOtherPlayerOutsideArea(PlayerId arg1, AreaId arg2, OtherPlayerOutsideAreaReason arg3)
-    {
-        var player = _playerState.GetPlayerById(arg1);
-        if (player.HasValue)
-        {
-            var nickname = player.Value.GetState().NickName;
-            CoopStatusWidget.Instance.RemovePlayer(nickname);
-            RefreshWidgets();
-        }
-    }
-
-    public void RefreshWidgets()
-    {
-        LobbyStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
-        CoopStatusWidget.Instance.SetConnectedCount(_clientState.AreaPlayers.Count);
-        CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
+        _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
     }
 
     public void ShowInGameWidgets()
     {
-        if (Constants.IsCoop)
-        {
-            CoopStatusWidget.Instance.SetVisibility(true);
-            CoopStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        }
-        else if (Constants.IsPvP)
-        {
-            LobbyStatusWidget.Instance.SetVisibility(true);
-            LobbyStatusWidget.Instance.SetMaxConnectedCount(Constants.MaxPlayers);
-        }
+        _pingIndicatorWidget.SetVisibility(true);
+        _chatWidget.ShowIfNotHidden();
+    }
 
-        PingIndicatorWidget.Instance.SetVisibility(true);
-        ChatWidget.Instance.ShowIfNotHidden();
+    public void AddChatMessage(bool isSystemMessage, string sender, string message)
+    {
+        _chatWidget.AddMessage(isSystemMessage, sender, message);
     }
 
     private void OnLevelLoaded()
     {
         Logging.LogDebug("Initializing widgets");
-        ModWidgetsUtils.SpawnWidgetManagerActor();
-        ModWidgetsUtils.InitializeWidgets();
-        ChatWidget.Instance.SetVisibility(false);
+        ModWidgetsUtils.SpawnWidgetManagerActor(); // this needs to be shared
+        InitializeWidgets();
+        _chatWidget.SetVisibility(false);
 
         if (!_clientState.IsConnected)
         {
             DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
             {
-                InfoMessageWidget.Instance.SetVisibility(true);
+                _infoMessageWidget.SetVisibility(true);
                 _lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
-                InfoMessageWidget.Instance.SetText(_lastDisconnectText);
+                _infoMessageWidget.SetText(_lastDisconnectText);
             });
         }
     }
 
-    private static void OnExitLevel()
+    public void UpdatePingIndicator(long pingMs)
+    {
+        _pingIndicatorWidget.SetPingValue(pingMs);
+        _pingIndicatorWidget.HideInfoText();
+    }
+
+    public void SetPacketLossWarning()
+    {
+        _pingIndicatorWidget.SetPingValue(999);
+        _pingIndicatorWidget.SetInfoText(Texts.SeverePacketLossDetected);
+    }
+
+    public void HideInfoMessage()
+    {
+        _infoMessageWidget.SetVisibility(false);
+    }
+
+    public void ShowInfoMessage(string message)
+    {
+        _infoMessageWidget.SetText(message);
+        _infoMessageWidget.SetVisibility(true);
+    }
+
+    private void OnExitLevel()
     {
         Logging.LogDebug("Deinitializing widgets");
-        ModWidgetsUtils.DeinitializeWidgets();
-    }
-
-    private void OnJoinedArea(AreaId area, Entity areaEntity)
-    {
-        var playerEntity = _playerState.LocalPlayerEntity;
-        if (playerEntity.HasValue)
-        {
-            CoopStatusWidget.Instance.AddPlayer(playerEntity.Value.GetState().NickName);
-        }
-
-        RefreshWidgets();
-    }
-
-    private void OnLeftArea(AreaId arg1, Entity arg2)
-    {
-        var playerEntity = _playerState.LocalPlayerEntity;
-        if (playerEntity.HasValue)
-        {
-            CoopStatusWidget.Instance.RemovePlayer(playerEntity.Value.GetState().NickName);
-        }
-
-        RefreshWidgets();
+        DeinitializeWidgets();
     }
 
     private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
-        InfoMessageWidget.Instance.SetVisibility(true);
+        _infoMessageWidget.SetVisibility(true);
         _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
-        InfoMessageWidget.Instance.SetText(_lastDisconnectText);
+        _infoMessageWidget.SetText(_lastDisconnectText);
     }
 
     private void OnConnected(PlayerId playerId, Entity entity)
     {
-        InfoMessageWidget.Instance.SetVisibility(false);
+        _infoMessageWidget.SetVisibility(false);
+    }
+
+    public void InitializeWidgets()
+    {
+        _chatWidget.Initialize();
+        _infoMessageWidget.Initialize();
+        _errorMessageWidget.Initialize();
+        _pingIndicatorWidget.Initialize();
+        _freeCameraControlsWidget.Initialize();
+    }
+
+    public void DeinitializeWidgets()
+    {
+        _chatWidget.Deinitialize();
+        _infoMessageWidget.Deinitialize();
+        _errorMessageWidget.Deinitialize();
+        _pingIndicatorWidget.Deinitialize();
+        _freeCameraControlsWidget.Deinitialize();
     }
 }

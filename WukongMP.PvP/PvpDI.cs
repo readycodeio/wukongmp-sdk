@@ -4,6 +4,7 @@ using WukongMp.Api.UI;
 using WukongMp.PvP.Chat;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.UI;
 
 namespace WukongMp.PvP
 {
@@ -17,6 +18,7 @@ namespace WukongMp.PvP
         public PvpGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public PvpSynchronizer Synchronizer { get; private set; } = null!;
         public PvpSaveManager SaveManager { get; private set; } = null!;
+        public PvpWidgetManager WidgetManager { get; private set; } = null!;
         public WukongPatcher Patcher { get; private set; } = null!;
 
         public PvpMode PVP { get; private set; } = null!;
@@ -33,8 +35,9 @@ namespace WukongMp.PvP
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
 
             var saveManager = SaveManager = new PvpSaveManager(DI.Logger);
+            var widgetManager = WidgetManager = new PvpWidgetManager(DI.WidgetManager, DI.State, DI.PlayerState);
 
-            var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, FreeCameraManager.Instance, DI.Logger);
+            var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, FreeCameraManager.Instance, widgetManager, DI.Logger);
 
             var synchronizer = Synchronizer = new PvpSynchronizer(
                 DI.ArchetypeEvent,

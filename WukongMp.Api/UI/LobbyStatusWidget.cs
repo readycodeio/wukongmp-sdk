@@ -7,11 +7,8 @@ using WukongMp.Api.Resources;
 namespace WukongMp.Api.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
-    {
-        private static LobbyStatusWidget? _instance;
-        public static LobbyStatusWidget Instance => _instance ??= new();
-        
-        private LobbyStatusWidget() : base(Constants.LobbyStatusWidgetName) { }
+    {       
+        public LobbyStatusWidget() : base(Constants.LobbyStatusWidgetName) { }
 
         public void SetConnectedCount(int count)
         {

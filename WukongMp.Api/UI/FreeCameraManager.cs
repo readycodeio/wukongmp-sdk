@@ -96,7 +96,6 @@ public class FreeCameraManager
         aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
         BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.UIAndGame, EGSInputModeChangeReason.Replay);
         _isInFreeCameraMode = true;
-        FreeCameraControlsWidget.Instance.SetVisibility(true);
         OnFreeCameraModeChanged?.Invoke(true);
     }
 
@@ -151,7 +150,6 @@ public class FreeCameraManager
         _freeCameraActor = null;
         _cachePlayerPawn = null;
         _isInFreeCameraMode = false;
-        FreeCameraControlsWidget.Instance.SetVisibility(false);
         OnFreeCameraModeChanged?.Invoke(false);
     }
 

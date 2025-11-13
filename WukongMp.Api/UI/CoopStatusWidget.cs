@@ -5,10 +5,7 @@ namespace WukongMp.Api.UI
 {
     public class CoopStatusWidget : GameWidgetBase
     {
-        private static CoopStatusWidget? _instance;
-        public static CoopStatusWidget Instance => _instance ??= new();
-        
-        private CoopStatusWidget() : base(Constants.CoopStatusWidgetName) { }
+        public CoopStatusWidget() : base(Constants.CoopStatusWidgetName) { }
 
         public void SetConnectedCount(int count)
         {

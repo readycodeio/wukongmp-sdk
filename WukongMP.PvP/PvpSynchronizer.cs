@@ -25,7 +25,7 @@ using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP;
 
-public class PvpSynchronizer : WukongSynchronizer
+internal class PvpSynchronizer : WukongSynchronizer
 {
     private readonly SystemGroup _modeGroup;
 

@@ -4,10 +4,7 @@ namespace WukongMp.Api.UI
 {
     public class ErrorMessageWidget : GameWidgetBase
     {
-        private static ErrorMessageWidget? _instance;
-        public static ErrorMessageWidget Instance => _instance ??= new();
-
-        private ErrorMessageWidget() : base(Constants.ErrorMessageWidgetName) { }
+        public ErrorMessageWidget() : base(Constants.ErrorMessageWidgetName) { }
 
         public void SetText(string message)
         {

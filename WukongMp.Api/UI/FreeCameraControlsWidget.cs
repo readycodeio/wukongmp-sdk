@@ -5,10 +5,7 @@ namespace WukongMp.Api.UI
 {
     public class FreeCameraControlsWidget : GameWidgetBase
     {
-        private static FreeCameraControlsWidget? _instance;
-        public static FreeCameraControlsWidget Instance => _instance ??= new();
-
-        private FreeCameraControlsWidget() : base(Constants.FreeCameraWidgetName) { }
+        public FreeCameraControlsWidget() : base(Constants.FreeCameraWidgetName) { }
 
         public void SetDownDescriptionText(string down)
         {

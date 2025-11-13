@@ -169,7 +169,7 @@ public class DI
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
-        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, eventBus);
+        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, eventBus, FreeCameraManager.Instance);
 
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
@@ -184,10 +184,10 @@ public class DI
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
         var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, ecsLoop, logger);
-        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger);
+        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger, widgetManager);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
-        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
+        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, widgetManager, ecsLoop);
 
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, widgetManager);
 
