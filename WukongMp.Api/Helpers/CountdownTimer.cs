@@ -9,8 +9,7 @@ public class CountdownTimer
     private int _totalSeconds;
     private readonly Timer _timer;
     private Action? _callback;
-
-    public event Action<int, int>? OnTick;
+    private Action<int, int>? _onTickCallback;
 
     public CountdownTimer(int minutes, int seconds)
     {
@@ -31,7 +30,7 @@ public class CountdownTimer
         if (_remainingSeconds > 0)
         {
             _remainingSeconds--;
-            OnTick?.Invoke(_remainingSeconds / 60, _remainingSeconds % 60);
+            _onTickCallback?.Invoke(_remainingSeconds / 60, _remainingSeconds % 60);
         }
         else
         {
@@ -40,10 +39,11 @@ public class CountdownTimer
         }
     }
 
-    public void Start(Action onFinishedCallback)
+    public void Start(Action onFinishedCallback, Action<int, int> onTickCallback)
     {
         _timer.Start();
         _callback = onFinishedCallback;
+        _onTickCallback = onTickCallback;
     }
 
     public void Stop()
@@ -55,6 +55,7 @@ public class CountdownTimer
     {
         Stop();
         _callback = null;
+        _onTickCallback = null;
         _remainingSeconds = _totalSeconds;
     }
 }

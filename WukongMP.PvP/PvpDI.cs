@@ -58,6 +58,7 @@ namespace WukongMp.PvP
                 widgetManager,
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,
+                pvp,
                 DI.Logger);
         }
     }

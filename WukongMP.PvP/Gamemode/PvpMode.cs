@@ -23,6 +23,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Helpers;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -57,6 +58,8 @@ internal partial class PvpMode : IDisposable
 
     private int _pendingDaSheng;
     private readonly HashSet<NetworkId> SpawnedDaSheng2 = [];
+
+    private readonly CountdownTimer _countdownTimer = new(1, 5);
 
     private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
     {
@@ -387,6 +390,7 @@ internal partial class PvpMode : IDisposable
 
     public void StartRound()
     {
+        CancelLobbyCountdown();
         _pvpWidgetManager.StartRound();
 
         var areaEntity = _areaState.CurrentArea;
@@ -662,6 +666,26 @@ internal partial class PvpMode : IDisposable
             Logging.LogError("No area entity found, cannot end matchmaking");
             return;
         }
+    }
+
+    public void StartLobbyCountdown(int seconds)
+    {
+        _pvpWidgetManager.SetMainMessage(Texts.StartingGame);
+        _pvpWidgetManager.ShowCountdown();
+
+        _countdownTimer.SetTime(0, seconds);
+        _countdownTimer.Start(() =>
+        {
+            CancelLobbyCountdown();
+            StartPvP();
+        }, _pvpWidgetManager.UpdateRoundCountdown);
+    }
+
+    public void CancelLobbyCountdown()
+    {
+        _countdownTimer.Reset();
+        _pvpWidgetManager.HideCountdown();
+        _pvpWidgetManager.SetMainMessage(Texts.InMultiplayer);
     }
 
     #region Event Handlers

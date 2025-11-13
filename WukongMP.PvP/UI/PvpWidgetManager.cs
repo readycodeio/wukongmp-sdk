@@ -78,18 +78,24 @@ namespace WukongMp.PvP.UI
             RefreshWidgets();
         }
 
-        public void SetupPvpLobby(bool allReady)
+        public void SetMainMessage(string message)
         {
-            if (allReady)
-            {
-                _gameMessageWidget.SetMainText(Texts.StartingGame);
-                _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, pvpMode.StartPvP);
-            }
-            else
-            {
-                _countdownWidget.StopCountdown();
-                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
-            }
+            _gameMessageWidget.SetMainText(message);
+        }
+
+        public void UpdateRoundCountdown(int minutesLeft, int secondsLeft)
+        {
+            _countdownWidget.SetText(secondsLeft);
+        }
+
+        public void ShowCountdown()
+        {
+            _countdownWidget.SetVisibility(true);
+        }
+
+        public void HideCountdown()
+        {
+            _countdownWidget.SetVisibility(false);
         }
 
         private void ShowInGameWidgets()
@@ -164,7 +170,6 @@ namespace WukongMp.PvP.UI
         public void StartRound()
         {
             _gameMessageWidget.SetVisibility(false);
-            _countdownWidget.StopCountdown();
         }
 
         public void SwitchReadyState(bool isReady)
