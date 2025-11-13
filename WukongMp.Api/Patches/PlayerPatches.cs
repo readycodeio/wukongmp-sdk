@@ -186,55 +186,6 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(BUC_ABPJumpV2Data), nameof(BUC_ABPJumpV2Data.Update))]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
-    public class PatchJumpData
-    {
-        public static void Postfix(
-            BUC_ABPJumpV2Data __instance,
-            AActor Owner,
-            IBUC_ActorBasicData ActorBasicData,
-            IBUC_ABPCharacterData ChrData,
-            IBUC_ABPBasicData BasicData,
-            IBUC_ABPSpecialMoveData SpecialMoveData,
-            float DeltaTime)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return;
-
-            if (Owner is not BGUCharacterCS)
-                return;
-
-            if (Owner.IsNullOrDestroyed())
-            {
-                Logging.LogError("Owner is null or destroyed");
-                return;
-            }
-
-            var playerState = DI.Instance.PlayerState;
-
-            if (Owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
-            {
-                var mainEntity = playerState.LocalMainCharacter;
-                ref var mainComp = ref mainEntity.Value.GetState();
-
-                if (mainComp.InJump != __instance.bInJump)
-                {
-                    mainComp.InJump = __instance.bInJump;
-                }
-            }
-            else
-            {
-                var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(Owner);
-                if (!mainEntity.HasValue)
-                    return;
-
-                ref var mainComp = ref mainEntity.Value.GetState();
-                __instance.bInJump = mainComp.InJump;
-            }
-        }
-    }
-
     // NOTE: Runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPBasicData), nameof(BUC_ABPBasicData.Update_WorkThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
@@ -816,69 +767,6 @@ namespace WukongMp.Api.Patches
             }
 
             return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(BUS_PlayerMovementSystem), "TickInputMoving")]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
-    public class PatchTickInputMoving
-    {
-        public static void Postfix(float DeltaTime, BUS_PlayerMovementSystem __instance, BUC_MovementData ___MovementData, IBUC_ABPCharacterData ___ChrData)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return;
-
-            if (__instance.GetOwner() == GameUtils.GetControlledPawn() && ___MovementData.GetMoveType() == EBGUMoveMode.AIPathMove)
-            {
-                var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-                if (!mainEntity.HasValue)
-                    return;
-                ref var localMain = ref mainEntity.Value.GetLocalState();
-                if (___ChrData.RealWorldVelocity.IsNearlyZero())
-                {
-                    Logging.LogDebug("RealWorldVelocity is nearly zero");
-                    localMain.AIPathMoveStuckTimer += DeltaTime;
-                    if (localMain.AIPathMoveStuckTimer > Constants.AiPathMoveStuckTimeout)
-                    {
-                        Logging.LogDebug("AIPathMove stuck detected, resetting timer");
-                        localMain.AIPathMoveStuckTimer = 0f;
-                        localMain.IsAIPathMoveStuck = true;
-                        var events = BUS_EventCollectionCS.Get(__instance.GetOwner());
-                        events.Evt_MovementForceStop.Invoke();
-                    }
-                }
-                else
-                {
-                    localMain.AIPathMoveStuckTimer = 0f;
-                    localMain.IsAIPathMoveStuck = false;
-                }
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(InteractStepMatchPos), "OnInteractMatchingPosFinish")]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
-    public class PatchOnInteractMatchingPosFinish
-    {
-        public static bool Prefix(InteractStepMatchPos __instance)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return true;
-
-            var playerState = DI.Instance.PlayerState;
-            var mainEntity = playerState.LocalMainCharacter;
-            if (!mainEntity.HasValue)
-                return true;
-
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-            if (localMain.IsAIPathMoveStuck)
-            {
-                localMain.IsAIPathMoveStuck = false;
-                __instance.StepFinish();
-                return false;
-            }
-
-            return true;
         }
     }
 
