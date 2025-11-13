@@ -138,26 +138,26 @@ namespace WukongMp.PvP
             }
 
 #if DEBUG
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
             {
                 Logging.LogDebug("Alt + 0");
                 if (LaunchParameters.Instance.RecordShimFile != null)
                     DI.Instance.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 _logger.LogDebug("Alt + C");
                 DI.Instance.NetLogger.DumpDebugInfo();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 _logger.LogDebug("Alt + X");
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
 
@@ -168,7 +168,7 @@ namespace WukongMp.PvP
                 DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
 
@@ -179,40 +179,40 @@ namespace WukongMp.PvP
                 DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
-            Utils.RegisterKeyBind(Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
                     PvpDI.Instance.PVP.SwitchReadyStateMulti();
             });
 
-            Utils.RegisterKeyBind(Key.L, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.L, () =>
             {
                 _logger.LogDebug("L");
                 if (!ChatWidget.Instance.HasFocus())
                     PvpDI.Instance.PVP?.SwitchTeam();
             });
 
-            Utils.RegisterKeyBind(Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
             {
                 _logger.LogDebug("K");
                 if (!ChatWidget.Instance.HasFocus())
                     ChatWidget.Instance.ToggleVisibility();
             });
 
-            Utils.RegisterKeyBind(Key.UP, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
                 ChatWidget.Instance.SetHistoryNext();
             });
 
-            Utils.RegisterKeyBind(Key.DOWN, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.DOWN, () =>
             {
                 _logger.LogDebug("DOWN");
                 ChatWidget.Instance.SetHistoryPrev();
             });
 
-            Utils.RegisterKeyBind(Key.ENTER, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>
             {
                 _logger.LogDebug("ENTER");
                 if (!ChatWidget.Instance.HasFocus())

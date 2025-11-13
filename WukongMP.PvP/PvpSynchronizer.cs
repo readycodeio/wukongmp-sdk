@@ -21,6 +21,7 @@ using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.PvP.ECS.Systems;
 using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.UI;
 using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP;
@@ -33,7 +34,6 @@ internal class PvpSynchronizer : WukongSynchronizer
         ArchetypeEventRouter archetypeEvent,
         ClientState state,
         ClientWukongArchetypeRegistration wukongArchetype,
-        PvpMode pvp,
         Store world,
         WukongAreaState areaState,
         WukongPlayerState playerState,
@@ -46,11 +46,11 @@ internal class PvpSynchronizer : WukongSynchronizer
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
         WukongEventBus eventBus,
-        WukongWidgetManager widgetManager,
+        PvpWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
         ILogger logger)
-        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, gameplayEventRouter, configuration, logger)
+        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager.widgetManager, gameplayEventRouter, configuration, logger)
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot += OnApplySnapshot;
@@ -58,7 +58,7 @@ internal class PvpSynchronizer : WukongSynchronizer
         _modeGroup = new SystemGroup("Pvp");
 
         _modeGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
-        _modeGroup.Add(new ReadinessSystem(areaState, pvp));
+        _modeGroup.Add(new ReadinessSystem(areaState, widgetManager));
         _modeGroup.Add(new PlayerListSystem(playerState, areaState));
         _modeGroup.Add(new TeamColorSystem());
 

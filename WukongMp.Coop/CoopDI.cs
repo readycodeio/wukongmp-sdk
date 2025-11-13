@@ -36,7 +36,7 @@ namespace WukongMp.Coop
             var gameplayConfig = GameplayConfiguration = new CoopGameplayConfiguration(DI.GameplayConfiguration);
 
             var saveManager = SaveManager = new CoopSaveManager(DI.Logger);
-            var widgetManager = WidgetManager = new CoopWidgetManager(DI.WidgetManager, DI.State, DI.PlayerState, DI.EventBus, FreeCameraManager.Instance, DI.AreaState);
+            var widgetManager = WidgetManager = new CoopWidgetManager(DI.WidgetManager, DI.State, DI.PlayerState, DI.EventBus, FreeCameraManager.Instance, DI.AreaState, DI.GameplayEventRouter);
 
             var coop = Coop = new CoopMode(DI.Serializer, DI.RelayClient, DI.AreaState, DI.PlayerState, DI.PawnState, DI.GameplayEventRouter);
 

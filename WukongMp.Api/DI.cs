@@ -1,4 +1,6 @@
-﻿using Friflo.Engine.ECS;
+﻿using CSharpModBase;
+using CSharpModBase.Input;
+using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Runtime.Public;
 using PreludeLib.Runtime.Backend.WeaverCallback;
@@ -30,10 +32,11 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public class DI
+public sealed class DI
 {
     public static DI Instance { get; } = new();
 
+    public IInputManager InputManager { get; private set; } = null!;
     public ILoggerFactory LoggerFactory { get; private set; } = null!;
     public ILogger Logger { get; private set; } = null!;
 
@@ -116,6 +119,8 @@ public class DI
 
         var loggerFactory = LoggerFactory;
         var logger = Logger;
+
+        var inputManager = InputManager = CSharpModBase.InputManager.Instance;
 
         var areaComponentRegistry = AreaComponentRegistry = new AreaComponentRegistry([
             new WukongAreaRegistration(),

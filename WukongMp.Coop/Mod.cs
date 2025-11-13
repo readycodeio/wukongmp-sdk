@@ -131,28 +131,27 @@ namespace WukongMp.Coop
                     DI.Instance.Connection.Connect();
                 }
             });
-
 #if DEBUG
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
             {
                 Logging.LogDebug("Alt + Y: Show colliders markers");
                 DebugUtils.ShowMarkersForInvisibleWalls(4000);
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.U, () =>
             {
                 Logging.LogDebug("Alt + U: Remove colliders markers");
                 DebugUtils.DestroyTmpMarkerActors();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
             {
                 Logging.LogDebug("Alt + 0");
                 if (LaunchParameters.Instance.RecordShimFile != null)
                     DI.Instance.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 _logger.LogDebug("Alt + C");
                 try
@@ -166,69 +165,69 @@ namespace WukongMp.Coop
                 }
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
             {
                 _logger.LogDebug("Alt + S");
                 CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 _logger.LogDebug("Alt + X");
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
 
-            Utils.RegisterKeyBind(Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J (Dump anim info)");
                 DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
                 DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
             {
                 _logger.LogDebug("Shift + J");
                 DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
                 DebugUtils.ResetPlayersAnimation();
             });
 #endif
-            Utils.RegisterKeyBind(Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");
                 if (!ChatWidget.Instance.HasFocus())
                     CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             });
 
-            Utils.RegisterKeyBind(Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
             {
                 _logger.LogDebug("K");
                 if (!ChatWidget.Instance.HasFocus())
                     ChatWidget.Instance.ToggleVisibility();
             });
 
-            Utils.RegisterKeyBind(Key.UP, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
                 ChatWidget.Instance.SetHistoryNext();
             });
 
-            Utils.RegisterKeyBind(Key.DOWN, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.DOWN, () =>
             {
                 _logger.LogDebug("DOWN");
                 ChatWidget.Instance.SetHistoryPrev();
             });
 
-            Utils.RegisterKeyBind(Key.ENTER, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>
             {
                 _logger.LogDebug("ENTER");
                 if (!ChatWidget.Instance.HasFocus())

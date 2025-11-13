@@ -13,7 +13,6 @@ namespace WukongMp.PvP.ECS.Systems;
 
 internal sealed class ReadinessSystem(
     WukongAreaState areaState,
-    PvpMode pvpMode,
     PvpWidgetManager widgetManager
 ) : QuerySystem<PvPComponent, InScopeComponent>
 {

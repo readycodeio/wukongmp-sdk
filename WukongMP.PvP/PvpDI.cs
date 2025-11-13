@@ -43,7 +43,6 @@ namespace WukongMp.PvP
                 DI.ArchetypeEvent,
                 DI.State,
                 DI.ArchetypeRegistration,
-                pvp,
                 DI.World,
                 DI.AreaState,
                 DI.PlayerState,
@@ -56,7 +55,7 @@ namespace WukongMp.PvP
                 DI.RelayClient,
                 DI.EcsLoop,
                 DI.EventBus,
-                DI.WidgetManager,
+                widgetManager,
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,
                 DI.Logger);
