@@ -178,7 +178,7 @@ public class DI
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
         
         var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
-        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
+        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager, gameplayEventRouter);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);

@@ -7,12 +7,14 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.UI;
 
 namespace WukongMp.PvP.ECS.Systems;
 
-public sealed class ReadinessSystem(
+internal sealed class ReadinessSystem(
     WukongAreaState areaState,
-    PvpMode pvpMode
+    PvpMode pvpMode,
+    PvpWidgetManager widgetManager
 ) : QuerySystem<PvPComponent, InScopeComponent>
 {
     private int _lastReadyCount = -1;
@@ -39,22 +41,12 @@ public sealed class ReadinessSystem(
             return;
 
         _lastReadyCount = readyCount;
-        LobbyStatusWidget.Instance.SetReadyCount(readyCount);
+        widgetManager.UpdateReadyCount(readyCount);
 
         if (areaState.PvpState is { InPvP: false })
         {
             var allReady = readyCount == players && players > 0;
-            if (allReady)
-            {
-                // all players are ready
-                GameMessageWidget.Instance.SetMainText(Texts.StartingGame);
-                CountdownWidget.Instance.StartLobbyCountdown(Constants.CountdownSeconds, pvpMode.StartPvP);
-            }
-            else
-            {
-                CountdownWidget.Instance.StopCountdown();
-                GameMessageWidget.Instance.SetMainText(Texts.InMultiplayer);
-            }
+            widgetManager.SetupPvpLobby(allReady);
         }
     }
 }

@@ -18,6 +18,7 @@ public class SyncMainCharactersSystem(
     WukongEventBus eventBus,
     WukongWidgetManager widgetManager,
     GameplayConfiguration configuration,
+    GameplayEventRouter eventRouter,
     ILogger logger
 )
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
@@ -74,8 +75,7 @@ public class SyncMainCharactersSystem(
         {
             logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.NickName);
             ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
-
-            widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
+            eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
     }
 

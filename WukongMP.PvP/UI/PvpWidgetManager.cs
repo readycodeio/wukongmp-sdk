@@ -3,39 +3,37 @@ using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
-using System.Data.Common;
-using System.Xml;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
-using WukongMp.Api.WukongUtils;
+using WukongMp.PvP.Gamemode;
 
 namespace WukongMp.PvP.UI
 {
     internal class PvpWidgetManager
     {
         private readonly ClientState _clientState;
-        private readonly WukongPlayerState _playerState;
         private readonly WukongWidgetManager _widgetManager;
         private readonly WukongEventBus _eventBus;
         private readonly FreeCameraManager _freeCameraManager;
         private readonly WukongAreaState _areaState;
+        private readonly GameplayEventRouter _eventRouter;
 
         private readonly LobbyStatusWidget _lobbyStatusWidget = new();
         private readonly GameMessageWidget _gameMessageWidget = new();
         private readonly CountdownWidget _countdownWidget = new();
 
-        public PvpWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState)
+        public PvpWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState, GameplayEventRouter eventRouter)
         {
             _widgetManager = widgetManager;
             _clientState = clientState;
-            _playerState = playerState;
             _eventBus = eventBus;
             _freeCameraManager = freeCameraManager;
             _areaState = areaState;
+            _eventRouter = eventRouter;
 
             _clientState.OnJoinedArea += OnJoinedArea;
             _clientState.OnLeftArea += OnLeftArea;
@@ -49,6 +47,8 @@ namespace WukongMp.PvP.UI
             _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
 
             _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
+
+            _eventRouter.OnPlayerChangedTeam += UpdatePlayerTeam;
         }
 
         public void Dispose()
@@ -65,6 +65,8 @@ namespace WukongMp.PvP.UI
             _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
 
             _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
+
+            _eventRouter.OnPlayerChangedTeam -= UpdatePlayerTeam;
         }
 
         public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
@@ -76,7 +78,21 @@ namespace WukongMp.PvP.UI
             RefreshWidgets();
         }
 
-        public void ShowInGameWidgets()
+        public void SetupPvpLobby(bool allReady)
+        {
+            if (allReady)
+            {
+                _gameMessageWidget.SetMainText(Texts.StartingGame);
+                _countdownWidget.StartLobbyCountdown(Constants.CountdownSeconds, pvpMode.StartPvP);
+            }
+            else
+            {
+                _countdownWidget.StopCountdown();
+                _gameMessageWidget.SetMainText(Texts.InMultiplayer);
+            }
+        }
+
+        private void ShowInGameWidgets()
         {
             _lobbyStatusWidget.SetVisibility(true);
             _lobbyStatusWidget.SetMaxConnectedCount(Constants.MaxPlayers);

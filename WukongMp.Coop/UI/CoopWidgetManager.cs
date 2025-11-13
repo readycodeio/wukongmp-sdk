@@ -20,10 +20,11 @@ namespace WukongMp.Coop.UI
         private readonly FreeCameraManager _freeCameraManager;
         private readonly WukongWidgetManager _widgetManager;
         private readonly WukongAreaState _areaState;
+        private readonly GameplayEventRouter _eventRouter;
 
         private readonly CoopStatusWidget _coopStatusWidget = new();
 
-        public CoopWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState)
+        public CoopWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState, GameplayEventRouter eventRouter)
         {
             _widgetManager = widgetManager;
             _clientState = clientState;
@@ -31,6 +32,7 @@ namespace WukongMp.Coop.UI
             _eventBus = eventBus;
             _freeCameraManager = freeCameraManager;
             _areaState = areaState;
+            _eventRouter = eventRouter;
 
             _clientState.OnJoinedArea += OnJoinedArea;
             _clientState.OnLeftArea += OnLeftArea;
@@ -44,6 +46,8 @@ namespace WukongMp.Coop.UI
             _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
 
             _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
+
+            _eventRouter.OnPlayerChangedTeam += UpdatePlayerTeam;
         }
 
         public void Dispose()
@@ -60,6 +64,8 @@ namespace WukongMp.Coop.UI
             _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
 
             _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
+
+            _eventRouter.OnPlayerChangedTeam -= UpdatePlayerTeam;
         }
 
         public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
