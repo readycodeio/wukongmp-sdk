@@ -10,8 +10,6 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
-using WukongMp.PvP.Gamemode;
-using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.UI
 {

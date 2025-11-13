@@ -8,76 +8,69 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
 
-public sealed class WukongWidgetManager : IDisposable
+public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
 {
-    private readonly ClientState _clientState;
-
     private string _lastDisconnectText = Texts.Disconnected;
 
     private bool _isInitialized;
 
-    private readonly ChatWidget _chatWidget = new();
-    private readonly InfoMessageWidget _infoMessageWidget = new();
-    private readonly ErrorMessageWidget _errorMessageWidget = new();
-    private readonly PingIndicatorWidget _pingIndicatorWidget = new();
-    private readonly FreeCameraControlsWidget _freeCameraControlsWidget = new();
-
-    public WukongWidgetManager(ClientState clientState)
-    {
-        _clientState = clientState;
-    }
+    private readonly Lazy<ChatWidget> _chatWidget = new();
+    private readonly Lazy<InfoMessageWidget> _infoMessageWidget = new();
+    private readonly Lazy<ErrorMessageWidget> _errorMessageWidget = new();
+    private readonly Lazy<PingIndicatorWidget> _pingIndicatorWidget = new();
+    private readonly Lazy<FreeCameraControlsWidget> _freeCameraControlsWidget = new();
 
     public void Dispose() { }
 
     public void OnFreeCameraModeChanged(bool enabled)
     {
-        _freeCameraControlsWidget.SetVisibility(enabled);
+        _freeCameraControlsWidget.Value.SetVisibility(enabled);
     }
 
     public void ShowInGameWidgets()
     {
-        _pingIndicatorWidget.SetVisibility(true);
-        _chatWidget.ShowIfNotHidden();
+        _pingIndicatorWidget.Value.SetVisibility(true);
+        _chatWidget.Value.ShowIfNotHidden();
     }
 
     public void OnLevelLoaded()
     {
         Logging.LogDebug("Initializing widgets");
         InitializeWidgets();
-        _chatWidget.SetVisibility(false);
+        _chatWidget.Value.SetVisibility(false);
 
-        if (!_clientState.IsConnected)
+        if (!clientState.IsConnected)
         {
-            DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
+            DI.Instance.RelayClient.Scheduler.Schedule(static (ctx, self) =>
             {
-                _infoMessageWidget.SetVisibility(true);
-                _lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
-                _infoMessageWidget.SetText(_lastDisconnectText);
-            });
+                self._infoMessageWidget.Value.SetVisibility(true);
+                self._lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
+                self._infoMessageWidget.Value.SetText(self._lastDisconnectText);
+            }, this);
         }
     }
 
     public void UpdatePingIndicator(long pingMs)
     {
-        _pingIndicatorWidget.SetPingValue(pingMs);
-        _pingIndicatorWidget.HideInfoText();
+        _pingIndicatorWidget.Value.SetPingValue(pingMs);
+        _pingIndicatorWidget.Value.HideInfoText();
     }
 
     public void SetPacketLossWarning()
     {
-        _pingIndicatorWidget.SetPingValue(999);
-        _pingIndicatorWidget.SetInfoText(Texts.SeverePacketLossDetected);
+        _pingIndicatorWidget.Value.SetPingValue(999);
+        _pingIndicatorWidget.Value.SetInfoText(Texts.SeverePacketLossDetected);
     }
 
     public void HideInfoMessage()
     {
-        _infoMessageWidget.SetVisibility(false);
+        _infoMessageWidget.Value.SetVisibility(false);
     }
 
     public void ShowInfoMessage(string message)
     {
-        _infoMessageWidget.SetText(message);
-        _infoMessageWidget.SetVisibility(true);
+        _infoMessageWidget.Value.SetText(message);
+        _infoMessageWidget.Value.SetVisibility(true);
     }
 
     public void OnExitLevel()
@@ -88,14 +81,14 @@ public sealed class WukongWidgetManager : IDisposable
 
     public void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
-        _infoMessageWidget.SetVisibility(true);
+        _infoMessageWidget.Value.SetVisibility(true);
         _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
-        _infoMessageWidget.SetText(_lastDisconnectText);
+        _infoMessageWidget.Value.SetText(_lastDisconnectText);
     }
 
     public void OnConnected(PlayerId playerId, Entity entity)
     {
-        _infoMessageWidget.SetVisibility(false);
+        _infoMessageWidget.Value.SetVisibility(false);
     }
 
     private void InitializeWidgets()
@@ -105,35 +98,35 @@ public sealed class WukongWidgetManager : IDisposable
             _isInitialized = true;
             ModWidgetsUtils.SpawnWidgetManagerActor();
 
-            _chatWidget.Initialize();
-            _infoMessageWidget.Initialize();
-            _errorMessageWidget.Initialize();
-            _pingIndicatorWidget.Initialize();
-            _freeCameraControlsWidget.Initialize();
+            _chatWidget.Value.Initialize();
+            _infoMessageWidget.Value.Initialize();
+            _errorMessageWidget.Value.Initialize();
+            _pingIndicatorWidget.Value.Initialize();
+            _freeCameraControlsWidget.Value.Initialize();
         }
     }
 
     private void DeinitializeWidgets()
     {
-        _chatWidget.Deinitialize();
-        _infoMessageWidget.Deinitialize();
-        _errorMessageWidget.Deinitialize();
-        _pingIndicatorWidget.Deinitialize();
-        _freeCameraControlsWidget.Deinitialize();
+        _chatWidget.Value.Deinitialize();
+        _infoMessageWidget.Value.Deinitialize();
+        _errorMessageWidget.Value.Deinitialize();
+        _pingIndicatorWidget.Value.Deinitialize();
+        _freeCameraControlsWidget.Value.Deinitialize();
         _isInitialized = false;
     }
 
-    public void ToggleChatVisibility() => _chatWidget.ToggleVisibility();
+    public void ToggleChatVisibility() => _chatWidget.Value.ToggleVisibility();
     
-    public void AddChatMessage(bool isSystemMessage, string sender, string message) => _chatWidget.AddMessage(isSystemMessage, sender, message);
+    public void AddChatMessage(bool isSystemMessage, string sender, string message) => _chatWidget.Value.AddMessage(isSystemMessage, sender, message);
 
-    public bool ChatHasFocus() => _chatWidget.HasFocus();
+    public bool ChatHasFocus() => _chatWidget.Value.HasFocus();
 
-    public void SetChatHistoryNext() => _chatWidget.SetHistoryNext();
+    public void SetChatHistoryNext() => _chatWidget.Value.SetHistoryNext();
     
-    public void SetChatHistoryPrev() => _chatWidget.SetHistoryPrev();
+    public void SetChatHistoryPrev() => _chatWidget.Value.SetHistoryPrev();
 
-    public void SetChatInputFocus() => _chatWidget.SetInputFocus();
+    public void SetChatInputFocus() => _chatWidget.Value.SetInputFocus();
 
-    public string CommitChatMessage() => _chatWidget.CommitMessage();
+    public string CommitChatMessage() => _chatWidget.Value.CommitMessage();
 }
