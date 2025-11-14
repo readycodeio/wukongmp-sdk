@@ -25,14 +25,14 @@ namespace WukongMp.PvP.Configuration
             _configuration.EnableSpawnedTamers = true;
             _configuration.SyncTamerTeamFromGameToEcs = false;
 
-            _configuration.DisableTamerAttackQuery += ShouldDisableTamerAttack;
-            _configuration.IsSkillEnabledQuery += IsSkillEnabled;
+            _configuration.SetDisableTamerAttackQuery(ShouldDisableTamerAttack);
+            _configuration.SetIsSkillEnabledQuery(IsSkillEnabled);
         }
 
         public void Dispose()
         {
-            _configuration.DisableTamerAttackQuery -= ShouldDisableTamerAttack;
-            _configuration.IsSkillEnabledQuery -= IsSkillEnabled;
+            _configuration.ClearDisableTamerAttackQuery();
+            _configuration.ClearDisableTamerAttackQuery();
         }
 
         private bool ShouldDisableTamerAttack()
