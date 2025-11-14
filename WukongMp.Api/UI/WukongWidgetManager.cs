@@ -19,6 +19,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     private bool _isInitialized;
 
+    private string _modVersion = "";
+
     private readonly Lazy<ChatWidget> _chatWidget = new();
     private readonly Lazy<InfoMessageWidget> _infoMessageWidget = new();
     private readonly Lazy<ErrorMessageWidget> _errorMessageWidget = new();
@@ -44,12 +46,17 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         _modVersionWidget.Value.SetVisibility(true);
     }
 
+    public void SetModVersion(string version)
+    {
+        _modVersion = version;
+    }
+
     public void OnLevelLoaded()
     {
         Logging.LogDebug("Initializing widgets");
         InitializeWidgets();
         _chatWidget.Value.SetVisibility(false);
-        SetModVersionText(Assembly.GetExecutingAssembly().GetNameAndVersion().Version ?? "");
+        SetModVersionText();
 
         if (!clientState.IsConnected)
         {
@@ -64,10 +71,10 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
 
-    public void SetModVersionText(string version)
+    private void SetModVersionText()
     {
-        _modVersionWidget.Value.SetVersionText(version);
-        _debugViewWidget.Value.SetVersionText(version);
+        _modVersionWidget.Value.SetVersionText(_modVersion);
+        _debugViewWidget.Value.SetVersionText(_modVersion);
     }
 
     public void UpdatePlayerPosition(string playerName, FVector gameLocation, FVector ecsLocation)

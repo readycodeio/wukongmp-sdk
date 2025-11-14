@@ -105,10 +105,12 @@ namespace WukongMp.Coop
             DebugUtils.LogUe4SsPresence();
 
             // InformationalVersion from assembly def
-            var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
 
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
             _logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
+
+            DI.Instance.WidgetManager.SetModVersion(trueModVersion);
 
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
