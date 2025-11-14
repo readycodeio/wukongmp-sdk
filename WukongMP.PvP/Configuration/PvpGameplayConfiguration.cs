@@ -24,6 +24,7 @@ namespace WukongMp.PvP.Configuration
             _configuration.EnableCustomCameraArmLength = true;
             _configuration.EnableSpawnedTamers = true;
             _configuration.SyncTamerTeamFromGameToEcs = false;
+            _configuration.OverrideLocalPlayerTeamFromGlobalEntity = true;
 
             _configuration.SetDisableTamerAttackQuery(ShouldDisableTamerAttack);
             _configuration.SetIsSkillEnabledQuery(IsSkillEnabled);
