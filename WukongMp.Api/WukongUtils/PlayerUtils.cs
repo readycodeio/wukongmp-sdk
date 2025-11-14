@@ -69,7 +69,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void RebirthPlayer(BGUCharacterCS playerPawn, int rebirthPointId)
         {
-            FreeCameraManager.Instance.LeaveFreeCameraMode();
+            DI.Instance.FreeCameraManager.LeaveFreeCameraMode();
             BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
             var uiControlData = BGU_DataUtil.GetReadOnlyData<BUC_UIControlData>(playerPawn);
             uiControlData.SetActiveDeathUI(NewValue: true);

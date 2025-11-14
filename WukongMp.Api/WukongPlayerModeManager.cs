@@ -10,7 +10,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager, GameplayEventRouter eventRouter)
+public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
@@ -37,7 +37,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
 
         if (isMyself)
         {
-            FreeCameraManager.Instance.EnterFreeCameraMode();
+            freeCameraManager.EnterFreeCameraMode();
         }
         SetPlayerCollision(playerEntity, mainEntity, false);
         eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
@@ -59,7 +59,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
 
         if (isMyself)
         {
-            FreeCameraManager.Instance.LeaveFreeCameraMode();
+            freeCameraManager.LeaveFreeCameraMode();
         }
         eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
 

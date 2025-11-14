@@ -82,6 +82,7 @@ public sealed class DI
     public WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
     public NetworkPingMonitor PingMonitor { get; private set; } = null!;
     public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
+    public FreeCameraManager FreeCameraManager { get; private set; } = null!;
 
     public WukongChatter Chatter { get; private set; } = null!;
 
@@ -181,14 +182,16 @@ public sealed class DI
 
         var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
+
+        var freeCameraManager = FreeCameraManager = new FreeCameraManager();
         
         var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
-        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager, gameplayEventRouter);
+        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager, gameplayEventRouter, freeCameraManager);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
-        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, ecsLoop, logger);
+        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, freeCameraManager, ecsLoop, logger);
         var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger, widgetManager);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
@@ -198,7 +201,6 @@ public sealed class DI
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
-
 
         var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
         var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);

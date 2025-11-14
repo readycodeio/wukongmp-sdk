@@ -16,10 +16,7 @@ public class FreeCameraManager
     private AActor? _cacheCameraViewTarget;
     private const string FreeCameraActorPath = "/Game/Mods/CustomLuaMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
 
-    private static FreeCameraManager? _instance;
-    public static FreeCameraManager Instance => _instance ??= new();
-
-    private FreeCameraManager() { }
+    public FreeCameraManager() { }
 
     public bool IsInFreeCameraMode => _isInFreeCameraMode;
 

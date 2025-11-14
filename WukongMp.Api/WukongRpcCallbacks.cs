@@ -36,6 +36,7 @@ public partial class WukongRpcCallbacks : IDisposable
     private readonly WukongPlayerState _playerState;
     private readonly WukongPawnState _pawnState;
     private readonly ClientOwnershipManager _clientOwnership;
+    private readonly FreeCameraManager _freeCameraManager;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -48,6 +49,7 @@ public partial class WukongRpcCallbacks : IDisposable
         WukongPlayerState playerState,
         WukongPawnState pawnState,
         ClientOwnershipManager clientOwnership,
+        FreeCameraManager freeCameraManager,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
     {
@@ -59,6 +61,7 @@ public partial class WukongRpcCallbacks : IDisposable
         _playerState = playerState;
         _pawnState = pawnState;
         _clientOwnership = clientOwnership;
+        _freeCameraManager = freeCameraManager;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -403,7 +406,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (playerId0 == self._state.LocalPlayerId)
             {
-                FreeCameraManager.Instance.LeaveFreeCameraMode();
+                self._freeCameraManager.LeaveFreeCameraMode();
             }
 
             ref var localMainComp = ref mainEntity.GetLocalState();
@@ -547,7 +550,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (mainEntity.GetState().IsDead)
             {
-                FreeCameraManager.Instance.LeaveFreeCameraMode();
+                self._freeCameraManager.LeaveFreeCameraMode();
                 PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
                 CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             }

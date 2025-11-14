@@ -358,7 +358,7 @@ namespace WukongMp.Api.Patches
             {
                 if (playerState.LocalMainCharacter?.GetState().IsTransformed == false)
                 {
-                    FreeCameraManager.Instance.EnterFreeCameraMode();
+                    DI.Instance.FreeCameraManager.EnterFreeCameraMode();
                 }
 
                 return;
