@@ -19,7 +19,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     private bool _isInitialized;
 
-    private string _modVersion = "";
+    private string _fullModVersion = "";
+    private string _shortModVersion = "";
 
     private readonly Lazy<ChatWidget> _chatWidget = new();
     private readonly Lazy<InfoMessageWidget> _infoMessageWidget = new();
@@ -48,7 +49,10 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public void SetModVersion(string version)
     {
-        _modVersion = version;
+        _fullModVersion = version;
+        var subVersions = version.Split('+');
+        if (subVersions.Length > 0)
+            _shortModVersion = subVersions[0];
     }
 
     public void OnLevelLoaded()
@@ -73,8 +77,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     private void SetModVersionText()
     {
-        _modVersionWidget.Value.SetVersionText(_modVersion);
-        _debugViewWidget.Value.SetVersionText(_modVersion);
+        _modVersionWidget.Value.SetVersionText(_shortModVersion);
+        _debugViewWidget.Value.SetVersionText(_fullModVersion);
     }
 
     public void UpdatePlayerPosition(string playerName, FVector gameLocation, FVector ecsLocation)
