@@ -145,25 +145,21 @@
     <ItemGroup>
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
         <PackageReference Include="HttpMachine.PCL" Version="5.0.1" />
-        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-        <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.5" />
-        <PackageReference Include="Microsoft.Bcl.Numerics" Version="9.0.5" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.6" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.6" />
-        <PackageReference Include="Mono.Cecil" Version="0.11.5" />
-        <PackageReference Include="System.Buffers" Version="4.5.1" />
-        <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
-        <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
-        <PackageReference Include="System.Memory" Version="4.5.5" />
-        <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Bcl.Numerics" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
+        <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+        <PackageReference Include="System.Collections.Immutable" Version="10.0.0" />
+        <PackageReference Include="System.Memory" Version="4.6.3" />
         <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
-        <PackageReference Include="System.Reflection.Metadata" Version="8.0.0" />
-        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="9.0.6" />
-        <PackageReference Include="System.Text.Json" Version="9.0.6" />
-        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+        <PackageReference Include="System.Reflection.Metadata" Version="10.0.0" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0" />
+        <PackageReference Include="System.Text.Json" Version="10.0.0" />
         <PackageReference Include="Nito.AsyncEx.Context" Version="5.1.2" />
     </ItemGroup>
 
