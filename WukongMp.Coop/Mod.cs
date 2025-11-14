@@ -201,6 +201,13 @@ namespace WukongMp.Coop
                 DebugUtils.ResetPlayersAnimation();
             });
 #endif
+            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
+            {
+                _logger.LogDebug("F5");
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    DI.Instance.WidgetManager.ToggleDebugVisibility();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");

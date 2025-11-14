@@ -128,9 +128,10 @@ namespace WukongMp.PvP.UI
 
         private void OnLoadingScreenClose()
         {
-            if (_areaState.CurrentArea != null)
+            var isOnGameplayLevel = _areaState.CurrentArea != null;
+            widgetManager.ShowInGameWidgets(isOnGameplayLevel);
+            if (isOnGameplayLevel)
             {
-                widgetManager.ShowInGameWidgets();
                 ShowInGameWidgets();
                 _isAfterLoadingScreen = true;
 
@@ -236,21 +237,25 @@ namespace WukongMp.PvP.UI
 
         private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
         {
+            widgetManager.OnOtherPlayerInsideArea(playerId, area, reason);
             RefreshWidgets();
         }
 
         private void OnOtherPlayerOutsideArea(PlayerId arg1, AreaId arg2, OtherPlayerOutsideAreaReason arg3)
         {
+            widgetManager.OnOtherPlayerOutsideArea(arg1, arg2, arg3);
             RefreshWidgets();
         }
 
         private void OnJoinedArea(AreaId area, Entity areaEntity)
         {
+            widgetManager.OnJoinedArea(area, areaEntity);
             RefreshWidgets();
         }
 
         private void OnLeftArea(AreaId arg1, Entity arg2)
         {
+            widgetManager.OnLeftArea(arg1, arg2);
             RefreshWidgets();
         }
     }

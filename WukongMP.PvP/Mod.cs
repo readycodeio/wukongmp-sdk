@@ -179,6 +179,13 @@ namespace WukongMp.PvP
                 DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
+            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
+            {
+                _logger.LogDebug("F5");
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    DI.Instance.WidgetManager.ToggleDebugVisibility();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");

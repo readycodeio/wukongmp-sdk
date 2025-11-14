@@ -102,9 +102,10 @@ namespace WukongMp.Coop.UI
 
         private void OnLoadingScreenClose()
         {
-            if (_areaState.CurrentArea != null)
+            bool isOnGameplayLevel = _areaState.CurrentArea != null;
+            _widgetManager.ShowInGameWidgets(isOnGameplayLevel);
+            if (isOnGameplayLevel)
             {
-                _widgetManager.ShowInGameWidgets();
                 ShowInGameWidgets();
             }
         }
@@ -142,6 +143,7 @@ namespace WukongMp.Coop.UI
 
         private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
         {
+            _widgetManager.OnOtherPlayerInsideArea(playerId, area, reason);
             var player = _playerState.GetPlayerById(playerId);
             if (player.HasValue)
             {
@@ -153,6 +155,7 @@ namespace WukongMp.Coop.UI
 
         private void OnOtherPlayerOutsideArea(PlayerId arg1, AreaId arg2, OtherPlayerOutsideAreaReason arg3)
         {
+            _widgetManager.OnOtherPlayerOutsideArea(arg1, arg2, arg3);
             var player = _playerState.GetPlayerById(arg1);
             if (player.HasValue)
             {
@@ -164,6 +167,7 @@ namespace WukongMp.Coop.UI
 
         private void OnJoinedArea(AreaId area, Entity areaEntity)
         {
+            _widgetManager.OnJoinedArea(area, areaEntity);
             var playerEntity = _playerState.LocalPlayerEntity;
             if (playerEntity.HasValue)
             {
@@ -174,6 +178,7 @@ namespace WukongMp.Coop.UI
 
         private void OnLeftArea(AreaId arg1, Entity arg2)
         {
+            _widgetManager.OnLeftArea(arg1, arg2);
             var playerEntity = _playerState.LocalPlayerEntity;
             if (playerEntity.HasValue)
             {

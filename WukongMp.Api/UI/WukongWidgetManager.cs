@@ -1,14 +1,19 @@
-﻿using System;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using LiteNetLib;
+using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
+using Sentry.Reflection;
+using System;
+using System.Reflection;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Resources;
+using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
 
-public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
+public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerState playerState) : IDisposable
 {
     private string _lastDisconnectText = Texts.Disconnected;
 
@@ -19,6 +24,8 @@ public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
     private readonly Lazy<ErrorMessageWidget> _errorMessageWidget = new();
     private readonly Lazy<PingIndicatorWidget> _pingIndicatorWidget = new();
     private readonly Lazy<FreeCameraControlsWidget> _freeCameraControlsWidget = new();
+    private readonly Lazy<ModVersionWidget> _modVersionWidget = new();
+    private readonly Lazy<DebugViewWidget> _debugViewWidget = new();
 
     public void Dispose() { }
 
@@ -27,10 +34,14 @@ public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
         _freeCameraControlsWidget.Value.SetVisibility(enabled);
     }
 
-    public void ShowInGameWidgets()
+    public void ShowInGameWidgets(bool isOnGameplayLevel)
     {
-        _pingIndicatorWidget.Value.SetVisibility(true);
-        _chatWidget.Value.ShowIfNotHidden();
+        if (isOnGameplayLevel)
+        {
+            _pingIndicatorWidget.Value.SetVisibility(true);
+            _chatWidget.Value.ShowIfNotHidden();
+        }
+        _modVersionWidget.Value.SetVisibility(true);
     }
 
     public void OnLevelLoaded()
@@ -38,6 +49,7 @@ public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
         Logging.LogDebug("Initializing widgets");
         InitializeWidgets();
         _chatWidget.Value.SetVisibility(false);
+        SetModVersionText(Assembly.GetExecutingAssembly().GetNameAndVersion().Version ?? "");
 
         if (!clientState.IsConnected)
         {
@@ -48,6 +60,19 @@ public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
                 self._infoMessageWidget.Value.SetText(self._lastDisconnectText);
             }, this);
         }
+    }
+
+    public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
+
+    public void SetModVersionText(string version)
+    {
+        _modVersionWidget.Value.SetVersionText(version);
+        _debugViewWidget.Value.SetVersionText(version);
+    }
+
+    public void UpdatePlayerPosition(string playerName, FVector gameLocation, FVector ecsLocation)
+    {
+        _debugViewWidget.Value.SetPlayerPosition(playerName, gameLocation, ecsLocation);
     }
 
     public void UpdatePingIndicator(long pingMs)
@@ -91,6 +116,42 @@ public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
         _infoMessageWidget.Value.SetVisibility(false);
     }
 
+    public void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
+    {
+        var player = playerState.GetPlayerById(playerId);
+        if (player.HasValue)
+        {
+            _debugViewWidget.Value.AddPlayer(player.Value.GetState().NickName);
+        }
+    }
+
+    public void OnOtherPlayerOutsideArea(PlayerId playerId, AreaId area, OtherPlayerOutsideAreaReason reason)
+    {
+        var player = playerState.GetPlayerById(playerId);
+        if (player.HasValue)
+        {
+            _debugViewWidget.Value.RemovePlayer(player.Value.GetState().NickName);
+        }
+    }
+
+    public void OnJoinedArea(AreaId area, Entity areaEntity)
+    {
+        var playerEntity = playerState.LocalPlayerEntity;
+        if (playerEntity.HasValue)
+        {
+            _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().NickName);
+        }
+    }
+
+    public void OnLeftArea(AreaId arg1, Entity arg2)
+    {
+        var playerEntity = playerState.LocalPlayerEntity;
+        if (playerEntity.HasValue)
+        {
+            _debugViewWidget.Value.RemovePlayer(playerEntity.Value.GetState().NickName);
+        }
+    }
+
     private void InitializeWidgets()
     {
         if (!_isInitialized)
@@ -103,6 +164,8 @@ public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
             _errorMessageWidget.Value.Initialize();
             _pingIndicatorWidget.Value.Initialize();
             _freeCameraControlsWidget.Value.Initialize();
+            _modVersionWidget.Value.Initialize();
+            _debugViewWidget.Value.Initialize();
         }
     }
 
@@ -113,8 +176,12 @@ public sealed class WukongWidgetManager(ClientState clientState) : IDisposable
         _errorMessageWidget.Value.Deinitialize();
         _pingIndicatorWidget.Value.Deinitialize();
         _freeCameraControlsWidget.Value.Deinitialize();
+        _modVersionWidget.Value.Deinitialize();
+        _debugViewWidget.Value.Deinitialize();
         _isInitialized = false;
     }
+
+    public void ToggleDebugVisibility() => _debugViewWidget.Value.ToggleVisibility();
 
     public void ToggleChatVisibility() => _chatWidget.Value.ToggleVisibility();
     

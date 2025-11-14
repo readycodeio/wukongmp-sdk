@@ -175,7 +175,7 @@ public sealed class DI
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
-        var widgetManager = WidgetManager = new WukongWidgetManager(state);
+        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState);
 
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
