@@ -655,6 +655,7 @@ internal partial class PvpMode : IDisposable
     public void StartLobbyCountdown(int seconds)
     {
         _pvpWidgetManager.SetMainMessage(Texts.StartingGame);
+        _pvpWidgetManager.UpdateRoundCountdown(0, seconds);
         _pvpWidgetManager.ShowCountdown();
 
         _countdownTimer.SetTime(0, seconds);
