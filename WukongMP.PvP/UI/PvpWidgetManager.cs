@@ -162,6 +162,7 @@ namespace WukongMp.PvP.UI
             if (!enabled && _areaState.PvpState is { InPvP: true })
             {
                 _lobbyStatusWidget.Value.SetVisibility(false);
+                return;
             }
 
             if (enabled && _playerState.LocalMainCharacter.Value.GetLocalState().IsSpectatorLocally)
