@@ -551,7 +551,7 @@ internal partial class PvpMode : IDisposable
             _areaState.OwnedPvpStateRef().InPvP = false;
     }
 
-    public void CheckRoundEndCondition()
+    private void CheckRoundEndCondition()
     {
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -568,15 +568,7 @@ internal partial class PvpMode : IDisposable
         var aliveTeamIds = playerEntities.Where(p =>
             {
                 var state = p.Character.GetState();
-                if (!state.IsDead || state.IsTransformed)
-                    return true;
-
-                var pawn = p.Character.GetLocalState().Pawn;
-                var unitStateData = BGU_DataUtil.GetReadOnlyData<IBUC_UnitStateData, BUC_UnitStateData>(pawn);
-
-                return unitStateData.HasState(EBGUUnitState.LifeSavingHair_FakeDead)
-                       || unitStateData.HasState(EBGUUnitState.LifeSavingHair_Rebirth)
-                       || unitStateData.HasState(EBGUUnitState.LifeSavingHairBlocking);
+                return !state.IsDead || state.IsTransformed;
             })
             .Select(x => x.Player.GetState().TeamId)
             .ToList();

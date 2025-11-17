@@ -63,21 +63,6 @@ namespace WukongMp.Api.Patches
                 }
 
                 __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
-
-                if (mainComp.IsDead)
-                {
-                    var events = BUS_EventCollectionCS.Get(__instance.Owner);
-
-                    if (events == null)
-                    {
-                        Logging.LogError("events are null");
-                        return;
-                    }
-
-                    Logging.LogDebug("Applying unit dead for player {PlayerId}", mainComp.PlayerId);
-                    events.Evt_UnitDead!.Invoke(__instance.Owner, EDeadReason.SkillDamage);
-                }
-
                 return;
             }
 

@@ -355,11 +355,15 @@ namespace WukongMp.Api.Patches
                 DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
             }
 
-            if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+            if (playerState.LocalMainCharacter.HasValue && owner == playerState.LocalMainCharacter.Value.GetLocalState().Pawn)
             {
-                if (playerState.LocalMainCharacter?.GetState().IsTransformed == false)
+                var localMain = playerState.LocalMainCharacter.Value;
+                if (!localMain.GetState().IsTransformed)
                 {
                     DI.Instance.FreeCameraManager.EnterFreeCameraMode();
+
+                    var payload = new UnitDeadPacket(localMain.GetMeta().NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    DI.Instance.Rpc.SendUnitDead(payload);
                 }
 
                 return;
@@ -554,38 +558,6 @@ namespace WukongMp.Api.Patches
             }
 
             return true;
-        }
-    }
-
-    [HarmonyPatch(typeof(BUS_BeAttackedComp), "DoDamageLogic")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchDoDamageLogic
-    {
-        public static void Postfix(BUS_BeAttackedComp __instance, AActor? Attacker)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return;
-
-            if (DI.Instance.AreaState.IsMasterClient)
-            {
-                var owner = __instance.GetOwner();
-
-                if (owner.IsNullOrDestroyed())
-                {
-                    Logging.LogError("Owner is null or destroyed");
-                    return;
-                }
-
-                var attrs = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(owner);
-                var hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-
-                // Manually trigger UnitDead
-                if (hp <= 0)
-                {
-                    var events = BUS_EventCollectionCS.Get(owner);
-                    events.Evt_UnitDead.Invoke(Attacker, EDeadReason.SkillDamage);
-                }
-            }
         }
     }
 

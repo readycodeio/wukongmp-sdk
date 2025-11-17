@@ -867,7 +867,7 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     #region PvpRPC
-    
+
     [Obsolete("To be removed once per-project RPC is implemented")]
     public event Action<int[]>? OnPvpEventReceived;
 
