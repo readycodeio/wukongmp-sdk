@@ -60,6 +60,10 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
         mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
         mainComp.HpMaxBase = attrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+        if (mainComp.Hp > 0)
+        {
+            mainComp.IsDead = false;
+        }
 
         foreach (var attr in Constants.SyncedAttributes)
         {

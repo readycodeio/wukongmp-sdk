@@ -576,7 +576,7 @@ internal partial class PvpMode : IDisposable
         var aliveMonsters = new List<int>();
         _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
         {
-            if (hpComp.Hp <= 0)
+            if (hpComp.IsDead)
                 return;
 
             aliveMonsters.Add(teamComp.TeamId);

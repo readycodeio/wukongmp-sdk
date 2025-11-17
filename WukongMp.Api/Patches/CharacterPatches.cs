@@ -144,6 +144,11 @@ namespace WukongMp.Api.Patches
                     if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
                     {
                         mainComp.Hp = result;
+                        
+                        if (mainComp.Hp > 0)
+                        {
+                            mainComp.IsDead = false;
+                        }
                     }
                 }
                 else

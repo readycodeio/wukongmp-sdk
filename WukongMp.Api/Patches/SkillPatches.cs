@@ -9,7 +9,6 @@ using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
@@ -766,6 +765,7 @@ public class PatchOnTransBackSpawnNewOne
             mainComp.IsTransformed = false;
             var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Value.GetLocalState().Pawn);
             mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
+            mainComp.IsDead = false;
         }
     }
 }

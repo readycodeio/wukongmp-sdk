@@ -1,29 +1,22 @@
-﻿using b1;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using b1;
 using B1UI.GSSvc;
-using B1UI.GSUI;
-using BtlB1;
 using BtlShare;
-using CSharpModBase;
-using Friflo.Engine.ECS;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.NavigationSystem;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Values;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using EquipPosition = BtlB1.EquipPosition;
 
@@ -348,22 +341,18 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (Attacker is BGUCharacterCS attackerCharacter &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(ownerCharacter, out var victimEntity) &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(attackerCharacter, out var attackerEntity))
-            {
-                DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
-            }
-
             if (playerState.LocalMainCharacter.HasValue && owner == playerState.LocalMainCharacter.Value.GetLocalState().Pawn)
             {
                 var localMain = playerState.LocalMainCharacter.Value;
                 if (!localMain.GetState().IsTransformed)
                 {
                     DI.Instance.FreeCameraManager.EnterFreeCameraMode();
+                    var netId = localMain.GetMeta().NetId;
 
-                    var payload = new UnitDeadPacket(localMain.GetMeta().NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    var payload = new UnitDeadPacket(netId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    localMain.GetState().IsDead = true;
                     DI.Instance.Rpc.SendUnitDead(payload);
+                    Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", localMain.GetState().PlayerId);
                 }
 
                 return;
@@ -372,11 +361,18 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                ref var meta = ref tamerEntity.Value.GetMeta();
+                var meta = tamerEntity.Value.GetMeta();
 
                 var payload = new UnitDeadPacket(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                 DI.Instance.Rpc.SendUnitDead(payload);
                 Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
+            }
+
+            if (Attacker is BGUCharacterCS attackerCharacter &&
+                DI.Instance.PawnState.TryGetEnityByCharacter(ownerCharacter, out var victimEntity) &&
+                DI.Instance.PawnState.TryGetEnityByCharacter(attackerCharacter, out var attackerEntity))
+            {
+                DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
             }
         }
     }
@@ -686,7 +682,7 @@ namespace WukongMp.Api.Patches
 
             List<FVector> playersPositions = [];
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-                ref MainCharacterComponent playerComp, Entity _) =>
+                ref playerComp, _) =>
             {
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
