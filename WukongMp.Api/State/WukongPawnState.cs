@@ -82,7 +82,7 @@ public class WukongPawnState(
         TamerEntity? result = null;
 
         var query = world.Query<LocalTamerComponent>();
-        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
+        query.ForEachEntity((ref localTamerComp, entity) =>
         {
             if (localTamerComp.Pawn == actor)
             {
@@ -98,7 +98,7 @@ public class WukongPawnState(
         TamerEntity? result = null;
 
         var query = world.Query<TamerComponent>();
-        query.ForEachEntity((ref TamerComponent tamerComp, Entity entity) =>
+        query.ForEachEntity((ref tamerComp, entity) =>
         {
             if (tamerComp.Guid == guid)
             {
@@ -117,7 +117,7 @@ public class WukongPawnState(
         TamerEntity? result = null;
 
         var query = world.Query<LocalTamerComponent>();
-        query.ForEachEntity((ref LocalTamerComponent localTamerComp, Entity entity) =>
+        query.ForEachEntity((ref localTamerComp, entity) =>
         {
             if (localTamerComp.Tamer == owner)
             {
@@ -136,7 +136,7 @@ public class WukongPawnState(
         MainCharacterEntity? result = null;
 
         var query = world.Query<LocalMainCharacterComponent>();
-        query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, Entity entity) =>
+        query.ForEachEntity((ref localMainComp, entity) =>
         {
             if (!localMainComp.HasPawn)
                 return;

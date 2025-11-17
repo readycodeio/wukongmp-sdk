@@ -17,8 +17,7 @@ public sealed class ChangeTamerTargetSystem : QuerySystem<LocalTamerComponent>
             _elapsedTime = 0;
 
             Query.ForEachEntity((
-                ref LocalTamerComponent localTamerComp,
-                Entity entity) =>
+                ref localTamerComp, entity) =>
             {
                 if (DI.Instance.ClientOwnership.OwnsEntity(entity) && BGUFunctionLibraryCS.BGUIsUnitInBattle(localTamerComp.Pawn))
                 {

@@ -388,7 +388,7 @@ public static class SpawningUtils
             // Check if master or another player with lower id is nearby
             bool canSummon = true;
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-            ref MainCharacterComponent playerComp, Entity entity) =>
+            ref playerComp, entity) =>
             {
                 if (entity == localCharacter.Value.Entity)
                     return;

@@ -10,7 +10,7 @@ public class SyncMonsterTeamSystem : QuerySystem<TeamComponent, LocalTamerCompon
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref TeamComponent team, ref LocalTamerComponent localTamer, Entity entity) =>
+        Query.ForEachEntity((ref team, ref localTamer, entity) =>
         {
             if (!localTamer.IsMonsterActive || localTamer.Pawn == null)
                 return;

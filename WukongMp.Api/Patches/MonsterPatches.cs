@@ -31,9 +31,8 @@ namespace WukongMp.Api.Patches
                 return;
 
             DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((
-                ref LocalTamerComponent localTamerComp,
-                ref TranslationComponent transComp,
-                Entity entity) =>
+                ref localTamerComp,
+                ref transComp, entity) =>
             {
                 if (!localTamerComp.IsTamerSynced || !localTamerComp.IsTamerValid || localTamerComp.Pawn == null)
                     return;
@@ -401,7 +400,7 @@ namespace WukongMp.Api.Patches
             {
                 var anyPlayerAlive = false;
                 DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-                ref MainCharacterComponent playerComp, Entity _) =>
+                ref playerComp, _) =>
                 {
                     if (!playerComp.IsDead)
                         anyPlayerAlive = true;

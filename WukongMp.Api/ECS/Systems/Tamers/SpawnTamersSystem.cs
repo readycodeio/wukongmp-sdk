@@ -25,12 +25,11 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref MetadataComponent metaComp,
-            ref HpComponent hpComp,
-            ref TeamComponent teamComp,
-            ref TamerComponent tamerComp,
-            ref LocalTamerComponent localTamerComp,
-            Entity entity) =>
+            ref metaComp,
+            ref hpComp,
+            ref teamComp,
+            ref tamerComp,
+            ref localTamerComp, entity) =>
         {
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)

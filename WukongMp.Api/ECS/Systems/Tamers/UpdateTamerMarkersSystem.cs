@@ -13,12 +13,11 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref LocalTamerComponent localTamerComp,
-            ref MarkerComponent markerComp,
-            ref TranslationComponent transComp,
-            ref NicknameComponent nameComp,
-            ref TamerComponent tamerComp,
-            Entity _) =>
+            ref localTamerComp,
+            ref markerComp,
+            ref transComp,
+            ref nameComp,
+            ref tamerComp, _) =>
         {
             if (markerComp.MarkerActor == null)
                 return;

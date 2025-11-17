@@ -21,7 +21,7 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
 #else
         var targetScaling = 1 + 1.5f * (areaPlayers - 1);
 #endif
-        Query.ForEachEntity((ref HpComponent hp, ref LocalTamerComponent localTamer, Entity entity) =>
+        Query.ForEachEntity((ref hp, ref localTamer, entity) =>
         {
             if (!localTamer.IsMonsterActive)
                 return;

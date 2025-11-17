@@ -29,9 +29,8 @@ public class SyncMainCharactersSystem(
             return;
 
         Query.ForEachEntity((
-            ref LocalMainCharacterComponent localMainComp,
-            ref MainCharacterComponent mainComp,
-            Entity entity) =>
+            ref localMainComp,
+            ref mainComp, entity) =>
         {
             if (localMainComp.Pawn == null)
                 return;

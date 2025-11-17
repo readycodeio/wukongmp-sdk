@@ -23,7 +23,7 @@ public class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widget
         if (tickCounter++ % TickInterval != 0)
             return;
 
-        Query.ForEachEntity((ref LocalMainCharacterComponent localMainCharacter, ref MainCharacterComponent mainCharacter, Entity entity) =>
+        Query.ForEachEntity((ref localMainCharacter, ref mainCharacter, entity) =>
         {
             var nickname = mainCharacter.CharacterNickName;
             var position = localMainCharacter.Pawn?.GetActorLocation() ?? FVector.ZeroVector;

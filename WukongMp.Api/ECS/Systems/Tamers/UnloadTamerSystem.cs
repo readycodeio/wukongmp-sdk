@@ -11,9 +11,8 @@ public sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerC
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref TamerComponent tamerComp,
-            ref LocalTamerComponent localTamerComp,
-            Entity _) =>
+            ref tamerComp,
+            ref localTamerComp, _) =>
         {
             if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null || localTamerComp.Tamer.CurrentRef == null || localTamerComp.Pawn == null)
             {
