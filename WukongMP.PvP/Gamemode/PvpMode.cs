@@ -379,7 +379,7 @@ internal partial class PvpMode : IDisposable
 
     public void StartRound()
     {
-        CancelLobbyCountdown();
+        ClearLoobyCountdown();
         _pvpWidgetManager.StartRound();
 
         var areaEntity = _areaState.CurrentArea;
@@ -606,16 +606,21 @@ internal partial class PvpMode : IDisposable
         _countdownTimer.SetTime(0, seconds);
         _countdownTimer.Start(() =>
         {
-            CancelLobbyCountdown();
+            ClearLoobyCountdown();
             StartPvP();
         }, _pvpWidgetManager.UpdateRoundCountdown);
     }
 
     public void CancelLobbyCountdown()
     {
+        ClearLoobyCountdown();
+        _pvpWidgetManager.SetMainMessage(Texts.InMultiplayer);
+    }
+
+    public void ClearLoobyCountdown()
+    {
         _countdownTimer.Reset();
         _pvpWidgetManager.HideCountdown();
-        _pvpWidgetManager.SetMainMessage(Texts.InMultiplayer);
     }
 
     #region Event Handlers
