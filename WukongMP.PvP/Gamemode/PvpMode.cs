@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using b1;
@@ -29,6 +30,7 @@ using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
+using WukongMp.PvP.Resources;
 using WukongMp.PvP.UI;
 using WukongMp.PvP.WukongUtils;
 
@@ -131,10 +133,16 @@ internal partial class PvpMode : IDisposable
 
         _eventRouter.OnUnitDead += OnUnitDead;
         _eventRouter.OnMonsterSpawned += OnMonsterSpawned;
+        _eventRouter.OnLanguageChanged += OnLanguageChanged;
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
         _rpc.OnPvpEventReceived += OnPvpEvent;
+    }
+
+    private void OnLanguageChanged(CultureInfo culture)
+    {
+        PvpTexts.Culture = culture;
     }
 
     public void Dispose()
@@ -146,6 +154,7 @@ internal partial class PvpMode : IDisposable
 
         _eventRouter.OnUnitDead -= OnUnitDead;
         _eventRouter.OnMonsterSpawned -= OnMonsterSpawned;
+        _eventRouter.OnLanguageChanged -= OnLanguageChanged;
 
         _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;

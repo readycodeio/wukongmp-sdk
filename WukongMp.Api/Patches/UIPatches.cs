@@ -13,6 +13,7 @@ using PreludeLib.Attributes;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.Resources;
 using CultureInfo = System.Globalization.CultureInfo;
 
 namespace WukongMp.Api.Patches;
@@ -151,7 +152,8 @@ public class PatchSetCurrentCulture
     public static void Postfix(string Culture)
     {
         Logging.LogInformation("Culture changed to: {Culture}", Culture);
-        Thread.CurrentThread.CurrentUICulture = new CultureInfo(Culture);
+        Texts.Culture = new CultureInfo(Culture);
+        DI.Instance.GameplayEventRouter.RaiseOnLanguageChanged(Texts.Culture);
     }
 }
 

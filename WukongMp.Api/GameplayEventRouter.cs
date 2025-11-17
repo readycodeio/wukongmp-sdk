@@ -1,15 +1,22 @@
-﻿using Friflo.Engine.ECS;
-using System;
+﻿using System;
+using System.Globalization;
+using Friflo.Engine.ECS;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api
 {
     public class GameplayEventRouter
     {
+        public event Action<CultureInfo>? OnLanguageChanged;
         public event Action<Entity, Entity>? OnUnitDead;
         public event Action<Entity, int>? OnRebirthPointChanged;
         public event Action<Entity>? OnMonsterSpawned;
         public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
+        
+        public void RaiseOnLanguageChanged(CultureInfo culture)
+        {
+            OnLanguageChanged?.Invoke(culture);
+        }
 
         public void RaiseOnUnitDead(Entity victimEntity, Entity attackerEntity)
         {
