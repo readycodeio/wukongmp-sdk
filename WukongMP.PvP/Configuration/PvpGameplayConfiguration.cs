@@ -33,7 +33,7 @@ namespace WukongMp.PvP.Configuration
         public void Dispose()
         {
             _configuration.ClearDisableTamerAttackQuery();
-            _configuration.ClearDisableTamerAttackQuery();
+            _configuration.ClearIsSkillEnabledQuery();
         }
 
         private bool ShouldDisableTamerAttack()

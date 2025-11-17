@@ -154,7 +154,7 @@ public sealed class DI
 
         var eventBus = EventBus = new WukongEventBus();
 
-        var gameplayConfig = GameplayConfiguration = new GameplayConfiguration();
+        var gameplayConfig = GameplayConfiguration = new GameplayConfiguration(logger);
         var gameplayEventRouter = GameplayEventRouter = new GameplayEventRouter();
 
         var textSerializer = TextSerializer = new TextRelaySerializer([

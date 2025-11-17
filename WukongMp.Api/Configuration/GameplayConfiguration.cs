@@ -1,40 +1,52 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 
-namespace WukongMp.Api.Configuration
+namespace WukongMp.Api.Configuration;
+
+public class GameplayConfiguration(ILogger logger)
 {
-    public class GameplayConfiguration
+    public bool IsSupportMultiLockEnabled { get; set; } = false;
+    public bool IsStrongDamageImmueEnabled { get; set; } = false;
+    public bool EnableCustomCameraArmLength { get; set; } = false;
+    public bool EnableSpawnedTamers { get; set; } = false;
+
+    [Obsolete("To be replaced by data sync direction after refactoring")]
+    public bool SyncTamerTeamFromGameToEcs { get; set; } = false;
+
+    [Obsolete("To be replaced by data sync direction after refactoring")]
+    public bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; } = false;
+
+    private Func<bool>? disableTamerAttackQuery;
+
+    public void SetDisableTamerAttackQuery(Func<bool> query)
     {
-        public bool IsSupportMultiLockEnabled { get; set; } = false;
-        public bool IsStrongDamageImmueEnabled { get; set; } = false;
-        public bool EnableCustomCameraArmLength { get; set; } = false;
-        public bool EnableSpawnedTamers { get; set; } = false;
+        if (disableTamerAttackQuery is not null)
+            logger.LogError("DisableTamerAttackQuery is already set. Overriding the existing query.");
 
-        [Obsolete("To be replaced by data sync direction after refactoring")]
-        public bool SyncTamerTeamFromGameToEcs { get; set; } = false;
-
-        [Obsolete("To be replaced by data sync direction after refactoring")]
-        public bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; } = false;
-
-        private Func<bool>? DisableTamerAttackQuery;
-        public void SetDisableTamerAttackQuery(Func<bool> query)
-        {
-            DisableTamerAttackQuery = query;
-        }
-        public void ClearDisableTamerAttackQuery()
-        {
-            DisableTamerAttackQuery = null;
-        }
-        public bool ShouldDisableTamerAttack() => DisableTamerAttackQuery?.Invoke() ?? false;
-
-        private Func<int, bool>? IsSkillEnabledQuery;
-        public void SetIsSkillEnabledQuery(Func<int, bool> query)
-        {
-            IsSkillEnabledQuery = query;
-        }
-        public void ClearIsSkillEnabledQuery()
-        {
-            IsSkillEnabledQuery = null;
-        }
-        public bool IsSkillEnabled(int skillId) => IsSkillEnabledQuery?.Invoke(skillId) ?? true;
+        disableTamerAttackQuery = query;
     }
+
+    public void ClearDisableTamerAttackQuery()
+    {
+        disableTamerAttackQuery = null;
+    }
+
+    public bool ShouldDisableTamerAttack() => disableTamerAttackQuery?.Invoke() ?? false;
+
+    private Func<int, bool>? isSkillEnabledQuery;
+
+    public void SetIsSkillEnabledQuery(Func<int, bool> query)
+    {
+        if (isSkillEnabledQuery is not null)
+            logger.LogError("IsSkillEnabledQuery is already set. Overriding the existing query.");
+
+        isSkillEnabledQuery = query;
+    }
+
+    public void ClearIsSkillEnabledQuery()
+    {
+        isSkillEnabledQuery = null;
+    }
+
+    public bool IsSkillEnabled(int skillId) => isSkillEnabledQuery?.Invoke(skillId) ?? true;
 }
