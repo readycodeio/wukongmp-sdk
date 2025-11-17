@@ -164,7 +164,7 @@ namespace WukongMp.PvP.UI
                 _lobbyStatusWidget.Value.SetVisibility(false);
             }
 
-            if (enabled)
+            if (enabled && _playerState.LocalMainCharacter.Value.GetLocalState().IsSpectatorLocally)
             {
                 SetupSpectatorUi();
             }
