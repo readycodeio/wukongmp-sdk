@@ -3,9 +3,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 
@@ -13,8 +11,8 @@ namespace WukongMp.PvP.WukongUtils;
 
 public static class PvpUtils
 {
-    public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
-    public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
+    private const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
+    private const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
 
     public static void ShowPvPCountDown()
     {
@@ -31,18 +29,18 @@ public static class PvpUtils
 
     public static string GetTeamColorString(int teamId)
     {
-        if (teamId == Constants.AvailableTeamIds[0])
+        if (teamId == Constants.RedTeamId)
             return RedTeamColor;
-        if (teamId == Constants.AvailableTeamIds[1])
+        if (teamId == Constants.BlueTeamId)
             return BlueTeamColor;
         return "";
     }
 
     public static string GetLocalizedTeamName(int teamId)
     {
-        if (teamId == Constants.AvailableTeamIds[0])
+        if (teamId == Constants.RedTeamId)
             return Texts.RedTeam;
-        if (teamId == Constants.AvailableTeamIds[1])
+        if (teamId == Constants.BlueTeamId)
             return Texts.BlueTeam;
         return "";
     }
@@ -51,26 +49,12 @@ public static class PvpUtils
     {
         if (teamId == Constants.DrawTeamId)
             return teamId;
-        return teamId == Constants.AvailableTeamIds[0] ? Constants.AvailableTeamIds[1] : Constants.AvailableTeamIds[0];
+        return teamId == Constants.RedTeamId ? Constants.BlueTeamId : Constants.RedTeamId;
     }
 
     public static void CreatePvpStateEntity()
     {
         DI.Instance.AreaState.PvpStateEntity = DI.Instance.ClientNetEntity.CreateNetworkedAreaEntity(DI.Instance.ArchetypeRegistration.PvPStateSingletonArchetype).Entity;
-    }
-
-    public static void SpawnBots(int teamId)
-    {
-        for (var i = 0; i < Constants.BotCount; i++)
-        {
-            var angle = i / (float)Constants.BotCount * 2f * FMath.PI;
-            var x = FMath.Cos(angle) * Constants.PvpMonsterRadius;
-            var y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
-
-            var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-            var spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            SpawningUtils.SpawnUnitAsOwner(CharacterKind.Monkey, spawnPosition, teamId);
-        }
     }
 
     public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)

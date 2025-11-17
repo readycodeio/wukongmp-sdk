@@ -402,21 +402,4 @@ public static class SpawningUtils
             return canSummon;
         }
     }
-
-    public static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
-    {
-        var events = BUS_EventCollectionCS.Get(bGUCharacter);
-        if (events != null)
-        {
-            foreach (var attr in MonkeyBotConfig.Attribues)
-            {
-                events.Evt_SetAttrFloat.Invoke(attr.Key, attr.Value);
-            }
-
-            foreach (var eq in MonkeyBotConfig.Equipment)
-            {
-                events.Evt_InitDaShenEquipData.Invoke(eq.Key, eq.Value);
-            }
-        }
-    }
 }

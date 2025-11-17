@@ -27,7 +27,9 @@ namespace WukongMp.Api.Configuration
         public const int NewCharacterArchiveId = 9;
         public const int WorldArchiveId = 0;
         public const int MaxPlayers = 10;
-        public static readonly List<int> AvailableTeamIds = [-9999, -9998];
+        public const int RedTeamId = -9999;
+        public const int BlueTeamId = -9998;
+        public static readonly int[] AvailableTeamIds = [RedTeamId, BlueTeamId];
         public const int DrawTeamId = 9999;
         public const int DefaultMonsterTeamId = 2;
         public const int ReconnectDelayMs = 1000;

@@ -1,7 +1,9 @@
 ﻿using Friflo.Engine.ECS.Systems;
+using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
 using WukongMp.PvP.Gamemode;
 using WukongMp.PvP.UI;
@@ -9,10 +11,11 @@ using WukongMp.PvP.UI;
 namespace WukongMp.PvP.ECS.Systems;
 
 internal sealed class ReadinessSystem(
+    Store world,
     WukongAreaState areaState,
     PvpWidgetManager widgetManager,
     PvpMode pvpMode
-) : QuerySystem<PvPComponent, InScopeComponent>
+) : QuerySystem<PvPComponent, TeamComponent, InScopeComponent>
 {
     private int _lastReadyCount = -1;
 
@@ -23,15 +26,28 @@ internal sealed class ReadinessSystem(
 
         var players = 0;
         var readyCount = 0;
+        var blueTeamAnyReady = false;
+        var redTeamAnyReady = false;
 
-        Query.ForEachEntity((ref pvp, ref scope, _) =>
+        Query.ForEachEntity((ref pvp, ref team, ref scope, _) =>
         {
             if (scope.ScopeEntity != areaState.CurrentArea.Value.Entity)
                 return;
 
             players++;
             if (pvp.IsReadyForPvP)
+            {
                 readyCount++;
+                switch (team.TeamId)
+                {
+                    case Constants.BlueTeamId:
+                        blueTeamAnyReady = true;
+                        break;
+                    case Constants.RedTeamId:
+                        redTeamAnyReady = true;
+                        break;
+                }
+            }
         });
 
         if (_lastReadyCount == readyCount)
@@ -43,7 +59,24 @@ internal sealed class ReadinessSystem(
         if (areaState.PvpState is { InPvP: false })
         {
             var allReady = readyCount == players && players > 0;
-            if (allReady)
+
+            world.Query<LocalTamerComponent, TeamComponent>().ForEachEntity((ref localTamerComp, ref team, _) =>
+            {
+                if (localTamerComp.IsTamerSynced)
+                {
+                    switch (team.TeamId)
+                    {
+                        case Constants.BlueTeamId:
+                            blueTeamAnyReady = true;
+                            break;
+                        case Constants.RedTeamId:
+                            redTeamAnyReady = true;
+                            break;
+                    }
+                }
+            });
+
+            if (allReady && blueTeamAnyReady && redTeamAnyReady)
             {
                 pvpMode.StartLobbyCountdown(Constants.CountdownSeconds);
             }

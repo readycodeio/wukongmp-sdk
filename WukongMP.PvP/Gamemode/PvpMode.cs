@@ -164,15 +164,8 @@ internal partial class PvpMode : IDisposable
     private void OnMonsterSpawned(Entity entity)
     {
         var teamComp = entity.GetComponent<TeamComponent>();
-        var tamerComp = entity.GetComponent<TamerComponent>();
-        var localTamerComp = entity.GetComponent<LocalTamerComponent>();
-
         var teamColor = PvpUtils.GetTeamColorString(teamComp.TeamId);
         MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity), teamColor);
-        if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
-        {
-            SpawningUtils.SetMonkeyBotConfig(localTamerComp.Tamer!.GetMonster());
-        }
     }
 
     private void OnPlayerPawnSpawned(MainCharacterEntity mainCharacterEntity, BGUCharacterCS pawn)
@@ -388,29 +381,8 @@ internal partial class PvpMode : IDisposable
 
         if (!_areaState.OwnsPvpState)
             return;
-
+        
         _areaState.OwnedPvpStateRef().InPvP = true;
-
-        var monsterCount = 0;
-        _world.Query<LocalTamerComponent>().ForEachEntity((ref localTamerComp, _) =>
-        {
-            if (localTamerComp.IsTamerSynced)
-            {
-                monsterCount++;
-            }
-        });
-
-        if (!OtherPlayers.Any() && monsterCount == 0)
-        {
-            // FIXME: Is there any way to get rid of having those checks all over the place? Seems very tedious,
-            // and it handles a fringe case where somehow the player got disconnected.
-            if (_playerState.LocalPlayerEntity != null)
-            {
-                var teamId = _playerState.LocalPlayerEntity.Value.GetState().TeamId;
-                var oppositeId = PvpUtils.GetOppositeTeam(teamId);
-                _ecsLoop.Scheduler.Schedule(static (_, oppositeId0) => { PvpUtils.SpawnBots(oppositeId0); }, oppositeId);
-            }
-        }
     }
 
     public void EndRound()
