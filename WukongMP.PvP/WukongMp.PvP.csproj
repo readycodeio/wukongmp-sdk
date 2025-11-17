@@ -37,6 +37,9 @@
         <Reference Include="B1UI_GSE.Script">
           <HintPath>..\WukongMp.Api\Game\B1UI_GSE.Script.dll</HintPath>
         </Reference>
+        <Reference Include="GSE.Core">
+            <HintPath>..\WukongMp.Api\Game\GSE.Core.dll</HintPath>
+        </Reference>
         <Reference Include="BtlSvr.Main">
           <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
         </Reference>

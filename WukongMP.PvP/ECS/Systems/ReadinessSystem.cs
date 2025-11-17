@@ -25,7 +25,7 @@ internal sealed class ReadinessSystem(
         var players = 0;
         var readyCount = 0;
 
-        Query.ForEachEntity((ref PvPComponent pvp, ref InScopeComponent scope, Entity _) =>
+        Query.ForEachEntity((ref pvp, ref scope, _) =>
         {
             if (scope.ScopeEntity != areaState.CurrentArea.Value.Entity)
                 return;

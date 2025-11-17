@@ -11,7 +11,7 @@ public class TeamColorSystem : QuerySystem<MainCharacterComponent, LocalMainChar
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref MainCharacterComponent mainComp, ref LocalMainCharacterComponent localMainComp, ref TeamComponent teamComp, Entity _) =>
+        Query.ForEachEntity((ref mainComp, ref localMainComp, ref teamComp, _) =>
         {
             if (!localMainComp.HasPawn)
                 return;

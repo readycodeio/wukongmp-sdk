@@ -35,7 +35,7 @@ internal sealed class PlayerListSystem(
 
         Query
             .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity)
-            .ForEachEntity((ref MainCharacterComponent mainCharacterComponent, ref PvPComponent pvp, Entity _) =>
+            .ForEachEntity((ref mainCharacterComponent, ref pvp, _) =>
             {
                 var player = playerState.GetPlayerById(mainCharacterComponent.PlayerId);
                 if (player.HasValue)

@@ -387,7 +387,7 @@ internal partial class PvpMode : IDisposable
         _areaState.OwnedPvpStateRef().InPvP = true;
 
         var monsterCount = 0;
-        _world.Query<LocalTamerComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, Entity _) =>
+        _world.Query<LocalTamerComponent>().ForEachEntity((ref localTamerComp, _) =>
         {
             if (localTamerComp.IsTamerSynced)
             {
@@ -565,12 +565,24 @@ internal partial class PvpMode : IDisposable
 
         // check if all players but one are dead
         var playerEntities = AllPvPPlayers.ToList();
-        var aliveTeamIds = playerEntities.Where(p => !p.Character.GetState().IsDead || p.Character.GetState().IsTransformed)
+        var aliveTeamIds = playerEntities.Where(p =>
+            {
+                var state = p.Character.GetState();
+                if (!state.IsDead || state.IsTransformed)
+                    return true;
+
+                var pawn = p.Character.GetLocalState().Pawn;
+                var unitStateData = BGU_DataUtil.GetReadOnlyData<IBUC_UnitStateData, BUC_UnitStateData>(pawn);
+
+                return unitStateData.HasState(EBGUUnitState.LifeSavingHair_FakeDead)
+                       || unitStateData.HasState(EBGUUnitState.LifeSavingHair_Rebirth)
+                       || unitStateData.HasState(EBGUUnitState.LifeSavingHairBlocking);
+            })
             .Select(x => x.Player.GetState().TeamId)
             .ToList();
 
         var aliveMonsters = new List<int>();
-        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref HpComponent hpComp, ref TeamComponent teamComp, Entity _) =>
+        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
         {
             if (hpComp.Hp <= 0)
                 return;
