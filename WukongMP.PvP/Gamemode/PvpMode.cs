@@ -1,4 +1,8 @@
-﻿using b1;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using b1;
 using CSharpModBase;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
@@ -11,10 +15,6 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
@@ -39,7 +39,7 @@ internal partial class PvpMode : IDisposable
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
 
-    private bool _isRoundEnding;
+    public bool IsRoundEnding { get; private set; }
     private readonly Store _world;
     private readonly ClientState _state;
     private readonly WukongAreaState _areaState;
@@ -52,11 +52,10 @@ internal partial class PvpMode : IDisposable
     private readonly ClientOwnershipManager _clientOwnership;
     private readonly WukongPawnState _pawnState;
     private readonly IClientEcsUpdateLoop _ecsLoop;
-    private readonly FreeCameraManager _freeCameraManager;
     private readonly PvpWidgetManager _pvpWidgetManager;
     private readonly ILogger _logger;
 
-    private int _pendingDaSheng;
+    public int PendingDaShengSecondPhaseSpawns { get; private set; }
     private readonly HashSet<NetworkId> SpawnedDaSheng2 = [];
 
     private readonly CountdownTimer _countdownTimer = new(1, 5);
@@ -122,7 +121,6 @@ internal partial class PvpMode : IDisposable
         _clientOwnership = clientOwnership;
         _pawnState = pawnState;
         _ecsLoop = ecsLoop;
-        _freeCameraManager = freeCameraManager;
         _pvpWidgetManager = pvpWidgetManager;
         _logger = logger;
 
@@ -130,7 +128,6 @@ internal partial class PvpMode : IDisposable
 
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerInsideArea += OnOtherPlayerInsideAreaHandler;
-        _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
 
         _eventRouter.OnUnitDead += OnUnitDead;
         _eventRouter.OnMonsterSpawned += OnMonsterSpawned;
@@ -142,7 +139,6 @@ internal partial class PvpMode : IDisposable
 
     public void Dispose()
     {
-        _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
         _state.OnOtherPlayerInsideArea -= OnOtherPlayerInsideAreaHandler;
         _state.OnJoinedArea -= OnJoinedAreaHandler;
 
@@ -262,7 +258,7 @@ internal partial class PvpMode : IDisposable
 
     public async Task EndRoundAsync(int winner)
     {
-        if (_isRoundEnding)
+        if (IsRoundEnding)
             return;
 
         if (!_areaState.OwnsPvpState)
@@ -272,7 +268,7 @@ internal partial class PvpMode : IDisposable
 
         ref var pvpState = ref _areaState.OwnedPvpStateRef();
 
-        _isRoundEnding = true;
+        IsRoundEnding = true;
 
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -306,7 +302,7 @@ internal partial class PvpMode : IDisposable
         if (AllPvPPlayers.Select(p => p.Player.GetState().TeamId).Distinct().Count() == 1)
         {
             SendPvPEvent(PvpEvent.TournamentEnd, winner);
-            _isRoundEnding = false;
+            IsRoundEnding = false;
             return;
         }
 
@@ -315,7 +311,7 @@ internal partial class PvpMode : IDisposable
         if (winnerTeam.Key != 0)
         {
             SendPvPEvent(PvpEvent.TournamentEnd, winnerTeam.Key);
-            _isRoundEnding = false;
+            IsRoundEnding = false;
             return;
         }
 
@@ -348,7 +344,7 @@ internal partial class PvpMode : IDisposable
             await StartRoundAsync();
         }
 
-        _isRoundEnding = false;
+        IsRoundEnding = false;
     }
 
     private async Task ResetHpAndRespawnAllPlayers()
@@ -551,70 +547,6 @@ internal partial class PvpMode : IDisposable
             _areaState.OwnedPvpStateRef().InPvP = false;
     }
 
-    private void CheckRoundEndCondition()
-    {
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-        {
-            Logging.LogError("No room joined.");
-            return;
-        }
-
-        if (_areaState.PvpState is not { InPvP: true })
-            return;
-
-        // check if all players but one are dead
-        var playerEntities = AllPvPPlayers.ToList();
-        var aliveTeamIds = playerEntities.Where(p =>
-            {
-                var state = p.Character.GetState();
-                return !state.IsDead || state.IsTransformed;
-            })
-            .Select(x => x.Player.GetState().TeamId)
-            .ToList();
-
-        var aliveMonsters = new List<int>();
-        _world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
-        {
-            if (hpComp.IsDead)
-                return;
-
-            aliveMonsters.Add(teamComp.TeamId);
-        });
-
-        var alivePlayersTeams = aliveTeamIds.Concat(aliveMonsters).ToList();
-
-        var aliveTeamCount = alivePlayersTeams.Distinct().Count();
-
-        var aliveTeamPlayers = alivePlayersTeams
-            .GroupBy(teamId => teamId)
-            .Select(group => new { TeamId = group.Key, Count = group.Count() })
-            .OrderByDescending(item => item.Count).ToList();
-
-        if (aliveTeamIds.Count == 0)
-        {
-            Logging.LogInformation("All players are dead, ending round");
-            var aliveTeamId = aliveTeamPlayers.Count > 0 ? aliveTeamPlayers[0].TeamId : Constants.DrawTeamId;
-            if (alivePlayersTeams.Count == 0)
-            {
-                Task.Run(async () => await EndRoundAsync(PvpUtils.GetOppositeTeam(aliveTeamId)));
-            }
-            else
-            {
-                Task.Run(async () => await EndRoundAsync(aliveTeamId));
-            }
-
-            return;
-        }
-
-        if (aliveTeamCount == 1)
-        {
-            Logging.LogInformation("One team with alive players, ending round");
-            var winner = playerEntities.First(p => !p.Character.GetState().IsDead);
-            _ecsLoop.Scheduler.ScheduleFunc(async (_, self, winner0) => { await self.EndRoundAsync(winner0.Player.GetState().TeamId); }, this, winner);
-        }
-    }
-
     private int GetSmallerTeamId()
     {
         Dictionary<int, int> teamsCount = [];
@@ -708,18 +640,6 @@ internal partial class PvpMode : IDisposable
         }
     }
 
-    private void OnOtherPlayerOutsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerOutsideAreaReason arg3)
-    {
-        {
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(Constants.PlayerTtlMs);
-                if (_areaState.OwnsPvpState)
-                    CheckRoundEndCondition();
-            });
-        }
-    }
-
     private void OnUnitDead(Entity victim, Entity attacker)
     {
         if (_areaState is { PvpState.InPvP: true })
@@ -740,14 +660,14 @@ internal partial class PvpMode : IDisposable
 
                     if (SpawnedDaSheng2.Add(netId))
                     {
-                        _pendingDaSheng++;
+                        PendingDaShengSecondPhaseSpawns++;
                         _ = Task.Run(async () =>
                         {
                             await Task.Delay(5000);
                             Utils.TryRunOnGameThread(() =>
                             {
                                 SpawningUtils.SpawnUnitAsOwner(CharacterKind.DaSheng2, location, teamId);
-                                _pendingDaSheng--;
+                                PendingDaShengSecondPhaseSpawns--;
                             });
                         });
                     }
@@ -755,14 +675,7 @@ internal partial class PvpMode : IDisposable
                     {
                         Logging.LogDebug("Would spawn DaSheng2, but already spawned for this monster: {Monster}", netId);
                     }
-
-                    return;
                 }
-            }
-
-            if (_pendingDaSheng == 0)
-            {
-                CheckRoundEndCondition();
             }
         }
     }
