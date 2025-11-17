@@ -9,16 +9,12 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
-using WukongMp.Api.ECS.Components;
-using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems.Tamers;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using WukongMp.PvP.ECS.Systems;
 using WukongMp.PvP.Gamemode;
 using WukongMp.PvP.UI;
@@ -54,7 +50,6 @@ internal class PvpSynchronizer : WukongSynchronizer
         : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager.widgetManager, gameplayEventRouter, configuration, logger)
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
-        JobRegistry.OnApplySnapshot += OnApplySnapshot;
 
         _modeGroup = new SystemGroup("Pvp");
 
@@ -70,7 +65,6 @@ internal class PvpSynchronizer : WukongSynchronizer
     protected override void OnDispose()
     {
         State.OnJoinedArea -= OnJoinedAreaHandler;
-        JobRegistry.OnApplySnapshot -= OnApplySnapshot;
 
         EcsLoop.RemoveSystem(_modeGroup);
         base.OnDispose();
@@ -86,10 +80,5 @@ internal class PvpSynchronizer : WukongSynchronizer
         {
             PvpUtils.CreatePvpStateEntity();
         }
-    }
-
-    private void OnApplySnapshot()
-    {
-        World.Query<LocalTamerComponent, TamerComponent, TranslationComponent>().Each(new SpawnMonstersFromEcs());
     }
 }
