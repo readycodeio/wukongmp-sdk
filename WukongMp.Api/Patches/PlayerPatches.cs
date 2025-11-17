@@ -292,7 +292,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnUnitDead
     {
-        public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, AActor Attacker, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData, out bool __state)
+        public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData, out bool __state)
         {
             __state = false;
 
@@ -316,19 +316,13 @@ namespace WukongMp.Api.Patches
             }
 
             __state = true;
-
-            if (Attacker is BGUCharacterCS attackerCharacter &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(ownerCharacter, out var victimEntity) &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(attackerCharacter, out var attackerEntity))
-            {
-                DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
-            }
         }
 
         public static void Postfix(
             BUS_DeadComp __instance,
             bool __state,
             EDeadReason DeadReason,
+            AActor Attacker,
             int DmgID = -1,
             int StiffLevel = -1,
             bool bIsDotDmg = false,
@@ -349,9 +343,16 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (owner is not BGUCharacterCS)
+            if (owner is not BGUCharacterCS ownerCharacter)
             {
                 return;
+            }
+
+            if (Attacker is BGUCharacterCS attackerCharacter &&
+                DI.Instance.PawnState.TryGetEnityByCharacter(ownerCharacter, out var victimEntity) &&
+                DI.Instance.PawnState.TryGetEnityByCharacter(attackerCharacter, out var attackerEntity))
+            {
+                DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
             }
 
             if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
@@ -456,6 +457,7 @@ namespace WukongMp.Api.Patches
             {
                 __result = false;
             }
+
             return DI.Instance.GameplayConfiguration.IsSupportMultiLockEnabled;
         }
     }
@@ -712,7 +714,7 @@ namespace WukongMp.Api.Patches
 
             List<FVector> playersPositions = [];
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-            ref MainCharacterComponent playerComp, Entity _) =>
+                ref MainCharacterComponent playerComp, Entity _) =>
             {
                 playersPositions.Add(playerComp.Location.ToFVector());
             });
