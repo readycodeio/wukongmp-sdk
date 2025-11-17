@@ -710,12 +710,12 @@ internal partial class PvpMode : IDisposable
 
     private void OnOtherPlayerOutsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerOutsideAreaReason arg3)
     {
-        if (_areaState.OwnsPvpState)
         {
             _ = Task.Run(async () =>
             {
                 await Task.Delay(Constants.PlayerTtlMs);
-                CheckRoundEndCondition();
+                if (_areaState.OwnsPvpState)
+                    CheckRoundEndCondition();
             });
         }
     }
