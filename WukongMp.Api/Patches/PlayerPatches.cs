@@ -679,6 +679,8 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var obstacle = __instance.GetOwner();
+            var obstavceName = BGU_DataUtil.GetActorGuid(obstacle);
+            Logging.LogDebug("Checking whether to enable collider for obstacle with guid {Guid}", obstavceName);
 
             List<FVector> playersPositions = [];
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
@@ -691,10 +693,16 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var enableCollider = true;
+            Logging.LogDebug("Obstacle at {ObstaclePos}", obstacle.GetActorLocation());
+            Logging.LogDebug("Found {Count} players in area", playersPositions.Count);
+            Logging.LogDebug("Players positions: {Positions}", string.Join(", ", playersPositions));
             for (int i = 1; i < playersPositions.Count; i++)
             {
                 var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[0], playersPositions[i], null, null);
                 var path = nav.PathPoints.ToList();
+                Logging.LogDebug("Checking path between players at {Pos1} and {Pos2}, path has {Count} points", playersPositions[0], playersPositions[i], path.Count);
+                Logging.LogDebug("Path points: {Points}", string.Join(", ", path));
+                Logging.LogDebug("IsPartial: {IsPartial}", nav.IsPartial());
                 if (nav.IsPartial() || IsPathNearPosition(path, obstacle.GetActorLocation(), Constants.ArenaPortalRadius))
                 {
                     enableCollider = false;
