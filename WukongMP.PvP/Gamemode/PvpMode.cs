@@ -62,6 +62,8 @@ internal partial class PvpMode : IDisposable
 
     private readonly CountdownTimer _countdownTimer = new(1, 5);
 
+    private bool _inTournament;
+
     private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
     {
         var playerEntity = _playerState.GetPlayerById(playerId);
@@ -210,7 +212,7 @@ internal partial class PvpMode : IDisposable
         }
     }
 
-    public void StartPvP()
+    private void StartPvP()
     {
         if (_areaState.OwnsPvpState)
         {
@@ -386,7 +388,7 @@ internal partial class PvpMode : IDisposable
         await Task.Delay(6500);
     }
 
-    public void StartRound()
+    private void StartRound()
     {
         ClearLoobyCountdown();
         _pvpWidgetManager.StartRound();
@@ -401,7 +403,7 @@ internal partial class PvpMode : IDisposable
         _areaState.OwnedPvpStateRef().InPvP = true;
     }
 
-    public void EndRound()
+    private void EndRound()
     {
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -421,12 +423,12 @@ internal partial class PvpMode : IDisposable
         }
     }
 
-    public void ResetRoundState()
+    private void ResetRoundState()
     {
         _ecsLoop.Scheduler.Schedule(_ => { TamerUtils.DestroyAllTamers(); });
     }
 
-    public void SetReadyState(bool isReady)
+    private void SetReadyState(bool isReady)
     {
         if (_playerState.LocalMainCharacter == null)
             return;
@@ -435,7 +437,7 @@ internal partial class PvpMode : IDisposable
 
     public void SwitchReadyStateMulti()
     {
-        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count > 0 && _playerState.LocalMainCharacter?.GetPvP().IsSpectator is not true)
+        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count > 0 && _playerState.LocalMainCharacter?.GetPvP().IsSpectator is not true && !_inTournament)
         {
             SwitchReadyState();
         }
@@ -457,7 +459,7 @@ internal partial class PvpMode : IDisposable
         if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null)
             return;
 
-        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InPvP: false })
+        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InPvP: false } && !_inTournament)
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
@@ -466,7 +468,7 @@ internal partial class PvpMode : IDisposable
         }
     }
 
-    public void EnablePvP()
+    private void EnablePvP()
     {
         Logging.LogInformation("Enabled PvP");
 
@@ -492,7 +494,7 @@ internal partial class PvpMode : IDisposable
         }
     }
 
-    public void DisablePvP()
+    private void DisablePvP()
     {
         Logging.LogInformation("Disabled PvP");
 
@@ -518,7 +520,7 @@ internal partial class PvpMode : IDisposable
         }
     }
 
-    public void EnterPvP()
+    private void StartTournament()
     {
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -527,11 +529,12 @@ internal partial class PvpMode : IDisposable
             return;
         }
 
+        _inTournament = true;
         if (_areaState.OwnsPvpState)
             _areaState.OwnedPvpStateRef().InPvP = true;
     }
 
-    public void ExitPvP()
+    private void EndTournament()
     {
         var areaEntity = _areaState.CurrentArea;
         if (areaEntity == null)
@@ -540,6 +543,7 @@ internal partial class PvpMode : IDisposable
             return;
         }
 
+        _inTournament = false;
         if (_areaState.OwnsPvpState)
             _areaState.OwnedPvpStateRef().InPvP = false;
     }
@@ -713,7 +717,7 @@ internal partial class PvpMode : IDisposable
                 _ecsLoop.Scheduler.Schedule(_ => PvpUtils.ShowPvPCountDown());
                 StartRound();
                 EnablePvP();
-                EnterPvP();
+                StartTournament();
                 break;
             }
             case PvpEvent.RoundEnd:
@@ -763,7 +767,7 @@ internal partial class PvpMode : IDisposable
                     await Task.Delay(2000);
                     Logging.LogInformation("End tournament");
                     self._pvpWidgetManager.SetupLobbyUi();
-                    self.ExitPvP();
+                    self.EndTournament();
                     self.SetReadyState(false);
                 }, this);
 
