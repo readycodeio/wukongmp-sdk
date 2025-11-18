@@ -745,7 +745,7 @@ namespace WukongMp.Api.Patches
 
         private static bool HasPathColllision(UObject world, IList<FVector> pathPoints, float radius, AActor actorToCheck)
         {
-            if (pathPoints == null || pathPoints.Count == 0 || radius <= 0f)
+            if (pathPoints.Count == 0 || radius <= 0f)
                 return false;
 
             var actorHeight = actorToCheck.GetActorLocation().Z;
