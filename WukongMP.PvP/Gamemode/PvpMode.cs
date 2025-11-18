@@ -530,6 +530,7 @@ internal partial class PvpMode : IDisposable
         }
 
         _inTournament = true;
+        PlayerUtils.SetPlayerInteractionEnabled(_playerState.LocalMainCharacter!.Value, false);
         if (_areaState.OwnsPvpState)
             _areaState.OwnedPvpStateRef().InPvP = true;
     }
@@ -544,6 +545,7 @@ internal partial class PvpMode : IDisposable
         }
 
         _inTournament = false;
+        PlayerUtils.SetPlayerInteractionEnabled(_playerState.LocalMainCharacter!.Value, true);
         if (_areaState.OwnsPvpState)
             _areaState.OwnedPvpStateRef().InPvP = false;
     }

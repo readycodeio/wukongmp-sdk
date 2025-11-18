@@ -22,12 +22,13 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        public static void DisablePlayerInteraction(BGUPlayerCharacterCS playerCharacter)
+        public static void SetPlayerInteractionEnabled(MainCharacterEntity mainEntity, bool enabled)
         {
-            var events = BUS_EventCollectionCS.Get(playerCharacter);
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
             if (events != null)
             {
-                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract);
+                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
             }
         }
 
