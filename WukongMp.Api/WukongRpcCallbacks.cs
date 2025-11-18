@@ -792,6 +792,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
 
             localMainComp.IsRespawning = true;
+            self._freeCameraManager.LeaveFreeCameraMode();
             PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
         }, this, birthPointId);
     }
