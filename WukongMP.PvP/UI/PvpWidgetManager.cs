@@ -54,6 +54,7 @@ namespace WukongMp.PvP.UI
             _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
 
             _eventRouter.OnPlayerChangedTeam += UpdatePlayerTeam;
+            _eventRouter.OnLocalPlayerChangedSpectator += OnLocalPlayerChangedSpectator; ;
         }
 
         public void Dispose()
@@ -72,6 +73,7 @@ namespace WukongMp.PvP.UI
             _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
 
             _eventRouter.OnPlayerChangedTeam -= UpdatePlayerTeam;
+            _eventRouter.OnLocalPlayerChangedSpectator -= OnLocalPlayerChangedSpectator; ;
         }
 
         public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
@@ -159,19 +161,24 @@ namespace WukongMp.PvP.UI
         private void OnFreeCameraModeChanged(bool enabled)
         {
             widgetManager.OnFreeCameraModeChanged(enabled);
-            if (!enabled && _areaState.PvpState is { InPvP: true })
-            {
-                _lobbyStatusWidget.Value.SetVisibility(false);
-                return;
-            }
+        }
 
-            if (enabled && _playerState.LocalMainCharacter.Value.GetLocalState().IsSpectatorLocally)
+        private void OnLocalPlayerChangedSpectator(bool enabled)
+        {
+            if (enabled)
             {
                 SetupSpectatorUi();
             }
-            else if (_areaState.PvpState is not { InPvP: true })
+            else
             {
-                SetupLobbyUi();
+                if (_areaState.PvpState is not { InPvP: true })
+                {
+                    SetupLobbyUi();
+                }
+                else
+                {
+                    _lobbyStatusWidget.Value.SetVisibility(false);
+                }
             }
         }
 

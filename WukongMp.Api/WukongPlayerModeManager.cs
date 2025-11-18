@@ -2,7 +2,6 @@
 using BtlShare;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -38,6 +37,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         if (isMyself)
         {
             freeCameraManager.EnterFreeCameraMode();
+            eventRouter.RaiseOnLocalPlayerChangedSpectator(true);
         }
         SetPlayerCollision(playerEntity, mainEntity, false);
         eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
@@ -60,6 +60,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         if (isMyself)
         {
             freeCameraManager.LeaveFreeCameraMode();
+            eventRouter.RaiseOnLocalPlayerChangedSpectator(false);
         }
         eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
 
