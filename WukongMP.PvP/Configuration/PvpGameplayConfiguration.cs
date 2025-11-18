@@ -47,12 +47,20 @@ namespace WukongMp.PvP.Configuration
             if (areaEntity == null)
                 return true;
 
-            // Only Immobilize checked here, Phantom Rush is not a skill in code
-            if (skillId == Constants.ImmobilizeSkillId && !areaEntity.Value.GetRoom().ImmobilizeAllowed)
-                return false;
+            var room = areaEntity.Value.GetRoom();
 
-            // more skills here
-            return true;
+            switch (skillId)
+            {
+                // Note: Phantom Rush is not a skill in code
+                case Constants.ImmobilizeSkillId when !room.ImmobilizeAllowed:
+                case Constants.GourdSkillId when !room.GourdAllowed:
+                case Constants.ConsumableBuffSkillId when !room.ConsumablesAllowed:
+                case Constants.IncenseTrailTalismanSkillId:
+                    return false;
+                default:
+                    // more skills here
+                    return true;
+            }
         }
     }
 }

@@ -40,22 +40,7 @@ public static class PatchTriggerItemSkill
             return true;
 
         var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
-
-        if (!DI.Instance.GameplayConfiguration.IsSkillEnabled(lastSkill))
-            return false;
-
-        var areaEntity = areaState.CurrentArea;
-        ref var room = ref areaEntity.Value.GetRoom();
-
-        switch (lastSkill)
-        {
-            case Constants.GourdSkillId when !room.GourdAllowed:
-            case Constants.ConsumableBuffSkillId when !room.ConsumablesAllowed:
-            case Constants.IncenseTrailTalismanSkillId:
-                return false;
-            default:
-                return true;
-        }
+        return DI.Instance.GameplayConfiguration.IsSkillEnabled(lastSkill);
     }
 }
 

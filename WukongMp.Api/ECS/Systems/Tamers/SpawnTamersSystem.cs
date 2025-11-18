@@ -45,7 +45,6 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
 
             if (localTamerComp.Tamer.CurrentRef?.Phase == ETamerPhase.Dead)
             {
-                Logging.LogDebug("Tamer is dead, will not spawn, guid {Guid}", tamerComp.Guid);
                 return;
             }
 
