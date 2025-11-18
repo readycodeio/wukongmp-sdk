@@ -703,7 +703,11 @@ namespace WukongMp.Api.Patches
                 Logging.LogDebug("Checking path between players at {Pos1} and {Pos2}, path has {Count} points", playersPositions[0], playersPositions[i], path.Count);
                 Logging.LogDebug("Path points: {Points}", string.Join(", ", path));
                 Logging.LogDebug("IsPartial: {IsPartial}", nav.IsPartial());
-                if (nav.IsPartial() || IsPathNearPosition(path, obstacle.GetActorLocation(), Constants.ArenaPortalRadius))
+                if (!nav.IsPartial())
+                {
+                    break;
+                }
+                if (HasPathColllision(obstacle.World, path, Constants.ArenaPortalRadius, obstacle))
                 {
                     enableCollider = false;
                     break;
@@ -712,6 +716,30 @@ namespace WukongMp.Api.Patches
 
             Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
             return enableCollider;
+        }
+
+        private static bool HasPathColllision(UObject world, IList<FVector> pathPoints, float radius, AActor actorToCheck)
+        {
+            if (pathPoints == null || pathPoints.Count == 0 || radius <= 0f)
+                return false;
+
+            List<AActor> emptyActorList = [];
+            for (int i = 0; i < pathPoints.Count - 1; i++)
+            {
+                if (USystemLibrary.SphereTraceMultiByProfile(world, pathPoints[i], pathPoints[i + 1], radius, B1GlobalFNames.Pawn, bTraceComplex: false, emptyActorList, EDrawDebugTrace.None, out var OutHit3, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 5f))
+                {
+                    foreach (var hit in OutHit3)
+                    {
+                        if (hit.Component.Value.GetOwner() == actorToCheck)
+                        {
+                            Logging.LogDebug("Path collision detected with actor: {ActorName}", hit.Component.Value.GetOwner().GetName());
+                            return true;
+                        }
+                    }
+                }
+
+            }
+            return false;
         }
 
         private static bool IsPathNearPosition(IList<FVector> pathPoints, FVector worldPos, float radius)
