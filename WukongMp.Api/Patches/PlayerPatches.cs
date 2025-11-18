@@ -695,7 +695,7 @@ namespace WukongMp.Api.Patches
             {
                 var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[0], playersPositions[i], null, null);
                 var path = nav.PathPoints.ToList();
-                if (IsPathNearPosition(path, obstacle.GetActorLocation(), Constants.ArenaPortalRadius))
+                if (nav.IsPartial() || IsPathNearPosition(path, obstacle.GetActorLocation(), Constants.ArenaPortalRadius))
                 {
                     enableCollider = false;
                     break;
