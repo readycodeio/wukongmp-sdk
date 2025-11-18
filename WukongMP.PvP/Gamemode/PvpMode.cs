@@ -134,15 +134,11 @@ internal partial class PvpMode : IDisposable
         _eventRouter.OnUnitDead += OnUnitDead;
         _eventRouter.OnMonsterSpawned += OnMonsterSpawned;
         _eventRouter.OnLanguageChanged += OnLanguageChanged;
+        _eventRouter.OnPlayerChangedTeam += OnPlayerChangedTeam;
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
         _rpc.OnPvpEventReceived += OnPvpEvent;
-    }
-
-    private void OnLanguageChanged(CultureInfo culture)
-    {
-        PvpTexts.Culture = culture;
     }
 
     public void Dispose()
@@ -155,10 +151,30 @@ internal partial class PvpMode : IDisposable
         _eventRouter.OnUnitDead -= OnUnitDead;
         _eventRouter.OnMonsterSpawned -= OnMonsterSpawned;
         _eventRouter.OnLanguageChanged -= OnLanguageChanged;
+        _eventRouter.OnPlayerChangedTeam -= OnPlayerChangedTeam;
 
         _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;
         _rpc.OnPvpEventReceived -= OnPvpEvent;
+    }
+
+    private void OnPlayerChangedTeam(PlayerEntity player, MainCharacterEntity character)
+    {
+        ref var mainComp = ref character.GetState();
+        ref var localMainComp = ref character.GetLocalState();
+        var teamComp = character.GetTeam();
+
+        Logging.LogDebug("Updating player {Nickname} marker to team {Team}", mainComp.CharacterNickName, teamComp.TeamId);
+        if (localMainComp.MarkerActor != null)
+        {
+            var teamColor = PvpUtils.GetTeamColorString(teamComp.TeamId);
+            localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
+        }
+    }
+
+    private void OnLanguageChanged(CultureInfo culture)
+    {
+        PvpTexts.Culture = culture;
     }
 
     private void OnMonsterSpawned(Entity entity)
