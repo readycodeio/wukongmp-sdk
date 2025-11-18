@@ -1014,3 +1014,25 @@ public class PatchOnForceSetRebirthPoint
         }
     }
 }
+
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnRebirthFinished
+{
+    [HarmonyTargetMethodHint("b1.BUS_RebirthComp", "CommonRebirthLogic")]
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BUS_RebirthComp:CommonRebirthLogic");
+    }
+
+    public static void Postfix(UActorCompBaseCS __instance)
+    {
+        var owner = __instance.GetOwner();
+        var entity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+
+        if (entity.HasValue)
+        {
+            entity.Value.GetLocalState().IsRespawning = false;
+        }
+    }
+}
