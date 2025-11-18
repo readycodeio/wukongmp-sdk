@@ -90,7 +90,7 @@ public class CoopSynchronizer : WukongSynchronizer
     {
         var isFirst = AreaState.IsMasterClient;
 
-        Logger.LogDebug("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
+        Logger.LogInformation("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
 
         if (isFirst)
         {
