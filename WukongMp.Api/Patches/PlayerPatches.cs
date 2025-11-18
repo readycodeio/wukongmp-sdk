@@ -696,6 +696,21 @@ namespace WukongMp.Api.Patches
             Logging.LogDebug("Obstacle at {ObstaclePos}", obstacle.GetActorLocation());
             Logging.LogDebug("Found {Count} players in area", playersPositions.Count);
             Logging.LogDebug("Players positions: {Positions}", string.Join(", ", playersPositions));
+
+
+            MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_QuestDynamicObstacleComp), "CollisionComponents");
+            List<TWeakObject<UPrimitiveComponent>> CollisionComponents = (List<TWeakObject<UPrimitiveComponent>>)getter.Invoke(__instance, null);
+
+            // Enable collsions
+            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
+            {
+                if (collisionComponent.IsValid())
+                {
+                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
+                    uPrimitiveComponent?.SetCollisionEnabled(ECollisionEnabled.QueryAndPhysics);
+                }
+            }
+
             for (int i = 1; i < playersPositions.Count; i++)
             {
                 var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[0], playersPositions[i], null, null);
@@ -703,14 +718,24 @@ namespace WukongMp.Api.Patches
                 Logging.LogDebug("Checking path between players at {Pos1} and {Pos2}, path has {Count} points", playersPositions[0], playersPositions[i], path.Count);
                 Logging.LogDebug("Path points: {Points}", string.Join(", ", path));
                 Logging.LogDebug("IsPartial: {IsPartial}", nav.IsPartial());
-                if (!nav.IsPartial())
-                {
-                    break;
-                }
+                //if (!nav.IsPartial())
+                //{
+                //    break;
+                //}
                 if (HasPathColllision(obstacle.World, path, Constants.ArenaPortalRadius, obstacle))
                 {
                     enableCollider = false;
                     break;
+                }
+            }
+
+            // Disable collsions
+            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
+            {
+                if (collisionComponent.IsValid())
+                {
+                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
+                    uPrimitiveComponent?.SetCollisionEnabled(ECollisionEnabled.NoCollision);
                 }
             }
 
@@ -723,10 +748,11 @@ namespace WukongMp.Api.Patches
             if (pathPoints == null || pathPoints.Count == 0 || radius <= 0f)
                 return false;
 
+            var actorHeight = actorToCheck.GetActorLocation().Z;
             List<AActor> emptyActorList = [];
             for (int i = 0; i < pathPoints.Count - 1; i++)
             {
-                if (USystemLibrary.SphereTraceMultiByProfile(world, pathPoints[i], pathPoints[i + 1], radius, B1GlobalFNames.Pawn, bTraceComplex: false, emptyActorList, EDrawDebugTrace.None, out var OutHit3, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 5f))
+                if (USystemLibrary.SphereTraceMultiByProfile(world, new FVector(pathPoints[i].X, pathPoints[i].Y, actorHeight), new FVector(pathPoints[i + 1].X, pathPoints[i + 1].Y, actorHeight), radius, B1GlobalFNames.Pawn, bTraceComplex: false, emptyActorList, EDrawDebugTrace.None, out var OutHit3, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 5f))
                 {
                     foreach (var hit in OutHit3)
                     {
