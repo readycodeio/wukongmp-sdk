@@ -47,7 +47,7 @@ public static class PvpUtils
 
     public static int GetOppositeTeam(int teamId)
     {
-        if (teamId == Constants.DrawTeamId)
+        if (teamId == PvpConstants.DrawTeamId)
             return teamId;
         return teamId == Constants.RedTeamId ? Constants.BlueTeamId : Constants.RedTeamId;
     }
@@ -60,8 +60,8 @@ public static class PvpUtils
     public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)
     {
         float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
-        float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
-        float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
+        float x = FMath.Cos(angle) * PvpConstants.PvpStartingRadius;
+        float y = FMath.Sin(angle) * PvpConstants.PvpStartingRadius;
 
         var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
         var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);

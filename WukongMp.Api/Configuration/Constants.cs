@@ -6,7 +6,6 @@ namespace WukongMp.Api.Configuration
 {
     public static class Constants
     {
-        public const int PlayerTtlMs = 3000;
         public const int ToleratedLatencyMs = 50;
         public const float FloatComparisonTolerance = 0.1f;
         public const string ConnectedPatches = "Connected";
@@ -16,27 +15,16 @@ namespace WukongMp.Api.Configuration
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 200f;
-        public const int MonsterSpawnDelayMs = 500;
-        public const string AttributePrefix = "a_";
-        public const float PvpStartingRadius = 500;
-        public const float PvpMonsterRadius = 1000;
         public const float CameraArmLength = 720;
-        public const int CoopWorldArchiveId = 7;
-        public const int CoopPlayerArchiveId = 8;
-        public const int CharacterArchiveId = 10;
         public const int NewCharacterArchiveId = 9;
-        public const int WorldArchiveId = 0;
         public const int MaxPlayers = 10;
         public const int RedTeamId = -9999;
         public const int BlueTeamId = -9998;
         public static readonly int[] AvailableTeamIds = [RedTeamId, BlueTeamId];
-        public const int DrawTeamId = 9999;
         public const int DefaultMonsterTeamId = 2;
         public const int ReconnectDelayMs = 1000;
-        public const float CutsceneSyncDistance = 2000f;
         public const float RestrictedMovementRadius = 500f;
         public const float RestrictedMovementRadiusSquare = RestrictedMovementRadius * RestrictedMovementRadius;
-        public const float AiPathMoveStuckTimeout = 0.2f; // seconds
         public const float MonsterUpdateTargetTime = 7; // seconds
         public const float SpawnOwnershipRadius = 7500f; // 75m
         public const float ArenaPortalRadius = 200f; // 20m
@@ -59,10 +47,6 @@ namespace WukongMp.Api.Configuration
         public const int IncenseTrailTalismanSkillId = 10909;
         public const int ConsumableBuffSkillId = 10913;
         public const int IronBodySkillId = 10505;
-
-        public const int CountdownSeconds = 5;
-
-        public const int BotCount = 2;
 
         public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";
 

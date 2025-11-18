@@ -1,8 +1,8 @@
 ﻿using UnrealEngine.Runtime;
 
-namespace WukongMp.Api.Configuration;
+namespace WukongMp.PvP.Configuration;
 
-public struct LevelSpawnData(int mapId, int mapAreaId, int birthPointID, FVector pvpStartingLocation, float pvpRadius = 4000)
+internal struct LevelSpawnData(int mapId, int mapAreaId, int birthPointID, FVector pvpStartingLocation, float pvpRadius = 4000)
 {
     public int MapId { get; private set; } = mapId;
     public int MapAreaId { get; private set; } = mapAreaId;

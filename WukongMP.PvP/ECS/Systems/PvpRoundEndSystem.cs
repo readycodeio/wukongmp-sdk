@@ -6,8 +6,8 @@ using ReadyM.Api.ECS.Worlds;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
+using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Gamemode;
 using WukongMp.PvP.WukongUtils;
 
@@ -62,7 +62,7 @@ internal sealed class PvpRoundEndSystem(
         if (aliveTeamIds.Count == 0)
         {
             Logging.LogInformation("All players are dead, ending round");
-            var aliveTeamId = aliveTeamPlayers.Count > 0 ? aliveTeamPlayers[0].TeamId : Constants.DrawTeamId;
+            var aliveTeamId = aliveTeamPlayers.Count > 0 ? aliveTeamPlayers[0].TeamId : PvpConstants.DrawTeamId;
             if (alivePlayersTeams.Count == 0)
             {
                 Task.Run(async () => await pvpMode.EndRoundAsync(PvpUtils.GetOppositeTeam(aliveTeamId)));

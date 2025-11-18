@@ -15,10 +15,10 @@ using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Api.Resources;
 using WukongMp.PvP.Resources;
+using WukongMp.PvP.Configuration;
 
 namespace WukongMp.PvP.Patches;
 
@@ -68,7 +68,7 @@ public static class PatchStartGameUiPvp
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                 }
-                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(typeof(PatchStartGameUiPvp).Assembly, GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
+                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(typeof(PatchStartGameUiPvp).Assembly, GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId))))
                 {
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.QuickJoin));
                 }

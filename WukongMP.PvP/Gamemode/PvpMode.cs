@@ -298,7 +298,7 @@ internal partial class PvpMode : IDisposable
 
         // resolve tournament
         var winnersSoFar = _areaState.PvpState!.Value.RoundWinners.ToList();
-        var winnersByTeam = winnersSoFar.Where(w => w != Constants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
+        var winnersByTeam = winnersSoFar.Where(w => w != PvpConstants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
         // check if only one team is present
         if (AllPvPPlayers.Select(p => p.Player.GetState().TeamId).Distinct().Count() == 1)
@@ -331,13 +331,13 @@ internal partial class PvpMode : IDisposable
                 }
                 else
                 {
-                    SendPvPEvent(PvpEvent.TournamentEnd, Constants.DrawTeamId);
+                    SendPvPEvent(PvpEvent.TournamentEnd, PvpConstants.DrawTeamId);
                 }
             }
             else
             {
                 // that was the final round
-                SendPvPEvent(PvpEvent.TournamentEnd, Constants.DrawTeamId);
+                SendPvPEvent(PvpEvent.TournamentEnd, PvpConstants.DrawTeamId);
             }
         }
         else
@@ -705,7 +705,7 @@ internal partial class PvpMode : IDisposable
                 DisablePvP();
                 EndRound();
 
-                if (winnerTeamId == Constants.DrawTeamId)
+                if (winnerTeamId == PvpConstants.DrawTeamId)
                 {
                     UiUtils.ShowTip(Texts.RoundDraw, true);
                 }
@@ -714,7 +714,7 @@ internal partial class PvpMode : IDisposable
                     UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
                 }
 
-                if (winnerTeamId == Constants.DrawTeamId)
+                if (winnerTeamId == PvpConstants.DrawTeamId)
                     return;
 
                 var playerEntity = _playerState.LocalPlayerEntity;
@@ -730,7 +730,7 @@ internal partial class PvpMode : IDisposable
             }
             case PvpEvent.TournamentEnd:
             {
-                if (winnerTeamId == Constants.DrawTeamId)
+                if (winnerTeamId == PvpConstants.DrawTeamId)
                 {
                     UiUtils.ShowTip(Texts.TournamentDraw, true);
                 }

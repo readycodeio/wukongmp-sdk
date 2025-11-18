@@ -13,6 +13,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
+using WukongMp.Coop.Configuration;
 
 namespace WukongMp.Coop.Gamemode;
 
@@ -107,22 +108,22 @@ internal class CoopSaveManager
         else
         {
             // we need to write the data as file to read it
-            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
+            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConstants.CoopWorldArchiveId);
             var worldSavePath = GSWindowsPlatformSaveGame.GetFileFullName(worldSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(worldSavePath, worldData);
 
-            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopPlayerArchiveId);
+            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConstants.CoopPlayerArchiveId);
             var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(playerSavePath, playerData);
 
-            var readWorldResult = __instance.ReadArchiveData(Constants.CoopWorldArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
+            var readWorldResult = __instance.ReadArchiveData(CoopConstants.CoopWorldArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
             if (readWorldResult != ReadArchiveResult.Success)
             {
                 _logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
                 return;
             }
 
-            var readPlayerResult = __instance.ReadArchiveData(Constants.CoopPlayerArchiveId, out playerArchiveData, out archiveCanBeRepaired);
+            var readPlayerResult = __instance.ReadArchiveData(CoopConstants.CoopPlayerArchiveId, out playerArchiveData, out archiveCanBeRepaired);
             if (readPlayerResult != ReadArchiveResult.Success)
             {
                 _logger.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
-using WukongMp.Api.Configuration;
 
 namespace WukongMp.PvP.Configuration
 {

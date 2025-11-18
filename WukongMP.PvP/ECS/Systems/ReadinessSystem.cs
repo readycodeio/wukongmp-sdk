@@ -5,6 +5,7 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
+using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Gamemode;
 using WukongMp.PvP.UI;
 
@@ -78,7 +79,7 @@ internal sealed class ReadinessSystem(
 
             if (allReady && blueTeamAnyReady && redTeamAnyReady)
             {
-                pvpMode.StartLobbyCountdown(Constants.CountdownSeconds);
+                pvpMode.StartLobbyCountdown(PvpConstants.CountdownSeconds);
             }
             else
             {

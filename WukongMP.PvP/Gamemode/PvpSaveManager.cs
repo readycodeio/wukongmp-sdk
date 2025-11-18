@@ -54,14 +54,14 @@ internal class PvpSaveManager
                 var characterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(characterArchiveSlotName, __instance.ArchiveWorker.UserId);
 
                 _redirectSaveFiles = true;
-                var newCharacterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId);
+                var newCharacterArchiveSlotName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId);
                 var newCharacterArchiveFullName = GSWindowsPlatformSaveGame.GetFileFullName(newCharacterArchiveSlotName, __instance.ArchiveWorker.UserId);
                 File.Copy(characterArchiveFullName, newCharacterArchiveFullName, true);
             }
             else
             {
                 _redirectSaveFiles = true;
-                var characterReadArchiveResult = __instance.ReadArchiveData(Constants.CharacterArchiveId, out var characterGameArchiveData, out _);
+                var characterReadArchiveResult = __instance.ReadArchiveData(PvpConstants.CharacterArchiveId, out var characterGameArchiveData, out _);
                 if (characterReadArchiveResult == ReadArchiveResult.Success)
                 {
                     OutArchiveData = characterGameArchiveData.GameArchiveData;
@@ -70,7 +70,7 @@ internal class PvpSaveManager
         }
 
         // Read archive with our world state.
-        var readArchiveResult = __instance.ReadArchiveData(Constants.WorldArchiveId, out var gameArchiveData, out _);
+        var readArchiveResult = __instance.ReadArchiveData(PvpConstants.WorldArchiveId, out var gameArchiveData, out _);
         if (readArchiveResult != 0)
         {
             _logger.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
