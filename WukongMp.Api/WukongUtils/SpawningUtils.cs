@@ -168,7 +168,11 @@ public static class SpawningUtils
 
         BGW_EventCollection.Get(GameUtils.GetWorld())?.Evt_RemoveActorGuid2Entity(newCharacter, BGU_DataUtil.GetActorGuid(newCharacter), newCharacter.GetResID());
 
-        newCharacter.CapsuleComponent.SetCollisionResponseToChannel(ECollisionChannel.ECC_WorldStatic, ECollisionResponseType.ECR_Ignore);
+        //newCharacter.CapsuleComponent.SetCollisionResponseToChannel(ECollisionChannel.ECC_WorldStatic, ECollisionResponseType.ECR_Ignore);
+
+        var events = BUS_EventCollectionCS.Get(newCharacter);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, false);
+        events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, false);
 
         return newCharacter;
     }
