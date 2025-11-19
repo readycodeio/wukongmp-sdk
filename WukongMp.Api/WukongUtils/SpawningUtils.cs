@@ -168,6 +168,8 @@ public static class SpawningUtils
 
         BGW_EventCollection.Get(GameUtils.GetWorld())?.Evt_RemoveActorGuid2Entity(newCharacter, BGU_DataUtil.GetActorGuid(newCharacter), newCharacter.GetResID());
 
+        newCharacter.CapsuleComponent.SetCollisionResponseToChannel(ECollisionChannel.ECC_WorldStatic, ECollisionResponseType.ECR_Ignore);
+
         return newCharacter;
     }
 
