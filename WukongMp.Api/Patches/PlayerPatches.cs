@@ -600,22 +600,6 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(BPC_PlayerRoleData), "GetNewGamePlusCount")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public static class PatchGetNewGamePlusCount
-    {
-        public static bool Prefix(ref int __result)
-        {
-            if (!DI.Instance.AreaState.InRoom)
-                return true;
-            if (DI.Instance.AreaState.CurrentArea == null)
-                return true;
-
-            __result = DI.Instance.AreaState.CurrentArea.Value.GetRoom().EnemiesNgPlusLevel + 1;
-            return false;
-        }
-    }
-
     [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnTriggerInputActionImpl")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchOnTriggerInputActionImpl

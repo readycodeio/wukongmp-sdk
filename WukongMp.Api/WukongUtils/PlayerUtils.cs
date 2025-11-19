@@ -143,7 +143,7 @@ namespace WukongMp.Api.WukongUtils
 
             var location = localMainComp.Pawn.GetActorLocation();
             var caplsuleHalfHeight = localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight();
-            location.Z -= 2 * caplsuleHalfHeight;
+            location.Z -= 3 * caplsuleHalfHeight;
             localMainComp.Pawn.SetActorLocation(location, false, out _, true);
         }
 
