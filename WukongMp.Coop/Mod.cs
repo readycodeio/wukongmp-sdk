@@ -134,6 +134,12 @@ namespace WukongMp.Coop
                 }
             });
 #if DEBUG
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.L, () =>
+            {
+                Logging.LogDebug("Alt + L: Teleport underground");
+                PlayerUtils.MoveAllOtherPlayersUnderGround();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
             {
                 Logging.LogDebug("Alt + Y: Show colliders markers");
