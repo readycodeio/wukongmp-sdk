@@ -28,6 +28,7 @@ namespace WukongMp.Api.Configuration
         public const float MonsterUpdateTargetTime = 7; // seconds
         public const float SpawnOwnershipRadius = 7500f; // 75m
         public const float ArenaPortalRadius = 1000f; // 10m
+        public const float AllowedZDiffrence = 50f; // 0.5m
         
         public static readonly HashSet<int> InstantTriggerSequences =
         [

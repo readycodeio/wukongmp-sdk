@@ -77,6 +77,11 @@ public class MoveMainCharacterSystem(WukongPlayerState playerState) : QuerySyste
                 float interpSpeed2 = FVector.Dist(currentLocation, targetLocation) / _totalTime;
                 newLocation = MathLib.VInterpConstantTo(in currentLocation, in targetLocation, deltaTime, interpSpeed2);
             }
+            // Fix Z location if too far.
+            if (FMath.Abs(targetLocation.Z - currentLocation.Z) > Constants.AllowedZDiffrence)
+            {
+                newLocation.Z = targetLocation.Z;
+            }
             BGUFuncLibActorTransformCS.BGUSetActorLocation(pawn, newLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
         }
     }
