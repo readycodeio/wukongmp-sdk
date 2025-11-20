@@ -379,6 +379,37 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_PlayerMovementSystem), "TickForInterpolationMove")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTickForInterpolationMove
+    {
+        public static void Postfix(BUS_PlayerMovementSystem __instance, BUC_MovementData ___MovementData)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (!___MovementData.IM_EnableMove)
+            {
+                return;
+            }
+
+            var owner = __instance.GetOwner();
+            var otherMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+
+            if (otherMainEntity != null)
+            {
+                ref var otherMain = ref otherMainEntity.Value.GetState();
+
+                FVector currentLocation = BGUFuncLibActorTransformCS.BGUGetActorLocation(owner);
+                FVector targetLocation = otherMain.Location.ToFVector();
+                if (FMath.Abs(targetLocation.Z - currentLocation.Z) > Constants.AllowedZDiffrence)
+                {
+                    currentLocation.Z = targetLocation.Z;
+                }
+                BGUFuncLibActorTransformCS.BGUSetActorLocation(owner, currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitSimpleStateSet")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]

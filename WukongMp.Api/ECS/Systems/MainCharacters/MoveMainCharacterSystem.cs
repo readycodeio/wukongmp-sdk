@@ -27,7 +27,7 @@ public class MoveMainCharacterSystem(WukongPlayerState playerState) : QuerySyste
             if (localMainComp.JumpDataCached == null || !localMainComp.JumpDataCached.bIsInLandCantMoveTime)
             {
                 _frameCount++;
-                InterpolationMove(ref localMainComp, ref mainComp, Tick.deltaTime, false);
+                //InterpolationMove(ref localMainComp, ref mainComp, Tick.deltaTime, false);
                 if (_frameCount >= _forceSetFrameNumber)
                 {
                     _frameCount = 0;
