@@ -25,7 +25,7 @@ public class MoveMainCharacterSystem(WukongPlayerState playerState) : QuerySyste
                 return;
 
             _frameCount++;
-            InterpolationMove(ref localMainComp, ref mainComp, Tick.deltaTime, _frameCount >= _forceSetFrameNumber);
+            InterpolationMove(ref localMainComp, ref mainComp, Tick.deltaTime, false);
             if (_frameCount >= _forceSetFrameNumber)
             {
                 _frameCount = 0;
