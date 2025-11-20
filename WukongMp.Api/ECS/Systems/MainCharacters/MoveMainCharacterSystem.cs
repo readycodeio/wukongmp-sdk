@@ -43,41 +43,41 @@ public class MoveMainCharacterSystem(WukongPlayerState playerState) : QuerySyste
         FRotator targetRotation = mainCharacterComp.Rotation.ToFRotator();
         FVector targetLocation = mainCharacterComp.Location.ToFVector();
 
-        if (currentLocation.Equals(targetLocation, Constants.FloatComparisonTolerance))
+        bool updateLocation = !currentLocation.Equals(targetLocation, Constants.FloatComparisonTolerance);
+        bool updateRotation = !currentRotation.Equals(targetRotation, Constants.FloatComparisonTolerance);
+
+        if (updateRotation)
         {
-            return; // TODO: Check by component and update separately
+            FVector currentForwardVector = BGUFuncLibActorTransformCS.BGUGetActorForwardVector(pawn);
+            FVector2D unitRotateAimDir = new FVector2D(currentForwardVector);
+            FVector2D unit2TargetDir = new FVector2D(targetRotation.Vector().GetSafeNormal());
+            float rotateAngle2D = BGU_MoveUtil.GetRotateAngle2D(unitRotateAimDir, unit2TargetDir);
+            FRotator newRotation = currentRotation;
+            if (BGU_MoveUtil.IsRotateClockwise(unitRotateAimDir, unit2TargetDir))
+            {
+                newRotation.Yaw = MathLib.NormalizeAxis(newRotation.Yaw + rotateAngle2D);
+            }
+            else
+            {
+                newRotation.Yaw = MathLib.NormalizeAxis(newRotation.Yaw - rotateAngle2D);
+            }
+            if (!forceSet)
+            {
+                float interpSpeed = rotateAngle2D / _totalTime;
+                newRotation = MathLib.RInterpConstantTo(in currentRotation, in newRotation, deltaTime, interpSpeed);
+            }
+            BGUFuncLibActorTransformCS.BGUSetActorRotation(pawn, newRotation, bTeleportPhysics: false, false);
         }
 
-        // Rotation
-        FVector currentForwardVector = BGUFuncLibActorTransformCS.BGUGetActorForwardVector(pawn);
-        FVector2D unitRotateAimDir = new FVector2D(currentForwardVector);
-        FVector2D unit2TargetDir = new FVector2D(targetRotation.Vector().GetSafeNormal());
-        float rotateAngle2D = BGU_MoveUtil.GetRotateAngle2D(unitRotateAimDir, unit2TargetDir);
-        FRotator newRotation = currentRotation;
-        if (BGU_MoveUtil.IsRotateClockwise(unitRotateAimDir, unit2TargetDir))
+        if (updateLocation)
         {
-            newRotation.Yaw = MathLib.NormalizeAxis(newRotation.Yaw + rotateAngle2D);
+            FVector newLocation = targetLocation;
+            if (!forceSet)
+            {
+                float interpSpeed2 = FVector.Dist(currentLocation, targetLocation) / _totalTime;
+                newLocation = MathLib.VInterpConstantTo(in currentLocation, in targetLocation, deltaTime, interpSpeed2);
+            }
+            BGUFuncLibActorTransformCS.BGUSetActorLocation(pawn, newLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
         }
-        else
-        {
-            newRotation.Yaw = MathLib.NormalizeAxis(newRotation.Yaw - rotateAngle2D);
-        }
-
-        // Location
-        FVector newLocation = targetLocation;
-
-        if (!forceSet)
-        {
-            // Rotation
-            float interpSpeed = rotateAngle2D / _totalTime;
-            newRotation = MathLib.RInterpConstantTo(in currentRotation, in newRotation, deltaTime, interpSpeed);
-
-            // Location
-            float interpSpeed2 = FVector.Dist(currentLocation, targetLocation) / _totalTime;
-            newLocation = MathLib.VInterpConstantTo(in currentLocation, in targetLocation, deltaTime, interpSpeed2);
-        }
-
-        BGUFuncLibActorTransformCS.BGUSetActorLocation(pawn, newLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
-        BGUFuncLibActorTransformCS.BGUSetActorRotation(pawn, newRotation, bTeleportPhysics: false, false);
     }
 }
