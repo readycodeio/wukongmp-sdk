@@ -202,7 +202,10 @@ public static class PatchTickForMovieSystem
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.IsWaitingForSequence = false;
                     localMain.IsJoiningSequence = false;
-                    localMain.LastSyncableSequenceId = peakRequest.SequenceID;
+                    if (!isMoviePlayedByOthers)
+                    {
+                        localMain.LastSyncableSequenceId = peakRequest.SequenceID;
+                    }
                 }
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
