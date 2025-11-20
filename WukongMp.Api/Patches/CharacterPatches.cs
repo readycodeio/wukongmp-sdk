@@ -379,11 +379,11 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(BUS_PlayerMovementSystem), "TickForInterpolationMove")]
+    [HarmonyPatch(typeof(BUS_MovementSystem), "TickForInterpolationMove")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTickForInterpolationMove
     {
-        public static void Postfix(BUS_PlayerMovementSystem __instance, BUC_MovementData ___MovementData)
+        public static void Postfix(BUS_MovementSystem __instance, BUC_MovementData ___MovementData)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -400,13 +400,13 @@ namespace WukongMp.Api.Patches
             {
                 ref var otherMain = ref otherMainEntity.Value.GetState();
 
-                FVector currentLocation = BGUFuncLibActorTransformCS.BGUGetActorLocation(owner);
+                FVector currentLocation = owner.BGUGetActorLocation();
                 FVector targetLocation = otherMain.Location.ToFVector();
                 if (FMath.Abs(targetLocation.Z - currentLocation.Z) > Constants.AllowedZDiffrence)
                 {
                     currentLocation.Z = targetLocation.Z;
                 }
-                BGUFuncLibActorTransformCS.BGUSetActorLocation(owner, currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+                owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
             }
         }
     }
