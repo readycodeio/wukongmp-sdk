@@ -1043,6 +1043,11 @@ public class PatchOnSetCurrentBirthPoint
     public static void Postfix(UActorCompBaseCS __instance, int BirthPointID)
     {
         PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), BirthPointID);
+        var owner = __instance.GetOwner();
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        {
+            DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, BirthPointID);
+        }
     }
 }
 
