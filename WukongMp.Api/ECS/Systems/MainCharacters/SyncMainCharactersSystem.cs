@@ -106,6 +106,10 @@ public class SyncMainCharactersSystem(
 
         if (localMainComp.Pawn == null)
             return;
+        
+        // Skip equipment sync in the Prologue, as despite fighting as Wukong, the character's equipment is empty
+        if (mainComp.RebirthPointId == 1301)
+            return;
 
         var eqCopy = mainComp.Equipment;
         if (eqCopy.IsLocallyDirty)

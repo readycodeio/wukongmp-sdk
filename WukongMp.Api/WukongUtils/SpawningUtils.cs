@@ -98,13 +98,7 @@ public static class SpawningUtils
 
         localMainComp.Pawn = newPawn;
         
-        // NOTE: The actor needs to be synchronized to have the right equipment. ECS equipment shouldn't be set to 
-        // actor's equipment. Therefore, the following can be removed
-        // Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
-        // Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
-
         var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(newPawn);
-
         if (attrContainer != null)
         {
             var setHpMaxBase = attrContainer.SetFloatValue(EBGUAttrFloat.HpMaxBase, initialHpMaxBase);
