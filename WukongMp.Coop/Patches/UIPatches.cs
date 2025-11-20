@@ -12,7 +12,6 @@ using UnrealEngine.UMG;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop.Patches;
@@ -34,8 +33,9 @@ public static class PatchStartGameUiCoop
             DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
 
             Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
+            var buttonName = BtnBase2.Name.Value.ToString();
 
-            if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
+            if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
             {
                 var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
                 if (widgetManagerActorClass == null)
@@ -48,13 +48,7 @@ public static class PatchStartGameUiCoop
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
 
-                    DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
-                    {
-                        Utils.TryRunOnGameThread(() =>
-                        {
-                            DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
-                        });
-                    });
+                    DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected); }); });
                     Logging.LogError("Disconnected. Could not continue game.");
                 }
                 else
@@ -63,7 +57,9 @@ public static class PatchStartGameUiCoop
                     ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
                 }
             }
-            else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
+            else if (buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() 
+                     && buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString()
+                     && buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME_PLUS).ToString())
             {
                 Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
                 ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
