@@ -12,12 +12,13 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils;
 
 public static class SpawningUtils
 {
-    public static BGUCharacterCS? SpawnCloneForPlayer(in PlayerEntity playerEntity, in MainCharacterEntity mainEntity)
+    public static BGUCharacterCS? SpawnCloneForPlayer(WukongPlayerState playerState, in MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
@@ -25,14 +26,26 @@ public static class SpawningUtils
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
         var playerId = mainComp.PlayerId;
-        
+
         if (localMainComp.HasPawn)
         {
             Logging.LogDebug("Player already exists: {Id}", playerId); // reconnection
             return null;
         }
 
-        var playerPawnClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WukongClassPath, ELoadResourceType.SyncLoadAndCache);
+        var localPlayerPawn = playerState.LocalMainCharacter?.GetLocalState().Pawn;
+
+        if (localPlayerPawn == null)
+        {
+            Logging.LogError("Local player pawn is null");
+            return null;
+        }
+
+        var mapId = BGUFuncLibMap.GetCurLevelId(localPlayerPawn);
+        var areaId = BGUFuncLibMap.GetAreaId(localPlayerPawn);
+        bool isDaShengInPrologue = mapId == 13 && areaId == 0;
+
+        var playerPawnClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(isDaShengInPrologue ? Constants.WukongDashengClassPath : Constants.WukongClassPath, ELoadResourceType.SyncLoadAndCache);
 
         if (playerPawnClass == null)
         {
@@ -97,14 +110,14 @@ public static class SpawningUtils
         Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
 
         localMainComp.Pawn = newPawn;
-        
+
         var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(newPawn);
         if (attrContainer != null)
         {
             var setHpMaxBase = attrContainer.SetFloatValue(EBGUAttrFloat.HpMaxBase, initialHpMaxBase);
             var setHp = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
             Logging.LogDebug("Set actual Hp / HpMax: {Hp} {HpMax}", setHp, setHpMaxBase);
-            
+
             foreach (var attr in Constants.SyncedAttributes)
             {
                 if (mainComp.Attributes.TryGetAttribute((byte)attr, out var value))
@@ -299,11 +312,13 @@ public static class SpawningUtils
         {
             return null;
         }
+
         BUTamerActor? tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, tamerClass.Value, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
         if (tamerActor == null)
         {
             return null;
         }
+
         if (safeClampToLand)
         {
             FVector fVector = tamerActor.BGUGetActorLocation();
@@ -318,6 +333,7 @@ public static class SpawningUtils
                 tamerActor.BGUSetActorLocation(newLocation, bSweep: false, bTeleport: false);
             }
         }
+
         if (B1Global.GIsBossRushMode)
         {
             IBIC_BossRushBattleData gameInstanceReadonlyData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_BossRushBattleData, BIC_BossRushBattleData>(world);
@@ -326,6 +342,7 @@ public static class SpawningUtils
                 tamerActor.ApplyServantPropertyOverride(value);
             }
         }
+
         return tamerActor;
     }
 
@@ -339,6 +356,7 @@ public static class SpawningUtils
             Logging.LogDebug("Cannot spawn tamer {Name}", servantReq.TamerTemplate.GetName());
             return;
         }
+
         Logging.LogDebug("Spawned tamer {Name} with type {Type}", servantReq.TamerTemplate.GetName(), servantReq.ServantType);
         tamerActor.SpawnedTamerGuid = servantReq.ServantTamerGuid;
         tamerActor.MarkAsServant();
@@ -353,6 +371,7 @@ public static class SpawningUtils
         {
             return false;
         }
+
         var summonerEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(summoner);
         if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
         {
@@ -382,7 +401,7 @@ public static class SpawningUtils
             // Check if master or another player with lower id is nearby
             bool canSummon = true;
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-            ref playerComp, entity) =>
+                ref playerComp, entity) =>
             {
                 if (entity == localCharacter.Value.Entity)
                     return;

@@ -22,14 +22,7 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
     public void AddPlayerPawn(PlayerId playerId)
     {
         logger.LogDebug("SPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
-
-        var playerEntity = playerState.GetPlayerById(playerId);
-        if (playerEntity == null)
-        {
-            logger.LogError("Player with ID {PlayerId} not found in player state.", playerId);
-            return;
-        }
-
+        
         var mainEntity = playerState.GetMainCharacterById(playerId);
         if (mainEntity == null)
         {
@@ -37,7 +30,7 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
             return;
         }
 
-        var pawn = SpawningUtils.SpawnCloneForPlayer(playerEntity.Value, mainEntity.Value);
+        var pawn = SpawningUtils.SpawnCloneForPlayer(playerState, mainEntity.Value);
         if (pawn == null)
         {
             logger.LogError("Failed to spawn pawn for player {PlayerId}.", playerId);

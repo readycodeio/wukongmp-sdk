@@ -110,7 +110,11 @@ public class SyncMainCharactersSystem(
         var eqCopy = mainComp.Equipment;
         if (eqCopy.IsLocallyDirty)
         {
-            EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
+            if (localMainComp.Pawn.GetClass().PathName != Constants.WukongDashengClassPath)
+            {
+                EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
+            }
+
             eqCopy.ClearLocallyDirty();
             mainComp.Equipment = eqCopy;
             // Equipment is passed by value, so we need to reassign it
