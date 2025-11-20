@@ -11,8 +11,6 @@ public struct LocalMainCharacterComponent : IComponent
 {
     private BGUCharacterCS? _pawn;
 
-    public BUC_ABPJumpV2Data? JumpDataCached;
-
     public bool IsPlayerSynced;
 
     public bool IsSpectatorLocally;
@@ -35,11 +33,7 @@ public struct LocalMainCharacterComponent : IComponent
 
             return _pawn;
         }
-        set
-        {
-            _pawn = value;
-            JumpDataCached = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPJumpV2Data>(_pawn);
-        }
+        set => _pawn = value;
     }
 
     public bool HasPawn => !_pawn.IsNullOrDestroyed();
