@@ -32,6 +32,7 @@ namespace WukongMp.Api.Configuration
         
         public static readonly HashSet<int> InstantTriggerSequences =
         [
+            40104151, // phase 2 of Hundred-Eyed Daoist Master, sword-swallowing cutscene
             62103371, 62103351, 62103321, 62103301 // 4 heavenly kings, lute guy
         ];
 

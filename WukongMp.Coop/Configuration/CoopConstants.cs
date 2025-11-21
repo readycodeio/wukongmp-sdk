@@ -2,7 +2,7 @@
 {
     public static class CoopConstants
     {
-        public const int CoopWorldArchiveId = 7;
-        public const int CoopPlayerArchiveId = 8;
+        public const int CoopWorldArchiveId = 8;
+        public const int CoopPlayerArchiveId = 7;
     }
 }
