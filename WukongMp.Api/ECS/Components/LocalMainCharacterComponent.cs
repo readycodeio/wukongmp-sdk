@@ -69,19 +69,4 @@ public struct LocalMainCharacterComponent : IComponent
         }
         set => _markerActor = value;
     }
-        
-    public void UpdateMarkerPosition()
-    {
-        if (MarkerActor != null)
-        {
-            if (Pawn == null)
-            {
-                Logging.LogError("Pawn is null");
-                return;
-            }
-
-            var markerHeight = Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1;
-            MarkerActor.SetActorLocation(Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out _, true);
-        }
-    }
 }

@@ -272,7 +272,7 @@ namespace WukongMp.Api.Patches
                     main.Rotation = __instance.ActorRotation.ToVector3();
                 }
 
-                TeleportUtils.UpdatePlayerPosition(mainEntity.Value, DeltaTime);
+                TeleportUtils.CheckForTeleportFinish(mainEntity.Value);
             }
             else
             {
@@ -315,7 +315,7 @@ namespace WukongMp.Api.Patches
                         __instance.LastVelocity = FVector.ZeroVector;
                     }
 
-                    TeleportUtils.UpdatePlayerPosition(otherMainEntity.Value, DeltaTime);
+                    TeleportUtils.CheckForTeleportFinish(otherMainEntity.Value);
                 }
                 else
                 {

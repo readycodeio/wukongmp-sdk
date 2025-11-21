@@ -4,12 +4,10 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class TeleportUtils
 {
-    public static void UpdatePlayerPosition(MainCharacterEntity mainEntity, float deltaTime)
+    public static void CheckForTeleportFinish(MainCharacterEntity mainEntity)
     {
         ref var localMainComp = ref mainEntity.GetLocalState();
         
-        localMainComp.UpdateMarkerPosition();
-
         if (localMainComp.TeleportFinishFrames >= 0)
         {
             if (localMainComp.TeleportFinishFrames == 0)
