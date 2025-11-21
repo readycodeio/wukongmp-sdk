@@ -41,12 +41,14 @@ public static class PatchStartGameUiCoop
                 if (widgetManagerActorClass == null)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    ___StartGameBtnList.RemoveAt(j);
                     UiUtils.ShowTip(Texts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
                 else if (!DI.Instance.State.IsConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    ___StartGameBtnList.RemoveAt(j);
 
                     DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected); }); });
                     Logging.LogError("Disconnected. Could not continue game.");
@@ -57,12 +59,13 @@ public static class PatchStartGameUiCoop
                     ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
                 }
             }
-            else if (buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() 
+            else if (buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString()
                      && buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString()
                      && buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME_PLUS).ToString())
             {
                 Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
                 ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                ___StartGameBtnList.RemoveAt(j);
             }
         }
 

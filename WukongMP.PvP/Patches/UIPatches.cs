@@ -44,13 +44,7 @@ public static class PatchStartGameUiPvp
         }
         else if (!isConnected)
         {
-            DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
-            {
-                Utils.TryRunOnGameThread(() =>
-                {
-                    DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
-                });
-            });
+            DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected); }); });
             Logging.LogError(" PvP Disconnected. Could not continue game.");
         }
 
@@ -67,6 +61,7 @@ public static class PatchStartGameUiPvp
                 if (!hasPak || !isConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    ___StartGameBtnList.RemoveAt(j);
                 }
                 else if (File.Exists(GameSaveUtils.GetSaveFileFullName(typeof(PatchStartGameUiPvp).Assembly, GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId))))
                 {
@@ -75,6 +70,7 @@ public static class PatchStartGameUiPvp
                 else
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    ___StartGameBtnList.RemoveAt(j);
                 }
 
                 // Clear OnGSButtonUnFocused event form the continue game button.
@@ -88,6 +84,7 @@ public static class PatchStartGameUiPvp
                 if (!hasPak || !isConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    ___StartGameBtnList.RemoveAt(j);
                 }
                 else
                 {
@@ -100,6 +97,7 @@ public static class PatchStartGameUiPvp
                 if (!hasPak || !isConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                    ___StartGameBtnList.RemoveAt(j);
                 }
                 else
                 {
@@ -110,6 +108,7 @@ public static class PatchStartGameUiPvp
             {
                 Logging.LogDebug("UI name desc to hide: {Description}", buttonName);
                 ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
+                ___StartGameBtnList.RemoveAt(j);
             }
         }
 
