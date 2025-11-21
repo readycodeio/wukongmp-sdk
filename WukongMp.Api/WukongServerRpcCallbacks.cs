@@ -50,8 +50,14 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         }, this, sequenceId);
     }
 
-    [ServerRpcEvent("MoviePlayed")]
-    private void OnMoviePlayed(int sequenceId, AreaId areaId)
+    [ServerRpcEvent("MovieStarted")]
+    private void OnMovieStarted(int sequenceId, AreaId areaId)
+    {
+        // Do nothing on response from server.
+    }
+
+    [ServerRpcEvent("MovieFinished")]
+    private void OnMovieFinished(int sequenceId, AreaId areaId)
     {
         // Do nothing on response from server.
     }
