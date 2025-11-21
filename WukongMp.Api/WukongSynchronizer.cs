@@ -10,6 +10,7 @@ using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
@@ -120,10 +121,14 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         if (meta.Owner == _state.LocalPlayerId)
         {
-            events.Evt_AIPauseBT.Invoke(false);
-            events.Evt_AIPauseFsm.Invoke(false);
-            events.Evt_AIPerceptionSetting.Invoke(true);
-            Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+            var tamerComp = entity.GetComponent<TamerComponent>();
+            if (tamerComp.HasFsmEnabled)
+            {
+                events.Evt_AIPauseBT.Invoke(false);
+                events.Evt_AIPauseFsm.Invoke(false);
+                events.Evt_AIPerceptionSetting.Invoke(true);
+                Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+            }
         }
     }
 }

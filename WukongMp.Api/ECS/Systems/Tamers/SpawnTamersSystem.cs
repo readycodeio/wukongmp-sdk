@@ -105,6 +105,14 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
+            else
+            {
+                var fsmData = BGU_DataUtil.GetReadOnlyData<IBUC_FsmData, BUC_FsmData>(localTamerComp.Pawn);
+                if (fsmData != null)
+                {
+                    tamerComp.HasFsmEnabled = !fsmData.bFsmPaused;
+                }
+            }
 
             localTamerComp.IsMonsterActive = true;
 

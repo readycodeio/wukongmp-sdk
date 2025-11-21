@@ -300,7 +300,10 @@ namespace WukongMp.Api.Patches
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
                 if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                {
+                    tamerEntity.Value.GetTamer().HasFsmEnabled = !IsPause;
                     return true;
+                }
             }
 
             return IsPause;
