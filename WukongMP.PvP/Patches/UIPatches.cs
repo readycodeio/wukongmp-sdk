@@ -48,7 +48,7 @@ public static class PatchStartGameUiPvp
             Logging.LogError(" PvP Disconnected. Could not continue game.");
         }
 
-        for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
+        for (int j = ___DataStore.BtnDataList.Count - 1; j >= 0; j--)
         {
             DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
             var buttonName = BtnBase2.Name.Value.ToString();

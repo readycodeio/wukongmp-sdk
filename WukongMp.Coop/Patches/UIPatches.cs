@@ -28,7 +28,7 @@ public static class PatchStartGameUiCoop
 
     public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
     {
-        for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
+        for (int j = ___DataStore.BtnDataList.Count - 1; j >= 0; j--)
         {
             DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
 
