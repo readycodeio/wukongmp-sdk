@@ -145,5 +145,11 @@ namespace WukongMp.Api.WukongUtils
                 BGU_UnrealWorldUtil.DestroyActor(markerActor);
             }
         }
+
+        public static void TriggerWakeUp(BGUCharacterCS character)
+        {
+            var events = BUS_EventCollectionCS.Get(character);
+            events?.Evt_OnWakeUp.Invoke();
+        }
     }
 }

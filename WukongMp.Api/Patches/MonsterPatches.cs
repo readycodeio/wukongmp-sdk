@@ -508,4 +508,35 @@ namespace WukongMp.Api.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(BUS_AIComp), "TriggerWakeupActivated")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTriggerWakeupActivated
+    {
+        public static void Postfix(BUS_AIComp? __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (__instance == null)
+                return;
+
+            var owner = __instance.GetOwner();
+            if (owner.IsNullOrDestroyed() || owner is not BGUCharacterCS character)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
+            if (tamerEntity.HasValue)
+            {
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                if (!localTamer.IsTamerValid)
+                    return;
+
+                if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                {
+                    DI.Instance.Rpc.SendMonsterWakeUp(tamerEntity.Value.GetMeta().NetId);
+                }
+            }
+        }
+    }
 }

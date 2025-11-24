@@ -865,6 +865,25 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, __sender);
     }
 
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnMonsterWakeUp(NetworkId netId)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(netId0);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(netId0));
+                return;
+            }
+
+            var guid = BGU_DataUtil.GetActorGuid(pawn);
+            Logging.LogDebug("OnMonsterWakeup called for monster {Guid}", guid);
+
+            TamerUtils.TriggerWakeUp(pawn);
+        }, this, netId);
+    }
+
     #region PvpRPC
 
     [Obsolete("To be removed once per-project RPC is implemented")]
