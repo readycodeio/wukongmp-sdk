@@ -122,13 +122,13 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         if (meta.Owner == _state.LocalPlayerId)
         {
             var tamerComp = entity.GetComponent<TamerComponent>();
-            if (tamerComp.HasFsmEnabled)
-            {
+            //if (tamerComp.HasFsmEnabled)
+            //{
                 events.Evt_AIPauseBT.Invoke(false);
                 events.Evt_AIPauseFsm.Invoke(false);
                 events.Evt_AIPerceptionSetting.Invoke(true);
                 Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
-            }
+            //}
         }
     }
 }
