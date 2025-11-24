@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+using b1;
 using b1.BGW;
 using B1UI.GSUI;
 using CSharpModBase;
@@ -7,6 +8,7 @@ using GSE.GSUI;
 using HarmonyLib;
 using LiteNetLib;
 using PreludeLib.Attributes;
+using ResB1;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api;
@@ -28,9 +30,9 @@ public static class PatchStartGameUiCoop
 
     public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
     {
-        for (int j = ___DataStore.BtnDataList.Count - 1; j >= 0; j--)
+        for (var j = ___DataStore.BtnDataList.Count - 1; j >= 0; j--)
         {
-            DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
+            var BtnBase2 = ___DataStore.BtnDataList[j];
 
             Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
             var buttonName = BtnBase2.Name.Value.ToString();
@@ -74,5 +76,30 @@ public static class PatchStartGameUiCoop
         ___TxtMainName.SetText(FText.FromString(""));
         ___TxtSubName.SetText(FText.FromString("Wukong Multiplayer Mod"));
         ___TxtSubName.SetRenderScale(new FVector2D(1.2, 1.2));
+    }
+}
+
+/// <summary>
+/// Hide challenges shrine options in coop mode.
+/// </summary>
+[HarmonyPatch]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchShrineRegisterFunc
+{
+    [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
+    public static MethodBase TargetMethod()
+    {
+        var specializedType = typeof(FMenuHelper<EShrineMenuTag>);
+        return specializedType.GetMethod("RegisterFunc")!;
+    }
+
+    public static bool Prefix(int FuncId)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
+        return interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossIterations
+               && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge;
     }
 }
