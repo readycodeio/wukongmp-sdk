@@ -539,4 +539,62 @@ namespace WukongMp.Api.Patches
             }
         }
     }
+
+    [HarmonyPatch(typeof(BUS_DumperTruckTriggerComp), "PatrolTick")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchPatrolTick
+    {
+        private static MethodInfo? _dumperTruckTriggerDataGetter;
+
+        public static bool Prefix(BUS_DumperTruckTriggerComp? __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            if (__instance == null)
+                return true;
+
+            var owner = __instance.GetOwner();
+            if (owner.IsNullOrDestroyed() || owner is not BGUCharacterCS character)
+                return true;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
+            if (tamerEntity.HasValue)
+            {
+                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                if (!localTamer.IsTamerValid)
+                    return true;
+
+                _dumperTruckTriggerDataGetter ??= AccessTools.PropertyGetter(typeof(BUS_DumperTruckTriggerComp), "DumperTruckTriggerData");
+                BUC_DumperTruckTriggerData dumperTruckTriggerData = (BUC_DumperTruckTriggerData)_dumperTruckTriggerDataGetter.Invoke(__instance, null);
+                if (dumperTruckTriggerData.ControlledUnit == null || dumperTruckTriggerData.ControlledUnit.IsNullOrDestroyed())
+                    return true;
+
+                var anim = tamerEntity.Value.GetMonsterAnimation();
+                if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                {
+                    anim.AnimationPlayRate = dumperTruckTriggerData.ControlledUnit.Mesh.GetPlayRate();
+                    return true;
+                }
+                else
+                {
+                    // Run alternative patrol logic for non-owned monsters
+                    dumperTruckTriggerData.ControlledUnit.Mesh.SetPlayRate(anim.AnimationPlayRate);
+                    var playRateAbs = Math.Abs(anim.AnimationPlayRate);
+                    if (playRateAbs > dumperTruckTriggerData.DamageAvailableSpeedThreshold)
+                    {
+                        __instance.EnableSweepCheck();
+                        __instance.TriggerBeginEvent();
+                    }
+                    else if (playRateAbs < dumperTruckTriggerData.DamageDisableSpeedThreshold)
+                    {
+                        __instance.DisableSweepCheck();
+                        __instance.TriggerEndEvent();
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 }
