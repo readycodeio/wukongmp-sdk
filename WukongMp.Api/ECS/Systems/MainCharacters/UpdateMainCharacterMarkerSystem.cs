@@ -17,7 +17,7 @@ public class UpdateMainCharacterMarkerSystem() : QuerySystem<LocalMainCharacterC
             if (localMainComp.HasPawn)
             {
                 var markerHeight = localMainComp.Pawn!.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-                localMainComp.MarkerActor.SetActorLocation(mainComp.Location.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+                localMainComp.MarkerActor.SetActorLocation(localMainComp.Pawn!.GetActorLocation() + new FVector(0, 0, markerHeight), false, out var _, true);
             }
         });
     }
