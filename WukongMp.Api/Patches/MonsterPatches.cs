@@ -261,7 +261,6 @@ public class PatchOnAIPauseBT
     }
 }
 
-
 [HarmonyPatch(typeof(BUS_AIComp), "OnEnableCanSetBT")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnEnableCanSetBT
@@ -553,8 +552,11 @@ public class PatchPatrolTick
         if (__instance == null)
             return true;
 
-        var owner = __instance.GetOwner();
-        if (owner.IsNullOrDestroyed() || owner is not BGUActorBaseCS character)
+        _dumperTruckTriggerDataGetter ??= AccessTools.PropertyGetter(typeof(BUS_DumperTruckTriggerComp), "DumperTruckTriggerData");
+        var dumperTruckTriggerData = (BUC_DumperTruckTriggerData)_dumperTruckTriggerDataGetter.Invoke(__instance, null);
+
+        var character = dumperTruckTriggerData.ControlledUnit;
+        if (character.IsNullOrDestroyed())
             return true;
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
@@ -562,11 +564,6 @@ public class PatchPatrolTick
         {
             ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
             if (!localTamer.IsTamerValid)
-                return true;
-
-            _dumperTruckTriggerDataGetter ??= AccessTools.PropertyGetter(typeof(BUS_DumperTruckTriggerComp), "DumperTruckTriggerData");
-            BUC_DumperTruckTriggerData dumperTruckTriggerData = (BUC_DumperTruckTriggerData)_dumperTruckTriggerDataGetter.Invoke(__instance, null);
-            if (dumperTruckTriggerData.ControlledUnit == null || dumperTruckTriggerData.ControlledUnit.IsNullOrDestroyed())
                 return true;
 
             ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
@@ -577,7 +574,7 @@ public class PatchPatrolTick
             }
 
             // Run alternative patrol logic for non-owned monsters
-            dumperTruckTriggerData.ControlledUnit.Mesh.SetPlayRate(anim.AnimationPlayRate);
+            character.Mesh.SetPlayRate(anim.AnimationPlayRate);
             var playRateAbs = Math.Abs(anim.AnimationPlayRate);
             if (playRateAbs > dumperTruckTriggerData.DamageAvailableSpeedThreshold)
             {
