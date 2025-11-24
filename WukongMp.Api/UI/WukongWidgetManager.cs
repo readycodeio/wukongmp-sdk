@@ -86,6 +86,11 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         _debugViewWidget.Value.SetPlayerPosition(playerName, gameLocation, ecsLocation);
     }
 
+    public void AddCharacterToDebugView(string name)
+    {
+        _debugViewWidget.Value.AddPlayer(name);
+    }
+
     public void UpdatePingIndicator(long pingMs)
     {
         _pingIndicatorWidget.Value.SetPingValue(pingMs);
