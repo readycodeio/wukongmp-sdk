@@ -4,7 +4,6 @@ using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -25,11 +24,15 @@ namespace WukongMp.Api.WukongUtils
         public static void SetPlayerInteractionEnabled(MainCharacterEntity mainEntity, bool enabled)
         {
             ref var localMainComp = ref mainEntity.GetLocalState();
+
+            IBUC_SimpleStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_SimpleStateData, BUC_SimpleStateData>(localMainComp.Pawn);
+            var hasCantInteract = readOnlyData.HasSimpleState(EBGUSimpleState.CantInteract);
+
+            if (!enabled && hasCantInteract)
+                return;
+
             var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
-            if (events != null)
-            {
-                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
-            }
+            events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
         }
 
         public static void ResetLocalPlayerCooldown()
