@@ -248,7 +248,11 @@ public static class PatchSearchTargetTick
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var target = ___TargetInfoData.GetTargetInfo().LockTargetActor;
+        var targetList = ___TargetInfoData?.GetMultiTargetInfoList();
+        if (targetList == null || targetList.Count == 0)
+            return;
+
+        var target = targetList[0].LockTargetActor;
         if (target.IsNullOrDestroyed())
             return;
 
