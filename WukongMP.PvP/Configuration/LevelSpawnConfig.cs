@@ -14,7 +14,7 @@ namespace WukongMp.PvP.Configuration
             { 3, new LevelSpawnData(20, 21, 2010, new FVector(-82034, 26036, -10158), 3000) },
             { 4, new LevelSpawnData(30, 6, 3004, new FVector(399750, -346464, -17503)) },
             { 5, new LevelSpawnData(98, 11, 9801, new FVector(-128621, -36775, -4407)) },
-            { 6, new LevelSpawnData(50, 7, 5009, new FVector(50232, -5521, 26267), 3000) },
+            { 6, new LevelSpawnData(50, 7, 5009, new FVector(51132, -5121, 26367), 3000) },
             { 7, new LevelSpawnData(50, 2, 5008, new FVector(-28007, 93707, 39560), 3000) },
         };
 
