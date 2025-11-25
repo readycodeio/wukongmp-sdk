@@ -543,6 +543,8 @@ public class PatchTriggerWakeupActivated
 public class PatchPatrolTick
 {
     private static MethodInfo? _dumperTruckTriggerDataGetter;
+    private static MethodInfo? _BeGetter;
+    private static MethodInfo? _BeSetter;
 
     public static bool Prefix(BUS_DumperTruckTriggerComp? __instance)
     {
@@ -553,11 +555,20 @@ public class PatchPatrolTick
             return true;
 
         _dumperTruckTriggerDataGetter ??= AccessTools.PropertyGetter(typeof(BUS_DumperTruckTriggerComp), "DumperTruckTriggerData");
+        _BeGetter ??= AccessTools.PropertyGetter(typeof(BUS_DumperTruckTriggerComp), "BE");
+        _BeSetter ??= AccessTools.PropertySetter(typeof(BUS_DumperTruckTriggerComp), "BE");
+
         var dumperTruckTriggerData = (BUC_DumperTruckTriggerData)_dumperTruckTriggerDataGetter.Invoke(__instance, null);
 
         var character = dumperTruckTriggerData.ControlledUnit;
         if (character.IsNullOrDestroyed())
             return true;
+
+        if ((BUS_GSEventCollection?)_BeGetter.Invoke(__instance, null) == null)
+        {
+            var be = BUS_EventCollectionCS.Get(BGU_DataUtil.GetActorByGuid(__instance.GetOwner(), dumperTruckTriggerData.UnitGuid));
+            _BeSetter.Invoke(__instance, [be]);
+        }
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
         if (tamerEntity.HasValue)
