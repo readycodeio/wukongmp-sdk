@@ -790,6 +790,7 @@ internal partial class PvpMode : IDisposable
                     _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
                     {
                         var events = BUS_EventCollectionCS.Get(mainEntity0.GetLocalState().Pawn!);
+                        events?.Evt_DestroyAllCtrableBullet.Invoke();
                         events?.Evt_TriggerTeleportResetPlayer!.Invoke();
                     }, mainEntity.Value);
                 }
