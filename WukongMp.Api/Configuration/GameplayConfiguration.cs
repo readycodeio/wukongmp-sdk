@@ -49,4 +49,23 @@ public class GameplayConfiguration(ILogger logger)
     }
 
     public bool IsSkillEnabled(int skillId) => isSkillEnabledQuery?.Invoke(skillId) ?? true;
+
+    // Custom IsPlayerInBattle
+    public bool EnableCustomIsPlayerInBattle { get; set; } = false;
+    private Func<bool>? isPlayerInBattleQuery;
+
+    public void SetIsPlayerInBattleQuery(Func<bool> query)
+    {
+        if (isPlayerInBattleQuery is not null)
+            logger.LogError("IsPlayerInBattleQuery is already set. Overriding the existing query.");
+
+        isPlayerInBattleQuery = query;
+    }
+
+    public void ClearIsPlayerInBattleQuery()
+    {
+        isPlayerInBattleQuery = null;
+    }
+
+    public bool IsPlayerInBattle() => isPlayerInBattleQuery?.Invoke() ?? false;
 }

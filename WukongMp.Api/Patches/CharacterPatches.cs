@@ -705,4 +705,26 @@ namespace WukongMp.Api.Patches
             hpComp.HpMultiplier = 1; // Reset multiplier so that the HP scaling system will re-scale it again
         }
     }
+
+    [HarmonyPatch(typeof(BUC_BattleStateData), "IsUnitInBattle")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchIsUnitInBattle
+    {
+        public static bool Postfix(BUC_BattleStateData __instance, ref bool __result)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            if (!__instance.IsPlayerUnit)
+                return true;
+
+            var configuration = DI.Instance.GameplayConfiguration;
+            if (configuration.EnableCustomIsPlayerInBattle)
+            {
+                __result = configuration.IsPlayerInBattle();
+                return false;
+            }
+            return true;
+        }
+    }
 }

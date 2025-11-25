@@ -28,6 +28,9 @@ namespace WukongMp.PvP.Configuration
 
             _configuration.SetDisableTamerAttackQuery(ShouldDisableTamerAttack);
             _configuration.SetIsSkillEnabledQuery(IsSkillEnabled);
+
+            _configuration.EnableCustomIsPlayerInBattle = true;
+            _configuration.SetIsPlayerInBattleQuery(() => _areaState.PvpState?.InPvP ?? false);
         }
 
         public void Dispose()
