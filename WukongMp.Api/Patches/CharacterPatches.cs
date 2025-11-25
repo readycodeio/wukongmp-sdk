@@ -710,7 +710,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchIsUnitInBattle
     {
-        public static bool Postfix(BUC_BattleStateData __instance, ref bool __result)
+        public static bool Prefix(BUC_BattleStateData __instance, ref bool __result)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return true;
