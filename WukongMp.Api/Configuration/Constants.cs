@@ -18,9 +18,6 @@ namespace WukongMp.Api.Configuration
         public const float CameraArmLength = 720;
         public const int NewCharacterArchiveId = 1;
         public const int MaxPlayers = 10;
-        public const int RedTeamId = -9999;
-        public const int BlueTeamId = -9998;
-        public static readonly int[] AvailableTeamIds = [RedTeamId, BlueTeamId];
         public const int DefaultMonsterTeamId = 2;
         public const int ReconnectDelayMs = 1000;
         public const float RestrictedMovementRadius = 500f;

@@ -10,5 +10,8 @@
         public const int DrawTeamId = 9999;
 
         public const int CountdownSeconds = 5;
+        public const int RedTeamId = -9999;
+        public const int BlueTeamId = -9998;
+        public static readonly int[] AvailableTeamIds = [RedTeamId, BlueTeamId];
     }
 }

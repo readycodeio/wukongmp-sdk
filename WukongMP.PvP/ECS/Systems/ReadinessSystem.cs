@@ -41,10 +41,10 @@ internal sealed class ReadinessSystem(
                 readyCount++;
                 switch (team.TeamId)
                 {
-                    case Constants.BlueTeamId:
+                    case PvpConstants.BlueTeamId:
                         blueTeamAnyReady = true;
                         break;
-                    case Constants.RedTeamId:
+                    case PvpConstants.RedTeamId:
                         redTeamAnyReady = true;
                         break;
                 }
@@ -67,10 +67,10 @@ internal sealed class ReadinessSystem(
                 {
                     switch (team.TeamId)
                     {
-                        case Constants.BlueTeamId:
+                        case PvpConstants.BlueTeamId:
                             blueTeamAnyReady = true;
                             break;
-                        case Constants.RedTeamId:
+                        case PvpConstants.RedTeamId:
                             redTeamAnyReady = true;
                             break;
                     }

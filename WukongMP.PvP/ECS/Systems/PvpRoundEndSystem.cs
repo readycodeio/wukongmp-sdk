@@ -36,7 +36,8 @@ internal sealed class PvpRoundEndSystem(
         var aliveTeamIds = playerEntities.Where(p =>
             {
                 var state = p.Character.GetState();
-                return !state.IsDead || state.IsTransformed;
+                var pvp = p.Character.GetPvP();
+                return !pvp.IsSpectator && (!state.IsDead || state.IsTransformed);
             })
             .Select(x => x.Player.GetState().TeamId)
             .ToList();
@@ -44,7 +45,7 @@ internal sealed class PvpRoundEndSystem(
         var aliveMonsters = new List<int>();
         world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
         {
-            if (hpComp.IsDead)
+            if (hpComp.IsDead || !PvpConstants.AvailableTeamIds.Contains(teamComp.TeamId))
                 return;
 
             aliveMonsters.Add(teamComp.TeamId);

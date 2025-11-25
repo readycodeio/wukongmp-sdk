@@ -339,30 +339,6 @@ public class PatchOnEnableCanUpdateHatred
     }
 }
 
-/// <summary>
-/// Only reset character Team ID if it was not set by us.
-/// This prevents the game from resetting the team ID of monsters assigned to player teams in PvP.
-/// </summary>
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class TamerResetPatch
-{
-    [HarmonyTargetMethodHint("b1.BUS_TeamIDManageComp", "OnResetTeamID")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BUS_TeamIDManageComp:OnResetTeamID");
-    }
-
-    public static bool Prefix(BGUCharacterCS ___OwnerAsCharacterCS)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        var teamId = ___OwnerAsCharacterCS.GetTeamIDInCS();
-        return !Constants.AvailableTeamIds.Contains(teamId);
-    }
-}
-
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.OnReset))]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchTamerOnReset

@@ -29,18 +29,18 @@ public static class PvpUtils
 
     public static string GetTeamColorString(int teamId)
     {
-        if (teamId == Constants.RedTeamId)
+        if (teamId == PvpConstants.RedTeamId)
             return RedTeamColor;
-        if (teamId == Constants.BlueTeamId)
+        if (teamId == PvpConstants.BlueTeamId)
             return BlueTeamColor;
         return "";
     }
 
     public static string GetLocalizedTeamName(int teamId)
     {
-        if (teamId == Constants.RedTeamId)
+        if (teamId == PvpConstants.RedTeamId)
             return Texts.RedTeam;
-        if (teamId == Constants.BlueTeamId)
+        if (teamId == PvpConstants.BlueTeamId)
             return Texts.BlueTeam;
         return "";
     }
@@ -49,7 +49,7 @@ public static class PvpUtils
     {
         if (teamId == PvpConstants.DrawTeamId)
             return teamId;
-        return teamId == Constants.RedTeamId ? Constants.BlueTeamId : Constants.RedTeamId;
+        return teamId == PvpConstants.RedTeamId ? PvpConstants.BlueTeamId : PvpConstants.RedTeamId;
     }
 
     public static void CreatePvpStateEntity()

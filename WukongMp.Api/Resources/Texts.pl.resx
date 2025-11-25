@@ -241,7 +241,7 @@
     <value>Zwycięzca: {0}</value>
   </data>
   <data name="WaitForEnd" xml:space="preserve">
-    <value>Czekaj na konic meczu</value>
+    <value>Czekaj na koniec meczu</value>
   </data>
   <data name="YouAreReady" xml:space="preserve">
     <value>Gotowy</value>

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
+using WukongMp.Api.UI;
+using WukongMp.PvP.Configuration;
 
-namespace WukongMp.Api.UI
+namespace WukongMp.PvP.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
     {       
@@ -32,11 +35,11 @@ namespace WukongMp.Api.UI
             {
                 AddSpectator(nickName);
             }
-            else if (teamId == Constants.AvailableTeamIds[0])
+            else if (teamId == PvpConstants.AvailableTeamIds[0])
             {
                 AddToTeam1(nickName);
             }
-            else if (teamId == Constants.AvailableTeamIds[1])
+            else if (teamId == PvpConstants.AvailableTeamIds[1])
             {
                 AddToTeam2(nickName);
             }

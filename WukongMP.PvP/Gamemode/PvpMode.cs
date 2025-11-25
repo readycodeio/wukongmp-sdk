@@ -488,7 +488,7 @@ internal partial class PvpMode : IDisposable
         Logging.LogDebug("My team: {Team}", myTeam);
         Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
-        foreach (var team in Constants.AvailableTeamIds)
+        foreach (var team in PvpConstants.AvailableTeamIds)
         {
             ClientUtils.RegisterTeamHostility(myTeam, team);
         }
@@ -514,7 +514,7 @@ internal partial class PvpMode : IDisposable
         Logging.LogDebug("My team: {Team}", myTeam);
         Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
-        foreach (var team in Constants.AvailableTeamIds)
+        foreach (var team in PvpConstants.AvailableTeamIds)
         {
             ClientUtils.UnregisterTeamHostility(myTeam, team);
         }
@@ -553,8 +553,8 @@ internal partial class PvpMode : IDisposable
     private int GetSmallerTeamId()
     {
         Dictionary<int, int> teamsCount = [];
-        var team1Id = Constants.AvailableTeamIds[0];
-        var team2Id = Constants.AvailableTeamIds[1];
+        var team1Id = PvpConstants.AvailableTeamIds[0];
+        var team2Id = PvpConstants.AvailableTeamIds[1];
         teamsCount[team1Id] = 0;
         teamsCount[team2Id] = 0;
 
