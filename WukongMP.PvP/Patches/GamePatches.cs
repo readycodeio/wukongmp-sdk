@@ -58,7 +58,7 @@ public class PlayerCameraLockPatch
 {
     public static bool Prefix(UnitLockTargetInfo TargetInfo)
     {
-        if (TargetInfo is { LockTargetActor: BGUPlayerCharacterCS, LockTargetSkeletonSocketName: PvpConstants.FeetCameraLockNode })
+        if (TargetInfo is { LockTargetActor: BGUPlayerCharacterCS, LockTargetSkeletonSocketName: Constants.FeetCameraLockNode })
             return false;
 
         return true;

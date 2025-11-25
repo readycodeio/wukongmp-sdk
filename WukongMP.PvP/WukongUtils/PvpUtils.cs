@@ -164,7 +164,7 @@ public static class PvpUtils
                     foreach (var name in readOnlyData2.CachedLockSkeletonSocket)
                     {
                         // do not lock on Wukong's feet
-                        if (name == PvpConstants.FeetCameraLockNode && bguCharacterCs is BGUPlayerCharacterCS)
+                        if (name == Constants.FeetCameraLockNode && bguCharacterCs is BGUPlayerCharacterCS)
                             continue;
 
                         if (!readOnlyData2.DisabledLockSkeletonSocket.Contains(name))

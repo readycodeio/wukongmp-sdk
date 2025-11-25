@@ -13,6 +13,4 @@ public static class PvpConstants
     public const int RedTeamId = -9999;
     public const int BlueTeamId = -9998;
     public static readonly int[] AvailableTeamIds = [RedTeamId, BlueTeamId];
-
-    public const string FeetCameraLockNode = "CAMERA_LOCK_Root";
 }

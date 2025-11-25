@@ -990,7 +990,7 @@ public class PatchJumpOnReleased
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchCheckCanSelectTarget
 {
-    public static bool Prefix(AActor Player, ref bool __result)
+    public static bool Prefix(AActor Player, string Socket, ref bool __result)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
@@ -999,11 +999,21 @@ public class PatchCheckCanSelectTarget
         if (actor == null)
             return true;
 
-        if (actor.GetController() != null && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(actor, EBGUSimpleState.PhantomRush))
-            return true;
+        if (actor.GetController() == null)
+        {
+            __result = false;
+            return false;
+        }
 
-        __result = false;
-        return false;
+        if (actor is BGUPlayerCharacterCS && (
+                Socket == Constants.FeetCameraLockNode || // do not lock on Wukong's feet
+                BGUFunctionLibraryCS.BGUHasUnitSimpleState(actor, EBGUSimpleState.PhantomRush))) // do not lock on Phantom rushed players
+        {
+            __result = false;
+            return false;
+        }
+
+        return true;
     }
 }
 
