@@ -237,3 +237,29 @@ public static class PatchCheckTargetValid
         return true;
     }
 }
+
+[HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "SearchTargetTick")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchSearchTargetTick
+{
+    private static MethodInfo? _changeToFollowMasterMethod;
+    public static void Prefix(BPS_MultiTargetProjectileCtrComp __instance, BPC_MultiTargetProjectileCtrData ___MultiTargetProjectileCtrData, IBUC_TargetInfoData ___TargetInfoData)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var target = ___TargetInfoData.GetTargetInfo().LockTargetActor;
+        if (target.IsNullOrDestroyed())
+            return;
+
+        if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(target, EBGUSimpleState.PhantomRush))
+        {
+            _changeToFollowMasterMethod ??= AccessTools.Method(typeof(BPS_MultiTargetProjectileCtrComp), "ChangeToFollowMaster");
+            if (_changeToFollowMasterMethod == null)
+            {
+                return;
+            }
+            _changeToFollowMasterMethod.Invoke(__instance, null);
+        }
+    }
+}
