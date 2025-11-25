@@ -747,8 +747,8 @@ namespace WukongMp.Api.Patches
                         }
                     }
                 }
-
             }
+
             return false;
         }
 
@@ -996,13 +996,14 @@ public class PatchCheckCanSelectTarget
             return true;
 
         var actor = Player as ACharacter;
-        if (actor != null && actor.GetController() == null)
-        {
-            __result = false;
-            return false;
-        }
+        if (actor == null)
+            return true;
 
-        return true;
+        if (actor.GetController() != null && !BGUFunctionLibraryCS.BGUHasUnitSimpleState(actor, EBGUSimpleState.PhantomRush))
+            return true;
+
+        __result = false;
+        return false;
     }
 }
 
