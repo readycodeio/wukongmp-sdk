@@ -270,7 +270,11 @@ public static class SpawningUtils
         var tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)unitClass, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
         if (tamerActor == null)
         {
-            Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
+            if (!unitPath.Contains("PersistentLevel"))
+            {
+                Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
+            }
+
             return null;
         }
 
