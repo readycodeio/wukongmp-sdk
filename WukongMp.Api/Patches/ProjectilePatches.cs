@@ -219,3 +219,21 @@ public static class PatchApplyBySkill_Implement
         return true;
     }
 }
+
+[HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "CheckTargetValid")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchCheckTargetValid
+{
+    public static bool Prefix(AActor Target, ref bool __result)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(Target, EBGUSimpleState.PhantomRush))
+        {
+            __result = false;
+            return false;
+        }
+        return true;
+    }
+}
