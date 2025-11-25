@@ -3,9 +3,12 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
+using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.Patches;
 
@@ -46,5 +49,38 @@ public class TamerResetPatch
 
         var teamId = ___OwnerAsCharacterCS.GetTeamIDInCS();
         return !PvpConstants.AvailableTeamIds.Contains(teamId);
+    }
+}
+
+[HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnCameraLockTarget")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PlayerCameraLockPatch
+{
+    public static bool Prefix(UnitLockTargetInfo TargetInfo)
+    {
+        if (TargetInfo is { LockTargetActor: BGUPlayerCharacterCS, LockTargetSkeletonSocketName: PvpConstants.FeetCameraLockNode })
+            return false;
+
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(BGUFuncLibSelectTargetsCS), nameof(BGUFuncLibSelectTargetsCS.BGUSelectLockTargetInRange))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchBGUSelectLockTargetInRange
+{
+    public static bool Prefix(
+        ref UnitLockTargetInfo __result,
+        ACharacter Owner,
+        float FirstFilterMaxRange,
+        EBSelectTargetRangeType RangeType,
+        float AngleMax,
+        FRotator MyDir,
+        float DistScoreRating,
+        AActor PreferActor,
+        float PreferActorDistTolerance = 0.0f)
+    {
+        __result = PvpUtils.BGUSelectLockTargetInRange(Owner, FirstFilterMaxRange, RangeType, AngleMax, MyDir, DistScoreRating, PreferActor, PreferActorDistTolerance);
+        return false;
     }
 }
