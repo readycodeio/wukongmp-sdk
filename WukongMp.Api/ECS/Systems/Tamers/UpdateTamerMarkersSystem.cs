@@ -22,10 +22,10 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
             if (markerComp.MarkerActor == null)
                 return;
 
-            if (localTamerComp.Tamer != null)
+            if (localTamerComp.Tamer != null && localTamerComp.Pawn != null)
             {
                 var markerHeight = localTamerComp.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-                markerComp.MarkerActor.SetActorLocation(transComp.Position.ToFVector() + new FVector(0, 0, markerHeight), false, out var _, true);
+                markerComp.MarkerActor.SetActorLocation(localTamerComp.Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out var _, true);
             }
 #if TESTING
             string title = localTamerComp.Tamer?.GetClass()?.GetName() ?? "";
