@@ -22,12 +22,10 @@ using WukongMp.Api;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Helpers;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Resources;
@@ -61,8 +59,6 @@ internal partial class PvpMode : IDisposable
     private readonly HashSet<NetworkId> SpawnedDaSheng2 = [];
 
     private readonly CountdownTimer _countdownTimer = new(1, 5);
-
-    private bool _inTournament;
 
     private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
     {
@@ -106,7 +102,6 @@ internal partial class PvpMode : IDisposable
         ClientOwnershipManager clientOwnership,
         WukongPawnState pawnState,
         IClientEcsUpdateLoop ecsLoop,
-        FreeCameraManager freeCameraManager,
         PvpWidgetManager pvpWidgetManager,
         ILogger logger
     )
@@ -399,7 +394,7 @@ internal partial class PvpMode : IDisposable
 
         if (!_areaState.OwnsPvpState)
             return;
-        
+
         _areaState.OwnedPvpStateRef().InPvP = true;
     }
 
@@ -437,7 +432,7 @@ internal partial class PvpMode : IDisposable
 
     public void SwitchReadyStateMulti()
     {
-        if (_areaState is { InRoom: true, PvpState.InPvP: false } && _state.AllPlayers.Count > 0 && _playerState.LocalMainCharacter?.GetPvP().IsSpectator is not true && !_inTournament)
+        if (_areaState is { InRoom: true, PvpState.InTournament: false } && _state.AllPlayers.Count > 0 && _playerState.LocalMainCharacter?.GetPvP().IsSpectator is not true)
         {
             SwitchReadyState();
         }
@@ -459,7 +454,7 @@ internal partial class PvpMode : IDisposable
         if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null)
             return;
 
-        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InPvP: false } && !_inTournament)
+        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InTournament: false })
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
@@ -529,10 +524,12 @@ internal partial class PvpMode : IDisposable
             return;
         }
 
-        _inTournament = true;
         PlayerUtils.SetPlayerInteractionEnabled(_playerState.LocalMainCharacter!.Value, false);
         if (_areaState.OwnsPvpState)
+        {
+            _areaState.OwnedPvpStateRef().InTournament = true;
             _areaState.OwnedPvpStateRef().InPvP = true;
+        }
     }
 
     private void EndTournament()
@@ -544,10 +541,12 @@ internal partial class PvpMode : IDisposable
             return;
         }
 
-        _inTournament = false;
         PlayerUtils.SetPlayerInteractionEnabled(_playerState.LocalMainCharacter!.Value, true);
         if (_areaState.OwnsPvpState)
+        {
             _areaState.OwnedPvpStateRef().InPvP = false;
+            _areaState.OwnedPvpStateRef().InTournament = false;
+        }
     }
 
     private int GetSmallerTeamId()
@@ -577,7 +576,10 @@ internal partial class PvpMode : IDisposable
             return;
 
         if (_areaState.OwnsPvpState)
+        {
             _areaState.OwnedPvpStateRef().InPvP = false;
+            _areaState.OwnedPvpStateRef().InTournament = false;
+        }
     }
 
     [Obsolete("Matchmaking is not supported for now")]

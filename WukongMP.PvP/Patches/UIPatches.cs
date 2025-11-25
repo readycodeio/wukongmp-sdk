@@ -181,6 +181,16 @@ public class PatchOnChangeSaveTipsStat
     }
 }
 
+[HarmonyPatch(typeof(BUI_BattleInfoCS), "SetDamageNumCanEnabled")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchSetDamageNumCanEnabled
+{
+    public static void Prefix(ref bool InIsDamageNumCanEnabled)
+    {
+        InIsDamageNumCanEnabled = true;
+    }
+}
+
 [HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchIsShowSettingUiOnly
@@ -191,7 +201,7 @@ public class PatchIsShowSettingUiOnly
             return true;
 
         var areaState = DI.Instance.AreaState;
-        if (areaState.PvpState is { InPvP: true })
+        if (areaState.PvpState is { InTournament: true })
         {
             __result = true;
             return false;
