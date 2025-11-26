@@ -686,7 +686,7 @@ internal partial class PvpMode : IDisposable
     private static void ResetPlayer(MainCharacterEntity mainCharacter)
     {
         var pawn = mainCharacter.GetLocalState().Pawn!;
-        BPS_EventCollectionCS.Get(pawn.PlayerState)?.Evt_TriggerPlayerTransEnd.Invoke(EPlayerTransEndType.RebirthTransBack, default(PlayerTransParam));
+        BPS_EventCollectionCS.Get(pawn.PlayerState)?.Evt_TriggerPlayerTransEnd.Invoke(EPlayerTransEndType.None, default(PlayerTransParam));
         var events = BUS_EventCollectionCS.Get(pawn);
         events?.Evt_DestroyAllCtrableBullet.Invoke();
         events?.Evt_TriggerTeleportResetPlayer!.Invoke();
