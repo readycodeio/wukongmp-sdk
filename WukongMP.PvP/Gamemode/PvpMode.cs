@@ -692,6 +692,15 @@ internal partial class PvpMode : IDisposable
         }
     }
 
+    private static void ResetPlayer(MainCharacterEntity mainCharacter)
+    {
+        var pawn = mainCharacter.GetLocalState().Pawn!;
+        BPS_EventCollectionCS.Get(pawn.PlayerState)?.Evt_TriggerPlayerTransEnd.Invoke(EPlayerTransEndType.RebirthTransBack, default(PlayerTransParam));
+        var events = BUS_EventCollectionCS.Get(pawn);
+        events?.Evt_DestroyAllCtrableBullet.Invoke();
+        events?.Evt_TriggerTeleportResetPlayer!.Invoke();
+    }
+
     #endregion
 
     #region RPC
@@ -721,6 +730,16 @@ internal partial class PvpMode : IDisposable
             case PvpEvent.RoundStart:
             {
                 _ecsLoop.Scheduler.Schedule(_ => PvpUtils.ShowPvPCountDown());
+
+                var mainEntity = _playerState.LocalMainCharacter;
+                if (mainEntity.HasValue)
+                {
+                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
+                    {
+                        ResetPlayer(mainEntity0);
+                    }, mainEntity.Value);
+                }
+
                 StartRound();
                 EnablePvP();
                 StartTournament();
@@ -791,9 +810,7 @@ internal partial class PvpMode : IDisposable
                 {
                     _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
                     {
-                        var events = BUS_EventCollectionCS.Get(mainEntity0.GetLocalState().Pawn!);
-                        events?.Evt_DestroyAllCtrableBullet.Invoke();
-                        events?.Evt_TriggerTeleportResetPlayer!.Invoke();
+                        ResetPlayer(mainEntity0);
                     }, mainEntity.Value);
                 }
 
