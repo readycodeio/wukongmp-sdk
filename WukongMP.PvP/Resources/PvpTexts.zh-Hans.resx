@@ -126,4 +126,7 @@
   <data name="QuickJoin" xml:space="preserve">
     <value>快速加入在线房间</value>
   </data>
+  <data name="BothTeamsNeedReadyPlayers" xml:space="preserve">
+    <value>双方队伍必须至少有一名玩家或怪物才能开始 PvP。</value>
+  </data>
 </root>

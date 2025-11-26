@@ -35,6 +35,9 @@ internal sealed class ReadinessSystem(
             if (scope.ScopeEntity != areaState.CurrentArea.Value.Entity)
                 return;
 
+            if (pvp.IsSpectator)
+                return;
+
             players++;
             if (pvp.IsReadyForPvP)
             {
@@ -77,9 +80,17 @@ internal sealed class ReadinessSystem(
                 }
             });
 
-            if (allReady && blueTeamAnyReady && redTeamAnyReady)
+            if (allReady)
             {
-                pvpMode.StartLobbyCountdown(PvpConstants.CountdownSeconds);
+                if (blueTeamAnyReady && redTeamAnyReady)
+                {
+                    pvpMode.StartLobbyCountdown(PvpConstants.CountdownSeconds);
+                }
+                else
+                {
+                    // show a message that both teams need at least one ready player
+                    widgetManager.SetThirdText(Resources.PvpTexts.BothTeamsNeedReadyPlayers);
+                }
             }
             else
             {

@@ -106,4 +106,7 @@
   <data name="QuickJoin" xml:space="preserve">
     <value>Quick Join</value>
   </data>
+  <data name="BothTeamsNeedReadyPlayers" xml:space="preserve">
+	  <value>Both teams must have at least one player or monster to start PvP.</value>
+  </data>
 </root>

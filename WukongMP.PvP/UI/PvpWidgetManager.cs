@@ -90,6 +90,11 @@ namespace WukongMp.PvP.UI
             _gameMessageWidget.Value.SetMainText(message);
         }
 
+        public void SetThirdText(string message)
+        {
+            _gameMessageWidget.Value.SetThirdText(message);
+        }
+
         public void UpdateRoundCountdown(int minutesLeft, int secondsLeft)
         {
             _countdownWidget.Value.SetText(secondsLeft);

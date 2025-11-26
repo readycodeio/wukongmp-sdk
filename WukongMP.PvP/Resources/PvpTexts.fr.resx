@@ -126,4 +126,7 @@
   <data name="QuickJoin" xml:space="preserve">
     <value>Rejoindre Rapidement</value>
   </data>
+  <data name="BothTeamsNeedReadyPlayers" xml:space="preserve">
+    <value>Les deux équipes doivent avoir au moins un joueur ou un monstre pour commencer le PvP.</value>
+  </data>
 </root>
