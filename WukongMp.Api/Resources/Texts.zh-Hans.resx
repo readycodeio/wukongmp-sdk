@@ -162,9 +162,6 @@
   <data name="InvalidUnitsCount" xml:space="preserve">
     <value>无效的单位数量</value>
   </data>
-  <data name="MatchmakingInProgress" xml:space="preserve">
-    <value>正在匹配中...</value>
-  </data>
   <data name="More" xml:space="preserve">
     <value>排队</value>
   </data>

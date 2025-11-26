@@ -582,17 +582,6 @@ internal partial class PvpMode : IDisposable
         }
     }
 
-    [Obsolete("Matchmaking is not supported for now")]
-    private void EndMatchmaking()
-    {
-        var areaEntity = _areaState.CurrentArea;
-        if (areaEntity == null)
-        {
-            Logging.LogError("No area entity found, cannot end matchmaking");
-            return;
-        }
-    }
-
     public void StartLobbyCountdown(int seconds)
     {
         _pvpWidgetManager.SetMainMessage(Texts.StartingGame);
@@ -619,6 +608,13 @@ internal partial class PvpMode : IDisposable
         _pvpWidgetManager.HideCountdown();
     }
 
+    private void RefreshReadyCounts()
+    {
+        var readyForPvp = OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP && !x.Character.GetPvP().IsSpectator);
+        var available = OtherPlayers.Count(x => !x.Character.GetPvP().IsSpectator);
+        _pvpWidgetManager.UpdateReadyCount(readyForPvp, available);
+    }
+
     #region Event Handlers
 
     private void OnBeginPlayGameplayLevel()
@@ -631,9 +627,7 @@ internal partial class PvpMode : IDisposable
         Logging.LogInformation("Joined room");
 
         SetUpRoom();
-        var readyForPvp = OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP && !x.Character.GetPvP().IsSpectator);
-        var available = OtherPlayers.Count(x => !x.Character.GetPvP().IsSpectator);
-        _pvpWidgetManager.UpdateReadyCount(readyForPvp, available);
+        RefreshReadyCounts();
 
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)
@@ -646,10 +640,7 @@ internal partial class PvpMode : IDisposable
     private void OnOtherPlayerInsideAreaHandler(PlayerId playerId, AreaId areaId, OtherPlayerInsideAreaReason arg3)
     {
         Logging.LogInformation("Player {PlayerId} entered the room", playerId);
-        if (_state.AreaPlayers.Count == Constants.MaxPlayers)
-        {
-            EndMatchmaking();
-        }
+        RefreshReadyCounts();
     }
 
     private void OnUnitDead(Entity victim, Entity attacker)

@@ -165,9 +165,6 @@
   <data name="MasterClient" xml:space="preserve">
     <value>Cliente principal: {0}</value>
   </data>
-  <data name="MatchmakingInProgress" xml:space="preserve">
-    <value>Buscando partida...</value>
-  </data>
   <data name="More" xml:space="preserve">
     <value>más</value>
   </data>

@@ -162,9 +162,6 @@
   <data name="InvalidUnitsCount" xml:space="preserve">
     <value>Niepoprawna liczba jednostek</value>
   </data>
-  <data name="MatchmakingInProgress" xml:space="preserve">
-    <value>Szukanie graczy...</value>
-  </data>
   <data name="More" xml:space="preserve">
     <value>więcej</value>
   </data>
