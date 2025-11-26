@@ -2,11 +2,15 @@
 using System.Reflection;
 using System.Threading;
 using b1;
+using b1.ECS;
 using b1.GSMUI;
 using b1.GSMUI.GSWidget;
 using b1.Localization;
+using b1.Protobuf.DataAPI;
+using b1.UI.Comm;
 using B1UI.GSSvc;
 using B1UI.GSUI;
+using BtlShare;
 using GSE.GSUI;
 using HarmonyLib;
 using PreludeLib.Attributes;
@@ -247,6 +251,40 @@ public static class PatchDoGSTicking
             {
                 ___TickingQueue.RemoveAt(i);
             }
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BGW_GameDB), nameof(BGW_GameDB.GetUnitBattleInfoExtendDesc))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchIsStandAlone
+{
+    public static bool Prefix(ref FUStUnitBattleInfoExtendDesc __result, int BattleInfoID)
+    {
+        __result = BG_ProtobufDataAPI<FUStUnitBattleInfoExtendDesc>.Get().FindByID(BattleInfoID);
+        if (__result.BloodBarType == EBGUBloodBarType.PlayerBar)
+        {
+            __result.BloodBarType = EBGUBloodBarType.EnemyBar;
+        }
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(BUI_BattleInfoCS), "BindProjWidget")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchBindProjWidget
+{
+    public static void Postfix(Entity Entity, BUI_ProjWidget Widget)
+    {
+        if (Widget == null || Widget.IsNullOrDestroyed())
+            return;
+
+        BGUPlayerCharacterCS? bGUPlayerCharacterCS = ECSExtension.ToActor(Entity) as BGUPlayerCharacterCS;
+        if (!bGUPlayerCharacterCS.IsNullOrDestroyed())
+        {
+            Widget.SetAlwaysShowSetting(AlwaysShowSetting.Always, true);
+            Widget.SetAlwaysShowSetting(AlwaysShowSetting.Locked, true);
+            Widget.Play();
         }
     }
 }
