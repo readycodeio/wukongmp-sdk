@@ -28,6 +28,11 @@ namespace WukongMp.PvP.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
         }
 
+        public void SetMaxReadyCount(int count)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetMaxReadyCount {count}", true);
+        }
+
         public void UpdatePlayerTeam(string nickName, int teamId, bool isSpectator)
         {
             RemovePlayerFromTeams(nickName);
