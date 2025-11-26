@@ -359,22 +359,38 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, direction0) =>
         {
-            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            if (self._playerState.GetMainCharacterById(sender) is not { } senderEntity)
                 return;
-            ref var mainComp = ref mainEntity.GetState();
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            if (localMainComp.Pawn == null)
+            ref var senderMainComp = ref senderEntity.GetState();
+            ref var senderLocalMainComp = ref senderEntity.GetLocalState();
+            if (senderLocalMainComp.Pawn == null)
             {
-                self._logger.LogError("Player not found: {PlayerId}", mainComp.PlayerId);
+                self._logger.LogError("Player not found: {PlayerId}", senderMainComp.PlayerId);
                 return;
             }
 
-            self._logger.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", mainComp.CharacterNickName, direction0);
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            self._logger.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", senderMainComp.CharacterNickName, direction0);
+            var events = BUS_EventCollectionCS.Get(senderLocalMainComp.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction0);
 
-            PlayerUtils.ResetCooldown(localMainComp.Pawn);
-            PlayerUtils.ResetMana(localMainComp.Pawn);
+            // reset mana and cooldowns of the sender's pawn, since it's a remote player who needs to keep track of them
+            PlayerUtils.ResetCooldown(senderLocalMainComp.Pawn);
+            PlayerUtils.ResetMana(senderLocalMainComp.Pawn);
+
+            // unattach tracking camera if target was the sender
+            if (self._playerState.LocalMainCharacter.HasValue)
+            {
+                var localPlayer = self._playerState.LocalMainCharacter.Value.GetLocalState().Pawn;
+                if (localPlayer != null)
+                {
+                    var targetData = BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(localPlayer);
+                    if (targetData?.GetTargetInfo()?.LockTargetActor == senderLocalMainComp.Pawn)
+                    {
+                        var localEvents = BUS_EventCollectionCS.Get(localPlayer);
+                        localEvents.Evt_ClearCameraLock?.Invoke();
+                    }
+                }
+            }
         }, this, __sender, direction);
     }
 

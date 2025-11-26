@@ -631,7 +631,9 @@ internal partial class PvpMode : IDisposable
         Logging.LogInformation("Joined room");
 
         SetUpRoom();
-        _pvpWidgetManager.UpdateReadyCount(OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP));
+        var readyForPvp = OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP && !x.Character.GetPvP().IsSpectator);
+        var available = OtherPlayers.Count(x => !x.Character.GetPvP().IsSpectator);
+        _pvpWidgetManager.UpdateReadyCount(readyForPvp, available);
 
         var playerEntity = _playerState.LocalPlayerEntity;
         if (playerEntity == null)

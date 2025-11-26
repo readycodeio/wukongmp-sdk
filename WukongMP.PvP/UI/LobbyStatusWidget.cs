@@ -23,14 +23,10 @@ namespace WukongMp.PvP.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetMaxConnectedCount {count}", true);
         }
 
-        public void SetReadyCount(int count)
+        public void SetReadyCount(int count, int maxCount)
         {
             GameWidget?.CallFunctionByNameWithArguments($"SetReadyCount {count}", true);
-        }
-
-        public void SetMaxReadyCount(int count)
-        {
-            GameWidget?.CallFunctionByNameWithArguments($"SetMaxReadyCount {count}", true);
+            GameWidget?.CallFunctionByNameWithArguments($"SetMaxReadyCount {maxCount}", true);
         }
 
         public void UpdatePlayerTeam(string nickName, int teamId, bool isSpectator)

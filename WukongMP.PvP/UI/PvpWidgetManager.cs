@@ -217,9 +217,9 @@ namespace WukongMp.PvP.UI
             _gameMessageWidget.Value.SetSecondText(TextUtils.GetReadyText(_clientState.AllPlayers.Count, isReady));
         }
 
-        public void UpdateReadyCount(int readyCount)
+        public void UpdateReadyCount(int readyCount, int maxCount)
         {
-            _lobbyStatusWidget.Value.SetReadyCount(readyCount);
+            _lobbyStatusWidget.Value.SetReadyCount(readyCount, maxCount);
         }
 
         public void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList) => _lobbyStatusWidget.Value.SetTeams(redTeamList, blueTeamList, spectatorsList);

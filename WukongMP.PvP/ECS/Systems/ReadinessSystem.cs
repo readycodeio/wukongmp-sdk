@@ -58,7 +58,7 @@ internal sealed class ReadinessSystem(
             return;
 
         _lastReadyCount = readyCount;
-        widgetManager.UpdateReadyCount(readyCount);
+        widgetManager.UpdateReadyCount(readyCount, players);
 
         if (areaState.PvpState is { InPvP: false })
         {
