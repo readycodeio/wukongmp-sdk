@@ -14,7 +14,10 @@ public struct LocalMainCharacterComponent : IComponent
     public bool IsPlayerSynced;
 
     public bool IsSpectatorLocally;
-    
+
+    [Ignore]
+    public BGUCharacterCS? LastPawn { get; private set; }
+
     [Ignore]
     public BGUCharacterCS? Pawn
     {
@@ -24,7 +27,7 @@ public struct LocalMainCharacterComponent : IComponent
             {
                 return null;
             }
-            
+
             if (_pawn.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Player pawn is null or destroyed");
@@ -33,39 +36,39 @@ public struct LocalMainCharacterComponent : IComponent
 
             return _pawn;
         }
-        set => _pawn = value;
+        set
+        {
+            LastPawn = _pawn;
+            _pawn = value;
+        }
     }
 
     public bool HasPawn => !_pawn.IsNullOrDestroyed();
-        
+
     public bool IsRespawning { get; set; }
     public bool RunImmobilizePatches { get; set; }
     public MontageState MontageState { get; set; }
-        
+
     public bool ReceivedPhantomRushExit { get; set; }
     public int TeleportFinishFrames { get; set; }
-    public float AIPathMoveStuckTimer { get; set; }
-    public bool IsAIPathMoveStuck { get; set; }
 
     // FIXME: Move to PlayerComponent?
     public bool IsWaitingForSequence { get; set; }
     public bool IsJoiningSequence { get; set; }
     public FVector JoiningSequenceLocation { get; set; }
 
-    private AActor? _markerActor;
-    
     [Ignore]
     public AActor? MarkerActor
     {
         get
         {
-            if (_markerActor != null && _markerActor.IsNullOrDestroyed())
+            if (field != null && field.IsNullOrDestroyed())
             {
                 return null;
             }
 
-            return _markerActor;
+            return field;
         }
-        set => _markerActor = value;
+        set;
     }
 }

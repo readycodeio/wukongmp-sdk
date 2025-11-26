@@ -65,6 +65,49 @@ public class PlayerCameraLockPatch
     }
 }
 
+[HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "UpdateCameraState_AnyThread")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class FixTransformCameraLockToOriginPatch
+{
+    private static MethodInfo? TargetGetter;
+    private static MethodInfo? CameraStateGetter;
+
+    public static void Prefix(BUS_PlayerCameraCompImpl __instance)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        TargetGetter ??= AccessTools.PropertyGetter(typeof(BUS_PlayerCameraCompImpl), "Target");
+        CameraStateGetter ??= AccessTools.PropertyGetter(typeof(BUS_PlayerCameraCompImpl), "CameraState");
+
+        var target = (AActor?)TargetGetter.Invoke(__instance, null);
+
+        if (target == null || target is not BGUCharacterCS targetCharacter)
+            return;
+
+        var cameraState = (BUC_CameraState?)CameraStateGetter.Invoke(__instance, null);
+
+        if (cameraState == null)
+            return;
+
+        // we are forced to look at origin
+        if (cameraState.TargetSoulFocusPos.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+        {
+            var owner = __instance.GetOwner() as BGUCharacterCS;
+
+            if (owner == null)
+                return;
+
+            var entity = DI.Instance.PawnState.GetEntityByLastPlayerPawn(targetCharacter);
+            if (entity.HasValue)
+            {
+                var events = BUS_EventCollectionCS.Get(owner);
+                events?.Evt_Camera_ManualLock?.Invoke(entity.Value.GetLocalState().Pawn, Constants.ChestCameraLockNode);
+            }
+        }
+    }
+}
+
 [HarmonyPatch(typeof(BGUFuncLibSelectTargetsCS), nameof(BGUFuncLibSelectTargetsCS.BGUSelectLockTargetInRange))]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchBGUSelectLockTargetInRange

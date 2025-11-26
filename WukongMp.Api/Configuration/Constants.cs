@@ -46,6 +46,7 @@ namespace WukongMp.Api.Configuration
         public const int IncenseTrailTalismanSkillId = 10909;
         public const int ConsumableBuffSkillId = 10913;
         public const int IronBodySkillId = 10505;
+        public const string ChestCameraLockNode = "CAMERA_LOCK";
         public const string FeetCameraLockNode = "CAMERA_LOCK_Root";
 
         public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";

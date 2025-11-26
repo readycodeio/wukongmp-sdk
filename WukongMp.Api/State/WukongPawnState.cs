@@ -147,6 +147,23 @@ public class WukongPawnState(
 
         return result;
     }
+    
+    public MainCharacterEntity? GetEntityByLastPlayerPawn(AActor? owner)
+    {
+        if (owner == null)
+            return null;
+
+        MainCharacterEntity? result = null;
+
+        var query = world.Query<LocalMainCharacterComponent>();
+        query.ForEachEntity((ref localMainComp, entity) =>
+        {
+            if (localMainComp.LastPawn == owner)
+                result = new MainCharacterEntity(entity);
+        });
+
+        return result;
+    }
 
     public NetworkId? GetNetworkIdByActor(AActor? owner)
     {
