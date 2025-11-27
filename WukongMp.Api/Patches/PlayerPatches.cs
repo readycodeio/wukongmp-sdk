@@ -613,7 +613,6 @@ namespace WukongMp.Api.Patches
 
             var playerState = DI.Instance.PlayerState;
 
-            var playerEntity = playerState.LocalPlayerEntity;
             var mainEntity = playerState.LocalMainCharacter;
             if (!mainEntity.HasValue)
                 return true;

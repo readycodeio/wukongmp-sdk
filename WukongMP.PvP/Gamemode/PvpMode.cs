@@ -574,6 +574,7 @@ internal partial class PvpMode : IDisposable
         }
     }
 
+    [Obsolete("This does not work since on Area join this.AllPlayers are not populated")]
     private int GetSmallerTeamId()
     {
         Dictionary<int, int> teamsCount = [];
