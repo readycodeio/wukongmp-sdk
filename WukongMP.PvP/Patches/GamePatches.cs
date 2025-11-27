@@ -61,6 +61,9 @@ public class PlayerCameraLockPatch
         if (TargetInfo is { LockTargetActor: BGUPlayerCharacterCS, LockTargetSkeletonSocketName: Constants.FeetCameraLockNode })
             return false;
 
+        if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(TargetInfo.LockTargetActor, EBGUSimpleState.PhantomRush))
+            return false;
+
         return true;
     }
 }
