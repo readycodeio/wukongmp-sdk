@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using B1UI;
+using B1UI.GSUI;
 using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
@@ -11,6 +13,7 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.PvP.UI
 {
@@ -54,7 +57,7 @@ namespace WukongMp.PvP.UI
             _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
 
             _eventRouter.OnPlayerChangedTeam += UpdatePlayerTeam;
-            _eventRouter.OnLocalPlayerChangedSpectator += OnLocalPlayerChangedSpectator; ;
+            _eventRouter.OnLocalPlayerChangedSpectator += OnLocalPlayerChangedSpectator;
         }
 
         public void Dispose()
@@ -73,7 +76,7 @@ namespace WukongMp.PvP.UI
             _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
 
             _eventRouter.OnPlayerChangedTeam -= UpdatePlayerTeam;
-            _eventRouter.OnLocalPlayerChangedSpectator -= OnLocalPlayerChangedSpectator; ;
+            _eventRouter.OnLocalPlayerChangedSpectator -= OnLocalPlayerChangedSpectator;
         }
 
         public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
@@ -209,6 +212,8 @@ namespace WukongMp.PvP.UI
         public void StartRound()
         {
             _gameMessageWidget.Value.SetVisibility(false);
+            if (GSG.GSPageOP.FindUIPage(12) != null)
+                GSB1UIUtil.ExitEquipScene(GameUtils.GetWorld());
         }
 
         public void SwitchReadyState(bool isReady)
