@@ -1,4 +1,7 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using b1;
 using b1.BGW;
 using b1.UI.Comm;
 using B1UI.GSUI;
@@ -8,17 +11,14 @@ using HarmonyLib;
 using LiteNetLib;
 using PreludeLib.Attributes;
 using ResB1;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.WukongUtils;
 using WukongMp.Api.Resources;
-using WukongMp.PvP.Resources;
+using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
+using WukongMp.PvP.Resources;
 
 namespace WukongMp.PvP.Patches;
 
@@ -201,12 +201,23 @@ public class PatchIsShowSettingUiOnly
             return true;
 
         var areaState = DI.Instance.AreaState;
-        if (areaState.PvpState is { InTournament: true } || DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsSpectator is true)
+        if (areaState.PvpState is { InTournament: true })
         {
             __result = true;
             return false;
         }
 
         return true;
+    }
+}
+
+// TODO: Maybe there's a way to fix free floating camera after exiting menu without prohibiting it altogether
+[HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenEquipUI")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnClickOpenEquipUI
+{
+    public static bool Prefix()
+    {
+        return DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsSpectator is not true;
     }
 }

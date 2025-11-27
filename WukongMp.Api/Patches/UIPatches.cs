@@ -259,13 +259,11 @@ public static class PatchDoGSTicking
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public static class PatchIsStandAlone
 {
-    public static bool Prefix(ref FUStUnitBattleInfoExtendDesc __result, int BattleInfoID)
+    public static void Postfix(ref FUStUnitBattleInfoExtendDesc? __result)
     {
-        __result = BG_ProtobufDataAPI<FUStUnitBattleInfoExtendDesc>.Get().FindByID(BattleInfoID);
-        if (__result.BloodBarType == EBGUBloodBarType.PlayerBar)
+        if (__result is { BloodBarType: EBGUBloodBarType.PlayerBar })
         {
             __result.BloodBarType = EBGUBloodBarType.EnemyBar;
         }
-        return false;
     }
 }
