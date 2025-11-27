@@ -549,7 +549,9 @@ namespace WukongMp.Api.Patches
 
             if (DI.Instance.GameplayConfiguration.EnableCustomCameraArmLength)
             {
-                InControlData.ArmLength = Constants.CameraArmLength;
+                var isTransformed = DI.Instance.PlayerState.LocalMainCharacter?.GetState().IsTransformed ?? false;
+
+                InControlData.ArmLength = Math.Max(InControlData.ArmLength, isTransformed ? Constants.TransformedCameraArmLength : Constants.CameraArmLength);
                 InControlData.ArmTargetOffset = FVector.ZeroVector;
             }
 

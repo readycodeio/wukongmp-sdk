@@ -16,6 +16,7 @@ namespace WukongMp.Api.Configuration
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 200f;
         public const float CameraArmLength = 720;
+        public const float TransformedCameraArmLength = 1100;
         public const int NewCharacterArchiveId = 1;
         public const int MaxPlayers = 10;
         public const int DefaultMonsterTeamId = 2;
