@@ -269,22 +269,3 @@ public static class PatchIsStandAlone
         return false;
     }
 }
-
-[HarmonyPatch(typeof(BUI_BattleInfoCS), "BindProjWidget")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchBindProjWidget
-{
-    public static void Postfix(Entity Entity, BUI_ProjWidget Widget)
-    {
-        if (Widget == null || Widget.IsNullOrDestroyed())
-            return;
-
-        BGUPlayerCharacterCS? bGUPlayerCharacterCS = ECSExtension.ToActor(Entity) as BGUPlayerCharacterCS;
-        if (!bGUPlayerCharacterCS.IsNullOrDestroyed())
-        {
-            Widget.SetAlwaysShowSetting(AlwaysShowSetting.Always, true);
-            Widget.SetAlwaysShowSetting(AlwaysShowSetting.Locked, true);
-            Widget.Play();
-        }
-    }
-}
