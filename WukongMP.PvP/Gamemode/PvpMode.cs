@@ -132,7 +132,7 @@ internal partial class PvpMode : IDisposable
         _eventRouter.OnMonsterSpawned += OnMonsterSpawned;
         _eventRouter.OnLanguageChanged += OnLanguageChanged;
         _eventRouter.OnPlayerChangedTeam += OnPlayerChangedTeam;
-        _eventRouter.OnLocalPlayerChangedSpectator -= OnLocalPlayerChangedSpectator;
+        _eventRouter.OnLocalPlayerChangedSpectator += OnLocalPlayerChangedSpectator;
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
@@ -501,9 +501,12 @@ internal partial class PvpMode : IDisposable
         Logging.LogDebug("My team: {Team}", myTeam);
         Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
-        foreach (var team in PvpConstants.AllTeamIds)
+        foreach (var team1 in PvpConstants.AllTeamIds)
         {
-            ClientUtils.RegisterTeamHostility(myTeam, team);
+            foreach (var team2 in PvpConstants.AllTeamIds)
+            {
+                ClientUtils.RegisterTeamHostility(team1, team2);
+            }
         }
     }
 
@@ -527,9 +530,13 @@ internal partial class PvpMode : IDisposable
         Logging.LogDebug("My team: {Team}", myTeam);
         Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
-        foreach (var team in PvpConstants.AllTeamIds)
+
+        foreach (var team1 in PvpConstants.AllTeamIds)
         {
-            ClientUtils.UnregisterTeamHostility(myTeam, team);
+            foreach (var team2 in PvpConstants.AllTeamIds)
+            {
+                ClientUtils.UnregisterTeamHostility(team1, team2);
+            }
         }
     }
 
