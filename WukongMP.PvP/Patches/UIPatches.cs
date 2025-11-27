@@ -201,7 +201,7 @@ public class PatchIsShowSettingUiOnly
             return true;
 
         var areaState = DI.Instance.AreaState;
-        if (areaState.PvpState is { InTournament: true })
+        if (areaState.PvpState is { InTournament: true } || DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsSpectator is true)
         {
             __result = true;
             return false;

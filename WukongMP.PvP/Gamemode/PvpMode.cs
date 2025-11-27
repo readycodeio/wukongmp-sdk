@@ -598,8 +598,12 @@ internal partial class PvpMode : IDisposable
 
     public void CancelLobbyCountdown()
     {
+        var playerEntity = _playerState.LocalMainCharacter;
+        ref var player = ref playerEntity!.Value.GetPvP();
+
         ClearLoobyCountdown();
         _pvpWidgetManager.SetMainMessage(Texts.InMultiplayer);
+        _pvpWidgetManager.SwitchReadyState(player.IsReadyForPvP);
     }
 
     public void ClearLoobyCountdown()
@@ -725,10 +729,7 @@ internal partial class PvpMode : IDisposable
                 var mainEntity = _playerState.LocalMainCharacter;
                 if (mainEntity.HasValue)
                 {
-                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
-                    {
-                        ResetPlayer(mainEntity0);
-                    }, mainEntity.Value);
+                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) => { ResetPlayer(mainEntity0); }, mainEntity.Value);
                 }
 
                 StartRound();
@@ -799,10 +800,7 @@ internal partial class PvpMode : IDisposable
 
                 if (!mainEntity.Value.GetState().IsDead)
                 {
-                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) =>
-                    {
-                        ResetPlayer(mainEntity0);
-                    }, mainEntity.Value);
+                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) => { ResetPlayer(mainEntity0); }, mainEntity.Value);
                 }
 
                 break;

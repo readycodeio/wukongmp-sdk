@@ -24,14 +24,14 @@ internal class PvpChatter : IDisposable
     private readonly ClientOwnershipManager _clientOwnership;
 
     public PvpChatter(
-    WukongChatter wukongChatter,
-    WukongPlayerState playerState,
-    WukongRpcCallbacks rpc,
-    GameplayEventRouter eventRouter,
-    WukongAreaState areaState,
-    WukongPawnState pawnState,
-    ClientOwnershipManager clientOwnership
-)
+        WukongChatter wukongChatter,
+        WukongPlayerState playerState,
+        WukongRpcCallbacks rpc,
+        GameplayEventRouter eventRouter,
+        WukongAreaState areaState,
+        WukongPawnState pawnState,
+        ClientOwnershipManager clientOwnership
+    )
     {
         Logging.LogDebug("Initializing PvpChatter");
 
@@ -58,9 +58,7 @@ internal class PvpChatter : IDisposable
     private void SetupCommands()
     {
         _wukongChatter.AddCommand("/spawn", new WukongChatterCommand(RequestSpawn));
-#if DEBUG
         _wukongChatter.AddCommand("/spectator", new WukongChatterCommand(SetSpectatorStatus));
-#endif
     }
 
     private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -96,18 +94,18 @@ internal class PvpChatter : IDisposable
                 shouldSpawn = true;
                 break;
             case 2:
+            {
+                if (int.TryParse(args.Span[1], out count))
                 {
-                    if (int.TryParse(args.Span[1], out count))
-                    {
-                        shouldSpawn = true;
-                    }
-                    else
-                    {
-                        _wukongChatter.AddLocalCommandMessage($"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
-                    }
-
-                    break;
+                    shouldSpawn = true;
                 }
+                else
+                {
+                    _wukongChatter.AddLocalCommandMessage($"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
+                }
+
+                break;
+            }
         }
 
         if (shouldSpawn)
@@ -119,14 +117,17 @@ internal class PvpChatter : IDisposable
 
     private void SetSpectatorStatus(ReadOnlyMemory<string> args)
     {
-        if (args.Length == 1)
+        if (args.Length == 0)
         {
-            var isSpectator = args.Span[0].Equals("true", StringComparison.OrdinalIgnoreCase);
-
             var playerEntity = _playerState.LocalMainCharacter;
             if (playerEntity == null)
                 return;
-            playerEntity.Value.GetPvP().IsSpectator = isSpectator;
+
+            if (!_areaState.PvpState!.Value.InTournament)
+            {
+                ref var pvp = ref playerEntity.Value.GetPvP();
+                pvp.IsSpectator = !pvp.IsSpectator;
+            }
         }
     }
 

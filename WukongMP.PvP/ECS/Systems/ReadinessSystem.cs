@@ -2,11 +2,11 @@
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.Resources;
 using WukongMp.PvP.UI;
 
 namespace WukongMp.PvP.ECS.Systems;
@@ -15,9 +15,11 @@ internal sealed class ReadinessSystem(
     Store world,
     WukongAreaState areaState,
     PvpWidgetManager widgetManager,
+    WukongPlayerState playerState,
     PvpMode pvpMode
 ) : QuerySystem<PvPComponent, TeamComponent, InScopeComponent>
 {
+    private int _lastPlayers = -1;
     private int _lastReadyCount = -1;
 
     protected override void OnUpdate()
@@ -54,10 +56,12 @@ internal sealed class ReadinessSystem(
             }
         });
 
-        if (_lastReadyCount == readyCount)
+        if (_lastReadyCount == readyCount && _lastPlayers == players)
             return;
 
         _lastReadyCount = readyCount;
+        _lastPlayers = players;
+
         widgetManager.UpdateReadyCount(readyCount, players);
 
         if (areaState.PvpState is { InPvP: false })
@@ -80,16 +84,17 @@ internal sealed class ReadinessSystem(
                 }
             });
 
+            var isSpectator = playerState.LocalMainCharacter!.Value.GetPvP().IsSpectator;
             if (allReady)
             {
                 if (blueTeamAnyReady && redTeamAnyReady)
                 {
                     pvpMode.StartLobbyCountdown(PvpConstants.CountdownSeconds);
                 }
-                else
+                else if (!isSpectator)
                 {
                     // show a message that both teams need at least one ready player
-                    widgetManager.SetThirdText(Resources.PvpTexts.BothTeamsNeedReadyPlayers);
+                    widgetManager.SetThirdText(PvpTexts.BothTeamsNeedReadyPlayers);
                 }
             }
             else
