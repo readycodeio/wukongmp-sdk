@@ -1,9 +1,11 @@
 ﻿using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
@@ -12,6 +14,12 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
 {
     protected override void OnUpdate()
     {
+        var localPlayerController = GameUtils.GetPlayerController();
+        if (localPlayerController == null)
+            return;
+        var viewTarget = localPlayerController.GetViewTarget();
+        var viewTargetLocation = viewTarget.GetActorLocation();
+
         Query.ForEachEntity((
             ref localTamerComp,
             ref markerComp,
@@ -24,8 +32,11 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
 
             if (localTamerComp.Tamer != null && localTamerComp.Pawn != null)
             {
-                var markerHeight = localTamerComp.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * 1.1f;
-                markerComp.MarkerActor.SetActorLocation(localTamerComp.Pawn.GetActorLocation() + new FVector(0, 0, markerHeight), false, out var _, true);
+                var location = localTamerComp.Pawn.GetActorLocation();
+                var distance = FVector.Dist2D(viewTargetLocation, location);
+                var coefficient = Math.Min(distance / Constants.MaxMarkerHeightDistance, 1);
+                var markerHeight = localTamerComp.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * (1 + Constants.BaseMarkerHeightCoefficient + coefficient);
+                markerComp.MarkerActor.SetActorLocation(location + new FVector(0, 0, markerHeight), false, out var _, true);
             }
 #if TESTING
             string title = localTamerComp.Tamer?.GetClass()?.GetName() ?? "";

@@ -27,8 +27,8 @@ namespace WukongMp.Api.Configuration
         public const float SpawnOwnershipRadius = 7500f; // 75m
         public const float ArenaPortalRadius = 1000f; // 10m
         public const float AllowedZDiffrence = 120f; // Wukong capsule collider half height
-        public const float BaseMarkerHeightCoefficient = 0.13f;
-        public const float MaxMarkerHeightDistance = 50000f;
+        public const float BaseMarkerHeightCoefficient = 0.12f;
+        public const float MaxMarkerHeightDistance = 10000f;
         
         public static readonly HashSet<int> InstantTriggerSequences =
         [
