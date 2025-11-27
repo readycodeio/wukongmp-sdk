@@ -48,7 +48,7 @@ public class TamerResetPatch
             return true;
 
         var teamId = ___OwnerAsCharacterCS.GetTeamIDInCS();
-        return !PvpConstants.AvailableTeamIds.Contains(teamId);
+        return !PvpConstants.CompetingTeamIds.Contains(teamId);
     }
 }
 

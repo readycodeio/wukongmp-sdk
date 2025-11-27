@@ -36,11 +36,11 @@ namespace WukongMp.PvP.UI
             {
                 AddSpectator(nickName);
             }
-            else if (teamId == PvpConstants.AvailableTeamIds[0])
+            else if (teamId == PvpConstants.CompetingTeamIds[0])
             {
                 AddToTeam1(nickName);
             }
-            else if (teamId == PvpConstants.AvailableTeamIds[1])
+            else if (teamId == PvpConstants.CompetingTeamIds[1])
             {
                 AddToTeam2(nickName);
             }

@@ -45,7 +45,7 @@ internal sealed class PvpRoundEndSystem(
         var aliveMonsters = new List<int>();
         world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
         {
-            if (hpComp.IsDead || !PvpConstants.AvailableTeamIds.Contains(teamComp.TeamId))
+            if (hpComp.IsDead || !PvpConstants.CompetingTeamIds.Contains(teamComp.TeamId))
                 return;
 
             aliveMonsters.Add(teamComp.TeamId);

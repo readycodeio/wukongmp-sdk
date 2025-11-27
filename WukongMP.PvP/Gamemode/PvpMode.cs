@@ -132,6 +132,7 @@ internal partial class PvpMode : IDisposable
         _eventRouter.OnMonsterSpawned += OnMonsterSpawned;
         _eventRouter.OnLanguageChanged += OnLanguageChanged;
         _eventRouter.OnPlayerChangedTeam += OnPlayerChangedTeam;
+        _eventRouter.OnLocalPlayerChangedSpectator -= OnLocalPlayerChangedSpectator;
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
@@ -149,6 +150,7 @@ internal partial class PvpMode : IDisposable
         _eventRouter.OnMonsterSpawned -= OnMonsterSpawned;
         _eventRouter.OnLanguageChanged -= OnLanguageChanged;
         _eventRouter.OnPlayerChangedTeam -= OnPlayerChangedTeam;
+        _eventRouter.OnLocalPlayerChangedSpectator -= OnLocalPlayerChangedSpectator;
 
         _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;
@@ -166,6 +168,22 @@ internal partial class PvpMode : IDisposable
         {
             var teamColor = PvpUtils.GetTeamColorString(teamComp.TeamId);
             localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
+        }
+    }
+
+    private void OnLocalPlayerChangedSpectator(bool enabled)
+    {
+        if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null || !_areaState.InRoom)
+            return;
+
+        ref var player = ref _playerState.LocalPlayerEntity.Value.GetState();
+        if (enabled)
+        {
+            player.TeamId = PvpConstants.SpectatorTeamId;
+        }
+        else
+        {
+            player.TeamId = GetSmallerTeamId();
         }
     }
 
@@ -483,7 +501,7 @@ internal partial class PvpMode : IDisposable
         Logging.LogDebug("My team: {Team}", myTeam);
         Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
-        foreach (var team in PvpConstants.AvailableTeamIds)
+        foreach (var team in PvpConstants.AllTeamIds)
         {
             ClientUtils.RegisterTeamHostility(myTeam, team);
         }
@@ -509,7 +527,7 @@ internal partial class PvpMode : IDisposable
         Logging.LogDebug("My team: {Team}", myTeam);
         Logging.LogDebug("Other teams: {Teams}", string.Join(", ", otherTeams));
 
-        foreach (var team in PvpConstants.AvailableTeamIds)
+        foreach (var team in PvpConstants.AllTeamIds)
         {
             ClientUtils.UnregisterTeamHostility(myTeam, team);
         }
@@ -552,8 +570,8 @@ internal partial class PvpMode : IDisposable
     private int GetSmallerTeamId()
     {
         Dictionary<int, int> teamsCount = [];
-        var team1Id = PvpConstants.AvailableTeamIds[0];
-        var team2Id = PvpConstants.AvailableTeamIds[1];
+        var team1Id = PvpConstants.CompetingTeamIds[0];
+        var team2Id = PvpConstants.CompetingTeamIds[1];
         teamsCount[team1Id] = 0;
         teamsCount[team2Id] = 0;
 
