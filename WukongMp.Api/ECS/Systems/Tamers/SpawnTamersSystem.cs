@@ -21,7 +21,6 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router, GameplayConfiguration configuration) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private readonly HashSet<string?> _notYetSpawnedGuids = [];
-    private readonly HashSet<string?> _notTurnedOffGuids = ["UGuid.HYS.JiRuHuo01"];
 
     protected override void OnUpdate()
     {
@@ -99,7 +98,7 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
             }
 
-            if (metaComp.Owner != state.LocalPlayerId && !_notTurnedOffGuids.Contains(tamerComp.Guid))
+            if (metaComp.Owner != state.LocalPlayerId)
             {
                 events.Evt_AIPauseBT.Invoke(true);
                 events.Evt_AIPauseFsm.Invoke(true);
