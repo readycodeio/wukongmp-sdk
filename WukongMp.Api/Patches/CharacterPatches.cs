@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Reflection;
 using b1;
 using BtlShare;
@@ -367,7 +368,14 @@ namespace WukongMp.Api.Patches
                             if (!location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
                                 !rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                             {
-                                events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                                if (character.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+                                {
+                                    character.Mesh.SetWorldRotation(rotation, false, out _, false); // rotates around invisible origin, setting relative location to 0 doesn't fix it
+                                }
+                                else
+                                {
+                                    events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                                }
                             }
                         }
                     }
@@ -415,26 +423,6 @@ namespace WukongMp.Api.Patches
                 }
 
                 owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
-            }
-
-            // apply special rotation for JiRuHuo
-            if (!___MovementData.IM_IgnoreRotation && owner is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
-            {
-                var currentRot = owner.BGUGetActorRotation();
-                var targetRot = ___MovementData.IM_TargetRotation;
-
-                float totalTime = ___MovementData.IM_TotalTime;
-                if (totalTime <= 0f)
-                    return;
-
-                float interpSpeedPitch = Math.Abs(targetRot.Pitch - currentRot.Pitch) / totalTime;
-                float interpSpeedRoll = Math.Abs(targetRot.Roll - currentRot.Roll) / totalTime;
-
-                var newRot = currentRot;
-                newRot.Pitch = MathLib.FInterpConstantTo(currentRot.Pitch, targetRot.Pitch, DeltaTime, interpSpeedPitch);
-                newRot.Roll = MathLib.FInterpConstantTo(currentRot.Roll, targetRot.Roll, DeltaTime, interpSpeedRoll);
-
-                owner.BGUSetActorRotation(newRot, false, bForceUpdate);
             }
         }
     }

@@ -107,6 +107,7 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 if (tamerComp.Guid == "UGuid.HYS.JiRuHuo01")
                 {
                     monster.Mesh.SetSimulatePhysics(false);
+                    events.Evt_DisablePhysicalMove.Invoke(true);
                 }
             }
             else
