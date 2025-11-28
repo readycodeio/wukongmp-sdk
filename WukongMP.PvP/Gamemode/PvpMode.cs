@@ -578,10 +578,9 @@ internal partial class PvpMode : IDisposable
     private int GetSmallerTeamId()
     {
         Dictionary<int, int> teamsCount = [];
-        var team1Id = PvpConstants.CompetingTeamIds[0];
-        var team2Id = PvpConstants.CompetingTeamIds[1];
-        teamsCount[team1Id] = 0;
-        teamsCount[team2Id] = 0;
+        teamsCount[PvpConstants.RedTeamId] = 0;
+        teamsCount[PvpConstants.BlueTeamId] = 0;
+        teamsCount[PvpConstants.SpectatorTeamId] = 0; // to avoid KeyNotFoundException
 
         foreach (var (playerId, playerEntity, _) in AllPlayers)
         {
@@ -592,7 +591,7 @@ internal partial class PvpMode : IDisposable
             teamsCount[assignedTeamId]++;
         }
 
-        return teamsCount[team1Id] > teamsCount[team2Id] ? team2Id : team1Id;
+        return teamsCount[PvpConstants.RedTeamId] > teamsCount[PvpConstants.BlueTeamId] ? PvpConstants.RedTeamId : PvpConstants.BlueTeamId;
     }
 
     private void SetUpRoom()
