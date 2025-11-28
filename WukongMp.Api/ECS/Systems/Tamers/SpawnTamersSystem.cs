@@ -104,6 +104,10 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 events.Evt_AIPauseFsm.Invoke(true);
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
+                if (tamerComp.Guid == "UGuid.HYS.JiRuHuo01")
+                {
+                    monster.Mesh.SetSimulatePhysics(false);
+                }
             }
             else
             {
