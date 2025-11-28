@@ -1,6 +1,6 @@
-﻿using System;
-using b1;
+﻿using b1;
 using b1.BGW;
+using GSE.GSSdk;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -10,12 +10,16 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
+using System;
+using System.Threading.Tasks;
 using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Patches;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -32,6 +36,7 @@ public partial class WukongRpcCallbacks : IDisposable
     private readonly WukongPlayerState _playerState;
     private readonly WukongPawnState _pawnState;
     private readonly ClientOwnershipManager _clientOwnership;
+    private readonly FreeCameraManager _freeCameraManager;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -44,6 +49,7 @@ public partial class WukongRpcCallbacks : IDisposable
         WukongPlayerState playerState,
         WukongPawnState pawnState,
         ClientOwnershipManager clientOwnership,
+        FreeCameraManager freeCameraManager,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
     {
@@ -55,6 +61,7 @@ public partial class WukongRpcCallbacks : IDisposable
         _playerState = playerState;
         _pawnState = pawnState;
         _clientOwnership = clientOwnership;
+        _freeCameraManager = freeCameraManager;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -116,12 +123,6 @@ public partial class WukongRpcCallbacks : IDisposable
             localMainComp.ReceivedPhantomRushExit = true;
             events?.Evt_RelievePhantomRush.Invoke();
         }, this, playerId);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnEndMatchmaking()
-    {
-        _ecsLoop.Scheduler.Schedule(_ => { PvPUtils.OnMatchmakingEnded(); });
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -344,10 +345,13 @@ public partial class WukongRpcCallbacks : IDisposable
         // TODO
     }
 
+    [Obsolete("To be removed once per-file RPC is implemented")]
+    public event Action<ChatMessage>? OnGetChatMessage;
+
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     internal void OnChatMessage(ChatMessage message)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, message0) => { WukongChatter.OnGetMessage(message0); }, message);
+        _ecsLoop.Scheduler.Schedule(static (_, self, message0) => { self.OnGetChatMessage?.Invoke(message0); }, this, message);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -355,22 +359,38 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, direction0) =>
         {
-            if (self._playerState.GetMainCharacterById(sender) is not { } mainEntity)
+            if (self._playerState.GetMainCharacterById(sender) is not { } senderEntity)
                 return;
-            ref var mainComp = ref mainEntity.GetState();
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            if (localMainComp.Pawn == null)
+            ref var senderMainComp = ref senderEntity.GetState();
+            ref var senderLocalMainComp = ref senderEntity.GetLocalState();
+            if (senderLocalMainComp.Pawn == null)
             {
-                self._logger.LogError("Player not found: {PlayerId}", mainComp.PlayerId);
+                self._logger.LogError("Player not found: {PlayerId}", senderMainComp.PlayerId);
                 return;
             }
 
-            self._logger.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", mainComp.CharacterNickName, direction0);
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            self._logger.LogDebug("Received phantom rush for player {Nickname} in direction {Direction}", senderMainComp.CharacterNickName, direction0);
+            var events = BUS_EventCollectionCS.Get(senderLocalMainComp.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(direction0);
 
-            PlayerUtils.ResetCooldown(localMainComp.Pawn);
-            PlayerUtils.ResetMana(localMainComp.Pawn);
+            // reset mana and cooldowns of the sender's pawn, since it's a remote player who needs to keep track of them
+            PlayerUtils.ResetCooldown(senderLocalMainComp.Pawn);
+            PlayerUtils.ResetMana(senderLocalMainComp.Pawn);
+
+            // unattach tracking camera if target was the sender
+            if (self._playerState.LocalMainCharacter.HasValue)
+            {
+                var localPlayer = self._playerState.LocalMainCharacter.Value.GetLocalState().Pawn;
+                if (localPlayer != null)
+                {
+                    var targetData = BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(localPlayer);
+                    if (targetData?.GetTargetInfo()?.LockTargetActor == senderLocalMainComp.Pawn)
+                    {
+                        var localEvents = BUS_EventCollectionCS.Get(localPlayer);
+                        localEvents.Evt_ClearCameraLock?.Invoke();
+                    }
+                }
+            }
         }, this, __sender, direction);
     }
 
@@ -402,7 +422,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (playerId0 == self._state.LocalPlayerId)
             {
-                FreeCameraManager.Instance.LeaveFreeCameraMode();
+                self._freeCameraManager.LeaveFreeCameraMode();
             }
 
             ref var localMainComp = ref mainEntity.GetLocalState();
@@ -546,7 +566,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (mainEntity.GetState().IsDead)
             {
-                FreeCameraManager.Instance.LeaveFreeCameraMode();
+                self._freeCameraManager.LeaveFreeCameraMode();
                 PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
                 CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             }
@@ -788,8 +808,8 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
 
             localMainComp.IsRespawning = true;
+            self._freeCameraManager.LeaveFreeCameraMode();
             PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
-            localMainComp.IsRespawning = false;
         }, this, birthPointId);
     }
 
@@ -809,7 +829,6 @@ public partial class WukongRpcCallbacks : IDisposable
             {
                 localMainComp.IsRespawning = true;
                 PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
-                localMainComp.IsRespawning = false;
             }
             else
             {
@@ -861,4 +880,36 @@ public partial class WukongRpcCallbacks : IDisposable
             PlayerUtils.StopJump(localMainComp.Pawn);
         }, this, __sender);
     }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnMonsterWakeUp(NetworkId netId)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(netId0);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(netId0));
+                return;
+            }
+
+            var guid = BGU_DataUtil.GetActorGuid(pawn);
+            Logging.LogDebug("OnMonsterWakeup called for monster {Guid}", guid);
+
+            TamerUtils.TriggerWakeUp(pawn);
+        }, this, netId);
+    }
+
+    #region PvpRPC
+
+    [Obsolete("To be removed once per-project RPC is implemented")]
+    public event Action<int[]>? OnPvpEventReceived;
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    internal void OnPvpEvent(int[] data)
+    {
+        OnPvpEventReceived?.Invoke(data);
+    }
+
+    #endregion
 }

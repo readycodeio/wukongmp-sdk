@@ -2,7 +2,6 @@
 using BtlShare;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -10,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager)
+public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
@@ -37,12 +36,12 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
 
         if (isMyself)
         {
-            FreeCameraManager.Instance.EnterFreeCameraMode();
-            PvPUtils.SetupSpectatorUi();
+            freeCameraManager.EnterFreeCameraMode();
+            eventRouter.RaiseOnLocalPlayerChangedSpectator(true);
         }
         SetPlayerCollision(playerEntity, mainEntity, false);
-
-        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
+        eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
+        
         return true;
     }
 
@@ -60,20 +59,10 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
 
         if (isMyself)
         {
-            FreeCameraManager.Instance.LeaveFreeCameraMode();
-
-            if (areaState.PvpState is not { InPvP: true })
-            {
-                PvPUtils.SetupLobbyUi();
-            }
-            else
-            {
-                LobbyStatusWidget.Instance.SetVisibility(false);
-                CoopStatusWidget.Instance.SetVisibility(false);
-            }
+            freeCameraManager.LeaveFreeCameraMode();
+            eventRouter.RaiseOnLocalPlayerChangedSpectator(false);
         }
-
-        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
+        eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
 
         return true;
     }
@@ -120,30 +109,5 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
         PlayerUtils.EnablePlayerPawnCollision(localMainComp.Pawn, enable);
         return true;
-    }
-
-    public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
-    {
-        ref var playerComp = ref playerEntity.GetState();
-        ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
-        ref readonly var teamComp = ref mainEntity.GetTeam();
-
-        Logging.LogDebug("Updating player {Nickname} to team {Team}", playerComp.NickName, teamComp.TeamId);
-
-        var pawn = localMainComp.Pawn;
-
-        if (pawn == null)
-            return;
-
-        ClientUtils.RegisterAndSetPlayerTeam(pawn, teamComp.TeamId);
-
-        if (localMainComp.MarkerActor != null)
-        {
-            var teamColor = Constants.IsCoop ? Constants.WhiteTeamColor : PvPUtils.GetTeamColorString(teamComp.TeamId);
-            localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
-        }
-
-        widgetManager.UpdatePlayerTeam(playerEntity, mainEntity);
     }
 }

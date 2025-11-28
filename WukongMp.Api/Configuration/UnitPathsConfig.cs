@@ -3,7 +3,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Configuration
 {
-    internal static class UnitPathsConfig
+    public static class UnitPathsConfig
     {
         private static readonly Dictionary<string, string> Configurations = new()
         {

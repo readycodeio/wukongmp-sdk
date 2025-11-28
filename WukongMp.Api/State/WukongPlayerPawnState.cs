@@ -1,3 +1,4 @@
+using System;
 using b1;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
@@ -5,6 +6,8 @@ using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.WukongUtils;
 
@@ -14,17 +17,12 @@ namespace WukongMp.Api.State;
 // deal with placing and removing pawns.
 public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, ILogger logger)
 {
+    public event Action<MainCharacterEntity, BGUCharacterCS>? OnPlayerPawnSpawned;
+    
     public void AddPlayerPawn(PlayerId playerId)
     {
         logger.LogDebug("SPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
-
-        var playerEntity = playerState.GetPlayerById(playerId);
-        if (playerEntity == null)
-        {
-            logger.LogError("Player with ID {PlayerId} not found in player state.", playerId);
-            return;
-        }
-
+        
         var mainEntity = playerState.GetMainCharacterById(playerId);
         if (mainEntity == null)
         {
@@ -32,20 +30,14 @@ public class WukongPlayerPawnState(Store world, WukongPlayerState playerState, I
             return;
         }
 
-        var pawn = SpawningUtils.SpawnCloneForPlayer(playerEntity.Value, mainEntity.Value);
+        var pawn = SpawningUtils.SpawnCloneForPlayer(playerState, mainEntity.Value);
         if (pawn == null)
         {
             logger.LogError("Failed to spawn pawn for player {PlayerId}.", playerId);
             return;
         }
-
-        var marker = MarkerUtils.CreateMarkerForCharacter(mainEntity.Value); // 3D marker above player
-        if (marker == null)
-        {
-            logger.LogError("Failed to create marker for player {PlayerId}.", playerId);
-            return;
-        }
-
+        
+        OnPlayerPawnSpawned?.Invoke(mainEntity.Value, pawn);
         logger.LogDebug("Spawn successful: {PlayerId}", playerId);
     }
 

@@ -23,7 +23,7 @@ public class RespawnMainCharacterSystem(
         var allDead = true;
         var players = 0;
 
-        Query.ForEachEntity((ref LocalMainCharacterComponent localMainComp, ref MainCharacterComponent mainComp, Entity _) =>
+        Query.ForEachEntity((ref localMainComp, ref mainComp, _) =>
         {
             if (!localMainComp.HasPawn)
                 return;
@@ -51,7 +51,7 @@ public class RespawnMainCharacterSystem(
         {
             logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, playerState.LocalPlayerId);
             var maxComp = 0;
-            Query.ForEachEntity((ref LocalMainCharacterComponent _, ref MainCharacterComponent mainComp, Entity _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
+            Query.ForEachEntity((ref _, ref mainComp, _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
 
             localMainComp.IsRespawning = true;
             rpc.SendPartyRespawn(maxComp);

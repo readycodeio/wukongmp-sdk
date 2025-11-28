@@ -1,29 +1,23 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using b1;
-using b1.BGW;
+using b1.ECS;
 using b1.GSMUI;
 using b1.GSMUI.GSWidget;
 using b1.Localization;
+using b1.Protobuf.DataAPI;
 using b1.UI.Comm;
 using B1UI.GSSvc;
 using B1UI.GSUI;
-using CSharpModBase;
+using BtlShare;
 using GSE.GSUI;
 using HarmonyLib;
-using LiteNetLib;
-using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
-using ResB1;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
-using WukongMp.Api.UI;
-using WukongMp.Api.WukongUtils;
 using CultureInfo = System.Globalization.CultureInfo;
 
 namespace WukongMp.Api.Patches;
@@ -92,168 +86,6 @@ public static class PatchSendDamageNumbers
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.CoopPatches)]
-public static class PatchStartGameUiCoop
-{
-    [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
-    }
-
-    public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
-    {
-        for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
-        {
-            DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
-
-            Logging.LogDebug("Button name: {Name}, id: {Id}", BtnBase2.Name.Value, BtnBase2.Id.Value);
-
-            if (BtnBase2.Name.Value.ToString() == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
-            {
-                var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
-                if (widgetManagerActorClass == null)
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                    UiUtils.ShowTip(Texts.MissingPak, false);
-                    Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
-                }
-                else if (!DI.Instance.State.IsConnected)
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-
-                    DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
-                    {
-                        Utils.TryRunOnGameThread(() =>
-                        {
-                            InfoMessageWidget.Instance.SetVisibility(true);
-                            InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
-                        });
-                    });
-                    Logging.LogError("Disconnected. Could not continue game.");
-                }
-                else
-                {
-                    Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                    ___StartGameBtnList[j].SetTxtName(GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
-                }
-            }
-            else if (BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && BtnBase2.Name.Value.ToString() != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
-            {
-                Logging.LogDebug("UI name desc to hide: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME));
-                ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-            }
-        }
-
-        __instance.GSAnimKeyToState("GSAKBContinueBtn", "CBtnFocus");
-
-        ___TxtMainName.SetText(FText.FromString(""));
-        ___TxtSubName.SetText(FText.FromString("Wukong Multiplayer Mod"));
-        ___TxtSubName.SetRenderScale(new FVector2D(1.2, 1.2));
-    }
-}
-
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.PvpPatches)]
-public static class PatchStartGameUiPvP
-{
-    [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
-    }
-
-    public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
-    {
-        var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
-        var hasPak = widgetManagerActorClass != null;
-        var isConnected = DI.Instance.State.IsConnected;
-        if (!hasPak)
-        {
-            UiUtils.ShowTip(Texts.MissingPak, false);
-            Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
-        }
-        else if (!isConnected)
-        {
-            DI.Instance.RelayClient.Scheduler.Schedule(ctx =>
-            {
-                Utils.TryRunOnGameThread(() =>
-                {
-                    InfoMessageWidget.Instance.SetVisibility(true);
-                    InfoMessageWidget.Instance.SetText(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
-                });
-            });
-            Logging.LogError("Disconnected. Could not continue game.");
-        }
-
-        for (int j = 0; j < ___DataStore.BtnDataList.Count; j++)
-        {
-            DSButtonBase BtnBase2 = ___DataStore.BtnDataList[j];
-            var buttonName = BtnBase2.Name.Value.ToString();
-
-            Logging.LogDebug("Button name: {Name}, id: {Id}", buttonName, BtnBase2.Id.Value);
-
-            if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
-            {
-                Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
-                if (!hasPak || !isConnected)
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                }
-                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CharacterArchiveId))))
-                {
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.QuickJoin));
-                }
-                else
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                }
-
-                // Clear OnGSButtonUnFocused event form the continue game button.
-                var type = ___StartGameBtnList[j].GetBUIButton().GetType();
-                var field = type.GetField(nameof(BUI_Button.OnGSButtonUnFocused), BindingFlags.Instance | BindingFlags.NonPublic);
-                field?.SetValue(___StartGameBtnList[j].GetBUIButton(), null);
-            }
-            else if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME).ToString())
-            {
-                Logging.LogDebug("New game UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.NEW_GAME));
-                if (!hasPak || !isConnected)
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                }
-                else
-                {
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.NewCharacter));
-                }
-            }
-            else if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
-            {
-                Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
-                if (!hasPak || !isConnected)
-                {
-                    ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-                }
-                else
-                {
-                    ___StartGameBtnList[j].SetTxtName(FText.FromString(Texts.SelectCharacter));
-                }
-            }
-            else if (buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.EXIT_GAME).ToString() && buttonName != GSB1UIUtil.GetUIWordDescFText(EUIWordID.START_GAME_SETTING).ToString())
-            {
-                Logging.LogDebug("UI name desc to hide: {Description}", buttonName);
-                ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
-            }
-        }
-
-        __instance.GSAnimKeyToState("GSAKBContinueBtn", "CBtnFocus");
-
-        ___TxtMainName.SetText(FText.FromString(""));
-        ___TxtSubName.SetText(FText.FromString("Wukong Multiplayer Mod"));
-        ___TxtSubName.SetRenderScale(new FVector2D(1.2, 1.2));
-    }
-}
-
-[HarmonyPatch]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchBossRushTimerCountdown
 {
@@ -280,37 +112,6 @@ public class PatchShowPage
     public static void Prefix(int NewPageID, string Source, ChangeReason Reason, object exParam)
     {
         Logging.LogInformation("ShowPage: {NewPageID}, {Source}, {Reason}, {ExParam}", NewPageID, Source, Reason, exParam);
-    }
-}
-
-[HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
-[HarmonyPatchCategory(Constants.DisabledPatches)]
-public class PatchOnChangeSaveTipsStat
-{
-    public static bool Prefix(UWidget ___RootCon)
-    {
-        ___RootCon.SetVisibility(ESlateVisibility.Collapsed);
-        return false;
-    }
-}
-
-[HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchIsShowSettingUiOnly
-{
-    public static bool Prefix(ref bool __result)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        var areaState = DI.Instance.AreaState;
-        if (areaState.PvpState is { InPvP: true })
-        {
-            __result = true;
-            return false;
-        }
-
-        return true;
     }
 }
 
@@ -348,56 +149,6 @@ public class PatchSetGamePause
     }
 }
 
-[HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenMapUI")]
-[HarmonyPatchCategory(Constants.PvpPatches)]
-public class PatchOnClickOpenMapUI
-{
-    public static bool Prefix()
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        return false;
-    }
-}
-
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.PvpPatches)]
-public class PatchShrineRegisterFunc
-{
-    [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
-    public static MethodBase TargetMethod()
-    {
-        var specializedType = typeof(FMenuHelper<EShrineMenuTag>);
-        return specializedType.GetMethod("RegisterFunc")!;
-    }
-
-    public static bool Prefix(int FuncId)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        InteractionFuncDesc interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
-        return interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.Teleport
-               && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossIterations
-               && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge;
-    }
-}
-
-[HarmonyPatch(typeof(GSEUtil), "GetCanTeleportGroupMapList")]
-[HarmonyPatchCategory(Constants.PvpPatches)]
-public class PatchGetCanTeleportGroupMapList
-{
-    public static bool Prefix(ref List<int> __result)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        __result = [];
-        return false;
-    }
-}
-
 [HarmonyPatch(typeof(GSLocalization), "SetCurrentCulture")]
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public class PatchSetCurrentCulture
@@ -405,7 +156,8 @@ public class PatchSetCurrentCulture
     public static void Postfix(string Culture)
     {
         Logging.LogInformation("Culture changed to: {Culture}", Culture);
-        Thread.CurrentThread.CurrentUICulture = new CultureInfo(Culture);
+        Texts.Culture = new CultureInfo(Culture);
+        DI.Instance.GameplayEventRouter.RaiseOnLanguageChanged(Texts.Culture);
     }
 }
 
@@ -499,6 +251,19 @@ public static class PatchDoGSTicking
             {
                 ___TickingQueue.RemoveAt(i);
             }
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BGW_GameDB), nameof(BGW_GameDB.GetUnitBattleInfoExtendDesc))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchIsStandAlone
+{
+    public static void Postfix(ref FUStUnitBattleInfoExtendDesc? __result)
+    {
+        if (__result is { BloodBarType: EBGUBloodBarType.PlayerBar })
+        {
+            __result.BloodBarType = EBGUBloodBarType.EnemyBar;
         }
     }
 }

@@ -4,7 +4,6 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
@@ -15,20 +14,21 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, WukongAreaState areaState, ILogger logger) : BaseSystem
+public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
 {
+
     protected override void OnUpdateGroup()
     {
         if (!eventBus.IsGameplayLevel)
             return;
-        
+
         var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
         var areaId = clientState.CurrentAreaId;
         if (areaId == null)
             return;
-        
+
         var pawn = GameUtils.GetControlledPawn();
         var mainEntity = playerState.LocalMainCharacter;
 
@@ -39,13 +39,13 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
             CreateLocalMainEntity(pawn, playerEntity.Value);
         }
     }
-    
+
     private void CreateLocalMainEntity(BGUPlayerCharacterCS pawn, PlayerEntity playerEntity)
     {
         logger.LogDebug("Setting initial player properties");
 
         ref var player = ref playerEntity.GetState();
-        
+
         var mainEntity = playerState.CreateLocalMainCharacter();
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
@@ -53,13 +53,17 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         logger.LogDebug("Local main character pawn: {Pawn}", pawn.PathName);
 
         localMainComp.Pawn = pawn;
-        
+
         mainComp.Location = pawn.GetActorLocation().ToVector3();
         mainComp.Rotation = pawn.GetActorRotation().ToVector3();
 
         var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
         mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
         mainComp.HpMaxBase = attrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+        if (mainComp.Hp > 0)
+        {
+            mainComp.IsDead = false;
+        }
 
         foreach (var attr in Constants.SyncedAttributes)
         {
@@ -73,33 +77,18 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         mainComp.Equipment = eq;
 
         var pawnTeamId = pawn.GetTeamIDInCS();
-        mainEntity.SetTeam(new TeamComponent()
+        mainEntity.SetTeam(new TeamComponent
         {
             TeamId = pawnTeamId,
         });
-        
+
 #if TESTING
         BUC_SpeedCtrlData? speedCtrlData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_SpeedCtrlData, BUC_SpeedCtrlData>(GameUtils.GetControlledPawn()) as BUC_SpeedCtrlData;
         speedCtrlData?.SetSpeedInfo(10000, 10000, 10000);
 #endif
-        
+
         localMainComp.IsPlayerSynced = true;
-
-        if (Constants.IsPvP)
-        {
-            var spawnPosition = SpawningUtils.GetSpawnPosition(GameUtils.GetControlledPawn(), mainComp.PlayerId.RawValue, Constants.MaxPlayers);
-            PlayerUtils.TeleportLocalPlayer(mainEntity, spawnPosition, FRotator.ZeroRotator, false);
-
-            var areaEntity = areaState.CurrentArea;
-            if (areaEntity != null && areaState.PvpState.HasValue)
-            {
-                ref var pvpComp = ref mainEntity.GetPvP();
-
-                // Set IsSpectator if joining during fight.
-                pvpComp.IsSpectator = areaState.PvpState.Value.InPvP;
-                Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
-            }
-        }
+        playerState.InvokeMainCharacterEntityInitialized(mainEntity);
 
         Logging.LogDebug("Finished setting initial player properties");
     }

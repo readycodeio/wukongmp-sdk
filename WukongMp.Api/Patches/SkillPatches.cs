@@ -9,7 +9,6 @@ using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
@@ -26,7 +25,7 @@ public static class PatchTriggerMagicSkill
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        return DI.Instance.PVP?.IsSkillEnabledInPVP(SkillID) ?? true;
+        return DI.Instance.GameplayConfiguration.IsSkillEnabled(SkillID);
     }
 }
 
@@ -36,27 +35,12 @@ public static class PatchTriggerItemSkill
 {
     public static bool Prefix(BUS_PlayerInputActionComp __instance)
     {
-        if (Constants.IsCoop)
-            return true;
-
         var areaState = DI.Instance.AreaState;
-        var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
-
         if (areaState.CurrentArea == null)
             return true;
 
-        var areaEntity = areaState.CurrentArea;
-        ref var room = ref areaEntity.Value.GetRoom();
-
-        switch (lastSkill)
-        {
-            case Constants.GourdSkillId when !room.GourdAllowed:
-            case Constants.ConsumableBuffSkillId when !room.ConsumablesAllowed:
-            case Constants.IncenseTrailTalismanSkillId:
-                return false;
-            default:
-                return true;
-        }
+        var lastSkill = Traverse.Create(__instance).Field("ComboCacheData").Property<int>("LastItemSkillID").Value;
+        return DI.Instance.GameplayConfiguration.IsSkillEnabled(lastSkill);
     }
 }
 
@@ -766,6 +750,7 @@ public class PatchOnTransBackSpawnNewOne
             mainComp.IsTransformed = false;
             var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Value.GetLocalState().Pawn);
             mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
+            mainComp.IsDead = false;
         }
     }
 }

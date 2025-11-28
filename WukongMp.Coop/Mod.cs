@@ -47,8 +47,8 @@ namespace WukongMp.Coop
                 return;
             }
 
-            Constants.IsCoop = true;
             DI.Instance.Init();
+            CoopDI.Instance.Init(DI.Instance);
 
             if (LaunchParameters.Instance.PlayShimOnStart)
                 ShimUtils.InitRelayPlayShim(
@@ -81,9 +81,9 @@ namespace WukongMp.Coop
 #endif
                 );
 
-            if (!DI.Instance.Patcher.IsPatched)
+            if (!CoopDI.Instance.Patcher.IsPatched)
             {
-                DI.Instance.Patcher.Patch();
+                CoopDI.Instance.Patcher.Patch();
             }
         }
 
@@ -105,15 +105,17 @@ namespace WukongMp.Coop
             DebugUtils.LogUe4SsPresence();
 
             // InformationalVersion from assembly def
-            var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
 
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
             _logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
+            DI.Instance.WidgetManager.SetModVersion(trueModVersion);
+
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
             {
-                Debug.Assert(DI.Instance.Patcher.IsPatched);
+                Debug.Assert(CoopDI.Instance.Patcher.IsPatched);
 
                 if (!DI.Instance.Connection.IsRunning)
                 {
@@ -131,28 +133,33 @@ namespace WukongMp.Coop
                     DI.Instance.Connection.Connect();
                 }
             });
-
 #if DEBUG
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.L, () =>
+            {
+                Logging.LogDebug("Alt + L: Teleport underground");
+                PlayerUtils.MoveAllOtherPlayersUnderGround();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
             {
                 Logging.LogDebug("Alt + Y: Show colliders markers");
                 DebugUtils.ShowMarkersForInvisibleWalls(4000);
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.U, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.U, () =>
             {
                 Logging.LogDebug("Alt + U: Remove colliders markers");
                 DebugUtils.DestroyTmpMarkerActors();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
             {
                 Logging.LogDebug("Alt + 0");
                 if (LaunchParameters.Instance.RecordShimFile != null)
                     DI.Instance.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 _logger.LogDebug("Alt + C");
                 try
@@ -166,78 +173,85 @@ namespace WukongMp.Coop
                 }
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
             {
                 _logger.LogDebug("Alt + S");
                 CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 _logger.LogDebug("Alt + X");
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
 
-            Utils.RegisterKeyBind(Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J (Dump anim info)");
-                DebugUtils.DumpPlayersAnimationDebugInfo();
+                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
-                DebugUtils.DumpPlayersAnimationDebugInfo();
+                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
             {
                 _logger.LogDebug("Shift + J");
-                DebugUtils.DumpPlayersAnimationDebugInfo();
+                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
                 DebugUtils.ResetPlayersAnimation();
             });
 #endif
-            Utils.RegisterKeyBind(Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
+            {
+                _logger.LogDebug("F5");
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    DI.Instance.WidgetManager.ToggleDebugVisibility();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");
-                if (!ChatWidget.Instance.HasFocus())
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
                     CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             });
 
-            Utils.RegisterKeyBind(Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
             {
                 _logger.LogDebug("K");
-                if (!ChatWidget.Instance.HasFocus())
-                    ChatWidget.Instance.ToggleVisibility();
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    DI.Instance.WidgetManager.ToggleChatVisibility();
             });
 
-            Utils.RegisterKeyBind(Key.UP, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
-                ChatWidget.Instance.SetHistoryNext();
+                DI.Instance.WidgetManager.SetChatHistoryNext();
             });
 
-            Utils.RegisterKeyBind(Key.DOWN, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.DOWN, () =>
             {
                 _logger.LogDebug("DOWN");
-                ChatWidget.Instance.SetHistoryPrev();
+                DI.Instance.WidgetManager.SetChatHistoryPrev();
             });
 
-            Utils.RegisterKeyBind(Key.ENTER, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>
             {
                 _logger.LogDebug("ENTER");
-                if (!ChatWidget.Instance.HasFocus())
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
                 {
-                    ChatWidget.Instance.SetInputFocus();
+                    DI.Instance.WidgetManager.SetChatInputFocus();
                 }
                 else
                 {
-                    var message = ChatWidget.Instance.CommitMessage();
+                    var message = DI.Instance.WidgetManager.CommitChatMessage();
                     DI.Instance.Chatter.ProcessMessage(message);
                 }
             });
@@ -265,9 +279,9 @@ namespace WukongMp.Coop
                     DI.Instance.EcsLoop.Stop();
                 }
 
-                if (DI.Instance.Patcher.IsPatched)
+                if (CoopDI.Instance.Patcher.IsPatched)
                 {
-                    DI.Instance.Patcher.Unpatch();
+                    CoopDI.Instance.Patcher.Unpatch();
                 }
             });
         }

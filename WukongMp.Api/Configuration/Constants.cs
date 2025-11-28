@@ -6,46 +6,33 @@ namespace WukongMp.Api.Configuration
 {
     public static class Constants
     {
-        public const int PlayerTtlMs = 3000;
         public const int ToleratedLatencyMs = 50;
         public const float FloatComparisonTolerance = 0.1f;
         public const string ConnectedPatches = "Connected";
         public const string GlobalPatches = "Global";
-        public const string CoopPatches = "Coop";
-        public const string PvpPatches = "PvP";
         public const string DisabledPatches = "Disabled";
         public const float MonsterSpawnDistance = 2000f;
         public const float MonsterSpawnTraceHeight = 10000f;
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 200f;
-        public const int MonsterSpawnDelayMs = 500;
-        public const string AttributePrefix = "a_";
-        public const float PvpStartingRadius = 500;
-        public const float PvpMonsterRadius = 1000;
         public const float CameraArmLength = 720;
-        public const int CoopWorldArchiveId = 7;
-        public const int CoopPlayerArchiveId = 8;
-        public const int CharacterArchiveId = 10;
-        public const int NewCharacterArchiveId = 9;
-        public const int WorldArchiveId = 0;
+        public const float TransformedCameraArmLength = 1100;
+        public const int NewCharacterArchiveId = 1;
         public const int MaxPlayers = 10;
-        public static readonly List<int> AvailableTeamIds = [-9999, -9998];
-        public const int DrawTeamId = 9999;
         public const int DefaultMonsterTeamId = 2;
-        public const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
-        public const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
-        public const string WhiteTeamColor = "(R=0.9,G=0.9,B=0.9)";
         public const int ReconnectDelayMs = 1000;
-        public const float CutsceneSyncDistance = 2000f;
         public const float RestrictedMovementRadius = 500f;
         public const float RestrictedMovementRadiusSquare = RestrictedMovementRadius * RestrictedMovementRadius;
-        public const float AiPathMoveStuckTimeout = 0.2f; // seconds
         public const float MonsterUpdateTargetTime = 7; // seconds
         public const float SpawnOwnershipRadius = 7500f; // 75m
-        public const float ArenaPortalRadius = 200f; // 20m
+        public const float ArenaPortalRadius = 1000f; // 10m
+        public const float AllowedZDiffrence = 120f; // Wukong capsule collider half height
+        public const float BaseMarkerHeightCoefficient = 0.12f;
+        public const float MaxMarkerHeightDistance = 10000f;
         
         public static readonly HashSet<int> InstantTriggerSequences =
         [
+            40104151, // phase 2 of Hundred-Eyed Daoist Master, sword-swallowing cutscene
             62103371, 62103351, 62103321, 62103301 // 4 heavenly kings, lute guy
         ];
 
@@ -62,14 +49,11 @@ namespace WukongMp.Api.Configuration
         public const int IncenseTrailTalismanSkillId = 10909;
         public const int ConsumableBuffSkillId = 10913;
         public const int IronBodySkillId = 10505;
-
-        public const int CountdownSeconds = 5;
-
-        public const int BotCount = 2;
-        public static bool IsCoop = false;
-        public static bool IsPvP => !IsCoop;
+        public const string ChestCameraLockNode = "CAMERA_LOCK";
+        public const string FeetCameraLockNode = "CAMERA_LOCK_Root";
 
         public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";
+        public const string WukongDashengClassPath = "/Game/00Main/Design/Units/Player/Unit_player_dasheng.Unit_player_dasheng_C";
 
         public const string WidgetManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
@@ -83,6 +67,8 @@ namespace WukongMp.Api.Configuration
         public const string ErrorMessageWidgetName = "WBP_ErrorMessage_C";
         public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
         public const string CoopStatusWidgetName = "WBP_CoopStatus_C";
+        public const string ModVersionWidgetName = "WBP_ModVersion_C";
+        public const string DebugViewWidgetName = "WBP_DebugView_C";
 
         public const string DebugCubeActorPath = "/Game/Mods/DebugMod/BP_DebugCube.BP_DebugCube_C";
         public const string DebugSphereActorPath = "/Game/Mods/DebugMod/BP_DebugShpere.BP_DebugShpere_C";

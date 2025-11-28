@@ -18,6 +18,8 @@ public class WukongPlayerState
     private readonly ClientNetworkedEntityState _clientNetEntity;
     private readonly ClientState _state;
     private readonly ILogger _logger;
+    
+    public event Action<MainCharacterEntity>? OnMainCharacterEntityInitialized;
 
     public WukongPlayerState(Store world, ClientWukongArchetypeRegistration wukongArchetype, ClientNetworkedEntityState clientNetEntity, ClientState state, ILogger logger)
     {
@@ -27,6 +29,11 @@ public class WukongPlayerState
         _logger = logger;
 
         _ix = world.ComponentIndex<MainCharacterComponent, PlayerId>();
+    }
+    
+    internal void InvokeMainCharacterEntityInitialized(MainCharacterEntity mainCharacterEntity)
+    {
+        OnMainCharacterEntityInitialized?.Invoke(mainCharacterEntity);
     }
 
     public PlayerId? LocalPlayerId

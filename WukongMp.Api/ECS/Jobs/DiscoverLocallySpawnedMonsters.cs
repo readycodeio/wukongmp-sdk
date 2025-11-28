@@ -11,7 +11,7 @@ namespace WukongMp.Api.ECS.Jobs;
 /// <summary>
 /// This job is used to discover already spawned monsters.
 /// </summary>
-public readonly struct DiscoverLocallySpawnedMonsters() : IEach<LocalTamerComponent, MetadataComponent>
+public readonly struct DiscoverLocallySpawnedMonsters : IEach<LocalTamerComponent, MetadataComponent>
 {
     public void Execute(ref LocalTamerComponent tamer, ref MetadataComponent metadata)
     {

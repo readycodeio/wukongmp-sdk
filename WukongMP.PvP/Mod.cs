@@ -47,8 +47,8 @@ namespace WukongMp.PvP
                 return;
             }
 
-            Constants.IsCoop = false;
             DI.Instance.Init();
+            PvpDI.Instance.Init(DI.Instance);
 
             if (LaunchParameters.Instance.PlayShimOnStart)
                 ShimUtils.InitRelayPlayShim(
@@ -81,9 +81,9 @@ namespace WukongMp.PvP
 #endif
                 );
 
-            if (!DI.Instance.Patcher.IsPatched)
+            if (!PvpDI.Instance.Patcher.IsPatched)
             {
-                DI.Instance.Patcher.Patch();
+                PvpDI.Instance.Patcher.Patch();
             }
         }
 
@@ -105,15 +105,17 @@ namespace WukongMp.PvP
             DebugUtils.LogUe4SsPresence();
 
             // InformationalVersion from assembly def
-            var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
 
             _logger.LogInformation("Mod version: {Version}", trueModVersion);
             _logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
+            DI.Instance.WidgetManager.SetModVersion(trueModVersion);
+
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
             {
-                Debug.Assert(DI.Instance.Patcher.IsPatched);
+                Debug.Assert(PvpDI.Instance.Patcher.IsPatched);
 
                 if (!DI.Instance.Connection.IsRunning)
                 {
@@ -138,26 +140,26 @@ namespace WukongMp.PvP
             }
 
 #if DEBUG
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
             {
                 Logging.LogDebug("Alt + 0");
                 if (LaunchParameters.Instance.RecordShimFile != null)
                     DI.Instance.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
             {
                 _logger.LogDebug("Alt + C");
                 DI.Instance.NetLogger.DumpDebugInfo();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 _logger.LogDebug("Alt + X");
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
 
@@ -168,7 +170,7 @@ namespace WukongMp.PvP
                 DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
 
-            Utils.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
             {
                 _logger.LogDebug("Alt + K");
 
@@ -179,49 +181,56 @@ namespace WukongMp.PvP
                 DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
-            Utils.RegisterKeyBind(Key.J, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
+            {
+                _logger.LogDebug("F5");
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    DI.Instance.WidgetManager.ToggleDebugVisibility();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");
-                if (!ChatWidget.Instance.HasFocus())
-                    DI.Instance.PVP?.SwitchReadyStateMulti();
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    PvpDI.Instance.PVP.SwitchReadyStateMulti();
             });
 
-            Utils.RegisterKeyBind(Key.L, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.L, () =>
             {
                 _logger.LogDebug("L");
-                if (!ChatWidget.Instance.HasFocus())
-                    DI.Instance.PVP?.SwitchTeam();
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    PvpDI.Instance.PVP?.SwitchTeam();
             });
 
-            Utils.RegisterKeyBind(Key.K, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
             {
                 _logger.LogDebug("K");
-                if (!ChatWidget.Instance.HasFocus())
-                    ChatWidget.Instance.ToggleVisibility();
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                    DI.Instance.WidgetManager.ToggleChatVisibility();
             });
 
-            Utils.RegisterKeyBind(Key.UP, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
-                ChatWidget.Instance.SetHistoryNext();
+                DI.Instance.WidgetManager.SetChatHistoryNext();
             });
 
-            Utils.RegisterKeyBind(Key.DOWN, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.DOWN, () =>
             {
                 _logger.LogDebug("DOWN");
-                ChatWidget.Instance.SetHistoryPrev();
+                DI.Instance.WidgetManager.SetChatHistoryPrev();
             });
 
-            Utils.RegisterKeyBind(Key.ENTER, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>
             {
                 _logger.LogDebug("ENTER");
-                if (!ChatWidget.Instance.HasFocus())
+                if (!DI.Instance.WidgetManager.ChatHasFocus())
                 {
-                    ChatWidget.Instance.SetInputFocus();
+                    DI.Instance.WidgetManager.SetChatInputFocus();
                 }
                 else
                 {
-                    var message = ChatWidget.Instance.CommitMessage();
+                    var message = DI.Instance.WidgetManager.CommitChatMessage();
                     DI.Instance.Chatter.ProcessMessage(message);
                 }
             });
@@ -238,9 +247,9 @@ namespace WukongMp.PvP
 
             Utils.TryRunOnGameThread(() =>
             {
-                if (DI.Instance.Patcher.IsPatched)
+                if (PvpDI.Instance.Patcher.IsPatched)
                 {
-                    DI.Instance.Patcher.Unpatch();
+                    PvpDI.Instance.Patcher.Unpatch();
                 }
 
                 if (DI.Instance.Connection.RequestedConnect)

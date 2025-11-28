@@ -7,6 +7,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
@@ -15,6 +16,9 @@ public class SyncMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerModeManager modeManager,
     WukongEventBus eventBus,
+    WukongWidgetManager widgetManager,
+    GameplayConfiguration configuration,
+    GameplayEventRouter eventRouter,
     ILogger logger
 )
     : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
@@ -25,9 +29,8 @@ public class SyncMainCharactersSystem(
             return;
 
         Query.ForEachEntity((
-            ref LocalMainCharacterComponent localMainComp,
-            ref MainCharacterComponent mainComp,
-            Entity entity) =>
+            ref localMainComp,
+            ref mainComp, entity) =>
         {
             if (localMainComp.Pawn == null)
                 return;
@@ -71,8 +74,7 @@ public class SyncMainCharactersSystem(
         {
             logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.NickName);
             ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
-
-            modeManager.UpdatePlayerTeam(playerEntity, mainEntity);
+            eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
     }
 
@@ -80,7 +82,7 @@ public class SyncMainCharactersSystem(
     {
         SyncMainCharacterStateBase(playerEntity, mainEntity);
 
-        if (Constants.IsPvP)
+        if (configuration.OverrideLocalPlayerTeamFromGlobalEntity)
         {
             ref var playerComp = ref playerEntity.GetState();
             var playerTeamId = playerComp.TeamId;
@@ -101,7 +103,6 @@ public class SyncMainCharactersSystem(
 
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
-        ref readonly var teamComp = ref mainEntity.GetTeam();
 
         if (localMainComp.Pawn == null)
             return;
@@ -109,7 +110,11 @@ public class SyncMainCharactersSystem(
         var eqCopy = mainComp.Equipment;
         if (eqCopy.IsLocallyDirty)
         {
-            EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
+            if (localMainComp.Pawn.GetClass().PathName != Constants.WukongDashengClassPath)
+            {
+                EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
+            }
+
             eqCopy.ClearLocallyDirty();
             mainComp.Equipment = eqCopy;
             // Equipment is passed by value, so we need to reassign it

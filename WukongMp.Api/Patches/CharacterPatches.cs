@@ -6,6 +6,7 @@ using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
@@ -13,6 +14,188 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
 {
+    [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchAttrs
+    {
+        public static void Postfix(BUC_AttrContainer __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (DI.Instance.PlayerState.LocalMainCharacter == null)
+                return;
+
+            if (__instance.Owner.IsNullOrDestroyed())
+            {
+                Logging.LogError("Owner is null or destroyed");
+                return;
+            }
+
+            if (__instance.Owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+            {
+                return; // players own their characters
+            }
+
+            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(__instance.Owner);
+
+            // remote player - sync properties and HP
+
+            if (mainEntity != null)
+            {
+                ref var mainComp = ref mainEntity.Value.GetState();
+
+                // set their attributes
+                foreach (var (attr, value) in mainComp.Attributes)
+                {
+                    __instance.SetFloatValue((EBGUAttrFloat)attr, value);
+                }
+
+                if (mainComp.Hp <= -80000)
+                {
+                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
+                    return;
+                }
+
+                if (mainComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                {
+                    return; // do not reapply the same value
+                }
+
+                __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
+                return;
+            }
+
+            // remote monster - sync HP
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance.Owner as BGUCharacterCS);
+            if (!tamerEntity.HasValue)
+                return;
+
+            // owned, skip
+            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                return;
+
+            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+
+            if (!localTamer.IsTamerSynced)
+            {
+                Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
+                return;
+            }
+
+            ref var hpComp = ref tamerEntity.Value.GetHp();
+
+            if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
+            {
+                __instance.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
+            }
+
+            if (!hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+            {
+                __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
+            }
+        }
+    }
+
+
+    [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchHp
+    {
+        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            if (AttrID == EBGUAttrFloat.Hp)
+            {
+                var owner = __instance.GetOwner();
+                var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
+                if (netId.HasValue)
+                    return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
+            }
+            return true;
+        }
+
+        public static void Postfix(BUS_AttrComp __instance, BUC_AttrContainer ___AttrContainer, EBGUAttrFloat AttrID)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var playerState = DI.Instance.PlayerState;
+            var owner = __instance.GetOwner();
+
+            if (owner.IsNullOrDestroyed())
+            {
+                Logging.LogError("Owner is null or destroyed");
+                return;
+            }
+
+            var result = ___AttrContainer.GetFloatValue(AttrID);
+
+            var mainEntity = playerState.LocalMainCharacter;
+
+            if (AttrID == EBGUAttrFloat.Hp)
+            {
+                if (mainEntity != null && owner == mainEntity.Value.GetLocalState().Pawn)
+                {
+                    ref var mainComp = ref mainEntity.Value.GetState();
+
+                    if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
+                    {
+                        mainComp.Hp = result;
+                        
+                        if (mainComp.Hp > 0)
+                        {
+                            mainComp.IsDead = false;
+                        }
+                    }
+                }
+                else
+                {
+                    var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner as BGUCharacterCS);
+
+                    if (!tamerEntity.HasValue)
+                        return; // not found
+
+                    if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                        return; // not owned
+
+                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+
+                    if (!localTamer.IsTamerSynced)
+                        return; // not synced
+
+                    ref var hpComp = ref tamerEntity.Value.GetHp();
+
+                    hpComp.HpMaxBase = ___AttrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                    hpComp.Hp = result;
+                }
+            }
+
+            if (mainEntity != null && Constants.SyncedAttributes.Contains(AttrID) && owner == mainEntity.Value.GetLocalState().Pawn)
+            {
+                ref var mainComp = ref mainEntity.Value.GetState();
+
+                if (mainComp.Attributes.TryGetAttribute((byte)AttrID, out var existing)
+                    && existing.Equals(result, Constants.FloatComparisonTolerance))
+                {
+                    return;
+                }
+
+                mainComp.Attributes.SetAttribute((byte)AttrID, result);
+
+                // some attributes may influence other attributes
+                var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
+                if (valid)
+                {
+                    var finalVal = ___AttrContainer.GetFloatValue(calc.finalVal);
+                    mainComp.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
+                }
+            }
+        }
+    }
+
     // NOTE: Runs multithreaded
     [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
@@ -89,7 +272,7 @@ namespace WukongMp.Api.Patches
                     main.Rotation = __instance.ActorRotation.ToVector3();
                 }
 
-                TeleportUtils.UpdatePlayerPosition(mainEntity.Value, DeltaTime);
+                TeleportUtils.CheckForTeleportFinish(mainEntity.Value);
             }
             else
             {
@@ -132,7 +315,7 @@ namespace WukongMp.Api.Patches
                         __instance.LastVelocity = FVector.ZeroVector;
                     }
 
-                    TeleportUtils.UpdatePlayerPosition(otherMainEntity.Value, DeltaTime);
+                    TeleportUtils.CheckForTeleportFinish(otherMainEntity.Value);
                 }
                 else
                 {
@@ -196,6 +379,37 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch(typeof(BUS_MovementSystem), "TickForInterpolationMove")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchTickForInterpolationMove
+    {
+        public static void Postfix(BUS_MovementSystem __instance, BUC_MovementData ___MovementData)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            if (!___MovementData.IM_EnableMove)
+            {
+                return;
+            }
+
+            var owner = __instance.GetOwner();
+            var otherMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+
+            if (otherMainEntity != null)
+            {
+                ref var otherMain = ref otherMainEntity.Value.GetState();
+
+                FVector currentLocation = owner.BGUGetActorLocation();
+                FVector targetLocation = otherMain.Location.ToFVector();
+                if (FMath.Abs(targetLocation.Z - currentLocation.Z) > Constants.AllowedZDiffrence)
+                {
+                    currentLocation.Z = targetLocation.Z;
+                }
+                owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitSimpleStateSet")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
@@ -455,6 +669,61 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return false;
 
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(CharacterAttrDataInitTemplate), nameof(CharacterAttrDataInitTemplate.InitDataPreBeginPlay))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchTamerStatResetOnBeginPlay
+    {
+        public static void Postfix(AActor ___Owner)
+        {
+            if (___Owner is not BGU_CharacterAI ai)
+                return;
+
+            var tamer = ai.GetTamerOwner();
+
+            if (tamer.IsNullOrDestroyed())
+                return; // no tamer
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
+
+            if (!tamerEntity.HasValue)
+                return; // not found
+
+            if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                return; // not owned
+
+            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+
+            if (!localTamer.IsTamerSynced)
+                return; // not synced
+
+            ref var hpComp = ref tamerEntity.Value.GetHp();
+
+            hpComp.HpMultiplier = 1; // Reset multiplier so that the HP scaling system will re-scale it again
+        }
+    }
+
+    [HarmonyPatch(typeof(BUC_BattleStateData), "IsUnitInBattle")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchIsUnitInBattle
+    {
+        public static bool Prefix(BUC_BattleStateData __instance, ref bool __result)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            if (!__instance.IsPlayerUnit)
+                return true;
+
+            var configuration = DI.Instance.GameplayConfiguration;
+            if (configuration.EnableCustomIsPlayerInBattle)
+            {
+                __result = configuration.IsPlayerInBattle();
+                return false;
+            }
             return true;
         }
     }

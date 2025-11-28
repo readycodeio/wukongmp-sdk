@@ -11,7 +11,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, MetadataComponent, HpComponent>
+public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, TranslationComponent, MetadataComponent, HpComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;
@@ -27,7 +27,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                 .GroupBy(x => x.GetFinalGuid())
                 .ToDictionary(g => g.Key, g => g.Last());
 
-        Query.ForEachEntity((ref TamerComponent tamerComp, ref LocalTamerComponent localTamerComp, ref MetadataComponent metaComp, ref HpComponent hpComp, Entity entity) =>
+        Query.ForEachEntity((ref tamerComp, ref localTamerComp, ref translation, ref metaComp, ref hpComp, entity) =>
         {
             if (!localTamerComp.IsTamerSynced)
             {
@@ -54,9 +54,13 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                         TamerUtils.MarkMonsterLocallySpawned(ref localTamerComp, metaComp);
                     }
                 }
-
-                // TODO: else spawn tamer?
-                // SpawningUtils.SpawnUnitLocally(netId, tamer.Guid, tamer.UnitPath, team.TeamId, trans.Position.X, trans.Position.Y, trans.Position.Z);
+                else
+                {
+                    if (tamerComp is { UnitPath: not null })
+                    {
+                        SpawningUtils.SpawnUnitLocallyByPath(tamerComp.Guid, tamerComp.UnitPath, translation.Position.ToFVector());
+                    }
+                }
             }
         });
     }

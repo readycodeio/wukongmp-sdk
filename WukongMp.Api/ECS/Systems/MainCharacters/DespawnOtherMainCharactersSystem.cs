@@ -31,7 +31,6 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
     private readonly WukongPlayerPawnState _playerPawnState;
     private readonly WukongEventBus _eventBus;
-    private readonly WukongWidgetManager _widgetManager;
     private readonly ILogger _logger;
 
     private readonly List<PendingDeleteEvent> _pendingDeleteEvents = [];
@@ -41,7 +40,6 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         WukongPlayerState playerState,
         ClientWukongArchetypeRegistration wukongArchetype,
         WukongPlayerPawnState playerPawnState,
-        WukongWidgetManager widgetManager,
         WukongEventBus eventBus,
         ILogger logger)
     {
@@ -50,7 +48,6 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         _wukongArchetype = wukongArchetype;
         _playerPawnState = playerPawnState;
         _eventBus = eventBus;
-        _widgetManager = widgetManager;
         _logger = logger;
 
         _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete += OnEntityDeleteHandler;
@@ -100,7 +97,5 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         }
 
         _pendingDeleteEvents.Clear();
-
-        _widgetManager.RefreshWidgets();
     }
 }

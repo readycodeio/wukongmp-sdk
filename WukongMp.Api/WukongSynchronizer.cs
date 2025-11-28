@@ -7,7 +7,6 @@ using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
-using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
@@ -15,32 +14,28 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
-using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.MainCharacters;
-using WukongMp.Api.ECS.Systems.PvP;
 using WukongMp.Api.ECS.Systems.Tamers;
-using WukongMp.Api.PVP;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
-using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
 public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 {
-    private readonly WukongAreaState _areaState;
+    protected readonly WukongAreaState AreaState;
+    protected readonly WukongPlayerPawnState PlayerPawnState;
     private readonly SystemGroup _syncGroup;
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
     private readonly ClientState _state;
-    private readonly Store _world;
+    protected readonly Store World;
 
     public WukongSynchronizer(
         ArchetypeEventRouter archetypeEvent,
         ClientState state,
         ClientWukongArchetypeRegistration wukongArchetype,
-        WukongPVP? pvp,
         Store world,
         WukongAreaState areaState,
         WukongPlayerState playerState,
@@ -54,51 +49,35 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         IClientEcsUpdateLoop ecsLoop,
         WukongEventBus eventBus,
         WukongWidgetManager widgetManager,
-        WukongRpcCallbacks rpc,
+        GameplayEventRouter gameplayEventRouter,
+        GameplayConfiguration configuration,
         ILogger logger)
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
     {
-        _areaState = areaState;
+        AreaState = areaState;
+        PlayerPawnState = playerPawnState;
         _wukongArchetype = wukongArchetype;
         _state = state;
-        _world = world;
-
-        State.OnJoinedArea += OnJoinedAreaHandler;
-        JobRegistry.OnApplySnapshot += OnApplySnapshot;
+        World = world;
 
         _syncGroup = new SystemGroup("Sync");
 
-        _syncGroup.Add(new SpawnTamersSystem(state));
+        _syncGroup.Add(new SpawnTamersSystem(state, gameplayEventRouter, configuration));
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UnloadTamersSystem());
         _syncGroup.Add(new UpdateTamerMarkersSystem());
 
-        if (pvp == null)
-        {
-            _syncGroup.Add(new ScaleMonsterHpSystem());
-        }
-        else
-        {
-            _syncGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
-        }
-
         _syncGroup.Add(new SyncMonsterTeamSystem());
         _syncGroup.Add(new ChangeTamerTargetSystem());
 
-        _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, areaState, Logger));
+        _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
-        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, widgetManager, eventBus, Logger));
-        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, Logger));
+        _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, eventBus, Logger));
+        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, widgetManager, configuration, gameplayEventRouter, logger));
+        _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
 
-        if (pvp != null)
-        {
-            _syncGroup.Add(new ReadinessSystem(areaState, pvp));
-            _syncGroup.Add(new PlayerListSystem(playerState, areaState));
-        }
-        else
-        {
-            _syncGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
-        }
+        _syncGroup.Add(new DebugViewSystem(eventBus, widgetManager));
+        _syncGroup.Add(new TamerDebugViewSystem(eventBus, widgetManager));
 
         _syncGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_syncGroup);
@@ -106,9 +85,6 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
     protected override void OnDispose()
     {
-        State.OnJoinedArea -= OnJoinedAreaHandler;
-        JobRegistry.OnApplySnapshot -= OnApplySnapshot;
-
         EcsLoop.RemoveSystem(_syncGroup);
         base.OnDispose();
     }
@@ -146,43 +122,14 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         if (meta.Owner == _state.LocalPlayerId)
         {
-            events.Evt_AIPauseBT.Invoke(false);
-            events.Evt_AIPauseFsm.Invoke(false);
-            events.Evt_AIPerceptionSetting.Invoke(true);
-            Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
-        }
-    }
-
-    private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
-    {
-        var isFirst = _areaState.IsMasterClient;
-
-        Logger.LogDebug("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
-
-        if (isFirst)
-        {
-            if (Constants.IsPvP)
-            {
-                PvPUtils.CreatePvpStateEntity();
-            }
-
-            if (Constants.IsCoop)
-            {
-                TamerUtils.DiscoverTamers();
-            }
-        }
-    }
-
-    private void OnApplySnapshot()
-    {
-        if (Constants.IsPvP)
-        {
-            _world.Query<LocalTamerComponent, TamerComponent, TranslationComponent>().Each(new SpawnMonstersFromEcs());
-        }
-        else
-        {
-            // TODO: Probably can be deleted.
-            _world.Query<LocalTamerComponent, MetadataComponent>().Each(new DiscoverLocallySpawnedMonsters());
+            var tamerComp = entity.GetComponent<TamerComponent>();
+            //if (tamerComp.HasFsmEnabled)
+            //{
+                events.Evt_AIPauseBT.Invoke(false);
+                events.Evt_AIPauseFsm.Invoke(false);
+                events.Evt_AIPerceptionSetting.Invoke(true);
+                Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
+            //}
         }
     }
 }

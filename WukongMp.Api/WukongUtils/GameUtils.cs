@@ -40,10 +40,11 @@ namespace WukongMp.Api.WukongUtils
             PossessPawn(controller, possessPawn, unpossessPawn);
             controller.SetViewTargetWithBlend(possessPawn);
             controller.SetControlRotation(controllerRotation);
-            if (FreeCameraManager.Instance.IsInFreeCameraMode)
+            var freeCameraManager = DI.Instance.FreeCameraManager;
+            if (freeCameraManager.IsInFreeCameraMode)
             {
-                FreeCameraManager.Instance.LeaveFreeCameraMode();
-                FreeCameraManager.Instance.EnterFreeCameraMode();
+                freeCameraManager.LeaveFreeCameraMode();
+                freeCameraManager.EnterFreeCameraMode();
             }
         }
 

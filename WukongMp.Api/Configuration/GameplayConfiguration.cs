@@ -1,0 +1,71 @@
+﻿using System;
+using Microsoft.Extensions.Logging;
+
+namespace WukongMp.Api.Configuration;
+
+public class GameplayConfiguration(ILogger logger)
+{
+    public bool IsSupportMultiLockEnabled { get; set; } = false;
+    public bool IsStrongDamageImmueEnabled { get; set; } = false;
+    public bool EnableCustomCameraArmLength { get; set; } = false;
+    public bool EnableSpawnedTamers { get; set; } = false;
+
+    [Obsolete("To be replaced by data sync direction after refactoring")]
+    public bool SyncTamerTeamFromGameToEcs { get; set; } = false;
+
+    [Obsolete("To be replaced by data sync direction after refactoring")]
+    public bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; } = false;
+
+    private Func<bool>? disableTamerAttackQuery;
+
+    public void SetDisableTamerAttackQuery(Func<bool> query)
+    {
+        if (disableTamerAttackQuery is not null)
+            logger.LogError("DisableTamerAttackQuery is already set. Overriding the existing query.");
+
+        disableTamerAttackQuery = query;
+    }
+
+    public void ClearDisableTamerAttackQuery()
+    {
+        disableTamerAttackQuery = null;
+    }
+
+    public bool ShouldDisableTamerAttack() => disableTamerAttackQuery?.Invoke() ?? false;
+
+    private Func<int, bool>? isSkillEnabledQuery;
+
+    public void SetIsSkillEnabledQuery(Func<int, bool> query)
+    {
+        if (isSkillEnabledQuery is not null)
+            logger.LogError("IsSkillEnabledQuery is already set. Overriding the existing query.");
+
+        isSkillEnabledQuery = query;
+    }
+
+    public void ClearIsSkillEnabledQuery()
+    {
+        isSkillEnabledQuery = null;
+    }
+
+    public bool IsSkillEnabled(int skillId) => isSkillEnabledQuery?.Invoke(skillId) ?? true;
+
+    // Custom IsPlayerInBattle
+    public bool EnableCustomIsPlayerInBattle { get; set; } = false;
+    private Func<bool>? isPlayerInBattleQuery;
+
+    public void SetIsPlayerInBattleQuery(Func<bool> query)
+    {
+        if (isPlayerInBattleQuery is not null)
+            logger.LogError("IsPlayerInBattleQuery is already set. Overriding the existing query.");
+
+        isPlayerInBattleQuery = query;
+    }
+
+    public void ClearIsPlayerInBattleQuery()
+    {
+        isPlayerInBattleQuery = null;
+    }
+
+    public bool IsPlayerInBattle() => isPlayerInBattleQuery?.Invoke() ?? false;
+}

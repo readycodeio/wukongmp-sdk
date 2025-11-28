@@ -18,19 +18,18 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// whether they require spawning.
 /// </summary>
 /// <param name="state"></param>
-public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router, GameplayConfiguration configuration) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private readonly HashSet<string?> _notYetSpawnedGuids = [];
 
     protected override void OnUpdate()
     {
         Query.ForEachEntity((
-            ref MetadataComponent metaComp, 
-            ref HpComponent hpComp, 
-            ref TeamComponent teamComp, 
-            ref TamerComponent tamerComp, 
-            ref LocalTamerComponent localTamerComp,
-            Entity entity) =>
+            ref metaComp,
+            ref hpComp,
+            ref teamComp,
+            ref tamerComp,
+            ref localTamerComp, entity) =>
         {
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
@@ -46,7 +45,6 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
 
             if (localTamerComp.Tamer.CurrentRef?.Phase == ETamerPhase.Dead)
             {
-                Logging.LogDebug("Tamer is dead, will not spawn, guid {Guid}", tamerComp.Guid);
                 return;
             }
 
@@ -78,7 +76,7 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 {
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
-                    if (Constants.IsCoop)
+                    if (configuration.SyncTamerTeamFromGameToEcs)
                         teamComp.TeamId = monster.GetTeamIDInCS();
 #if TESTING
                     hpComp.Hp = 10;
@@ -107,17 +105,22 @@ public sealed class SpawnTamersSystem(ClientState state) : QuerySystem<MetadataC
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
             }
-
-            if (Constants.IsPvP && localTamerComp.Tamer.TamerType == ETamerType.Spawned)
+            else
             {
-                MarkerUtils.CreateMarkerForCharacter(new TamerEntity(entity));
-                if (tamerComp.UnitPath == UnitPathsConfig.GetUnitPath(CharacterKind.Monkey))
+                var fsmData = BGU_DataUtil.GetReadOnlyData<IBUC_FsmData, BUC_FsmData>(localTamerComp.Pawn);
+                if (fsmData != null)
                 {
-                    SpawningUtils.SetMonkeyBotConfig(monster);
+                    tamerComp.HasFsmEnabled = !fsmData.bFsmPaused;
                 }
             }
 
             localTamerComp.IsMonsterActive = true;
+
+            if (localTamerComp.Tamer.TamerType == ETamerType.Spawned)
+            {
+                router.RaiseOnMonsterSpawned(entity);
+            }
+
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
         });
     }

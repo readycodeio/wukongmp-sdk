@@ -1,9 +1,9 @@
 ﻿using b1;
+using BtlB1;
 using BtlShare;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -21,13 +21,18 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        public static void DisablePlayerInteraction(BGUPlayerCharacterCS playerCharacter)
+        public static void SetPlayerInteractionEnabled(MainCharacterEntity mainEntity, bool enabled)
         {
-            var events = BUS_EventCollectionCS.Get(playerCharacter);
-            if (events != null)
-            {
-                events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract);
-            }
+            ref var localMainComp = ref mainEntity.GetLocalState();
+
+            IBUC_SimpleStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_SimpleStateData, BUC_SimpleStateData>(localMainComp.Pawn);
+            var hasCantInteract = readOnlyData.HasSimpleState(EBGUSimpleState.CantInteract);
+
+            if (!enabled && hasCantInteract)
+                return;
+
+            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
         }
 
         public static void ResetLocalPlayerCooldown()
@@ -68,7 +73,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void RebirthPlayer(BGUCharacterCS playerPawn, int rebirthPointId)
         {
-            FreeCameraManager.Instance.LeaveFreeCameraMode();
+            DI.Instance.FreeCameraManager.LeaveFreeCameraMode();
             BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
             var uiControlData = BGU_DataUtil.GetReadOnlyData<BUC_UIControlData>(playerPawn);
             uiControlData.SetActiveDeathUI(NewValue: true);
@@ -120,6 +125,41 @@ namespace WukongMp.Api.WukongUtils
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enableCollision);
             events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enableCollision);
+        }
+
+        public static void LogRebirthPointChange(AActor worldContext, int rebirthPointID)
+        {
+            Logging.LogInformation("Rebirth point as current birth point ID updated: {Id}", rebirthPointID);
+            FUStRebirthPointDesc fUStRebirthPointDesc = GameDBRuntime.GetFUStRebirthPointDesc(rebirthPointID);
+            if (fUStRebirthPointDesc != null && BGUFuncLibMap.IsValidLevelId(fUStRebirthPointDesc.MapID))
+            {
+                Logging.LogDebug("MapId: {Id}", fUStRebirthPointDesc.MapID);
+                Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(worldContext));
+            }
+        }
+
+        private static void MoveOtherPlayerUnderGround(MainCharacterEntity mainEntity)
+        {
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            var location = localMainComp.Pawn.GetActorLocation();
+            var caplsuleHalfHeight = localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight();
+            location.Z -= 3 * caplsuleHalfHeight;
+            localMainComp.Pawn.SetActorLocation(location, false, out _, true);
+        }
+
+        public static void MoveAllOtherPlayersUnderGround()
+        {
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            {
+                var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (characterEntity == null)
+                    return;
+
+                MoveOtherPlayerUnderGround(characterEntity.Value);
+            }
         }
     }
 }

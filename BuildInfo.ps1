@@ -59,10 +59,9 @@ $overridesFilesDebug = @(
     "LiteNetLib.pdb"
 )
 
-# at least one file so the game doesn't think we start from Prologue
 $saveFilesBase = @(
     "cacert.pem",
-    "ArchiveSaveFile.9.sav"
+    "ArchiveSaveFile.1.sav" # Prologue save file
 )
 
 # Culture folders (satellite assemblies)

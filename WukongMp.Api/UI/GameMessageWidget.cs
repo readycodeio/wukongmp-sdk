@@ -3,11 +3,8 @@
 namespace WukongMp.Api.UI
 {
     public class GameMessageWidget : GameWidgetBase
-    {
-        private static GameMessageWidget? _instance;
-        public static GameMessageWidget Instance => _instance ??= new();
-        
-        private GameMessageWidget() : base(Constants.GameMessageWidgetName) { }
+    {       
+        public GameMessageWidget() : base(Constants.GameMessageWidgetName) { }
 
         public void SetMainText(string message)
         {

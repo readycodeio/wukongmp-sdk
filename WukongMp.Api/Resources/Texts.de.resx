@@ -165,14 +165,8 @@
   <data name="MasterClient" xml:space="preserve">
     <value>Hauptclient: {0}</value>
   </data>
-  <data name="MatchmakingInProgress" xml:space="preserve">
-    <value>Matchmaking läuft...</value>
-  </data>
   <data name="More" xml:space="preserve">
     <value>mehr</value>
-  </data>
-  <data name="NewCharacter" xml:space="preserve">
-    <value>Neuer Charakter</value>
   </data>
   <data name="Ping" xml:space="preserve">
     <value>Ping</value>
@@ -219,9 +213,6 @@
   <data name="PressToSwitchTeam" xml:space="preserve">
     <value>Drücke L um das Team zu wechseln</value>
   </data>
-  <data name="QuickJoin" xml:space="preserve">
-    <value>Schnell Beitreten</value>
-  </data>
   <data name="Ready" xml:space="preserve">
     <value>Bereit</value>
   </data>
@@ -236,9 +227,6 @@
   </data>
   <data name="RoundEndedWinner" xml:space="preserve">
     <value>Runde beendet. {0} hat gewonnen</value>
-  </data>
-  <data name="SelectCharacter" xml:space="preserve">
-    <value>Charakter Auswählen</value>
   </data>
   <data name="Spectators" xml:space="preserve">
     <value>Zuschauer</value>

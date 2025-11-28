@@ -129,6 +129,12 @@ public static class PatchRequestPlayMovie
 
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
+                var areaEntity = DI.Instance.AreaState.CurrentArea;
+                if (areaEntity != null && !areaEntity.Value.GetMovie().StartedSequences.Contains(SequenceId))
+                {
+                    DI.Instance.ServerRpc.SendMovieFinished(SequenceId, areaEntity.Value.Scope.AreaId);
+                }
+
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
                 foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
                 {
@@ -138,7 +144,7 @@ public static class PatchRequestPlayMovie
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.Pawn?.SetActorHiddenInGame(false);
                     localMain.MarkerActor?.SetActorHiddenInGame(false);
-                    InfoMessageWidget.Instance.SetVisibility(false);
+                    DI.Instance.WidgetManager.HideInfoMessage();
                 }
             });
         }
@@ -192,25 +198,24 @@ public static class PatchTickForMovieSystem
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
             var mainEntity = playerState.LocalMainCharacter;
             var areaEntity = DI.Instance.AreaState.CurrentArea;
-            var isMoviePlayedByOthers = areaEntity != null && areaEntity.Value.GetMovie().AlreadyPlayedSequences.Contains(peakRequest.SequenceID);
+            var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(peakRequest.SequenceID);
 
-            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false || isMoviePlayedByOthers)
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false || isMovieStartedByOthers)
             {
-                InfoMessageWidget.Instance.SetVisibility(false);
+                DI.Instance.WidgetManager.HideInfoMessage();
                 if (mainEntity != null)
                 {
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.IsWaitingForSequence = false;
                     localMain.IsJoiningSequence = false;
-                    localMain.LastSyncableSequenceId = peakRequest.SequenceID;
                 }
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
                     var movieRequest = GlobalMovieData.PlayMovieRequestQueue.Dequeue();
-                    if (areaEntity != null  && !areaEntity.Value.GetMovie().AlreadyPlayedSequences.Contains(movieRequest.SequenceID))
+                    if (areaEntity != null && !areaEntity.Value.GetMovie().StartedSequences.Contains(movieRequest.SequenceID))
                     {
-                        DI.Instance.ServerRpc.SendMoviePlayed(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
+                        DI.Instance.ServerRpc.SendMovieStarted(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
                     }
                     RequestPlayMovieMethod?.Invoke(__instance, [movieRequest]);
                 }
@@ -225,8 +230,7 @@ public static class PatchTickForMovieSystem
                 
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                InfoMessageWidget.Instance.SetVisibility(true);
-                InfoMessageWidget.Instance.SetText(Resources.Texts.WaitForOtherPlayers);
+                DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
@@ -291,11 +295,11 @@ public static class PatchOnSkipCurrentCameraMovie
         BGC_MovieData movieData = (BGC_MovieData)getter.Invoke(__instance, null);
         var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
 
-        if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().LastSyncableSequenceId == sequenceId)
+        var areaEntity = DI.Instance.AreaState.CurrentArea;
+        if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            InfoMessageWidget.Instance.SetVisibility(true);
-            InfoMessageWidget.Instance.SetText(Resources.Texts.WaitForOtherPlayers);
+            DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
             DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
             return false;
         }

@@ -1,4 +1,4 @@
-using PreludeLib.Common;
+using System.Reflection;
 using PreludeLib.Runtime.Public;
 using WukongMp.Api.Configuration;
 
@@ -10,29 +10,21 @@ public class WukongPatcher(RuntimePrelude prelude) : PreludePatcherBase("ReadyM.
     {
         base.OnPatch();
 
-        Prelude.ScanAndPatchCategory(new(Constants.GlobalPatches));
+        Prelude.ScanAndPatchCategory(Assembly.GetExecutingAssembly(), new(Constants.GlobalPatches));
         Logging.LogInformation("Patched Prelude category: {Category}", Constants.GlobalPatches);
-        
-        Prelude.ScanAndPatchCategory(new(Constants.ConnectedPatches));
-        Logging.LogInformation("Patched Prelude category: {Category}", Constants.ConnectedPatches);
 
-        var category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-        Prelude.ScanAndPatchCategory(new(category));
-        Logging.LogInformation("Patched Prelude WukongMpMod {Patch}", category);
+        Prelude.ScanAndPatchCategory(Assembly.GetExecutingAssembly(), new(Constants.ConnectedPatches));
+        Logging.LogInformation("Patched Prelude category: {Category}", Constants.ConnectedPatches);
     }
-    
+
     protected override void OnUnpatch()
     {
-        var category = Constants.IsCoop ? Constants.CoopPatches : Constants.PvpPatches;
-        Prelude.UnpatchCategory(new(category));
-        Logging.LogInformation("Unpatched Prelude WukongMpMod {Patch}", category);
-        
-        Prelude.UnpatchCategory(new(Constants.ConnectedPatches));
+        Prelude.UnpatchCategory(Assembly.GetExecutingAssembly(), new(Constants.ConnectedPatches));
         Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.ConnectedPatches);
 
-        Prelude.UnpatchCategory(new(Constants.GlobalPatches));
+        Prelude.UnpatchCategory(Assembly.GetExecutingAssembly(), new(Constants.GlobalPatches));
         Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.GlobalPatches);
-        
+
         base.OnUnpatch();
     }
 }

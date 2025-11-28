@@ -43,9 +43,8 @@ public class SpawnOtherMainCharactersSystem(
             return;
 
         Query.ForEachEntity((
-            ref LocalMainCharacterComponent localMainComp,
-            ref MainCharacterComponent mainComp,
-            Entity entity) =>
+            ref localMainComp,
+            ref mainComp, entity) =>
         {
             if (mainComp.PlayerId == playerId)
                 return;

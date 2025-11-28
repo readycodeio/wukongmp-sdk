@@ -12,12 +12,13 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils;
 
 public static class SpawningUtils
 {
-    public static BGUCharacterCS? SpawnCloneForPlayer(in PlayerEntity playerEntity, in MainCharacterEntity mainEntity)
+    public static BGUCharacterCS? SpawnCloneForPlayer(WukongPlayerState playerState, in MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
@@ -25,14 +26,26 @@ public static class SpawningUtils
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
         var playerId = mainComp.PlayerId;
-        
+
         if (localMainComp.HasPawn)
         {
             Logging.LogDebug("Player already exists: {Id}", playerId); // reconnection
             return null;
         }
 
-        var playerPawnClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.WukongClassPath, ELoadResourceType.SyncLoadAndCache);
+        var localPlayerPawn = playerState.LocalMainCharacter?.GetLocalState().Pawn;
+
+        if (localPlayerPawn == null)
+        {
+            Logging.LogError("Local player pawn is null");
+            return null;
+        }
+
+        var mapId = BGUFuncLibMap.GetCurLevelId(localPlayerPawn);
+        var areaId = BGUFuncLibMap.GetAreaId(localPlayerPawn);
+        bool isDaShengInPrologue = mapId == 13 && areaId == 0;
+
+        var playerPawnClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(isDaShengInPrologue ? Constants.WukongDashengClassPath : Constants.WukongClassPath, ELoadResourceType.SyncLoadAndCache);
 
         if (playerPawnClass == null)
         {
@@ -97,20 +110,14 @@ public static class SpawningUtils
         Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
 
         localMainComp.Pawn = newPawn;
-        
-        // NOTE: The actor needs to be synchronized to have the right equipment. ECS equipment shouldn't be set to 
-        // actor's equipment. Therefore, the following can be removed
-        // Equipment = EquipmentHelpers.GetCurrentEquipmentStateForActor(pawn);
-        // Attributes = new ConcurrentDictionary<EBGUAttrFloat, float>();
 
         var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(newPawn);
-
         if (attrContainer != null)
         {
             var setHpMaxBase = attrContainer.SetFloatValue(EBGUAttrFloat.HpMaxBase, initialHpMaxBase);
             var setHp = attrContainer.SetFloatValue(EBGUAttrFloat.Hp, initialHp);
             Logging.LogDebug("Set actual Hp / HpMax: {Hp} {HpMax}", setHp, setHpMaxBase);
-            
+
             foreach (var attr in Constants.SyncedAttributes)
             {
                 if (mainComp.Attributes.TryGetAttribute((byte)attr, out var value))
@@ -263,7 +270,11 @@ public static class SpawningUtils
         var tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, (TSubclassOf<AActor>)unitClass, transform, ESpawnActorCollisionHandlingMethod.AdjustIfPossibleButAlwaysSpawn, null) as BUTamerActor;
         if (tamerActor == null)
         {
-            Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
+            if (!unitPath.Contains("PersistentLevel"))
+            {
+                Logging.LogError("Could not spawn unit: {UnitPath}", unitPath);
+            }
+
             return null;
         }
 
@@ -278,20 +289,6 @@ public static class SpawningUtils
         Logging.LogDebug("Spawned enemy: {TamerName}, with Guid {Guid}", tamerActor.GetName(), guid);
 
         return tamerActor;
-    }
-
-    public static void SpawnBots(int teamId)
-    {
-        for (var i = 0; i < Constants.BotCount; i++)
-        {
-            var angle = i / (float)Constants.BotCount * 2f * FMath.PI;
-            var x = FMath.Cos(angle) * Constants.PvpMonsterRadius;
-            var y = FMath.Sin(angle) * Constants.PvpMonsterRadius;
-
-            var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-            var spawnPosition = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-            SpawnUnitAsOwner(CharacterKind.Monkey, spawnPosition, teamId);
-        }
     }
 
     public static TamerEntity CreateMonsterInEcs(string guid, BUTamerActor tamer, int teamId, string unitName)
@@ -313,62 +310,19 @@ public static class SpawningUtils
         return new TamerEntity(entity);
     }
 
-    public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)
-    {
-        float angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
-        float x = FMath.Cos(angle) * Constants.PvpStartingRadius;
-        float y = FMath.Sin(angle) * Constants.PvpStartingRadius;
-
-        var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-        var baseLocation = levelData.PvpStartingLocation + new FVector(x, y, 0f);
-
-        return AdjustSpawnLocation(pawn, baseLocation);
-    }
-
-    public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
-    {
-        // TODO: For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
-        if (LaunchParameters.Instance.LevelId == 0)
-        {
-            return InTargetLocation;
-        }
-
-        FVector result = InTargetLocation;
-        if (CharacterCS == null)
-        {
-            return result;
-        }
-
-        UCapsuleComponent? uCapsuleComponent = CharacterCS.GetRootComponent() as UCapsuleComponent;
-        if (uCapsuleComponent == null)
-        {
-            return result;
-        }
-
-        float scaledCapsuleHalfHeight = uCapsuleComponent.GetScaledCapsuleHalfHeight();
-        float scaledCapsuleHalfHeight2 = uCapsuleComponent.GetScaledCapsuleHalfHeight();
-        float num = 2.4f;
-        FVector start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
-        FVector end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
-        if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GameUtils.GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
-        {
-            result = OutHitLocation + num + FVector.UpVector * scaledCapsuleHalfHeight;
-        }
-
-        return result;
-    }
-
     public static BUTamerActor? BeginDeferredSummonSpawn(UWorld? world, TSubclassOf<BUTamerActor> tamerClass, FTransform transform, int summonId, bool safeClampToLand = false)
     {
         if (world == null || tamerClass.Value == null)
         {
             return null;
         }
+
         BUTamerActor? tamerActor = UBGUFunctionLibrary.BGUBeginDeferredActorSpawnFromClass(world, tamerClass.Value, transform, ESpawnActorCollisionHandlingMethod.AlwaysSpawn, null) as BUTamerActor;
         if (tamerActor == null)
         {
             return null;
         }
+
         if (safeClampToLand)
         {
             FVector fVector = tamerActor.BGUGetActorLocation();
@@ -383,6 +337,7 @@ public static class SpawningUtils
                 tamerActor.BGUSetActorLocation(newLocation, bSweep: false, bTeleport: false);
             }
         }
+
         if (B1Global.GIsBossRushMode)
         {
             IBIC_BossRushBattleData gameInstanceReadonlyData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_BossRushBattleData, BIC_BossRushBattleData>(world);
@@ -391,6 +346,7 @@ public static class SpawningUtils
                 tamerActor.ApplyServantPropertyOverride(value);
             }
         }
+
         return tamerActor;
     }
 
@@ -404,6 +360,7 @@ public static class SpawningUtils
             Logging.LogDebug("Cannot spawn tamer {Name}", servantReq.TamerTemplate.GetName());
             return;
         }
+
         Logging.LogDebug("Spawned tamer {Name} with type {Type}", servantReq.TamerTemplate.GetName(), servantReq.ServantType);
         tamerActor.SpawnedTamerGuid = servantReq.ServantTamerGuid;
         tamerActor.MarkAsServant();
@@ -418,6 +375,7 @@ public static class SpawningUtils
         {
             return false;
         }
+
         var summonerEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(summoner);
         if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
         {
@@ -447,7 +405,7 @@ public static class SpawningUtils
             // Check if master or another player with lower id is nearby
             bool canSummon = true;
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-            ref MainCharacterComponent playerComp, Entity entity) =>
+                ref playerComp, entity) =>
             {
                 if (entity == localCharacter.Value.Entity)
                     return;
@@ -459,23 +417,6 @@ public static class SpawningUtils
                 }
             });
             return canSummon;
-        }
-    }
-
-    public static void SetMonkeyBotConfig(BGUCharacterCS bGUCharacter)
-    {
-        var events = BUS_EventCollectionCS.Get(bGUCharacter);
-        if (events != null)
-        {
-            foreach (var attr in MonkeyBotConfig.Attribues)
-            {
-                events.Evt_SetAttrFloat.Invoke(attr.Key, attr.Value);
-            }
-
-            foreach (var eq in MonkeyBotConfig.Equipment)
-            {
-                events.Evt_InitDaShenEquipData.Invoke(eq.Key, eq.Value);
-            }
         }
     }
 }

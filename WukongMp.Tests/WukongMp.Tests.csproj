@@ -31,6 +31,9 @@
         <Reference Include="CSharpModBaseV2">
             <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
+        <Reference Include="PreludeLib">
+          <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

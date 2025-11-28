@@ -199,6 +199,25 @@ public static class DebugUtils
         }
     }
 
+    public static void DumpTamerAnimationDebugInfo(string name)
+    {
+        var world = GameUtils.GetWorld();
+        if (world == null)
+            return;
+        var actors = world.GetAllActorsOfClass<BUTamerActor>();
+        foreach (var actor in actors)
+        {
+            var monster = actor.GetMonster();
+            if (monster != null)
+            {
+                if (!monster.GetName().Contains(name))
+                    continue;
+                Logging.LogDebug("Found actor: {ActorName}", actor.GetName());
+                DumpActorAnimationDebugInfo(monster);
+            }
+        }
+    }
+
     public static void DumpActorAnimationDebugInfo(AActor pawn)
     {
         BUC_ABPHelperData animationHelperData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPHelperData>(pawn);
@@ -210,6 +229,12 @@ public static class DebugUtils
         BUC_ABPBasicData basicData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPBasicData>(pawn);
         BUC_ABPCharacterData characterData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPCharacterData>(pawn);
         BUC_ABPBGUCharacterData bguCharacterData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPBGUCharacterData>(pawn);
+        BUC_ABPMonsterLocomotionData monsterLocomotionData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMonsterLocomotionData>(pawn);
+        BUC_ABPWheelMoveData wheelMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPWheelMoveData>(pawn);
+        BUC_ABPSplineMoveData splineMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPSplineMoveData>(pawn);
+        BUC_ABPSpeicalAdditiveData speicalAdditiveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPSpeicalAdditiveData>(pawn);
+        BUC_ABPSpecialMoveData specialMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPSpecialMoveData>(pawn);
+        BUC_ABPNPCAnimData aBPNPCAnimData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPNPCAnimData>(pawn);
 
         Logging.LogDebug("Animation debug info for: {Name}", pawn.GetName());
         Logging.LogDebug("FinalABPMoveMode: {MoveMode}", commonData.FinalABPMoveMode);
@@ -226,6 +251,12 @@ public static class DebugUtils
         LogAllProperties(characterData);
         LogAllProperties(characterData.MovementComp);
         LogAllProperties(bguCharacterData);
+        LogAllProperties(monsterLocomotionData);
+        LogAllProperties(wheelMoveData);
+        LogAllProperties(splineMoveData);
+        LogAllProperties(speicalAdditiveData);
+        LogAllProperties(specialMoveData);
+        LogAllProperties(aBPNPCAnimData);
 
         var animInst = animationHelperData.AnimInst;
         if (!(animInst == null) && animInst is BUAnimHumanoidCS bUAnimHumanoidCS)

@@ -219,3 +219,51 @@ public static class PatchApplyBySkill_Implement
         return true;
     }
 }
+
+[HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "CheckTargetValid")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchCheckTargetValid
+{
+    public static bool Prefix(AActor Target, ref bool __result)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(Target, EBGUSimpleState.PhantomRush))
+        {
+            __result = false;
+            return false;
+        }
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "SearchTargetTick")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchSearchTargetTick
+{
+    private static MethodInfo? _changeToFollowMasterMethod;
+    public static void Prefix(BPS_MultiTargetProjectileCtrComp __instance, BPC_MultiTargetProjectileCtrData ___MultiTargetProjectileCtrData, IBUC_TargetInfoData ___TargetInfoData)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var targetList = ___TargetInfoData?.GetMultiTargetInfoList();
+        if (targetList == null || targetList.Count == 0)
+            return;
+
+        var target = targetList[0].LockTargetActor;
+        if (target.IsNullOrDestroyed())
+            return;
+
+        if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(target, EBGUSimpleState.PhantomRush))
+        {
+            _changeToFollowMasterMethod ??= AccessTools.Method(typeof(BPS_MultiTargetProjectileCtrComp), "ChangeToFollowMaster");
+            if (_changeToFollowMasterMethod == null)
+            {
+                return;
+            }
+            _changeToFollowMasterMethod.Invoke(__instance, null);
+        }
+    }
+}

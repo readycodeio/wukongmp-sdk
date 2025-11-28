@@ -1,4 +1,6 @@
-﻿using Friflo.Engine.ECS;
+﻿using CSharpModBase;
+using CSharpModBase.Input;
+using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Runtime.Public;
 using PreludeLib.Runtime.Backend.WeaverCallback;
@@ -19,11 +21,9 @@ using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.ECS.Registry;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Coop;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.Https;
-using WukongMp.Api.PVP;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
 using WukongMp.Api.State;
@@ -32,16 +32,17 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public class DI
+public sealed class DI
 {
     public static DI Instance { get; } = new();
 
+    public IInputManager InputManager { get; private set; } = null!;
     public ILoggerFactory LoggerFactory { get; private set; } = null!;
     public ILogger Logger { get; private set; } = null!;
 
     public Store World { get; private set; } = null!;
     public ClientWukongArchetypeRegistration ArchetypeRegistration { get; private set; } = null!;
-    public ArchetypeEventRouter archetypeEvent { get; private set; } = null!;
+    public ArchetypeEventRouter ArchetypeEvent { get; private set; } = null!;
     public IClientEcsUpdateLoop EcsLoop { get; private set; } = null!;
 
     public RelaySerializer Serializer { get; private set; } = null!;
@@ -70,6 +71,8 @@ public class DI
     public WukongServerRpcCallbacks ServerRpc { get; private set; } = null!;
     public WukongSaveRelay SaveRelay { get; private set; } = null!;
     public WukongEventBus EventBus { get; private set; } = null!;
+    public GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
+    public GameplayEventRouter GameplayEventRouter { get; private set; } = null!;
 
     public WukongNetworkLogger NetLogger { get; private set; } = null!;
     public INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
@@ -79,15 +82,14 @@ public class DI
     public WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
     public NetworkPingMonitor PingMonitor { get; private set; } = null!;
     public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
+    public FreeCameraManager FreeCameraManager { get; private set; } = null!;
 
     public WukongChatter Chatter { get; private set; } = null!;
 
     public RuntimePrelude Prelude { get; private set; } = null!;
     public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
-    public WukongPatcher Patcher { get; private set; } = null!;
 
-    public WukongPVP? PVP { get; private set; }
-    public WukongCoop? Coop { get; private set; }
+
     public WukongWidgetManager WidgetManager { get; private set; } = null!;
 
     public ShimRelayMessageParser ShimParser { get; private set; } = null!;
@@ -119,6 +121,8 @@ public class DI
         var loggerFactory = LoggerFactory;
         var logger = Logger;
 
+        var inputManager = InputManager = CSharpModBase.InputManager.Instance;
+
         var areaComponentRegistry = AreaComponentRegistry = new AreaComponentRegistry([
             new WukongAreaRegistration(),
         ]);
@@ -137,7 +141,7 @@ public class DI
             wukongArchetype,
         ]);
 
-        var worldEvent = archetypeEvent = new ArchetypeEventRouter(world);
+        var worldEvent = ArchetypeEvent = new ArchetypeEventRouter(world);
         var serializer = Serializer = new RelaySerializer([
             new DefaultRelaySerializerRegistration(),
             new WukongSerializerRegistration(),
@@ -149,6 +153,9 @@ public class DI
         var relayClientService = RelayClientService = new RelayClientService(relayClient, logger);
 
         var eventBus = EventBus = new WukongEventBus();
+
+        var gameplayConfig = GameplayConfiguration = new GameplayConfiguration(logger);
+        var gameplayEventRouter = GameplayEventRouter = new GameplayEventRouter();
 
         var textSerializer = TextSerializer = new TextRelaySerializer([
             new DefaultTextRelaySerializerRegistration(),
@@ -168,63 +175,36 @@ public class DI
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
-        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, eventBus);
+        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState);
 
-        var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity, logger);
+        var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
 
         var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
+
+        var freeCameraManager = FreeCameraManager = new FreeCameraManager();
         
         var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
-        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager);
+        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager, gameplayEventRouter, freeCameraManager);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
-        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, ecsLoop, logger);
-        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger);
+        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, freeCameraManager, ecsLoop, logger);
+        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger, widgetManager);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
-        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, ecsLoop);
+        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, widgetManager, ecsLoop);
 
-        WukongPVP? pvp = null;
-        if (Constants.IsPvP)
-            pvp = PVP = new WukongPVP(world, serializer, relayClient, state, areaState, playerState, eventBus, rpc, chatter, ecsLoop, logger);
-
-        var synchronizer = Synchronizer = new WukongSynchronizer(
-            worldEvent,
-            state,
-            wukongArchetype,
-            pvp,
-            world,
-            areaState,
-            playerState,
-            playerPawnState,
-            modeManager,
-            netEntity,
-            clientOwnership,
-            jobRegistry,
-            netComponentRegistry,
-            relayClient,
-            ecsLoop,
-            eventBus,
-            widgetManager,
-            rpc,
-            logger);
-        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, synchronizer, widgetManager);
+        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, widgetManager);
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
 
-
         var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
         var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
         var prelude = Prelude = new RuntimePrelude(preludeBackend, runtimeLogger);
-        var patcher = Patcher = new WukongPatcher(prelude);
-
-        if (Constants.IsCoop)
-            Coop = new WukongCoop(serializer, relayClient, areaState, playerState, synchronizer);
 
         // ---
 

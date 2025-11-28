@@ -1,0 +1,47 @@
+﻿using System;
+using System.Globalization;
+using Friflo.Engine.ECS;
+using WukongMp.Api.ECS.Entities;
+
+namespace WukongMp.Api
+{
+    public class GameplayEventRouter
+    {
+        public event Action<CultureInfo>? OnLanguageChanged;
+        public event Action<Entity, Entity>? OnUnitDead;
+        public event Action<Entity, int>? OnRebirthPointChanged;
+        public event Action<Entity>? OnMonsterSpawned;
+        public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
+        public event Action<bool>? OnLocalPlayerChangedSpectator;
+        
+        public void RaiseOnLanguageChanged(CultureInfo culture)
+        {
+            OnLanguageChanged?.Invoke(culture);
+        }
+
+        public void RaiseOnUnitDead(Entity victimEntity, Entity attackerEntity)
+        {
+            OnUnitDead?.Invoke(victimEntity, attackerEntity);
+        }
+
+        public void RaiseOnRebirthPointChanged(Entity playerEntity, int rebirthPointId)
+        {
+            OnRebirthPointChanged?.Invoke(playerEntity, rebirthPointId);
+        }
+        
+        public void RaiseOnMonsterSpawned(Entity monsterEntity)
+        {
+            OnMonsterSpawned?.Invoke(monsterEntity);
+        }
+
+        public void RaiseOnPlayerChangedTeam(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
+        {
+            OnPlayerChangedTeam?.Invoke(playerEntity, mainEntity);
+        }
+
+        public void RaiseOnLocalPlayerChangedSpectator(bool enabled)
+        {
+            OnLocalPlayerChangedSpectator?.Invoke(enabled);
+        }
+    }
+}
