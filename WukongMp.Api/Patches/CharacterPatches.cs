@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Reflection;
 using b1;
 using BtlShare;
 using HarmonyLib;
-using System.Reflection;
 using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -329,10 +329,8 @@ namespace WukongMp.Api.Patches
                     {
                         ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
 
-                        if (!localTamer.IsTamerSynced)
-                        {
+                        if (!localTamer.IsTamerSynced || !localTamer.IsTamerValid || localTamer.Pawn == null)
                             return;
-                        }
 
                         if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                         {
@@ -342,7 +340,15 @@ namespace WukongMp.Api.Patches
 
                             ref var trans = ref tamerEntity.Value.GetTransform();
                             trans.Position = __instance.ActorLocation.ToVector3();
-                            trans.Rotation = __instance.ActorRotation.ToVector3();
+
+                            if (character is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+                            {
+                                trans.Rotation = ai.Mesh.GetSocketRotation(new FName("Head")).ToVector3();
+                            }
+                            else
+                            {
+                                trans.Rotation = __instance.ActorRotation.ToVector3();
+                            }
                         }
                         else
                         {
@@ -386,7 +392,7 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTickForInterpolationMove
     {
-        public static void Postfix(BUS_MovementSystem __instance, BUC_MovementData ___MovementData)
+        public static void Postfix(BUS_MovementSystem __instance, BUC_MovementData ___MovementData, float DeltaTime, bool bForceUpdate = false)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
@@ -409,6 +415,26 @@ namespace WukongMp.Api.Patches
                 }
 
                 owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+            }
+
+            // apply special rotation for JiRuHuo
+            if (!___MovementData.IM_IgnoreRotation && owner is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+            {
+                var currentRot = owner.BGUGetActorRotation();
+                var targetRot = ___MovementData.IM_TargetRotation;
+
+                float totalTime = ___MovementData.IM_TotalTime;
+                if (totalTime <= 0f)
+                    return;
+
+                float interpSpeedPitch = Math.Abs(targetRot.Pitch - currentRot.Pitch) / totalTime;
+                float interpSpeedRoll = Math.Abs(targetRot.Roll - currentRot.Roll) / totalTime;
+
+                var newRot = currentRot;
+                newRot.Pitch = MathLib.FInterpConstantTo(currentRot.Pitch, targetRot.Pitch, DeltaTime, interpSpeedPitch);
+                newRot.Roll = MathLib.FInterpConstantTo(currentRot.Roll, targetRot.Roll, DeltaTime, interpSpeedRoll);
+
+                owner.BGUSetActorRotation(newRot, false, bForceUpdate);
             }
         }
     }

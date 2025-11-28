@@ -36,9 +36,6 @@ public readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
     
     public ref TransformComponent GetTransform()
         => ref Entity.GetComponent<TransformComponent>();
-    
-    public ref PhysicalMoveComponent GetPhysicalMove()
-        => ref Entity.GetComponent<PhysicalMoveComponent>();
 
     public ref TamerComponent GetTamer()
         => ref Entity.GetComponent<TamerComponent>();

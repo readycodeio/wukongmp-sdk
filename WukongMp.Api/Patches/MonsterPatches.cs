@@ -9,83 +9,9 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
-
-// TODO: Duplication of character patch?
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerManagerTick
-{
-    [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnTickWithGroup")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BGS_TamerManagerSystem:OnTickWithGroup");
-    }
-
-    private static void Postfix(float DeltaTime, int TickGroup)
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return;
-
-        DI.Instance.World.Query<LocalTamerComponent, TransformComponent>().ForEachEntity((
-            ref localTamerComp,
-            ref transComp, entity) =>
-        {
-            if (!localTamerComp.IsTamerSynced || !localTamerComp.IsTamerValid || localTamerComp.Pawn == null)
-                return;
-
-            if (DI.Instance.ClientOwnership.OwnsEntity(entity))
-            {
-                // send updates for owned monsters
-                transComp.Position = localTamerComp.Pawn.GetActorLocation().ToVector3();
-                transComp.Rotation = localTamerComp.Pawn.GetActorRotation().ToVector3();
-            }
-            else
-            {
-                // apply updates for monsters owned by other players
-                var events = BUS_EventCollectionCS.Get(localTamerComp.Pawn);
-
-                if (events == null)
-                    return;
-
-                var pos = transComp.Position.ToFVector();
-                var rot = transComp.Rotation.ToFRotator();
-
-                var posChanged = !pos.Equals(localTamerComp.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance);
-                var rotChanged = !rot.Equals(localTamerComp.Pawn.GetActorRotation(), Constants.FloatComparisonTolerance);
-
-                if (posChanged || rotChanged)
-                {
-                    events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                }
-
-                // apply physical move
-                var physComp = entity.GetComponent<PhysicalMoveComponent>();
-                if (!string.IsNullOrEmpty(physComp.BoneName))
-                {
-                    var bone = new FName(physComp.BoneName);
-
-                    var currentAngularVelocity = localTamerComp.Pawn.Mesh.GetPhysicsAngularVelocityInDegrees(bone);
-                    var newAngularVelocity = physComp.AngularVelocity.ToFVector();
-                    if (FVector.DistSquared(currentAngularVelocity, newAngularVelocity) > Constants.FloatComparisonTolerance)
-                    {
-                        localTamerComp.Pawn.Mesh.SetPhysicsAngularVelocityInDegrees(newAngularVelocity, false, bone);
-                    }
-
-                    var currentLinearVelocity = localTamerComp.Pawn.Mesh.GetPhysicsLinearVelocity(bone);
-                    var newLinearVelocity = physComp.LinearVelocity.ToFVector();
-                    if (FVector.DistSquared(currentLinearVelocity, newLinearVelocity) > Constants.FloatComparisonTolerance)
-                    {
-                        localTamerComp.Pawn.Mesh.SetPhysicsLinearVelocity(newLinearVelocity, false, bone);
-                    }
-                }
-            }
-        });
-    }
-}
 
 [HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorLocation), typeof(AActor), typeof(FVector), typeof(bool), typeof(bool), typeof(FHitResult), typeof(bool), typeof(bool))]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
@@ -103,22 +29,22 @@ public class PatchBGUSetActorLocationForPhysicsBasedMovement
     }
 }
 
-// [HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorRotation))]
-// [HarmonyPatchCategory(Constants.ConnectedPatches)]
-// public class PatchBGUSetActorRotationForPhysicsBasedMovement
-// {
-//     public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleportPhysics, ref bool bForceUpdate)
-//     {
-//         if (!DI.Instance.AreaState.InRoom)
-//             return;
-//
-//         if (NeedSetInfoActor is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
-//         {
-//             bTeleportPhysics = true;
-//             bForceUpdate = true;
-//         }
-//     }
-// }
+[HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorRotation))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchBGUSetActorRotationForPhysicsBasedMovement
+{
+    public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleportPhysics, ref bool bForceUpdate)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        if (NeedSetInfoActor is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+        {
+            bTeleportPhysics = true;
+            bForceUpdate = true;
+        }
+    }
+}
 
 [HarmonyPatch(typeof(BGU_PhysicsSimulationMoveMode), "OnUpdate")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
@@ -136,19 +62,8 @@ public class PatchPhysicsSimulationMoveMode
         if (!entity.HasValue)
             return;
 
-        ref var physComp = ref entity.Value.GetPhysicalMove();
-
-        if (string.IsNullOrEmpty(physComp.BoneName))
-        {
-            physComp.BoneName = "Head";
-            // var persistentReadOnlyData1 = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_PhysAnimData>(___OwnerCharacter);
-            // if (persistentReadOnlyData1 == null || persistentReadOnlyData1.CurrentType != EPhysAnimType.PhysicsSimulationMove || !(persistentReadOnlyData1.TryGetSetting(EPhysAnimType.PhysicsSimulationMove, (AActor)this.OwnerCharacter, out bool _) is PhysMoveAnimSetting setting))
-            //     return;
-        }
-
-        var boneName = new FName(physComp.BoneName);
-        physComp.AngularVelocity = ___OwnerCharacter.Mesh.GetPhysicsAngularVelocityInDegrees(boneName).ToVector3();
-        physComp.LinearVelocity = ___OwnerCharacter.Mesh.GetPhysicsLinearVelocity(boneName).ToVector3();
+        ref var physComp = ref entity.Value.GetTransform();
+        physComp.Rotation = ___OwnerCharacter.Mesh.GetSocketRotation(new FName("Head")).ToVector3();
     }
 }
 
