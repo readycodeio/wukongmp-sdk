@@ -11,7 +11,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, TranslationComponent, MetadataComponent, HpComponent>
+public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent, TransformComponent, MetadataComponent, HpComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;

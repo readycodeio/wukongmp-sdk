@@ -5,6 +5,7 @@ using b1;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -29,7 +30,7 @@ public class PatchTamerManagerTick
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((
+        DI.Instance.World.Query<LocalTamerComponent, TransformComponent>().ForEachEntity((
             ref localTamerComp,
             ref transComp, entity) =>
         {
@@ -60,8 +61,94 @@ public class PatchTamerManagerTick
                 {
                     events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                 }
+
+                // apply physical move
+                var physComp = entity.GetComponent<PhysicalMoveComponent>();
+                if (!string.IsNullOrEmpty(physComp.BoneName))
+                {
+                    var bone = new FName(physComp.BoneName);
+
+                    var currentAngularVelocity = localTamerComp.Pawn.Mesh.GetPhysicsAngularVelocityInDegrees(bone);
+                    var newAngularVelocity = physComp.AngularVelocity.ToFVector();
+                    if (FVector.DistSquared(currentAngularVelocity, newAngularVelocity) > Constants.FloatComparisonTolerance)
+                    {
+                        localTamerComp.Pawn.Mesh.SetPhysicsAngularVelocityInDegrees(newAngularVelocity, false, bone);
+                    }
+
+                    var currentLinearVelocity = localTamerComp.Pawn.Mesh.GetPhysicsLinearVelocity(bone);
+                    var newLinearVelocity = physComp.LinearVelocity.ToFVector();
+                    if (FVector.DistSquared(currentLinearVelocity, newLinearVelocity) > Constants.FloatComparisonTolerance)
+                    {
+                        localTamerComp.Pawn.Mesh.SetPhysicsLinearVelocity(newLinearVelocity, false, bone);
+                    }
+                }
             }
         });
+    }
+}
+
+[HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorLocation), typeof(AActor), typeof(FVector), typeof(bool), typeof(bool), typeof(FHitResult), typeof(bool), typeof(bool))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchBGUSetActorLocationForPhysicsBasedMovement
+{
+    public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleport)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        if (NeedSetInfoActor is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+        {
+            bTeleport = true;
+        }
+    }
+}
+
+// [HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorRotation))]
+// [HarmonyPatchCategory(Constants.ConnectedPatches)]
+// public class PatchBGUSetActorRotationForPhysicsBasedMovement
+// {
+//     public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleportPhysics, ref bool bForceUpdate)
+//     {
+//         if (!DI.Instance.AreaState.InRoom)
+//             return;
+//
+//         if (NeedSetInfoActor is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+//         {
+//             bTeleportPhysics = true;
+//             bForceUpdate = true;
+//         }
+//     }
+// }
+
+[HarmonyPatch(typeof(BGU_PhysicsSimulationMoveMode), "OnUpdate")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchPhysicsSimulationMoveMode
+{
+    public static void Postfix(ACharacter ___OwnerCharacter)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        if (___OwnerCharacter.IsNullOrDestroyed())
+            return;
+
+        var entity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerCharacter);
+        if (!entity.HasValue)
+            return;
+
+        ref var physComp = ref entity.Value.GetPhysicalMove();
+
+        if (string.IsNullOrEmpty(physComp.BoneName))
+        {
+            physComp.BoneName = "Head";
+            // var persistentReadOnlyData1 = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_PhysAnimData>(___OwnerCharacter);
+            // if (persistentReadOnlyData1 == null || persistentReadOnlyData1.CurrentType != EPhysAnimType.PhysicsSimulationMove || !(persistentReadOnlyData1.TryGetSetting(EPhysAnimType.PhysicsSimulationMove, (AActor)this.OwnerCharacter, out bool _) is PhysMoveAnimSetting setting))
+            //     return;
+        }
+
+        var boneName = new FName(physComp.BoneName);
+        physComp.AngularVelocity = ___OwnerCharacter.Mesh.GetPhysicsAngularVelocityInDegrees(boneName).ToVector3();
+        physComp.LinearVelocity = ___OwnerCharacter.Mesh.GetPhysicsLinearVelocity(boneName).ToVector3();
     }
 }
 

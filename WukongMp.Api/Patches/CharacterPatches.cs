@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System;
+using b1;
 using BtlShare;
 using HarmonyLib;
 using System.Reflection;
@@ -114,6 +115,7 @@ namespace WukongMp.Api.Patches
                 if (netId.HasValue)
                     return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
             }
+
             return true;
         }
 
@@ -144,7 +146,7 @@ namespace WukongMp.Api.Patches
                     if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
                     {
                         mainComp.Hp = result;
-                        
+
                         if (mainComp.Hp > 0)
                         {
                             mainComp.IsDead = false;
@@ -306,6 +308,7 @@ namespace WukongMp.Api.Patches
                     {
                         events.Evt_InterpolationMove.Invoke(otherMain.Location.ToFVector(), otherMain.Rotation.ToFRotator(), Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
+
                     if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.Velocity = FVector.ZeroVector;
@@ -337,7 +340,7 @@ namespace WukongMp.Api.Patches
                             anim.Velocity = __instance.Velocity.ToVector3();
                             anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
 
-                            ref var trans = ref tamerEntity.Value.GetTranslation();
+                            ref var trans = ref tamerEntity.Value.GetTransform();
                             trans.Position = __instance.ActorLocation.ToVector3();
                             trans.Rotation = __instance.ActorRotation.ToVector3();
                         }
@@ -351,7 +354,7 @@ namespace WukongMp.Api.Patches
 
                             var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
 
-                            ref var trans = ref tamerEntity.Value.GetTranslation();
+                            ref var trans = ref tamerEntity.Value.GetTransform();
                             var location = trans.Position.ToFVector();
                             var rotation = trans.Rotation.ToFRotator();
 
@@ -389,9 +392,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             if (!___MovementData.IM_EnableMove)
-            {
                 return;
-            }
 
             var owner = __instance.GetOwner();
             var otherMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
@@ -406,6 +407,7 @@ namespace WukongMp.Api.Patches
                 {
                     currentLocation.Z = targetLocation.Z;
                 }
+
                 owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
             }
         }
@@ -442,7 +444,7 @@ namespace WukongMp.Api.Patches
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
-            
+
             if (Trigger == EBUStateTrigger.Die)
                 return;
 
@@ -724,6 +726,7 @@ namespace WukongMp.Api.Patches
                 __result = configuration.IsPlayerInBattle();
                 return false;
             }
+
             return true;
         }
     }

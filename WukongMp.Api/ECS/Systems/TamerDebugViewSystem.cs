@@ -6,7 +6,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class TamerDebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<LocalTamerComponent, TamerComponent, TranslationComponent>
+public class TamerDebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<LocalTamerComponent, TamerComponent, TransformComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;
