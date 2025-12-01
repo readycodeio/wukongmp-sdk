@@ -379,7 +379,7 @@ namespace WukongMp.Api.Patches
                             }
                         }
 
-                        if (character.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+                        if (character.GetActorGuid(out var cguid) && cguid == "UGuid.HYS.JiRuHuo01")
                         {
                             var boneNameLock = new FName(Constants.ChestCameraLockNode);
                             var trans = tamerEntity.Value.GetTransform();
