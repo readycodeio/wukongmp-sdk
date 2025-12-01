@@ -82,4 +82,5 @@ public static class MarkerUtils
     public static AActor? cube2;
     public static AActor? cube3;
     public static AActor? cube4;
+    public static AActor? cube5;
 }

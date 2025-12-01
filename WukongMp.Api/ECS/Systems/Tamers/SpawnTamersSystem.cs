@@ -99,6 +99,23 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
             }
 
+            if (tamerComp.Guid == "UGuid.HYS.JiRuHuo01")
+            {
+                Utils.TryRunOnGameThread(() =>
+                {
+                    MarkerUtils.cube1 ??= MarkerUtils.SpawnMarkerActor();
+                    MarkerUtils.cube1?.CallFunctionByNameWithArguments($"SetText Actor (R=0.3,G=0.3,B=1)", true);
+                    MarkerUtils.cube2 ??= MarkerUtils.SpawnMarkerActor();
+                    MarkerUtils.cube2?.CallFunctionByNameWithArguments($"SetText Mesh (R=0.3,G=1,B=0.3)", true);
+                    MarkerUtils.cube3 ??= MarkerUtils.SpawnMarkerActor();
+                    MarkerUtils.cube3?.CallFunctionByNameWithArguments($"SetText Head (R=1,G=0.3,B=0.3)", true);
+                    MarkerUtils.cube4 ??= MarkerUtils.SpawnMarkerActor();
+                    MarkerUtils.cube4?.CallFunctionByNameWithArguments($"SetText CameraLock (R=1,G=1,B=1)", true);
+                    MarkerUtils.cube5 ??= MarkerUtils.SpawnMarkerActor();
+                    MarkerUtils.cube5?.CallFunctionByNameWithArguments($"SetText Root (R=1,G=1,B=1)", true);
+                });
+            }
+
             if (metaComp.Owner != state.LocalPlayerId)
             {
                 events.Evt_AIPauseBT.Invoke(true);
@@ -109,25 +126,15 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 {
                     monster.Mesh.SetSimulatePhysics(false);
                     events.Evt_DisablePhysicalMove.Invoke(true);
-                    Utils.TryRunOnGameThread(() =>
-                    {
-                        MarkerUtils.cube1 ??= MarkerUtils.SpawnMarkerActor();
-                        MarkerUtils.cube1?.CallFunctionByNameWithArguments($"SetText Socket (R=0.3,G=0.3,B=1)", true);
-                        MarkerUtils.cube2 ??= MarkerUtils.SpawnMarkerActor();
-                        MarkerUtils.cube2?.CallFunctionByNameWithArguments($"SetText Mesh (R=0.3,G=1,B=0.3)", true);
-                        MarkerUtils.cube3 ??= MarkerUtils.SpawnMarkerActor();
-                        MarkerUtils.cube3?.CallFunctionByNameWithArguments($"SetText Actor (R=1,G=0.3,B=0.3)", true);
-                        MarkerUtils.cube4 ??= MarkerUtils.SpawnMarkerActor();
-                        MarkerUtils.cube4?.CallFunctionByNameWithArguments($"SetText Actor (R=1,G=1,B=1)", true);
-                    });
                 }
             }
             else
             {
-                var fsmData = BGU_DataUtil.GetReadOnlyData<IBUC_FsmData, BUC_FsmData>(localTamerComp.Pawn);
+                var fsmData = BGU_DataUtil.GetReadOnlyData<IBUC_FsmData, BUC_FsmData>(monster);
                 if (fsmData != null)
                 {
-                    tamerComp.HasFsmEnabled = !fsmData.bFsmPaused;
+                    Logging.LogDebug("Initial tamer bFsmPaused state {State}, guid: {Guid}.", fsmData.bFsmPaused, tamerComp.Guid);
+                    tamerComp.HasFsmPaused = fsmData.bFsmPaused;
                 }
             }
 

@@ -378,6 +378,20 @@ namespace WukongMp.Api.Patches
                                 //}
                             }
                         }
+
+                        if (character.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+                        {
+                            var boneNameLock = new FName(Constants.ChestCameraLockNode);
+                            var trans = tamerEntity.Value.GetTransform();
+                            var boneNameHead = new FName("Head");
+                            var boneNameRoot = new FName("Root");
+
+                            MarkerUtils.cube1?.SetActorTransform(character.GetActorTransform(), false, out _, false);
+                            MarkerUtils.cube2?.SetActorTransform(character.Mesh.GetWorldTransform(), false, out _, false);
+                            MarkerUtils.cube3?.SetActorTransform(character.Mesh.BGUGetSocketTransform(ref boneNameHead), false, out _, false);
+                            MarkerUtils.cube4?.SetActorTransform(character.Mesh.BGUGetSocketTransform(ref boneNameLock), false, out _, false);
+                            MarkerUtils.cube5?.SetActorTransform(character.Mesh.BGUGetSocketTransform(ref boneNameRoot), false, out _, false);
+                        }
                     }
                 }
             }
@@ -432,20 +446,17 @@ namespace WukongMp.Api.Patches
                      return;
 
                 // apply mesh rotation
+                var boneNameLock = new FName(Constants.ChestCameraLockNode);
                 var trans = tamerEntity.Value.GetTransform();
-                var boneName = new FName("Head");
-               
-                MarkerUtils.cube1?.SetActorTransform(ai.Mesh.BGUGetSocketTransform(ref boneName), false, out _, false);
-                MarkerUtils.cube2?.SetActorTransform(ai.Mesh.GetWorldTransform(), false, out _, false);
-                MarkerUtils.cube3?.SetActorTransform(ai.GetActorTransform(), false, out _, false);
-                MarkerUtils.cube4?.SetActorTransform(ai.CapsuleComponent.GetWorldTransform(), false, out _, false);
 
                 ai.Mesh.SetWorldRotation(trans.Rotation.ToFRotator(), false, out _, false);
 
                 // line trace to the floor, adjust Z position
-                var offset = new FVector(0, 0, 20_00);
+                //var offset = new FVector(0, 0, 20_00);
                 //var socketTransform = ai.Mesh.BGUGetSocketTransform(ref boneName);
-                var target = ai.Mesh.GetWorldLocation();// socketTransform.GetLocation();// + MathLib.TransformDirection(socketTransform, offset.GetSafeNormal()) * offset.Size();
+                var meshLocation = ai.Mesh.GetWorldLocation();
+                var socketLocation = ai.Mesh.GetSocketLocation(boneNameLock);
+                var target = socketLocation;// socketTransform.GetLocation();// + MathLib.TransformDirection(socketTransform, offset.GetSafeNormal()) * offset.Size();
                 var start = target;
                 var end = start;
                 start.Z += 3_00;
@@ -462,7 +473,9 @@ namespace WukongMp.Api.Patches
 
                 //ai.CapsuleComponent?.SetWorldTransform(actorTransform, false, out _, false);
                 //ai.SetActorTransform(actorTransform, false, out _, false);
-                ai.Mesh.SetWorldLocation(target, false, out _, false);
+
+                var offset = socketLocation - meshLocation;
+                ai.Mesh.SetWorldLocation(target - offset, false, out _, false);
             }
         }
     }
