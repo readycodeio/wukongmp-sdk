@@ -57,7 +57,7 @@ public static class MarkerUtils
         return markerActor;
     }
 
-    private static AActor? SpawnMarkerActor()
+    public static AActor? SpawnMarkerActor()
     {
         var world = GameUtils.GetWorld();
         var markerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
@@ -77,4 +77,9 @@ public static class MarkerUtils
         Logging.LogDebug("Marker actor spawned successfully");
         return markerActor;
     }
+
+    public static AActor? cube1;
+    public static AActor? cube2;
+    public static AActor? cube3;
+    public static AActor? cube4;
 }

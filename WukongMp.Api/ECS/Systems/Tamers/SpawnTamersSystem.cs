@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
+using CSharpModBase;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
@@ -108,6 +109,17 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 {
                     monster.Mesh.SetSimulatePhysics(false);
                     events.Evt_DisablePhysicalMove.Invoke(true);
+                    Utils.TryRunOnGameThread(() =>
+                    {
+                        MarkerUtils.cube1 ??= MarkerUtils.SpawnMarkerActor();
+                        MarkerUtils.cube1?.CallFunctionByNameWithArguments($"SetText Socket (R=0.3,G=0.3,B=1)", true);
+                        MarkerUtils.cube2 ??= MarkerUtils.SpawnMarkerActor();
+                        MarkerUtils.cube2?.CallFunctionByNameWithArguments($"SetText Mesh (R=0.3,G=1,B=0.3)", true);
+                        MarkerUtils.cube3 ??= MarkerUtils.SpawnMarkerActor();
+                        MarkerUtils.cube3?.CallFunctionByNameWithArguments($"SetText Actor (R=1,G=0.3,B=0.3)", true);
+                        MarkerUtils.cube4 ??= MarkerUtils.SpawnMarkerActor();
+                        MarkerUtils.cube4?.CallFunctionByNameWithArguments($"SetText Actor (R=1,G=1,B=1)", true);
+                    });
                 }
             }
             else

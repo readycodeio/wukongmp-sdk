@@ -368,14 +368,14 @@ namespace WukongMp.Api.Patches
                             if (!location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
                                 !rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                             {
-                                if (character.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
-                                {
-                                    character.Mesh.SetWorldRotation(rotation, false, out _, false); // rotates around invisible origin, setting relative location to 0 doesn't fix it
-                                }
-                                else
-                                {
+                                //if (character.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+                                //{
+                                //    character.Mesh.SetWorldRotation(rotation, false, out _, false); // rotates around invisible origin, setting relative location to 0 doesn't fix it
+                                //}
+                                //else
+                                //{
                                     events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                                }
+                                //}
                             }
                         }
                     }
@@ -423,6 +423,46 @@ namespace WukongMp.Api.Patches
                 }
 
                 owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+            }
+
+            if (owner is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+            {
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+                if (!tamerEntity.HasValue)
+                     return;
+
+                // apply mesh rotation
+                var trans = tamerEntity.Value.GetTransform();
+                var boneName = new FName("Head");
+               
+                MarkerUtils.cube1?.SetActorTransform(ai.Mesh.BGUGetSocketTransform(ref boneName), false, out _, false);
+                MarkerUtils.cube2?.SetActorTransform(ai.Mesh.GetWorldTransform(), false, out _, false);
+                MarkerUtils.cube3?.SetActorTransform(ai.GetActorTransform(), false, out _, false);
+                MarkerUtils.cube4?.SetActorTransform(ai.CapsuleComponent.GetWorldTransform(), false, out _, false);
+
+                ai.Mesh.SetWorldRotation(trans.Rotation.ToFRotator(), false, out _, false);
+
+                // line trace to the floor, adjust Z position
+                var offset = new FVector(0, 0, 20_00);
+                //var socketTransform = ai.Mesh.BGUGetSocketTransform(ref boneName);
+                var target = ai.Mesh.GetWorldLocation();// socketTransform.GetLocation();// + MathLib.TransformDirection(socketTransform, offset.GetSafeNormal()) * offset.Size();
+                var start = target;
+                var end = start;
+                start.Z += 3_00;
+                end.Z -= 200_00;
+
+                var fhitResult = new FHitResult();
+                ref var local = ref fhitResult;
+                if (USystemLibrary.LineTraceSingleForObjects(ai, start, end, [EObjectTypeQuery.ObjectTypeQuery1], false, null, EDrawDebugTrace.None, out local, true, FLinearColor.Red, FLinearColor.Black, 0.0f))
+                    target.Z = (float)fhitResult.ImpactPoint.Z + ai.CapsuleComponent.GetScaledCapsuleHalfHeight();
+
+                //var actorTransform = owner.BGUGetActorTransform();
+                //var origin = FMath.VInterpTo(owner.BGUGetActorLocation(), target, DeltaTime, 16f);
+                //actorTransform.SetLocation(origin);
+
+                //ai.CapsuleComponent?.SetWorldTransform(actorTransform, false, out _, false);
+                //ai.SetActorTransform(actorTransform, false, out _, false);
+                ai.Mesh.SetWorldLocation(target, false, out _, false);
             }
         }
     }
