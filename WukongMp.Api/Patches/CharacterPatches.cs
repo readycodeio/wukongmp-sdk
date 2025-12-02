@@ -367,29 +367,8 @@ namespace WukongMp.Api.Patches
                             if (!location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
                                 !rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
                             {
-                                //if (character.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
-                                //{
-                                //    character.Mesh.SetWorldRotation(rotation, false, out _, false); // rotates around invisible origin, setting relative location to 0 doesn't fix it
-                                //}
-                                //else
-                                //{
-                                    events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                                //}
+                                events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                             }
-                        }
-
-                        if (character.GetActorGuid(out var cguid) && cguid == "UGuid.HYS.JiRuHuo01")
-                        {
-                            var boneNameLock = new FName(Constants.ChestCameraLockNode);
-                            var trans = tamerEntity.Value.GetTransform();
-                            var boneNameHead = new FName("Head");
-                            var boneNameRoot = new FName("Root");
-
-                            MarkerUtils.cube1?.SetActorTransform(character.GetActorTransform(), false, out _, false);
-                            MarkerUtils.cube2?.SetActorTransform(character.Mesh.GetWorldTransform(), false, out _, false);
-                            MarkerUtils.cube3?.SetActorTransform(character.Mesh.BGUGetSocketTransform(ref boneNameHead), false, out _, false);
-                            MarkerUtils.cube4?.SetActorTransform(character.Mesh.BGUGetSocketTransform(ref boneNameLock), false, out _, false);
-                            MarkerUtils.cube5?.SetActorTransform(character.Mesh.BGUGetSocketTransform(ref boneNameRoot), false, out _, false);
                         }
                     }
                 }
@@ -444,43 +423,19 @@ namespace WukongMp.Api.Patches
                 if (!tamerEntity.HasValue)
                      return;
 
-                // apply mesh rotation
                 var boneNameLock = new FName(Constants.ChestCameraLockNode);
-                var trans = tamerEntity.Value.GetTransform();
-
-                var meshTransform = ai.Mesh.GetWorldTransform();
-                var socketTransform = ai.Mesh.GetSocketTransform(boneNameLock);
-
-                //ai.Mesh.SetWorldRotation(trans.Rotation.ToFRotator(), false, out _, false);
-
-                // Precompute once (in rest/bind pose)
-                //FVector centerLocation = socketTransform.GetLocation();
-                //FVector meshLocation = meshTransform.GetLocation();
-                //FVector meshOffset = meshLocation - centerLocation;
                 var socketOffset = ai.Mesh.GetSocketTransform(boneNameLock, ERelativeTransformSpace.RTS_Component).GetLocation();
 
+                var trans = tamerEntity.Value.GetTransform();
                 FVector targetCenterPosition = trans.Position.ToFVector();
                 FRotator targetCenterRotation = trans.Rotation.ToFRotator();
 
-                FRotator rotation = targetCenterRotation; // FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
+                FRotator rotation = targetCenterRotation; // TODO: Check interpolation: FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
                 FRotator outRotation = rotation;
-                FVector rotatedOffset = rotation.RotateVector(socketOffset); // check other offset
+                FVector rotatedOffset = rotation.RotateVector(socketOffset); 
                 FVector outLocation = targetCenterPosition - rotatedOffset;
 
                 ai.Mesh.SetWorldLocationAndRotation(outLocation, outRotation, false, out _, false);
-
-                // line trace to the floor, adjust Z position
-                FVector centerLocation = ai.Mesh.GetSocketLocation(boneNameLock);
-                FVector meshLocation = ai.Mesh.GetWorldLocation();
-                var target = targetCenterPosition;
-                var start = target + new FVector(0, 0, 3_00);
-                var end = target - new FVector(0, 0, 200_00); 
-
-                if (USystemLibrary.LineTraceSingleForObjects(ai, start, end, [EObjectTypeQuery.ObjectTypeQuery1], false, null, EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f))
-                    target.Z = (float)hitResult.ImpactPoint.Z + ai.CapsuleComponent.GetScaledCapsuleHalfHeight();
-
-                var offset = centerLocation - meshLocation;
-                //ai.Mesh.SetWorldLocation(target - socketOffset, false, out _, false);
             }
         }
     }

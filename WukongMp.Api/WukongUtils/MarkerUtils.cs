@@ -77,10 +77,4 @@ public static class MarkerUtils
         Logging.LogDebug("Marker actor spawned successfully");
         return markerActor;
     }
-
-    public static AActor? cube1;
-    public static AActor? cube2;
-    public static AActor? cube3;
-    public static AActor? cube4;
-    public static AActor? cube5;
 }
