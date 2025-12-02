@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Numerics;
 using System.Reflection;
 using b1;
 using BtlShare;
@@ -449,33 +448,39 @@ namespace WukongMp.Api.Patches
                 var boneNameLock = new FName(Constants.ChestCameraLockNode);
                 var trans = tamerEntity.Value.GetTransform();
 
-                ai.Mesh.SetWorldRotation(trans.Rotation.ToFRotator(), false, out _, false);
+                var meshTransform = ai.Mesh.GetWorldTransform();
+                var socketTransform = ai.Mesh.GetSocketTransform(boneNameLock);
+
+                //ai.Mesh.SetWorldRotation(trans.Rotation.ToFRotator(), false, out _, false);
+
+                // Precompute once (in rest/bind pose)
+                //FVector centerLocation = socketTransform.GetLocation();
+                //FVector meshLocation = meshTransform.GetLocation();
+                //FVector meshOffset = meshLocation - centerLocation;
+                var socketOffset = ai.Mesh.GetSocketTransform(boneNameLock, ERelativeTransformSpace.RTS_Component).GetLocation();
+
+                FVector targetCenterPosition = trans.Position.ToFVector();
+                FRotator targetCenterRotation = trans.Rotation.ToFRotator();
+
+                FRotator rotation = targetCenterRotation; // FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
+                FRotator outRotation = rotation;
+                FVector rotatedOffset = rotation.RotateVector(socketOffset); // check other offset
+                FVector outLocation = targetCenterPosition - rotatedOffset;
+
+                ai.Mesh.SetWorldLocationAndRotation(outLocation, outRotation, false, out _, false);
 
                 // line trace to the floor, adjust Z position
-                //var offset = new FVector(0, 0, 20_00);
-                //var socketTransform = ai.Mesh.BGUGetSocketTransform(ref boneName);
-                var meshLocation = ai.Mesh.GetWorldLocation();
-                var socketLocation = ai.Mesh.GetSocketLocation(boneNameLock);
-                var target = socketLocation;// socketTransform.GetLocation();// + MathLib.TransformDirection(socketTransform, offset.GetSafeNormal()) * offset.Size();
-                var start = target;
-                var end = start;
-                start.Z += 3_00;
-                end.Z -= 200_00;
+                FVector centerLocation = ai.Mesh.GetSocketLocation(boneNameLock);
+                FVector meshLocation = ai.Mesh.GetWorldLocation();
+                var target = targetCenterPosition;
+                var start = target + new FVector(0, 0, 3_00);
+                var end = target - new FVector(0, 0, 200_00); 
 
-                var fhitResult = new FHitResult();
-                ref var local = ref fhitResult;
-                if (USystemLibrary.LineTraceSingleForObjects(ai, start, end, [EObjectTypeQuery.ObjectTypeQuery1], false, null, EDrawDebugTrace.None, out local, true, FLinearColor.Red, FLinearColor.Black, 0.0f))
-                    target.Z = (float)fhitResult.ImpactPoint.Z + ai.CapsuleComponent.GetScaledCapsuleHalfHeight();
+                if (USystemLibrary.LineTraceSingleForObjects(ai, start, end, [EObjectTypeQuery.ObjectTypeQuery1], false, null, EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f))
+                    target.Z = (float)hitResult.ImpactPoint.Z + ai.CapsuleComponent.GetScaledCapsuleHalfHeight();
 
-                //var actorTransform = owner.BGUGetActorTransform();
-                //var origin = FMath.VInterpTo(owner.BGUGetActorLocation(), target, DeltaTime, 16f);
-                //actorTransform.SetLocation(origin);
-
-                //ai.CapsuleComponent?.SetWorldTransform(actorTransform, false, out _, false);
-                //ai.SetActorTransform(actorTransform, false, out _, false);
-
-                var offset = socketLocation - meshLocation;
-                ai.Mesh.SetWorldLocation(target - offset, false, out _, false);
+                var offset = centerLocation - meshLocation;
+                //ai.Mesh.SetWorldLocation(target - socketOffset, false, out _, false);
             }
         }
     }
