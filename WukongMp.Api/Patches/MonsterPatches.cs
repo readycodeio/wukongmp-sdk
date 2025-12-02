@@ -301,7 +301,8 @@ public class PatchOnAIPauseFsm
 
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                tamerEntity.Value.GetTamer().HasFsmEnabled = !IsPause;
+                Logging.LogDebug("Setting FSM pause state to {IsPause} for tamer {Tamer}", IsPause, tamerEntity.Value.GetTamer().Guid);
+                tamerEntity.Value.GetTamer().HasFsmPaused = IsPause;
                 return true;
             }
         }

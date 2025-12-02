@@ -123,7 +123,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         if (meta.Owner == _state.LocalPlayerId)
         {
             var tamerComp = entity.GetComponent<TamerComponent>();
-            //if (tamerComp.HasFsmEnabled)
+            //if (!tamerComp.HasFsmPaused)
             //{
                 events.Evt_AIPauseBT.Invoke(false);
                 events.Evt_AIPauseFsm.Invoke(false);
