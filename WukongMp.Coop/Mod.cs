@@ -188,19 +188,19 @@ namespace WukongMp.Coop
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J (Dump anim info)");
-                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
-                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
             {
                 _logger.LogDebug("Shift + J");
-                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>

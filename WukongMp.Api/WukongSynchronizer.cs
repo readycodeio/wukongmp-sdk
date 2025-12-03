@@ -77,7 +77,6 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
 
         _syncGroup.Add(new DebugViewSystem(eventBus, widgetManager));
-        _syncGroup.Add(new TamerDebugViewSystem(eventBus, widgetManager));
 
         _syncGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_syncGroup);
