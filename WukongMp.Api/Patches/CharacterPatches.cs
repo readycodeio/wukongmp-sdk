@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using b1;
 using BtlShare;
@@ -422,11 +423,11 @@ namespace WukongMp.Api.Patches
                     }
                     else
                     {
-                        var halfCapsuleHeight = owner.CapsuleComponent.GetScaledCapsuleHalfHeight();
-                        var start = targetLocation + new FVector(0, 0, halfCapsuleHeight);
-                        var end = targetLocation - new FVector(0, 0, halfCapsuleHeight);
+                        var capsuleHeight = owner.CapsuleComponent.GetScaledCapsuleHalfHeight() * 2;
+                        var start = targetLocation + new FVector(0, 0, capsuleHeight);
+                        var end = targetLocation - new FVector(0, 0, capsuleHeight);
 
-                        if (USystemLibrary.LineTraceSingleForObjects(owner, start, end, [EObjectTypeQuery.ObjectTypeQuery1], false, null, EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f)) 
+                        if (USystemLibrary.LineTraceSingleByProfile(owner, start, end, B1GlobalFNames.Pawn, false, [], EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f)) 
                         {
                             Logging.LogDebug("Correcting Z position with line trace for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, hitResult.ImpactPoint.Z);
                             currentLocation.Z = (float)hitResult.ImpactPoint.Z;
