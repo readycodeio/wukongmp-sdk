@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
+using CSharpModBase;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
@@ -104,13 +105,19 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 events.Evt_AIPauseFsm.Invoke(true);
                 events.Evt_AIPerceptionSetting.Invoke(false);
                 Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
+                if (tamerComp.Guid == "UGuid.HYS.JiRuHuo01")
+                {
+                    monster.Mesh.SetSimulatePhysics(false);
+                    events.Evt_DisablePhysicalMove.Invoke(true);
+                }
             }
             else
             {
-                var fsmData = BGU_DataUtil.GetReadOnlyData<IBUC_FsmData, BUC_FsmData>(localTamerComp.Pawn);
+                var fsmData = BGU_DataUtil.GetReadOnlyData<IBUC_FsmData, BUC_FsmData>(monster);
                 if (fsmData != null)
                 {
-                    tamerComp.HasFsmEnabled = !fsmData.bFsmPaused;
+                    Logging.LogDebug("Initial tamer bFsmPaused state {State}, guid: {Guid}.", fsmData.bFsmPaused, tamerComp.Guid);
+                    tamerComp.HasFsmPaused = fsmData.bFsmPaused;
                 }
             }
 

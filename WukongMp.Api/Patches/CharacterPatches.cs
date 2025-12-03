@@ -1,7 +1,8 @@
-﻿using b1;
+﻿using System;
+using System.Reflection;
+using b1;
 using BtlShare;
 using HarmonyLib;
-using System.Reflection;
 using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -114,6 +115,7 @@ namespace WukongMp.Api.Patches
                 if (netId.HasValue)
                     return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
             }
+
             return true;
         }
 
@@ -144,7 +146,7 @@ namespace WukongMp.Api.Patches
                     if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
                     {
                         mainComp.Hp = result;
-                        
+
                         if (mainComp.Hp > 0)
                         {
                             mainComp.IsDead = false;
@@ -306,6 +308,7 @@ namespace WukongMp.Api.Patches
                     {
                         events.Evt_InterpolationMove.Invoke(otherMain.Location.ToFVector(), otherMain.Rotation.ToFRotator(), Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
+
                     if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                     {
                         __instance.Velocity = FVector.ZeroVector;
@@ -326,10 +329,8 @@ namespace WukongMp.Api.Patches
                     {
                         ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
 
-                        if (!localTamer.IsTamerSynced)
-                        {
+                        if (!localTamer.IsTamerSynced || !localTamer.IsTamerValid || localTamer.Pawn == null)
                             return;
-                        }
 
                         if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                         {
@@ -337,9 +338,17 @@ namespace WukongMp.Api.Patches
                             anim.Velocity = __instance.Velocity.ToVector3();
                             anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
 
-                            ref var trans = ref tamerEntity.Value.GetTranslation();
+                            ref var trans = ref tamerEntity.Value.GetTransform();
                             trans.Position = __instance.ActorLocation.ToVector3();
-                            trans.Rotation = __instance.ActorRotation.ToVector3();
+
+                            if (character is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+                            {
+                                trans.Rotation = ai.Mesh.GetSocketRotation(new FName("Head")).ToVector3();
+                            }
+                            else
+                            {
+                                trans.Rotation = __instance.ActorRotation.ToVector3();
+                            }
                         }
                         else
                         {
@@ -351,7 +360,7 @@ namespace WukongMp.Api.Patches
 
                             var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
 
-                            ref var trans = ref tamerEntity.Value.GetTranslation();
+                            ref var trans = ref tamerEntity.Value.GetTransform();
                             var location = trans.Position.ToFVector();
                             var rotation = trans.Rotation.ToFRotator();
 
@@ -383,15 +392,13 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchTickForInterpolationMove
     {
-        public static void Postfix(BUS_MovementSystem __instance, BUC_MovementData ___MovementData)
+        public static void Postfix(BUS_MovementSystem __instance, BUC_MovementData ___MovementData, float DeltaTime, bool bForceUpdate = false)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
             if (!___MovementData.IM_EnableMove)
-            {
                 return;
-            }
 
             var owner = __instance.GetOwner();
             var otherMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
@@ -406,7 +413,29 @@ namespace WukongMp.Api.Patches
                 {
                     currentLocation.Z = targetLocation.Z;
                 }
+
                 owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+            }
+
+            if (owner is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+            {
+                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+                if (!tamerEntity.HasValue)
+                     return;
+
+                var boneNameLock = new FName(Constants.ChestCameraLockNode);
+                var socketOffset = ai.Mesh.GetSocketTransform(boneNameLock, ERelativeTransformSpace.RTS_Component).GetLocation();
+
+                var trans = tamerEntity.Value.GetTransform();
+                FVector targetCenterPosition = trans.Position.ToFVector();
+                FRotator targetCenterRotation = trans.Rotation.ToFRotator();
+
+                FRotator rotation = targetCenterRotation; // TODO: Check interpolation: FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
+                FRotator outRotation = rotation;
+                FVector rotatedOffset = rotation.RotateVector(socketOffset); 
+                FVector outLocation = targetCenterPosition - rotatedOffset;
+
+                ai.Mesh.SetWorldLocationAndRotation(outLocation, outRotation, false, out _, false);
             }
         }
     }
@@ -442,7 +471,7 @@ namespace WukongMp.Api.Patches
         {
             if (!DI.Instance.AreaState.InRoom)
                 return;
-            
+
             if (Trigger == EBUStateTrigger.Die)
                 return;
 
@@ -724,6 +753,7 @@ namespace WukongMp.Api.Patches
                 __result = configuration.IsPlayerInBattle();
                 return false;
             }
+
             return true;
         }
     }

@@ -5,63 +5,65 @@ using b1;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
-// TODO: Duplication of character patch?
-[HarmonyPatch]
+[HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorLocation), typeof(AActor), typeof(FVector), typeof(bool), typeof(bool), typeof(FHitResult), typeof(bool), typeof(bool))]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerManagerTick
+public class PatchBGUSetActorLocationForPhysicsBasedMovement
 {
-    [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnTickWithGroup")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BGS_TamerManagerSystem:OnTickWithGroup");
-    }
-
-    private static void Postfix(float DeltaTime, int TickGroup)
+    public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleport)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        DI.Instance.World.Query<LocalTamerComponent, TranslationComponent>().ForEachEntity((
-            ref localTamerComp,
-            ref transComp, entity) =>
+        if (NeedSetInfoActor is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
         {
-            if (!localTamerComp.IsTamerSynced || !localTamerComp.IsTamerValid || localTamerComp.Pawn == null)
-                return;
+            bTeleport = true;
+        }
+    }
+}
 
-            if (DI.Instance.ClientOwnership.OwnsEntity(entity))
-            {
-                // send updates for owned monsters
-                transComp.Position = localTamerComp.Pawn.GetActorLocation().ToVector3();
-                transComp.Rotation = localTamerComp.Pawn.GetActorRotation().ToVector3();
-            }
-            else
-            {
-                // apply updates for monsters owned by other players
-                var events = BUS_EventCollectionCS.Get(localTamerComp.Pawn);
+[HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorRotation))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchBGUSetActorRotationForPhysicsBasedMovement
+{
+    public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleportPhysics, ref bool bForceUpdate)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
 
-                if (events == null)
-                    return;
+        if (NeedSetInfoActor is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+        {
+            bTeleportPhysics = true;
+            bForceUpdate = true;
+        }
+    }
+}
 
-                var pos = transComp.Position.ToFVector();
-                var rot = transComp.Rotation.ToFRotator();
+[HarmonyPatch(typeof(BGU_PhysicsSimulationMoveMode), "OnUpdate")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchPhysicsSimulationMoveMode
+{
+    public static void Postfix(ACharacter ___OwnerCharacter)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
 
-                var posChanged = !pos.Equals(localTamerComp.Pawn.GetActorLocation(), Constants.FloatComparisonTolerance);
-                var rotChanged = !rot.Equals(localTamerComp.Pawn.GetActorRotation(), Constants.FloatComparisonTolerance);
+        if (___OwnerCharacter.IsNullOrDestroyed())
+            return;
 
-                if (posChanged || rotChanged)
-                {
-                    events.Evt_InterpolationMove.Invoke(pos, rot, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                }
-            }
-        });
+        var entity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerCharacter);
+        if (!entity.HasValue)
+            return;
+
+        ref var physComp = ref entity.Value.GetTransform();
+        physComp.Rotation = ___OwnerCharacter.Mesh.GetSocketRotation(new FName("Head")).ToVector3();
     }
 }
 
@@ -299,7 +301,8 @@ public class PatchOnAIPauseFsm
 
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                tamerEntity.Value.GetTamer().HasFsmEnabled = !IsPause;
+                Logging.LogDebug("Setting FSM pause state to {IsPause} for tamer {Tamer}", IsPause, tamerEntity.Value.GetTamer().Guid);
+                tamerEntity.Value.GetTamer().HasFsmPaused = IsPause;
                 return true;
             }
         }

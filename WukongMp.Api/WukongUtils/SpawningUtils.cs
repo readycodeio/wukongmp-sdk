@@ -232,7 +232,7 @@ public static class SpawningUtils
             var unitPath = UnitPathsConfig.GetUnitPath(unitName);
             var characterEntity = CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
 
-            ref var transComp = ref characterEntity.GetTranslation();
+            ref var transComp = ref characterEntity.GetTransform();
             transComp.Position = locaction.ToVector3();
             transComp.Rotation = Vector3.Zero;
 
