@@ -423,14 +423,14 @@ namespace WukongMp.Api.Patches
                     }
                     else
                     {
-                        var capsuleHeight = owner.CapsuleComponent.GetScaledCapsuleHalfHeight() * 2;
-                        var start = targetLocation + new FVector(0, 0, capsuleHeight);
-                        var end = targetLocation - new FVector(0, 0, capsuleHeight);
+                        var capsuleHalfHeight = owner.CapsuleComponent.GetScaledCapsuleHalfHeight();
+                        var start = targetLocation + FVector.UpVector * capsuleHalfHeight * 2;
+                        var end = targetLocation - FVector.UpVector * capsuleHalfHeight * 2;
 
                         if (USystemLibrary.LineTraceSingleByProfile(owner, start, end, B1GlobalFNames.Pawn, false, [], EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f)) 
                         {
-                            Logging.LogDebug("Correcting Z position with line trace for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, hitResult.ImpactPoint.Z);
-                            currentLocation.Z = (float)hitResult.ImpactPoint.Z;
+                            Logging.LogDebug("Correcting Z position with line trace for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, hitResult.ImpactPoint.Z + capsuleHalfHeight);
+                            currentLocation.Z = (float)hitResult.ImpactPoint.Z + capsuleHalfHeight;
                             owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
                         }
                     }
