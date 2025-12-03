@@ -2,13 +2,17 @@
 using System.Reflection;
 using b1;
 using b1.BGW;
+using b1.ECS;
+using b1.UI.Comm;
 using B1UI.GSUI;
+using BtlShare;
 using CSharpModBase;
 using GSE.GSUI;
 using HarmonyLib;
 using LiteNetLib;
 using PreludeLib.Attributes;
 using ResB1;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api;
@@ -101,5 +105,70 @@ public class PatchShrineRegisterFunc
         var interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
         return interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossIterations
                && interactionFuncDesc.MenuBtnActionType != EMenuBtnActionType.BossRechallenge;
+    }
+}
+
+[HarmonyPatch(typeof(BUI_BattleInfoCS), "InitBloodBarUI")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchInitBloodBarUI
+{
+    public static bool Prefix(BUI_BattleInfoCS __instance, Dictionary<Entity, BUI_ProjWidget> ___EntityDic, Dictionary<AActor, DSBarInfoBind> ___BloodBarActorBindDict, Entity Entity)
+    {
+        if (___EntityDic.ContainsKey(Entity))
+            return false;
+        var actor = Entity.ToActor();
+        var OwnerUnit = actor as BGUCharacterCS;
+        if (OwnerUnit == null)
+            return false;
+        var unitCommDesc = BGW_GameDB.GetUnitCommDesc(OwnerUnit.GetResID());
+        if (unitCommDesc == null)
+            return false;
+        var battleInfoExtendDesc = BGW_GameDB.GetUnitBattleInfoExtendDesc(OwnerUnit.GetFinalBattleInfoExtendID());
+        if (battleInfoExtendDesc == null)
+            return false;
+
+        var bloodBarShowType = EBGUBloodBarShowType.Always;
+
+        var maybePlayer = DI.Instance.PawnState.GetEntityByPlayerPawn(actor);
+        var isPlayer = maybePlayer.HasValue;
+
+        var isInPlayerTeam = !isPlayer && BGU_DataUtil.GetIsInPlayerTeam(actor);
+
+        if (battleInfoExtendDesc.BloodBarType == EBGUBloodBarType.None || isInPlayerTeam)
+            return false;
+
+        var bloodBarPoolWidget = __instance.GetTopBarPoolWidget(OwnerUnit, true) as BUI_MBarBase;
+        bloodBarPoolWidget?.InitBloodBar(battleInfoExtendDesc.BloodBarType, unitCommDesc.HPBarHeightOffset);
+
+        switch (bloodBarShowType)
+        {
+            case EBGUBloodBarShowType.Hide:
+                if (bloodBarPoolWidget != null)
+                {
+                    bloodBarPoolWidget.SetAlwaysHideSetting(AlwaysHideSetting.Always, true);
+                    break;
+                }
+
+                break;
+            case EBGUBloodBarShowType.Always:
+                if (bloodBarPoolWidget != null)
+                {
+                    bloodBarPoolWidget.SetAlwaysShowSetting(AlwaysShowSetting.Always, true);
+                    break;
+                }
+
+                break;
+        }
+
+        if (bloodBarPoolWidget != null)
+        {
+            ___EntityDic.Add(Entity, bloodBarPoolWidget);
+        }
+
+        if (!___EntityDic.ContainsKey(Entity) || !___BloodBarActorBindDict.TryGetValue(actor, out DSBarInfoBind dsBarInfoBind))
+            return false;
+
+        dsBarInfoBind.ReInit();
+        return false;
     }
 }
