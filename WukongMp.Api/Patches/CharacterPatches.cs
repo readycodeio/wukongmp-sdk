@@ -400,7 +400,10 @@ namespace WukongMp.Api.Patches
             if (!___MovementData.IM_EnableMove)
                 return;
 
-            var owner = __instance.GetOwner();
+            var owner = __instance.GetOwner() as BGUCharacterCS;
+            if (owner == null)
+                return;
+
             var otherMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
 
             if (otherMainEntity != null)
@@ -411,10 +414,26 @@ namespace WukongMp.Api.Patches
                 FVector targetLocation = otherMain.Location.ToFVector();
                 if (FMath.Abs(targetLocation.Z - currentLocation.Z) > Constants.AllowedZDiffrence)
                 {
-                    currentLocation.Z = targetLocation.Z;
-                }
+                    if (!DebugUtils.CorrectPositionWithLineTrace)
+                    {
+                        Logging.LogDebug("Correcting Z position for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, targetLocation.Z);
+                        currentLocation.Z = targetLocation.Z;
+                        owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+                    }
+                    else
+                    {
+                        var halfCapsuleHeight = owner.CapsuleComponent.GetScaledCapsuleHalfHeight();
+                        var start = targetLocation + new FVector(0, 0, halfCapsuleHeight);
+                        var end = targetLocation - new FVector(0, 0, halfCapsuleHeight);
 
-                owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+                        if (USystemLibrary.LineTraceSingleForObjects(owner, start, end, [EObjectTypeQuery.ObjectTypeQuery1], false, null, EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f)) 
+                        {
+                            Logging.LogDebug("Correcting Z position with line trace for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, hitResult.ImpactPoint.Z);
+                            currentLocation.Z = (float)hitResult.ImpactPoint.Z;
+                            owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
+                        }
+                    }
+                }
             }
 
             if (owner is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")

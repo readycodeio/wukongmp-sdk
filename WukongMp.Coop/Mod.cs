@@ -187,8 +187,8 @@ namespace WukongMp.Coop
 
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
-                _logger.LogDebug("J (Dump anim info)");
-                DebugUtils.DumpPlayersAnimationDebugInfo();
+                _logger.LogDebug("J");
+                DebugUtils.CorrectPositionWithLineTrace = !DebugUtils.CorrectPositionWithLineTrace;
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
