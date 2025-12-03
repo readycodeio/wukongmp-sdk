@@ -117,51 +117,35 @@ public class PatchInitBloodBarUI
         if (___EntityDic.ContainsKey(Entity))
             return false;
         var actor = Entity.ToActor();
-        var OwnerUnit = actor as BGUCharacterCS;
-        if (OwnerUnit == null)
+        var ownerUnit = actor as BGUCharacterCS;
+        if (ownerUnit == null)
             return false;
-        var unitCommDesc = BGW_GameDB.GetUnitCommDesc(OwnerUnit.GetResID());
+        var unitCommDesc = BGW_GameDB.GetUnitCommDesc(ownerUnit.GetResID());
         if (unitCommDesc == null)
             return false;
-        var battleInfoExtendDesc = BGW_GameDB.GetUnitBattleInfoExtendDesc(OwnerUnit.GetFinalBattleInfoExtendID());
+        var battleInfoExtendDesc = BGW_GameDB.GetUnitBattleInfoExtendDesc(ownerUnit.GetFinalBattleInfoExtendID());
         if (battleInfoExtendDesc == null)
             return false;
 
-        var bloodBarShowType = EBGUBloodBarShowType.Always;
-
         var maybePlayer = DI.Instance.PawnState.GetEntityByPlayerPawn(actor);
         var isPlayer = maybePlayer.HasValue;
+        var bloodBarShowType = isPlayer ? EBGUBloodBarShowType.Always : EBGUBloodBarShowType.Change;
 
         var isInPlayerTeam = !isPlayer && BGU_DataUtil.GetIsInPlayerTeam(actor);
 
         if (battleInfoExtendDesc.BloodBarType == EBGUBloodBarType.None || isInPlayerTeam)
             return false;
 
-        var bloodBarPoolWidget = __instance.GetTopBarPoolWidget(OwnerUnit, true) as BUI_MBarBase;
+        var bloodBarPoolWidget = __instance.GetTopBarPoolWidget(ownerUnit, true) as BUI_MBarBase;
         bloodBarPoolWidget?.InitBloodBar(battleInfoExtendDesc.BloodBarType, unitCommDesc.HPBarHeightOffset);
-
-        switch (bloodBarShowType)
-        {
-            case EBGUBloodBarShowType.Hide:
-                if (bloodBarPoolWidget != null)
-                {
-                    bloodBarPoolWidget.SetAlwaysHideSetting(AlwaysHideSetting.Always, true);
-                    break;
-                }
-
-                break;
-            case EBGUBloodBarShowType.Always:
-                if (bloodBarPoolWidget != null)
-                {
-                    bloodBarPoolWidget.SetAlwaysShowSetting(AlwaysShowSetting.Always, true);
-                    break;
-                }
-
-                break;
-        }
 
         if (bloodBarPoolWidget != null)
         {
+            if (bloodBarShowType == EBGUBloodBarShowType.Always)
+            {
+                bloodBarPoolWidget.SetAlwaysShowSetting(AlwaysShowSetting.Always, true);
+            }
+
             ___EntityDic.Add(Entity, bloodBarPoolWidget);
         }
 
@@ -170,5 +154,18 @@ public class PatchInitBloodBarUI
 
         dsBarInfoBind.ReInit();
         return false;
+    }
+}
+
+[HarmonyPatch(typeof(BUI_ProjWidget), nameof(BUI_ProjWidget.SetAlwaysShowSetting))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchSetAlwaysShowSetting
+{
+    public static void Prefix(IProjInfo ___ProjData, ref bool Value)
+    {
+        if (___ProjData is HPProjInfo { BindedUnit: BGUPlayerCharacterCS })
+        {
+            Value = true;
+        }
     }
 }
