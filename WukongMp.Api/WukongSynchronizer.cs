@@ -129,6 +129,12 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
                 events.Evt_AIPerceptionSetting.Invoke(true);
                 Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
             }
+            if (tamerComp.Guid == "UGuid.HYS.JiRuHuo01")
+            {
+                events.Evt_DisablePhysicalMove.Invoke(false);
+                var monster = localTamerComp.Tamer.GetMonster();
+                monster?.Mesh?.SetSimulatePhysics(true);
+            }
         }
     }
 }
