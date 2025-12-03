@@ -250,4 +250,10 @@
   <data name="MissingPak" type="System.Resources.ResXNullRef, System.Windows.Forms">
     <value />
   </data>
+  <data name="WaitForOtherPlayers" xml:space="preserve">
+    <value>Warte auf andere Spieler</value>
+  </data>
+  <data name="WaitForOtherPlayersCount" xml:space="preserve">
+    <value>Warte auf andere Spieler ({0}/{1})</value>
+  </data>
 </root>

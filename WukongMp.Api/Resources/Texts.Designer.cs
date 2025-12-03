@@ -492,6 +492,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Wait for other players ({0}/{1}).
+        /// </summary>
+        public static string WaitForOtherPlayersCount {
+            get {
+                return ResourceManager.GetString("WaitForOtherPlayersCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You are ready.
         /// </summary>
         public static string YouAreReady {

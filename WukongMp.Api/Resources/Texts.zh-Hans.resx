@@ -264,4 +264,7 @@
   <data name="SeverePacketLossDetected" xml:space="preserve">
     <value>检测到严重丢包！</value>
   </data>
+  <data name="WaitForOtherPlayersCount" xml:space="preserve">
+    <value>等待其他玩家 ({0}/{1})</value>
+  </data>
 </root>

@@ -264,4 +264,7 @@
   <data name="SeverePacketLossDetected" xml:space="preserve">
     <value>Severe packet loss detected!</value>
   </data>
+  <data name="WaitForOtherPlayersCount" xml:space="preserve">
+    <value>Wait for other players ({0}/{1})</value>
+  </data>
 </root>

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using PreludeLib.Attributes;
+using ReadyM.Relay.Common.Wukong.RPC;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
@@ -217,6 +218,7 @@ public static class PatchTickForMovieSystem
                     {
                         DI.Instance.ServerRpc.SendMovieStarted(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
                     }
+
                     RequestPlayMovieMethod?.Invoke(__instance, [movieRequest]);
                 }
             }
@@ -227,7 +229,7 @@ public static class PatchTickForMovieSystem
                 {
                     return true;
                 }
-                
+
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
@@ -299,8 +301,10 @@ public static class PatchOnSkipCurrentCameraMovie
         if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
-            DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
+            DI.Instance.ServerRpc.SendSkipMovie(new SkipMovieData
+            {
+                SequenceId = sequenceId
+            });
             return false;
         }
 
