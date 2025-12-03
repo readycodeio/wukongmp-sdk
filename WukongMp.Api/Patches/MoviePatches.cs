@@ -130,7 +130,7 @@ public static class PatchRequestPlayMovie
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
                 var areaEntity = DI.Instance.AreaState.CurrentArea;
-                if (areaEntity != null && !areaEntity.Value.GetMovie().StartedSequences.Contains(SequenceId))
+                if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(SequenceId))
                 {
                     DI.Instance.ServerRpc.SendMovieFinished(SequenceId, areaEntity.Value.Scope.AreaId);
                 }
@@ -296,7 +296,7 @@ public static class PatchOnSkipCurrentCameraMovie
         var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
 
         var areaEntity = DI.Instance.AreaState.CurrentArea;
-        if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
+        if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
             DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
