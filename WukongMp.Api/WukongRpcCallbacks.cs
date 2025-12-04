@@ -809,7 +809,16 @@ public partial class WukongRpcCallbacks : IDisposable
 
             localMainComp.IsRespawning = true;
             self._freeCameraManager.LeaveFreeCameraMode();
-            PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+
+            foreach (var player in DI.Instance.State.AreaPlayers)
+            {
+                var playerEntity = self._playerState.GetMainCharacterById(player);
+                var playerPawn = playerEntity?.GetLocalState().Pawn;
+                if (playerPawn == null)
+                    continue;
+
+                PlayerUtils.RebirthPlayer(playerPawn, shrineId);
+            }
         }, this, birthPointId);
     }
 
@@ -818,21 +827,26 @@ public partial class WukongRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, shrineId) =>
         {
-            if (self._playerState.LocalMainCharacter is not { } mainEntity)
-                return;
-
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            if (localMainComp.Pawn == null)
-                return;
-
-            if (mainEntity.GetState().IsDead)
+            foreach (var player in DI.Instance.State.AreaPlayers)
             {
-                localMainComp.IsRespawning = true;
-                PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
-            }
-            else
-            {
-                PlayerUtils.RestPlayer(localMainComp.Pawn);
+                var playerEntity = self._playerState.GetMainCharacterById(player);
+
+                if (playerEntity is not { } mainEntity)
+                    continue;
+
+                ref var localMainComp = ref mainEntity.GetLocalState();
+                if (localMainComp.Pawn == null)
+                    continue;
+
+                if (mainEntity.GetState().IsDead)
+                {
+                    localMainComp.IsRespawning = true;
+                    PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+                }
+                else
+                {
+                    PlayerUtils.RestPlayer(localMainComp.Pawn);
+                }
             }
         }, this, birthPointId);
     }
