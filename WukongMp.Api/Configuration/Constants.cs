@@ -29,6 +29,7 @@ namespace WukongMp.Api.Configuration
         public const float AllowedZDiffrence = 120f; // Wukong capsule collider half height
         public const float BaseMarkerHeightCoefficient = 0.12f;
         public const float MaxMarkerHeightDistance = 10000f;
+        public const float ColliderDisableTime = 3f; // seconds
         
         public static readonly HashSet<int> InstantTriggerSequences =
         [

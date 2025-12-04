@@ -655,7 +655,7 @@ namespace WukongMp.Api.Patches
     }
 
     [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "EnableCollision")]
-    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    [HarmonyPatchCategory(Constants.DisabledPatches)]
     public class PatchEnableCollision
     {
         public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
@@ -784,6 +784,57 @@ namespace WukongMp.Api.Patches
             }
 
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_TouchWallFeedbackComp), "CheckCanTrigger_HitDynamicObstacleWall")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchCheckCanTrigger_HitDynamicObstacleWall
+    {
+        public static bool Prefix(BUS_TouchWallFeedbackComp __instance, AActor HitActor)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return true;
+
+            var player = __instance.GetOwner() as BGUPlayerCharacterCS;
+            if (player == null)
+                return true;
+
+            var bossActor = GetClosestBossActor(HitActor, __instance.GetOwner().GetActorLocation());
+            if (bossActor == null)
+                return true;
+
+            var distancePlayerToBoss = FVector.DistSquared2D(player.GetActorLocation(), bossActor.GetActorLocation());
+            var distanceHitToBoss = FVector.DistSquared2D(HitActor.GetActorLocation(), bossActor.GetActorLocation());
+            if (distanceHitToBoss > distancePlayerToBoss)
+            {
+                Logging.LogDebug("Hit dynamic obstacle wall is further from boss than player, allowing collision");
+                return true;
+            }
+
+            Logging.LogDebug("Hit dynamic obstacle wall is closer to boss than player, disabling collision temporarily");
+            DI.Instance.ColliderDisableData.DisableCollider(HitActor, Constants.ColliderDisableTime);
+            HitActor.SetActorEnableCollision(false);
+            return false;
+        }
+
+        private static AActor? GetClosestBossActor(UObject context, FVector position)
+        {
+            AActor? closestBoss = null;
+            double closestDistanceSquared = double.MaxValue;
+            var monsters = UGameplayStatics.GetAllActorsOfClass<BGU_CharacterAI>(context);
+            foreach (BGU_CharacterAI monster in monsters)
+            {
+                if (!monster.bBossRoomMonster)
+                    continue;
+                var distanceSquared = FVector.DistSquared2D(monster.GetActorLocation(), position);
+                if (distanceSquared < closestDistanceSquared)
+                {
+                    closestDistanceSquared = distanceSquared;
+                    closestBoss = monster;
+                }
+            }
+            return closestBoss;
         }
     }
 

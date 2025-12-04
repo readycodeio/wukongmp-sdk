@@ -73,6 +73,7 @@ public sealed class DI
     public WukongEventBus EventBus { get; private set; } = null!;
     public GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
     public GameplayEventRouter GameplayEventRouter { get; private set; } = null!;
+    public ColliderDisableData ColliderDisableData { get; private set; } = null!;
 
     public WukongNetworkLogger NetLogger { get; private set; } = null!;
     public INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
@@ -156,6 +157,7 @@ public sealed class DI
 
         var gameplayConfig = GameplayConfiguration = new GameplayConfiguration(logger);
         var gameplayEventRouter = GameplayEventRouter = new GameplayEventRouter();
+        var colliderDisableData = ColliderDisableData = new ColliderDisableData(logger);
 
         var textSerializer = TextSerializer = new TextRelaySerializer([
             new DefaultTextRelaySerializerRegistration(),
