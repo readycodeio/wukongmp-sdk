@@ -677,16 +677,32 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
+            BGU_QuestActor? questActor = HitActor as BGU_QuestActor;
+            if (questActor == null)
+                return true;
+
+            if (questActor.QuestActorType != EQuestActorType.DynamicObstacle)
+                return true;
+
             var player = __instance.GetOwner() as BGUPlayerCharacterCS;
             if (player == null)
                 return true;
 
-            var bossActor = GetClosestBossActor(HitActor, __instance.GetOwner().GetActorLocation());
+            if (player != DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn)
+                return true;
+
+            var bossActor = GetClosestBossActor(player, player.GetActorLocation());
             if (bossActor == null)
                 return true;
 
-            var distancePlayerToBoss = FVector.DistSquared2D(player.GetActorLocation(), bossActor.GetActorLocation());
-            var distanceHitToBoss = FVector.DistSquared2D(HitActor.GetActorLocation(), bossActor.GetActorLocation());
+            var bossLocation = bossActor.GetActorLocation();
+
+            var aiData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_AIData, BUC_AIData>(bossActor);
+            if (aiData != null)
+                bossLocation = aiData.GetEnterBattlePosition();
+
+            var distancePlayerToBoss = FVector.DistSquared2D(player.GetActorLocation(), bossLocation);
+            var distanceHitToBoss = FVector.DistSquared2D(questActor.GetActorLocation(), bossLocation);
             if (distanceHitToBoss > distancePlayerToBoss)
             {
                 Logging.LogDebug("Hit dynamic obstacle wall is further from boss than player, allowing collision");
@@ -694,7 +710,7 @@ namespace WukongMp.Api.Patches
             }
 
             Logging.LogDebug("Hit dynamic obstacle wall is closer to boss than player, disabling collision temporarily");
-            DI.Instance.ColliderDisableData.DisableCollider(HitActor, Constants.ColliderDisableTime);
+            DI.Instance.ColliderDisableData.DisableCollider(questActor, Constants.ColliderDisableTime);
             HitActor.SetActorEnableCollision(false);
             return false;
         }
