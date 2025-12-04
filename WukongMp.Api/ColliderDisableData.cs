@@ -10,6 +10,15 @@ namespace WukongMp.Api
     {
         private readonly Dictionary<AActor, float> _colliderDisableTimes = []; 
 
+        public void PermanentlyDisableCollider(AActor actor)
+        {
+            if (_colliderDisableTimes.ContainsKey(actor))
+            {
+                _colliderDisableTimes.Remove(actor);
+                logger.LogDebug("Permanently disabled collider for actor: {Actor}", BGU_DataUtil.GetActorGuid(actor));
+            }
+        }
+
         public void DisableCollider(AActor actor, float disableDuration)
         {
             _colliderDisableTimes[actor] = disableDuration;

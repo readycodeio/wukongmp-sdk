@@ -654,136 +654,17 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "EnableCollision")]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
-    public class PatchEnableCollision
+    [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "DisableCollision")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchDisableCollision
     {
-        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
+        public static void Postfix(BUS_QuestDynamicObstacleComp __instance)
         {
             if (!DI.Instance.AreaState.InRoom)
-                return true;
+                return;
 
             var obstacle = __instance.GetOwner();
-            var obstavceName = BGU_DataUtil.GetActorGuid(obstacle);
-            Logging.LogDebug("Checking whether to enable collider for obstacle with guid {Guid}", obstavceName);
-
-            List<FVector> playersPositions = [];
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-                ref playerComp, _) =>
-            {
-                playersPositions.Add(playerComp.Location.ToFVector());
-            });
-
-            if (playersPositions.Count <= 1)
-                return true;
-
-            var enableCollider = true;
-            Logging.LogDebug("Obstacle at {ObstaclePos}", obstacle.GetActorLocation());
-            Logging.LogDebug("Found {Count} players in area", playersPositions.Count);
-            Logging.LogDebug("Players positions: {Positions}", string.Join(", ", playersPositions));
-
-
-            MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_QuestDynamicObstacleComp), "CollisionComponents");
-            List<TWeakObject<UPrimitiveComponent>> CollisionComponents = (List<TWeakObject<UPrimitiveComponent>>)getter.Invoke(__instance, null);
-
-            // Enable collsions
-            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
-            {
-                if (collisionComponent.IsValid())
-                {
-                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
-                    uPrimitiveComponent?.SetCollisionEnabled(ECollisionEnabled.QueryAndPhysics);
-                }
-            }
-
-            for (int i = 1; i < playersPositions.Count; i++)
-            {
-                var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[0], playersPositions[i], null, null);
-                var path = nav.PathPoints.ToList();
-                Logging.LogDebug("Checking path between players at {Pos1} and {Pos2}, path has {Count} points", playersPositions[0], playersPositions[i], path.Count);
-                Logging.LogDebug("Path points: {Points}", string.Join(", ", path));
-                Logging.LogDebug("IsPartial: {IsPartial}", nav.IsPartial());
-                //if (!nav.IsPartial())
-                //{
-                //    break;
-                //}
-                if (HasPathColllision(obstacle.World, path, Constants.ArenaPortalRadius, obstacle))
-                {
-                    enableCollider = false;
-                    break;
-                }
-            }
-
-            // Disable collsions
-            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
-            {
-                if (collisionComponent.IsValid())
-                {
-                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
-                    uPrimitiveComponent?.SetCollisionEnabled(ECollisionEnabled.NoCollision);
-                }
-            }
-
-            Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
-            return enableCollider;
-        }
-
-        private static bool HasPathColllision(UObject world, IList<FVector> pathPoints, float radius, AActor actorToCheck)
-        {
-            if (pathPoints.Count == 0 || radius <= 0f)
-                return false;
-
-            var actorHeight = actorToCheck.GetActorLocation().Z;
-            List<AActor> emptyActorList = [];
-            for (int i = 0; i < pathPoints.Count - 1; i++)
-            {
-                if (USystemLibrary.SphereTraceMultiByProfile(world, new FVector(pathPoints[i].X, pathPoints[i].Y, actorHeight), new FVector(pathPoints[i + 1].X, pathPoints[i + 1].Y, actorHeight), radius, B1GlobalFNames.Pawn, bTraceComplex: false, emptyActorList, EDrawDebugTrace.None, out var OutHit3, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 5f))
-                {
-                    foreach (var hit in OutHit3)
-                    {
-                        if (hit.Component.Value.GetOwner() == actorToCheck)
-                        {
-                            Logging.LogDebug("Path collision detected with actor: {ActorName}", hit.Component.Value.GetOwner().GetName());
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private static bool IsPathNearPosition(IList<FVector> pathPoints, FVector worldPos, float radius)
-        {
-            if (pathPoints == null || pathPoints.Count == 0 || radius <= 0f)
-                return false;
-
-            float radiusSquared = radius * radius;
-
-            FVector ClosestPointOnSegment(FVector segmentStart, FVector segmentEnd, FVector point)
-            {
-                FVector segmentVector = segmentEnd - segmentStart;
-                double segmentLength = segmentVector.SizeSquared();
-                if (segmentLength <= 1e-6f) return segmentStart;
-                double t = FVector.DotProduct(point - segmentStart, segmentVector) / segmentLength;
-                t = FMath.Clamp(t, 0, 1);
-                return segmentStart + t * segmentVector;
-            }
-
-            for (int i = 0; i < pathPoints.Count; i++)
-            {
-                if (FVector.DistSquared2D(pathPoints[i], worldPos) <= radiusSquared)
-                    return true;
-            }
-
-            for (int i = 0; i < pathPoints.Count - 1; i++)
-            {
-                FVector closest = ClosestPointOnSegment(pathPoints[i], pathPoints[i + 1], worldPos);
-                if (FVector.DistSquared2D(closest, worldPos) <= radiusSquared)
-                    return true;
-            }
-
-            return false;
+            DI.Instance.ColliderDisableData.PermanentlyDisableCollider(obstacle);
         }
     }
 
