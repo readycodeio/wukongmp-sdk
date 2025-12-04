@@ -1,6 +1,7 @@
 ﻿using b1;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using UnrealEngine.Engine;
 
 namespace WukongMp.Api
@@ -17,10 +18,9 @@ namespace WukongMp.Api
         public void TryReEnableColliders(float deltaTime)
         {
             var collidersToEnable = new List<AActor>();
-            foreach (var kvp in _colliderDisableTimes)
+            foreach (var collider in _colliderDisableTimes.Keys.ToList())
             {
-                var collider = kvp.Key;
-                var remainingTime = kvp.Value - deltaTime;
+                var remainingTime = _colliderDisableTimes[collider] - deltaTime;
                 if (remainingTime <= 0f)
                 {
                     collidersToEnable.Add(collider);
