@@ -50,6 +50,7 @@ public class CoopSynchronizer : WukongSynchronizer
         WukongRpcCallbacks rpc,
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
+        ColliderDisableData colliderDisableData,
         ILogger logger)
         : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager, gameplayEventRouter, configuration, logger)
     {
@@ -60,6 +61,7 @@ public class CoopSynchronizer : WukongSynchronizer
         _modeGroup = new SystemGroup("Coop");
 
         _modeGroup.Add(new ScaleMonsterHpSystem());
+        _modeGroup.Add(new ReEnableCollidersSystem(colliderDisableData, eventBus));
         _modeGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
 
         _modeGroup.SetMonitorPerf(true);
