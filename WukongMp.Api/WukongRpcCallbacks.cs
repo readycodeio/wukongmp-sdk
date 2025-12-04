@@ -809,15 +809,20 @@ public partial class WukongRpcCallbacks : IDisposable
 
             localMainComp.IsRespawning = true;
             self._freeCameraManager.LeaveFreeCameraMode();
+            PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
 
-            foreach (var player in DI.Instance.State.AreaPlayers)
+            foreach (var player in DI.Instance.State.OtherAreaPlayers)
             {
                 var playerEntity = self._playerState.GetMainCharacterById(player);
                 var playerPawn = playerEntity?.GetLocalState().Pawn;
                 if (playerPawn == null)
                     continue;
 
-                PlayerUtils.RebirthPlayer(playerPawn, shrineId);
+                var events = BUS_EventCollectionCS.Get(playerPawn);
+                if (events != null)
+                {
+                    events.Evt_AfterUnitRebirth.Invoke(ERebirthType.RebirthPoint); // Reset falling timer.
+                }
             }
         }, this, birthPointId);
     }
@@ -841,6 +846,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 if (mainEntity.GetState().IsDead)
                 {
                     localMainComp.IsRespawning = true;
+                    self._freeCameraManager.LeaveFreeCameraMode();
                     PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
                 }
                 else
