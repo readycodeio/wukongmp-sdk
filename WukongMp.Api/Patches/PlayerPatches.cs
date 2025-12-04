@@ -703,16 +703,33 @@ namespace WukongMp.Api.Patches
 
             var distancePlayerToBoss = FVector.DistSquared2D(player.GetActorLocation(), bossLocation);
             var distanceHitToBoss = FVector.DistSquared2D(questActor.GetActorLocation(), bossLocation);
+            bool disableCollider;
             if (distanceHitToBoss > distancePlayerToBoss)
             {
-                Logging.LogDebug("Hit dynamic obstacle wall is further from boss than player, allowing collision");
-                return true;
+                if (UBGUSelectUtil.LineTraceForObjects(player, player.GetActorLocation(), bossLocation, [EObjectTypeQuery.ObjectTypeQuery15], false, out var HitResult) > 0 && HitResult.HitActor == HitActor)
+                {
+                    Logging.LogDebug("Hit dynamic obstacle wall is further from boss than player, but there is an obstacle in the way, disabling collision temporarily");
+                    disableCollider = true;
+                }
+                else
+                {
+                    Logging.LogDebug("Hit dynamic obstacle wall is further from boss than player, allowing collision");
+                    return true;
+                }
+            }
+            else
+            {
+                Logging.LogDebug("Hit dynamic obstacle wall is closer to boss than player, disabling collision temporarily");
+                disableCollider = true;
             }
 
-            Logging.LogDebug("Hit dynamic obstacle wall is closer to boss than player, disabling collision temporarily");
-            DI.Instance.ColliderDisableData.DisableCollider(questActor, Constants.ColliderDisableTime);
-            HitActor.SetActorEnableCollision(false);
-            return false;
+            if (disableCollider)
+            {
+                DI.Instance.ColliderDisableData.DisableCollider(questActor, Constants.ColliderDisableTime);
+                HitActor.SetActorEnableCollision(false);
+                return false;
+            }
+            return true;
         }
 
         private static AActor? GetClosestBossActor(UObject context, FVector position)
