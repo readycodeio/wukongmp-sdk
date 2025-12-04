@@ -810,21 +810,22 @@ public partial class WukongRpcCallbacks : IDisposable
             localMainComp.IsRespawning = true;
             self._freeCameraManager.LeaveFreeCameraMode();
             PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
-
-            foreach (var player in DI.Instance.State.OtherAreaPlayers)
-            {
-                var playerEntity = self._playerState.GetMainCharacterById(player);
-                var playerPawn = playerEntity?.GetLocalState().Pawn;
-                if (playerPawn == null)
-                    continue;
-
-                var events = BUS_EventCollectionCS.Get(playerPawn);
-                if (events != null)
-                {
-                    events.Evt_AfterUnitRebirth.Invoke(ERebirthType.RebirthPoint); // Reset falling timer.
-                }
-            }
         }, this, birthPointId);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnAfterRebirth(PlayerId __sender)
+    {
+        var playerEntity = _playerState.GetMainCharacterById(__sender);
+        if (playerEntity is not { } mainEntity)
+            return;
+
+        var playerPawn = mainEntity.GetLocalState().Pawn;
+        var events = BUS_EventCollectionCS.Get(playerPawn);
+        if (events != null)
+        {
+            events.Evt_AfterUnitRebirth.Invoke(ERebirthType.RebirthPoint);
+        }
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]

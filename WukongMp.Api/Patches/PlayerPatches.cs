@@ -729,6 +729,7 @@ namespace WukongMp.Api.Patches
                 HitActor.SetActorEnableCollision(false);
                 return false;
             }
+
             return true;
         }
 
@@ -748,6 +749,7 @@ namespace WukongMp.Api.Patches
                     closestBoss = monster;
                 }
             }
+
             return closestBoss;
         }
     }
@@ -1061,6 +1063,7 @@ public class PatchOnRebirthFinished
         if (entity.HasValue)
         {
             entity.Value.GetLocalState().IsRespawning = false;
+            DI.Instance.Rpc.SendAfterRebirth();
         }
     }
 }
