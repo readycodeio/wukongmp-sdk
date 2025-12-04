@@ -151,7 +151,7 @@
     <value>ENTRÉE - Écrire/Envoyer | K - Cacher/Afficher Chat</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>Connecté</value>
+    <value>Joueurs dans la zone</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
     <value>Dans le Lobby Multijoueur</value>

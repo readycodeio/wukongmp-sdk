@@ -151,7 +151,7 @@
     <value>ENTER - Pisz/Wyślij   |   K - Ukryj/Pokaż Czat</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>Połączeni</value>
+    <value>Gracze w strefie</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
     <value>W lobby trybu wieloosobowego</value>

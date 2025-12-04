@@ -159,7 +159,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected.
+        ///   Looks up a localized string similar to Players in zone.
         /// </summary>
         public static string Connected {
             get {

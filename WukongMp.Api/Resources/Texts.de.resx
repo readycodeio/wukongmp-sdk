@@ -151,7 +151,7 @@
     <value>ENTER - Eingeben/Senden | K - Chat Ausblenden/Einblenden</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>Verbunden</value>
+    <value>Spieler in der Zone</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
     <value>In Mehrspieler-Lobby</value>
