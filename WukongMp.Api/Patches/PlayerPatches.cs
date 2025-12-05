@@ -785,12 +785,15 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(InteractStepMatchPos), "StepFinish")]
+    [HarmonyPatch(typeof(InteractStepBase), "TriggerFinish")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchOnInteractStepFinish
+    public class PatchTriggerFinish
     {
-        public static void Prefix(InteractStepMatchPos __instance, InteractContext ___Context)
+        public static void Prefix(InteractStepBase __instance, InteractContext ___Context)
         {
+            if (__instance is not InteractStepMatchPos)
+                return;
+
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
