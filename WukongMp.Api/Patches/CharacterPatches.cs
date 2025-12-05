@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using b1;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using PreludeLib.Compat;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
@@ -427,7 +426,7 @@ namespace WukongMp.Api.Patches
                         var start = targetLocation + FVector.UpVector * capsuleHalfHeight * 2;
                         var end = targetLocation - FVector.UpVector * capsuleHalfHeight * 2;
 
-                        if (USystemLibrary.LineTraceSingleByProfile(owner, start, end, B1GlobalFNames.Pawn, false, [], EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f)) 
+                        if (USystemLibrary.LineTraceSingleByProfile(owner, start, end, B1GlobalFNames.Pawn, false, [], EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f))
                         {
                             Logging.LogDebug("Correcting Z position with line trace for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, hitResult.ImpactPoint.Z + capsuleHalfHeight);
                             currentLocation.Z = (float)hitResult.ImpactPoint.Z + capsuleHalfHeight;
@@ -441,7 +440,7 @@ namespace WukongMp.Api.Patches
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
                 if (!tamerEntity.HasValue)
-                     return;
+                    return;
 
                 var boneNameLock = new FName(Constants.ChestCameraLockNode);
                 var socketOffset = ai.Mesh.GetSocketTransform(boneNameLock, ERelativeTransformSpace.RTS_Component).GetLocation();
@@ -452,7 +451,7 @@ namespace WukongMp.Api.Patches
 
                 FRotator rotation = targetCenterRotation; // TODO: Check interpolation: FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
                 FRotator outRotation = rotation;
-                FVector rotatedOffset = rotation.RotateVector(socketOffset); 
+                FVector rotatedOffset = rotation.RotateVector(socketOffset);
                 FVector outLocation = targetCenterPosition - rotatedOffset;
 
                 ai.Mesh.SetWorldLocationAndRotation(outLocation, outRotation, false, out _, false);
@@ -470,15 +469,28 @@ namespace WukongMp.Api.Patches
                 return;
 
             var owner = __instance.GetOwner();
+            NetworkId? netId = null;
+
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            {
+                netId = tamerEntity.Value.GetMeta().NetId;
+            }
+            else
+            {
+                var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
+                if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == owner)
+                {
+                    netId = playerEntity.Value.GetMeta().NetId;
+                }
+            }
+
+            if (netId.HasValue)
             {
                 if (SimpleState == EBGUSimpleState.Immobilizing)
                     return;
 
-                var netId = tamerEntity.Value.GetMeta().NetId;
-
-                DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
+                DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId.Value, SimpleState, IsRemove));
             }
         }
     }

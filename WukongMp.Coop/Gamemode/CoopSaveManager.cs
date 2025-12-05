@@ -9,26 +9,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using PreludeLib.Compat;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
-using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Coop.Configuration;
 
 namespace WukongMp.Coop.Gamemode;
 
-internal class CoopSaveManager
+internal class CoopSaveManager(ILogger logger)
 {
-    private readonly ILogger _logger;
-
     public bool ShouldRedirectSaveFiles => true;
-
-    public bool AllowSaves => true;
-
-    public CoopSaveManager(ILogger logger)
-    {
-        _logger = logger;
-    }
 
     public void OnNewGameLoad(UObject worldContext)
     {
@@ -61,11 +52,11 @@ internal class CoopSaveManager
             DI.Instance.EcsLoop.Wait(task);
 
             timer.Stop();
-            _logger.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
+            logger.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
 
             if (worldDownloadTask.Result is null)
             {
-                _logger.LogInformation("Failed to download world save file from the cloud, will start new game");
+                logger.LogInformation("Failed to download world save file from the cloud, will start new game");
                 startNewGame = true;
             }
             else
@@ -75,7 +66,7 @@ internal class CoopSaveManager
 
             if (playerDownloadTask.Result is null)
             {
-                _logger.LogInformation("Player has no save file in the cloud, using default world save");
+                logger.LogInformation("Player has no save file in the cloud, using default world save");
                 playerData = worldData;
             }
             else
@@ -99,7 +90,7 @@ internal class CoopSaveManager
             var readWorldResult = __instance.ReadArchiveData(Constants.NewCharacterArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
             if (readWorldResult != ReadArchiveResult.Success)
             {
-                _logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
+                logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
                 return;
             }
 
@@ -119,14 +110,14 @@ internal class CoopSaveManager
             var readWorldResult = __instance.ReadArchiveData(CoopConstants.CoopWorldArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
             if (readWorldResult != ReadArchiveResult.Success)
             {
-                _logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
+                logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
                 return;
             }
 
             var readPlayerResult = __instance.ReadArchiveData(CoopConstants.CoopPlayerArchiveId, out playerArchiveData, out archiveCanBeRepaired);
             if (readPlayerResult != ReadArchiveResult.Success)
             {
-                _logger.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);
+                logger.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);
                 return;
             }
         }
@@ -161,12 +152,12 @@ internal class CoopSaveManager
 
             if (spellItemDict.TryGetValue(worldSpellType, out var existingSpellId) && existingSpellId == 0)
             {
-                _logger.LogDebug("Assigning spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
+                logger.LogDebug("Assigning spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
                 spellItemDict[worldSpellType] = worldSpellId;
             }
             else if (!spellItemDict.ContainsKey(worldSpellType))
             {
-                _logger.LogDebug("Adding spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
+                logger.LogDebug("Adding spell ID {SpellId} to type {SpellType}", worldSpellId, worldSpellType);
                 spellItemDict.Add(worldSpellType, worldSpellId);
             }
         }
@@ -185,7 +176,7 @@ internal class CoopSaveManager
 
     public void OnSaveData(List<byte> inSaveData, string slotName)
     {
-        _logger.LogInformation("Will upload save to the cloud, Slot: {SlotName}, Size: {Size} Mb", slotName, (inSaveData.Count / (1024.0 * 1024.0)).ToString("F2"));
+        logger.LogInformation("Will upload save to the cloud, Slot: {SlotName}, Size: {Size} Mb", slotName, (inSaveData.Count / (1024.0 * 1024.0)).ToString("F2"));
 
         var data = inSaveData.ToArray();
 
@@ -210,11 +201,11 @@ internal class CoopSaveManager
 
         if (success)
         {
-            _logger.LogInformation("Blob uploaded successfully: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
+            logger.LogInformation("Blob uploaded successfully: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
         }
         else
         {
-            _logger.LogError("Failed to upload blob: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
+            logger.LogError("Failed to upload blob: {Name} in {Time} ms", name, stopwatch.ElapsedMilliseconds);
         }
     }
 }
