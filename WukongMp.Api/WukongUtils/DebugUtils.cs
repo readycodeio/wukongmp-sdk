@@ -13,8 +13,6 @@ namespace WukongMp.Api.WukongUtils;
 
 public static class DebugUtils
 {
-    public static bool CorrectPositionWithLineTrace = false;
-
     private static readonly List<AActor> TmpActors = [];
 
     public static void LogUe4SsPresence()

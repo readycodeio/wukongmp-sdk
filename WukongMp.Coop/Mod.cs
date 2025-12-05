@@ -185,12 +185,6 @@ namespace WukongMp.Coop
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
-            {
-                _logger.LogDebug("J");
-                DebugUtils.CorrectPositionWithLineTrace = !DebugUtils.CorrectPositionWithLineTrace;
-            });
-
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");

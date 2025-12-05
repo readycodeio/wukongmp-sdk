@@ -25,8 +25,6 @@ namespace WukongMp.Api.Configuration
         public const float RestrictedMovementRadiusSquare = RestrictedMovementRadius * RestrictedMovementRadius;
         public const float MonsterUpdateTargetTime = 7; // seconds
         public const float SpawnOwnershipRadius = 7500f; // 75m
-        public const float ArenaPortalRadius = 1000f; // 10m
-        public const float AllowedZDiffrence = 120f; // Wukong capsule collider half height
         public const float BaseMarkerHeightCoefficient = 0.12f;
         public const float MaxMarkerHeightDistance = 10000f;
         public const float ColliderDisableTime = 3f; // seconds

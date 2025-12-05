@@ -401,43 +401,6 @@ namespace WukongMp.Api.Patches
                 return;
 
             var owner = __instance.GetOwner() as BGUCharacterCS;
-            if (owner == null)
-                return;
-
-            var otherMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-
-            if (otherMainEntity != null)
-            {
-                ref var otherMain = ref otherMainEntity.Value.GetState();
-
-                FVector currentLocation = owner.BGUGetActorLocation();
-                FVector targetLocation = otherMain.Location.ToFVector();
-                if (FMath.Abs(targetLocation.Z - currentLocation.Z) > Constants.AllowedZDiffrence)
-                {
-                    if (!DebugUtils.CorrectPositionWithLineTrace)
-                    {
-                        Logging.LogDebug("Correcting Z position for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, targetLocation.Z);
-                        owner.SetActorEnableCollision(true); // the cause for this is usually falling through the ground, so re-enable collision
-                        currentLocation.Z = targetLocation.Z;
-                        owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
-                    }
-                    else
-                    {
-                        var capsuleHalfHeight = owner.CapsuleComponent.GetScaledCapsuleHalfHeight();
-                        var start = targetLocation + FVector.UpVector * capsuleHalfHeight * 2;
-                        var end = targetLocation - FVector.UpVector * capsuleHalfHeight * 2;
-
-                        if (USystemLibrary.LineTraceSingleByProfile(owner, start, end, B1GlobalFNames.Pawn, false, [], EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f))
-                        {
-                            Logging.LogDebug("Correcting Z position with line trace for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, hitResult.ImpactPoint.Z + capsuleHalfHeight);
-                            owner.SetActorEnableCollision(true); // the cause for this is usually falling through the ground, so re-enable collision
-                            currentLocation.Z = (float)hitResult.ImpactPoint.Z + capsuleHalfHeight;
-                            owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
-                        }
-                    }
-                }
-            }
-
             if (owner is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
@@ -448,13 +411,13 @@ namespace WukongMp.Api.Patches
                 var socketOffset = ai.Mesh.GetSocketTransform(boneNameLock, ERelativeTransformSpace.RTS_Component).GetLocation();
 
                 var trans = tamerEntity.Value.GetTransform();
-                FVector targetCenterPosition = trans.Position.ToFVector();
-                FRotator targetCenterRotation = trans.Rotation.ToFRotator();
+                var targetCenterPosition = trans.Position.ToFVector();
+                var targetCenterRotation = trans.Rotation.ToFRotator();
 
-                FRotator rotation = targetCenterRotation; // TODO: Check interpolation: FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
-                FRotator outRotation = rotation;
-                FVector rotatedOffset = rotation.RotateVector(socketOffset);
-                FVector outLocation = targetCenterPosition - rotatedOffset;
+                var rotation = targetCenterRotation; // TODO: Check interpolation: FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
+                var outRotation = rotation;
+                var rotatedOffset = rotation.RotateVector(socketOffset);
+                var outLocation = targetCenterPosition - rotatedOffset;
 
                 ai.Mesh.SetWorldLocationAndRotation(outLocation, outRotation, false, out _, false);
             }
@@ -806,7 +769,7 @@ namespace WukongMp.Api.Patches
             }
             if (__instance.ActorGuid2Entity.TryGetValue(UnitGuid, out var value))
             {
-                int count = value.Count;
+                var count = value.Count;
                 // Return local player entity if player guid is queried.
                 if (count > 1 && DI.Instance.PlayerState.LocalMainCharacter.HasValue && value[0] is BGUPlayerCharacterCS)
                 {
@@ -819,7 +782,7 @@ namespace WukongMp.Api.Patches
                 }
                 if (count > 0)
                 {
-                    for (int num = count - 1; num >= 0; num--)
+                    for (var num = count - 1; num >= 0; num--)
                     {
                         Entity = ECSExtension.ToEntity(value[num]);
                         if (Entity != b1.ECS.Entity.Null)
