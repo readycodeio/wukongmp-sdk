@@ -791,4 +791,47 @@ namespace WukongMp.Api.Patches
             return true;
         }
     }
+
+    [HarmonyPatch(typeof(BIC_GlobalActorData), nameof(BIC_GlobalActorData.GetActorEntity))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchGetActorEntity
+    {
+        public static bool Prefix(BIC_GlobalActorData __instance, ref bool __result, string UnitGuid, out b1.ECS.Entity Entity)
+        {
+            Entity = b1.ECS.Entity.Null;
+            if (string.IsNullOrEmpty(UnitGuid))
+            {
+                __result = false;
+                return false;
+            }
+            if (__instance.ActorGuid2Entity.TryGetValue(UnitGuid, out var value))
+            {
+                int count = value.Count;
+                // Return local player entity if player guid is queried.
+                if (count > 1 && DI.Instance.PlayerState.LocalMainCharacter.HasValue && value[0] is BGUPlayerCharacterCS)
+                {
+                    Entity = ECSExtension.ToEntity(DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn);
+                    if (Entity != b1.ECS.Entity.Null)
+                    {
+                        __result = true;
+                        return false;
+                    }
+                }
+                if (count > 0)
+                {
+                    for (int num = count - 1; num >= 0; num--)
+                    {
+                        Entity = ECSExtension.ToEntity(value[num]);
+                        if (Entity != b1.ECS.Entity.Null)
+                        {
+                            __result = true;
+                            return false;
+                        }
+                    }
+                }
+            }
+            __result = false;
+            return false;
+        }
+    }
 }
