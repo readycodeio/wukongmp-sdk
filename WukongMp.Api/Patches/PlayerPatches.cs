@@ -726,7 +726,6 @@ namespace WukongMp.Api.Patches
             if (disableCollider)
             {
                 DI.Instance.ColliderDisableData.DisableCollider(questActor, Constants.ColliderDisableTime);
-                HitActor.SetActorEnableCollision(false);
                 return false;
             }
 

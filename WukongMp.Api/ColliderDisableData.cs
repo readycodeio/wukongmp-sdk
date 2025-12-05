@@ -3,10 +3,13 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api
 {
-    public class ColliderDisableData(ILogger logger)
+    public class ColliderDisableData(WukongPlayerState playerState, ILogger logger)
     {
         private readonly Dictionary<AActor, float> _colliderDisableTimes = []; 
 
@@ -22,6 +25,7 @@ namespace WukongMp.Api
         public void DisableCollider(AActor actor, float disableDuration)
         {
             _colliderDisableTimes[actor] = disableDuration;
+            actor.SetActorEnableCollision(false);
         }
 
         public void TryReEnableColliders(float deltaTime)
@@ -42,9 +46,39 @@ namespace WukongMp.Api
             foreach (var collider in collidersToEnable)
             {
                 collider.SetActorEnableCollision(true);
+
+                if (playerState.LocalMainCharacter.HasValue && playerState.LocalMainCharacter.Value.GetLocalState().Pawn != null)
+                {
+                    var player = playerState.LocalMainCharacter.Value.GetLocalState().Pawn!;
+                    var traceLength = player.CapsuleComponent.GetScaledCapsuleRadius() + 20f;
+                    var lineTraceDir = GetLineTraceDir_SafeNormal2D(player);
+                    var playerLocation = BGUFuncLibActorTransformCS.BGUGetActorLocation(player);
+                    var startTrace = playerLocation - lineTraceDir * traceLength;
+                    var endTrace = playerLocation + lineTraceDir * traceLength;
+                    if (UBGUSelectUtil.MultiSphereTraceForObjects(player, startTrace, endTrace, traceLength, [EObjectTypeQuery.ObjectTypeQuery15], false, out var HitResult) > 0)
+                    {
+                        if (HitResult.Any(x => x.HitActor == collider))
+                        {
+                            logger.LogDebug("Re-disabled collider for actor: {Actor} due to player proximity", BGU_DataUtil.GetActorGuid(collider));
+                            DisableCollider(collider, Constants.ColliderDisableTime);
+                            continue;
+                        }
+                    }
+                }
+
                 _colliderDisableTimes.Remove(collider);
                 logger.LogDebug("Re-enabled collider for actor: {Actor}", BGU_DataUtil.GetActorGuid(collider));
             }
+        }
+
+        private FVector GetLineTraceDir_SafeNormal2D(BGUCharacterCS playerCharacter)
+        {
+            if (playerCharacter.CharacterMovement.IsFalling())
+            {
+                return playerCharacter.GetVelocity().GetSafeNormal2D();
+            }
+
+            return playerCharacter.CharacterMovement.GetCurrentAcceleration().GetSafeNormal2D();
         }
     }
 }

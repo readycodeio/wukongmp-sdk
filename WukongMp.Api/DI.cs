@@ -157,7 +157,6 @@ public sealed class DI
 
         var gameplayConfig = GameplayConfiguration = new GameplayConfiguration(logger);
         var gameplayEventRouter = GameplayEventRouter = new GameplayEventRouter();
-        var colliderDisableData = ColliderDisableData = new ColliderDisableData(logger);
 
         var textSerializer = TextSerializer = new TextRelaySerializer([
             new DefaultTextRelaySerializerRegistration(),
@@ -187,6 +186,7 @@ public sealed class DI
 
         var freeCameraManager = FreeCameraManager = new FreeCameraManager();
         
+        var colliderDisableData = ColliderDisableData = new ColliderDisableData(playerState, logger);
         var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager, gameplayEventRouter, freeCameraManager);
 
