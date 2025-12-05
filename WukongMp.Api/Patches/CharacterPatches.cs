@@ -417,6 +417,7 @@ namespace WukongMp.Api.Patches
                     if (!DebugUtils.CorrectPositionWithLineTrace)
                     {
                         Logging.LogDebug("Correcting Z position for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, targetLocation.Z);
+                        owner.SetActorEnableCollision(true); // the cause for this is usually falling through the ground, so re-enable collision
                         currentLocation.Z = targetLocation.Z;
                         owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
                     }
@@ -429,6 +430,7 @@ namespace WukongMp.Api.Patches
                         if (USystemLibrary.LineTraceSingleByProfile(owner, start, end, B1GlobalFNames.Pawn, false, [], EDrawDebugTrace.None, out FHitResult hitResult, true, FLinearColor.Red, FLinearColor.Black, 0.0f))
                         {
                             Logging.LogDebug("Correcting Z position with line trace for {Name} from {CurrentZ} to {TargetZ}", otherMain.CharacterNickName, currentLocation.Z, hitResult.ImpactPoint.Z + capsuleHalfHeight);
+                            owner.SetActorEnableCollision(true); // the cause for this is usually falling through the ground, so re-enable collision
                             currentLocation.Z = (float)hitResult.ImpactPoint.Z + capsuleHalfHeight;
                             owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
                         }
