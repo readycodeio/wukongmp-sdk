@@ -530,7 +530,7 @@ public static class PatchOnUnitCastSkillTry
         if (CSI.SourceType == ECastSkillSourceType.CBG && CSI.SkillID == 471236)
         {
             var tamerEntity = pawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue)
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 DI.Instance.Rpc.SendCastSkill(tamerEntity.Value.GetMeta().NetId, CSI.SkillID, CSI.SourceType);
                 Logging.LogDebug("Sent CBG skill cast for skill {SkillId}", CSI.SkillID);
