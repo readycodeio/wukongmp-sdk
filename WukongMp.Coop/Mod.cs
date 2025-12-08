@@ -154,7 +154,25 @@ namespace WukongMp.Coop
 
             DI.Instance.InputManager.RegisterKeyBind(Key.F4, () =>
             {
-                _logger.LogDebug("F4: Skip cutscene");
+                _logger.LogDebug("F4: Toggle invincibility");
+                DebugUtils.InvincibilityEnabled = !DebugUtils.InvincibilityEnabled;
+            });
+#endif
+            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
+            {
+                _logger.LogDebug("F5: Toggle debug widget visibility");
+                DI.Instance.WidgetManager.ToggleDebugVisibility();
+            });
+#if DEBUG
+            DI.Instance.InputManager.RegisterKeyBind(Key.F6, () =>
+            {
+                Logging.LogDebug("F6: Toggle HP scaling");
+                DebugUtils.ScaleMonsterHpToHalf = !DebugUtils.ScaleMonsterHpToHalf;
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F12, () =>
+            {
+                _logger.LogDebug("F12: Skip cutscene");
                 CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
@@ -203,13 +221,6 @@ namespace WukongMp.Coop
                 DebugUtils.ResetPlayersAnimation();
             });
 #endif
-            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
-            {
-                _logger.LogDebug("F5");
-                if (!DI.Instance.WidgetManager.ChatHasFocus())
-                    DI.Instance.WidgetManager.ToggleDebugVisibility();
-            });
-
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");

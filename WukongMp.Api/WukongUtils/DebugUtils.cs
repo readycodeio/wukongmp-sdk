@@ -14,6 +14,8 @@ namespace WukongMp.Api.WukongUtils;
 public static class DebugUtils
 {
     private static readonly List<AActor> TmpActors = [];
+    public static bool ScaleMonsterHpToHalf { get; set; }
+    public static bool InvincibilityEnabled { get; set; }
 
     public static void LogUe4SsPresence()
     {

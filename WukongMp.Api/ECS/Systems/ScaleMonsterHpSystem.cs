@@ -1,12 +1,12 @@
-﻿using b1;
+﻿using System;
+using b1;
 using BtlShare;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System;
 using Microsoft.Extensions.Logging;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
@@ -16,11 +16,15 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
     {
         var areaPlayers = DI.Instance.State.AreaPlayers.Count;
 
-#if DEBUG
-        const float targetScaling = .5f;
-#else
         var targetScaling = 1 + 1.5f * (areaPlayers - 1);
+
+#if DEBUG
+        if (DebugUtils.ScaleMonsterHpToHalf)
+        {
+            targetScaling = .5f;
+        }
 #endif
+
         Query.ForEachEntity((ref hp, ref localTamer, entity) =>
         {
             if (!localTamer.IsMonsterActive)
@@ -42,10 +46,9 @@ public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent
                     return;
 
                 var healthBarType = info.BloodBarType;
-#if !DEBUG
+
                 if (healthBarType is not (EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar))
                     return;
-#endif
 
                 var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(localTamer.Pawn);
 

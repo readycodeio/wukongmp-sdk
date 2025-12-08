@@ -111,6 +111,10 @@ namespace WukongMp.Api.Patches
             if (AttrID == EBGUAttrFloat.Hp)
             {
                 var owner = __instance.GetOwner();
+#if DEBUG
+                if (DebugUtils.InvincibilityEnabled && owner == DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn)
+                    return false;
+#endif
                 var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
                 if (netId.HasValue)
                     return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
@@ -767,6 +771,7 @@ namespace WukongMp.Api.Patches
                 __result = false;
                 return false;
             }
+
             if (__instance.ActorGuid2Entity.TryGetValue(UnitGuid, out var value))
             {
                 var count = value.Count;
@@ -780,6 +785,7 @@ namespace WukongMp.Api.Patches
                         return false;
                     }
                 }
+
                 if (count > 0)
                 {
                     for (var num = count - 1; num >= 0; num--)
@@ -793,6 +799,7 @@ namespace WukongMp.Api.Patches
                     }
                 }
             }
+
             __result = false;
             return false;
         }
