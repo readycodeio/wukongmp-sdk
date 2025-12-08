@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using PreludeLib.Attributes;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using ReadyM.Relay.Common.Wukong.RPC;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
@@ -12,6 +13,7 @@ using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
@@ -209,9 +211,16 @@ public static class PatchTickForMovieSystem
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.IsWaitingForSequence = false;
                     localMain.IsJoiningSequence = false;
-                    
-                    localMain.Pawn?.SetActorEnableCollision(false);
-                    localMain.IsCollisionDisabledDuringCutscene = true;
+
+                    // disable collision for other players during cutscene
+                    DI.Instance.World.Query<MainCharacterComponent, LocalMainCharacterComponent>().ForEachEntity((ref otherMain, ref otherLocal, entity) =>
+                    {
+                        if (otherMain.PlayerId == playerState.LocalPlayerId)
+                            return;
+
+                        otherLocal.Pawn?.SetActorEnableCollision(false);
+                        otherLocal.IsCollisionDisabledDuringCutscene = true;
+                    });
                 }
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)

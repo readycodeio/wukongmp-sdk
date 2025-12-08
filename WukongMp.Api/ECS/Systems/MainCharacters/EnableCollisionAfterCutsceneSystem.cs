@@ -41,6 +41,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) :
                 {
                     // we are far enough away, enable collision
                     local.Pawn.SetActorEnableCollision(true);
+                    local.IsCollisionDisabledDuringCutscene = false;
                 }
             }
         });
