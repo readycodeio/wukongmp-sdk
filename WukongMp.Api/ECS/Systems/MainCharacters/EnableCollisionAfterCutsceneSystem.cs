@@ -37,7 +37,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) :
                 // check if the two capsules are intersecting
                 var distanceSq = FVector.Dist2D(myCapsuleCenter, playerCenter);
                 var radiusSum = myCapsuleRadius + capsuleRadius;
-                if (distanceSq > radiusSum * radiusSum)
+                if (distanceSq > radiusSum)
                 {
                     // we are far enough away, enable collision
                     local.Pawn.SetActorEnableCollision(true);
