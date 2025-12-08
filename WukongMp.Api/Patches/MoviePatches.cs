@@ -201,7 +201,7 @@ public static class PatchTickForMovieSystem
             var areaEntity = DI.Instance.AreaState.CurrentArea;
             var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(peakRequest.SequenceID);
 
-            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false || isMovieStartedByOthers)
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
             {
                 DI.Instance.WidgetManager.HideInfoMessage();
                 if (mainEntity != null)
@@ -209,6 +209,9 @@ public static class PatchTickForMovieSystem
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.IsWaitingForSequence = false;
                     localMain.IsJoiningSequence = false;
+                    
+                    localMain.Pawn?.SetActorEnableCollision(false);
+                    localMain.IsCollisionDisabledDuringCutscene = true;
                 }
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
