@@ -971,6 +971,23 @@ public partial class WukongRpcCallbacks : IDisposable
         }, this, data);
     }
 
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnCastSkill(NetworkId caster, int skillId, ECastSkillSourceType skillType)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, caster0, skillId0, skillType0) =>
+        {
+            if (self._pawnState.GetPawnByNetworkId(caster0) is not { } casterPawn)
+            {
+                self._logger.LogError("Caster pawn not found: {NetId}", caster0);
+                return;
+            }
+
+            Logging.LogDebug("OnCastSkill called for caster {Caster} with skillId {SkillId} and skillType {SkillType}", BGU_DataUtil.GetActorGuid(casterPawn), skillId0, skillType0);
+            BUS_EventCollectionCS.Get(casterPawn)?.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(skillId0, skillType0));
+
+        }, this, caster, skillId, skillType);
+    }
+
     #region PvpRPC
 
     [Obsolete("To be removed once per-project RPC is implemented")]
