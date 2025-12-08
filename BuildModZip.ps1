@@ -6,7 +6,7 @@ param (
 # Normalize params
 if (-not $Configuration)
 {
-    Write-Host "Usage: .\BuildModZip.ps1 -Configuration <Debug|Release>"
+    Write-Host "Usage: .\BuildModZip.ps1 <Debug|Release>"
     Exit 1
 }
 
@@ -56,14 +56,7 @@ $allFiles = @()
 foreach ($v in $ModVariants)
 {
     $lists = Get-VariantLists -Variant $v -Configuration $Configuration
-    if ($Configuration -eq 'Debug')
-    {
-        $allFiles += $lists.Dev
-    }
-    else
-    {
-        $allFiles += $lists.Mod
-    }
+    $allFiles += $lists.Mod
 }
 
 # (Optional) de-dup identical triplets if you want to avoid recopying shared dirs:
