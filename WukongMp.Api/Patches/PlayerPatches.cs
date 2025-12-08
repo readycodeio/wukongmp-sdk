@@ -696,35 +696,9 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var bossLocation = bossActor.GetActorLocation();
-
-            var aiData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_AIData, BUC_AIData>(bossActor);
-            if (aiData != null)
-                bossLocation = aiData.GetEnterBattlePosition();
-
-            var distancePlayerToBoss = FVector.DistSquared2D(player.GetActorLocation(), bossLocation);
-            var distanceHitToBoss = FVector.DistSquared2D(questActor.GetActorLocation(), bossLocation);
-            bool disableCollider;
-            if (distanceHitToBoss > distancePlayerToBoss)
+            if (UBGUSelectUtil.MultiSphereTraceForObjects(player, player.GetActorLocation(), bossLocation, 10, [EObjectTypeQuery.ObjectTypeQuery15], false, out var HitResult) > 0 && HitResult.Any(x => x.HitActor == HitActor))
             {
-                if (UBGUSelectUtil.LineTraceForObjects(player, player.GetActorLocation(), bossLocation, [EObjectTypeQuery.ObjectTypeQuery15], false, out var HitResult) > 0 && HitResult.HitActor == HitActor)
-                {
-                    Logging.LogDebug("Hit dynamic obstacle wall is further from boss than player, but there is an obstacle in the way, disabling collision temporarily");
-                    disableCollider = true;
-                }
-                else
-                {
-                    Logging.LogDebug("Hit dynamic obstacle wall is further from boss than player, allowing collision");
-                    return true;
-                }
-            }
-            else
-            {
-                Logging.LogDebug("Hit dynamic obstacle wall is closer to boss than player, disabling collision temporarily");
-                disableCollider = true;
-            }
-
-            if (disableCollider)
-            {
+                Logging.LogDebug("Hit dynamic obstacle wall is between boss and player, disabling collision temporarily");
                 DI.Instance.ColliderDisableData.DisableCollider(questActor, Constants.ColliderDisableTime);
                 return false;
             }
