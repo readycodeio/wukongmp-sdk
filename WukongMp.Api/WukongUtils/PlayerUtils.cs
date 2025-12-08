@@ -136,29 +136,5 @@ namespace WukongMp.Api.WukongUtils
                 Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(worldContext));
             }
         }
-
-        private static void MoveOtherPlayerUnderGround(MainCharacterEntity mainEntity)
-        {
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            if (localMainComp.Pawn == null)
-                return;
-
-            var location = localMainComp.Pawn.GetActorLocation();
-            var caplsuleHalfHeight = localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight();
-            location.Z -= 3 * caplsuleHalfHeight;
-            localMainComp.Pawn.SetActorLocation(location, false, out _, true);
-        }
-
-        public static void MoveAllOtherPlayersUnderGround()
-        {
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
-            {
-                var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                if (characterEntity == null)
-                    return;
-
-                MoveOtherPlayerUnderGround(characterEntity.Value);
-            }
-        }
     }
 }

@@ -341,4 +341,31 @@ public static class DebugUtils
     {
         BUS_EventCollectionCS.Get(player)?.Evt_ResetActorStatusPre.Invoke(EResetActorReason.Rebirth);
     }
+
+    private static bool _superSpeed;
+    private static float _originalFastSpeedRatio;
+    private static float _originalNormalSpeedRatio;
+    private static float _originalSlowSpeedRatio;
+
+    public static void ToggleSuperFastSpeed()
+    {
+        BUC_SpeedCtrlData? speedCtrlData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_SpeedCtrlData, BUC_SpeedCtrlData>(GameUtils.GetControlledPawn()) as BUC_SpeedCtrlData;
+        if (speedCtrlData == null)
+            return;
+
+        if (!_superSpeed)
+        {
+            _originalSlowSpeedRatio = speedCtrlData.GetMoveSpeedSlow();
+            _originalNormalSpeedRatio = speedCtrlData.GetMoveSpeedNormal();
+            _originalFastSpeedRatio = speedCtrlData.GetMoveSpeedFast();
+
+            speedCtrlData.SetSpeedInfo(10000, 10000, 10000);
+            _superSpeed = true;
+        }
+        else
+        {
+            speedCtrlData.SetSpeedInfo(_originalSlowSpeedRatio, _originalNormalSpeedRatio, _originalFastSpeedRatio);
+            _superSpeed = false;
+        }
+    }
 }

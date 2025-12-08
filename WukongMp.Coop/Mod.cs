@@ -134,22 +134,28 @@ namespace WukongMp.Coop
                 }
             });
 #if DEBUG
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.L, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F1, () =>
             {
-                Logging.LogDebug("Alt + L: Teleport underground");
-                PlayerUtils.MoveAllOtherPlayersUnderGround();
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
-            {
-                Logging.LogDebug("Alt + Y: Show colliders markers");
+                Logging.LogDebug("F1: Show colliders markers");
                 DebugUtils.ShowMarkersForInvisibleWalls(4000);
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.U, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F2, () =>
             {
-                Logging.LogDebug("Alt + U: Remove colliders markers");
+                Logging.LogDebug("F2: Remove colliders markers");
                 DebugUtils.DestroyTmpMarkerActors();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F3, () =>
+            {
+                Logging.LogDebug("F3: Toggle super speed");
+                DebugUtils.ToggleSuperFastSpeed();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F4, () =>
+            {
+                _logger.LogDebug("F4: Skip cutscene");
+                CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
@@ -171,12 +177,6 @@ namespace WukongMp.Coop
                 {
                     _logger.LogError(ex, "Error while dumping debug info");
                 }
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
-            {
-                _logger.LogDebug("Alt + S");
-                CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
