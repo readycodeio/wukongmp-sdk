@@ -11,8 +11,11 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
+using HarmonyLib;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -919,6 +922,53 @@ public partial class WukongRpcCallbacks : IDisposable
 
             TamerUtils.TriggerWakeUp(pawn);
         }, this, netId);
+    }
+
+    // ReSharper disable once InconsistentNaming
+    private static readonly MethodInfo PlayDBC_ByType = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType");
+    private static readonly MethodInfo EndAllDBC = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC");
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnPlayBaneEffect(PlayBaneEffectData data)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Id));
+                return;
+            }
+
+            var handlers = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_AbnormalStateHandlers>(pawn);
+
+            if (handlers == null)
+                return;
+
+            var handler = handlers.GetAbnormalHanddler(data0.StateType);
+            PlayDBC_ByType.Invoke(handler, [data0.ActionType, default(FTransform), -1]);
+        }, this, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnStopBaneEffect(StopBaneEffectData data)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Id));
+                return;
+            }
+
+            var handlers = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_AbnormalStateHandlers>(pawn);
+            if (handlers == null)
+                return;
+
+            var handler = handlers.GetAbnormalHanddler(data0.StateType);
+            EndAllDBC.Invoke(handler, []);
+        }, this, data);
     }
 
     #region PvpRPC

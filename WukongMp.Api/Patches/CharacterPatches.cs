@@ -804,4 +804,58 @@ namespace WukongMp.Api.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchPlayDBC_ByType
+    {
+        public static void Postfix(BGUCharacterCS ___OwnerChr, EAbnormalStateType ___AbnormalType, EAbnromalDispActionType ActionType)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerChr);
+            if (tamerEntity.HasValue)
+            {
+                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                    return;
+
+                DI.Instance.Rpc.SendPlayBaneEffect(new PlayBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+                return;
+            }
+
+            var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == ___OwnerChr)
+            {
+                DI.Instance.Rpc.SendPlayBaneEffect(new PlayBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchEndAllDBC
+    {
+        public static void Postfix(BGUCharacterCS ___OwnerChr, EAbnormalStateType ___AbnormalType)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerChr);
+            if (tamerEntity.HasValue)
+            {
+                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                    return;
+
+                DI.Instance.Rpc.SendStopBaneEffect(new StopBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType));
+                return;
+            }
+
+            var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == ___OwnerChr)
+            {
+                DI.Instance.Rpc.SendStopBaneEffect(new StopBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType));
+            }
+        }
+    }
 }
