@@ -134,6 +134,8 @@ public class WukongChatter : IDisposable
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
 
+            DebugUtils.InvincibilityEnabled = false; // otherwise we get black screen
+            
             ref var localMainComp = ref mainEntity.GetLocalState();
             var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
             events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
