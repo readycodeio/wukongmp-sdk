@@ -777,6 +777,15 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    void OnMagicFieldDead(string magicFieldClassName, EBGUBulletDestroyReason reason)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0) =>
+        {
+            MagicFieldUtils.DestroyMagicField(magicFieldClassName0, reason0);
+        }, this, magicFieldClassName, reason);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileMoveMode(PlayerId __sender, ProjectileMoveModeData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
