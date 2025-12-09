@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using b1;
@@ -370,4 +371,34 @@ public static class DebugUtils
             _superSpeed = false;
         }
     }
+
+    public static void ToggleBoxTemp(UClass BP, UObject world)
+    {
+        try
+        {
+            if (BP == null)
+            {
+                return;
+            }
+            AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass(world, BP);
+            for (int i = 0; i < allActorsOfClass.Length; i++)
+            {
+                TArrayUnsafe<UActorComponent> componentsByClass = allActorsOfClass[i].GetComponentsByClass(UClass.GetClass<UStaticMeshComponent>());
+                for (int j = 0; j < componentsByClass.Count; j++)
+                {
+                    UStaticMeshComponent? uStaticMeshComponent = componentsByClass[j] as UStaticMeshComponent;
+                    if (uStaticMeshComponent != null)
+                    {
+                        bool newHidden = !uStaticMeshComponent.HiddenInGame;
+                        uStaticMeshComponent.SetHiddenInGame(newHidden);
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            USharpExceptionHandler.HandleException(e, EUSharpExceptionType.NativeReflectionInvokeFunction);
+        }
+    }
+
 }
