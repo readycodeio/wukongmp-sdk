@@ -196,8 +196,8 @@ namespace WukongMp.Coop
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F5, () =>
             {
-                _logger.LogDebug("Alt + F5: ToggleOtherPLayersCollisionChannel");
-                DebugUtils.ToggleOtherPLayersCollisionChannel();
+                _logger.LogDebug("Alt + F5: ToggleIgnoreActorsWhenMoving");
+                DebugUtils.ToggleIgnoreActorsWhenMoving();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>

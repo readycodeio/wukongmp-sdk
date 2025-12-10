@@ -509,4 +509,52 @@ public static class DebugUtils
         }
         bEnableOthers = !bEnableOthers;
     }
+
+    private static bool bEnableMoving = true;
+    public static void ToggleIgnoreActorsWhenMoving()
+    {
+        var player = DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn;
+        if (player == null)
+        {
+            Logging.LogError("Failed to get local player");
+            return;
+        }
+
+        foreach (var playerId in DI.Instance.State.AllPlayers)
+        {
+            if (playerId == DI.Instance.PlayerState.LocalPlayerId)
+                continue;
+            var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+            if (characterEntity == null)
+                continue;
+            var character = characterEntity.Value.GetLocalState().Pawn;
+            if (character != null)
+            {
+                character.CapsuleComponent.IgnoreActorWhenMoving(player, bEnableMoving);
+                player.CapsuleComponent.IgnoreActorWhenMoving(character, bEnableMoving);
+            }
+            bEnableMoving = !bEnableMoving;
+        }
+
+        //foreach (var playerId1 in DI.Instance.State.AllPlayers)
+        //{
+        //    foreach (var playerId2 in DI.Instance.State.AllPlayers)
+        //    {
+        //        if (playerId1 == playerId2)
+        //            continue;
+        //        var characterEntity1 = DI.Instance.PlayerState.GetMainCharacterById(playerId1);
+        //        var characterEntity2 = DI.Instance.PlayerState.GetMainCharacterById(playerId2);
+        //        if (characterEntity1 == null || characterEntity2 == null)
+        //            continue;
+        //        var character1 = characterEntity1.Value.GetLocalState().Pawn;
+        //        var character2 = characterEntity2.Value.GetLocalState().Pawn;
+        //        if (character1 != null && character2 != null)
+        //        {
+        //            character1.CapsuleComponent.IgnoreActorWhenMoving(character2, bEnableMoving);
+        //            character2.CapsuleComponent.IgnoreActorWhenMoving(character1, bEnableMoving);
+        //        }
+        //    }
+        //    bEnableMoving = !bEnableMoving;
+        //}
+    }
 }
