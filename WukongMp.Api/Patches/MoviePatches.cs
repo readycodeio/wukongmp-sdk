@@ -1,9 +1,8 @@
-﻿using b1;
-using HarmonyLib;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Reflection;
+using b1;
+using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using ReadyM.Relay.Common.Wukong.RPC;
@@ -14,7 +13,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Components;
-using WukongMp.Api.UI;
+using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -128,6 +127,10 @@ public static class PatchRequestPlayMovie
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 localMain.Pawn?.SetActorHiddenInGame(true);
                 localMain.MarkerActor?.SetActorHiddenInGame(true);
+
+                // disable collision for other players during cutscene
+                localMain.Pawn?.CapsuleComponent.SetCollisionProfileName(new FName("WindWalk_Pawn"));
+                localMain.ShouldDisableCollision = true;
             }
 
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
@@ -147,6 +150,7 @@ public static class PatchRequestPlayMovie
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.Pawn?.SetActorHiddenInGame(false);
                     localMain.MarkerActor?.SetActorHiddenInGame(false);
+                    localMain.ShouldDisableCollision = false;
                     DI.Instance.WidgetManager.HideInfoMessage();
                 }
             });
@@ -211,16 +215,6 @@ public static class PatchTickForMovieSystem
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.IsWaitingForSequence = false;
                     localMain.IsJoiningSequence = false;
-
-                    // disable collision for other players during cutscene
-                    DI.Instance.World.Query<MainCharacterComponent, LocalMainCharacterComponent>().ForEachEntity((ref otherMain, ref otherLocal, entity) =>
-                    {
-                        if (otherMain.PlayerId == playerState.LocalPlayerId)
-                            return;
-
-                        otherLocal.Pawn?.CapsuleComponent.SetCollisionProfileName(new FName("WindWalk_Pawn"));
-                        otherLocal.IsCollisionDisabledDuringCutscene = true;
-                    });
                 }
 
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
@@ -250,7 +244,7 @@ public static class PatchTickForMovieSystem
 
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
+                DI.Instance.WidgetManager.ShowInfoMessage(Texts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
