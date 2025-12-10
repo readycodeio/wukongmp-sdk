@@ -176,6 +176,30 @@ namespace WukongMp.Coop
                 CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F1, () =>
+            {
+                _logger.LogDebug("Alt + F1: ToggleOtherPlayersCollision");
+                DebugUtils.ToggleOtherPlayersCollision();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F2, () =>
+            {
+                _logger.LogDebug("Alt + F2: ToggleLocalPlayerCollisionChannel");
+                DebugUtils.ToggleLocalPlayerCollisionChannel();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F3, () =>
+            {
+                _logger.LogDebug("Alt + F3: ToggleAllPlayersCollisionChannel");
+                DebugUtils.ToggleAllPlayersCollisionChannel();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F5, () =>
+            {
+                _logger.LogDebug("Alt + F5: ToggleOtherPLayersCollisionChannel");
+                DebugUtils.ToggleOtherPLayersCollisionChannel();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
             {
                 Logging.LogDebug("Alt + 0");
