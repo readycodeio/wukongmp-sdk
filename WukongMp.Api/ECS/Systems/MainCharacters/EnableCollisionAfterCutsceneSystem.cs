@@ -40,7 +40,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) :
                 if (distanceSq > radiusSum)
                 {
                     // we are far enough away, enable collision
-                    local.Pawn.SetActorEnableCollision(true);
+                    local.Pawn.CapsuleComponent.SetCollisionProfileName(new FName("Pawn"));
                     local.IsCollisionDisabledDuringCutscene = false;
                 }
             }

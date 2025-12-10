@@ -218,7 +218,7 @@ public static class PatchTickForMovieSystem
                         if (otherMain.PlayerId == playerState.LocalPlayerId)
                             return;
 
-                        otherLocal.Pawn?.SetActorEnableCollision(false);
+                        otherLocal.Pawn?.CapsuleComponent.SetCollisionProfileName(new FName("WindWalk_Pawn"));
                         otherLocal.IsCollisionDisabledDuringCutscene = true;
                     });
                 }
