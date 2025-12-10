@@ -231,6 +231,12 @@ public static class PatchTickForMovieSystem
                         DI.Instance.ServerRpc.SendMovieStarted(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
                     }
 
+                    MovieData.GetPlayingMovieID(out var playingMovies);
+                    playingMovies ??= [];
+
+                    if (playingMovies.Contains(movieRequest.SequenceID))
+                        continue;
+
                     RequestPlayMovieMethod?.Invoke(__instance, [movieRequest]);
                 }
             }

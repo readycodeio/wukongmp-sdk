@@ -188,7 +188,7 @@ public sealed class DI
         
         var colliderDisableData = ColliderDisableData = new ColliderDisableData(playerState, logger);
         var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
-        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager, gameplayEventRouter, freeCameraManager);
+        var modeManager = ModeManager = new WukongPlayerModeManager(state, gameplayEventRouter, freeCameraManager);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);

@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
+public class WukongPlayerModeManager(ClientState state, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
