@@ -401,160 +401,20 @@ public static class DebugUtils
         }
     }
 
-    public static void ToggleLocalPlayerCollision()
+    public static void DisableOtherPlayersCollision()
     {
-        var player = DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn;
-        if (player == null)
+        foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
         {
-            Logging.LogError("Failed to get local player");
-            return;
-        }
-        var collisionEnabled = player.GetActorEnableCollision();
-        player.SetActorEnableCollision(!collisionEnabled);
-
-        //var capsuleComponent = player.CapsuleComponent;
-        //if (capsuleComponent == null)
-        //{
-        //    Logging.LogError("Failed to get local player capsule component");
-        //    return;
-        //}
-        //bool newCollisionEnabled = capsuleComponent.GetCollisionEnabled() == ECollisionEnabled.QueryAndPhysics ? false : true;
-        //capsuleComponent.SetCollisionEnabled(newCollisionEnabled ? ECollisionEnabled.QueryAndPhysics : ECollisionEnabled.NoCollision);
-        //Logging.LogInformation("Local player collision enabled: {Enabled}", newCollisionEnabled);
-    }
-
-    public static void ToggleOtherPlayersCollision()
-    {
-        foreach (var playerId in DI.Instance.State.AllPlayers)
-        {
-            if (playerId == DI.Instance.PlayerState.LocalPlayerId)
+            var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+            if (mainEntity == null)
                 continue;
-            var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-            if (characterEntity == null)
-                return;
-            var character = characterEntity.Value.GetLocalState().Pawn;
-            if (character != null)
-            {
-                var collisionEnabled = character.GetActorEnableCollision();
-                character.SetActorEnableCollision(!collisionEnabled);
-            }
+            ref var localMain = ref mainEntity.Value.GetLocalState();
+            localMain.Pawn?.SetActorHiddenInGame(true);
+            localMain.MarkerActor?.SetActorHiddenInGame(true);
+
+            // disable collision for other players during cutscene
+            localMain.Pawn?.CapsuleComponent.SetCollisionProfileName(B1GlobalFNames.WindWalk_Pawn);
+            localMain.ShouldDisableCollision = true;
         }
-    }
-
-    private static bool bEnable = true;
-
-    public static void ToggleLocalPlayerCollisionChannel()
-    {
-        //Dictionary<ECollisionChannel, ECollisionResponseType> value = new Dictionary<ECollisionChannel, ECollisionResponseType> {
-        //{
-        //    ECollisionChannel.ECC_Pawn,
-        //    bEnable ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore
-        //} };
-        //Dictionary<ECollisionChannel, ECollisionResponseType> value2 = new Dictionary<ECollisionChannel, ECollisionResponseType> {
-        //{
-        //    ECollisionChannel.ECC_PhysicsBody,
-        //    bEnable ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore
-        //} };
-
-        var player = DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn;
-        if (player == null)
-        {
-            Logging.LogError("Failed to get local player");
-            return;
-        }
-
-        player.CapsuleComponent.SetCollisionResponseToChannel(ECollisionChannel.ECC_Pawn, bEnable ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore);
-        player.Mesh.SetCollisionResponseToChannel(ECollisionChannel.ECC_PhysicsBody, bEnable ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore);
-        bEnable = !bEnable;
-        //base.BUSEventCollection.Evt_SetCollisionResponseProperty.Invoke(EPropType.Capsule_CollisionResponseToChannels, value);
-        //base.BUSEventCollection.Evt_SetCollisionResponseProperty.Invoke(EPropType.Mesh_CollisionResponseToChannels, value2);
-    }
-
-    private static bool bEnableAll = true;
-
-    public static void ToggleAllPlayersCollisionChannel()
-    {
-        foreach (var playerId in DI.Instance.State.AllPlayers)
-        {
-            var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-            if (characterEntity == null)
-                return;
-            var character = characterEntity.Value.GetLocalState().Pawn;
-            if (character != null)
-            {
-                character.CapsuleComponent.SetCollisionResponseToChannel(ECollisionChannel.ECC_Pawn, bEnableAll ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore);
-                character.Mesh.SetCollisionResponseToChannel(ECollisionChannel.ECC_PhysicsBody, bEnableAll ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore);
-            }
-        }
-        bEnableAll = !bEnableAll;
-    }
-
-    private static bool bEnableOthers = true;
-
-    public static void ToggleOtherPLayersCollisionChannel()
-    {
-        foreach (var playerId in DI.Instance.State.AllPlayers)
-        {
-            if (playerId == DI.Instance.PlayerState.LocalPlayerId)
-                continue;
-            var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-            if (characterEntity == null)
-                return;
-            var character = characterEntity.Value.GetLocalState().Pawn;
-            if (character != null)
-            {
-                character.CapsuleComponent.SetCollisionResponseToChannel(ECollisionChannel.ECC_Pawn, bEnableOthers ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore);
-                character.Mesh.SetCollisionResponseToChannel(ECollisionChannel.ECC_PhysicsBody, bEnableOthers ? ECollisionResponseType.ECR_Block : ECollisionResponseType.ECR_Ignore);
-            }
-        }
-        bEnableOthers = !bEnableOthers;
-    }
-
-    private static bool bEnableMoving = true;
-    public static void ToggleIgnoreActorsWhenMoving()
-    {
-        var player = DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn;
-        if (player == null)
-        {
-            Logging.LogError("Failed to get local player");
-            return;
-        }
-
-        foreach (var playerId in DI.Instance.State.AllPlayers)
-        {
-            if (playerId == DI.Instance.PlayerState.LocalPlayerId)
-                continue;
-            var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-            if (characterEntity == null)
-                continue;
-            var character = characterEntity.Value.GetLocalState().Pawn;
-            if (character != null)
-            {
-                character.CapsuleComponent.IgnoreActorWhenMoving(player, bEnableMoving);
-                player.CapsuleComponent.IgnoreActorWhenMoving(character, bEnableMoving);
-            }
-            bEnableMoving = !bEnableMoving;
-        }
-
-        //foreach (var playerId1 in DI.Instance.State.AllPlayers)
-        //{
-        //    foreach (var playerId2 in DI.Instance.State.AllPlayers)
-        //    {
-        //        if (playerId1 == playerId2)
-        //            continue;
-        //        var characterEntity1 = DI.Instance.PlayerState.GetMainCharacterById(playerId1);
-        //        var characterEntity2 = DI.Instance.PlayerState.GetMainCharacterById(playerId2);
-        //        if (characterEntity1 == null || characterEntity2 == null)
-        //            continue;
-        //        var character1 = characterEntity1.Value.GetLocalState().Pawn;
-        //        var character2 = characterEntity2.Value.GetLocalState().Pawn;
-        //        if (character1 != null && character2 != null)
-        //        {
-        //            character1.CapsuleComponent.IgnoreActorWhenMoving(character2, bEnableMoving);
-        //            character2.CapsuleComponent.IgnoreActorWhenMoving(character1, bEnableMoving);
-        //        }
-        //    }
-        //    bEnableMoving = !bEnableMoving;
-        //}
     }
 }

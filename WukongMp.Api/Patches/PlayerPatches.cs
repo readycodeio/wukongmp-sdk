@@ -1068,3 +1068,54 @@ public class PatchSetCollisionResponseToChannel
         return player.Value == DI.Instance.PlayerState.LocalMainCharacter;
     }
 }
+
+
+[HarmonyPatch(typeof(UPrimitiveComponent), nameof(UPrimitiveComponent.SetCollisionResponseToAllChannels))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchSetCollisionResponseToAllChannels
+{
+    public static bool Prefix(UPrimitiveComponent __instance, ECollisionResponseType NewResponse)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var owner = __instance.GetOwner();
+
+        if (owner == null)
+            return true;
+
+        // do not set to Custom if the owner is a synchronized player
+        var player = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+
+        if (!player.HasValue)
+            return true;
+
+        DI.Instance.Logger.LogDebug("Prevented setting collision response to {Response} for all channels for player {Pawn}", NewResponse, player.Value.GetState().PlayerId);
+        return player.Value == DI.Instance.PlayerState.LocalMainCharacter;
+    }
+}
+
+[HarmonyPatch(typeof(UBGUFunctionLibCollisionChannel), nameof(UBGUFunctionLibCollisionChannel.BGUSetCollisionResponseToChannels))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchBGUSetCollisionResponseToChannels
+{
+    public static bool Prefix(UPrimitiveComponent Comp, Dictionary<ECollisionChannel, ECollisionResponseType> ResponseToChannels)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var owner = Comp.GetOwner();
+
+        if (owner == null)
+            return true;
+
+        // do not set to Custom if the owner is a synchronized player
+        var player = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+
+        if (!player.HasValue)
+            return true;
+
+        DI.Instance.Logger.LogDebug("Prevented BGUSetCollisionResponseToChannels for player {Pawn}", player.Value.GetState().PlayerId);
+        return player.Value == DI.Instance.PlayerState.LocalMainCharacter;
+    }
+}

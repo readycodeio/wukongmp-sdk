@@ -170,34 +170,16 @@ namespace WukongMp.Coop
                 DebugUtils.ScaleMonsterHpToHalf = !DebugUtils.ScaleMonsterHpToHalf;
             });
 
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F7, () =>
+            {
+                _logger.LogDebug("F7: Disable other players collision");
+                DebugUtils.DisableOtherPlayersCollision();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(Key.F12, () =>
             {
                 _logger.LogDebug("F12: Skip cutscene");
                 CutsceneUtils.RequestSkipCurrentCutscene();
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F1, () =>
-            {
-                _logger.LogDebug("Alt + F1: ToggleOtherPlayersCollision");
-                DebugUtils.ToggleOtherPlayersCollision();
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F2, () =>
-            {
-                _logger.LogDebug("Alt + F2: ToggleLocalPlayerCollisionChannel");
-                DebugUtils.ToggleLocalPlayerCollisionChannel();
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F3, () =>
-            {
-                _logger.LogDebug("Alt + F3: ToggleAllPlayersCollisionChannel");
-                DebugUtils.ToggleAllPlayersCollisionChannel();
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F5, () =>
-            {
-                _logger.LogDebug("Alt + F5: ToggleIgnoreActorsWhenMoving");
-                DebugUtils.ToggleIgnoreActorsWhenMoving();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
