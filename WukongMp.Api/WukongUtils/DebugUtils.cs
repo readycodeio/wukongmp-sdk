@@ -409,11 +409,12 @@ public static class DebugUtils
             if (mainEntity == null)
                 continue;
             ref var localMain = ref mainEntity.Value.GetLocalState();
-            localMain.Pawn?.SetActorHiddenInGame(true);
-            localMain.MarkerActor?.SetActorHiddenInGame(true);
-
-            // disable collision for other players during cutscene
-            localMain.Pawn?.CapsuleComponent.SetCollisionProfileName(B1GlobalFNames.WindWalk_Pawn);
+            BUS_GSEventCollection bUS_GSEventCollection = BUS_EventCollectionCS.Get(localMain.Pawn);
+            if (bUS_GSEventCollection != null)
+            {
+                bUS_GSEventCollection.Evt_SetStringProperty.Invoke(EPropType.Capsule_CollisionProfileName, B1GlobalFNames.WindWalk_Pawn.ToString());
+                bUS_GSEventCollection.Evt_SetIsEnableCollisionHitMove.Invoke(IsEnableCollisionHitMove: false, ECollisionHitMoveEnableReqType.Interact);
+            }
             localMain.ShouldDisableCollision = true;
         }
     }
