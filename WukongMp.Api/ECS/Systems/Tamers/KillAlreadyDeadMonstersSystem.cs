@@ -36,7 +36,15 @@ public sealed class KillAlreadyDeadMonstersSystem(ClientOwnershipManager clientO
                     return;
 
                 Logging.LogDebug("Monster is dead, sending unitDead locally. Guid: {Guid}, netId: {NetId}.", tamerComp.Guid, metaComp.NetId);
-                BUS_EventCollectionCS.Get(monster)?.Evt_UnitDead.Invoke(monster, EDeadReason.SkillDamage);
+
+                if (tamerComp.Guid == "UGuid.LYS.KJL.Women")
+                {
+                    BUS_EventCollectionCS.Get(monster)?.Evt_UnitDead.Invoke(monster, EDeadReason.SkillDamage, 11213, 5);
+                }
+                else
+                {
+                    BUS_EventCollectionCS.Get(monster)?.Evt_UnitDead.Invoke(monster, EDeadReason.SkillDamage);
+                }
             }
         });
     }

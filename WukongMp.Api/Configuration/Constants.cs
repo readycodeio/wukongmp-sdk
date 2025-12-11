@@ -36,7 +36,6 @@ namespace WukongMp.Api.Configuration
         public static readonly HashSet<int> InstantTriggerSequences =
         [
             30105200, // act 3 boss transition to 2nd phase
-            30104101, 30104111, // act 3 turtle general after Kan Jin Star
             40104151, // phase 2 of Hundred-Eyed Daoist Master, sword-swallowing cutscene
             62103371, 62103351, 62103321, 62103301 // 4 heavenly kings, lute guy
         ];
