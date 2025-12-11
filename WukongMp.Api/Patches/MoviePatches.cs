@@ -129,7 +129,7 @@ public static class PatchRequestPlayMovie
                 localMain.MarkerActor?.SetActorHiddenInGame(true);
 
                 // disable collision for other players during cutscene
-                localMain.Pawn?.CapsuleComponent.SetCollisionProfileName(new FName("WindWalk_Pawn"));
+                localMain.Pawn?.CapsuleComponent.SetCollisionProfileName(B1GlobalFNames.WindWalk_Pawn);
                 localMain.ShouldDisableCollision = true;
             }
 

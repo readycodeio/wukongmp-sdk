@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using b1;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Components;
@@ -28,7 +29,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) :
             if (local.Pawn == null)
                 return;
 
-            if (!local.ShouldDisableCollision && local.Pawn.CapsuleComponent.GetCollisionProfileName() == new FName("WindWalk_Pawn"))
+            if (!local.ShouldDisableCollision && local.Pawn.CapsuleComponent.GetCollisionProfileName() == B1GlobalFNames.WindWalk_Pawn) // actually, it's set to Custom in cutscenes
             {
                 // check if we can disable it now if the player is no longer intersecting with the local player
                 var playerCenter = local.Pawn.GetActorLocation();
@@ -40,7 +41,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) :
                 if (distanceSq > radiusSum)
                 {
                     // we are far enough away, enable collision
-                    local.Pawn.CapsuleComponent.SetCollisionProfileName(new FName("Pawn"));
+                    local.Pawn.CapsuleComponent.SetCollisionProfileName(B1GlobalFNames.Pawn);
                 }
             }
         });
