@@ -2,12 +2,14 @@
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class KillAlreadyDeadMonstersSystem : QuerySystem<TamerComponent, LocalTamerComponent, MetadataComponent, HpComponent>
+public sealed class KillAlreadyDeadMonstersSystem(ClientOwnershipManager clientOwnership, WukongPlayerState playerState) : QuerySystem<TamerComponent, LocalTamerComponent, MetadataComponent, HpComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;
@@ -17,9 +19,16 @@ public sealed class KillAlreadyDeadMonstersSystem : QuerySystem<TamerComponent, 
         if (tickCounter++ % TickInterval != 0)
             return;
 
-        Query.ForEachEntity((ref tamerComp, ref localTamerComp, ref metaComp, ref hpComp, _) =>
+        if (playerState.LocalPlayerId == null)
+            return;
+
+        Query.ForEachEntity((ref tamerComp, ref localTamerComp, ref metaComp, ref hpComp, entity) =>
         {
-            if (localTamerComp.IsTamerSynced && hpComp.IsDead)
+            if (localTamerComp.IsTamerSynced &&
+                hpComp.IsDead &&
+                !clientOwnership.OwnsEntity(entity) &&
+                tamerComp.HoldingPlayers.Count == 1 &&
+                tamerComp.HoldingPlayers.Contains(playerState.LocalPlayerId.Value))
             {
                 var monster = localTamerComp.Tamer?.GetMonster();
 
