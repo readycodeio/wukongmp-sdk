@@ -42,6 +42,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) :
                 {
                     // we are far enough away, enable collision
                     local.Pawn.CapsuleComponent.SetCollisionProfileName(B1GlobalFNames.Pawn);
+                    BUS_EventCollectionCS.Get(local.Pawn)?.Evt_SetIsEnableCollisionHitMove.Invoke(IsEnableCollisionHitMove: true, ECollisionHitMoveEnableReqType.Interact);
                 }
             }
         });
