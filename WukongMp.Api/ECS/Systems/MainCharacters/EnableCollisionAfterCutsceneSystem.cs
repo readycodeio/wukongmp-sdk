@@ -4,6 +4,7 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
@@ -41,8 +42,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) :
                 if (distanceSq > radiusSum)
                 {
                     // we are far enough away, enable collision
-                    local.Pawn.CapsuleComponent.SetCollisionProfileName(B1GlobalFNames.Pawn);
-                    BUS_EventCollectionCS.Get(local.Pawn)?.Evt_SetIsEnableCollisionHitMove.Invoke(IsEnableCollisionHitMove: true, ECollisionHitMoveEnableReqType.Interact);
+                    PlayerUtils.SetCollisionEnabled(local.Pawn, true);
                 }
             }
         });

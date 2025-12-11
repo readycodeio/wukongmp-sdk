@@ -136,5 +136,13 @@ namespace WukongMp.Api.WukongUtils
                 Logging.LogDebug("MapAreaId: {Id}", BGUFuncLibMap.GetAreaId(worldContext));
             }
         }
+
+        public static void SetCollisionEnabled(BGUCharacterCS? character, bool enabled)
+        {
+            if (character == null)
+                return;
+            character.CapsuleComponent.SetCollisionProfileName(enabled ? B1GlobalFNames.Pawn : B1GlobalFNames.WindWalk_Pawn);
+            BUS_EventCollectionCS.Get(character)?.Evt_SetIsEnableCollisionHitMove.Invoke(enabled, ECollisionHitMoveEnableReqType.Interact);
+        }
     }
 }

@@ -754,7 +754,8 @@ namespace WukongMp.Api.Patches
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 if (localMain.Pawn == null)
                     continue;
-                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, false);
+                PlayerUtils.SetCollisionEnabled(localMain.Pawn, false);
+                localMain.ShouldDisableCollision = true;
             }
         }
     }
@@ -789,7 +790,7 @@ namespace WukongMp.Api.Patches
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 if (localMain.Pawn == null)
                     continue;
-                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, true);
+                localMain.ShouldDisableCollision = false;
             }
         }
     }
