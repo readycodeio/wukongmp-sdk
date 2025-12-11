@@ -65,7 +65,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new SpawnTamersSystem(state, gameplayEventRouter, configuration));
         _syncGroup.Add(new SyncTamersSystem());
         _syncGroup.Add(new UnloadTamersSystem());
-        _syncGroup.Add(new KillAlreadyDeadMonstersSystem());
+        _syncGroup.Add(new KillAlreadyDeadMonstersSystem(clientOwnership, playerState));
         _syncGroup.Add(new UpdateTamerMarkersSystem());
 
         _syncGroup.Add(new SyncMonsterTeamSystem());
