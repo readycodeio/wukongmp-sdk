@@ -74,10 +74,10 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
         _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, eventBus, Logger));
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, widgetManager, configuration, gameplayEventRouter, logger));
+        _syncGroup.Add(new EnableCollisionAfterCutsceneSystem(playerState));
         _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
 
         _syncGroup.Add(new DebugViewSystem(eventBus, widgetManager));
-        _syncGroup.Add(new TamerDebugViewSystem(eventBus, widgetManager));
 
         _syncGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_syncGroup);
@@ -123,13 +123,19 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         if (meta.Owner == _state.LocalPlayerId)
         {
             var tamerComp = entity.GetComponent<TamerComponent>();
-            //if (!tamerComp.HasFsmPaused)
-            //{
+            if (!tamerComp.HasFsmPaused)
+            {
                 events.Evt_AIPauseBT.Invoke(false);
                 events.Evt_AIPauseFsm.Invoke(false);
                 events.Evt_AIPerceptionSetting.Invoke(true);
                 Logging.LogDebug("Tamer actor enabled, guid: {Guid}.", BGU_DataUtil.GetActorGuid(localTamerComp.Tamer));
-            //}
+            }
+            if (tamerComp.Guid == "UGuid.HYS.JiRuHuo01")
+            {
+                events.Evt_DisablePhysicalMove.Invoke(false);
+                var monster = localTamerComp.Tamer.GetMonster();
+                monster?.Mesh?.SetSimulatePhysics(true);
+            }
         }
     }
 }

@@ -147,16 +147,4 @@ public class FreeCameraManager
         _isInFreeCameraMode = false;
         OnFreeCameraModeChanged?.Invoke(false);
     }
-
-    public void SwitchFreeCameraMode()
-    {
-        if (_isInFreeCameraMode)
-        {
-            LeaveFreeCameraMode();
-        }
-        else
-        {
-            EnterFreeCameraMode();
-        }
-    }
 }

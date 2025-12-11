@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using b1;
@@ -14,6 +15,8 @@ namespace WukongMp.Api.WukongUtils;
 public static class DebugUtils
 {
     private static readonly List<AActor> TmpActors = [];
+    public static bool ScaleMonsterHpToHalf { get; set; }
+    public static bool InvincibilityEnabled { get; set; }
 
     public static void LogUe4SsPresence()
     {
@@ -340,5 +343,62 @@ public static class DebugUtils
     public static void ResetActorStatus(BGUCharacterCS player)
     {
         BUS_EventCollectionCS.Get(player)?.Evt_ResetActorStatusPre.Invoke(EResetActorReason.Rebirth);
+    }
+
+    private static bool _superSpeed;
+    private static float _originalFastSpeedRatio;
+    private static float _originalNormalSpeedRatio;
+    private static float _originalSlowSpeedRatio;
+
+    public static void ToggleSuperFastSpeed()
+    {
+        BUC_SpeedCtrlData? speedCtrlData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_SpeedCtrlData, BUC_SpeedCtrlData>(GameUtils.GetControlledPawn()) as BUC_SpeedCtrlData;
+        if (speedCtrlData == null)
+            return;
+
+        if (!_superSpeed)
+        {
+            _originalSlowSpeedRatio = speedCtrlData.GetMoveSpeedSlow();
+            _originalNormalSpeedRatio = speedCtrlData.GetMoveSpeedNormal();
+            _originalFastSpeedRatio = speedCtrlData.GetMoveSpeedFast();
+
+            speedCtrlData.SetSpeedInfo(10000, 10000, 10000);
+            _superSpeed = true;
+        }
+        else
+        {
+            speedCtrlData.SetSpeedInfo(_originalSlowSpeedRatio, _originalNormalSpeedRatio, _originalFastSpeedRatio);
+            _superSpeed = false;
+        }
+    }
+
+    public static void ToggleBoxTemp(UClass BP, UObject world)
+    {
+        try
+        {
+            if (BP == null)
+            {
+                return;
+            }
+
+            AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass(world, BP);
+            for (int i = 0; i < allActorsOfClass.Length; i++)
+            {
+                TArrayUnsafe<UActorComponent> componentsByClass = allActorsOfClass[i].GetComponentsByClass(UClass.GetClass<UStaticMeshComponent>());
+                for (int j = 0; j < componentsByClass.Count; j++)
+                {
+                    UStaticMeshComponent? uStaticMeshComponent = componentsByClass[j] as UStaticMeshComponent;
+                    if (uStaticMeshComponent != null)
+                    {
+                        bool newHidden = !uStaticMeshComponent.HiddenInGame;
+                        uStaticMeshComponent.SetHiddenInGame(newHidden);
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            USharpExceptionHandler.HandleException(e, EUSharpExceptionType.NativeReflectionInvokeFunction);
+        }
     }
 }

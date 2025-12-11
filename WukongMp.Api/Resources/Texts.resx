@@ -151,7 +151,7 @@
     <value>ENTER - Type/Send   |   K - Hide/Show Chat</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>Connected</value>
+    <value>Players in zone</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
     <value>In Multiplayer Lobby</value>
@@ -263,5 +263,8 @@
   </data>
   <data name="SeverePacketLossDetected" xml:space="preserve">
     <value>Severe packet loss detected!</value>
+  </data>
+  <data name="WaitForOtherPlayersCount" xml:space="preserve">
+    <value>Wait for other players ({0}/{1})</value>
   </data>
 </root>

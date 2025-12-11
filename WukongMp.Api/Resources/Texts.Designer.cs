@@ -159,7 +159,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected.
+        ///   Looks up a localized string similar to Players in zone.
         /// </summary>
         public static string Connected {
             get {
@@ -488,6 +488,15 @@ namespace WukongMp.Api.Resources {
         public static string WaitForOtherPlayers {
             get {
                 return ResourceManager.GetString("WaitForOtherPlayers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wait for other players ({0}/{1}).
+        /// </summary>
+        public static string WaitForOtherPlayersCount {
+            get {
+                return ResourceManager.GetString("WaitForOtherPlayersCount", resourceCulture);
             }
         }
         

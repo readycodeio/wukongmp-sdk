@@ -151,7 +151,7 @@
     <value>ENTER - 输入/发送 | K - 隐藏/显示对话框</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>在线模组已连接成功</value>
+    <value>本区玩家</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
     <value>在多人游戏准备大厅中</value>
@@ -263,5 +263,8 @@
   </data>
   <data name="SeverePacketLossDetected" xml:space="preserve">
     <value>检测到严重丢包！</value>
+  </data>
+  <data name="WaitForOtherPlayersCount" xml:space="preserve">
+    <value>等待其他玩家 ({0}/{1})</value>
   </data>
 </root>

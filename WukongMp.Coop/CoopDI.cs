@@ -60,6 +60,7 @@ namespace WukongMp.Coop
                 DI.Rpc,
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,
+                DI.ColliderDisableData,
                 DI.Logger);
 
         }

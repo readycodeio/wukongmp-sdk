@@ -1,17 +1,19 @@
-﻿using b1;
-using HarmonyLib;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Reflection;
+using b1;
+using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Relay.Common.Wukong.RPC;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.UI;
+using WukongMp.Api.ECS.Components;
+using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -125,12 +127,14 @@ public static class PatchRequestPlayMovie
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 localMain.Pawn?.SetActorHiddenInGame(true);
                 localMain.MarkerActor?.SetActorHiddenInGame(true);
+                localMain.ShouldDisableCollision = true;
+                PlayerUtils.SetCollisionEnabled(localMain.Pawn, false);
             }
 
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
                 var areaEntity = DI.Instance.AreaState.CurrentArea;
-                if (areaEntity != null && !areaEntity.Value.GetMovie().StartedSequences.Contains(SequenceId))
+                if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(SequenceId))
                 {
                     DI.Instance.ServerRpc.SendMovieFinished(SequenceId, areaEntity.Value.Scope.AreaId);
                 }
@@ -144,6 +148,7 @@ public static class PatchRequestPlayMovie
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     localMain.Pawn?.SetActorHiddenInGame(false);
                     localMain.MarkerActor?.SetActorHiddenInGame(false);
+                    localMain.ShouldDisableCollision = false;
                     DI.Instance.WidgetManager.HideInfoMessage();
                 }
             });
@@ -200,7 +205,7 @@ public static class PatchTickForMovieSystem
             var areaEntity = DI.Instance.AreaState.CurrentArea;
             var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(peakRequest.SequenceID);
 
-            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || peakRequest.bDisablePlayerControl == false || isMovieStartedByOthers)
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
             {
                 DI.Instance.WidgetManager.HideInfoMessage();
                 if (mainEntity != null)
@@ -217,6 +222,13 @@ public static class PatchTickForMovieSystem
                     {
                         DI.Instance.ServerRpc.SendMovieStarted(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
                     }
+
+                    MovieData.GetPlayingMovieID(out var playingMovies);
+                    playingMovies ??= [];
+
+                    if (playingMovies.Contains(movieRequest.SequenceID))
+                        continue;
+
                     RequestPlayMovieMethod?.Invoke(__instance, [movieRequest]);
                 }
             }
@@ -227,10 +239,10 @@ public static class PatchTickForMovieSystem
                 {
                     return true;
                 }
-                
+
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
+                DI.Instance.WidgetManager.ShowInfoMessage(Texts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
@@ -296,11 +308,13 @@ public static class PatchOnSkipCurrentCameraMovie
         var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
 
         var areaEntity = DI.Instance.AreaState.CurrentArea;
-        if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
+        if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.WaitForOtherPlayers);
-            DI.Instance.ServerRpc.SendSkipMovie(sequenceId);
+            DI.Instance.ServerRpc.SendSkipMovie(new SkipMovieData
+            {
+                SequenceId = sequenceId
+            });
             return false;
         }
 

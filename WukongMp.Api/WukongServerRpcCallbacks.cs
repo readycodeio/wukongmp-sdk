@@ -10,6 +10,7 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Common.Wukong.RPC;
 
 namespace WukongMp.Api;
 
@@ -40,14 +41,22 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     }
 
     [ServerRpcEvent("SkipMovie")]
-    private void OnSkipMovie(int sequenceId)
+    private void OnSkipMovie(SkipMovieData data)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, sequenceId0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            self._logger.LogDebug("Received skip movie event from server, sequence id: {Id}", sequenceId0);
-            self._widgetManager.HideInfoMessage();
-            CutsceneUtils.SkipCutscene(sequenceId0);
-        }, this, sequenceId);
+            self._logger.LogDebug("Received skip movie event from server, sequence id: {Id}, waiting: {Waiting}/{All}", data0.SequenceId, data0.WaitingPlayers, data0.AllPlayers);
+
+            if (data0.WaitingPlayers == data0.AllPlayers)
+            {
+                self._widgetManager.HideInfoMessage();
+                CutsceneUtils.SkipCutscene(data0.SequenceId);
+            }
+            else
+            {
+                self._widgetManager.ShowInfoMessage(string.Format(Texts.WaitForOtherPlayersCount, data0.WaitingPlayers, data0.AllPlayers));
+            }
+        }, this, data);
     }
 
     [ServerRpcEvent("MovieStarted")]

@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongPlayerModeManager(ClientState state, WukongAreaState areaState, WukongWidgetManager widgetManager, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
+public class WukongPlayerModeManager(ClientState state, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
@@ -39,7 +39,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             freeCameraManager.EnterFreeCameraMode();
             eventRouter.RaiseOnLocalPlayerChangedSpectator(true);
         }
-        SetPlayerCollision(playerEntity, mainEntity, false);
+        SetSpectatorCollisionEnabled(playerEntity, mainEntity, false);
         eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         
         return true;
@@ -55,7 +55,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
             UiUtils.SetHudVisibility(true);
 
         SetPlayerVisibility(playerEntity, mainEntity, true);
-        SetPlayerCollision(playerEntity, mainEntity, true);
+        SetSpectatorCollisionEnabled(playerEntity, mainEntity, true);
 
         if (isMyself)
         {
@@ -89,7 +89,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         return true;
     }
 
-    private bool SetPlayerCollision(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool enable)
+    private bool SetSpectatorCollisionEnabled(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool enable)
     {
         ref var localMainComp = ref mainEntity.GetLocalState();
         ref var playerComp = ref playerEntity.GetState();
@@ -107,7 +107,7 @@ public class WukongPlayerModeManager(ClientState state, WukongAreaState areaStat
         var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
-        PlayerUtils.EnablePlayerPawnCollision(localMainComp.Pawn, enable);
+        PlayerUtils.SetCollisionEnabled(localMainComp.Pawn, enable);
         return true;
     }
 }

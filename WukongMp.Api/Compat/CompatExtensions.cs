@@ -6,12 +6,6 @@ namespace WukongMp.Api.Compat;
 
 public static class CompatExtensions
 {
-    public static void Deconstruct<K, V>(this KeyValuePair<K, V> pair, out K key, out V value)
-    {
-        key = pair.Key;
-        value = pair.Value;
-    }
-    
     public static bool TryDequeue<T>(this Queue<T> queue, out T item)
     {
         if (queue == null) 

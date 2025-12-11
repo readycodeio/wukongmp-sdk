@@ -73,7 +73,6 @@ namespace WukongMp.Api.WukongUtils
 
         public static void RebirthPlayer(BGUCharacterCS playerPawn, int rebirthPointId)
         {
-            DI.Instance.FreeCameraManager.LeaveFreeCameraMode();
             BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
             var uiControlData = BGU_DataUtil.GetReadOnlyData<BUC_UIControlData>(playerPawn);
             uiControlData.SetActiveDeathUI(NewValue: true);
@@ -119,14 +118,6 @@ namespace WukongMp.Api.WukongUtils
             return Transform;
         }
 
-        public static void EnablePlayerPawnCollision(BGUCharacterCS playerPawn, bool enableCollision)
-        {
-            playerPawn.SetActorEnableCollision(enableCollision);
-            var events = BUS_EventCollectionCS.Get(playerPawn);
-            events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enableCollision);
-            events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enableCollision);
-        }
-
         public static void LogRebirthPointChange(AActor worldContext, int rebirthPointID)
         {
             Logging.LogInformation("Rebirth point as current birth point ID updated: {Id}", rebirthPointID);
@@ -138,28 +129,12 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        private static void MoveOtherPlayerUnderGround(MainCharacterEntity mainEntity)
+        public static void SetCollisionEnabled(BGUCharacterCS? character, bool enabled)
         {
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            if (localMainComp.Pawn == null)
+            if (character == null)
                 return;
-
-            var location = localMainComp.Pawn.GetActorLocation();
-            var caplsuleHalfHeight = localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight();
-            location.Z -= 3 * caplsuleHalfHeight;
-            localMainComp.Pawn.SetActorLocation(location, false, out _, true);
-        }
-
-        public static void MoveAllOtherPlayersUnderGround()
-        {
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
-            {
-                var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                if (characterEntity == null)
-                    return;
-
-                MoveOtherPlayerUnderGround(characterEntity.Value);
-            }
+            character.CapsuleComponent.SetCollisionProfileName(enabled ? B1GlobalFNames.Pawn : B1GlobalFNames.WindWalk_Pawn);
+            BUS_EventCollectionCS.Get(character)?.Evt_SetIsEnableCollisionHitMove.Invoke(enabled, ECollisionHitMoveEnableReqType.Interact);
         }
     }
 }

@@ -151,7 +151,7 @@
     <value>ENTER - Pisz/Wyślij   |   K - Ukryj/Pokaż Czat</value>
   </data>
   <data name="Connected" xml:space="preserve">
-    <value>Połączeni</value>
+    <value>Gracze w lokacji</value>
   </data>
   <data name="InMultiplayer" xml:space="preserve">
     <value>W lobby trybu wieloosobowego</value>
@@ -264,5 +264,8 @@
   </data>
   <data name="SeverePacketLossDetected" xml:space="preserve">
     <value>Znaczna utrata pakietów!</value>
+  </data>
+  <data name="WaitForOtherPlayersCount" xml:space="preserve">
+    <value>Czekaj na pozostałych graczy ({0}/{1})</value>
   </data>
 </root>

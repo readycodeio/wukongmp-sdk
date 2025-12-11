@@ -16,7 +16,6 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// </summary>
 public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
 {
-
     protected override void OnUpdateGroup()
     {
         if (!eventBus.IsGameplayLevel)
@@ -81,11 +80,6 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         {
             TeamId = pawnTeamId,
         });
-
-#if TESTING
-        BUC_SpeedCtrlData? speedCtrlData = BGU_DataUtil.GetUnPersistentReadOnlyData<IBUC_SpeedCtrlData, BUC_SpeedCtrlData>(GameUtils.GetControlledPawn()) as BUC_SpeedCtrlData;
-        speedCtrlData?.SetSpeedInfo(10000, 10000, 10000);
-#endif
 
         localMainComp.IsPlayerSynced = true;
         playerState.InvokeMainCharacterEntityInitialized(mainEntity);

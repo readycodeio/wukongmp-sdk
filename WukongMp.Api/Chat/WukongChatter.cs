@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using b1;
+using b1.BGW;
 using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
+using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -95,6 +98,8 @@ public class WukongChatter : IDisposable
         AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
 #if DEBUG
         AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
+        AddCommand("/command", new WukongChatterCommand(ExecuteConsoleCommand));
+        AddCommand("/colliders", new WukongChatterCommand(ToggleDynamicObstacles));
 #endif
     }
 
@@ -129,6 +134,8 @@ public class WukongChatter : IDisposable
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
 
+            DebugUtils.InvincibilityEnabled = false; // otherwise we get black screen
+            
             ref var localMainComp = ref mainEntity.GetLocalState();
             var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
             events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Hp, -2000f);
@@ -147,6 +154,30 @@ public class WukongChatter : IDisposable
         {
             SendServerMessage("PlayerLeft", NickName);
             _connection.Disconnect();
+        }
+    }
+
+    private void ExecuteConsoleCommand(ReadOnlyMemory<string> args)
+    {
+        var command = string.Join(" ", args.ToArray());
+        Logging.LogDebug("Executing command: {Command}", command);
+        USystemLibrary.ExecuteConsoleCommand(GameUtils.GetWorld(), command, null);
+    }
+
+    private void ToggleDynamicObstacles(ReadOnlyMemory<string> _)
+    {
+        try
+        {
+            var world = GameUtils.GetWorld();
+            if (world != null)
+            {
+                UClass dynamicObstacleClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>("Blueprint'/Game/00Main/BPLibrary/SceneObj/BP_DynamicObstcle.BP_DynamicObstcle_C'", ELoadResourceType.SyncLoadAndCache);
+                DebugUtils.ToggleBoxTemp(dynamicObstacleClass, world);
+            }
+        }
+        catch (Exception e)
+        {
+            USharpExceptionHandler.HandleException(e, EUSharpExceptionType.NativeReflectionInvokeFunction);
         }
     }
 

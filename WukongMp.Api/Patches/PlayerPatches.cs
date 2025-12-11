@@ -654,136 +654,76 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "EnableCollision")]
+    [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "DisableCollision")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchEnableCollision
+    public class PatchDisableCollision
     {
-        public static bool Prefix(BUS_QuestDynamicObstacleComp __instance)
+        public static void Postfix(BUS_QuestDynamicObstacleComp __instance)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var obstacle = __instance.GetOwner();
+            DI.Instance.ColliderDisableData.PermanentlyDisableCollider(obstacle);
+        }
+    }
+
+    [HarmonyPatch(typeof(BUS_TouchWallFeedbackComp), "CheckCanTrigger_HitDynamicObstacleWall")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchCheckCanTrigger_HitDynamicObstacleWall
+    {
+        public static bool Prefix(BUS_TouchWallFeedbackComp __instance, AActor HitActor)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            var obstacle = __instance.GetOwner();
-            var obstavceName = BGU_DataUtil.GetActorGuid(obstacle);
-            Logging.LogDebug("Checking whether to enable collider for obstacle with guid {Guid}", obstavceName);
-
-            List<FVector> playersPositions = [];
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-                ref playerComp, _) =>
-            {
-                playersPositions.Add(playerComp.Location.ToFVector());
-            });
-
-            if (playersPositions.Count <= 1)
+            BGU_QuestActor? questActor = HitActor as BGU_QuestActor;
+            if (questActor == null)
                 return true;
 
-            var enableCollider = true;
-            Logging.LogDebug("Obstacle at {ObstaclePos}", obstacle.GetActorLocation());
-            Logging.LogDebug("Found {Count} players in area", playersPositions.Count);
-            Logging.LogDebug("Players positions: {Positions}", string.Join(", ", playersPositions));
+            if (questActor.QuestActorType != EQuestActorType.DynamicObstacle)
+                return true;
 
+            var player = __instance.GetOwner() as BGUPlayerCharacterCS;
+            if (player == null)
+                return true;
 
-            MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_QuestDynamicObstacleComp), "CollisionComponents");
-            List<TWeakObject<UPrimitiveComponent>> CollisionComponents = (List<TWeakObject<UPrimitiveComponent>>)getter.Invoke(__instance, null);
+            if (player != DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn)
+                return true;
 
-            // Enable collsions
-            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
+            var bossActor = GetClosestBossActor(player, player.GetActorLocation());
+            if (bossActor == null)
+                return true;
+
+            var bossLocation = bossActor.GetActorLocation();
+            if (UBGUSelectUtil.MultiSphereTraceForObjects(player, player.GetActorLocation(), bossLocation, 10, [EObjectTypeQuery.ObjectTypeQuery15], false, out var HitResult) > 0 && HitResult.Any(x => x.HitActor == HitActor))
             {
-                if (collisionComponent.IsValid())
-                {
-                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
-                    uPrimitiveComponent?.SetCollisionEnabled(ECollisionEnabled.QueryAndPhysics);
-                }
+                Logging.LogDebug("Hit dynamic obstacle wall is between boss and player, disabling collision temporarily");
+                DI.Instance.ColliderDisableData.DisableCollider(questActor, Constants.ColliderDisableTime);
+                return false;
             }
 
-            for (int i = 1; i < playersPositions.Count; i++)
-            {
-                var nav = UNavigationSystemV1.FindPathToLocationSynchronously(obstacle.World, playersPositions[0], playersPositions[i], null, null);
-                var path = nav.PathPoints.ToList();
-                Logging.LogDebug("Checking path between players at {Pos1} and {Pos2}, path has {Count} points", playersPositions[0], playersPositions[i], path.Count);
-                Logging.LogDebug("Path points: {Points}", string.Join(", ", path));
-                Logging.LogDebug("IsPartial: {IsPartial}", nav.IsPartial());
-                //if (!nav.IsPartial())
-                //{
-                //    break;
-                //}
-                if (HasPathColllision(obstacle.World, path, Constants.ArenaPortalRadius, obstacle))
-                {
-                    enableCollider = false;
-                    break;
-                }
-            }
-
-            // Disable collsions
-            foreach (TWeakObject<UPrimitiveComponent> collisionComponent in CollisionComponents)
-            {
-                if (collisionComponent.IsValid())
-                {
-                    UPrimitiveComponent uPrimitiveComponent = collisionComponent.Get();
-                    uPrimitiveComponent?.SetCollisionEnabled(ECollisionEnabled.NoCollision);
-                }
-            }
-
-            Logging.LogDebug("{Status} collider with guid {Guid}", enableCollider ? "Enabling" : "Disabling", BGU_DataUtil.GetActorGuid(obstacle));
-            return enableCollider;
+            return true;
         }
 
-        private static bool HasPathColllision(UObject world, IList<FVector> pathPoints, float radius, AActor actorToCheck)
+        private static AActor? GetClosestBossActor(UObject context, FVector position)
         {
-            if (pathPoints.Count == 0 || radius <= 0f)
-                return false;
-
-            var actorHeight = actorToCheck.GetActorLocation().Z;
-            List<AActor> emptyActorList = [];
-            for (int i = 0; i < pathPoints.Count - 1; i++)
+            AActor? closestBoss = null;
+            double closestDistanceSquared = double.MaxValue;
+            var monsters = UGameplayStatics.GetAllActorsOfClass<BGU_CharacterAI>(context);
+            foreach (BGU_CharacterAI monster in monsters)
             {
-                if (USystemLibrary.SphereTraceMultiByProfile(world, new FVector(pathPoints[i].X, pathPoints[i].Y, actorHeight), new FVector(pathPoints[i + 1].X, pathPoints[i + 1].Y, actorHeight), radius, B1GlobalFNames.Pawn, bTraceComplex: false, emptyActorList, EDrawDebugTrace.None, out var OutHit3, bIgnoreSelf: true, FLinearColor.Red, FLinearColor.Blue, 5f))
+                if (!monster.bBossRoomMonster)
+                    continue;
+                var distanceSquared = FVector.DistSquared2D(monster.GetActorLocation(), position);
+                if (distanceSquared < closestDistanceSquared)
                 {
-                    foreach (var hit in OutHit3)
-                    {
-                        if (hit.Component.Value.GetOwner() == actorToCheck)
-                        {
-                            Logging.LogDebug("Path collision detected with actor: {ActorName}", hit.Component.Value.GetOwner().GetName());
-                            return true;
-                        }
-                    }
+                    closestDistanceSquared = distanceSquared;
+                    closestBoss = monster;
                 }
             }
 
-            return false;
-        }
-
-        private static bool IsPathNearPosition(IList<FVector> pathPoints, FVector worldPos, float radius)
-        {
-            if (pathPoints == null || pathPoints.Count == 0 || radius <= 0f)
-                return false;
-
-            float radiusSquared = radius * radius;
-
-            FVector ClosestPointOnSegment(FVector segmentStart, FVector segmentEnd, FVector point)
-            {
-                FVector segmentVector = segmentEnd - segmentStart;
-                double segmentLength = segmentVector.SizeSquared();
-                if (segmentLength <= 1e-6f) return segmentStart;
-                double t = FVector.DotProduct(point - segmentStart, segmentVector) / segmentLength;
-                t = FMath.Clamp(t, 0, 1);
-                return segmentStart + t * segmentVector;
-            }
-
-            for (int i = 0; i < pathPoints.Count; i++)
-            {
-                if (FVector.DistSquared2D(pathPoints[i], worldPos) <= radiusSquared)
-                    return true;
-            }
-
-            for (int i = 0; i < pathPoints.Count - 1; i++)
-            {
-                FVector closest = ClosestPointOnSegment(pathPoints[i], pathPoints[i + 1], worldPos);
-                if (FVector.DistSquared2D(closest, worldPos) <= radiusSquared)
-                    return true;
-            }
-
-            return false;
+            return closestBoss;
         }
     }
 
@@ -814,17 +754,21 @@ namespace WukongMp.Api.Patches
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 if (localMain.Pawn == null)
                     continue;
-                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, false);
+                PlayerUtils.SetCollisionEnabled(localMain.Pawn, false);
+                localMain.ShouldDisableCollision = true;
             }
         }
     }
 
-    [HarmonyPatch(typeof(InteractStepMatchPos), "StepFinish")]
+    [HarmonyPatch(typeof(InteractStepBase), "TriggerFinish")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    public class PatchOnInteractStepFinish
+    public class PatchTriggerFinish
     {
-        public static void Prefix(InteractStepMatchPos __instance, InteractContext ___Context)
+        public static void Prefix(InteractStepBase __instance, InteractContext ___Context)
         {
+            if (__instance is not InteractStepMatchPos)
+                return;
+
             if (!DI.Instance.AreaState.InRoom)
                 return;
 
@@ -846,7 +790,7 @@ namespace WukongMp.Api.Patches
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 if (localMain.Pawn == null)
                     continue;
-                PlayerUtils.EnablePlayerPawnCollision(localMain.Pawn, true);
+                localMain.ShouldDisableCollision = false;
             }
         }
     }
@@ -1096,6 +1040,32 @@ public class PatchOnRebirthFinished
         if (entity.HasValue)
         {
             entity.Value.GetLocalState().IsRespawning = false;
+            DI.Instance.Rpc.SendAfterRebirth();
         }
+    }
+}
+
+[HarmonyPatch(typeof(UBGUFunctionLibCollisionChannel), nameof(UBGUFunctionLibCollisionChannel.BGUSetCollisionResponseToChannels))]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchBGUSetCollisionResponseToChannels
+{
+    public static bool Prefix(UPrimitiveComponent Comp, Dictionary<ECollisionChannel, ECollisionResponseType> ResponseToChannels)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var owner = Comp.GetOwner();
+
+        if (owner == null)
+            return true;
+
+        // do not set to Custom if the owner is a synchronized player
+        var player = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+
+        if (!player.HasValue)
+            return true;
+
+        DI.Instance.Logger.LogDebug("Prevented BGUSetCollisionResponseToChannels for player {Pawn}", player.Value.GetState().PlayerId);
+        return player.Value == DI.Instance.PlayerState.LocalMainCharacter;
     }
 }

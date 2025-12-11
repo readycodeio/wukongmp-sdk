@@ -14,6 +14,7 @@ public struct LocalMainCharacterComponent : IComponent
     public bool IsPlayerSynced;
 
     public bool IsSpectatorLocally;
+    public bool ShouldDisableCollision;
 
     [Ignore]
     public BGUCharacterCS? LastPawn { get; private set; }

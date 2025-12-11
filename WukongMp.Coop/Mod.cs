@@ -134,22 +134,46 @@ namespace WukongMp.Coop
                 }
             });
 #if DEBUG
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.L, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F1, () =>
             {
-                Logging.LogDebug("Alt + L: Teleport underground");
-                PlayerUtils.MoveAllOtherPlayersUnderGround();
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.Y, () =>
-            {
-                Logging.LogDebug("Alt + Y: Show colliders markers");
+                Logging.LogDebug("F1: Show colliders markers");
                 DebugUtils.ShowMarkersForInvisibleWalls(4000);
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.U, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F2, () =>
             {
-                Logging.LogDebug("Alt + U: Remove colliders markers");
+                Logging.LogDebug("F2: Remove colliders markers");
                 DebugUtils.DestroyTmpMarkerActors();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F3, () =>
+            {
+                Logging.LogDebug("F3: Toggle super speed");
+                DebugUtils.ToggleSuperFastSpeed();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F4, () =>
+            {
+                _logger.LogDebug("F4: Toggle invincibility");
+                DebugUtils.InvincibilityEnabled = !DebugUtils.InvincibilityEnabled;
+            });
+#endif
+            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
+            {
+                _logger.LogDebug("F5: Toggle debug widget visibility");
+                DI.Instance.WidgetManager.ToggleDebugVisibility();
+            });
+#if DEBUG
+            DI.Instance.InputManager.RegisterKeyBind(Key.F6, () =>
+            {
+                Logging.LogDebug("F6: Toggle HP scaling");
+                DebugUtils.ScaleMonsterHpToHalf = !DebugUtils.ScaleMonsterHpToHalf;
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F12, () =>
+            {
+                _logger.LogDebug("F12: Skip cutscene");
+                CutsceneUtils.RequestSkipCurrentCutscene();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
@@ -173,34 +197,22 @@ namespace WukongMp.Coop
                 }
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.S, () =>
-            {
-                _logger.LogDebug("Alt + S");
-                CutsceneUtils.RequestSkipCurrentCutscene();
-            });
-
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {
                 _logger.LogDebug("Alt + X");
                 PlayerUtils.ResetLocalPlayerCooldown();
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
-            {
-                _logger.LogDebug("J (Dump anim info)");
-                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
-            });
-
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
             {
                 _logger.LogDebug("Alt + J");
-                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
             {
                 _logger.LogDebug("Shift + J");
-                DebugUtils.DumpTamerAnimationDebugInfo("JiRuHuo");
+                DebugUtils.DumpPlayersAnimationDebugInfo();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
@@ -209,13 +221,6 @@ namespace WukongMp.Coop
                 DebugUtils.ResetPlayersAnimation();
             });
 #endif
-            DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
-            {
-                _logger.LogDebug("F5");
-                if (!DI.Instance.WidgetManager.ChatHasFocus())
-                    DI.Instance.WidgetManager.ToggleDebugVisibility();
-            });
-
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");

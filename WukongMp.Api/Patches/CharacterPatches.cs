@@ -1,13 +1,13 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using b1;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using PreludeLib.Compat;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
@@ -111,6 +111,10 @@ namespace WukongMp.Api.Patches
             if (AttrID == EBGUAttrFloat.Hp)
             {
                 var owner = __instance.GetOwner();
+#if DEBUG
+                if (DebugUtils.InvincibilityEnabled && owner == DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn)
+                    return false;
+#endif
                 var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
                 if (netId.HasValue)
                     return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
@@ -400,40 +404,24 @@ namespace WukongMp.Api.Patches
             if (!___MovementData.IM_EnableMove)
                 return;
 
-            var owner = __instance.GetOwner();
-            var otherMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-
-            if (otherMainEntity != null)
-            {
-                ref var otherMain = ref otherMainEntity.Value.GetState();
-
-                FVector currentLocation = owner.BGUGetActorLocation();
-                FVector targetLocation = otherMain.Location.ToFVector();
-                if (FMath.Abs(targetLocation.Z - currentLocation.Z) > Constants.AllowedZDiffrence)
-                {
-                    currentLocation.Z = targetLocation.Z;
-                }
-
-                owner.BGUSetActorLocation(currentLocation, bSweep: false, bTeleport: false, NeedReturnHitResult: false, false);
-            }
-
+            var owner = __instance.GetOwner() as BGUCharacterCS;
             if (owner is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
             {
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
                 if (!tamerEntity.HasValue)
-                     return;
+                    return;
 
                 var boneNameLock = new FName(Constants.ChestCameraLockNode);
                 var socketOffset = ai.Mesh.GetSocketTransform(boneNameLock, ERelativeTransformSpace.RTS_Component).GetLocation();
 
                 var trans = tamerEntity.Value.GetTransform();
-                FVector targetCenterPosition = trans.Position.ToFVector();
-                FRotator targetCenterRotation = trans.Rotation.ToFRotator();
+                var targetCenterPosition = trans.Position.ToFVector();
+                var targetCenterRotation = trans.Rotation.ToFRotator();
 
-                FRotator rotation = targetCenterRotation; // TODO: Check interpolation: FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
-                FRotator outRotation = rotation;
-                FVector rotatedOffset = rotation.RotateVector(socketOffset); 
-                FVector outLocation = targetCenterPosition - rotatedOffset;
+                var rotation = targetCenterRotation; // TODO: Check interpolation: FMath.RInterpTo(meshTransform.Rotator(), targetCenterRotation, DeltaTime, 16f);
+                var outRotation = rotation;
+                var rotatedOffset = rotation.RotateVector(socketOffset);
+                var outLocation = targetCenterPosition - rotatedOffset;
 
                 ai.Mesh.SetWorldLocationAndRotation(outLocation, outRotation, false, out _, false);
             }
@@ -450,15 +438,28 @@ namespace WukongMp.Api.Patches
                 return;
 
             var owner = __instance.GetOwner();
+            NetworkId? netId = null;
+
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            {
+                netId = tamerEntity.Value.GetMeta().NetId;
+            }
+            else
+            {
+                var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
+                if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == owner)
+                {
+                    netId = playerEntity.Value.GetMeta().NetId;
+                }
+            }
+
+            if (netId.HasValue)
             {
                 if (SimpleState == EBGUSimpleState.Immobilizing)
                     return;
 
-                var netId = tamerEntity.Value.GetMeta().NetId;
-
-                DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId, SimpleState, IsRemove));
+                DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId.Value, SimpleState, IsRemove));
             }
         }
     }
@@ -755,6 +756,106 @@ namespace WukongMp.Api.Patches
             }
 
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(BIC_GlobalActorData), nameof(BIC_GlobalActorData.GetActorEntity))]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchGetActorEntity
+    {
+        public static bool Prefix(BIC_GlobalActorData __instance, ref bool __result, string UnitGuid, out b1.ECS.Entity Entity)
+        {
+            Entity = b1.ECS.Entity.Null;
+            if (string.IsNullOrEmpty(UnitGuid))
+            {
+                __result = false;
+                return false;
+            }
+
+            if (__instance.ActorGuid2Entity.TryGetValue(UnitGuid, out var value))
+            {
+                var count = value.Count;
+                // Return local player entity if player guid is queried.
+                if (count > 1 && DI.Instance.PlayerState.LocalMainCharacter.HasValue && value[0] is BGUPlayerCharacterCS)
+                {
+                    Entity = ECSExtension.ToEntity(DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn);
+                    if (Entity != b1.ECS.Entity.Null)
+                    {
+                        __result = true;
+                        return false;
+                    }
+                }
+
+                if (count > 0)
+                {
+                    for (var num = count - 1; num >= 0; num--)
+                    {
+                        Entity = ECSExtension.ToEntity(value[num]);
+                        if (Entity != b1.ECS.Entity.Null)
+                        {
+                            __result = true;
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            __result = false;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchPlayDBC_ByType
+    {
+        public static void Postfix(BGUCharacterCS ___OwnerChr, EAbnormalStateType ___AbnormalType, EAbnromalDispActionType ActionType)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerChr);
+            if (tamerEntity.HasValue)
+            {
+                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                    return;
+
+                DI.Instance.Rpc.SendPlayBaneEffect(new PlayBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+                return;
+            }
+
+            var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == ___OwnerChr)
+            {
+                DI.Instance.Rpc.SendPlayBaneEffect(new PlayBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchEndAllDBC
+    {
+        public static void Postfix(BGUCharacterCS ___OwnerChr, EAbnormalStateType ___AbnormalType)
+        {
+            if (!DI.Instance.AreaState.InRoom)
+                return;
+
+            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerChr);
+            if (tamerEntity.HasValue)
+            {
+                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                    return;
+
+                DI.Instance.Rpc.SendStopBaneEffect(new StopBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType));
+                return;
+            }
+
+            var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
+            if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == ___OwnerChr)
+            {
+                DI.Instance.Rpc.SendStopBaneEffect(new StopBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType));
+            }
         }
     }
 }

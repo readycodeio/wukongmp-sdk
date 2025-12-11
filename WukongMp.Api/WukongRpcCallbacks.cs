@@ -11,8 +11,11 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
+using HarmonyLib;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -774,6 +777,15 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    void OnMagicFieldDead(string magicFieldClassName, EBGUBulletDestroyReason reason)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0) =>
+        {
+            MagicFieldUtils.DestroyMagicField(magicFieldClassName0, reason0);
+        }, this, magicFieldClassName, reason);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileMoveMode(PlayerId __sender, ProjectileMoveModeData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, sender, data0) =>
@@ -814,25 +826,46 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnAfterRebirth(PlayerId __sender)
+    {
+        var playerEntity = _playerState.GetMainCharacterById(__sender);
+        if (playerEntity is not { } mainEntity)
+            return;
+
+        var playerPawn = mainEntity.GetLocalState().Pawn;
+        var events = BUS_EventCollectionCS.Get(playerPawn);
+        if (events != null)
+        {
+            events.Evt_AfterUnitRebirth.Invoke(ERebirthType.RebirthPoint);
+        }
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRestAtShrine(int birthPointId)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, shrineId) =>
         {
-            if (self._playerState.LocalMainCharacter is not { } mainEntity)
-                return;
-
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            if (localMainComp.Pawn == null)
-                return;
-
-            if (mainEntity.GetState().IsDead)
+            foreach (var player in DI.Instance.State.AreaPlayers)
             {
-                localMainComp.IsRespawning = true;
-                PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
-            }
-            else
-            {
-                PlayerUtils.RestPlayer(localMainComp.Pawn);
+                var playerEntity = self._playerState.GetMainCharacterById(player);
+
+                if (playerEntity is not { } mainEntity)
+                    continue;
+
+                ref var localMainComp = ref mainEntity.GetLocalState();
+                if (localMainComp.Pawn == null)
+                    continue;
+
+                if (mainEntity.GetState().IsDead)
+                {
+                    localMainComp.IsRespawning = true;
+                    self._freeCameraManager.LeaveFreeCameraMode();
+                    PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+                }
+                else
+                {
+                    PlayerUtils.RestPlayer(localMainComp.Pawn);
+                }
             }
         }, this, birthPointId);
     }
@@ -898,6 +931,70 @@ public partial class WukongRpcCallbacks : IDisposable
 
             TamerUtils.TriggerWakeUp(pawn);
         }, this, netId);
+    }
+
+    // ReSharper disable once InconsistentNaming
+    private static readonly MethodInfo PlayDBC_ByType = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType");
+    private static readonly MethodInfo EndAllDBC = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC");
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnPlayBaneEffect(PlayBaneEffectData data)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Id));
+                return;
+            }
+
+            var handlers = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_AbnormalStateHandlers>(pawn);
+
+            if (handlers == null)
+                return;
+
+            var handler = handlers.GetAbnormalHanddler(data0.StateType);
+            PlayDBC_ByType.Invoke(handler, [data0.ActionType, default(FTransform), -1]);
+        }, this, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    private void OnStopBaneEffect(StopBaneEffectData data)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Id);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Id));
+                return;
+            }
+
+            var handlers = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_AbnormalStateHandlers>(pawn);
+            if (handlers == null)
+                return;
+
+            var handler = handlers.GetAbnormalHanddler(data0.StateType);
+            EndAllDBC.Invoke(handler, []);
+        }, this, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnCastSkill(NetworkId caster, int skillId, ECastSkillSourceType skillType)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, caster0, skillId0, skillType0) =>
+        {
+            if (self._pawnState.GetPawnByNetworkId(caster0) is not { } casterPawn)
+            {
+                self._logger.LogError("Caster pawn not found: {NetId}", caster0);
+                return;
+            }
+
+            Logging.LogDebug("OnCastSkill called for caster {Caster} with skillId {SkillId} and skillType {SkillType}", BGU_DataUtil.GetActorGuid(casterPawn), skillId0, skillType0);
+            BUS_EventCollectionCS.Get(casterPawn)?.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(skillId0, skillType0));
+
+        }, this, caster, skillId, skillType);
     }
 
     #region PvpRPC

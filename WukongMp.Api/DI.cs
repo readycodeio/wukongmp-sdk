@@ -73,6 +73,7 @@ public sealed class DI
     public WukongEventBus EventBus { get; private set; } = null!;
     public GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
     public GameplayEventRouter GameplayEventRouter { get; private set; } = null!;
+    public ColliderDisableData ColliderDisableData { get; private set; } = null!;
 
     public WukongNetworkLogger NetLogger { get; private set; } = null!;
     public INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
@@ -185,8 +186,9 @@ public sealed class DI
 
         var freeCameraManager = FreeCameraManager = new FreeCameraManager();
         
+        var colliderDisableData = ColliderDisableData = new ColliderDisableData(playerState, logger);
         var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
-        var modeManager = ModeManager = new WukongPlayerModeManager(state, areaState, widgetManager, gameplayEventRouter, freeCameraManager);
+        var modeManager = ModeManager = new WukongPlayerModeManager(state, gameplayEventRouter, freeCameraManager);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);

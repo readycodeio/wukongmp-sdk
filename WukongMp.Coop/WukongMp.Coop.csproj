@@ -50,6 +50,9 @@
         <Reference Include="Google.Protobuf">
           <HintPath>..\WukongMp.Api\Game\Google.Protobuf.dll</HintPath>
         </Reference>
+        <Reference Include="GSE.Core">
+          <HintPath>..\WukongMp.Api\Game\GSE.Core.dll</HintPath>
+        </Reference>
         <Reference Include="GSE.ProtobufDB">
           <HintPath>..\WukongMp.Api\Game\GSE.ProtobufDB.dll</HintPath>
         </Reference>
