@@ -380,6 +380,7 @@ public static class DebugUtils
             {
                 return;
             }
+
             AActor[] allActorsOfClass = UGameplayStatics.GetAllActorsOfClass(world, BP);
             for (int i = 0; i < allActorsOfClass.Length; i++)
             {
@@ -398,24 +399,6 @@ public static class DebugUtils
         catch (Exception e)
         {
             USharpExceptionHandler.HandleException(e, EUSharpExceptionType.NativeReflectionInvokeFunction);
-        }
-    }
-
-    public static void DisableOtherPlayersCollision()
-    {
-        foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
-        {
-            var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-            if (mainEntity == null)
-                continue;
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-            BUS_GSEventCollection bUS_GSEventCollection = BUS_EventCollectionCS.Get(localMain.Pawn);
-            if (bUS_GSEventCollection != null)
-            {
-                localMain.Pawn?.CapsuleComponent.SetCollisionProfileName(B1GlobalFNames.WindWalk_Pawn);
-                bUS_GSEventCollection?.Evt_SetIsEnableCollisionHitMove.Invoke(IsEnableCollisionHitMove: false, ECollisionHitMoveEnableReqType.Interact);
-            }
-            localMain.ShouldDisableCollision = true;
         }
     }
 }

@@ -170,12 +170,6 @@ namespace WukongMp.Coop
                 DebugUtils.ScaleMonsterHpToHalf = !DebugUtils.ScaleMonsterHpToHalf;
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.F7, () =>
-            {
-                _logger.LogDebug("F7: Disable other players collision");
-                DebugUtils.DisableOtherPlayersCollision();
-            });
-
             DI.Instance.InputManager.RegisterKeyBind(Key.F12, () =>
             {
                 _logger.LogDebug("F12: Skip cutscene");
