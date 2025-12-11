@@ -118,14 +118,6 @@ namespace WukongMp.Api.WukongUtils
             return Transform;
         }
 
-        public static void EnablePlayerPawnCollision(BGUCharacterCS playerPawn, bool enableCollision)
-        {
-            playerPawn.SetActorEnableCollision(enableCollision);
-            var events = BUS_EventCollectionCS.Get(playerPawn);
-            events?.Evt_SetBoolProperty.Invoke(EPropType.Capsule_EnableGravity, enableCollision);
-            events?.Evt_SetBoolProperty.Invoke(EPropType.Mesh_EnableGravity, enableCollision);
-        }
-
         public static void LogRebirthPointChange(AActor worldContext, int rebirthPointID)
         {
             Logging.LogInformation("Rebirth point as current birth point ID updated: {Id}", rebirthPointID);
