@@ -1044,11 +1044,11 @@ public class PatchOnRebirthFinished
     }
 }
 
-[HarmonyPatch(typeof(UCapsuleComponent), nameof(UCapsuleComponent.SetCollisionResponseToChannel))]
+[HarmonyPatch(typeof(UPrimitiveComponent), nameof(UPrimitiveComponent.SetCollisionResponseToChannel))]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchSetCollisionResponseToChannel
 {
-    public static bool Prefix(UCapsuleComponent __instance, ECollisionChannel Channel, ECollisionResponseType NewResponse)
+    public static bool Prefix(UPrimitiveComponent __instance, ECollisionChannel Channel, ECollisionResponseType NewResponse)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
