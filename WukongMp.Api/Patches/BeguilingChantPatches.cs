@@ -4,9 +4,9 @@ using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Patches;
 
-[HarmonyPatch(typeof(BUS_IntervalTriggerImpl), "OnTickAction")]
+[HarmonyPatch(typeof(BUS_IntervalTriggerImpl.IntervalTriggerEnableState), "OnTickAction")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchEventActiveTick
+public static class PatchEventActiveTick
 {
     public static bool Prefix()
     {
@@ -16,7 +16,7 @@ public class PatchEventActiveTick
 
 [HarmonyPatch(typeof(BUS_IntervalTriggerImpl), "SetIsActive")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnIntervalEventBegin
+public static class PatchSetIsActive
 {
     public static void Postfix(bool IsActive)
     {
