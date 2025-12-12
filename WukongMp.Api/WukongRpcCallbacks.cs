@@ -1,6 +1,8 @@
-﻿using b1;
+﻿using System;
+using System.Reflection;
+using b1;
 using b1.BGW;
-using GSE.GSSdk;
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -10,21 +12,11 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Chat;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.NameCompressors;
-using WukongMp.Api.Patches;
-using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -996,47 +988,21 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnBeginBeguilingChant()
+    internal void OnBeguilingChant(bool enable)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, enable0) =>
         {
-            var uClass = UClass.GetClass("BGUIntervalTriggerArea");
-            var areaActors = UGameplayStatics.GetAllActorsOfClass(GameUtils.GetWorld(), uClass);
+            var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
 
-            foreach (var actor in areaActors)
+            foreach (var area in areaActors)
             {
-                if (actor is BGUAreaBase areaBase)
+                var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
+                if (comp != null)
                 {
-                    var comp = areaBase.GetComponent<BUS_IntervalTriggerLogicComp>();
-                    if (comp != null)
-                    {
-                        Traverse.Create(comp).Method("OnIntervalEventBegin", []).GetValue();
-                    }
+                    Traverse.Create(comp).Method("SetIsActive").GetValue(enable0);
                 }
             }
-        }, this);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnEndBeguilingChant()
-    {
-        _ecsLoop.Scheduler.Schedule(static (_, self) =>
-        {
-            var uClass = UClass.GetClass("BGUIntervalTriggerArea");
-            var areaActors = UGameplayStatics.GetAllActorsOfClass(GameUtils.GetWorld(), uClass);
-
-            foreach (var actor in areaActors)
-            {
-                if (actor is BGUAreaBase areaBase)
-                {
-                    var comp = areaBase.GetComponent<BUS_IntervalTriggerLogicComp>();
-                    if (comp != null)
-                    {
-                        Traverse.Create(comp).Method("OnIntervalEventEnd", []).GetValue();
-                    }
-                }
-            }
-        }, this);
+        }, this, enable);
     }
 
     #region PvpRPC

@@ -4,7 +4,7 @@ using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Patches;
 
-[HarmonyPatch(typeof(BUS_IntervalTriggerLogicComp), "EventActiveTick")]
+[HarmonyPatch(typeof(BUS_IntervalTriggerImpl), "OnTickAction")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchEventActiveTick
 {
@@ -14,28 +14,15 @@ public class PatchEventActiveTick
     }
 }
 
-[HarmonyPatch(typeof(BUS_IntervalTriggerLogicComp), "OnIntervalEventBegin")]
+[HarmonyPatch(typeof(BUS_IntervalTriggerImpl), "SetIsActive")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchOnIntervalEventBegin
 {
-    public static void Postfix()
+    public static void Postfix(bool IsActive)
     {
         if (DI.Instance.AreaState.IsMasterClient)
         {
-            DI.Instance.Rpc.SendBeginBeguilingChant();
-        }
-    }
-}
-
-[HarmonyPatch(typeof(BUS_IntervalTriggerLogicComp), "OnIntervalEventEnd")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnIntervalEventEnd
-{
-    public static void Postfix()
-    {
-        if (DI.Instance.AreaState.IsMasterClient)
-        {
-            DI.Instance.Rpc.SendEndBeguilingChant();
+            DI.Instance.Rpc.SendBeguilingChant(IsActive);
         }
     }
 }
