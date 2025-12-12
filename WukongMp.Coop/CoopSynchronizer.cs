@@ -23,6 +23,7 @@ using WukongMp.Api.ECS.Systems.MainCharacters;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
+using WukongMp.Coop.ECS.Systems;
 
 namespace WukongMp.Coop;
 
@@ -63,6 +64,7 @@ public class CoopSynchronizer : WukongSynchronizer
         _modeGroup.Add(new ScaleMonsterHpSystem());
         _modeGroup.Add(new ReEnableCollidersSystem(colliderDisableData, eventBus));
         _modeGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
+        _modeGroup.Add(new FixYellowbrowSystem());
 
         _modeGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_modeGroup);

@@ -4,11 +4,12 @@ using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Coop.ECS.Systems;
 
 public class ScaleMonsterHpSystem : QuerySystem<HpComponent, LocalTamerComponent>
 {
