@@ -24,11 +24,7 @@ public sealed class KillAlreadyDeadMonstersSystem(ClientOwnershipManager clientO
 
         Query.ForEachEntity((ref tamerComp, ref localTamerComp, ref metaComp, ref hpComp, entity) =>
         {
-            if (localTamerComp.IsTamerSynced &&
-                hpComp.IsDead &&
-                !clientOwnership.OwnsEntity(entity) &&
-                tamerComp.HoldingPlayers.Count == 1 &&
-                tamerComp.HoldingPlayers.Contains(playerState.LocalPlayerId.Value))
+            if (!localTamerComp.IsCheckedForDead && localTamerComp.IsTamerSynced && hpComp.IsDead && !clientOwnership.OwnsEntity(entity))
             {
                 var monster = localTamerComp.Tamer?.GetMonster();
 
@@ -45,6 +41,8 @@ public sealed class KillAlreadyDeadMonstersSystem(ClientOwnershipManager clientO
                 {
                     BUS_EventCollectionCS.Get(monster)?.Evt_UnitDead.Invoke(monster, EDeadReason.SkillDamage);
                 }
+
+                localTamerComp.IsCheckedForDead = true; // Check each tamer only once.
             }
         });
     }
