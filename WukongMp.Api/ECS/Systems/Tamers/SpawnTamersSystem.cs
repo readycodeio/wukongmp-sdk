@@ -68,6 +68,9 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 return;
             }
 
+            if (BGUFunctionLibraryCS.BGUHasUnitState(monster, EBGUUnitState.Dead))
+                return;
+
             // set monster hp
             var attrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(monster);
 
