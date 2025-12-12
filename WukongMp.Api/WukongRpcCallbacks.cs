@@ -999,7 +999,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
                 if (comp != null)
                 {
-                    Traverse.Create(comp).Method("SetIsActive").GetValue(enable0);
+                    AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "SetIsActive").Invoke(comp, [enable0]);
                 }
             }
         }, this, enable);
