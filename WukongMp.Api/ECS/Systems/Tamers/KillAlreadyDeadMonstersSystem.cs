@@ -28,7 +28,7 @@ public sealed class KillAlreadyDeadMonstersSystem(ClientOwnershipManager clientO
             {
                 var monster = localTamerComp.Tamer?.GetMonster();
 
-                if (monster == null || BGUFunctionLibraryCS.BGUHasUnitState(monster, EBGUUnitState.Dead))
+                if (monster == null || localTamerComp.Tamer?.CurrentRef?.Phase != ETamerPhase.Spawned || BGUFunctionLibraryCS.BGUHasUnitState(monster, EBGUUnitState.Dead))
                     return;
 
                 Logging.LogDebug("Monster is dead, sending unitDead locally. Guid: {Guid}, netId: {NetId}.", tamerComp.Guid, metaComp.NetId);
