@@ -1,6 +1,7 @@
 ﻿using Friflo.Engine.ECS.Systems;
+using WukongMp.Api;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.Coop.ECS.Systems;
 
 public class ReEnableCollidersSystem(ColliderDisableData colliderDisableData, WukongEventBus eventBus) : BaseSystem
 {

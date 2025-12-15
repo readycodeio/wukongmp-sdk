@@ -43,12 +43,7 @@ public sealed class SyncTamersSystem : QuerySystem<TamerComponent, LocalTamerCom
                     localTamerComp.IsTamerSynced = true;
                     Logging.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);
 
-                    if (hpComp.IsDead)
-                    {
-                        Logging.LogDebug("Tamer's monster is dead, sending unitDead locally. Guid: {Guid}, netId: {NetId}.", tamerComp.Guid, metaComp.NetId);
-                        BUS_EventCollectionCS.Get(actor)?.Evt_UnitDead.Invoke(actor, EDeadReason.SkillDamage);
-                    }
-                    else if (localTamerComp.Tamer.GetMonster() != null)
+                    if (localTamerComp.Tamer.GetMonster() != null)
                     {
                         Logging.LogDebug("Monster already spawned on the level, guid: {Guid}, netId: {NetId}. Marking as spawned.", tamerComp.Guid, metaComp.NetId);
                         TamerUtils.MarkMonsterLocallySpawned(ref localTamerComp, metaComp);

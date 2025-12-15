@@ -1,6 +1,8 @@
-﻿using b1;
+﻿using System;
+using System.Reflection;
+using b1;
 using b1.BGW;
-using GSE.GSSdk;
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -10,19 +12,11 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
-using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Chat;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.NameCompressors;
-using WukongMp.Api.Patches;
-using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -779,10 +773,7 @@ public partial class WukongRpcCallbacks : IDisposable
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnMagicFieldDead(string magicFieldClassName, EBGUBulletDestroyReason reason)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0) =>
-        {
-            MagicFieldUtils.DestroyMagicField(magicFieldClassName0, reason0);
-        }, this, magicFieldClassName, reason);
+        _ecsLoop.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0) => { MagicFieldUtils.DestroyMagicField(magicFieldClassName0, reason0); }, this, magicFieldClassName, reason);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
@@ -993,8 +984,25 @@ public partial class WukongRpcCallbacks : IDisposable
 
             Logging.LogDebug("OnCastSkill called for caster {Caster} with skillId {SkillId} and skillType {SkillType}", BGU_DataUtil.GetActorGuid(casterPawn), skillId0, skillType0);
             BUS_EventCollectionCS.Get(casterPawn)?.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(skillId0, skillType0));
-
         }, this, caster, skillId, skillType);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnBeguilingChant(bool enable)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, enable0) =>
+        {
+            var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
+
+            foreach (var area in areaActors)
+            {
+                var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
+                if (comp != null)
+                {
+                    AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "SetIsActive").Invoke(comp, [enable0]);
+                }
+            }
+        }, this, enable);
     }
 
     #region PvpRPC

@@ -79,7 +79,7 @@ namespace WukongMp.Api.WukongUtils
             BGW_UIEventCollection.Get(playerPawn)?.Evt_UI_ActiveDeathUI(B1: true);
         }
 
-        public static void RebirthPlayerInPlace(BGUCharacterCS playerPawn)
+        public static void RebirthPlayerInPlace(BGUCharacterCS? playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             if (events != null)

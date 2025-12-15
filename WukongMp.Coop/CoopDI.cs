@@ -29,7 +29,7 @@ namespace WukongMp.Coop
             wukongDI.Logger.LogDebug("Initializing Coop DI...");
 
             DI = wukongDI;
-            
+
             var patcher = Patcher = new CoopPatcher(DI.Prelude);
 
             var chatter = CoopChatter = new CoopChatter(DI.Chatter);
@@ -61,8 +61,8 @@ namespace WukongMp.Coop
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,
                 DI.ColliderDisableData,
+                DI.FreeCameraManager,
                 DI.Logger);
-
         }
     }
 }

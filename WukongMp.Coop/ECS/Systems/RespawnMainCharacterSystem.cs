@@ -1,12 +1,12 @@
 ﻿using System;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using WukongMp.Api;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.ECS.Systems.MainCharacters;
+namespace WukongMp.Coop.ECS.Systems;
 
 public class RespawnMainCharacterSystem(
     WukongAreaState areaState,
