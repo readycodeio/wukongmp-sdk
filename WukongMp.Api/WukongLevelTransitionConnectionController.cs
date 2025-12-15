@@ -11,17 +11,14 @@ public class WukongLevelTransitionConnectionController : IDisposable
 {
     private readonly WukongEventBus _eventBus;
     private readonly WukongConnectionManager _connection;
-    private readonly WukongWidgetManager _widgetManager;
 
     public WukongLevelTransitionConnectionController(
         WukongEventBus eventBus,
-        WukongConnectionManager connection,
-        WukongWidgetManager widgetManager
+        WukongConnectionManager connection
     )
     {
         _eventBus = eventBus;
         _connection = connection;
-        _widgetManager = widgetManager;
         
         _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
         _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;

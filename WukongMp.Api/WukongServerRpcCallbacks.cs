@@ -5,12 +5,15 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Serialization;
 using System;
 using System.Diagnostics;
+using b1;
 using b1.EventDelDefine;
+using HarmonyLib;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Common.Wukong.RPC;
+using UnrealEngine.Engine;
 
 namespace WukongMp.Api;
 
@@ -69,6 +72,24 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     private void OnMovieFinished(int sequenceId, AreaId areaId)
     {
         // Do nothing on response from server.
+    }
+    
+    [ServerRpcEvent("BeguilingChant")]
+    private void OnBeguilingChant(bool enable)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, enable0) =>
+        {
+            var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
+
+            foreach (var area in areaActors)
+            {
+                var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
+                if (comp != null)
+                {
+                    AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "SetIsActive").Invoke(comp, [enable0]);
+                }
+            }
+        }, this, enable);
     }
 
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();

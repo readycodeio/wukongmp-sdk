@@ -202,7 +202,7 @@ public sealed class DI
 
         var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, widgetManager, ecsLoop);
 
-        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection, widgetManager);
+        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection);
 
         var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
         var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
