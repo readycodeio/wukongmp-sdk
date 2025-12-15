@@ -986,25 +986,7 @@ public partial class WukongRpcCallbacks : IDisposable
             BUS_EventCollectionCS.Get(casterPawn)?.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(skillId0, skillType0));
         }, this, caster, skillId, skillType);
     }
-
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnBeguilingChant(bool enable)
-    {
-        _ecsLoop.Scheduler.Schedule(static (_, self, enable0) =>
-        {
-            var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
-
-            foreach (var area in areaActors)
-            {
-                var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
-                if (comp != null)
-                {
-                    AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "SetIsActive").Invoke(comp, [enable0]);
-                }
-            }
-        }, this, enable);
-    }
-
+    
     #region PvpRPC
 
     [Obsolete("To be removed once per-project RPC is implemented")]

@@ -1,6 +1,7 @@
 ﻿using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
@@ -11,6 +12,7 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
+using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
@@ -30,6 +32,7 @@ namespace WukongMp.Coop;
 public class CoopSynchronizer : WukongSynchronizer
 {
     private readonly SystemGroup _modeGroup;
+    private readonly WukongPlayerState PlayerState;
 
     public CoopSynchronizer(
         ArchetypeEventRouter archetypeEvent,
@@ -59,6 +62,8 @@ public class CoopSynchronizer : WukongSynchronizer
         State.OnJoinedArea += OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot += OnApplySnapshot;
         PlayerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
+        PlayerState = playerState;
+        PlayerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
 
         _modeGroup = new SystemGroup("Coop");
 
@@ -76,7 +81,8 @@ public class CoopSynchronizer : WukongSynchronizer
         State.OnJoinedArea -= OnJoinedAreaHandler;
         JobRegistry.OnApplySnapshot -= OnApplySnapshot;
         PlayerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
-
+        PlayerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;
+        
         EcsLoop.RemoveSystem(_modeGroup);
         base.OnDispose();
     }
@@ -88,6 +94,22 @@ public class CoopSynchronizer : WukongSynchronizer
         if (marker == null)
         {
             Logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickName);
+        }
+    }
+
+    private void OnMainCharacterEntityInitialized(MainCharacterEntity mainCharacterEntity)
+    {
+        // check if we are in the Pagoda
+        var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
+        foreach (var area in areaActors)
+        {
+            var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
+            if (comp != null)
+            {
+                var eligible = comp.CurrentState is BUS_IntervalTriggerImpl.IntervalTriggerEnableState;
+                mainCharacterEntity.GetState().BeguilingChantEligible = eligible;
+                return;
+            }
         }
     }
 
