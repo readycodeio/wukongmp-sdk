@@ -46,7 +46,7 @@ public class PatchOnEnterPreAnimationSyncingStateOnHost
     }
 
     // Disable animation syncing attacks for monsters not owned by the local player
-    public static bool Postfix(UActorCompBaseCS __instance, AActor Guest, List<int> PreAnimationSyncStateHostBuffList)
+    public static void Postfix(UActorCompBaseCS __instance, AActor Guest, List<int> PreAnimationSyncStateHostBuffList)
     {
         var owner = __instance.GetOwner() as BGU_CharacterAI;
         var guest = Guest as BGUCharacterCS;
@@ -67,8 +67,6 @@ public class PatchOnEnterPreAnimationSyncingStateOnHost
                 }
             }
         }
-
-        return true;
     }
 }
 
@@ -83,7 +81,7 @@ public class PatchOnEnterAnimationSyncingStateOnHost
     }
 
     // Disable animation syncing attacks for monsters not owned by the local player
-    public static bool Postfix(UActorCompBaseCS __instance, List<int> AnimationSyncStateHostBuffList, UAnimMontage AnimationSyncMontage)
+    public static void Postfix(UActorCompBaseCS __instance, List<int> AnimationSyncStateHostBuffList, UAnimMontage AnimationSyncMontage)
     {
         var owner = __instance.GetOwner() as BGU_CharacterAI;
 
@@ -101,7 +99,5 @@ public class PatchOnEnterAnimationSyncingStateOnHost
                 }
             }
         }
-
-        return true;
     }
 }
