@@ -369,8 +369,8 @@ namespace WukongMp.Api.Patches
             }
 
             if (Attacker is BGUCharacterCS attackerCharacter &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(ownerCharacter, out var victimEntity) &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(attackerCharacter, out var attackerEntity))
+                DI.Instance.PawnState.TryGetEntityByCharacter(ownerCharacter, out var victimEntity) &&
+                DI.Instance.PawnState.TryGetEntityByCharacter(attackerCharacter, out var attackerEntity))
             {
                 DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
             }
@@ -985,7 +985,7 @@ public class PatchOnSetRebirthPointAsCurrentBirthPoint
     {
         PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), RebirthPointID);
         var owner = __instance.GetOwner();
-        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
             DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, RebirthPointID);
         }
@@ -1000,7 +1000,7 @@ public class PatchOnSetCurrentBirthPoint
     {
         PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), BirthPointID);
         var owner = __instance.GetOwner();
-        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
             DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, BirthPointID);
         }
@@ -1015,7 +1015,7 @@ public class PatchOnForceSetRebirthPoint
     {
         PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), RebirthPointId);
         var owner = __instance.GetOwner();
-        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
             DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, RebirthPointId);
         }

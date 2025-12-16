@@ -182,7 +182,7 @@ public class WukongPawnState(
         return null;
     }
 
-    public bool TryGetEnityByCharacter(BGUCharacterCS? character, [NotNullWhen(true)] out Entity? entity)
+    public bool TryGetEntityByCharacter(BGUCharacterCS? character, [NotNullWhen(true)] out Entity? entity)
     {
         entity = null;
         if (character == null)
