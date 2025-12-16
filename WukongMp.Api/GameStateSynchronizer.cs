@@ -4,6 +4,7 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
@@ -27,15 +28,11 @@ public class GameStateSynchronizer : IDisposable
 
     private void OnLeftAreaHandler(AreaId areaId, Entity entity)
     {
+        Logging.LogDebug("Left area, cleaning up game state.");
         var playerEntity = _playerState.LocalMainCharacter;
         if (playerEntity.HasValue)
         {
-            BIC_MovieData? movieData = BGWGameInstanceCS.GetObject<BGW_GameDataMgr>(playerEntity.Value.GetLocalState().Pawn)?.GetGameInstanceWritableData<BIC_MovieData>();
-            if (movieData != null)
-            {
-                Logging.LogDebug("Left area, cleaning up game state.");
-                movieData.PlayMovieRequestQueue.Clear();
-            }
+            CutsceneUtils.ClearLocalJoiningCutsceneStatus(playerEntity.Value);
         }
     }
 }

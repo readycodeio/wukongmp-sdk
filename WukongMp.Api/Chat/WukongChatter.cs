@@ -96,6 +96,7 @@ public class WukongChatter : IDisposable
         AddCommand("/giveup", new WukongChatterCommand(RequestGiveUp));
         AddCommand("/rebirth", new WukongChatterCommand(RequestRebirth));
         AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
+        AddCommand("/softlock", new WukongChatterCommand(ResolveSoftlock));
 #if DEBUG
         AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
         AddCommand("/command", new WukongChatterCommand(ExecuteConsoleCommand));
@@ -122,6 +123,14 @@ public class WukongChatter : IDisposable
         PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
         _rpc.SendRebirthPlayer(playerId);
         SendServerMessage("PlayerRequestedRebirth", NickName);
+    }
+
+    private void ResolveSoftlock(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        PlayerUtils.RespawnParty(mainEntity);
     }
 
     private void RequestGiveUp(ReadOnlyMemory<string> _)

@@ -1,6 +1,8 @@
 ﻿using b1;
 using BtlB1;
 using BtlShare;
+using System;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
@@ -135,6 +137,16 @@ namespace WukongMp.Api.WukongUtils
                 return;
             character.CapsuleComponent.SetCollisionProfileName(enabled ? B1GlobalFNames.Pawn : B1GlobalFNames.WindWalk_Pawn);
             BUS_EventCollectionCS.Get(character)?.Evt_SetIsEnableCollisionHitMove.Invoke(enabled, ECollisionHitMoveEnableReqType.Interact);
+        }
+
+        public static void RespawnParty(MainCharacterEntity mainCharacter)
+        {
+            var maxComp = 0;
+            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
+
+            ref var localMainComp = ref mainCharacter.GetLocalState();
+            localMainComp.IsRespawning = true;
+            DI.Instance.Rpc.SendPartyRespawn(maxComp);
         }
     }
 }

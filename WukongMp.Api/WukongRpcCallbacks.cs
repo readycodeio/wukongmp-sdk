@@ -34,6 +34,7 @@ public partial class WukongRpcCallbacks : IDisposable
     private readonly WukongPawnState _pawnState;
     private readonly ClientOwnershipManager _clientOwnership;
     private readonly FreeCameraManager _freeCameraManager;
+    private readonly GameplayEventRouter _eventRouter;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -47,6 +48,7 @@ public partial class WukongRpcCallbacks : IDisposable
         WukongPawnState pawnState,
         ClientOwnershipManager clientOwnership,
         FreeCameraManager freeCameraManager,
+        GameplayEventRouter eventRouter,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
     {
@@ -59,6 +61,7 @@ public partial class WukongRpcCallbacks : IDisposable
         _pawnState = pawnState;
         _clientOwnership = clientOwnership;
         _freeCameraManager = freeCameraManager;
+        _eventRouter = eventRouter;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -812,6 +815,8 @@ public partial class WukongRpcCallbacks : IDisposable
 
             localMainComp.IsRespawning = true;
             self._freeCameraManager.LeaveFreeCameraMode();
+            CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
+            self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
             PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
         }, this, birthPointId);
     }

@@ -267,4 +267,7 @@
   <data name="WaitForOtherPlayersCount" xml:space="preserve">
     <value>等待其他玩家 ({0}/{1})</value>
   </data>
+  <data name="SoftlockDetected" xml:space="preserve">
+    <value>软锁。使用 /softlock 命令可以重新生成所有角色。</value>
+  </data>
 </root>

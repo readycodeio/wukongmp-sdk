@@ -1,18 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
-using WukongMp.Api.WukongUtils;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Coop.ECS.Systems;
 
-public class RespawnMainCharacterSystem(
+public class DetectSoftlockSystem(
     WukongAreaState areaState,
     WukongPlayerState playerState,
-    WukongRpcCallbacks rpc,
+    WukongWidgetManager widgetManager,
     ILogger logger
 ) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
 {
@@ -21,8 +22,8 @@ public class RespawnMainCharacterSystem(
         if (!areaState.IsMasterClient)
             return;
 
-        var allDead = true;
         var players = 0;
+        HashSet<int> waitingSequencesIds = new();
 
         Query.ForEachEntity((ref localMainComp, ref mainComp, _) =>
         {
@@ -31,8 +32,8 @@ public class RespawnMainCharacterSystem(
 
             players++;
 
-            // count players who are dead and not yet respawning
-            allDead &= mainComp is { IsDead: true, IsTransformed: false } && !localMainComp.IsRespawning;
+            if (localMainComp.IsWaitingForSequence)
+                waitingSequencesIds.Add(mainComp.WaitingSequenceId);
         });
 
         if (players == 0)
@@ -47,11 +48,10 @@ public class RespawnMainCharacterSystem(
 
         ref var localMainComp = ref mainEntity.Value.GetLocalState();
 
-        // if all players are dead, respawn the local player
-        if (players > 0 && allDead && !localMainComp.IsRespawning)
+        if (players > 0 && waitingSequencesIds.Count > 1 && !localMainComp.IsRespawning)
         {
-            logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, playerState.LocalPlayerId);
-            PlayerUtils.RespawnParty(mainEntity.Value);
+            logger.LogDebug("Softlock detected");
+            widgetManager.ShowInfoMessage(Texts.SoftlockDetected);
         }
     }
 }

@@ -267,4 +267,7 @@
   <data name="WaitForOtherPlayersCount" xml:space="preserve">
     <value>Wait for other players ({0}/{1})</value>
   </data>
+  <data name="SoftlockDetected" xml:space="preserve">
+    <value>Softlock. Use /softlock command to respawn</value>
+  </data>
 </root>

@@ -1,7 +1,7 @@
 using System.Linq;
 using b1;
 using WukongMp.Api.DTO;
-using WukongMp.Api.UI;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -87,5 +87,15 @@ public static class CutsceneUtils
         {
             PlayerUtils.TeleportLocalPlayer(mainEntity.Value, localMain.JoiningSequenceLocation, main.Rotation.ToFRotator(), false);
         }
+    }
+
+    public static void ClearLocalJoiningCutsceneStatus(MainCharacterEntity mainCharacter)
+    {
+        ref var localMain = ref mainCharacter.GetLocalState();
+        BIC_MovieData? movieData = BGWGameInstanceCS.GetObject<BGW_GameDataMgr>(localMain.Pawn)?.GetGameInstanceWritableData<BIC_MovieData>();
+        movieData?.PlayMovieRequestQueue.Clear();
+
+        localMain.IsJoiningSequence = false;
+        localMain.IsWaitingForSequence = false;
     }
 }
