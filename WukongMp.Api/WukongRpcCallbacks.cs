@@ -539,7 +539,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 self._logger.LogNullDebug(nameof(data0.Host));
                 return;
             }
-            
+
             var guestPawn = self._pawnState.GetPawnByNetworkId(data0.Guest);
             if (guestPawn == null)
             {
@@ -570,7 +570,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 self._logger.LogNullDebug(nameof(data0.NetId));
                 return;
             }
-            
+
             var fullMontagePath = data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.MontagePath) : data0.MontagePath;
             var montage = string.IsNullOrEmpty(fullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
@@ -582,6 +582,33 @@ public partial class WukongRpcCallbacks : IDisposable
             }
 
             events.Evt_NotifyEnterAnimationSyncingStateOnHost?.Invoke([], montage);
+        }, this, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnBeginSyncAnimation(BeginSyncAnimationData data)
+    {
+        _logger.LogDebug("OnBeginSyncAnimation called for Host {NetId} with GuestMontage '{MontagePath}'", data.Host, data.GuestMontage);
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var hostPawn = self._pawnState.GetPawnByNetworkId(data0.Host);
+            if (hostPawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Host));
+                return;
+            }
+
+            var fullMontagePath = data0.Shortened ? Compressors.MontageNameCompressor.Decompress(data0.GuestMontage) : data0.GuestMontage;
+            var montage = string.IsNullOrEmpty(fullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
+
+            var events = BGS_GSEventCollection.Get(hostPawn);
+            if (events == null)
+            {
+                self._logger.LogError("Failed to get event collection for unit {Unit}", hostPawn.GetName());
+                return;
+            }
+
+            events.Evt_BGS_BeginSyncAnimation?.Invoke(hostPawn, montage, data0.bFoundHostSyncPointOnDummyMesh, new FName(data0.SelfSyncPointOnHost), new FName(data0.TargetSyncPointOnHost), new FName(data0.SelfSyncPointOnGuest), data0.bForceSyncDummyMeshAnimation, data0.bEnableDebugDraw, data0.NotifyBeginTime, data0.TotalDuration, data0.AnimationSyncMontageInstanceId);
         }, this, data);
     }
 

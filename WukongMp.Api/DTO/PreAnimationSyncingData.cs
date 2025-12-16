@@ -5,7 +5,6 @@ using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.DTO;
 
-
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
 public partial struct PreAnimationSyncingData(NetworkId host, NetworkId guest) : INetSerializable

@@ -7,6 +7,7 @@ using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.NameCompressors;
@@ -96,6 +97,55 @@ public class PatchOnEnterAnimationSyncingStateOnHost
                     var data = shortened ? shortMontagePath : AnimationSyncMontage?.PathName ?? "";
                     var evData = new MontageCallbackData(entity.Value.GetMeta().NetId, shortened, data, 0, true);
                     DI.Instance.Rpc.SendAnimationSyncing(evData);
+                }
+            }
+        }
+    }
+}
+
+[HarmonyPatch(typeof(BGS_AnimationSyncSystem), "OnBeginSyncAnimation")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchOnBeginSyncAnimation
+{
+    // Disable animation syncing attacks for monsters not owned by the local player
+    public static void Postfix(AActor Host,
+        UAnimMontage? GuestMontage,
+        bool bFoundHostSyncPointOnDummyMesh,
+        FName SelfSyncPointOnHost,
+        FName TargetSyncPointOnHost,
+        FName SelfSyncPointOnGuest,
+        bool bForceSyncDummyMeshAnimation,
+        bool bEnableDebugDraw,
+        float NotifyBeginTime,
+        float TotalDuration,
+        int AnimationSyncMontageInstanceID)
+    {
+        var owner = Host as BGU_CharacterAI;
+        if (owner != null)
+        {
+            var entity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+            if (entity.HasValue)
+            {
+                if (DI.Instance.ClientOwnership.OwnsEntity(entity.Value.Entity))
+                {
+                    var shortened = Compressors.MontageNameCompressor.Compress(GuestMontage?.PathName, out var shortMontagePath);
+                    var montage = shortened ? shortMontagePath : GuestMontage?.PathName ?? "";
+                    var data = new BeginSyncAnimationData
+                    {
+                        Host = entity.Value.GetMeta().NetId,
+                        Shortened = shortened,
+                        GuestMontage = montage,
+                        AnimationSyncMontageInstanceId = AnimationSyncMontageInstanceID,
+                        bEnableDebugDraw = bEnableDebugDraw,
+                        bForceSyncDummyMeshAnimation = bForceSyncDummyMeshAnimation,
+                        bFoundHostSyncPointOnDummyMesh = bFoundHostSyncPointOnDummyMesh,
+                        NotifyBeginTime = NotifyBeginTime,
+                        SelfSyncPointOnGuest = SelfSyncPointOnGuest.ToString(),
+                        SelfSyncPointOnHost = SelfSyncPointOnHost.ToString(),
+                        TargetSyncPointOnHost = TargetSyncPointOnHost.ToString(),
+                        TotalDuration = TotalDuration
+                    };
+                    DI.Instance.Rpc.SendBeginSyncAnimation(data);
                 }
             }
         }
