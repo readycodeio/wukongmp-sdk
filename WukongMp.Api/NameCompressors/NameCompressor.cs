@@ -15,8 +15,14 @@ public class NameCompressor
         _shortNameRegex = shortNameRegex;
     }
 
-    public bool Compress(string fullName, out string shortName)
+    public bool Compress(string? fullName, out string shortName)
     {
+        if (fullName is null)
+        {
+            shortName = "";   
+            return false;
+        }
+        
         var match = _longNameRegex.Match(fullName);
         if (match.Success)
         {

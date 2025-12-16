@@ -81,7 +81,7 @@ public class PatchOnEnterAnimationSyncingStateOnHost
     }
 
     // Disable animation syncing attacks for monsters not owned by the local player
-    public static void Postfix(UActorCompBaseCS __instance, List<int> AnimationSyncStateHostBuffList, UAnimMontage AnimationSyncMontage)
+    public static void Postfix(UActorCompBaseCS __instance, List<int> AnimationSyncStateHostBuffList, UAnimMontage? AnimationSyncMontage)
     {
         var owner = __instance.GetOwner() as BGU_CharacterAI;
 
@@ -92,8 +92,8 @@ public class PatchOnEnterAnimationSyncingStateOnHost
             {
                 if (DI.Instance.ClientOwnership.OwnsEntity(entity.Value.Entity))
                 {
-                    var shortened = Compressors.MontageNameCompressor.Compress(AnimationSyncMontage.PathName, out var shortMontagePath);
-                    var data = shortened ? shortMontagePath : AnimationSyncMontage.PathName;
+                    var shortened = Compressors.MontageNameCompressor.Compress(AnimationSyncMontage?.PathName, out var shortMontagePath);
+                    var data = shortened ? shortMontagePath : AnimationSyncMontage?.PathName ?? "";
                     var evData = new MontageCallbackData(entity.Value.GetMeta().NetId, shortened, data, 0, true);
                     DI.Instance.Rpc.SendAnimationSyncing(evData);
                 }
