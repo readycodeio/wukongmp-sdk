@@ -557,7 +557,7 @@ public partial class WukongRpcCallbacks : IDisposable
             BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterAnimationSyncingStateOnHost?.Invoke([], montage);
             BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterAnimationSyncingStateOnGuest?.Invoke([]);
 
-            var data = BGU_DataUtil.GetReadOnlyData<BGC_AnimationSyncData>(hostPawn);
+            var data = BGU_DataUtil.GetReadOnlyData<BGC_AnimationSyncData>(UGameplayStatics.GetGameState(GameUtils.GetWorld()));
             data?.AddParticipants(hostPawn, guestPawn);
         }, this, data);
     }
