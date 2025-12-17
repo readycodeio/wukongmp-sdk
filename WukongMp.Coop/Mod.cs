@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using b1;
+using b1.BGW;
 using CSharpModBase;
 using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
+using UnrealEngine.Engine;
 using WukongMp.Api;
-using WukongMp.Api.Configuration;
+using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Shim;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop
@@ -168,6 +170,43 @@ namespace WukongMp.Coop
             {
                 Logging.LogDebug("F6: Toggle HP scaling");
                 DebugUtils.ScaleMonsterHpToHalf = !DebugUtils.ScaleMonsterHpToHalf;
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F7, () =>
+            {
+                Logging.LogDebug("F7: Force be hit animation");
+
+                var localPlayer = DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn;
+
+                const string beHitMontage = "Player/Wukong/AM/Behit/TeWaZa/LYS_KJLDragon/AM_LYS_KJLDragon_Atk_14_player";
+                var fullMontagePath = Compressors.MontageNameCompressor.Decompress(beHitMontage);
+                var montage = string.IsNullOrEmpty(fullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
+
+                var events = BUS_EventCollectionCS.Get(localPlayer);
+                var animInstance = localPlayer?.Mesh.GetAnimInstance();
+                animInstance?.Montage_Play(montage);
+                events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F8, () =>
+            {
+                Logging.LogDebug("F8: Force hit animation");
+
+                var localPlayer = DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn;
+
+                const string beHitMontage = "LYS/LYS_KJLDragon/new/Montage/AM_LYS_KJLDragon_Atk_14_monster";
+                var fullMontagePath = Compressors.MontageNameCompressor.Decompress(beHitMontage);
+                var montage = string.IsNullOrEmpty(fullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
+
+                var target = TargetingUtils.GetTarget(localPlayer) as ABGUCharacter;
+
+                if (target != null)
+                {
+                    var events = BUS_EventCollectionCS.Get(target);
+                    var animInstance = target.Mesh.GetAnimInstance();
+                    animInstance?.Montage_Play(montage);
+                    events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
+                }
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.F12, () =>

@@ -474,6 +474,9 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
             }
 
+            if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(pawn, EBGUSimpleState.InAnimationSyncing))
+                return;
+
             if (string.IsNullOrEmpty(data0.MontagePath))
             {
                 pawn.StopAnimMontage(null);
