@@ -713,7 +713,9 @@ namespace WukongMp.Api.Patches
             var monsters = UGameplayStatics.GetAllActorsOfClass<BGU_CharacterAI>(context);
             foreach (BGU_CharacterAI monster in monsters)
             {
-                if (!monster.bBossRoomMonster)
+                var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(monster.GetFinalBattleInfoExtendID());
+                
+                if (!(monster.bBossRoomMonster || info.QualityType is EUnitQualityType.NormalBoss or EUnitQualityType.FinalBoss || info.BloodBarType == EBGUBloodBarType.BossBar))
                     continue;
                 var distanceSquared = FVector.DistSquared2D(monster.GetActorLocation(), position);
                 if (distanceSquared < closestDistanceSquared)

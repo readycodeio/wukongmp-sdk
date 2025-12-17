@@ -529,7 +529,7 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    public void OnPreAnimationSyncing(PreAnimationSyncingData data)
+    public void OnAnimationSyncing(AnimationSyncingData data)
     {
         _logger.LogDebug("OnPreAnimationSyncing called for Host {Host} and Guest {Guest}", data.Host, data.Guest);
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
@@ -551,35 +551,14 @@ public partial class WukongRpcCallbacks : IDisposable
             BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnHost?.Invoke(guestPawn, []);
             BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnGuest?.Invoke(hostPawn, []);
 
-            var data = BGU_DataUtil.GetReadOnlyData<BGC_AnimationSyncData>(hostPawn);
-            data?.AddParticipants(hostPawn, guestPawn);
-        }, this, data);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    public void OnAnimationSyncing(MontageCallbackData data)
-    {
-        _logger.LogDebug("OnAnimationSyncing called for NetId {NetId} with MontagePath '{MontagePath}'", data.NetId, data.MontagePath);
-        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
-        {
-            var pawn = self._pawnState.GetPawnByNetworkId(data0.NetId);
-            if (pawn == null)
-            {
-                self._logger.LogNullDebug(nameof(data0.NetId));
-                return;
-            }
-
-            var fullMontagePath = data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.MontagePath) : data0.MontagePath;
+            var fullMontagePath = data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.Montage) : data0.Montage;
             var montage = string.IsNullOrEmpty(fullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
 
-            var events = BUS_EventCollectionCS.Get(pawn);
-            if (events == null)
-            {
-                self._logger.LogError("Failed to get event collection for unit {Unit}", pawn.GetName());
-                return;
-            }
+            BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterAnimationSyncingStateOnHost?.Invoke([], montage);
+            BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterAnimationSyncingStateOnGuest?.Invoke([]);
 
-            events.Evt_NotifyEnterAnimationSyncingStateOnHost?.Invoke([], montage);
+            var data = BGU_DataUtil.GetReadOnlyData<BGC_AnimationSyncData>(hostPawn);
+            data?.AddParticipants(hostPawn, guestPawn);
         }, this, data);
     }
 

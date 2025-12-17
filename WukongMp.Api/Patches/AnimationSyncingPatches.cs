@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using b1;
 using HarmonyLib;
@@ -36,70 +34,30 @@ public class PatchOnBeginAnimationSyncPreCheck
     }
 }
 
-[HarmonyPatch]
+[HarmonyPatch(typeof(BGS_AnimationSyncSystem), "OnPreCheckSuccess")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnEnterPreAnimationSyncingStateOnHost
+public class PatchOnPreCheckSuccess
 {
-    [HarmonyTargetMethodHint("b1.BUS_AnimationSyncHostComp", "OnEnterPreAnimationSyncingStateOnHost")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BUS_AnimationSyncHostComp:OnEnterPreAnimationSyncingStateOnHost");
-    }
-
     // Disable animation syncing attacks for monsters not owned by the local player
-    public static void Postfix(UActorCompBaseCS __instance, AActor Guest, List<int> PreAnimationSyncStateHostBuffList)
+    public static void Postfix(AActor Host, AActor GuestCandidate, UAnimMontage? AnimationSyncMontage)
     {
-        var owner = __instance.GetOwner() as BGU_CharacterAI;
-        var guest = Guest as BGUCharacterCS;
+        if (!DI.Instance.PawnState.TryGetEntityByCharacter(Host as BGUCharacterCS, out var hostEntity))
+            return;
 
-        if (owner != null && guest != null)
-        {
-            var hostEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (hostEntity.HasValue)
-            {
-                if (DI.Instance.ClientOwnership.OwnsEntity(hostEntity.Value.Entity))
-                {
-                    if (DI.Instance.PawnState.TryGetEntityByCharacter(guest, out var guestEntity))
-                    {
-                        var hostId = hostEntity.Value.GetMeta().NetId;
-                        var guestId = guestEntity.Value.GetComponent<MetadataComponent>().NetId;
-                        DI.Instance.Rpc.SendPreAnimationSyncing(new PreAnimationSyncingData(hostId, guestId));
-                    }
-                }
-            }
-        }
-    }
-}
+        if (!DI.Instance.ClientOwnership.OwnsEntity(hostEntity.Value))
+            return;
 
-[HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnEnterAnimationSyncingStateOnHost
-{
-    [HarmonyTargetMethodHint("b1.BUS_AnimationSyncHostComp", "OnEnterAnimationSyncingStateOnHost")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BUS_AnimationSyncHostComp:OnEnterAnimationSyncingStateOnHost");
-    }
+        if (!DI.Instance.PawnState.TryGetEntityByCharacter(GuestCandidate as BGUCharacterCS, out var guestEntity))
+            return;
 
-    // Disable animation syncing attacks for monsters not owned by the local player
-    public static void Postfix(UActorCompBaseCS __instance, List<int> AnimationSyncStateHostBuffList, UAnimMontage? AnimationSyncMontage)
-    {
-        var owner = __instance.GetOwner() as BGU_CharacterAI;
+        var hostId = hostEntity.Value.GetComponent<MetadataComponent>().NetId;
+        var guestId = guestEntity.Value.GetComponent<MetadataComponent>().NetId;
 
-        if (owner != null)
-        {
-            var entity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (entity.HasValue)
-            {
-                if (DI.Instance.ClientOwnership.OwnsEntity(entity.Value.Entity))
-                {
-                    var shortened = Compressors.MontageNameCompressor.Compress(AnimationSyncMontage?.PathName, out var shortMontagePath);
-                    var data = shortened ? shortMontagePath : AnimationSyncMontage?.PathName ?? "";
-                    var evData = new MontageCallbackData(entity.Value.GetMeta().NetId, shortened, data, 0, true);
-                    DI.Instance.Rpc.SendAnimationSyncing(evData);
-                }
-            }
-        }
+        var shortened = Compressors.MontageNameCompressor.Compress(AnimationSyncMontage?.PathName, out var shortMontagePath);
+        var montage = shortened ? shortMontagePath : AnimationSyncMontage?.PathName ?? "";
+
+        var payload = new AnimationSyncingData(hostId, guestId, shortened, montage);
+        DI.Instance.Rpc.SendAnimationSyncing(payload);
     }
 }
 
