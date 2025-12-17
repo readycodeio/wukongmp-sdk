@@ -965,7 +965,10 @@ public partial class WukongRpcCallbacks : IDisposable
             self._freeCameraManager.LeaveFreeCameraMode();
             CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
             self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
-            PlayerUtils.RebirthAlivePlayer(localMainComp.Pawn, shrineId);
+            if (!PlayerUtils.TryReloadFromSave())
+            {
+                PlayerUtils.RebirthAlivePlayer(localMainComp.Pawn, shrineId);
+            }
         }, this, birthPointId);
     }
 
