@@ -73,12 +73,18 @@ namespace WukongMp.Api.WukongUtils
             TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
         }
 
-        public static void RebirthPlayer(BGUCharacterCS playerPawn, int rebirthPointId)
+        public static void RebirthDeadPlayer(BGUCharacterCS playerPawn, int rebirthPointId)
         {
             BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
             var uiControlData = BGU_DataUtil.GetReadOnlyData<BUC_UIControlData>(playerPawn);
             uiControlData.SetActiveDeathUI(NewValue: true);
             BGW_UIEventCollection.Get(playerPawn)?.Evt_UI_ActiveDeathUI(B1: true);
+        }
+
+        public static void RebirthAlivePlayer(BGUCharacterCS playerPawn, int rebirthPointId)
+        {
+            BPS_GSEventCollection.Get(playerPawn.PlayerState)?.Evt_SetCurrentRebirthPoint.Invoke(rebirthPointId);
+            BUS_EventCollectionCS.Get(playerPawn)?.Evt_UnitRebirth.Invoke(ERebirthType.RebirthPoint);
         }
 
         public static void RebirthPlayerInPlace(BGUCharacterCS? playerPawn)
@@ -139,14 +145,14 @@ namespace WukongMp.Api.WukongUtils
             BUS_EventCollectionCS.Get(character)?.Evt_SetIsEnableCollisionHitMove.Invoke(enabled, ECollisionHitMoveEnableReqType.Interact);
         }
 
-        public static void RespawnParty(MainCharacterEntity mainCharacter)
+        public static void RespawnSoftlockedParty(MainCharacterEntity mainCharacter)
         {
             var maxComp = 0;
             DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
 
             ref var localMainComp = ref mainCharacter.GetLocalState();
             localMainComp.IsRespawning = true;
-            DI.Instance.Rpc.SendPartyRespawn(maxComp);
+            DI.Instance.Rpc.SendPartySoftlock(maxComp);
         }
     }
 }

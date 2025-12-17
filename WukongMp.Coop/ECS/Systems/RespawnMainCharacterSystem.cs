@@ -5,7 +5,6 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
-using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop.ECS.Systems;
 
@@ -51,7 +50,11 @@ public class RespawnMainCharacterSystem(
         if (players > 0 && allDead && !localMainComp.IsRespawning)
         {
             logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, playerState.LocalPlayerId);
-            PlayerUtils.RespawnParty(mainEntity.Value);
+            var maxComp = 0;
+            Query.ForEachEntity((ref _, ref mainComp, _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
+
+            localMainComp.IsRespawning = true;
+            rpc.SendPartyRespawn(maxComp);
         }
     }
 }

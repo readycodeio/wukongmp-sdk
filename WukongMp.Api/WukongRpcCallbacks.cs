@@ -900,7 +900,7 @@ public partial class WukongRpcCallbacks : IDisposable
             self._freeCameraManager.LeaveFreeCameraMode();
             CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
             self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
-            PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+            PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
         }, this, birthPointId);
     }
 
@@ -939,13 +939,33 @@ public partial class WukongRpcCallbacks : IDisposable
                 {
                     localMainComp.IsRespawning = true;
                     self._freeCameraManager.LeaveFreeCameraMode();
-                    PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+                    PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
                 }
                 else
                 {
                     PlayerUtils.RestPlayer(localMainComp.Pawn);
                 }
             }
+        }, this, birthPointId);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    private void OnPartySoftlock(int birthPointId)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, shrineId) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            localMainComp.IsRespawning = true;
+            self._freeCameraManager.LeaveFreeCameraMode();
+            CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
+            self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
+            PlayerUtils.RebirthAlivePlayer(localMainComp.Pawn, shrineId);
         }, this, birthPointId);
     }
 

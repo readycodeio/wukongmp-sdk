@@ -130,7 +130,7 @@ public class WukongChatter : IDisposable
         if (_playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        PlayerUtils.RespawnParty(mainEntity);
+        PlayerUtils.RespawnSoftlockedParty(mainEntity);
     }
 
     private void RequestGiveUp(ReadOnlyMemory<string> _)
