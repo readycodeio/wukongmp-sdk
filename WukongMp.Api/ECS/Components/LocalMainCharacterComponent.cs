@@ -57,6 +57,7 @@ public struct LocalMainCharacterComponent : IComponent
     public bool IsWaitingForSequence { get; set; }
     public bool IsJoiningSequence { get; set; }
     public FVector JoiningSequenceLocation { get; set; }
+    public bool IsInSequence { get; set; }
 
     [Ignore]
     public AActor? MarkerActor

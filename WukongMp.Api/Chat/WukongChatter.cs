@@ -197,14 +197,22 @@ public class WukongChatter : IDisposable
         {
             if (_commands.ContainsKey(commandParts[0]))
             {
-                var cmd = _commands[commandParts[0]];
-                var rest = commandParts.Skip(1).ToArray();
-                cmd.Handler(rest);
+                if (CanExecuteCommand())
+                {
+                    var cmd = _commands[commandParts[0]];
+                    var rest = commandParts.Skip(1).ToArray();
+                    cmd.Handler(rest);
+                }
                 return true;
             }
         }
 
         return false;
+    }
+
+    private bool CanExecuteCommand()
+    {
+        return _playerState.LocalMainCharacter.HasValue && !_playerState.LocalMainCharacter.Value.GetLocalState().IsInSequence;
     }
 
     private void SendChatMessage(string nickname, string message)
