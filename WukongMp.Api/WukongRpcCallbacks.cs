@@ -2,6 +2,7 @@
 using System.Reflection;
 using b1;
 using b1.BGW;
+using CSharpModBase;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
@@ -547,14 +548,11 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
             }
 
-            var events = BUS_EventCollectionCS.Get(hostPawn);
-            if (events == null)
-            {
-                self._logger.LogError("Failed to get event collection for unit {Unit}", hostPawn.GetName());
-                return;
-            }
+            BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnHost?.Invoke(guestPawn, []);
+            BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnGuest?.Invoke(hostPawn, []);
 
-            events.Evt_NotifyEnterPreAnimationSyncingStateOnHost?.Invoke(guestPawn, []);
+            var data = BGU_DataUtil.GetReadOnlyData<BGC_AnimationSyncData>(hostPawn);
+            data?.AddParticipants(hostPawn, guestPawn);
         }, this, data);
     }
 
