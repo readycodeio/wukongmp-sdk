@@ -267,3 +267,38 @@ public static class PatchIsStandAlone
         }
     }
 }
+
+[HarmonyPatch(typeof(GSPlayerDataMgr), nameof(GSPlayerDataMgr.OnTick))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchGSPlayerDataMgrOnTick
+{
+    public static bool Prefix(float DeltaTime)
+    {
+        PatchVISimTipsOnTick.OriginalDeltaTime = DeltaTime;
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(VISimTips), "OnTick")]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public static class PatchVISimTipsOnTick
+{
+    public static float OriginalDeltaTime;
+
+    public static bool Prefix(VISimTips __instance, float DeltaTime, DSTipsData ___DataStore)
+    {
+        if (___DataStore is DSSimTipsData dSSimTipsData && dSSimTipsData.IsShowing.Value && !dSSimTipsData.IsCloseAutoHide)
+        {
+            if (dSSimTipsData.ShowTime.Value <= 0f)
+            {
+                __instance.FadeOut();
+            }
+            else
+            {
+                dSSimTipsData.SetShowTime(dSSimTipsData.ShowTime.Value - OriginalDeltaTime);
+            }
+        }
+
+        return false;
+    }
+}
