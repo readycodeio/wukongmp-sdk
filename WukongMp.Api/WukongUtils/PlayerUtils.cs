@@ -88,21 +88,6 @@ namespace WukongMp.Api.WukongUtils
             BUS_EventCollectionCS.Get(playerPawn)?.Evt_UnitRebirth.Invoke(ERebirthType.RebirthPoint);
         }
 
-        public static bool TryReloadFromSave()
-        {
-            var world = GameUtils.GetWorld();
-            ArchiveSummaryData? latestArchive = BGW_GameArchiveMgr.Get(world)?.GetLatestArchive();
-            if (latestArchive != null)
-            {
-                BGW_EventCollection.Get(GameUtils.GetWorld())?.Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
-                {
-                    ArchiveId = latestArchive.ArchiveId,
-                });
-                return true;
-            }
-            return false;
-        }
-
         public static void RebirthPlayerInPlace(BGUCharacterCS? playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
