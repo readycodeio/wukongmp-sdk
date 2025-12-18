@@ -29,6 +29,7 @@ public class PatchOnBeginAnimationSyncPreCheck
                     if (target == DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn)
                     {
                         // we are being attacked by a monster, allow it
+                        DI.Instance.Logger.LogDebug("Allowing animation sync pre check for monster attacking local player");
                         return true;
                     }
 

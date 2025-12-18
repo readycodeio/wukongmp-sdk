@@ -587,16 +587,19 @@ namespace WukongMp.Api.Patches
             if (owner.IsNullOrDestroyed())
                 return;
 
-            var ownerId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
-            if (ownerId is not null)
+            var ownerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+
+            if (ownerEntity.HasValue)
             {
-                if (!DI.Instance.ClientOwnership.OwnsEntity(ownerId.Value))
+                var ownerId = ownerEntity.Value.GetMeta().NetId;
+
+                if (!DI.Instance.ClientOwnership.OwnsEntity(ownerId))
                     return;
 
                 if (aoTarget == null && state.HasValue)
                 {
                     // cleared target
-                    DI.Instance.Rpc.SendClearAOTarget(ownerId.Value);
+                    DI.Instance.Rpc.SendClearAOTarget(ownerId);
                 }
                 else if (aoTarget is not null && (!state.HasValue || state.Value.Target != aoTarget.LockTargetActor ||
                                                   state.Value.SourceType != aoTarget.SourceType ||
@@ -609,12 +612,12 @@ namespace WukongMp.Api.Patches
 
                     if (targetId is not null)
                     {
-                        var data = new AoTargetData(ownerId.Value, targetId.Value, ___bOwnerIsPlayer, (byte)aoTarget.SourceType, aoTarget.NonCombatantAOTargetDegreeLimit);
+                        var data = new AoTargetData(ownerId, targetId.Value, ___bOwnerIsPlayer, (byte)aoTarget.SourceType, aoTarget.NonCombatantAOTargetDegreeLimit);
                         DI.Instance.Rpc.SendSetAOTarget(data);
                     }
                     else
                     {
-                        DI.Instance.Rpc.SendClearAOTarget(ownerId.Value);
+                        DI.Instance.Rpc.SendClearAOTarget(ownerId);
                     }
                 }
             }
