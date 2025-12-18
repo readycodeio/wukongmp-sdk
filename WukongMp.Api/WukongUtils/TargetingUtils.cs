@@ -1,6 +1,5 @@
 ﻿using b1;
 using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -15,15 +14,6 @@ public static class TargetingUtils
         return targetInfoData.GetTargetInfo()?.LockTargetActor;
     }
     
-    public static AActor? GetAoTarget(BGUCharacterCS? pawn)
-    {
-        if (pawn == null)
-            return null;
-        
-        var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
-        return targetInfoData.GetAOTarget()?.LockTargetActor;
-    }
-    
     public static void SetTarget(BGUCharacterCS pawn, BGUCharacterCS target)
     {
         Logging.LogDebug("Updating target for pawn {Pawn} to pawn {Target}", BGU_DataUtil.GetActorGuid(pawn), BGU_DataUtil.GetActorGuid(target));
@@ -36,33 +26,5 @@ public static class TargetingUtils
         Logging.LogDebug("Updating target for pawn {Pawn} to null", BGU_DataUtil.GetActorGuid(pawn));
         var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
         targetInfoData.SetTargetInfo(new UnitLockTargetInfo());
-    }
-
-    public static void SetAOTarget(BGUCharacterCS pawn, BGUCharacterCS target, ETargetSourceType sourceType, bool bPlayer, float degreeLimit)
-    {
-        Logging.LogDebug("Updating AO target for pawn {Pawn} to pawn {Target}", BGU_DataUtil.GetActorGuid(pawn), BGU_DataUtil.GetActorGuid(target));
-        var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
-        targetInfoData.SetAOTarget(target, sourceType, bPlayer, degreeLimit);
-    }
-
-    public static void ClearAOTarget(BGUCharacterCS pawn)
-    {
-        Logging.LogDebug("Updating AO target for pawn {Pawn} to null", BGU_DataUtil.GetActorGuid(pawn));
-        var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
-        targetInfoData.ClearAOTarget();
-    }
-    
-    public static void SetSkillBaseTarget(BGUCharacterCS pawn, BGUCharacterCS target, FVector location, ETargetSourceType sourceType, string sceneCompName)
-    {
-        Logging.LogDebug("Updating AO target for pawn {Pawn} to pawn {Target}", BGU_DataUtil.GetActorGuid(pawn), BGU_DataUtil.GetActorGuid(target));
-        var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
-        targetInfoData.SetSkillBaseTarget(target, location, sourceType, sceneCompName);
-    }
-
-    public static void ClearSkillBaseTarget(BGUCharacterCS pawn)
-    {
-        Logging.LogDebug("Updating AO target for pawn {Pawn} to null", BGU_DataUtil.GetActorGuid(pawn));
-        var targetInfoData = (BUC_TargetInfoData)BGU_DataUtil.GetReadOnlyData<IBUC_TargetInfoData, BUC_TargetInfoData>(pawn);
-        targetInfoData.ClearSkillBaseTarget();
     }
 }
