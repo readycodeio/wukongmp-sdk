@@ -625,6 +625,71 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchOnSetSkillBaseTarget
+    {
+        [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "OnSetSkillBaseTarget")]
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BattleStateComp:OnSetSkillBaseTarget");
+        }
+
+        private static void Postfix(UActorCompBaseCS __instance, AActor SkillBaseTarget, FVector Location, ETargetSourceType SourceType, string SceneCompName)
+        {
+            var owner = __instance.GetOwner() as BGUCharacterCS;
+            if (owner.IsNullOrDestroyed())
+                return;
+
+            var ownerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+
+            if (ownerEntity.HasValue)
+            {
+                var ownerId = ownerEntity.Value.GetMeta().NetId;
+
+                if (!DI.Instance.ClientOwnership.OwnsEntity(ownerId))
+                    return;
+
+                var targetId = DI.Instance.PawnState.GetNetworkIdByActor(SkillBaseTarget);
+                if (targetId is null)
+                    return;
+
+                var data = new SkillBaseTargetData(ownerId, targetId.Value, Location.ToVector3(), (byte)SourceType, SceneCompName);
+                DI.Instance.Rpc.SendSetSkillBaseTarget(data);
+            }
+        }
+    }
+    
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchOnClearSkillBaseTarget
+    {
+        [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "OnClearSkillBaseTarget")]
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BattleStateComp:OnClearSkillBaseTarget");
+        }
+
+        private static void Postfix(UActorCompBaseCS __instance)
+        {
+            var owner = __instance.GetOwner() as BGUCharacterCS;
+            if (owner.IsNullOrDestroyed())
+                return;
+
+            var ownerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
+
+            if (ownerEntity.HasValue)
+            {
+                var ownerId = ownerEntity.Value.GetMeta().NetId;
+
+                if (!DI.Instance.ClientOwnership.OwnsEntity(ownerId))
+                    return;
+
+                DI.Instance.Rpc.SendClearSkillBaseTarget(ownerId);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "ApplyCameraControlData")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchApplyCameraControlData
