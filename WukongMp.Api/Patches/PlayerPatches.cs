@@ -747,18 +747,8 @@ namespace WukongMp.Api.Patches
             if (localMainComp.Pawn != character)
                 return;
 
-            Logging.LogDebug("InteractStepMatchPos started, disabling collision for all players");
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
-            {
-                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                if (mainEntity == null)
-                    continue;
-                ref var localMain = ref mainEntity.Value.GetLocalState();
-                if (localMain.Pawn == null)
-                    continue;
-                PlayerUtils.SetCollisionEnabled(localMain.Pawn, false);
-                localMain.ShouldDisableCollision = true;
-            }
+            Logging.LogWarning("InteractStepMatchPos started, disabling collision for all players");
+            PlayerUtils.DisableOtherPlayersCollision();
         }
     }
 
@@ -783,16 +773,26 @@ namespace WukongMp.Api.Patches
             if (localMainComp.Pawn != character)
                 return;
 
-            Logging.LogDebug("InteractStepMatchPos finished, enabling collision for all players");
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            Logging.LogWarning("InteractStepMatchPos finished, enabling collision for all players");
+            PlayerUtils.AllowOtherPlayersCollision();
+        }
+    }
+
+    [HarmonyPatch(typeof(BGS_GameBgmMgr), "OnUIShrineMainActive")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUIShrineMainActive
+    {
+        public static void Postfix(bool IsActive)
+        {
+            if (IsActive)
             {
-                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                if (mainEntity == null)
-                    continue;
-                ref var localMain = ref mainEntity.Value.GetLocalState();
-                if (localMain.Pawn == null)
-                    continue;
-                localMain.ShouldDisableCollision = false;
+                Logging.LogWarning("OnUIShrineMainActive is active, disabling collision for all players");
+                PlayerUtils.DisableOtherPlayersCollision();
+            }
+            else
+            {
+                Logging.LogWarning("OnUIShrineMainActive is not active, enabling collision for all players");
+                PlayerUtils.AllowOtherPlayersCollision();
             }
         }
     }

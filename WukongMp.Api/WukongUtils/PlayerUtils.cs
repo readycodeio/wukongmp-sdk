@@ -155,5 +155,34 @@ namespace WukongMp.Api.WukongUtils
             localMainComp.IsRespawning = true;
             DI.Instance.Rpc.SendPartySoftlock(maxComp);
         }
+
+        public static void DisableOtherPlayersCollision()
+        {
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            {
+                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (mainEntity == null)
+                    continue;
+                ref var localMain = ref mainEntity.Value.GetLocalState();
+                if (localMain.Pawn == null)
+                    continue;
+                SetCollisionEnabled(localMain.Pawn, false);
+                localMain.ShouldDisableCollision = true;
+            }
+        }
+
+        public static void AllowOtherPlayersCollision()
+        {
+            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            {
+                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                if (mainEntity == null)
+                    continue;
+                ref var localMain = ref mainEntity.Value.GetLocalState();
+                if (localMain.Pawn == null)
+                    continue;
+                localMain.ShouldDisableCollision = false;
+            }
+        }
     }
 }
