@@ -1,12 +1,13 @@
-﻿using ArchiveB1;
+﻿using System.Collections.Generic;
+using ArchiveB1;
 using b1;
 using B1UI.GSUI;
+using CommB1;
 using HarmonyLib;
-using System.Collections.Generic;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
-using WukongMp.Api;
 
 namespace WukongMp.Coop.Patches;
 
@@ -81,6 +82,25 @@ public class PatchGSWindowsPlatformSaveGame
         CoopDI.Instance.SaveManager.OnSaveData(InSaveData, SlotName);
 
         __result = true;
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.GetLatestArchive))]
+[HarmonyPatchCategory(Constants.GlobalPatches)]
+public class PatchGetLatestArchive
+{
+    public static bool Prefix(BGW_GameArchiveMgr __instance, ref ArchiveSummaryData? __result)
+    {
+        ArchiveSummaryData? archiveSummaryData = null;
+        List<ArchiveSummaryData> archiveInfoList = (List<ArchiveSummaryData>)AccessTools.Method(typeof(BGW_GameArchiveMgr), "_GetArchiveInfoList").Invoke(__instance, []);
+        for (int index = 0; index < archiveInfoList.Count; ++index)
+        {
+            if (archiveSummaryData == null || archiveInfoList[index].ArchiveId > archiveSummaryData.ArchiveId)
+                archiveSummaryData = archiveInfoList[index];
+        }
+
+        __result = archiveSummaryData?.Clone();
         return false;
     }
 }
