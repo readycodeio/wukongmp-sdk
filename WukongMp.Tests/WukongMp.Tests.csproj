@@ -36,8 +36,4 @@
         </Reference>
     </ItemGroup>
 
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="powershell.exe -File &quot;$(SolutionDir)CopyToGameFolder.ps1&quot; Tests Debug" />
-    </Target>
-
 </Project>
