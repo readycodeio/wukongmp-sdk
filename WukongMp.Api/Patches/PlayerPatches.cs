@@ -8,6 +8,7 @@ using BtlShare;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -538,6 +539,88 @@ namespace WukongMp.Api.Patches
         }
     }
 
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public static class PatchSetAOTarget
+    {
+        private struct State
+        {
+            public AActor? Target;
+            public ETargetSourceType SourceType;
+            public ELockTargetWayType LockTargetWayType;
+            public float NonCombatantAOTargetDegreeLimit;
+        }
+
+        [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "TickForAOTarget")]
+        private static MethodBase TargetMethod()
+        {
+            return AccessTools.Method("b1.BUS_BattleStateComp:TickForAOTarget");
+        }
+
+        private static void Prefix(BUC_TargetInfoData ___TargetInfoData, out object? __state)
+        {
+            var target = ___TargetInfoData.GetAOTarget();
+
+            if (target is null)
+            {
+                __state = null;
+            }
+            else
+            {
+                var aoTargetData = new State
+                {
+                    Target = target.LockTargetActor,
+                    SourceType = target.SourceType,
+                    LockTargetWayType = target.LockTargetWayType,
+                    NonCombatantAOTargetDegreeLimit = target.NonCombatantAOTargetDegreeLimit
+                };
+                __state = aoTargetData;
+            }
+        }
+
+        private static void Postfix(UActorCompBaseCS __instance, BUC_TargetInfoData ___TargetInfoData, bool ___bOwnerIsPlayer, object? __state)
+        {
+            var state = (State?)__state;
+            var aoTarget = ___TargetInfoData.GetAOTarget();
+
+            var owner = __instance.GetOwner() as BGUCharacterCS;
+            if (owner.IsNullOrDestroyed())
+                return;
+
+            var ownerId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
+            if (ownerId is not null)
+            {
+                if (!DI.Instance.ClientOwnership.OwnsEntity(ownerId.Value))
+                    return;
+
+                if (aoTarget == null && state.HasValue)
+                {
+                    // cleared target
+                    DI.Instance.Rpc.SendClearAOTarget(ownerId.Value);
+                }
+                else if (aoTarget is not null && (!state.HasValue || state.Value.Target != aoTarget.LockTargetActor ||
+                                                  state.Value.SourceType != aoTarget.SourceType ||
+                                                  state.Value.LockTargetWayType != aoTarget.LockTargetWayType ||
+                                                  Math.Abs(state.Value.NonCombatantAOTargetDegreeLimit - aoTarget.NonCombatantAOTargetDegreeLimit) > Constants.FloatComparisonTolerance))
+                {
+                    // set or changed target
+                    Logging.LogDebug("AO Target changed to: {Target}", aoTarget.LockTargetActor?.GetName() ?? "null");
+                    var targetId = DI.Instance.PawnState.GetNetworkIdByActor(aoTarget.LockTargetActor);
+
+                    if (targetId is not null)
+                    {
+                        var data = new AoTargetData(ownerId.Value, targetId.Value, ___bOwnerIsPlayer, (byte)aoTarget.SourceType, aoTarget.NonCombatantAOTargetDegreeLimit);
+                        DI.Instance.Rpc.SendSetAOTarget(data);
+                    }
+                    else
+                    {
+                        DI.Instance.Rpc.SendClearAOTarget(ownerId.Value);
+                    }
+                }
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "ApplyCameraControlData")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchApplyCameraControlData
@@ -714,7 +797,7 @@ namespace WukongMp.Api.Patches
             foreach (BGU_CharacterAI monster in monsters)
             {
                 var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(monster.GetFinalBattleInfoExtendID());
-                
+
                 if (!(monster.bBossRoomMonster || info.QualityType is EUnitQualityType.NormalBoss or EUnitQualityType.FinalBoss || info.BloodBarType == EBGUBloodBarType.BossBar))
                     continue;
                 var distanceSquared = FVector.DistSquared2D(monster.GetActorLocation(), position);

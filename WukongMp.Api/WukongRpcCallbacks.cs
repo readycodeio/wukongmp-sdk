@@ -298,6 +298,46 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnSetAOTarget(AoTargetData data)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(data0.Character);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Character));
+                return;
+            }
+
+            var target = self._pawnState.GetPawnByNetworkId(data0.Target);
+
+            if (target == null)
+            {
+                self._logger.LogNull(nameof(data0.Target));
+                return;
+            }
+
+            TargetingUtils.SetAOTarget(pawn, target, (ETargetSourceType)data0.SourceType, data0.IsPlayer, data0.DegreeLimit);
+        }, this, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnClearAOTarget(NetworkId netId)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        {
+            var pawn = self._pawnState.GetPawnByNetworkId(netId0);
+            if (pawn == null)
+            {
+                self._logger.LogNullDebug(nameof(netId0));
+                return;
+            }
+
+            TargetingUtils.ClearAOTarget(pawn);
+        }, this, netId);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
     internal void OnCastImmobilize(NetworkId caster)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, caster0) =>

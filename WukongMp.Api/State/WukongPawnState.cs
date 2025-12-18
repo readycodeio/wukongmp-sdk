@@ -167,6 +167,9 @@ public class WukongPawnState(
 
     public NetworkId? GetNetworkIdByActor(AActor? owner)
     {
+        if (owner.IsNullOrDestroyed())
+            return null;
+        
         var playerEntity = GetEntityByPlayerPawn(owner);
         if (playerEntity.HasValue)
         {

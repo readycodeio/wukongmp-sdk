@@ -7,9 +7,11 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct TargetData(NetworkId character, NetworkId target, bool clearTarget) : INetSerializable
+public partial struct AoTargetData(NetworkId character, NetworkId target, bool isPlayer, byte sourceType, float degreeLimit) : INetSerializable
 {
     public NetworkId Character = character;
     public NetworkId Target = target;
-    public bool ClearTarget = clearTarget;
+    public bool IsPlayer = isPlayer;
+    public byte SourceType = sourceType;
+    public float DegreeLimit = degreeLimit;
 }
