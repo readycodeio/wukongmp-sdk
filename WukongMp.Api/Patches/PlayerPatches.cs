@@ -533,10 +533,10 @@ namespace WukongMp.Api.Patches
 
                 var meta = tamerEntity.Value.GetMeta();
                 DI.Instance.Rpc.SendSetTarget(new TargetData(meta.NetId, newTargetId, clearTarget));
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
     }
 
