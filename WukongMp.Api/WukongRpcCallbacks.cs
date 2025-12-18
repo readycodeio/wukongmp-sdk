@@ -2,6 +2,7 @@
 using System.Reflection;
 using b1;
 using b1.BGW;
+using CSharpModBase;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
@@ -34,6 +35,7 @@ public partial class WukongRpcCallbacks : IDisposable
     private readonly WukongPawnState _pawnState;
     private readonly ClientOwnershipManager _clientOwnership;
     private readonly FreeCameraManager _freeCameraManager;
+    private readonly GameplayEventRouter _eventRouter;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -47,6 +49,7 @@ public partial class WukongRpcCallbacks : IDisposable
         WukongPawnState pawnState,
         ClientOwnershipManager clientOwnership,
         FreeCameraManager freeCameraManager,
+        GameplayEventRouter eventRouter,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
     {
@@ -59,6 +62,7 @@ public partial class WukongRpcCallbacks : IDisposable
         _pawnState = pawnState;
         _clientOwnership = clientOwnership;
         _freeCameraManager = freeCameraManager;
+        _eventRouter = eventRouter;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -75,12 +79,15 @@ public partial class WukongRpcCallbacks : IDisposable
         var shortened = Compressors.MontageNameCompressor.Compress(montage.PathName, out var shortMontagePath);
         var data = shortened ? shortMontagePath : montage.PathName;
         var evData = new MontageCallbackData(netId, shortened, data, position, reset);
+
+        _logger.LogDebug("Sent montage for {NetId} at {Position} - {Montage}", netId, position, data);
         SendMontageCallback(evData);
     }
 
     public void SendMontageCancel(NetworkId netId)
     {
         var evData = new MontageCallbackData(netId, false, "", 0f, false);
+        _logger.LogDebug("Sent montage cancel for entity {NetId}", netId);
         SendMontageCallback(evData);
     }
 
@@ -472,6 +479,13 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (string.IsNullOrEmpty(data0.MontagePath))
             {
+                var current = pawn.GetCurrentMontage();
+                if (current != null)
+                {
+                    var time = pawn.Mesh.GetAnimInstance().Montage_GetPosition(current);
+                    self._logger.LogDebug("Received montage cancel at {Time} for entity {NetId} - {Montage}", time, data0.NetId, current.PathName);
+                }
+
                 pawn.StopAnimMontage(null);
                 return;
             }
@@ -519,8 +533,74 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
             }
 
+            if (data0.MontagePath == "LYS/LYS_KJLDragon/new/Montage/AM_LYS_KJLDragon_Atk_14_monster")
+            {
+                self._logger.LogDebug("Received host attack with offset {Offset} (reset: {Reset})", data0.Position, data0.Reset);
+            }
+
             animInstance.Montage_Play(montage, 1f, EMontagePlayReturnType.MontageLength, data0.Position);
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
+        }, this, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    public void OnAnimationSyncing(AnimationSyncingData data)
+    {
+        _logger.LogDebug("OnPreAnimationSyncing called for Host {Host} and Guest {Guest}", data.Host, data.Guest);
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var hostPawn = self._pawnState.GetPawnByNetworkId(data0.Host);
+            if (hostPawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Host));
+                return;
+            }
+
+            var guestPawn = self._pawnState.GetPawnByNetworkId(data0.Guest);
+            if (guestPawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Guest));
+                return;
+            }
+
+            BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnHost?.Invoke(guestPawn, []);
+            BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnGuest?.Invoke(hostPawn, []);
+
+            var fullMontagePath = data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.Montage) : data0.Montage;
+            var montage = string.IsNullOrEmpty(fullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
+
+            BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterAnimationSyncingStateOnHost?.Invoke([], montage);
+            BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterAnimationSyncingStateOnGuest?.Invoke([]);
+
+            var data = BGU_DataUtil.GetReadOnlyData<BGC_AnimationSyncData>(UGameplayStatics.GetGameState(GameUtils.GetWorld()));
+            data?.AddParticipants(hostPawn, guestPawn);
+        }, this, data);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    internal void OnBeginSyncAnimation(BeginSyncAnimationData data)
+    {
+        _logger.LogDebug("OnBeginSyncAnimation called for Host {NetId} with GuestMontage '{MontagePath}'", data.Host, data.GuestMontage);
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        {
+            var hostPawn = self._pawnState.GetPawnByNetworkId(data0.Host);
+            if (hostPawn == null)
+            {
+                self._logger.LogNullDebug(nameof(data0.Host));
+                return;
+            }
+
+            var fullMontagePath = data0.Shortened ? Compressors.MontageNameCompressor.Decompress(data0.GuestMontage) : data0.GuestMontage;
+            var montage = string.IsNullOrEmpty(fullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(fullMontagePath, ELoadResourceType.SyncLoadAndCache);
+
+            var events = BGS_GSEventCollection.Get(hostPawn);
+            if (events == null)
+            {
+                self._logger.LogError("Failed to get event collection for unit {Unit}", hostPawn.GetName());
+                return;
+            }
+
+            events.Evt_BGS_BeginSyncAnimation?.Invoke(hostPawn, montage, data0.bFoundHostSyncPointOnDummyMesh, new FName(data0.SelfSyncPointOnHost), new FName(data0.TargetSyncPointOnHost), new FName(data0.SelfSyncPointOnGuest), data0.bForceSyncDummyMeshAnimation, data0.bEnableDebugDraw, data0.NotifyBeginTime, data0.TotalDuration, data0.AnimationSyncMontageInstanceId);
         }, this, data);
     }
 
@@ -812,7 +892,9 @@ public partial class WukongRpcCallbacks : IDisposable
 
             localMainComp.IsRespawning = true;
             self._freeCameraManager.LeaveFreeCameraMode();
-            PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+            CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
+            self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
+            PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
         }, this, birthPointId);
     }
 
@@ -851,13 +933,33 @@ public partial class WukongRpcCallbacks : IDisposable
                 {
                     localMainComp.IsRespawning = true;
                     self._freeCameraManager.LeaveFreeCameraMode();
-                    PlayerUtils.RebirthPlayer(localMainComp.Pawn, shrineId);
+                    PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
                 }
                 else
                 {
                     PlayerUtils.RestPlayer(localMainComp.Pawn);
                 }
             }
+        }, this, birthPointId);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    private void OnPartySoftlock(int birthPointId)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, shrineId) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            ref var localMainComp = ref mainEntity.GetLocalState();
+            if (localMainComp.Pawn == null)
+                return;
+
+            localMainComp.IsRespawning = true;
+            self._freeCameraManager.LeaveFreeCameraMode();
+            CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
+            self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
+            PlayerUtils.RebirthAlivePlayer(localMainComp.Pawn, shrineId);
         }, this, birthPointId);
     }
 
@@ -986,7 +1088,7 @@ public partial class WukongRpcCallbacks : IDisposable
             BUS_EventCollectionCS.Get(casterPawn)?.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(skillId0, skillType0));
         }, this, caster, skillId, skillType);
     }
-    
+
     #region PvpRPC
 
     [Obsolete("To be removed once per-project RPC is implemented")]

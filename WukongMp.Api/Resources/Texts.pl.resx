@@ -243,29 +243,32 @@
   <data name="YouAreReady" xml:space="preserve">
     <value>Gotowy</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="MissingPak" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Disconnected" xml:space="preserve">
-    <value>Rozłączono</value>
-  </data>
-  <data name="ConnectionRejectedByServer" xml:space="preserve">
-    <value>Połączenie odrzucone przez serwer</value>
-  </data>
   <data name="InvalidCommand" xml:space="preserve">
     <value>Nieznana komenda: {0}</value>
+  </data>
+  <data name="JoinOtherPlayersToProceed" xml:space="preserve">
+    <value>Dołącz do pozostałych graczy</value>
   </data>
   <data name="WaitForOtherPlayers" xml:space="preserve">
     <value>Czekaj na pozostałych graczy</value>
   </data>
-  <data name="JoinOtherPlayersToProceed" xml:space="preserve">
-    <value>Dołącz do pozostałych graczy</value>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Rozłączono</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="MissingPak" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="ConnectionRejectedByServer" xml:space="preserve">
+    <value>Połączenie odrzucone przez serwer</value>
   </data>
   <data name="SeverePacketLossDetected" xml:space="preserve">
     <value>Znaczna utrata pakietów!</value>
   </data>
   <data name="WaitForOtherPlayersCount" xml:space="preserve">
     <value>Czekaj na pozostałych graczy ({0}/{1})</value>
+  </data>
+  <data name="SoftlockDetected" xml:space="preserve">
+    <value>Softlock. Użyj polecenia /softlock, aby odrodzić wszystkich</value>
   </data>
 </root>

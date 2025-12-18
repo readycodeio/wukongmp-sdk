@@ -456,7 +456,7 @@ namespace WukongMp.Api.Patches
 
             if (netId.HasValue)
             {
-                if (SimpleState == EBGUSimpleState.Immobilizing)
+                if (SimpleState is EBGUSimpleState.Immobilizing or EBGUSimpleState.InAnimationSyncing or EBGUSimpleState.PreAnimationSyncing)
                     return;
 
                 DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId.Value, SimpleState, IsRemove));

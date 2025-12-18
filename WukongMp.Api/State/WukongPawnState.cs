@@ -167,6 +167,9 @@ public class WukongPawnState(
 
     public NetworkId? GetNetworkIdByActor(AActor? owner)
     {
+        if (owner.IsNullOrDestroyed())
+            return null;
+        
         var playerEntity = GetEntityByPlayerPawn(owner);
         if (playerEntity.HasValue)
         {
@@ -182,7 +185,7 @@ public class WukongPawnState(
         return null;
     }
 
-    public bool TryGetEnityByCharacter(BGUCharacterCS? character, [NotNullWhen(true)] out Entity? entity)
+    public bool TryGetEntityByCharacter(BGUCharacterCS? character, [NotNullWhen(true)] out Entity? entity)
     {
         entity = null;
         if (character == null)

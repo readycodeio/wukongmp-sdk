@@ -118,10 +118,17 @@ public static class PatchRequestPlayMovie
 
         if (!Instance.PlaySettings.PlaybackSettings.DisableCameraCuts)
         {
+            var playerState = DI.Instance.PlayerState;
+            if (playerState.LocalMainCharacter.HasValue)
+            {
+                ref var localMain = ref playerState.LocalMainCharacter.Value.GetLocalState();
+                localMain.IsInSequence = true;
+            }
+
             Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
             foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
             {
-                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                var mainEntity = playerState.GetMainCharacterById(playerId);
                 if (mainEntity == null)
                     continue;
                 ref var localMain = ref mainEntity.Value.GetLocalState();
@@ -139,10 +146,17 @@ public static class PatchRequestPlayMovie
                     DI.Instance.ServerRpc.SendMovieFinished(SequenceId, areaEntity.Value.Scope.AreaId);
                 }
 
+                var playerState = DI.Instance.PlayerState;
+                if (playerState.LocalMainCharacter.HasValue)
+                {
+                    ref var localMain = ref playerState.LocalMainCharacter.Value.GetLocalState();
+                    localMain.IsInSequence = false;
+                }
+
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
                 foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
                 {
-                    var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                    var mainEntity = playerState.GetMainCharacterById(playerId);
                     if (!mainEntity.HasValue)
                         continue;
                     ref var localMain = ref mainEntity.Value.GetLocalState();

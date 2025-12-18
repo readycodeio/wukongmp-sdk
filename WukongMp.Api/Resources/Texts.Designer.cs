@@ -438,6 +438,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Softlock. Use /softlock command to respawn.
+        /// </summary>
+        public static string SoftlockDetected {
+            get {
+                return ResourceManager.GetString("SoftlockDetected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectators.
         /// </summary>
         public static string Spectators {

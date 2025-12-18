@@ -8,6 +8,7 @@ using BtlShare;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -369,8 +370,8 @@ namespace WukongMp.Api.Patches
             }
 
             if (Attacker is BGUCharacterCS attackerCharacter &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(ownerCharacter, out var victimEntity) &&
-                DI.Instance.PawnState.TryGetEnityByCharacter(attackerCharacter, out var attackerEntity))
+                DI.Instance.PawnState.TryGetEntityByCharacter(ownerCharacter, out var victimEntity) &&
+                DI.Instance.PawnState.TryGetEntityByCharacter(attackerCharacter, out var attackerEntity))
             {
                 DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
             }
@@ -532,9 +533,10 @@ namespace WukongMp.Api.Patches
 
                 var meta = tamerEntity.Value.GetMeta();
                 DI.Instance.Rpc.SendSetTarget(new TargetData(meta.NetId, newTargetId, clearTarget));
+                return true;
             }
 
-            return true;
+            return false;
         }
     }
 
@@ -713,7 +715,9 @@ namespace WukongMp.Api.Patches
             var monsters = UGameplayStatics.GetAllActorsOfClass<BGU_CharacterAI>(context);
             foreach (BGU_CharacterAI monster in monsters)
             {
-                if (!monster.bBossRoomMonster)
+                var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(monster.GetFinalBattleInfoExtendID());
+
+                if (!(monster.bBossRoomMonster || info.QualityType is EUnitQualityType.NormalBoss or EUnitQualityType.FinalBoss || info.BloodBarType == EBGUBloodBarType.BossBar))
                     continue;
                 var distanceSquared = FVector.DistSquared2D(monster.GetActorLocation(), position);
                 if (distanceSquared < closestDistanceSquared)
@@ -745,18 +749,8 @@ namespace WukongMp.Api.Patches
             if (localMainComp.Pawn != character)
                 return;
 
-            Logging.LogDebug("InteractStepMatchPos started, disabling collision for all players");
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
-            {
-                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                if (mainEntity == null)
-                    continue;
-                ref var localMain = ref mainEntity.Value.GetLocalState();
-                if (localMain.Pawn == null)
-                    continue;
-                PlayerUtils.SetCollisionEnabled(localMain.Pawn, false);
-                localMain.ShouldDisableCollision = true;
-            }
+            Logging.LogWarning("InteractStepMatchPos started, disabling collision for all players");
+            PlayerUtils.DisableOtherPlayersCollision();
         }
     }
 
@@ -781,16 +775,26 @@ namespace WukongMp.Api.Patches
             if (localMainComp.Pawn != character)
                 return;
 
-            Logging.LogDebug("InteractStepMatchPos finished, enabling collision for all players");
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            Logging.LogWarning("InteractStepMatchPos finished, enabling collision for all players");
+            PlayerUtils.AllowOtherPlayersCollision();
+        }
+    }
+
+    [HarmonyPatch(typeof(BGS_GameBgmMgr), "OnUIShrineMainActive")]
+    [HarmonyPatchCategory(Constants.ConnectedPatches)]
+    public class PatchOnUIShrineMainActive
+    {
+        public static void Postfix(bool IsActive)
+        {
+            if (IsActive)
             {
-                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                if (mainEntity == null)
-                    continue;
-                ref var localMain = ref mainEntity.Value.GetLocalState();
-                if (localMain.Pawn == null)
-                    continue;
-                localMain.ShouldDisableCollision = false;
+                Logging.LogWarning("OnUIShrineMainActive is active, disabling collision for all players");
+                PlayerUtils.DisableOtherPlayersCollision();
+            }
+            else
+            {
+                Logging.LogWarning("OnUIShrineMainActive is not active, enabling collision for all players");
+                PlayerUtils.AllowOtherPlayersCollision();
             }
         }
     }
@@ -985,7 +989,7 @@ public class PatchOnSetRebirthPointAsCurrentBirthPoint
     {
         PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), RebirthPointID);
         var owner = __instance.GetOwner();
-        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
             DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, RebirthPointID);
         }
@@ -1000,7 +1004,7 @@ public class PatchOnSetCurrentBirthPoint
     {
         PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), BirthPointID);
         var owner = __instance.GetOwner();
-        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
             DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, BirthPointID);
         }
@@ -1015,7 +1019,7 @@ public class PatchOnForceSetRebirthPoint
     {
         PlayerUtils.LogRebirthPointChange(__instance.GetOwner(), RebirthPointId);
         var owner = __instance.GetOwner();
-        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEnityByCharacter(character, out var entity))
+        if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
             DI.Instance.GameplayEventRouter.RaiseOnRebirthPointChanged(entity.Value, RebirthPointId);
         }

@@ -13,6 +13,7 @@ namespace WukongMp.Api
         public event Action<Entity>? OnMonsterSpawned;
         public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
         public event Action<bool>? OnLocalPlayerChangedSpectator;
+        public event Action? OnLocalPlayerBeforeRebirth;
         
         public void RaiseOnLanguageChanged(CultureInfo culture)
         {
@@ -42,6 +43,11 @@ namespace WukongMp.Api
         public void RaiseOnLocalPlayerChangedSpectator(bool enabled)
         {
             OnLocalPlayerChangedSpectator?.Invoke(enabled);
+        }
+
+        public void RaiseOnLocalPlayerBeforeRebirth()
+        {
+            OnLocalPlayerBeforeRebirth?.Invoke();
         }
     }
 }

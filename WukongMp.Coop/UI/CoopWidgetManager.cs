@@ -48,6 +48,7 @@ namespace WukongMp.Coop.UI
             _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
 
             _eventRouter.OnPlayerChangedTeam += UpdatePlayerTeam;
+            _eventRouter.OnLocalPlayerBeforeRebirth += OnLocalPlayerBeforeRebirth; ;
         }
 
         public void Dispose()
@@ -66,6 +67,7 @@ namespace WukongMp.Coop.UI
             _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
 
             _eventRouter.OnPlayerChangedTeam -= UpdatePlayerTeam;
+            _eventRouter.OnLocalPlayerBeforeRebirth -= OnLocalPlayerBeforeRebirth; ;
         }
 
         public void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
@@ -139,6 +141,11 @@ namespace WukongMp.Coop.UI
         {
             _coopStatusWidget.Value.SetConnectedCount(_clientState.AreaPlayers.Count);
             _coopStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
+        }
+
+        private void OnLocalPlayerBeforeRebirth()
+        {
+            _widgetManager.HideInfoMessage();
         }
 
         private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)

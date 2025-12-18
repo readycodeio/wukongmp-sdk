@@ -1,7 +1,7 @@
 ﻿using Friflo.Engine.ECS;
+using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Idents;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Jobs;
@@ -44,6 +44,7 @@ public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlay
         }
         else if (montageState.LocalMontage != null)
         {
+            DI.Instance.Logger.LogDebug("Sent cancel at {Position} for montage {Montage}", montageState.LocalMontagePosition, montageState.LocalMontage.PathName);
             DI.Instance.Rpc.SendMontageCancel(meta.NetId);
         }
 

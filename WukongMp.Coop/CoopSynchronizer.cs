@@ -71,6 +71,7 @@ public class CoopSynchronizer : WukongSynchronizer
         _modeGroup.Add(new ReEnableCollidersSystem(colliderDisableData, eventBus));
         _modeGroup.Add(new RespawnMainCharacterSystem(areaState, playerState, rpc, Logger));
         _modeGroup.Add(new FixYellowbrowSystem(areaState, playerState, freeCameraManager));
+        _modeGroup.Add(new DetectSoftlockSystem(areaState, playerState, widgetManager, Logger));
 
         _modeGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_modeGroup);

@@ -96,6 +96,7 @@ public class WukongChatter : IDisposable
         AddCommand("/giveup", new WukongChatterCommand(RequestGiveUp));
         AddCommand("/rebirth", new WukongChatterCommand(RequestRebirth));
         AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
+        AddCommand("/softlock", new WukongChatterCommand(ResolveSoftlock));
 #if DEBUG
         AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
         AddCommand("/command", new WukongChatterCommand(ExecuteConsoleCommand));
@@ -122,6 +123,14 @@ public class WukongChatter : IDisposable
         PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
         _rpc.SendRebirthPlayer(playerId);
         SendServerMessage("PlayerRequestedRebirth", NickName);
+    }
+
+    private void ResolveSoftlock(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        PlayerUtils.RespawnSoftlockedParty(mainEntity);
     }
 
     private void RequestGiveUp(ReadOnlyMemory<string> _)
@@ -188,14 +197,22 @@ public class WukongChatter : IDisposable
         {
             if (_commands.ContainsKey(commandParts[0]))
             {
-                var cmd = _commands[commandParts[0]];
-                var rest = commandParts.Skip(1).ToArray();
-                cmd.Handler(rest);
+                if (CanExecuteCommand())
+                {
+                    var cmd = _commands[commandParts[0]];
+                    var rest = commandParts.Skip(1).ToArray();
+                    cmd.Handler(rest);
+                }
                 return true;
             }
         }
 
         return false;
+    }
+
+    private bool CanExecuteCommand()
+    {
+        return _playerState.LocalMainCharacter.HasValue && !_playerState.LocalMainCharacter.Value.GetLocalState().IsInSequence;
     }
 
     private void SendChatMessage(string nickname, string message)

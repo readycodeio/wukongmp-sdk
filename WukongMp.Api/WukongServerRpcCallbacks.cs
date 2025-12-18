@@ -73,11 +73,11 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     {
         // Do nothing on response from server.
     }
-    
+
     [ServerRpcEvent("BeguilingChant")]
-    private void OnBeguilingChant(bool enable)
+    private void OnBeguilingChant(byte rawState)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, enable0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, state) =>
         {
             var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
 
@@ -86,10 +86,21 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
                 var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
                 if (comp != null)
                 {
-                    AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "SetIsActive").Invoke(comp, [enable0]);
+                    var isActive = state == BeguilingChantState.Active;
+                    var isWarnig = state == BeguilingChantState.Warning;
+                    AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "SetIsActive").Invoke(comp, [isActive]);
+
+                    if (isWarnig)
+                    {
+                        AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "CheckIsWarning").Invoke(comp, [0f]);
+                    }
+                    else
+                    {
+                        AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "ResetNotiedWarning").Invoke(comp, []);
+                    }
                 }
             }
-        }, this, enable);
+        }, this, (BeguilingChantState)rawState);
     }
 
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
