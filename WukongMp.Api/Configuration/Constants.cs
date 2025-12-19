@@ -42,6 +42,7 @@ namespace WukongMp.Api.Configuration
 
         public static readonly HashSet<int> SoloPlaySequences =
         [
+            1102021, 1102031, 1103011, // Erlang in the Prologue
             90005015, // Feng-Tail General
             90005016, // Feng-Tail General
             90005017, // Feng-Tail General
