@@ -259,13 +259,14 @@ namespace WukongMp.Coop
                 _logger.LogDebug("Alt + K");
                 DebugUtils.ResetPlayersAnimation();
             });
-#endif
+            
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");
                 if (!DI.Instance.WidgetManager.ChatHasFocus())
                     CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             });
+#endif
 
             DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
             {

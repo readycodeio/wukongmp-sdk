@@ -96,8 +96,8 @@ public class WukongChatter : IDisposable
         AddCommand("/giveup", new WukongChatterCommand(RequestGiveUp));
         AddCommand("/rebirth", new WukongChatterCommand(RequestRebirth));
         AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
-        AddCommand("/softlock", new WukongChatterCommand(ResolveSoftlock));
 #if DEBUG
+        AddCommand("/softlock", new WukongChatterCommand(ResolveSoftlock));
         AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
         AddCommand("/command", new WukongChatterCommand(ExecuteConsoleCommand));
         AddCommand("/colliders", new WukongChatterCommand(ToggleDynamicObstacles));
