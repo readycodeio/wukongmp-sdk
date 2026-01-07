@@ -1,11 +1,12 @@
-﻿using WukongMp.Api.Configuration;
-using WukongMp.Api.Resources;
+﻿using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
 {
     public class CoopStatusWidget : GameWidgetBase
     {
-        public CoopStatusWidget() : base(Constants.CoopStatusWidgetName) { }
+        private const string CoopStatusWidgetPath = "/Game/Mods/CustomLuaMod/WBP_CoopStatus.WBP_CoopStatus_C";
+
+        public CoopStatusWidget() : base(CoopStatusWidgetPath) { }
 
         public void SetConnectedCount(int count)
         {

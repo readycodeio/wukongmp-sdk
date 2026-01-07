@@ -1,10 +1,10 @@
-﻿using WukongMp.Api.Configuration;
-
-namespace WukongMp.Api.UI
+﻿namespace WukongMp.Api.UI
 {
     public class ModVersionWidget : GameWidgetBase
     {
-        public ModVersionWidget() : base(Constants.ModVersionWidgetName) { }
+        private const string ModVersionWidgetPath = "/Game/Mods/CustomLuaMod/WBP_ModVersion.WBP_ModVersion_C";
+
+        public ModVersionWidget() : base(ModVersionWidgetPath) { }
 
         public void SetVersionText(string version)
         {

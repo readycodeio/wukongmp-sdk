@@ -3,22 +3,28 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI
 {
-    public abstract class GameWidgetBase(string name)
+    public abstract class GameWidgetBase(string path)
     {
         protected UUserWidget? GameWidget;
 
         public void Initialize()
         {
-            GameWidget = ModWidgetsUtils.GetWidget(name);
+            GameWidget = ModWidgetsUtils.GetWidget(path);
+            if (GameWidget == null)
+            {
+                GameWidget = ModWidgetsUtils.SpawnWidget(path);
+            }
             if (GameWidget != null)
             {
-                Logging.LogDebug("{Name} widget initialized!", name);
+                Logging.LogDebug("{Name} widget initialized!", path);
                 PostInitialize();
             }
             else
             {
-                Logging.LogError("Cannot initialize {Name} widget", name);
+                Logging.LogError("Cannot initialize {Name} widget", path);
             }
+            GameWidget?.AddToViewport(1000);
+            GameWidget?.SetVisibility(ESlateVisibility.SelfHitTestInvisible);
         }
 
         protected abstract void PostInitialize();
@@ -30,6 +36,7 @@ namespace WukongMp.Api.UI
 
         public void Deinitialize()
         {
+            GameWidget?.RemoveFromParent();
             GameWidget = null;
         }
     }

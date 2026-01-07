@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
 {
     public class ChatWidget : GameWidgetBase
     {
-        public ChatWidget() : base(Constants.ChatWidgetName) { }
+        private const string ChatWidgetPath = "/Game/Mods/CustomLuaMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C";
+
+        public ChatWidget() : base(ChatWidgetPath) { }
 
         private int _messageId;
 
@@ -211,7 +212,7 @@ namespace WukongMp.Api.UI
 
         public static void InitNativeFunctions()
         {
-            IntPtr @class = NativeReflection.GetClass("/Game/Mods/CustomLuaMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C");
+            IntPtr @class = NativeReflection.GetClass(ChatWidgetPath);
             IsChatVisible_FunctionAddress = NativeReflectionCached.GetFunction(@class, "IsChatVisible");
             IsChatVisible_ParamsSize = NativeReflection.GetFunctionParamsSize(IsChatVisible_FunctionAddress);
 

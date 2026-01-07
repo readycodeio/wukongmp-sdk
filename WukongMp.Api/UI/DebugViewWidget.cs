@@ -1,13 +1,13 @@
-﻿using CommB1;
-using System;
+﻿using System;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.UI
 {
     public class DebugViewWidget : GameWidgetBase
     {
-        public DebugViewWidget() : base(Constants.DebugViewWidgetName) { }
+        private const string DebugViewWidgetPath = "/Game/Mods/CustomLuaMod/Debug/WBP_DebugView.WBP_DebugView_C";
+
+        public DebugViewWidget() : base(DebugViewWidgetPath) { }
 
         public void SetVersionText(string version)
         {
@@ -124,7 +124,7 @@ namespace WukongMp.Api.UI
 
         public static void InitNativeFunctions()
         {
-            IntPtr classPtr = NativeReflection.GetClass("/Game/Mods/CustomLuaMod/Debug/WBP_DebugView.WBP_DebugView_C");
+            IntPtr classPtr = NativeReflection.GetClass(DebugViewWidgetPath);
             SetPlayerPosition_FunctionAddress = NativeReflectionCached.GetFunction(classPtr, "SetPlayerPosition");
             SetPlayerPosition_ParamsSize = NativeReflection.GetFunctionParamsSize(SetPlayerPosition_FunctionAddress);
 

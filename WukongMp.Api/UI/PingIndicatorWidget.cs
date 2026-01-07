@@ -1,11 +1,12 @@
-﻿using WukongMp.Api.Configuration;
-using WukongMp.Api.Resources;
+﻿using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
 {
     public class PingIndicatorWidget : GameWidgetBase
     {
-        public PingIndicatorWidget() : base(Constants.PingWidgetName) { }
+        private const string PingWidgetPath = "/Game/Mods/CustomLuaMod/WBP_PingIndicator.WBP_PingIndicator_C";
+
+        public PingIndicatorWidget() : base(PingWidgetPath) { }
 
         public void SetPingValue(long pingMs)
         {

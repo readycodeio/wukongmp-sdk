@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using WukongMp.Api.UI;
 using WukongMp.PvP.Configuration;
@@ -10,8 +9,10 @@ using WukongMp.PvP.Configuration;
 namespace WukongMp.PvP.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
-    {       
-        public LobbyStatusWidget() : base(Constants.LobbyStatusWidgetName) { }
+    {
+        private const string LobbyStatusWidgetPath = "/Game/Mods/CustomLuaMod/WBP_LobbyStatus.WBP_LobbyStatus_C";
+
+        public LobbyStatusWidget() : base(LobbyStatusWidgetPath) { }
 
         public void SetConnectedCount(int count)
         {
@@ -180,7 +181,7 @@ namespace WukongMp.PvP.UI
 
         public static void InitNativeFunctions()
         {
-            IntPtr classPtr = NativeReflection.GetClass("/Game/Mods/CustomLuaMod/WBP_LobbyStatus.WBP_LobbyStatus_C");
+            IntPtr classPtr = NativeReflection.GetClass(LobbyStatusWidgetPath);
             SetTeams_FunctionAddress = NativeReflectionCached.GetFunction(classPtr, "SetTeams");
             SetTeams_ParamsSize = NativeReflection.GetFunctionParamsSize(SetTeams_FunctionAddress);
 

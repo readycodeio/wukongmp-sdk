@@ -1,10 +1,10 @@
-﻿using WukongMp.Api.Configuration;
-
-namespace WukongMp.Api.UI
+﻿namespace WukongMp.Api.UI
 {
     public class ErrorMessageWidget : GameWidgetBase
     {
-        public ErrorMessageWidget() : base(Constants.ErrorMessageWidgetName) { }
+        private const string ErrorMessageWidgetPath = "/Game/Mods/CustomLuaMod/WBP_ErrorMessage.WBP_ErrorMessage_C";
+
+        public ErrorMessageWidget() : base(ErrorMessageWidgetPath) { }
 
         public void SetText(string message)
         {

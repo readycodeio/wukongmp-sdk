@@ -1,10 +1,10 @@
-﻿using WukongMp.Api.Configuration;
-
-namespace WukongMp.Api.UI
+﻿namespace WukongMp.Api.UI
 {
     public class CountdownWidget : GameWidgetBase
     {
-        public CountdownWidget() : base(Constants.CountdownWidgetName) { }
+        private const string CountdownWidgetPath = "/Game/Mods/CustomLuaMod/WBP_Countdown.WBP_Countdown_C";
+
+        public CountdownWidget() : base(CountdownWidgetPath) { }
 
         public void SetText(int seconds)
         {

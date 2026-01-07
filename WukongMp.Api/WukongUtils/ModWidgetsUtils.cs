@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -33,7 +32,31 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        private static List<UUserWidget> GetWidgetsByName(string widgetName)
+        public static UUserWidget? SpawnWidget(string widgetPath)
+        {
+            var world = GameUtils.GetWorld();
+            if (world == null)
+                return null;
+
+            var widgetClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(widgetPath, ELoadResourceType.SyncLoadAndCache);
+            if (widgetClass == null)
+            {
+                Logging.LogError("Cannot find class of {Class} to spawn", widgetPath);
+                return null;
+            }
+            var widget = UGSE_UMGFuncLib.CreateUserWidgetWithClass(world, widgetClass);
+            if (widget != null)
+            {
+                Logging.LogDebug("Widget {Class} spawned successfully", widgetPath);
+            }
+            else
+            {
+                Logging.LogError("Cannot spawn widget {Class}", widgetPath);
+            }
+            return widget;
+        }
+
+        private static List<UUserWidget> GetWidgetsByPath(string widgetPath)
         {
             var world = GameUtils.GetWorld();
             if (world == null)
@@ -41,23 +64,20 @@ namespace WukongMp.Api.WukongUtils
 
             var userWidgets = new List<UUserWidget>();
 
-            var wiClass = new TSubclassOf<UUserWidget>();
-            wiClass.SetClass<UUserWidget>();
-            UWidgetLibrary.GetAllWidgetsOfClass(world, out var list, wiClass);
-            foreach (var widget in list)
+            var widgetClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(widgetPath, ELoadResourceType.SyncLoadAndCache);
+            if (widgetClass == null)
             {
-                if (widget.GetFullName().Contains(widgetName))
-                {
-                    userWidgets.Add(widget);
-                }
+                Logging.LogError("Cannot find class of {Class}", widgetPath);
+                return [];
             }
 
+            UWidgetLibrary.GetAllWidgetsOfClass(world, out var list, widgetClass);
             return userWidgets;
         }
 
-        public static UUserWidget? GetWidget(string widgetName)
+        public static UUserWidget? GetWidget(string widgetPath)
         {
-            return GetWidgetsByName(widgetName).SingleOrDefault();
+            return GetWidgetsByPath(widgetPath).SingleOrDefault();
         }
     }
 }

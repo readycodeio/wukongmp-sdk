@@ -1,11 +1,12 @@
-﻿using WukongMp.Api.Configuration;
-using WukongMp.Api.Resources;
+﻿using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
 {
     public class FreeCameraControlsWidget : GameWidgetBase
     {
-        public FreeCameraControlsWidget() : base(Constants.FreeCameraWidgetName) { }
+        private const string FreeCameraWidgetPath = "/Game/Mods/CustomLuaMod/WBP_FreeCameraControls.WBP_FreeCameraControls_C";
+
+        public FreeCameraControlsWidget() : base(FreeCameraWidgetPath) { }
 
         public void SetDownDescriptionText(string down)
         {

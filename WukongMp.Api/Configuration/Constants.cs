@@ -63,18 +63,6 @@ namespace WukongMp.Api.Configuration
 
         public const string WidgetManagerActorPath = "/Game/Mods/CustomLuaMod/BP_UIManager.BP_UIManager_C";
         public const string PlayerMarkerPath = "/Game/Mods/CustomLuaMod/BP_PlayerMarker.BP_PlayerMarker_C";
-        public const string ChatWidgetName = "WBP_MultiplayerChat_C";
-        public const string TimerWidgetName = "WBP_Timer_C";
-        public const string PingWidgetName = "WBP_PingIndicator_C";
-        public const string FreeCameraWidgetName = "WBP_FreeCameraControls_C";
-        public const string CountdownWidgetName = "WBP_Countdown_C";
-        public const string GameMessageWidgetName = "WBP_GameMessage_C";
-        public const string InfoMessageWidgetName = "WBP_InfoMessage_C";
-        public const string ErrorMessageWidgetName = "WBP_ErrorMessage_C";
-        public const string LobbyStatusWidgetName = "WBP_LobbyStatus_C";
-        public const string CoopStatusWidgetName = "WBP_CoopStatus_C";
-        public const string ModVersionWidgetName = "WBP_ModVersion_C";
-        public const string DebugViewWidgetName = "WBP_DebugView_C";
 
         public const string DebugCubeActorPath = "/Game/Mods/DebugMod/BP_DebugCube.BP_DebugCube_C";
         public const string DebugSphereActorPath = "/Game/Mods/DebugMod/BP_DebugShpere.BP_DebugShpere_C";

@@ -1,10 +1,10 @@
-﻿using WukongMp.Api.Configuration;
-
-namespace WukongMp.Api.UI
+﻿namespace WukongMp.Api.UI
 {
     public class InfoMessageWidget : GameWidgetBase
     {
-        public InfoMessageWidget() : base(Constants.InfoMessageWidgetName) { }
+        private const string InfoMessageWidgetPath = "/Game/Mods/CustomLuaMod/WBP_InfoMessage.WBP_InfoMessage_C";
+
+        public InfoMessageWidget() : base(InfoMessageWidgetPath) { }
 
         public void SetText(string message)
         {
