@@ -19,6 +19,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     private string _fullModVersion = "";
     private string _shortModVersion = "";
 
+    private readonly Lazy<CommandConsoleWidget> _commandConsoleWidget = new();
     private readonly Lazy<ChatWidget> _chatWidget = new();
     private readonly Lazy<InfoMessageWidget> _infoMessageWidget = new();
     private readonly Lazy<ErrorMessageWidget> _errorMessageWidget = new();
@@ -170,8 +171,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         if (!_isInitialized)
         {
             _isInitialized = true;
-            //ModWidgetsUtils.SpawnWidgetManagerActor();
 
+            _commandConsoleWidget.Value.Initialize();
             _chatWidget.Value.Initialize();
             _infoMessageWidget.Value.Initialize();
             _errorMessageWidget.Value.Initialize();
@@ -184,6 +185,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     private void DeinitializeWidgets()
     {
+        _commandConsoleWidget.Value.Deinitialize();
         _chatWidget.Value.Deinitialize();
         _infoMessageWidget.Value.Deinitialize();
         _errorMessageWidget.Value.Deinitialize();
@@ -202,11 +204,21 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public bool ChatHasFocus() => _chatWidget.Value.HasFocus();
 
-    public void SetChatHistoryNext() => _chatWidget.Value.SetHistoryNext();
-    
-    public void SetChatHistoryPrev() => _chatWidget.Value.SetHistoryPrev();
-
     public void SetChatInputFocus() => _chatWidget.Value.SetInputFocus();
 
     public string CommitChatMessage() => _chatWidget.Value.CommitMessage();
+
+    public void ToggleCommandVisibility() => _commandConsoleWidget.Value.ToggleVisibility();
+
+    public bool CommandHasFocus() => _commandConsoleWidget.Value.HasFocus();
+
+    public bool IsCommandVisible() => _commandConsoleWidget.Value.IsVisible();
+
+    public void SetCommandHistoryNext() => _commandConsoleWidget.Value.SetHistoryNext();
+
+    public void SetCommandHistoryPrev() => _commandConsoleWidget.Value.SetHistoryPrev();
+
+    public void SetCommandInputFocus() => _commandConsoleWidget.Value.SetInputFocus();
+
+    public string CommitCommand() => _commandConsoleWidget.Value.CommitCommand();
 }
