@@ -263,7 +263,7 @@ namespace WukongMp.Coop
             DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
             {
                 _logger.LogDebug("J");
-                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                if (DI.Instance.WukongInputManager.CanApplyInput())
                     CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             });
 #endif
@@ -271,34 +271,33 @@ namespace WukongMp.Coop
             DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
             {
                 _logger.LogDebug("K");
-                if (!DI.Instance.WidgetManager.ChatHasFocus())
+                if (DI.Instance.WukongInputManager.CanApplyInput())
                     DI.Instance.WidgetManager.ToggleChatVisibility();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.OEM_3, () =>
+            {
+                _logger.LogDebug("`");
+                if (DI.Instance.WukongInputManager.CanApplyInput())
+                    DI.Instance.WidgetManager.ToggleCommandVisibility();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
-                DI.Instance.WidgetManager.SetChatHistoryNext();
+                DI.Instance.WidgetManager.SetCommandHistoryNext();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.DOWN, () =>
             {
                 _logger.LogDebug("DOWN");
-                DI.Instance.WidgetManager.SetChatHistoryPrev();
+                DI.Instance.WidgetManager.SetCommandHistoryPrev();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>
             {
                 _logger.LogDebug("ENTER");
-                if (!DI.Instance.WidgetManager.ChatHasFocus())
-                {
-                    DI.Instance.WidgetManager.SetChatInputFocus();
-                }
-                else
-                {
-                    var message = DI.Instance.WidgetManager.CommitChatMessage();
-                    DI.Instance.Chatter.ProcessMessage(message);
-                }
+                DI.Instance.WukongInputManager.HandleEnterPressed();
             });
         }
 

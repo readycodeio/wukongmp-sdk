@@ -30,6 +30,7 @@ using WukongMp.Api.State;
 using WukongMp.Api.Tests;
 using WukongMp.Api.UI;
 using WukongMp.Api.Command;
+using WukongMp.Api.Input;
 
 namespace WukongMp.Api;
 
@@ -89,6 +90,7 @@ public sealed class DI
 
     public WukongCommandConsole CommandConsole { get; set; } = null!;
     public WukongChatter Chatter { get; private set; } = null!;
+    public WukongInputManager WukongInputManager { get; private set; } = null!;
 
     public RuntimePrelude Prelude { get; private set; } = null!;
     public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
@@ -204,6 +206,7 @@ public sealed class DI
 
         var chatter = Chatter = new WukongChatter(state, playerState, rpc, widgetManager);
         var commandConsole = CommandConsole = new WukongCommandConsole(connection, playerState, rpc, Chatter, ecsLoop);
+        var wukongInputManager = WukongInputManager = new WukongInputManager(commandConsole, chatter, widgetManager);
 
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection);
 
