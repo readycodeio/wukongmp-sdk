@@ -9,29 +9,6 @@ namespace WukongMp.Api.WukongUtils
 {
     public static class ModWidgetsUtils
     {
-        public static void SpawnWidgetManagerActor()
-        {
-            var world = GameUtils.GetWorld();
-            if (world != null)
-            {
-                var widgetManagerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.WidgetManagerActorPath, ELoadResourceType.SyncLoadAndCache);
-                if (widgetManagerActorClass == null)
-                {
-                    Logging.LogError("Cannot find class of {Class} to spawn", Constants.WidgetManagerActorPath);
-                    return;
-                }
-                var widgetManagerActor = BGU_UnrealWorldUtil.SpawnActor(world, widgetManagerActorClass);
-                if (widgetManagerActor != null)
-                {
-                    Logging.LogDebug("UI Manager actor spawned successfully");
-                }
-                else
-                {
-                    Logging.LogError("Cannot spawn UI Manager actor");
-                }
-            }
-        }
-
         public static UUserWidget? SpawnWidget(string widgetPath)
         {
             var world = GameUtils.GetWorld();

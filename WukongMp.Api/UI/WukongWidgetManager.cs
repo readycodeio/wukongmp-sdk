@@ -3,13 +3,10 @@ using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
-using Sentry.Reflection;
 using System;
-using System.Reflection;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
-using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
 
@@ -173,7 +170,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         if (!_isInitialized)
         {
             _isInitialized = true;
-            ModWidgetsUtils.SpawnWidgetManagerActor();
+            //ModWidgetsUtils.SpawnWidgetManagerActor();
 
             _chatWidget.Value.Initialize();
             _infoMessageWidget.Value.Initialize();
