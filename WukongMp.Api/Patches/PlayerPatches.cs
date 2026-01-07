@@ -711,14 +711,21 @@ namespace WukongMp.Api.Patches
         private static AActor? GetClosestBossActor(UObject context, FVector position)
         {
             AActor? closestBoss = null;
-            double closestDistanceSquared = double.MaxValue;
-            var monsters = UGameplayStatics.GetAllActorsOfClass<BGU_CharacterAI>(context);
-            foreach (BGU_CharacterAI monster in monsters)
+            var closestDistanceSquared = double.MaxValue;
+            var monsters = UGameplayStatics.GetAllActorsOfClass<BGU_CharacterAI?>(context);
+            foreach (var monster in monsters)
             {
+                if (monster.IsNullOrDestroyed())
+                    continue;
+
                 var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(monster.GetFinalBattleInfoExtendID());
+
+                if (info == null)
+                    continue;
 
                 if (!(monster.bBossRoomMonster || info.QualityType is EUnitQualityType.NormalBoss or EUnitQualityType.FinalBoss || info.BloodBarType == EBGUBloodBarType.BossBar))
                     continue;
+
                 var distanceSquared = FVector.DistSquared2D(monster.GetActorLocation(), position);
                 if (distanceSquared < closestDistanceSquared)
                 {

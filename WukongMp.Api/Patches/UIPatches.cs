@@ -155,8 +155,13 @@ public class PatchSetCurrentCulture
 {
     public static void Postfix(string Culture)
     {
-        Logging.LogInformation("Culture changed to: {Culture}", Culture);
-        Texts.Culture = new CultureInfo(Culture);
+        var normalizedCulture = Culture switch
+        {
+            "zh-Hans-CN" or "zh-Hant" => "zh-Hans",
+            _ => Culture
+        };
+        Logging.LogInformation("Culture changed to: {Culture}", normalizedCulture);
+        Texts.Culture = new CultureInfo(normalizedCulture);
         DI.Instance.GameplayEventRouter.RaiseOnLanguageChanged(Texts.Culture);
     }
 }
