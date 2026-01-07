@@ -29,6 +29,7 @@ using WukongMp.Api.Shim;
 using WukongMp.Api.State;
 using WukongMp.Api.Tests;
 using WukongMp.Api.UI;
+using WukongMp.Api.Command;
 
 namespace WukongMp.Api;
 
@@ -86,6 +87,7 @@ public sealed class DI
     public FreeCameraManager FreeCameraManager { get; private set; } = null!;
     public GameStateSynchronizer GameStateSynchronizer { get; private set; } = null!;
 
+    public WukongCommandConsole CommandConsole { get; set; } = null!;
     public WukongChatter Chatter { get; private set; } = null!;
 
     public RuntimePrelude Prelude { get; private set; } = null!;
@@ -200,7 +202,8 @@ public sealed class DI
         var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger, widgetManager);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
-        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, serverRpc, widgetManager, eventBus, ecsLoop);
+        var chatter = Chatter = new WukongChatter(state, playerState, rpc, widgetManager);
+        var commandConsole = CommandConsole = new WukongCommandConsole(connection, playerState, rpc, Chatter, ecsLoop);
 
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection);
 

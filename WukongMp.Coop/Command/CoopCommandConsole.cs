@@ -4,22 +4,22 @@ using System;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
-using WukongMp.Api.Chat;
+using WukongMp.Api.Command;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.PvP.Chat
+namespace WukongMp.Coop.Command
 {
-    internal class CoopChatter
+    internal class CoopCommandConsole
     {
-        private readonly WukongChatter _wukongChatter;
+        private readonly WukongCommandConsole _wukongCommandConsole;
 
-        public CoopChatter(
-        WukongChatter wukongChatter
+        public CoopCommandConsole(
+        WukongCommandConsole wukongCommandConsole
     )
         {
-            Logging.LogDebug("Initializing WukongChatter");
+            Logging.LogDebug("Initializing CoopCommandConsole");
 
-            _wukongChatter = wukongChatter;
+            _wukongCommandConsole = wukongCommandConsole;
 
             SetupCommands();
         }
@@ -27,9 +27,9 @@ namespace WukongMp.PvP.Chat
         private void SetupCommands()
         {
 #if DEBUG
-            _wukongChatter.AddCommand("/play", new WukongChatterCommand(PlayCutscene));
-            _wukongChatter.AddCommand("/teleport", new WukongChatterCommand(Teleport));
-            _wukongChatter.AddCommand("/openlevel", new WukongChatterCommand(OpenLevel));
+            _wukongCommandConsole.AddCommand("/play", new ConsoleCommand(PlayCutscene));
+            _wukongCommandConsole.AddCommand("/teleport", new ConsoleCommand(Teleport));
+            _wukongCommandConsole.AddCommand("/openlevel", new ConsoleCommand(OpenLevel));
 #endif
         }
 

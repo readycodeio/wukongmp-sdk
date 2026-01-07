@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using WukongMp.Api;
-using WukongMp.Api.UI;
 using WukongMp.PvP.Chat;
+using WukongMp.PvP.Command;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Gamemode;
 using WukongMp.PvP.UI;
@@ -15,6 +15,7 @@ namespace WukongMp.PvP
         public DI DI { get; private set; } = null!;
 
         public PvpChatter PvpChatter { get; private set; } = null!;
+        public PvpCommandConsole PvpCommandConsole { get; private set; } = null!;
         public PvpGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public PvpSynchronizer Synchronizer { get; private set; } = null!;
         public PvpSaveManager SaveManager { get; private set; } = null!;
@@ -31,7 +32,8 @@ namespace WukongMp.PvP
 
             var patcher = Patcher = new PvpPatcher(DI.Prelude);
 
-            var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.PlayerState, DI.Rpc, DI.GameplayEventRouter, DI.AreaState, DI.PawnState, DI.ClientOwnership);
+            var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.GameplayEventRouter, DI.AreaState, DI.PawnState, DI.ClientOwnership);
+            var commandConsole = PvpCommandConsole = new PvpCommandConsole(DI.CommandConsole, DI.Chatter, DI.PlayerState, DI.Rpc, DI.AreaState);
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
 
             var saveManager = SaveManager = new PvpSaveManager(DI.Logger);

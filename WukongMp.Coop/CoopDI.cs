@@ -4,7 +4,7 @@ using WukongMp.Api.UI;
 using WukongMp.Coop.Configuration;
 using WukongMp.Coop.Gamemode;
 using WukongMp.Coop.UI;
-using WukongMp.PvP.Chat;
+using WukongMp.Coop.Command;
 
 namespace WukongMp.Coop
 {
@@ -14,7 +14,7 @@ namespace WukongMp.Coop
 
         public DI DI { get; private set; } = null!;
 
-        public CoopChatter CoopChatter { get; private set; } = null!;
+        public CoopCommandConsole CoopCommandConsole { get; private set; } = null!;
         public CoopGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public CoopSynchronizer Synchronizer { get; private set; } = null!;
         public CoopSaveManager SaveManager { get; private set; } = null!;
@@ -32,7 +32,7 @@ namespace WukongMp.Coop
 
             var patcher = Patcher = new CoopPatcher(DI.Prelude);
 
-            var chatter = CoopChatter = new CoopChatter(DI.Chatter);
+            var coopCommandConsole = CoopCommandConsole = new CoopCommandConsole(DI.CommandConsole);
             var gameplayConfig = GameplayConfiguration = new CoopGameplayConfiguration(DI.GameplayConfiguration);
 
             var saveManager = SaveManager = new CoopSaveManager(DI.Logger);

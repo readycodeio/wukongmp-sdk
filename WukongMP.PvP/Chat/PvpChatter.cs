@@ -6,21 +6,13 @@ using System;
 using System.Globalization;
 using WukongMp.Api;
 using WukongMp.Api.Chat;
-using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
-using WukongMp.Api.Resources;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
-using WukongMp.Api.WukongUtils;
-using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.Chat;
 
 internal class PvpChatter : IDisposable
 {
     private readonly WukongChatter _wukongChatter;
-    private readonly WukongPlayerState _playerState;
-    private readonly WukongRpcCallbacks _rpc;
     private readonly GameplayEventRouter _eventRouter;
     private readonly WukongAreaState _areaState;
     private readonly WukongPawnState _pawnState;
@@ -29,8 +21,6 @@ internal class PvpChatter : IDisposable
 
     public PvpChatter(
         WukongChatter wukongChatter,
-        WukongPlayerState playerState,
-        WukongRpcCallbacks rpc,
         GameplayEventRouter eventRouter,
         WukongAreaState areaState,
         WukongPawnState pawnState,
@@ -40,16 +30,12 @@ internal class PvpChatter : IDisposable
         Logging.LogDebug("Initializing PvpChatter");
 
         _wukongChatter = wukongChatter;
-        _playerState = playerState;
-        _rpc = rpc;
         _eventRouter = eventRouter;
         _areaState = areaState;
         _pawnState = pawnState;
         _clientOwnership = clientOwnership;
 
         _eventRouter.OnUnitDead += OnUnitDead;
-
-        SetupCommands();
     }
 
     public void Dispose()
