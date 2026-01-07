@@ -10,7 +10,7 @@ namespace WukongMp.PvP.UI
 {
     public class LobbyStatusWidget : GameWidgetBase
     {
-        private const string LobbyStatusWidgetPath = "/Game/Mods/CustomLuaMod/WBP_LobbyStatus.WBP_LobbyStatus_C";
+        private const string LobbyStatusWidgetPath = "/Game/Mods/WukongMod/WBP_LobbyStatus.WBP_LobbyStatus_C";
 
         public LobbyStatusWidget() : base(LobbyStatusWidgetPath) { }
 

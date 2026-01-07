@@ -2,7 +2,7 @@
 {
     public class ErrorMessageWidget : GameWidgetBase
     {
-        private const string ErrorMessageWidgetPath = "/Game/Mods/CustomLuaMod/WBP_ErrorMessage.WBP_ErrorMessage_C";
+        private const string ErrorMessageWidgetPath = "/Game/Mods/WukongMod/WBP_ErrorMessage.WBP_ErrorMessage_C";
 
         public ErrorMessageWidget() : base(ErrorMessageWidgetPath) { }
 

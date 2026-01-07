@@ -2,7 +2,7 @@
 {
     public class CountdownWidget : GameWidgetBase
     {
-        private const string CountdownWidgetPath = "/Game/Mods/CustomLuaMod/WBP_Countdown.WBP_Countdown_C";
+        private const string CountdownWidgetPath = "/Game/Mods/WukongMod/WBP_Countdown.WBP_Countdown_C";
 
         public CountdownWidget() : base(CountdownWidgetPath) { }
 

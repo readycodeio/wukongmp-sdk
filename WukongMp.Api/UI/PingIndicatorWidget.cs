@@ -4,7 +4,7 @@ namespace WukongMp.Api.UI
 {
     public class PingIndicatorWidget : GameWidgetBase
     {
-        private const string PingWidgetPath = "/Game/Mods/CustomLuaMod/WBP_PingIndicator.WBP_PingIndicator_C";
+        private const string PingWidgetPath = "/Game/Mods/WukongMod/WBP_PingIndicator.WBP_PingIndicator_C";
 
         public PingIndicatorWidget() : base(PingWidgetPath) { }
 

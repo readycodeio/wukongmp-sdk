@@ -14,7 +14,7 @@ public class FreeCameraManager
     private AActor? _freeCameraActor;
     private float _gameFov;
     private AActor? _cacheCameraViewTarget;
-    private const string FreeCameraActorPath = "/Game/Mods/CustomLuaMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
+    private const string FreeCameraActorPath = "/Game/Mods/WukongMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
 
     public bool IsInFreeCameraMode => _isInFreeCameraMode;
 

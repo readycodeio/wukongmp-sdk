@@ -2,7 +2,7 @@
 {
     public class ModVersionWidget : GameWidgetBase
     {
-        private const string ModVersionWidgetPath = "/Game/Mods/CustomLuaMod/WBP_ModVersion.WBP_ModVersion_C";
+        private const string ModVersionWidgetPath = "/Game/Mods/WukongMod/WBP_ModVersion.WBP_ModVersion_C";
 
         public ModVersionWidget() : base(ModVersionWidgetPath) { }
 

@@ -8,7 +8,7 @@ namespace WukongMp.Api.UI
 {
     public class ChatWidget : GameWidgetBase
     {
-        private const string ChatWidgetPath = "/Game/Mods/CustomLuaMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C";
+        private const string ChatWidgetPath = "/Game/Mods/WukongMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C";
 
         public ChatWidget() : base(ChatWidgetPath) { }
 

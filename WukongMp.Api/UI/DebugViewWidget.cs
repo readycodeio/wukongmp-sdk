@@ -5,7 +5,7 @@ namespace WukongMp.Api.UI
 {
     public class DebugViewWidget : GameWidgetBase
     {
-        private const string DebugViewWidgetPath = "/Game/Mods/CustomLuaMod/Debug/WBP_DebugView.WBP_DebugView_C";
+        private const string DebugViewWidgetPath = "/Game/Mods/WukongMod/Debug/WBP_DebugView.WBP_DebugView_C";
 
         public DebugViewWidget() : base(DebugViewWidgetPath) { }
 

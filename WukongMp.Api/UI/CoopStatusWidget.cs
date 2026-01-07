@@ -4,7 +4,7 @@ namespace WukongMp.Api.UI
 {
     public class CoopStatusWidget : GameWidgetBase
     {
-        private const string CoopStatusWidgetPath = "/Game/Mods/CustomLuaMod/WBP_CoopStatus.WBP_CoopStatus_C";
+        private const string CoopStatusWidgetPath = "/Game/Mods/WukongMod/WBP_CoopStatus.WBP_CoopStatus_C";
 
         public CoopStatusWidget() : base(CoopStatusWidgetPath) { }
 

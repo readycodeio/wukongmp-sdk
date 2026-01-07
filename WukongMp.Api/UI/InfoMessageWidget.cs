@@ -2,7 +2,7 @@
 {
     public class InfoMessageWidget : GameWidgetBase
     {
-        private const string InfoMessageWidgetPath = "/Game/Mods/CustomLuaMod/WBP_InfoMessage.WBP_InfoMessage_C";
+        private const string InfoMessageWidgetPath = "/Game/Mods/WukongMod/WBP_InfoMessage.WBP_InfoMessage_C";
 
         public InfoMessageWidget() : base(InfoMessageWidgetPath) { }
 
