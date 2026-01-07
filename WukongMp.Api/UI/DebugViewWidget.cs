@@ -66,7 +66,7 @@ namespace WukongMp.Api.UI
         {
             if (GameWidget == null || IsWidgetVisible_ReturnValue_PropertyAddress == null)
             {
-                Logging.LogError("GameWidget or property address is null in WBP_DebugView_C:IsWidgetVisible.");
+                Logging.LogDebug("GameWidget or property address is null in WBP_DebugView_C:IsWidgetVisible.");
                 return false;
             }
 
