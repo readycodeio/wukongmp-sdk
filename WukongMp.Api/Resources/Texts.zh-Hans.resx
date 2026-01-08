@@ -270,4 +270,34 @@
   <data name="SoftlockDetected" xml:space="preserve">
     <value>软锁。使用 /softlock 命令可以重新生成所有角色。</value>
   </data>
+  <data name="CheatsEnabled" xml:space="preserve">
+    <value>作弊功能已启用</value>
+  </data>
+  <data name="CheatsDisabled" xml:space="preserve">
+    <value>作弊功能已禁用</value>
+  </data>
+  <data name="CheatsAreDisabled" xml:space="preserve">
+    <value>作弊功能目前已禁用</value>
+  </data>
+  <data name="PlayerCooldown" xml:space="preserve">
+    <value>玩家 {0} 将冷却时间乘数设置为 {1}</value>
+  </data>
+  <data name="InfVesselEnabled" xml:space="preserve">
+    <value>{0} 启用无限容器能量</value>
+  </data>
+  <data name="InfVesselDisabled" xml:space="preserve">
+    <value>{0} 禁用无限容器能量</value>
+  </data>
+  <data name="InfSpiritEnabled" xml:space="preserve">
+    <value>{0} 启用无限精神能量</value>
+  </data>
+  <data name="InfSpiritDisabled" xml:space="preserve">
+    <value>{0} 禁用无限精神能量</value>
+  </data>
+  <data name="InfManaDisabled" xml:space="preserve">
+    <value>{0} 无限法力禁用</value>
+  </data>
+  <data name="InfManaEnabled" xml:space="preserve">
+    <value>{0} 启用无限法力</value>
+  </data>
 </root>

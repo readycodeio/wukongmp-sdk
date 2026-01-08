@@ -270,4 +270,34 @@
   <data name="SoftlockDetected" xml:space="preserve">
     <value>Softlock. Use /softlock command to respawn</value>
   </data>
+  <data name="CheatsEnabled" xml:space="preserve">
+    <value>Cheats enabled</value>
+  </data>
+  <data name="CheatsDisabled" xml:space="preserve">
+    <value>Cheats disabled</value>
+  </data>
+  <data name="CheatsAreDisabled" xml:space="preserve">
+    <value>Cheats are disabled</value>
+  </data>
+  <data name="PlayerCooldown" xml:space="preserve">
+    <value>{0} set colldown multiplier to {1}</value>
+  </data>
+  <data name="InfVesselEnabled" xml:space="preserve">
+    <value>{0} enabled infinite vessel energy</value>
+  </data>
+  <data name="InfVesselDisabled" xml:space="preserve">
+    <value>{0} disabled infinite vessel energy</value>
+  </data>
+  <data name="InfSpiritEnabled" xml:space="preserve">
+    <value>{0} enabled infinite spirit energy</value>
+  </data>
+  <data name="InfSpiritDisabled" xml:space="preserve">
+    <value>{0} disabled infinite spirit energy</value>
+  </data>
+  <data name="InfManaDisabled" xml:space="preserve">
+    <value>{0} disabled infinite mana</value>
+  </data>
+  <data name="InfManaEnabled" xml:space="preserve">
+    <value>{0} enabled infinite mana</value>
+  </data>
 </root>

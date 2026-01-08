@@ -25,6 +25,7 @@ public class WukongChatter : IDisposable
     private readonly WukongAreaState _areaState;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
+    private readonly WukongServerRpcCallbacks _serverRpc;
     private readonly WukongWidgetManager _widgetManager;
     private readonly IClientEcsUpdateLoop _ecsLoop;
 
@@ -38,6 +39,7 @@ public class WukongChatter : IDisposable
         WukongAreaState areaState,
         WukongPlayerState playerState,
         WukongRpcCallbacks rpc,
+        WukongServerRpcCallbacks serverRpc,
         WukongWidgetManager widgetManager,
         IClientEcsUpdateLoop ecsLoop
     )
@@ -49,6 +51,7 @@ public class WukongChatter : IDisposable
         _areaState = areaState;
         _playerState = playerState;
         _rpc = rpc;
+        _serverRpc = serverRpc;
         _widgetManager = widgetManager;
         _ecsLoop = ecsLoop;
 
@@ -96,6 +99,11 @@ public class WukongChatter : IDisposable
         AddCommand("/giveup", new WukongChatterCommand(RequestGiveUp));
         AddCommand("/rebirth", new WukongChatterCommand(RequestRebirth));
         AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
+        AddCommand("/cheats", new WukongChatterCommand(ToggleCheats));
+        AddCommand("/skill_cooldown", new WukongChatterCommand(SetSkillsCooldown));
+        AddCommand("/infinite_mana", new WukongChatterCommand(ToggleInfiniteMana));
+        AddCommand("/infinite_spirit", new WukongChatterCommand(ToggleInfiniteSpirit));
+        AddCommand("/infinite_vesell", new WukongChatterCommand(ToggleInfiniteVessel));
 #if DEBUG
         AddCommand("/softlock", new WukongChatterCommand(ResolveSoftlock));
         AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
@@ -123,6 +131,88 @@ public class WukongChatter : IDisposable
         PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
         _rpc.SendRebirthPlayer(playerId);
         SendServerMessage("PlayerRequestedRebirth", NickName);
+    }
+
+    private void ToggleInfiniteMana(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        mainEntity.GetLocalState().HasInfiniteMana = !mainEntity.GetLocalState().HasInfiniteMana;
+        SendServerMessage(mainEntity.GetLocalState().HasInfiniteMana ? "InfManaEnabled" : "InfManaDisabled", NickName);
+    }
+
+    private void ToggleInfiniteSpirit(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        mainEntity.GetLocalState().HasInfiniteSpirit = !mainEntity.GetLocalState().HasInfiniteSpirit;
+        SendServerMessage(mainEntity.GetLocalState().HasInfiniteSpirit ? "InfSpiritEnabled" : "InfSpiritDisabled", NickName);
+    }
+
+    private void ToggleInfiniteVessel(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        mainEntity.GetLocalState().HasInfiniteVessel = !mainEntity.GetLocalState().HasInfiniteVessel;
+        SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", NickName);
+    }
+
+    private void SetSkillsCooldown(ReadOnlyMemory<string> args)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        if (!float.TryParse(args.Span[0], out float multiplier))
+        {
+            multiplier = 1f;
+        }
+
+        ref var localState = ref mainEntity.GetLocalState();
+        var events = BUS_EventCollectionCS.Get(localState.Pawn);
+        events?.Evt_ResetSkillCD.Invoke();
+        localState.CooldownMultiplier = multiplier;
+        SendServerMessage("PlayerCooldown", NickName, multiplier.ToString());
+    }
+
+    private void ToggleCheats(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.IsMasterClient && _areaState.CurrentArea.HasValue)
+        {
+            var roomComp = _areaState.CurrentArea.Value.Room;
+            // TODO: Move to server rpc response.
+            SendServerMessage(roomComp.CheatsAllowed ? "CheatsDisabled" : "CheatsEnabled");
+            _serverRpc.SendEnableCheats(_areaState.CurrentArea.Value.Scope.AreaId, !roomComp.CheatsAllowed);
+        }
     }
 
     private void ResolveSoftlock(ReadOnlyMemory<string> _)
@@ -240,7 +330,7 @@ public class WukongChatter : IDisposable
         _widgetManager.AddChatMessage(message.IsServer, senderNickname, translatedMessage);
     }
 
-    private void AddLocalServerMessage(string message, string[] placeholders)
+    private void AddLocalServerMessage(string message, params string[] placeholders)
     {
         var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
         _widgetManager.AddChatMessage(true, "Server", translatedMessage);

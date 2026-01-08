@@ -103,6 +103,12 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         }, this, (BeguilingChantState)rawState);
     }
 
+    [ServerRpcEvent("EnableCheats")]
+    private void OnEnableCheats(AreaId areaId, bool enabled)
+    {
+        // Do nothing on response from server.
+    }
+
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
     private static long _lastPingTimestamp;
 
