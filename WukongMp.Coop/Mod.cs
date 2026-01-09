@@ -285,13 +285,13 @@ namespace WukongMp.Coop
             DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");
-                DI.Instance.WidgetManager.SetCommandHistoryNext();
+                DI.Instance.WidgetManager.CommandSelectUp();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.DOWN, () =>
             {
                 _logger.LogDebug("DOWN");
-                DI.Instance.WidgetManager.SetCommandHistoryPrev();
+                DI.Instance.WidgetManager.CommandSelectDown();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>

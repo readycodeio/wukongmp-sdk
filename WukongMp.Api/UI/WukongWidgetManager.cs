@@ -4,7 +4,9 @@ using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
+using System.Collections.Generic;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Command;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 
@@ -18,6 +20,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     private string _fullModVersion = "";
     private string _shortModVersion = "";
+    private List<string> _availableCommands = [];
 
     private readonly Lazy<CommandConsoleWidget> _commandConsoleWidget = new();
     private readonly Lazy<ChatWidget> _chatWidget = new();
@@ -70,6 +73,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             }, this);
         }
     }
+
+    public void UpdateConsoleCommands(List<string> commands) => _availableCommands = commands;
 
     public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
 
@@ -180,6 +185,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _freeCameraControlsWidget.Value.Initialize();
             _modVersionWidget.Value.Initialize();
             _debugViewWidget.Value.Initialize();
+
+            _commandConsoleWidget.Value.SetAvailableCommands(_availableCommands);
         }
     }
 
@@ -199,7 +206,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     public void ToggleDebugVisibility() => _debugViewWidget.Value.ToggleVisibility();
 
     public void ToggleChatVisibility() => _chatWidget.Value.ToggleVisibility();
-    
+
     public void AddChatMessage(bool isSystemMessage, string sender, string message) => _chatWidget.Value.AddMessage(isSystemMessage, sender, message);
 
     public bool ChatHasFocus() => _chatWidget.Value.HasFocus();
@@ -214,9 +221,11 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public bool IsCommandVisible() => _commandConsoleWidget.Value.IsVisible();
 
-    public void SetCommandHistoryNext() => _commandConsoleWidget.Value.SetHistoryNext();
+    public void CommandSelectUp() => _commandConsoleWidget.Value.SelectUp();
 
-    public void SetCommandHistoryPrev() => _commandConsoleWidget.Value.SetHistoryPrev();
+    public void CommandSelectDown() => _commandConsoleWidget.Value.SelectDown();
+
+    public void CommandSelectSuggestion() => _commandConsoleWidget.Value.SelectSuggestion();
 
     public void SetCommandInputFocus() => _commandConsoleWidget.Value.SetInputFocus();
 

@@ -9,16 +9,18 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Chat;
 using WukongMp.Api.State;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Command;
 
-public class WukongCommandConsole
+public class WukongCommandConsole : IDisposable
 {
     private readonly WukongConnectionManager _connection;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongChatter _wukongChatter;
+    private readonly WukongWidgetManager _widgetManager;
     private readonly IClientEcsUpdateLoop _ecsLoop;
 
     private readonly Dictionary<string, ConsoleCommand> _commands = new();
@@ -30,6 +32,7 @@ public class WukongCommandConsole
         WukongPlayerState playerState,
         WukongRpcCallbacks rpc,
         WukongChatter wukongChatter,
+        WukongWidgetManager widgetManager,
         IClientEcsUpdateLoop ecsLoop
     )
     {
@@ -39,9 +42,15 @@ public class WukongCommandConsole
         _playerState = playerState;
         _rpc = rpc;
         _wukongChatter = wukongChatter;
+        _widgetManager = widgetManager;
         _ecsLoop = ecsLoop;
 
         SetupCommands();
+    }
+
+    public void Dispose()
+    {
+        Logging.LogDebug("Disposing WukongCommandConsole");
     }
 
     public void ProcessCommand(string command)
@@ -58,6 +67,7 @@ public class WukongCommandConsole
         if (!_commands.ContainsKey(command))
         {
             _commands.Add(command, handler);
+            _widgetManager.UpdateConsoleCommands(GetAvailableCommands());
         }
     }
 
@@ -184,5 +194,10 @@ public class WukongCommandConsole
     private bool CanExecuteCommand()
     {
         return _playerState.LocalMainCharacter.HasValue && !_playerState.LocalMainCharacter.Value.GetLocalState().IsInSequence;
+    }
+
+    private List<string> GetAvailableCommands()
+    {
+        return [.. _commands.Keys];
     }
 }

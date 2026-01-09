@@ -205,7 +205,7 @@ public sealed class DI
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
         var chatter = Chatter = new WukongChatter(state, playerState, rpc, widgetManager);
-        var commandConsole = CommandConsole = new WukongCommandConsole(connection, playerState, rpc, Chatter, ecsLoop);
+        var commandConsole = CommandConsole = new WukongCommandConsole(connection, playerState, rpc, Chatter, widgetManager, ecsLoop);
         var wukongInputManager = WukongInputManager = new WukongInputManager(commandConsole, chatter, widgetManager);
 
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection);

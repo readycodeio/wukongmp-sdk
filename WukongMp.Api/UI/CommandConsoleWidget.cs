@@ -49,19 +49,27 @@ public class CommandConsoleWidget : GameWidgetBase
         }
     }
 
-    public void SetHistoryNext()
+    public void SelectUp()
     {
         if (HasFocus())
         {
-            GameWidget?.CallFunctionByNameWithArguments("SetHistoryNext", true);
+            GameWidget?.CallFunctionByNameWithArguments("SelectUp", true);
         }
     }
 
-    public void SetHistoryPrev()
+    public void SelectDown()
     {
         if (HasFocus())
         {
-            GameWidget?.CallFunctionByNameWithArguments("SetHistoryPrev", true);
+            GameWidget?.CallFunctionByNameWithArguments("SelectDown", true);
+        }
+    }
+
+    public void SelectSuggestion()
+    {
+        if (HasFocus())
+        {
+            GameWidget?.CallFunctionByNameWithArguments("SelectSuggestion", true);
         }
     }
 
@@ -103,7 +111,7 @@ public class CommandConsoleWidget : GameWidgetBase
 
     public unsafe void SetAvailableCommands(List<string> availableCommands)
     {
-        if (GameWidget == null || SetAvailableCommands_AvailableCommands_PropertyAddress == null)
+        if (GameWidget == null || SetAvailableCommands_Commands_PropertyAddress == null)
         {
             Logging.LogError("GameWidget or property address is null in WBP_CommandConsole_C:SetAvailableCommands.");
             return;
@@ -121,12 +129,12 @@ public class CommandConsoleWidget : GameWidgetBase
         System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetAvailableCommands_ParamsSize);
         IntPtr intPtr = new IntPtr(ptr2);
 
-        TArrayCopyMarshaler<string> readTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetAvailableCommands_AvailableCommands_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
-        readTeamArrayCopyMarshaler.ToNative(IntPtr.Add(intPtr, SetAvailableCommands_AvailableCommands_Offset), availableCommands);
+        TArrayCopyMarshaler<string> readTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetAvailableCommands_Commands_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
+        readTeamArrayCopyMarshaler.ToNative(IntPtr.Add(intPtr, SetAvailableCommands_Commands_Offset), availableCommands);
 
         NativeReflection.InvokeFunctionOptimized(GameWidget.Address, SetAvailableCommands_FunctionAddress, intPtr, SetAvailableCommands_ParamsSize);
 
-        NativeReflection.DestroyValue_InContainer(SetAvailableCommands_AvailableCommands_PropertyAddress.Address, intPtr);
+        NativeReflection.DestroyValue_InContainer(SetAvailableCommands_Commands_PropertyAddress.Address, intPtr);
     }
 
     public unsafe void AddMessage(string message)
@@ -241,9 +249,9 @@ public class CommandConsoleWidget : GameWidgetBase
     private static IntPtr SetAvailableCommands_FunctionAddress;
     private static int SetAvailableCommands_ParamsSize;
 
-    private static bool SetAvailableCommands_AvailableCommands_IsValid;
-    private static FFieldAddress? SetAvailableCommands_AvailableCommands_PropertyAddress;
-    private static int SetAvailableCommands_AvailableCommands_Offset;
+    private static bool SetAvailableCommands_Commands_IsValid;
+    private static FFieldAddress? SetAvailableCommands_Commands_PropertyAddress;
+    private static int SetAvailableCommands_Commands_Offset;
 
     // AddMessage function
     private static bool AddMessage_IsValid;
@@ -287,10 +295,10 @@ public class CommandConsoleWidget : GameWidgetBase
 
         SetAvailableCommands_FunctionAddress = NativeReflectionCached.GetFunction(@class, "SetAvailableCommands");
         SetAvailableCommands_ParamsSize = NativeReflection.GetFunctionParamsSize(SetAvailableCommands_FunctionAddress);
-        NativeReflectionCached.GetPropertyRef(ref SetAvailableCommands_AvailableCommands_PropertyAddress, SetAvailableCommands_FunctionAddress, "AvailableCommands");
-        SetAvailableCommands_AvailableCommands_Offset = NativeReflectionCached.GetPropertyOffset(SetAvailableCommands_FunctionAddress, "AvailableCommands");
-        SetAvailableCommands_AvailableCommands_IsValid = NativeReflectionCached.ValidatePropertyClass(SetAvailableCommands_FunctionAddress, "AvailableCommands", Classes.FArrayProperty);
-        SetAvailableCommands_IsValid = SetAvailableCommands_FunctionAddress != IntPtr.Zero && SetAvailableCommands_AvailableCommands_IsValid;
+        NativeReflectionCached.GetPropertyRef(ref SetAvailableCommands_Commands_PropertyAddress, SetAvailableCommands_FunctionAddress, "Commands");
+        SetAvailableCommands_Commands_Offset = NativeReflectionCached.GetPropertyOffset(SetAvailableCommands_FunctionAddress, "Commands");
+        SetAvailableCommands_Commands_IsValid = NativeReflectionCached.ValidatePropertyClass(SetAvailableCommands_FunctionAddress, "Commands", Classes.FArrayProperty);
+        SetAvailableCommands_IsValid = SetAvailableCommands_FunctionAddress != IntPtr.Zero && SetAvailableCommands_Commands_IsValid;
         if (!SetAvailableCommands_IsValid)
             Logging.LogError("Function WBP_CommandConsole_C:SetAvailableCommands is not valid.");
 
