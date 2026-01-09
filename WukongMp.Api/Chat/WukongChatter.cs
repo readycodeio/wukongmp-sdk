@@ -103,7 +103,7 @@ public class WukongChatter : IDisposable
         AddCommand("/skill_cooldown", new WukongChatterCommand(SetSkillsCooldown));
         AddCommand("/infinite_mana", new WukongChatterCommand(ToggleInfiniteMana));
         AddCommand("/infinite_spirit", new WukongChatterCommand(ToggleInfiniteSpirit));
-        AddCommand("/infinite_vesell", new WukongChatterCommand(ToggleInfiniteVessel));
+        AddCommand("/infinite_vessel", new WukongChatterCommand(ToggleInfiniteVessel));
 #if DEBUG
         AddCommand("/softlock", new WukongChatterCommand(ResolveSoftlock));
         AddCommand("/disconnect", new WukongChatterCommand(RequestDisconnect));
