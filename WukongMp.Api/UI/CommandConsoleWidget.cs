@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Resources;
 
@@ -100,6 +101,61 @@ public class CommandConsoleWidget : GameWidgetBase
         return result;
     }
 
+    public unsafe void SetAvailableCommands(List<string> availableCommands)
+    {
+        if (GameWidget == null || SetAvailableCommands_AvailableCommands_PropertyAddress == null)
+        {
+            Logging.LogError("GameWidget or property address is null in WBP_CommandConsole_C:SetAvailableCommands.");
+            return;
+        }
+
+        if (!SetAvailableCommands_IsValid)
+        {
+            Logging.LogError("Function WBP_CommandConsole_C:SetAvailableCommands is not valid.");
+            return;
+        }
+
+        byte* ptr = stackalloc byte[(int)(uint)(SetAvailableCommands_ParamsSize + 16)];
+        int num = (int)((16L - (long)ptr) & 0xF);
+        byte* ptr2 = ptr + num;
+        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetAvailableCommands_ParamsSize);
+        IntPtr intPtr = new IntPtr(ptr2);
+
+        TArrayCopyMarshaler<string> readTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetAvailableCommands_AvailableCommands_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
+        readTeamArrayCopyMarshaler.ToNative(IntPtr.Add(intPtr, SetAvailableCommands_AvailableCommands_Offset), availableCommands);
+
+        NativeReflection.InvokeFunctionOptimized(GameWidget.Address, SetAvailableCommands_FunctionAddress, intPtr, SetAvailableCommands_ParamsSize);
+
+        NativeReflection.DestroyValue_InContainer(SetAvailableCommands_AvailableCommands_PropertyAddress.Address, intPtr);
+    }
+
+    public unsafe void AddMessage(string message)
+    {
+        if (GameWidget == null || AddMessage_Message_PropertyAddress == null)
+        {
+            Logging.LogError("GameWidget or property address is null in WBP_CommandConsole_C:AddMessage.");
+            return;
+        }
+
+        if (!AddMessage_IsValid)
+        {
+            Logging.LogError("Function WBP_CommandConsole_C:AddMessage is not valid.");
+            return;
+        }
+
+        byte* ptr = stackalloc byte[(int)(uint)(AddMessage_ParamsSize + 16)];
+        int num = (int)((16L - (long)ptr) & 0xF);
+        byte* ptr2 = ptr + num;
+        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddMessage_ParamsSize);
+        IntPtr intPtr = new IntPtr(ptr2);
+
+        FStringMarshaler.ToNative(IntPtr.Add(intPtr, AddMessage_Message_Offset), 0, AddMessage_Message_PropertyAddress.Address, message);
+
+        NativeReflection.InvokeFunctionOptimized(GameWidget.Address, AddMessage_FunctionAddress, intPtr, AddMessage_ParamsSize);
+
+        NativeReflection.DestroyValue_InContainer(AddMessage_Message_PropertyAddress.Address, intPtr);
+    }
+
     public unsafe bool IsVisible()
     {
         if (GameWidget == null || IsConsoleVisible_ReturnValue_PropertyAddress == null)
@@ -180,6 +236,23 @@ public class CommandConsoleWidget : GameWidgetBase
     private static FFieldAddress? CommitCommand_ReturnValue_PropertyAddress;
     private static int CommitCommand_ReturnValue_Offset;
 
+    // SetAvailableCommands function
+    private static bool SetAvailableCommands_IsValid;
+    private static IntPtr SetAvailableCommands_FunctionAddress;
+    private static int SetAvailableCommands_ParamsSize;
+
+    private static bool SetAvailableCommands_AvailableCommands_IsValid;
+    private static FFieldAddress? SetAvailableCommands_AvailableCommands_PropertyAddress;
+    private static int SetAvailableCommands_AvailableCommands_Offset;
+
+    // AddMessage function
+    private static bool AddMessage_IsValid;
+    private static IntPtr AddMessage_FunctionAddress;
+    private static int AddMessage_ParamsSize;
+
+    private static bool AddMessage_Message_IsValid;
+    private static FFieldAddress? AddMessage_Message_PropertyAddress;
+    private static int AddMessage_Message_Offset;
 
     public static void InitNativeFunctions()
     {
@@ -211,5 +284,23 @@ public class CommandConsoleWidget : GameWidgetBase
         CommitCommand_IsValid = CommitCommand_FunctionAddress != IntPtr.Zero && CommitCommand_ReturnValue_IsValid;
         if (!CommitCommand_IsValid)
             Logging.LogError("Function WBP_CommandConsole_C:CommitCommand is not valid.");
+
+        SetAvailableCommands_FunctionAddress = NativeReflectionCached.GetFunction(@class, "SetAvailableCommands");
+        SetAvailableCommands_ParamsSize = NativeReflection.GetFunctionParamsSize(SetAvailableCommands_FunctionAddress);
+        NativeReflectionCached.GetPropertyRef(ref SetAvailableCommands_AvailableCommands_PropertyAddress, SetAvailableCommands_FunctionAddress, "AvailableCommands");
+        SetAvailableCommands_AvailableCommands_Offset = NativeReflectionCached.GetPropertyOffset(SetAvailableCommands_FunctionAddress, "AvailableCommands");
+        SetAvailableCommands_AvailableCommands_IsValid = NativeReflectionCached.ValidatePropertyClass(SetAvailableCommands_FunctionAddress, "AvailableCommands", Classes.FArrayProperty);
+        SetAvailableCommands_IsValid = SetAvailableCommands_FunctionAddress != IntPtr.Zero && SetAvailableCommands_AvailableCommands_IsValid;
+        if (!SetAvailableCommands_IsValid)
+            Logging.LogError("Function WBP_CommandConsole_C:SetAvailableCommands is not valid.");
+
+        AddMessage_FunctionAddress = NativeReflectionCached.GetFunction(@class, "AddMessage");
+        AddMessage_ParamsSize = NativeReflection.GetFunctionParamsSize(AddMessage_FunctionAddress);
+        NativeReflectionCached.GetPropertyRef(ref AddMessage_Message_PropertyAddress, AddMessage_FunctionAddress, "Message");
+        AddMessage_Message_Offset = NativeReflectionCached.GetPropertyOffset(AddMessage_FunctionAddress, "Message");
+        AddMessage_Message_IsValid = NativeReflectionCached.ValidatePropertyClass(AddMessage_FunctionAddress, "Message", Classes.FStrProperty);
+        AddMessage_IsValid = AddMessage_FunctionAddress != IntPtr.Zero && AddMessage_Message_IsValid;
+        if (!AddMessage_IsValid)
+            Logging.LogError("Function WBP_CommandConsole_C:AddMessage is not valid.");
     }
 }
