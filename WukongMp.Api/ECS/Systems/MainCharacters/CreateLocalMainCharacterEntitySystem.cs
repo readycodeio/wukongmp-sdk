@@ -82,7 +82,6 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         });
 
         localMainComp.IsPlayerSynced = true;
-        localMainComp.CooldownMultiplier = 1f;
         playerState.InvokeMainCharacterEntityInitialized(mainEntity);
 
         Logging.LogDebug("Finished setting initial player properties");

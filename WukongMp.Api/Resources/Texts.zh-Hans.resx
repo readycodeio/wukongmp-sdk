@@ -300,4 +300,10 @@
   <data name="InfManaEnabled" xml:space="preserve">
     <value>{0} 启用无限法力</value>
   </data>
+  <data name="InstantCooldownEnabled" xml:space="preserve">
+    <value>{0} 启用瞬发技能冷却</value>
+  </data>
+  <data name="InstantCooldownDisabled" xml:space="preserve">
+    <value>{0} 禁用瞬发技能冷却时间</value>
+  </data>
 </root>

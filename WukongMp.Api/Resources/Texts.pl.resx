@@ -301,4 +301,10 @@
   <data name="InfManaEnabled" xml:space="preserve">
     <value>{0} włączył nieskończoną manę</value>
   </data>
+  <data name="InstantCooldownEnabled" xml:space="preserve">
+    <value>{0} włączył natychmiastowe odnawianie zaklęć</value>
+  </data>
+  <data name="InstantCooldownDisabled" xml:space="preserve">
+    <value>{0} wyłączył natychmiastowe odnawianie zaklęć</value>
+  </data>
 </root>

@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using b1;
+﻿using b1;
 using b1.BGW;
 using BtlShare;
 using Friflo.Engine.ECS;
+using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
@@ -100,7 +101,7 @@ public class WukongChatter : IDisposable
         AddCommand("/rebirth", new WukongChatterCommand(RequestRebirth));
         AddCommand("/rebirth_shrine", new WukongChatterCommand(RequestPointRebirth));
         AddCommand("/cheats", new WukongChatterCommand(ToggleCheats));
-        AddCommand("/skill_cooldown", new WukongChatterCommand(SetSkillsCooldown));
+        AddCommand("/instant_cooldown", new WukongChatterCommand(ToggleSkillsCooldown));
         AddCommand("/infinite_mana", new WukongChatterCommand(ToggleInfiniteMana));
         AddCommand("/infinite_spirit", new WukongChatterCommand(ToggleInfiniteSpirit));
         AddCommand("/infinite_vessel", new WukongChatterCommand(ToggleInfiniteVessel));
@@ -144,7 +145,13 @@ public class WukongChatter : IDisposable
             return;
         }
 
-        mainEntity.GetLocalState().HasInfiniteMana = !mainEntity.GetLocalState().HasInfiniteMana;
+        ref var localState = ref mainEntity.GetLocalState();
+        if (localState.Pawn != null)
+        {
+            PlayerUtils.ResetMana(localState.Pawn);
+        }
+
+        localState.HasInfiniteMana = !localState.HasInfiniteMana;
         SendServerMessage(mainEntity.GetLocalState().HasInfiniteMana ? "InfManaEnabled" : "InfManaDisabled", NickName);
     }
 
@@ -157,6 +164,13 @@ public class WukongChatter : IDisposable
         {
             AddLocalServerMessage("CheatsAreDisabled");
             return;
+        }
+
+        ref var localState = ref mainEntity.GetLocalState();
+        if (localState.Pawn != null)
+        {
+            var events = BUS_EventCollectionCS.Get(localState.Pawn);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.VigorEnergyMax));
         }
 
         mainEntity.GetLocalState().HasInfiniteSpirit = !mainEntity.GetLocalState().HasInfiniteSpirit;
@@ -174,11 +188,18 @@ public class WukongChatter : IDisposable
             return;
         }
 
+        ref var localState = ref mainEntity.GetLocalState();
+        if (localState.Pawn != null)
+        {
+            var events = BUS_EventCollectionCS.Get(localState.Pawn);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.FabaoEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.FabaoEnergyMax));
+        }
+
         mainEntity.GetLocalState().HasInfiniteVessel = !mainEntity.GetLocalState().HasInfiniteVessel;
         SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", NickName);
     }
 
-    private void SetSkillsCooldown(ReadOnlyMemory<string> args)
+    private void ToggleSkillsCooldown(ReadOnlyMemory<string> _)
     {
         if (_playerState.LocalMainCharacter is not { } mainEntity)
             return;
@@ -189,16 +210,11 @@ public class WukongChatter : IDisposable
             return;
         }
 
-        if (!float.TryParse(args.Span[0], out float multiplier))
-        {
-            multiplier = 1f;
-        }
-
         ref var localState = ref mainEntity.GetLocalState();
         var events = BUS_EventCollectionCS.Get(localState.Pawn);
         events?.Evt_ResetSkillCD.Invoke();
-        localState.CooldownMultiplier = multiplier;
-        SendServerMessage("PlayerCooldown", NickName, multiplier.ToString());
+        localState.InstantSkillCooldown = !localState.InstantSkillCooldown;
+        SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", NickName);
     }
 
     private void ToggleCheats(ReadOnlyMemory<string> _)

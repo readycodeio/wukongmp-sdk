@@ -277,6 +277,24 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} disabled instant skill cooldown.
+        /// </summary>
+        public static string InstantCooldownDisabled {
+            get {
+                return ResourceManager.GetString("InstantCooldownDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} enabled instant skill cooldown.
+        /// </summary>
+        public static string InstantCooldownEnabled {
+            get {
+                return ResourceManager.GetString("InstantCooldownEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid command: {0}.
         /// </summary>
         public static string InvalidCommand {
@@ -349,7 +367,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} set colldown multiplier to {1}.
+        ///   Looks up a localized string similar to {0} set cooldown multiplier to {1}.
         /// </summary>
         public static string PlayerCooldown {
             get {

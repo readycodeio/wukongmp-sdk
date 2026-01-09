@@ -1092,7 +1092,7 @@ public static class PatchSkillCooldownTime
 
         if (DI.Instance.AreaState.CurrentArea.HasValue && DI.Instance.AreaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            __result *= DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().CooldownMultiplier ?? 1f;
+            __result *= (DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().InstantSkillCooldown ?? false) ? 0f : 1f;
         }
     }
 }

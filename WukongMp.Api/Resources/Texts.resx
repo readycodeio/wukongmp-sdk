@@ -280,7 +280,7 @@
     <value>Cheats are disabled</value>
   </data>
   <data name="PlayerCooldown" xml:space="preserve">
-    <value>{0} set colldown multiplier to {1}</value>
+    <value>{0} set cooldown multiplier to {1}</value>
   </data>
   <data name="InfVesselEnabled" xml:space="preserve">
     <value>{0} enabled infinite vessel energy</value>
@@ -299,5 +299,11 @@
   </data>
   <data name="InfManaEnabled" xml:space="preserve">
     <value>{0} enabled infinite mana</value>
+  </data>
+  <data name="InstantCooldownEnabled" xml:space="preserve">
+    <value>{0} enabled instant skill cooldown</value>
+  </data>
+  <data name="InstantCooldownDisabled" xml:space="preserve">
+    <value>{0} disabled instant skill cooldown</value>
   </data>
 </root>

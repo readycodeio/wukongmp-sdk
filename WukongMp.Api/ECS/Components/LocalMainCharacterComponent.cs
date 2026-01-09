@@ -60,7 +60,7 @@ public struct LocalMainCharacterComponent : IComponent
     public bool IsInSequence { get; set; }
 
     // Cheat parameters
-    public float CooldownMultiplier { get; set; }
+    public bool InstantSkillCooldown { get; set; }
     public bool HasInfiniteMana { get; set; }
     public bool HasInfiniteSpirit { get; set; }
     public bool HasInfiniteVessel { get; set; }
