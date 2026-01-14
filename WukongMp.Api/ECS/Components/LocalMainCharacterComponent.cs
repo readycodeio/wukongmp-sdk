@@ -59,6 +59,12 @@ public struct LocalMainCharacterComponent : IComponent
     public FVector JoiningSequenceLocation { get; set; }
     public bool IsInSequence { get; set; }
 
+    // Cheat parameters
+    public bool InstantSkillCooldown { get; set; }
+    public bool HasInfiniteMana { get; set; }
+    public bool HasInfiniteSpirit { get; set; }
+    public bool HasInfiniteVessel { get; set; }
+
     [Ignore]
     public AActor? MarkerActor
     {

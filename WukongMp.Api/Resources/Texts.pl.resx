@@ -271,4 +271,40 @@
   <data name="SoftlockDetected" xml:space="preserve">
     <value>Softlock. Użyj polecenia /softlock, aby odrodzić wszystkich</value>
   </data>
+  <data name="CheatsEnabled" xml:space="preserve">
+    <value>Oszustwa włączone</value>
+  </data>
+  <data name="CheatsDisabled" xml:space="preserve">
+    <value>Oszustwa wyłączone</value>
+  </data>
+  <data name="CheatsAreDisabled" xml:space="preserve">
+    <value>Oszustwa są wyłączone</value>
+  </data>
+  <data name="PlayerCooldown" xml:space="preserve">
+    <value>{0} ustawił mnożnik odnawiania umiejętności na {1}</value>
+  </data>
+  <data name="InfVesselEnabled" xml:space="preserve">
+    <value>{0} włączył nieskończoną energię naczyń</value>
+  </data>
+  <data name="InfVesselDisabled" xml:space="preserve">
+    <value>{0} wyłączył nieskończoną energię naczyń</value>
+  </data>
+  <data name="InfSpiritEnabled" xml:space="preserve">
+    <value>{0} włączył nieskończoną energię duchów</value>
+  </data>
+  <data name="InfSpiritDisabled" xml:space="preserve">
+    <value>{0} wyłączył nieskończoną energię duchów</value>
+  </data>
+  <data name="InfManaDisabled" xml:space="preserve">
+    <value>{0} wyłączył nieskończoną manę</value>
+  </data>
+  <data name="InfManaEnabled" xml:space="preserve">
+    <value>{0} włączył nieskończoną manę</value>
+  </data>
+  <data name="InstantCooldownEnabled" xml:space="preserve">
+    <value>{0} włączył natychmiastowe odnawianie zaklęć</value>
+  </data>
+  <data name="InstantCooldownDisabled" xml:space="preserve">
+    <value>{0} wyłączył natychmiastowe odnawianie zaklęć</value>
+  </data>
 </root>

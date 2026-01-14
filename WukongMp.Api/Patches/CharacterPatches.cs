@@ -103,21 +103,51 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public static class PatchHp
     {
-        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID)
+        public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue, BUC_AttrContainer ___AttrContainer)
         {
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
+            var owner = __instance.GetOwner();
+            var isLocalPlayer = owner == DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn;
+
             if (AttrID == EBGUAttrFloat.Hp)
             {
-                var owner = __instance.GetOwner();
 #if DEBUG
-                if (DebugUtils.InvincibilityEnabled && owner == DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn)
+                if (DebugUtils.InvincibilityEnabled && isLocalPlayer)
                     return false;
 #endif
                 var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
                 if (netId.HasValue)
                     return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
+            }
+
+            var cheatsEnabled = DI.Instance.AreaState.CurrentArea.HasValue && DI.Instance.AreaState.CurrentArea.Value.Room.CheatsAllowed;
+            if (cheatsEnabled && isLocalPlayer && AttrID == EBGUAttrFloat.VigorEnergy && DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().HasInfiniteSpirit == true)
+            {
+                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergy);
+                if (NewValue < current)
+                {
+                    return false;
+                }
+            }
+
+            if (cheatsEnabled && isLocalPlayer && AttrID == EBGUAttrFloat.FabaoEnergy && DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().HasInfiniteVessel == true)
+            {
+                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.FabaoEnergy);
+                if (NewValue < current)
+                {
+                    return false;
+                }
+            }
+
+            if (cheatsEnabled && isLocalPlayer && AttrID == EBGUAttrFloat.Mp && DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().HasInfiniteMana == true)
+            {
+                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.Mp);
+                if (NewValue < current)
+                {
+                    return false;
+                }
             }
 
             return true;

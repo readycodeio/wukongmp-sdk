@@ -1080,3 +1080,19 @@ public class PatchBGUSetCollisionResponseToChannels
         return player.Value == DI.Instance.PlayerState.LocalMainCharacter;
     }
 }
+
+[HarmonyPatch(typeof(FUStSkillSDesc), "get_CooldownTime")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public static class PatchSkillCooldownTime
+{
+    public static void Postfix(ref float __result)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        if (DI.Instance.AreaState.CurrentArea.HasValue && DI.Instance.AreaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            __result *= (DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().InstantSkillCooldown ?? false) ? 0f : 1f;
+        }
+    }
+}
