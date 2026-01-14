@@ -38,6 +38,12 @@ public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus 
             return;
         }
 
+        var currentVigorValue = BGUFunctionLibraryCS.BGUGetFloatAttr(localPawn, EBGUAttrFloat.VigorEnergy);
+        if (currentVigorValue.Equals(0, Constants.FloatComparisonTolerance))
+        {
+            _vigorRegenAccumulator = 0f;
+        }
+
         var events = BUS_EventCollectionCS.Get(localPawn);
         if (localMainComp.SpiritCooldownTime.Equals(0, Constants.FloatComparisonTolerance))
         {
@@ -52,7 +58,6 @@ public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus 
 
         _vigorRegenAccumulator += Tick.deltaTime;
         var newVigorValue = FMath.Lerp(0, BGUFunctionLibraryCS.BGUGetFloatAttr(localPawn, EBGUAttrFloat.VigorEnergyMax), FMath.Clamp(_vigorRegenAccumulator / localMainComp.SpiritCooldownTime, 0f, 1f));
-        var currentVigorValue = BGUFunctionLibraryCS.BGUGetFloatAttr(localPawn, EBGUAttrFloat.VigorEnergy);
         if (newVigorValue > currentVigorValue)
         {
             localMainComp.ShouldSetSpiritCooldown = true;
