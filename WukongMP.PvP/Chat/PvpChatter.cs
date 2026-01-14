@@ -182,7 +182,9 @@ internal class PvpChatter : IDisposable
         if (localState.Pawn != null)
         {
             var events = BUS_EventCollectionCS.Get(localState.Pawn);
+            mainEntity.GetLocalState().ShouldSetSpiritCooldown = true;
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.VigorEnergyMax));
+            mainEntity.GetLocalState().ShouldSetSpiritCooldown = false;
         }
 
         mainEntity.GetLocalState().SpiritCooldownEnabled = true;
