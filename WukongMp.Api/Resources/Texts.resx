@@ -306,4 +306,10 @@
   <data name="InstantCooldownDisabled" xml:space="preserve">
     <value>{0} disabled instant skill cooldown</value>
   </data>
+  <data name="InvalidCooldown" xml:space="preserve">
+    <value>Invalid cooldown value</value>
+  </data>
+  <data name="CustomSpiritCooldown" xml:space="preserve">
+    <value>{0} set spirit cooldown to {1} s</value>
+  </data>
 </root>
