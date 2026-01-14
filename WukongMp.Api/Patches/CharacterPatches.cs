@@ -129,6 +129,11 @@ namespace WukongMp.Api.Patches
                 if (AttrID == EBGUAttrFloat.VigorEnergy && localPlayerState.Value.SpiritCooldownEnabled && !localPlayerState.Value.ShouldSetSpiritCooldown)
                 {
                     var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergy);
+                    var max = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergyMax);
+                    if (NewValue.Equals(max, Constants.FloatComparisonTolerance))
+                    {
+                        return true;
+                    }
                     if (NewValue > current)
                     {
                         return false;
