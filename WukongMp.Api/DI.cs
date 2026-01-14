@@ -200,7 +200,7 @@ public sealed class DI
         var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger, widgetManager);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 
-        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, serverRpc, widgetManager, ecsLoop);
+        var chatter = Chatter = new WukongChatter(connection, state, areaState, playerState, rpc, serverRpc, widgetManager, eventBus, ecsLoop);
 
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection);
 

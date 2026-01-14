@@ -77,6 +77,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, widgetManager, configuration, gameplayEventRouter, logger));
         _syncGroup.Add(new EnableCollisionAfterCutsceneSystem(playerState));
         _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
+        _syncGroup.Add(new UpdateCooldownSystem(playerState, eventBus, areaState));
 
         _syncGroup.Add(new DebugViewSystem(eventBus, widgetManager));
 

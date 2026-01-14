@@ -302,9 +302,15 @@
     <value>{0} włączył nieskończoną manę</value>
   </data>
   <data name="InstantCooldownEnabled" xml:space="preserve">
-    <value>{0} włączył natychmiastowe odnawianie zaklęć</value>
+    <value>{0} włączył natychmiastowe odnawianie umiejętności</value>
   </data>
   <data name="InstantCooldownDisabled" xml:space="preserve">
-    <value>{0} wyłączył natychmiastowe odnawianie zaklęć</value>
+    <value>{0} wyłączył natychmiastowe odnawianie umiejętności</value>
+  </data>
+  <data name="InvalidCooldown" xml:space="preserve">
+    <value>Nieprawidłowa wartość czasu odnowienia</value>
+  </data>
+  <data name="CustomSpiritCooldown" xml:space="preserve">
+    <value>{0} ustawił czas odnowienia ducha na {1} s</value>
   </data>
 </root>

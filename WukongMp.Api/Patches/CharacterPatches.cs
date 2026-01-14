@@ -109,6 +109,7 @@ namespace WukongMp.Api.Patches
                 return true;
 
             var owner = __instance.GetOwner();
+            var localPlayerState = DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState();
             var isLocalPlayer = owner == DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn;
 
             if (AttrID == EBGUAttrFloat.Hp)
@@ -123,30 +124,38 @@ namespace WukongMp.Api.Patches
             }
 
             var cheatsEnabled = DI.Instance.AreaState.CurrentArea.HasValue && DI.Instance.AreaState.CurrentArea.Value.Room.CheatsAllowed;
-            if (cheatsEnabled && isLocalPlayer && AttrID == EBGUAttrFloat.VigorEnergy && DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().HasInfiniteSpirit == true)
+            if (cheatsEnabled && localPlayerState.HasValue && isLocalPlayer)
             {
-                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergy);
-                if (NewValue < current)
+                if (AttrID == EBGUAttrFloat.VigorEnergy && localPlayerState.Value.SpiritCooldownEnabled && !localPlayerState.Value.ShouldSetSpiritCooldown)
                 {
-                    return false;
+                    var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergy);
+                    var max = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergyMax);
+                    if (NewValue.Equals(max, Constants.FloatComparisonTolerance))
+                    {
+                        return true;
+                    }
+                    if (NewValue > current)
+                    {
+                        return false;
+                    }
                 }
-            }
 
-            if (cheatsEnabled && isLocalPlayer && AttrID == EBGUAttrFloat.FabaoEnergy && DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().HasInfiniteVessel == true)
-            {
-                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.FabaoEnergy);
-                if (NewValue < current)
+                if (AttrID == EBGUAttrFloat.FabaoEnergy && localPlayerState.Value.HasInfiniteVessel)
                 {
-                    return false;
+                    var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.FabaoEnergy);
+                    if (NewValue < current)
+                    {
+                        return false;
+                    }
                 }
-            }
 
-            if (cheatsEnabled && isLocalPlayer && AttrID == EBGUAttrFloat.Mp && DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().HasInfiniteMana == true)
-            {
-                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.Mp);
-                if (NewValue < current)
+                if (AttrID == EBGUAttrFloat.Mp && localPlayerState.Value.HasInfiniteMana)
                 {
-                    return false;
+                    var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.Mp);
+                    if (NewValue < current)
+                    {
+                        return false;
+                    }
                 }
             }
 

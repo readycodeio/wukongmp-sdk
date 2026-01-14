@@ -306,4 +306,10 @@
   <data name="InstantCooldownDisabled" xml:space="preserve">
     <value>{0} 禁用瞬发技能冷却时间</value>
   </data>
+  <data name="InvalidCooldown" xml:space="preserve">
+    <value>无效冷却时间值</value>
+  </data>
+  <data name="CustomSpiritCooldown" xml:space="preserve">
+    <value>玩家{0}将精神冷却时间设置为{1}秒</value>
+  </data>
 </root>

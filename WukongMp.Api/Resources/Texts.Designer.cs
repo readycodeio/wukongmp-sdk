@@ -205,6 +205,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} set spirit cooldown to {1} s.
+        /// </summary>
+        public static string CustomSpiritCooldown {
+            get {
+                return ResourceManager.GetString("CustomSpiritCooldown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disconnected.
         /// </summary>
         public static string Disconnected {
@@ -300,6 +309,15 @@ namespace WukongMp.Api.Resources {
         public static string InvalidCommand {
             get {
                 return ResourceManager.GetString("InvalidCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid cooldown value.
+        /// </summary>
+        public static string InvalidCooldown {
+            get {
+                return ResourceManager.GetString("InvalidCooldown", resourceCulture);
             }
         }
         
