@@ -26,6 +26,9 @@ public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus 
 
         ref var localMainComp = ref mainCharacterEntity.Value.GetLocalState();
 
+        if (!localMainComp.SpiritCooldownEnabled)
+            return;
+
         var localPawn = localMainComp.Pawn;
         if (localPawn == null)
             return;
