@@ -41,7 +41,9 @@ public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus 
         var events = BUS_EventCollectionCS.Get(localPawn);
         if (localMainComp.SpiritCooldownTime.Equals(0, Constants.FloatComparisonTolerance))
         {
+            localMainComp.ShouldSetSpiritCooldown = true;
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localPawn, EBGUAttrFloat.VigorEnergyMax));
+            localMainComp.ShouldSetSpiritCooldown = false;
             return;
         }
 
@@ -50,8 +52,12 @@ public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus 
 
         _vigorRegenAccumulator += Tick.deltaTime;
         var newVigorValue = FMath.Lerp(0, BGUFunctionLibraryCS.BGUGetFloatAttr(localPawn, EBGUAttrFloat.VigorEnergyMax), FMath.Clamp(_vigorRegenAccumulator / localMainComp.SpiritCooldownTime, 0f, 1f));
-        localMainComp.ShouldSetSpiritCooldown = true;
-        events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, newVigorValue);
-        localMainComp.ShouldSetSpiritCooldown = false;
+        var currentVigorValue = BGUFunctionLibraryCS.BGUGetFloatAttr(localPawn, EBGUAttrFloat.VigorEnergy);
+        if (newVigorValue > currentVigorValue)
+        {
+            localMainComp.ShouldSetSpiritCooldown = true;
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, newVigorValue);
+            localMainComp.ShouldSetSpiritCooldown = false;
+        }
     }
 }
