@@ -28,6 +28,7 @@ public class WukongChatter : IDisposable
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongServerRpcCallbacks _serverRpc;
     private readonly WukongWidgetManager _widgetManager;
+    private readonly WukongEventBus _eventBus;
     private readonly IClientEcsUpdateLoop _ecsLoop;
 
     private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
@@ -42,6 +43,7 @@ public class WukongChatter : IDisposable
         WukongRpcCallbacks rpc,
         WukongServerRpcCallbacks serverRpc,
         WukongWidgetManager widgetManager,
+        WukongEventBus eventBus,
         IClientEcsUpdateLoop ecsLoop
     )
     {
@@ -54,10 +56,13 @@ public class WukongChatter : IDisposable
         _rpc = rpc;
         _serverRpc = serverRpc;
         _widgetManager = widgetManager;
+        _eventBus = eventBus;
         _ecsLoop = ecsLoop;
 
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
+
+        _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
 
         _rpc.OnGetChatMessage += OnGetMessage;
 
@@ -70,6 +75,8 @@ public class WukongChatter : IDisposable
 
         _state.OnJoinedArea -= OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
+
+        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
 
         _rpc.OnGetChatMessage -= OnGetMessage;
     }
@@ -279,11 +286,7 @@ public class WukongChatter : IDisposable
         Logging.LogDebug("Player {PlayerName} joined the room", player.NickName);
         SendServerMessage("PlayerJoined", player.NickName);
 
-        if (_areaState.CurrentArea.HasValue && _areaState.CurrentArea.Value.Room.CheatsAllowed)
-        {
-            AddLocalServerMessage("CheatsEnabled");
-            return;
-        }
+
     }
 
     private void OnOtherPlayerOutsideAreaHandler(PlayerId arg1, AreaId arg2, ReadyM.Api.Multiplayer.Common.OtherPlayerOutsideAreaReason arg3)
@@ -295,4 +298,14 @@ public class WukongChatter : IDisposable
         var nickname = player.NickName;
         AddLocalServerMessage("PlayerLeft", [nickname]);
     }
+
+    private void OnLoadingScreenClose()
+    {
+        if (_eventBus.IsGameplayLevel && _areaState.CurrentArea.HasValue && _areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            AddLocalServerMessage("CheatsEnabled");
+            return;
+        }
+    }
+
 }
