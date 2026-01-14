@@ -279,7 +279,7 @@ public class WukongChatter : IDisposable
         Logging.LogDebug("Player {PlayerName} joined the room", player.NickName);
         SendServerMessage("PlayerJoined", player.NickName);
 
-        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (_areaState.CurrentArea.HasValue && _areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
             AddLocalServerMessage("CheatsEnabled");
             return;
