@@ -8,6 +8,15 @@ namespace WukongMp.Api.UI
 {
     public class ChatWidget : GameWidgetBase
     {
+        private struct MessageEntry
+        {
+            public bool ShowSender;
+            public int MessageId;
+            public string Sender;
+            public string Message;
+            public FLinearColor Color;
+        }
+
         private const string ChatWidgetPath = "/Game/Mods/WukongMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C";
 
         public ChatWidget() : base(ChatWidgetPath) { }
@@ -16,6 +25,7 @@ namespace WukongMp.Api.UI
 
         private bool _levelLoaded;
         private readonly Queue<string> _commandQueue = new();
+        private readonly Queue<MessageEntry> _messageQueue = new();
 
         private bool _hiddenManually;
 
@@ -25,6 +35,7 @@ namespace WukongMp.Api.UI
             ClearMessages();
             ClearToolTipText();
             SetHelperText(Texts.ChatHelperDescription);
+            SetWritable(true);
         }
 
         public bool HasFocus()
@@ -35,6 +46,14 @@ namespace WukongMp.Api.UI
             }
 
             return GameWidget.StopAction;
+        }
+
+        public void SetWritable(bool isWritable)
+        {
+            if (HasFocus())
+            {
+                GameWidget?.CallFunctionByNameWithArguments($"SetWritable {isWritable}", true);
+            }
         }
 
         public void AddMessage(bool isServerMessage, string sender, string message)
@@ -57,6 +76,53 @@ namespace WukongMp.Api.UI
             }
         }
 
+        public unsafe void AddMessageWithColor(bool showSender, string senderName, string message, FLinearColor messageColor)
+        {
+            if (GameWidget == null ||
+                AddMessageWithColor_ShowSender_PropertyAddress == null ||
+                AddMessageWithColor_MessageId_PropertyAddress == null ||
+                AddMessageWithColor_User_PropertyAddress == null ||
+                AddMessageWithColor_Message_PropertyAddress == null ||
+                AddMessageWithColor_MessageColor_PropertyAddress == null)
+            {
+                Logging.LogError("GameWidget or property address is null in WBP_MultiplayerChat_C:AddMessageWithColor.");
+                return;
+            }
+
+            if (!AddMessageWithColor_IsValid)
+            {
+                Logging.LogError("Function WBP_MultiplayerChat_C:AddMessageWithColor is not valid.");
+                return;
+            }
+
+            Logging.LogDebug("Calling AddMessage function with message {Message} from {Sender}", message, senderName);
+
+            var messageId = ++_messageId;
+            if (!_levelLoaded)
+            {
+                _messageQueue.Enqueue(new MessageEntry { Color = messageColor, Message = message, Sender = senderName, MessageId = messageId, ShowSender = showSender});
+            }
+            else
+            {
+                byte* ptr = stackalloc byte[(int)(uint)(AddMessageWithColor_ParamsSize + 16)];
+                int num = (int)((16L - (long)ptr) & 0xF);
+                byte* ptr2 = ptr + num;
+                System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddMessageWithColor_ParamsSize);
+                IntPtr intPtr = new IntPtr(ptr2);
+
+                BoolMarshaler.ToNative(IntPtr.Add(intPtr, AddMessageWithColor_ShowSender_Offset), 0, AddMessageWithColor_ShowSender_PropertyAddress.Address, showSender);
+                BlittableTypeMarshaler<int>.ToNative(IntPtr.Add(intPtr, AddMessageWithColor_MessageId_Offset), 0, AddMessageWithColor_MessageId_PropertyAddress.Address, messageId);
+                FStringMarshaler.ToNative(IntPtr.Add(intPtr, AddMessageWithColor_User_Offset), 0, AddMessageWithColor_User_PropertyAddress.Address, senderName);
+                FStringMarshaler.ToNative(IntPtr.Add(intPtr, AddMessageWithColor_Message_Offset), 0, AddMessageWithColor_Message_PropertyAddress.Address, message);
+                BlittableTypeMarshaler<FLinearColor>.ToNative(IntPtr.Add(intPtr, AddMessageWithColor_MessageColor_Offset), 0, AddMessageWithColor_MessageColor_PropertyAddress.Address, messageColor);
+
+                NativeReflection.InvokeFunctionOptimized(GameWidget.Address, AddMessageWithColor_FunctionAddress, intPtr, AddMessageWithColor_ParamsSize);
+
+                NativeReflection.DestroyValue_InContainer(AddMessageWithColor_User_PropertyAddress.Address, intPtr);
+                NativeReflection.DestroyValue_InContainer(AddMessageWithColor_Message_PropertyAddress.Address, intPtr);
+            }
+        }
+
         public override void SetVisibility(bool visible)
         {
             base.SetVisibility(visible);
@@ -72,6 +138,10 @@ namespace WukongMp.Api.UI
                 while (_commandQueue.TryDequeue(out var command))
                 {
                     GameWidget.CallFunctionByNameWithArguments(command, true);
+                }
+                while (_messageQueue.TryDequeue(out var message))
+                {
+                    AddMessageWithColor(message.ShowSender, message.Sender, message.Message, message.Color);
                 }
             }
 
@@ -210,6 +280,27 @@ namespace WukongMp.Api.UI
         private static FFieldAddress? IsChatVisible_ReturnValue_PropertyAddress;
         private static int IsChatVisible_ReturnValue_Offset;
 
+        // AddMessageWithColor function
+        private static bool AddMessageWithColor_IsValid;
+        private static IntPtr AddMessageWithColor_FunctionAddress;
+        private static int AddMessageWithColor_ParamsSize;
+
+        private static bool AddMessageWithColor_ShowSender_IsValid;
+        private static FFieldAddress? AddMessageWithColor_ShowSender_PropertyAddress;
+        private static int AddMessageWithColor_ShowSender_Offset;
+        private static bool AddMessageWithColor_MessageId_IsValid;
+        private static FFieldAddress? AddMessageWithColor_MessageId_PropertyAddress;
+        private static int AddMessageWithColor_MessageId_Offset;
+        private static bool AddMessageWithColor_User_IsValid;
+        private static FFieldAddress? AddMessageWithColor_User_PropertyAddress;
+        private static int AddMessageWithColor_User_Offset;
+        private static bool AddMessageWithColor_Message_IsValid;
+        private static FFieldAddress? AddMessageWithColor_Message_PropertyAddress;
+        private static int AddMessageWithColor_Message_Offset;
+        private static bool AddMessageWithColor_MessageColor_IsValid;
+        private static FFieldAddress? AddMessageWithColor_MessageColor_PropertyAddress;
+        private static int AddMessageWithColor_MessageColor_Offset;
+
         public static void InitNativeFunctions()
         {
             IntPtr @class = NativeReflection.GetClass(ChatWidgetPath);
@@ -222,6 +313,27 @@ namespace WukongMp.Api.UI
             IsChatVisible_IsValid = IsChatVisible_FunctionAddress != IntPtr.Zero && IsChatVisible_ReturnValue_IsValid;
             if (!IsChatVisible_IsValid)
                 Logging.LogError("Function WBP_MultiplayerChat_C:IsChatVisible is not valid.");
+
+            AddMessageWithColor_FunctionAddress = NativeReflectionCached.GetFunction(@class, "AddMessageWithColor");
+            AddMessageWithColor_ParamsSize = NativeReflection.GetFunctionParamsSize(AddMessageWithColor_FunctionAddress);
+            NativeReflectionCached.GetPropertyRef(ref AddMessageWithColor_ShowSender_PropertyAddress, AddMessageWithColor_FunctionAddress, "ShowSender");
+            AddMessageWithColor_ShowSender_Offset = NativeReflectionCached.GetPropertyOffset(AddMessageWithColor_FunctionAddress, "ShowSender");
+            AddMessageWithColor_ShowSender_IsValid = NativeReflectionCached.ValidatePropertyClass(AddMessageWithColor_FunctionAddress, "ShowSender", Classes.FBoolProperty);
+            NativeReflectionCached.GetPropertyRef(ref AddMessageWithColor_MessageId_PropertyAddress, AddMessageWithColor_FunctionAddress, "MessageId");
+            AddMessageWithColor_MessageId_Offset = NativeReflectionCached.GetPropertyOffset(AddMessageWithColor_FunctionAddress, "MessageId");
+            AddMessageWithColor_MessageId_IsValid = NativeReflectionCached.ValidatePropertyClass(AddMessageWithColor_FunctionAddress, "MessageId", Classes.FIntProperty);
+            NativeReflectionCached.GetPropertyRef(ref AddMessageWithColor_User_PropertyAddress, AddMessageWithColor_FunctionAddress, "User");
+            AddMessageWithColor_User_Offset = NativeReflectionCached.GetPropertyOffset(AddMessageWithColor_FunctionAddress, "User");
+            AddMessageWithColor_User_IsValid = NativeReflectionCached.ValidatePropertyClass(AddMessageWithColor_FunctionAddress, "User", Classes.FStrProperty);
+            NativeReflectionCached.GetPropertyRef(ref AddMessageWithColor_Message_PropertyAddress, AddMessageWithColor_FunctionAddress, "Message");
+            AddMessageWithColor_Message_Offset = NativeReflectionCached.GetPropertyOffset(AddMessageWithColor_FunctionAddress, "Message");
+            AddMessageWithColor_Message_IsValid = NativeReflectionCached.ValidatePropertyClass(AddMessageWithColor_FunctionAddress, "Message", Classes.FStrProperty);
+            NativeReflectionCached.GetPropertyRef(ref AddMessageWithColor_MessageColor_PropertyAddress, AddMessageWithColor_FunctionAddress, "MessageColor");
+            AddMessageWithColor_MessageColor_Offset = NativeReflectionCached.GetPropertyOffset(AddMessageWithColor_FunctionAddress, "MessageColor");
+            AddMessageWithColor_MessageColor_IsValid = NativeReflectionCached.ValidatePropertyClass(AddMessageWithColor_FunctionAddress, "MessageColor", Classes.FStructProperty);
+            AddMessageWithColor_IsValid = AddMessageWithColor_FunctionAddress != IntPtr.Zero && AddMessageWithColor_ShowSender_IsValid && AddMessageWithColor_MessageId_IsValid && AddMessageWithColor_User_IsValid && AddMessageWithColor_Message_IsValid && AddMessageWithColor_MessageColor_IsValid;
+            if (!AddMessageWithColor_IsValid)
+                Logging.LogError("Function WBP_MultiplayerChat_C:AddMessageWithColor is not valid.");
         }
     }
 }

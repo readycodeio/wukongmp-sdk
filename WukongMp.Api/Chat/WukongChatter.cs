@@ -2,6 +2,7 @@ using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -71,6 +72,7 @@ public class WukongChatter : IDisposable
     private void OnGetMessage(ChatMessage message)
     {
         var senderNickname = message.IsServer ? "Server" : message.Nickname!;
+        var messageColor = message.IsServer ? Constants.ServerMessageColor : Constants.PlayerMessageColor;
         var translatedMessage = message.Message;
         if (message.IsServer)
         {
@@ -78,13 +80,13 @@ public class WukongChatter : IDisposable
         }
 
         Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
-        _widgetManager.AddChatMessage(message.IsServer, senderNickname, translatedMessage);
+        _widgetManager.AddChatMessage(message.IsServer, senderNickname, translatedMessage, messageColor);
     }
 
     public void AddLocalServerMessage(string message, params string[] placeholders)
     {
         var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
-        _widgetManager.AddChatMessage(true, "Server", translatedMessage);
+        _widgetManager.AddChatMessage(true, "Server", translatedMessage, Constants.ServerMessageColor);
     }
 
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
@@ -95,8 +97,6 @@ public class WukongChatter : IDisposable
         ref var player = ref playerEntity.Value.GetState();
         Logging.LogDebug("Player {PlayerName} joined the room", player.NickName);
         SendServerMessage("PlayerJoined", player.NickName);
-
-
     }
 
     private void OnOtherPlayerOutsideAreaHandler(PlayerId arg1, AreaId arg2, ReadyM.Api.Multiplayer.Common.OtherPlayerOutsideAreaReason arg3)

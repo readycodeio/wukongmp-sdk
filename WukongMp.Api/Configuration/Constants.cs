@@ -33,6 +33,9 @@ namespace WukongMp.Api.Configuration
         public const string SupremeInspectorFirewallName = "BP_szlc_wanglingguan_mf_hq";
         public static readonly FVector SupremeInspectorFirewallLocation = new(107491.700, 92122.520, 15129.590);
 
+        public static readonly FLinearColor ServerMessageColor = new(0.3f, 0.3f, 0.3f, 1f);
+        public static readonly FLinearColor PlayerMessageColor = new(0.9f, 0.9f, 0.9f, 1f);
+
         public static readonly HashSet<int> InstantTriggerSequences =
         [
             30105200, // act 3 boss transition to 2nd phase

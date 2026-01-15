@@ -207,7 +207,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public void ToggleChatVisibility() => _chatWidget.Value.ToggleVisibility();
 
-    public void AddChatMessage(bool isSystemMessage, string sender, string message) => _chatWidget.Value.AddMessage(isSystemMessage, sender, message);
+    public void AddChatMessage(bool isSystemMessage, string sender, string message, FLinearColor color) => _chatWidget.Value.AddMessageWithColor(!isSystemMessage, sender, message, color);
 
     public bool ChatHasFocus() => _chatWidget.Value.HasFocus();
 
