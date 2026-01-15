@@ -235,5 +235,5 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public string CommitCommand() => _commandConsoleWidget.Value.CommitCommand();
 
-    public void AddMessageToConsole(string message) => _commandConsoleWidget.Value.AddMessage(message);
+    public void AddMessageToConsole(string message) => _commandConsoleWidget.Value.AddMessage("> " + message);
 }
