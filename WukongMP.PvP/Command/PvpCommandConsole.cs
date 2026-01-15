@@ -1,8 +1,11 @@
-﻿using System;
+﻿using b1;
+using BtlShare;
+using System;
+using System.Globalization;
 using WukongMp.Api;
 using WukongMp.Api.Chat;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.Command;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -18,6 +21,7 @@ internal class PvpCommandConsole : IDisposable
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongAreaState _areaState;
+    private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
 
     public PvpCommandConsole(
         WukongCommandConsole wukongCommandConsole,
@@ -47,6 +51,10 @@ internal class PvpCommandConsole : IDisposable
     {
         _wukongCommandConsole.AddCommand("/spawn", new ConsoleCommand(RequestSpawn));
         _wukongCommandConsole.AddCommand("/spectator", new ConsoleCommand(SetSpectatorStatus));
+        _wukongCommandConsole.AddCommand("/instant_cooldown", new ConsoleCommand(ToggleSkillsCooldown));
+        _wukongCommandConsole.AddCommand("/infinite_mana", new ConsoleCommand(ToggleInfiniteMana));
+        _wukongCommandConsole.AddCommand("/spirit_cooldown", new ConsoleCommand(SetSpiritCooldown));
+        _wukongCommandConsole.AddCommand("/infinite_vessel", new ConsoleCommand(ToggleInfiniteVessel));
     }
 
     private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -117,5 +125,98 @@ internal class PvpCommandConsole : IDisposable
                 pvp.IsSpectator = !pvp.IsSpectator;
             }
         }
+    }
+
+    private void ToggleInfiniteMana(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        ref var localState = ref mainEntity.GetLocalState();
+        if (localState.Pawn != null)
+        {
+            PlayerUtils.ResetMana(localState.Pawn);
+        }
+
+        localState.HasInfiniteMana = !localState.HasInfiniteMana;
+        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteMana ? "InfManaEnabled" : "InfManaDisabled", NickName);
+    }
+
+    private void SetSpiritCooldown(ReadOnlyMemory<string> args)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        bool success = float.TryParse(args.Span[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float spiritCooldownTime);
+        if (!success)
+        {
+            _wukongChatter.AddLocalServerMessage("InvalidCooldown");
+            return;
+        }
+
+        ref var localState = ref mainEntity.GetLocalState();
+        if (localState.Pawn != null)
+        {
+            var events = BUS_EventCollectionCS.Get(localState.Pawn);
+            mainEntity.GetLocalState().ShouldSetSpiritCooldown = true;
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.VigorEnergyMax));
+            mainEntity.GetLocalState().ShouldSetSpiritCooldown = false;
+        }
+
+        mainEntity.GetLocalState().SpiritCooldownEnabled = true;
+        mainEntity.GetLocalState().SpiritCooldownTime = spiritCooldownTime;
+        _wukongChatter.SendServerMessage("CustomSpiritCooldown", NickName, spiritCooldownTime.ToString());
+    }
+
+    private void ToggleInfiniteVessel(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        ref var localState = ref mainEntity.GetLocalState();
+        if (localState.Pawn != null)
+        {
+            var events = BUS_EventCollectionCS.Get(localState.Pawn);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.FabaoEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.FabaoEnergyMax));
+        }
+
+        mainEntity.GetLocalState().HasInfiniteVessel = !mainEntity.GetLocalState().HasInfiniteVessel;
+        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", NickName);
+    }
+
+    private void ToggleSkillsCooldown(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            return;
+        }
+
+        ref var localState = ref mainEntity.GetLocalState();
+        var events = BUS_EventCollectionCS.Get(localState.Pawn);
+        events?.Evt_ResetSkillCD.Invoke();
+        localState.InstantSkillCooldown = !localState.InstantSkillCooldown;
+        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", NickName);
     }
 }

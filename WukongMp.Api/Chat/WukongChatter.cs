@@ -1,15 +1,7 @@
-using b1;
-using b1.BGW;
-using BtlShare;
 using Friflo.Engine.ECS;
-using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnrealEngine.Engine;
-using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -22,21 +14,14 @@ public class WukongChatter : IDisposable
     private readonly ClientState _state;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
-    private readonly WukongServerRpcCallbacks _serverRpc;
     private readonly WukongWidgetManager _widgetManager;
-    private readonly WukongEventBus _eventBus;
-    private readonly IClientEcsUpdateLoop _ecsLoop;
-
     private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
 
     public WukongChatter(
         ClientState state,
         WukongPlayerState playerState,
         WukongRpcCallbacks rpc,
-        WukongServerRpcCallbacks serverRpc,
-        WukongWidgetManager widgetManager,
-        WukongEventBus eventBus,
-        IClientEcsUpdateLoop ecsLoop
+        WukongWidgetManager widgetManager
     )
     {
         Logging.LogDebug("Initializing WukongChatter");
@@ -44,15 +29,10 @@ public class WukongChatter : IDisposable
         _state = state;
         _playerState = playerState;
         _rpc = rpc;
-        _serverRpc = serverRpc;
         _widgetManager = widgetManager;
-        _eventBus = eventBus;
-        _ecsLoop = ecsLoop;
 
         _state.OnJoinedArea += OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
-
-        _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
 
         _rpc.OnGetChatMessage += OnGetMessage;
     }
@@ -63,8 +43,6 @@ public class WukongChatter : IDisposable
 
         _state.OnJoinedArea -= OnJoinedAreaHandler;
         _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
-
-        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
 
         _rpc.OnGetChatMessage -= OnGetMessage;
     }
@@ -135,14 +113,4 @@ public class WukongChatter : IDisposable
         var nickname = player.NickName;
         AddLocalServerMessage("PlayerLeft", [nickname]);
     }
-
-    private void OnLoadingScreenClose()
-    {
-        if (_eventBus.IsGameplayLevel && _areaState.CurrentArea.HasValue && _areaState.CurrentArea.Value.Room.CheatsAllowed)
-        {
-            AddLocalServerMessage("CheatsEnabled");
-            return;
-        }
-    }
-
 }

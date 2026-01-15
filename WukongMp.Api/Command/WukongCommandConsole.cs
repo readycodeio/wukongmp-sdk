@@ -19,8 +19,11 @@ public class WukongCommandConsole : IDisposable
     private readonly WukongConnectionManager _connection;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
+    private readonly WukongServerRpcCallbacks _serverRpc;
     private readonly WukongChatter _wukongChatter;
     private readonly WukongWidgetManager _widgetManager;
+    private readonly WukongEventBus _eventBus;
+    private readonly WukongAreaState _areaState;
     private readonly IClientEcsUpdateLoop _ecsLoop;
 
     private readonly Dictionary<string, ConsoleCommand> _commands = new();
@@ -31,8 +34,11 @@ public class WukongCommandConsole : IDisposable
         WukongConnectionManager connection,
         WukongPlayerState playerState,
         WukongRpcCallbacks rpc,
+        WukongServerRpcCallbacks serverRpc,
         WukongChatter wukongChatter,
         WukongWidgetManager widgetManager,
+        WukongEventBus eventBus,
+        WukongAreaState areaState,
         IClientEcsUpdateLoop ecsLoop
     )
     {
@@ -41,15 +47,22 @@ public class WukongCommandConsole : IDisposable
         _connection = connection;
         _playerState = playerState;
         _rpc = rpc;
+        _serverRpc = serverRpc;
         _wukongChatter = wukongChatter;
         _widgetManager = widgetManager;
+        _eventBus = eventBus;
+        _areaState = areaState;
         _ecsLoop = ecsLoop;
+
+        _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
 
         SetupCommands();
     }
 
     public void Dispose()
     {
+        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
+
         Logging.LogDebug("Disposing WukongCommandConsole");
     }
 
@@ -78,6 +91,7 @@ public class WukongCommandConsole : IDisposable
         AddCommand("/rebirth", new ConsoleCommand(RequestRebirth));
         AddCommand("/rebirth_shrine", new ConsoleCommand(RequestPointRebirth));
 #if DEBUG
+        AddCommand("/cheats", new ConsoleCommand(ToggleCheats));
         AddCommand("/softlock", new ConsoleCommand(ResolveSoftlock));
         AddCommand("/disconnect", new ConsoleCommand(RequestDisconnect));
         AddCommand("/command", new ConsoleCommand(ExecuteConsoleCommand));
@@ -104,6 +118,20 @@ public class WukongCommandConsole : IDisposable
         PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
         _rpc.SendRebirthPlayer(playerId);
         _wukongChatter.SendServerMessage("PlayerRequestedRebirth", NickName);
+    }
+
+    private void ToggleCheats(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.IsMasterClient && _areaState.CurrentArea.HasValue)
+        {
+            var roomComp = _areaState.CurrentArea.Value.Room;
+            // TODO: Move to server rpc response.
+            _wukongChatter.SendServerMessage(roomComp.CheatsAllowed ? "CheatsDisabled" : "CheatsEnabled");
+            _serverRpc.SendEnableCheats(_areaState.CurrentArea.Value.Scope.AreaId, !roomComp.CheatsAllowed);
+        }
     }
 
     private void ResolveSoftlock(ReadOnlyMemory<string> _)
@@ -199,5 +227,14 @@ public class WukongCommandConsole : IDisposable
     private List<string> GetAvailableCommands()
     {
         return [.. _commands.Keys];
+    }
+
+    private void OnLoadingScreenClose()
+    {
+        if (_eventBus.IsGameplayLevel && _areaState.CurrentArea.HasValue && _areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            _wukongChatter.AddLocalServerMessage("CheatsEnabled");
+            return;
+        }
     }
 }
