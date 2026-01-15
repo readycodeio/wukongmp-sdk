@@ -229,6 +229,18 @@ namespace WukongMp.PvP
                 DI.Instance.WidgetManager.CommandSelectDown();
             });
 
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.DOWN, () =>
+            {
+                _logger.LogDebug("ALT + DOWN");
+                DI.Instance.WidgetManager.CommandHistoryDown();
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.UP, () =>
+            {
+                _logger.LogDebug("ALT + UP");
+                DI.Instance.WidgetManager.CommandHistoryUp();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(Key.TAB, () =>
             {
                 _logger.LogDebug("TAB");

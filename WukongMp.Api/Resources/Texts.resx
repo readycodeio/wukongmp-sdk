@@ -150,6 +150,9 @@
   <data name="ChatHelperDescription" xml:space="preserve">
     <value>ENTER - Type/Send   |   K - Hide/Show Chat</value>
   </data>
+  <data name="CommandHelperDescription" xml:space="preserve">
+    <value>ENTER - Type   |   ~- Hide/Show</value>
+  </data>
   <data name="Connected" xml:space="preserve">
     <value>Players in zone</value>
   </data>

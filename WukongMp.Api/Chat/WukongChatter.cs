@@ -87,11 +87,6 @@ public class WukongChatter : IDisposable
         _widgetManager.AddChatMessage(true, "Server", translatedMessage);
     }
 
-    public void AddLocalCommandMessage(string message)
-    {
-        _widgetManager.AddChatMessage(true, "Command", message);
-    }
-
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
     {
         var playerEntity = _playerState.LocalPlayerEntity;

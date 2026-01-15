@@ -14,8 +14,9 @@ public class CommandConsoleWidget : GameWidgetBase
 
     protected override void PostInitialize()
     {
+        GameWidget?.AddToViewport(1001);
         InitNativeFunctions();
-        SetHelperText(Texts.ChatHelperDescription);
+        SetHelperText(Texts.CommandHelperDescription);
     }
 
     public override void SetVisibility(bool visible)
@@ -70,6 +71,22 @@ public class CommandConsoleWidget : GameWidgetBase
         if (HasFocus())
         {
             GameWidget?.CallFunctionByNameWithArguments("SelectSuggestion", true);
+        }
+    }
+
+    public void SetHistoryNext()
+    {
+        if (HasFocus())
+        {
+            GameWidget?.CallFunctionByNameWithArguments("SetHistoryNext", true);
+        }
+    }
+
+    public void SetHistoryPrev()
+    {
+        if (HasFocus())
+        {
+            GameWidget?.CallFunctionByNameWithArguments("SetHistoryPrev", true);
         }
     }
 

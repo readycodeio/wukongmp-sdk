@@ -62,7 +62,7 @@ internal class PvpCommandConsole : IDisposable
         var unitName = args.Span[0];
         if (!UnitPathsConfig.IsValidUnitName(unitName))
         {
-            _wukongChatter.AddLocalCommandMessage($"${Texts.InvalidUnitName}: \"{args.Span[0]}\"");
+            _wukongCommandConsole.AddMessageToConsole($"${Texts.InvalidUnitName}: \"{args.Span[0]}\"");
             return;
         }
 
@@ -97,7 +97,7 @@ internal class PvpCommandConsole : IDisposable
                 }
                 else
                 {
-                    _wukongChatter.AddLocalCommandMessage($"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
+                    _wukongCommandConsole.AddLocalizedMessageToConsole($"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
                 }
 
                 break;
@@ -134,7 +134,7 @@ internal class PvpCommandConsole : IDisposable
 
         if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
             return;
         }
 
@@ -155,14 +155,20 @@ internal class PvpCommandConsole : IDisposable
 
         if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
+            return;
+        }
+
+        if (args.Length < 1)
+        {
+            _wukongCommandConsole.AddLocalizedMessageToConsole("InvalidCooldown");
             return;
         }
 
         bool success = float.TryParse(args.Span[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float spiritCooldownTime);
-        if (!success)
+        if (!success || spiritCooldownTime < 0)
         {
-            _wukongChatter.AddLocalServerMessage("InvalidCooldown");
+            _wukongCommandConsole.AddLocalizedMessageToConsole("InvalidCooldown");
             return;
         }
 
@@ -187,7 +193,7 @@ internal class PvpCommandConsole : IDisposable
 
         if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
             return;
         }
 
@@ -209,7 +215,7 @@ internal class PvpCommandConsole : IDisposable
 
         if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            _wukongChatter.AddLocalServerMessage("CheatsAreDisabled");
+            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
             return;
         }
 

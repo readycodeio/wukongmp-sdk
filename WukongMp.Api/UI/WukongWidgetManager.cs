@@ -225,9 +225,15 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public void CommandSelectDown() => _commandConsoleWidget.Value.SelectDown();
 
+    public void CommandHistoryUp() => _commandConsoleWidget.Value.SetHistoryNext();
+
+    public void CommandHistoryDown() => _commandConsoleWidget.Value.SetHistoryPrev();
+
     public void CommandSelectSuggestion() => _commandConsoleWidget.Value.SelectSuggestion();
 
     public void SetCommandInputFocus() => _commandConsoleWidget.Value.SetInputFocus();
 
     public string CommitCommand() => _commandConsoleWidget.Value.CommitCommand();
+
+    public void AddMessageToConsole(string message) => _commandConsoleWidget.Value.AddMessage(message);
 }

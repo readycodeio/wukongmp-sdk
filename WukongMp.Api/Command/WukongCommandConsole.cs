@@ -8,6 +8,7 @@ using System.Linq;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Chat;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -82,6 +83,17 @@ public class WukongCommandConsole : IDisposable
             _commands.Add(command, handler);
             _widgetManager.UpdateConsoleCommands(GetAvailableCommands());
         }
+    }
+
+    public void AddMessageToConsole(string message)
+    {
+        _widgetManager.AddMessageToConsole(message);
+    }
+
+    public void AddLocalizedMessageToConsole(string message, params string[] placeholders)
+    {
+        var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
+        _widgetManager.AddMessageToConsole(translatedMessage);
     }
 
     private void SetupCommands()

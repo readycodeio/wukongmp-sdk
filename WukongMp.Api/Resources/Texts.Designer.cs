@@ -187,6 +187,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ENTER - Type   |   ~- Hide/Show.
+        /// </summary>
+        public static string CommandHelperDescription {
+            get {
+                return ResourceManager.GetString("CommandHelperDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Players in zone.
         /// </summary>
         public static string Connected {
