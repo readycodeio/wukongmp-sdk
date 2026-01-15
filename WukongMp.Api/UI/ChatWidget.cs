@@ -50,10 +50,7 @@ namespace WukongMp.Api.UI
 
         public void SetWritable(bool isWritable)
         {
-            if (HasFocus())
-            {
-                GameWidget?.CallFunctionByNameWithArguments($"SetWritable {isWritable}", true);
-            }
+            GameWidget?.CallFunctionByNameWithArguments($"SetWritable {isWritable}", true);
         }
 
         public void AddMessage(bool isServerMessage, string sender, string message)
