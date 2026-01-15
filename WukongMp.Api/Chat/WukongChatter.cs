@@ -12,14 +12,12 @@ namespace WukongMp.Api.Chat;
 
 public class WukongChatter : IDisposable
 {
-    private readonly ClientState _state;
     private readonly WukongPlayerState _playerState;
     private readonly WukongRpcCallbacks _rpc;
     private readonly WukongWidgetManager _widgetManager;
     private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
 
     public WukongChatter(
-        ClientState state,
         WukongPlayerState playerState,
         WukongRpcCallbacks rpc,
         WukongWidgetManager widgetManager
@@ -27,13 +25,9 @@ public class WukongChatter : IDisposable
     {
         Logging.LogDebug("Initializing WukongChatter");
 
-        _state = state;
         _playerState = playerState;
         _rpc = rpc;
         _widgetManager = widgetManager;
-
-        _state.OnJoinedArea += OnJoinedAreaHandler;
-        _state.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideAreaHandler;
 
         _rpc.OnGetChatMessage += OnGetMessage;
     }
@@ -41,9 +35,6 @@ public class WukongChatter : IDisposable
     public void Dispose()
     {
         Logging.LogDebug("Disposing WukongChatter");
-
-        _state.OnJoinedArea -= OnJoinedAreaHandler;
-        _state.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideAreaHandler;
 
         _rpc.OnGetChatMessage -= OnGetMessage;
     }
@@ -87,25 +78,5 @@ public class WukongChatter : IDisposable
     {
         var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
         _widgetManager.AddChatMessage(true, "Server", translatedMessage, Constants.ServerMessageColor);
-    }
-
-    private void OnJoinedAreaHandler(AreaId areaId, Entity entity)
-    {
-        var playerEntity = _playerState.LocalPlayerEntity;
-        if (playerEntity == null)
-            return;
-        ref var player = ref playerEntity.Value.GetState();
-        Logging.LogDebug("Player {PlayerName} joined the room", player.NickName);
-        SendServerMessage("PlayerJoined", player.NickName);
-    }
-
-    private void OnOtherPlayerOutsideAreaHandler(PlayerId arg1, AreaId arg2, ReadyM.Api.Multiplayer.Common.OtherPlayerOutsideAreaReason arg3)
-    {
-        var playerEntity = _playerState.GetPlayerById(arg1);
-        if (playerEntity == null)
-            return;
-        ref var player = ref playerEntity.Value.GetState();
-        var nickname = player.NickName;
-        AddLocalServerMessage("PlayerLeft", [nickname]);
     }
 }
