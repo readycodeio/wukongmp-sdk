@@ -210,9 +210,9 @@ namespace WukongMp.PvP
                     DI.Instance.WidgetManager.ToggleChatVisibility();
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(Key.OEM_3, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F9, () =>
             {
-                _logger.LogDebug("`");
+                _logger.LogDebug("F9");
                 if (DI.Instance.WukongInputManager.CanApplyInput())
                     DI.Instance.WidgetManager.ToggleCommandVisibility();
             });

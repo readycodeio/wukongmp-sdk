@@ -151,7 +151,7 @@
     <value>ENTER - Pisz/Wyślij   |   K - Ukryj/Pokaż Czat</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
-    <value>ENTER - Pisz |   ~ - Ukryj/Pokaż</value>
+    <value>ENTER - Pisz |   F9 - Ukryj/Pokaż</value>
   </data>
   <data name="Connected" xml:space="preserve">
     <value>Gracze w lokacji</value>

@@ -151,7 +151,7 @@
     <value>ENTER - Digitar/Enviar | K - Ocultar/Mostrar Chat</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
-    <value>ENTER - Digitar | ~ - Ocultar/Mostrar</value>
+    <value>ENTER - Digitar | F9 - Ocultar/Mostrar</value>
   </data>
   <data name="Connected" xml:space="preserve">
     <value>Jogadores na zona</value>

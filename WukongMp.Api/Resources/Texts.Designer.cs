@@ -187,7 +187,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ENTER - Type   |   ~- Hide/Show.
+        ///   Looks up a localized string similar to ENTER - Type   |   F9 - Hide/Show.
         /// </summary>
         public static string CommandHelperDescription {
             get {

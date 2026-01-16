@@ -151,7 +151,7 @@
     <value>ENTER - Eingeben/Senden | K - Chat Ausblenden/Einblenden</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
-    <value>ENTER - Eingeben | ~ - Ausblenden/Einblenden</value>
+    <value>ENTER - Eingeben | F9 - Ausblenden/Einblenden</value>
   </data>
   <data name="Connected" xml:space="preserve">
     <value>Spieler in der Zone</value>

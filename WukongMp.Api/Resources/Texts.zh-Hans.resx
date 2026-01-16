@@ -151,7 +151,7 @@
     <value>ENTER - 输入/发送 | K - 隐藏/显示对话框</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
-    <value>ENTER - 输入 | ~ - 隐藏/显示</value>
+    <value>ENTER - 输入 | F9 - 隐藏/显示</value>
   </data>
   <data name="Connected" xml:space="preserve">
     <value>本区玩家</value>

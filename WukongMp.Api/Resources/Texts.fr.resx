@@ -151,7 +151,7 @@
     <value>ENTRÉE - Écrire/Envoyer | K - Cacher/Afficher Chat</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
-    <value>ENTRÉE - Écrire | ~ - Cacher/Afficher</value>
+    <value>ENTRÉE - Écrire | F9 - Cacher/Afficher</value>
   </data>
   <data name="Connected" xml:space="preserve">
     <value>Joueurs dans la zone</value>
