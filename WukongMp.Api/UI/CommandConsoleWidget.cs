@@ -154,6 +154,36 @@ public class CommandConsoleWidget : GameWidgetBase
         NativeReflection.DestroyValue_InContainer(SetAvailableCommands_Commands_PropertyAddress.Address, intPtr);
     }
 
+    public unsafe void AddCommandParameters(string command, List<string> availableParameters)
+    {
+        if (GameWidget == null || AddCommandParameters_Command_PropertyAddress == null || AddCommandParameters_AvailableParameters_PropertyAddress == null)
+        {
+            Logging.LogError("GameWidget or property address is null in WBP_CommandConsole_C:AddCommandParameters.");
+            return;
+        }
+
+        if (!AddCommandParameters_IsValid)
+        {
+            Logging.LogError("Function WBP_CommandConsole_C:AddCommandParameters is not valid.");
+            return;
+        }
+
+        byte* ptr = stackalloc byte[(int)(uint)(AddCommandParameters_ParamsSize + 16)];
+        int num = (int)((16L - (long)ptr) & 0xF);
+        byte* ptr2 = ptr + num;
+        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddCommandParameters_ParamsSize);
+        IntPtr intPtr = new IntPtr(ptr2);
+
+        FStringMarshaler.ToNative(IntPtr.Add(intPtr, AddCommandParameters_Command_Offset), 0, AddCommandParameters_Command_PropertyAddress.Address, command);
+        TArrayCopyMarshaler<string> readTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, AddCommandParameters_AvailableParameters_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
+        readTeamArrayCopyMarshaler.ToNative(IntPtr.Add(intPtr, AddCommandParameters_AvailableParameters_Offset), availableParameters);
+
+        NativeReflection.InvokeFunctionOptimized(GameWidget.Address, AddCommandParameters_FunctionAddress, intPtr, AddCommandParameters_ParamsSize);
+
+        NativeReflection.DestroyValue_InContainer(AddCommandParameters_Command_PropertyAddress.Address, intPtr);
+        NativeReflection.DestroyValue_InContainer(AddCommandParameters_AvailableParameters_PropertyAddress.Address, intPtr);
+    }
+
     public unsafe void AddMessage(string message)
     {
         if (GameWidget == null || AddMessage_Message_PropertyAddress == null)
@@ -270,6 +300,19 @@ public class CommandConsoleWidget : GameWidgetBase
     private static FFieldAddress? SetAvailableCommands_Commands_PropertyAddress;
     private static int SetAvailableCommands_Commands_Offset;
 
+    // AddCommandParameters function
+    private static bool AddCommandParameters_IsValid;
+    private static IntPtr AddCommandParameters_FunctionAddress;
+    private static int AddCommandParameters_ParamsSize;
+
+    private static bool AddCommandParameters_Command_IsValid;
+    private static FFieldAddress? AddCommandParameters_Command_PropertyAddress;
+    private static int AddCommandParameters_Command_Offset;
+
+    private static bool AddCommandParameters_AvailableParameters_IsValid;
+    private static FFieldAddress? AddCommandParameters_AvailableParameters_PropertyAddress;
+    private static int AddCommandParameters_AvailableParameters_Offset;
+
     // AddMessage function
     private static bool AddMessage_IsValid;
     private static IntPtr AddMessage_FunctionAddress;
@@ -318,6 +361,18 @@ public class CommandConsoleWidget : GameWidgetBase
         SetAvailableCommands_IsValid = SetAvailableCommands_FunctionAddress != IntPtr.Zero && SetAvailableCommands_Commands_IsValid;
         if (!SetAvailableCommands_IsValid)
             Logging.LogError("Function WBP_CommandConsole_C:SetAvailableCommands is not valid.");
+
+        AddCommandParameters_FunctionAddress = NativeReflectionCached.GetFunction(@class, "AddCommandParameters");
+        AddCommandParameters_ParamsSize = NativeReflection.GetFunctionParamsSize(AddCommandParameters_FunctionAddress);
+        NativeReflectionCached.GetPropertyRef(ref AddCommandParameters_Command_PropertyAddress, AddCommandParameters_FunctionAddress, "Command");
+        AddCommandParameters_Command_Offset = NativeReflectionCached.GetPropertyOffset(AddCommandParameters_FunctionAddress, "Command");
+        AddCommandParameters_Command_IsValid = NativeReflectionCached.ValidatePropertyClass(AddCommandParameters_FunctionAddress, "Command", Classes.FStrProperty);
+        NativeReflectionCached.GetPropertyRef(ref AddCommandParameters_AvailableParameters_PropertyAddress, AddCommandParameters_FunctionAddress, "AvailableParameters");
+        AddCommandParameters_AvailableParameters_Offset = NativeReflectionCached.GetPropertyOffset(AddCommandParameters_FunctionAddress, "AvailableParameters");
+        AddCommandParameters_AvailableParameters_IsValid = NativeReflectionCached.ValidatePropertyClass(AddCommandParameters_FunctionAddress, "AvailableParameters", Classes.FArrayProperty);
+        AddCommandParameters_IsValid = AddCommandParameters_FunctionAddress != IntPtr.Zero && AddCommandParameters_Command_IsValid && AddCommandParameters_AvailableParameters_IsValid;
+        if (!AddCommandParameters_IsValid)
+            Logging.LogError("Function WBP_CommandConsole_C:AddCommandParameters is not valid.");
 
         AddMessage_FunctionAddress = NativeReflectionCached.GetFunction(@class, "AddMessage");
         AddMessage_ParamsSize = NativeReflection.GetFunctionParamsSize(AddMessage_FunctionAddress);

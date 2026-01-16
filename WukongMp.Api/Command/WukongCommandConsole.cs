@@ -28,6 +28,7 @@ public class WukongCommandConsole : IDisposable
     private readonly IClientEcsUpdateLoop _ecsLoop;
 
     private readonly Dictionary<string, ConsoleCommand> _commands = new();
+    private readonly Dictionary<string, IEnumerable<string>> _commandsParams = new();
     private const char Separator = ' ';
     private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
 
@@ -76,12 +77,16 @@ public class WukongCommandConsole : IDisposable
         }
     }
 
-    public void AddCommand(string command, ConsoleCommand handler)
+    public void AddCommand(string command, ConsoleCommand handler, IEnumerable<string>? availableFirstParams = null)
     {
         if (!_commands.ContainsKey(command))
         {
             _commands.Add(command, handler);
-            _widgetManager.UpdateConsoleCommands(GetAvailableCommands());
+            if (availableFirstParams != null)
+            {
+                _commandsParams[command] = availableFirstParams;
+            }
+            _widgetManager.UpdateConsoleCommands(GetAvailableCommands(), _commandsParams);
         }
     }
 

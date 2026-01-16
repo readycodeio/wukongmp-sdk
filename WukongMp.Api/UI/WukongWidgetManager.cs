@@ -5,6 +5,7 @@ using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Command;
 using WukongMp.Api.Resources;
@@ -21,6 +22,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     private string _fullModVersion = "";
     private string _shortModVersion = "";
     private List<string> _availableCommands = [];
+    private Dictionary<string, IEnumerable<string>> _availableParameters = [];
 
     private readonly Lazy<CommandConsoleWidget> _commandConsoleWidget = new();
     private readonly Lazy<ChatWidget> _chatWidget = new();
@@ -74,7 +76,11 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         }
     }
 
-    public void UpdateConsoleCommands(List<string> commands) => _availableCommands = commands;
+    public void UpdateConsoleCommands(List<string> commands, Dictionary<string, IEnumerable<string>> availableParameters)
+    {
+        _availableCommands = commands;
+        _availableParameters = availableParameters;
+    }
 
     public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
 
@@ -187,6 +193,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _debugViewWidget.Value.Initialize();
 
             _commandConsoleWidget.Value.SetAvailableCommands(_availableCommands);
+            foreach (var kvp in _availableParameters)
+                _commandConsoleWidget.Value.AddCommandParameters(kvp.Key, kvp.Value.ToList());
         }
     }
 

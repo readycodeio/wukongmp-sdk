@@ -105,5 +105,10 @@ namespace WukongMp.Api.Configuration
         {
             return Configurations.ContainsKey(TamerUtils.UnifyUnitName(unitName));
         }
+
+        public static IEnumerable<string> GetAllValidUnitNames()
+        {
+            return Configurations.Keys;
+        }
     }
 }

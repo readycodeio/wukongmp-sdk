@@ -49,7 +49,7 @@ internal class PvpCommandConsole : IDisposable
 
     private void SetupCommands()
     {
-        _wukongCommandConsole.AddCommand("/spawn", new ConsoleCommand(RequestSpawn));
+        _wukongCommandConsole.AddCommand("/spawn", new ConsoleCommand(RequestSpawn), UnitPathsConfig.GetAllValidUnitNames());
         _wukongCommandConsole.AddCommand("/spectator", new ConsoleCommand(SetSpectatorStatus));
         _wukongCommandConsole.AddCommand("/instant_cooldown", new ConsoleCommand(ToggleSkillsCooldown));
         _wukongCommandConsole.AddCommand("/infinite_mana", new ConsoleCommand(ToggleInfiniteMana));
