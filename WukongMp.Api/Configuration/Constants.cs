@@ -35,6 +35,7 @@ namespace WukongMp.Api.Configuration
 
         public static readonly FLinearColor ServerMessageColor = new(0.3f, 0.3f, 0.3f, 1f);
         public static readonly FLinearColor PlayerMessageColor = new(0.9f, 0.9f, 0.9f, 1f);
+        public static readonly FLinearColor EnemyPlayerMessageColor = new(1f, 0.3f, 0.3f, 1f);
 
         public static readonly HashSet<int> InstantTriggerSequences =
         [

@@ -1,6 +1,5 @@
-using Friflo.Engine.ECS;
+using b1;
 using ReadyM.Api.Multiplayer.Idents;
-using ReadyM.Relay.Client.State;
 using System;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -44,14 +43,17 @@ public class WukongChatter : IDisposable
         if (!string.IsNullOrWhiteSpace(message))
         {
             message = message.Trim();
-            SendChatMessage(NickName, message);
+            if (_playerState.LocalPlayerId.HasValue)
+                SendChatMessage(_playerState.LocalPlayerId.Value, NickName, message);
+            else
+                Logging.LogError("Cannot send chat message because local player ID is not set");
         }
     }
 
-    private void SendChatMessage(string nickname, string message)
+    private void SendChatMessage(PlayerId playerId, string nickname, string message)
     {
         Logging.LogDebug("Sending message {Message}", message);
-        _rpc.SendChatMessage(ChatMessage.CreateClientMessage(nickname, message));
+        _rpc.SendChatMessage(ChatMessage.CreateClientMessage(playerId, nickname, message));
     }
 
     public void SendServerMessage(string message, params string[] args)
@@ -62,16 +64,29 @@ public class WukongChatter : IDisposable
 
     private void OnGetMessage(ChatMessage message)
     {
-        var senderNickname = message.IsServer ? "Server" : message.Nickname!;
-        var messageColor = message.IsServer ? Constants.ServerMessageColor : Constants.PlayerMessageColor;
+        var isServer = message.PlayerId == PlayerId.Server;
+        var messageColor = isServer ? Constants.ServerMessageColor : Constants.PlayerMessageColor;
+
+        var sender = _playerState.GetMainCharacterById(message.PlayerId);
+        if (sender.HasValue && _playerState.LocalMainCharacter.HasValue)
+        {
+            var senderPawn = sender.Value.GetLocalState().Pawn;
+            var localPlayerPawn = _playerState.LocalMainCharacter.Value.GetLocalState().Pawn;
+            var isEnemy = BGUFunctionLibraryCS.BGUIsEnemyTeam(localPlayerPawn, senderPawn);
+            if (isEnemy)
+            {
+                messageColor = Constants.EnemyPlayerMessageColor;
+            }
+        }
+        var senderNickname = isServer ? "Server" : message.Nickname!;
         var translatedMessage = message.Message;
-        if (message.IsServer)
+        if (isServer)
         {
             translatedMessage = string.Format(Texts.ResourceManager.GetString(message.Message, Texts.Culture)!, [.. message.Placeholders]);
         }
 
-        Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message, senderNickname);
-        _widgetManager.AddChatMessage(message.IsServer, senderNickname, translatedMessage, messageColor);
+        Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message.Message, senderNickname);
+        _widgetManager.AddChatMessage(isServer, senderNickname, translatedMessage, messageColor);
     }
 
     public void AddLocalServerMessage(string message, params string[] placeholders)

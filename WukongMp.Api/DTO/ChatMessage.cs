@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LiteNetLib.Utils;
+using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.DTO;
@@ -18,9 +19,9 @@ public struct ChatMessage : INetSerializable
             => TextSerialize(writer, value, options);
     }
     
-    private ChatMessage(bool isServer, string? nickname, string message, string[] placeholders)
+    private ChatMessage(PlayerId playerId, string? nickname, string message, string[] placeholders)
     {
-        IsServer = isServer;
+        PlayerId = playerId;
         Nickname = nickname;
         Message = message;
         Placeholders = placeholders;
@@ -28,25 +29,25 @@ public struct ChatMessage : INetSerializable
 
     public static ChatMessage CreateServerMessage(string message, string[] placeholders)
     {
-        return new ChatMessage(true, "", message, placeholders);
+        return new ChatMessage(PlayerId.Server, "", message, placeholders);
     }
 
-    public static ChatMessage CreateClientMessage(string nickname, string message)
+    public static ChatMessage CreateClientMessage(PlayerId playerId, string nickname, string message)
     {
-        return new ChatMessage(false, nickname, message, []);
+        return new ChatMessage(playerId, nickname, message, []);
     }
 
-    public bool IsServer;
+    public PlayerId PlayerId;
     public string? Nickname;
     public string Message;
     public string[] Placeholders;
 
     public void Serialize(NetDataWriter writer)
     {
-        writer.Put(IsServer);
+        writer.Put(PlayerId);
         writer.Put(Message);
 
-        if (!IsServer)
+        if (PlayerId != PlayerId.Server)
         {
             writer.Put(Nickname);
         }
@@ -58,9 +59,9 @@ public struct ChatMessage : INetSerializable
 
     public void Deserialize(NetDataReader reader)
     {
-        IsServer = reader.GetBool();
+        PlayerId = reader.Get<PlayerId>();
         Message = reader.GetString();
-        if (!IsServer)
+        if (PlayerId != PlayerId.Server)
         {
             Nickname = reader.GetString();
         }
@@ -73,7 +74,7 @@ public struct ChatMessage : INetSerializable
     public static void TextSerialize(Utf8JsonWriter writer, ChatMessage obj, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
-        writer.WriteBoolean("isServer", obj.IsServer);
+        writer.WriteNumber("playerId", (uint)obj.PlayerId.RawValue);
         writer.WriteString("message", obj.Message);
         writer.WriteString("nickname", obj.Nickname);
         writer.WriteStartArray("placeholders");
@@ -84,7 +85,7 @@ public struct ChatMessage : INetSerializable
     {
         DebugJson.Assert(reader.TokenType == JsonTokenType.StartObject);
         
-        bool isServer = false;
+        PlayerId playerId = PlayerId.Invalid;
         string? nickname = null;
         string message = "";
         string[]? placeholders = null;
@@ -100,8 +101,8 @@ public struct ChatMessage : INetSerializable
 
             switch (propertyName)
             {
-                case "isServer":
-                    isServer = reader.GetBoolean();
+                case "playerId":
+                    playerId = new PlayerId((ushort)reader.GetUInt32());
                     break;
                 case "nickname":
                     nickname = reader.GetString();
@@ -117,6 +118,6 @@ public struct ChatMessage : INetSerializable
             }
         }
         
-        return new ChatMessage(isServer, nickname, message, placeholders ?? []);
+        return new ChatMessage(playerId, nickname, message, placeholders ?? []);
     }
 }
