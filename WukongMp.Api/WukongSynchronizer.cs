@@ -18,6 +18,7 @@ using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.MainCharacters;
 using WukongMp.Api.ECS.Systems.Tamers;
+using WukongMp.Api.FreeCamera;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 
@@ -51,6 +52,8 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         WukongWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
+        FreeCameraManager freeCameraManager,
+        FreeCameraMover freeCameraMover,
         ILogger logger)
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
     {
@@ -78,6 +81,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new EnableCollisionAfterCutsceneSystem(playerState));
         _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
         _syncGroup.Add(new UpdateCooldownSystem(playerState, eventBus, areaState));
+        _syncGroup.Add(new FreeCameraMovementSystem(playerState, eventBus, areaState, freeCameraManager, freeCameraMover));
 
         _syncGroup.Add(new DebugViewSystem(eventBus, widgetManager));
 

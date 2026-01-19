@@ -14,6 +14,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems.Tamers;
+using WukongMp.Api.FreeCamera;
 using WukongMp.Api.State;
 using WukongMp.PvP.ECS.Systems;
 using WukongMp.PvP.Gamemode;
@@ -45,9 +46,11 @@ internal class PvpSynchronizer : WukongSynchronizer
         PvpWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
+        FreeCameraManager freeCameraManager,
+        FreeCameraMover freeCameraMover,
         PvpMode pvpMode,
         ILogger logger)
-        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager.widgetManager, gameplayEventRouter, configuration, logger)
+        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager.widgetManager, gameplayEventRouter, configuration, freeCameraManager, freeCameraMover, logger)
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
 

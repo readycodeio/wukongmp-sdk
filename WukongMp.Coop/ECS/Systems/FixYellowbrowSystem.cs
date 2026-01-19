@@ -1,8 +1,8 @@
 ﻿using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.FreeCamera;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop.ECS.Systems;

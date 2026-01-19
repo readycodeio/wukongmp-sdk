@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using WukongMp.Api;
+using WukongMp.Api.FreeCamera;
 using WukongMp.PvP.Chat;
 using WukongMp.PvP.Command;
 using WukongMp.PvP.Configuration;
@@ -60,6 +61,8 @@ namespace WukongMp.PvP
                 widgetManager,
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,
+                DI.FreeCameraManager,
+                DI.FreeCameraMover,
                 pvp,
                 DI.Logger);
         }

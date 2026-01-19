@@ -10,6 +10,7 @@ using ReadyM.Relay.Client.State;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;

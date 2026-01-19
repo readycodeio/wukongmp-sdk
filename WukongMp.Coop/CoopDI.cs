@@ -5,6 +5,7 @@ using WukongMp.Coop.Configuration;
 using WukongMp.Coop.Gamemode;
 using WukongMp.Coop.UI;
 using WukongMp.Coop.Command;
+using WukongMp.Api.FreeCamera;
 
 namespace WukongMp.Coop
 {
@@ -62,6 +63,7 @@ namespace WukongMp.Coop
                 DI.GameplayConfiguration,
                 DI.ColliderDisableData,
                 DI.FreeCameraManager,
+                DI.FreeCameraMover,
                 DI.Logger);
         }
     }

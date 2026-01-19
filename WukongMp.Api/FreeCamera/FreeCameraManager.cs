@@ -1,11 +1,12 @@
-﻿using System;
-using b1;
+﻿using b1;
 using b1.BGW;
+using System;
+using System.Collections.Generic;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.UI;
+namespace WukongMp.Api.FreeCamera;
 
 public class FreeCameraManager
 {
@@ -146,5 +147,95 @@ public class FreeCameraManager
         _cachePlayerPawn = null;
         _isInFreeCameraMode = false;
         OnFreeCameraModeChanged?.Invoke(false);
+    }
+
+    public void MoveFreeCameraActor(FVector moveOffset, bool isLocal)
+    {
+        if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
+        {
+            return;
+        }
+
+        FVector actorLocation = _freeCameraActor.GetActorLocation();
+        FVector currentMoveOffset = (isLocal ? _freeCameraActor.GetActorTransform().TransformVectorNoScale(moveOffset) : moveOffset);
+        if (!MoveDetection(actorLocation, currentMoveOffset, out var adjustedMoveOffset, 0))
+        {
+            return;
+        }
+
+        _freeCameraActor.AddActorWorldOffset(adjustedMoveOffset, bSweep: true, out var sweepHitResult, bTeleport: false);
+        if (sweepHitResult.BlockingHit)
+        {
+            FVector planeNormal = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(in sweepHitResult.Normal);
+            FVector projectedMoveOffset = FVector.VectorPlaneProject(adjustedMoveOffset, planeNormal);
+            if (MoveDetection(actorLocation, projectedMoveOffset, out var outputOffset, 1))
+            {
+                _freeCameraActor.AddActorWorldOffset(outputOffset, bSweep: true, out var _, bTeleport: false);
+            }
+        }
+    }
+
+    private bool MoveDetection(FVector currentCameraPos, FVector moveOffset, out FVector adjustedMoveOffset, int traceNum)
+    {
+        adjustedMoveOffset = moveOffset;
+        FVector normalizedMoveOffset = moveOffset;
+        normalizedMoveOffset.Normalize();
+        USystemLibrary.SphereTraceSingle(GameUtils.GetWorld(), currentCameraPos + normalizedMoveOffset, currentCameraPos + moveOffset, 20f, ETraceTypeQuery.TraceTypeQuery2, bTraceComplex: false, [], EDrawDebugTrace.None, out var outHit, bIgnoreSelf: true, FLinearColor.Green, FLinearColor.Red, 1f);
+        traceNum++;
+        if (outHit.BlockingHit)
+        {
+            if (traceNum < 2)
+            {
+                FVector planeNormal = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(in outHit.Normal);
+                FVector projectedMoveOffset = FVector.VectorPlaneProject(moveOffset, planeNormal);
+                return MoveDetection(currentCameraPos, projectedMoveOffset, out adjustedMoveOffset, traceNum);
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public void RotateFreeCameraActor(FRotator rotatorOffset, bool isLocal)
+    {
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
+        {
+            if (isLocal)
+            {
+                _freeCameraActor.AddActorLocalRotation(rotatorOffset, bSweep: true, out _, bTeleport: false);
+            }
+            else
+            {
+                _freeCameraActor.AddActorWorldRotation(rotatorOffset, bSweep: true, out _, bTeleport: false);
+            }
+        }
+    }
+
+    public FVector GetForwardVector()
+    {
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
+        {
+            return _freeCameraActor.GetActorForwardVector();
+        }
+        return FVector.ForwardVector;
+    }
+
+    public FVector GetRightVector()
+    {
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
+        {
+            return _freeCameraActor.GetActorRightVector();
+        }
+        return FVector.RightVector;
+    }
+
+    public float GetFreeCameraActorPitch()
+    {
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
+        {
+            return _freeCameraActor.GetActorRotation().Pitch;
+        }
+        return 0f;
     }
 }

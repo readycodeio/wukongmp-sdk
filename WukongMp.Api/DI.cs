@@ -31,6 +31,7 @@ using WukongMp.Api.Tests;
 using WukongMp.Api.UI;
 using WukongMp.Api.Command;
 using WukongMp.Api.Input;
+using WukongMp.Api.FreeCamera;
 
 namespace WukongMp.Api;
 
@@ -38,7 +39,7 @@ public sealed class DI
 {
     public static DI Instance { get; } = new();
 
-    public IInputManager InputManager { get; private set; } = null!;
+    public InputManager InputManager { get; private set; } = null!;
     public ILoggerFactory LoggerFactory { get; private set; } = null!;
     public ILogger Logger { get; private set; } = null!;
 
@@ -86,6 +87,7 @@ public sealed class DI
     public NetworkPingMonitor PingMonitor { get; private set; } = null!;
     public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
     public FreeCameraManager FreeCameraManager { get; private set; } = null!;
+    public FreeCameraMover FreeCameraMover { get; private set; } = null!;
     public GameStateSynchronizer GameStateSynchronizer { get; private set; } = null!;
 
     public WukongCommandConsole CommandConsole { get; set; } = null!;
@@ -127,7 +129,7 @@ public sealed class DI
         var loggerFactory = LoggerFactory;
         var logger = Logger;
 
-        var inputManager = InputManager = CSharpModBase.InputManager.Instance;
+        var inputManager = InputManager = InputManager.Instance;
 
         var areaComponentRegistry = AreaComponentRegistry = new AreaComponentRegistry([
             new WukongAreaRegistration(),
@@ -190,6 +192,7 @@ public sealed class DI
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
         var freeCameraManager = FreeCameraManager = new FreeCameraManager();
+        var freeCameraMover = FreeCameraMover = new FreeCameraMover(inputManager, freeCameraManager);
 
         var gameStateSynchronizer = GameStateSynchronizer = new GameStateSynchronizer(state, playerState);
 

@@ -62,6 +62,9 @@ namespace WukongMp.Api.Configuration
         public const string ChestCameraLockNode = "CAMERA_LOCK";
         public const string FeetCameraLockNode = "CAMERA_LOCK_Root";
 
+        public const float FreeCameraMoveSpeed = 1000f;
+        public const float FreeCameraRotateSpeed = 3000f;
+
         public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";
         public const string WukongDashengClassPath = "/Game/00Main/Design/Units/Player/Unit_player_dasheng.Unit_player_dasheng_C";
 
