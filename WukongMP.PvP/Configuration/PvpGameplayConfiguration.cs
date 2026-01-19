@@ -59,6 +59,7 @@ namespace WukongMp.PvP.Configuration
                 case Constants.GourdSkillId when !room.GourdAllowed:
                 case Constants.ConsumableBuffSkillId when !room.ConsumablesAllowed:
                 case Constants.IncenseTrailTalismanSkillId:
+                case Constants.RuyiScrollSkillId:
                     return false;
                 default:
                     // more skills here
