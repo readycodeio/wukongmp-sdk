@@ -160,6 +160,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to K - Hide/Show Chat.
+        /// </summary>
+        public static string ChatHelperNoSendDescription {
+            get {
+                return ResourceManager.GetString("ChatHelperNoSendDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cheats are disabled.
         /// </summary>
         public static string CheatsAreDisabled {
@@ -187,7 +196,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ENTER - Type   |   F9 - Hide/Show.
+        ///   Looks up a localized string similar to ENTER - Type   |   F1 - Hide/Show.
         /// </summary>
         public static string CommandHelperDescription {
             get {

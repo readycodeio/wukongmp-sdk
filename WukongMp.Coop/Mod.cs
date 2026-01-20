@@ -136,18 +136,6 @@ namespace WukongMp.Coop
                 }
             });
 #if DEBUG
-            DI.Instance.InputManager.RegisterKeyBind(Key.F1, () =>
-            {
-                Logging.LogDebug("F1: Show colliders markers");
-                DebugUtils.ShowMarkersForInvisibleWalls(4000);
-            });
-
-            DI.Instance.InputManager.RegisterKeyBind(Key.F2, () =>
-            {
-                Logging.LogDebug("F2: Remove colliders markers");
-                DebugUtils.DestroyTmpMarkerActors();
-            });
-
             DI.Instance.InputManager.RegisterKeyBind(Key.F3, () =>
             {
                 Logging.LogDebug("F3: Toggle super speed");
@@ -207,6 +195,18 @@ namespace WukongMp.Coop
                     animInstance?.Montage_Play(montage);
                     events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
                 }
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F9, () =>
+            {
+                Logging.LogDebug("F9: Show colliders markers");
+                DebugUtils.ShowMarkersForInvisibleWalls(4000);
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F10, () =>
+            {
+                Logging.LogDebug("F10: Remove colliders markers");
+                DebugUtils.DestroyTmpMarkerActors();
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.F12, () =>
@@ -275,9 +275,9 @@ namespace WukongMp.Coop
                     DI.Instance.WidgetManager.ToggleChatVisibility();
             });
 
-            DI.Instance.InputManager.RegisterKeyBind(Key.F9, () =>
+            DI.Instance.InputManager.RegisterKeyBind(Key.F1, () =>
             {
-                _logger.LogDebug("F9");
+                _logger.LogDebug("F1");
                 if (DI.Instance.WukongInputManager.CanApplyInput())
                     DI.Instance.WidgetManager.ToggleCommandVisibility();
             });
