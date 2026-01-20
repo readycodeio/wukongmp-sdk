@@ -11,6 +11,8 @@ namespace WukongMp.Api;
 
 public class WukongPlayerModeManager(ClientState state, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
+    private float _gravityScale = 0f;
+
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
         if (isSpectator)
@@ -107,6 +109,16 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
         var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
+        if (enable)
+        {
+            localMainComp.Pawn.CharacterMovement.GravityScale = _gravityScale;
+        }
+        else
+        {
+            _gravityScale = localMainComp.Pawn.CharacterMovement.GravityScale;
+            localMainComp.Pawn.CharacterMovement.GravityScale = 0;
+        }
+        localMainComp.Pawn.CharacterMovement.StopMovementImmediately();
         PlayerUtils.SetCollisionEnabled(localMainComp.Pawn, enable);
         return true;
     }
