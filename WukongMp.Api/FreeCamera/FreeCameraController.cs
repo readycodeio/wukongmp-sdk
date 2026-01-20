@@ -11,6 +11,7 @@ using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera
@@ -43,6 +44,8 @@ namespace WukongMp.Api.FreeCamera
         private readonly FreeCameraManager _freeCameraManager;
         private readonly WukongPlayerState _playerState;
         private readonly ClientState _state;
+        private readonly WukongWidgetManager _widgetManager;
+
         private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
         {
             var playerEntity = _playerState.GetPlayerById(playerId);
@@ -60,11 +63,12 @@ namespace WukongMp.Api.FreeCamera
 
         private int _currentSpectatedIndex = -1;
 
-        public FreeCameraController(ClientState state, WukongPlayerState playerState, InputManager inputManager, FreeCameraManager freeCameraManager)
+        public FreeCameraController(ClientState state, WukongPlayerState playerState, InputManager inputManager, FreeCameraManager freeCameraManager, WukongWidgetManager widgetManager)
         {
             _state = state;
             _playerState = playerState;
             _freeCameraManager = freeCameraManager;
+            _widgetManager = widgetManager;
 
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.RBUTTON, OnRightMouseStarted, OnRightMouseCompleted));
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.W, OnForwardStarted, OnForwardCompleted));
@@ -180,11 +184,13 @@ namespace WukongMp.Api.FreeCamera
             var characterLocation = spectatedCharacter!.GetActorLocation();
             SetInitialOrbitFromCamera(cameraPosition, characterLocation);
             _freeCameraManager.SetLookAtTarget(characterLocation);
+            _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetState().CharacterNickName);
         }
 
         private void DisablePlayerSpectating()
         {
             _currentSpectatedIndex = -1;
+            _widgetManager.HideSpectatingMessage();
         }
 
         private void SetInitialOrbitFromCamera(FVector cameraPosition, FVector targetPosition)

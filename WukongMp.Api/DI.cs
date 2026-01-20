@@ -192,7 +192,7 @@ public sealed class DI
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
         var freeCameraManager = FreeCameraManager = new FreeCameraManager();
-        var freeCameraController = FreeCameraController = new FreeCameraController(state, playerState, inputManager, freeCameraManager);
+        var freeCameraController = FreeCameraController = new FreeCameraController(state, playerState, inputManager, freeCameraManager, widgetManager);
 
         var gameStateSynchronizer = GameStateSynchronizer = new GameStateSynchronizer(state, playerState);
 

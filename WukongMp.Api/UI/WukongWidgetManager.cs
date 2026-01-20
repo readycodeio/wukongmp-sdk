@@ -30,6 +30,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     private readonly Lazy<ErrorMessageWidget> _errorMessageWidget = new();
     private readonly Lazy<PingIndicatorWidget> _pingIndicatorWidget = new();
     private readonly Lazy<FreeCameraControlsWidget> _freeCameraControlsWidget = new();
+    private readonly Lazy<FreeCameraMessageWidget> _freeCameraMessageWidget = new();
     private readonly Lazy<ModVersionWidget> _modVersionWidget = new();
     private readonly Lazy<DebugViewWidget> _debugViewWidget = new();
 
@@ -189,6 +190,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _errorMessageWidget.Value.Initialize();
             _pingIndicatorWidget.Value.Initialize();
             _freeCameraControlsWidget.Value.Initialize();
+            _freeCameraMessageWidget.Value.Initialize();
             _modVersionWidget.Value.Initialize();
             _debugViewWidget.Value.Initialize();
 
@@ -206,6 +208,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         _errorMessageWidget.Value.Deinitialize();
         _pingIndicatorWidget.Value.Deinitialize();
         _freeCameraControlsWidget.Value.Deinitialize();
+        _freeCameraMessageWidget.Value.Deinitialize();
         _modVersionWidget.Value.Deinitialize();
         _debugViewWidget.Value.Deinitialize();
         _isInitialized = false;
@@ -244,4 +247,12 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     public string CommitCommand() => _commandConsoleWidget.Value.CommitCommand();
 
     public void AddMessageToConsole(string message) => _commandConsoleWidget.Value.AddMessage("> " + message);
+
+    public void SetSpectatingMessage(string message)
+    {
+        _freeCameraMessageWidget.Value.SetVisibility(true);
+        _freeCameraMessageWidget.Value.SetMessageText(message);
+    }
+
+    public void HideSpectatingMessage() => _freeCameraMessageWidget.Value.SetVisibility(false);
 }
