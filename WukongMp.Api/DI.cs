@@ -87,7 +87,7 @@ public sealed class DI
     public NetworkPingMonitor PingMonitor { get; private set; } = null!;
     public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
     public FreeCameraManager FreeCameraManager { get; private set; } = null!;
-    public FreeCameraMover FreeCameraMover { get; private set; } = null!;
+    public FreeCameraController FreeCameraController { get; private set; } = null!;
     public GameStateSynchronizer GameStateSynchronizer { get; private set; } = null!;
 
     public WukongCommandConsole CommandConsole { get; set; } = null!;
@@ -192,7 +192,7 @@ public sealed class DI
         var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
         var freeCameraManager = FreeCameraManager = new FreeCameraManager();
-        var freeCameraMover = FreeCameraMover = new FreeCameraMover(inputManager, freeCameraManager);
+        var freeCameraController = FreeCameraController = new FreeCameraController(state, playerState, inputManager, freeCameraManager);
 
         var gameStateSynchronizer = GameStateSynchronizer = new GameStateSynchronizer(state, playerState);
 

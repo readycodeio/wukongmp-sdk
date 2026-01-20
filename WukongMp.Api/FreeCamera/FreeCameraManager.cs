@@ -1,7 +1,6 @@
 ﻿using b1;
 using b1.BGW;
 using System;
-using System.Collections.Generic;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.WukongUtils;
@@ -149,6 +148,18 @@ public class FreeCameraManager
         OnFreeCameraModeChanged?.Invoke(false);
     }
 
+    public void MoveFreeCameraToPosition(FVector position)
+    {
+        if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
+        {
+            return;
+        }
+
+        var currentLocation = _freeCameraActor.GetActorLocation();
+        FVector moveOffset = position - currentLocation;
+        MoveFreeCameraActor(moveOffset, isLocal: false);
+    }
+
     public void MoveFreeCameraActor(FVector moveOffset, bool isLocal)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
@@ -210,6 +221,23 @@ public class FreeCameraManager
                 _freeCameraActor.AddActorWorldRotation(rotatorOffset, bSweep: true, out _, bTeleport: false);
             }
         }
+    }
+
+    public void SetLookAtTarget(FVector targetLocation)
+    {
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
+        {
+            FVector actorLocation = _freeCameraActor.GetActorLocation();
+            FRotator lookAtRotation = UMathLibrary.FindLookAtRotation(actorLocation, targetLocation);
+            _freeCameraActor.SetActorRotation(lookAtRotation, false);
+        }
+    }
+    
+    public FVector GetCurrentCameraPosition()
+    {
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
+            return _freeCameraActor.GetActorLocation();
+        return FVector.ZeroVector;
     }
 
     public FVector GetForwardVector()

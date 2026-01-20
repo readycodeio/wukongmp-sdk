@@ -47,10 +47,10 @@ internal class PvpSynchronizer : WukongSynchronizer
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
         FreeCameraManager freeCameraManager,
-        FreeCameraMover freeCameraMover,
+        FreeCameraController freeCameraController,
         PvpMode pvpMode,
         ILogger logger)
-        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager.widgetManager, gameplayEventRouter, configuration, freeCameraManager, freeCameraMover, logger)
+        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager.widgetManager, gameplayEventRouter, configuration, freeCameraManager, freeCameraController, logger)
     {
         State.OnJoinedArea += OnJoinedAreaHandler;
 

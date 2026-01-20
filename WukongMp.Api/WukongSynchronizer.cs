@@ -53,7 +53,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
         FreeCameraManager freeCameraManager,
-        FreeCameraMover freeCameraMover,
+        FreeCameraController freeCameraController,
         ILogger logger)
         : base(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
     {
@@ -81,7 +81,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new EnableCollisionAfterCutsceneSystem(playerState));
         _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
         _syncGroup.Add(new UpdateCooldownSystem(playerState, eventBus, areaState));
-        _syncGroup.Add(new FreeCameraMovementSystem(playerState, eventBus, areaState, freeCameraManager, freeCameraMover));
+        _syncGroup.Add(new FreeCameraMovementSystem(eventBus, freeCameraManager, freeCameraController));
 
         _syncGroup.Add(new DebugViewSystem(eventBus, widgetManager));
 

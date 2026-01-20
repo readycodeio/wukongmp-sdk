@@ -63,7 +63,7 @@ namespace WukongMp.Coop
                 DI.GameplayConfiguration,
                 DI.ColliderDisableData,
                 DI.FreeCameraManager,
-                DI.FreeCameraMover,
+                DI.FreeCameraController,
                 DI.Logger);
         }
     }

@@ -62,7 +62,7 @@ namespace WukongMp.PvP
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,
                 DI.FreeCameraManager,
-                DI.FreeCameraMover,
+                DI.FreeCameraController,
                 pvp,
                 DI.Logger);
         }
