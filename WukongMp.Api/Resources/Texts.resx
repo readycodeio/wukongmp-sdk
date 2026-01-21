@@ -321,4 +321,10 @@
   <data name="HintCommandsUse" xml:space="preserve">
     <value>Press F1 to use commands</value>
   </data>
+  <data name="CameraSwitchDescription" xml:space="preserve">
+    <value>Switch player</value>
+  </data>
+  <data name="CameraSwitchControls" xml:space="preserve">
+    <value>←/→</value>
+  </data>
 </root>

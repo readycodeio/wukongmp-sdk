@@ -133,6 +133,24 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ←/→.
+        /// </summary>
+        public static string CameraSwitchControls {
+            get {
+                return ResourceManager.GetString("CameraSwitchControls", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switch player.
+        /// </summary>
+        public static string CameraSwitchDescription {
+            get {
+                return ResourceManager.GetString("CameraSwitchDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to E.
         /// </summary>
         public static string CameraUpControls {

@@ -28,6 +28,11 @@ namespace WukongMp.Api.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetUpDescriptionText {up}", true);
         }
 
+        public void SetSwitchDescriptionText(string up)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetSwitchDescriptionText {up}", true);
+        }
+
         public void SetDownControlsText(string down)
         {
             GameWidget?.CallFunctionByNameWithArguments($"SetDownControlsText {down}", true);
@@ -48,11 +53,17 @@ namespace WukongMp.Api.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetUpControlsText {up}", true);
         }
 
+        public void SetSwitchControlsText(string up)
+        {
+            GameWidget?.CallFunctionByNameWithArguments($"SetSwitchControlsText {up}", true);
+        }
+
         private void SetStaticTexts(
             string downControls, string downDescription,
             string moveControls, string moveDescription,
             string rotateControls, string rotateDescription,
-            string upControls, string upDescription)
+            string upControls, string upDescription,
+            string switchControls, string switchDescription)
         {
             SetDownControlsText(downControls);
             SetDownDescriptionText(downDescription);
@@ -62,6 +73,8 @@ namespace WukongMp.Api.UI
             SetRotateDescriptionText(rotateDescription);
             SetUpControlsText(upControls);
             SetUpDescriptionText(upDescription);
+            SetSwitchControlsText(switchControls);
+            SetSwitchDescriptionText(switchDescription);
         }
 
         protected override void PostInitialize()
@@ -70,7 +83,8 @@ namespace WukongMp.Api.UI
                 Texts.CameraDownControls, Texts.CameraDownDescription,
                 Texts.CameraMoveControls, Texts.CameraMoveDescription,
                 Texts.CameraRotateControls, Texts.CameraRotateDescription,
-                Texts.CameraUpControls, Texts.CameraUpDescription);
+                Texts.CameraUpControls, Texts.CameraUpDescription,
+                Texts.CameraSwitchControls, Texts.CameraSwitchDescription);
         }
     }
 }

@@ -271,4 +271,10 @@
   <data name="HintCommandsUse" xml:space="preserve">
     <value>Appuyez sur F1 pour utiliser les commandes</value>
   </data>
+  <data name="CameraSwitchDescription" xml:space="preserve">
+    <value>Changer de joueur</value>
+  </data>
+  <data name="CameraSwitchControls" xml:space="preserve">
+    <value>←/→</value>
+  </data>
 </root>
