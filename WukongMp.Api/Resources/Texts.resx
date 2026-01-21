@@ -163,10 +163,10 @@
     <value>In Multiplayer Lobby</value>
   </data>
   <data name="InvalidUnitName" xml:space="preserve">
-    <value>Invalid unit name</value>
+    <value>Invalid unit name: {0}</value>
   </data>
   <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>Invalid number of units</value>
+    <value>Invalid number of units {0}</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>more</value>
@@ -317,5 +317,8 @@
   </data>
   <data name="CustomSpiritCooldown" xml:space="preserve">
     <value>{0} set spirit cooldown to {1} s</value>
+  </data>
+  <data name="HintCommandsUse" xml:space="preserve">
+    <value>Press F1 to use commands</value>
   </data>
 </root>

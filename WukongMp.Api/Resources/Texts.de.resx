@@ -163,10 +163,10 @@
     <value>In Mehrspieler-Lobby</value>
   </data>
   <data name="InvalidUnitName" xml:space="preserve">
-    <value>Ungültiger Einheitenname</value>
+    <value>Ungültiger Einheitenname: {0}</value>
   </data>
   <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>Ungültige Anzahl an Einheiten</value>
+    <value>Ungültige Anzahl von Einheiten: {0}</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>mehr</value>
@@ -249,6 +249,9 @@
   <data name="YouAreReady" xml:space="preserve">
     <value>Du bist bereit</value>
   </data>
+  <data name="InvalidCommand" xml:space="preserve">
+    <value>Ungültiger Befehl: {0}</value>
+  </data>
   <data name="WaitForOtherPlayers" xml:space="preserve">
     <value>Warte auf andere Spieler</value>
   </data>
@@ -261,5 +264,8 @@
   </data>
   <data name="MasterClient" xml:space="preserve">
     <value>Hauptclient: {0}</value>
+  </data>
+  <data name="HintCommandsUse" xml:space="preserve">
+    <value>Drücken Sie F1, um Befehle zu verwenden</value>
   </data>
 </root>

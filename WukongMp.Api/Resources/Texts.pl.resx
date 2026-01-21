@@ -163,10 +163,10 @@
     <value>W lobby trybu wieloosobowego</value>
   </data>
   <data name="InvalidUnitName" xml:space="preserve">
-    <value>Niepoprawna nazwa jednostki</value>
+    <value>Nieprawidłowa nazwa jednostki: {0}</value>
   </data>
   <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>Niepoprawna liczba jednostek</value>
+    <value>Nieprawidłowa liczba jednostek: {0}</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>więcej</value>
@@ -318,5 +318,8 @@
   </data>
   <data name="CustomSpiritCooldown" xml:space="preserve">
     <value>{0} ustawił czas odnowienia ducha na {1} s</value>
+  </data>
+  <data name="HintCommandsUse" xml:space="preserve">
+    <value>Naciśnij F1, aby użyć poleceń</value>
   </data>
 </root>

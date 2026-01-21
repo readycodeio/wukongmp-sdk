@@ -44,7 +44,13 @@ public class WukongChatter : IDisposable
         {
             message = message.Trim();
             if (_playerState.LocalPlayerId.HasValue)
+            {
+                if(message.StartsWith("/"))
+                {
+                    AddLocalServerMessage("HintCommandsUse");
+                }
                 SendChatMessage(_playerState.LocalPlayerId.Value, NickName, message);
+            }
             else
                 Logging.LogError("Cannot send chat message because local player ID is not set");
         }

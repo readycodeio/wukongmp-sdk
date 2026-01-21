@@ -163,10 +163,10 @@
     <value>No Lobby Multijogador</value>
   </data>
   <data name="InvalidUnitName" xml:space="preserve">
-    <value>Nome de unidade inválido</value>
+    <value>Nome de unidade inválido: {0}</value>
   </data>
   <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>Número de unidades inválido</value>
+    <value>Número de unidades inválido: {0}</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>mais</value>
@@ -249,6 +249,9 @@
   <data name="YouAreReady" xml:space="preserve">
     <value>Você está pronto</value>
   </data>
+  <data name="InvalidCommand" xml:space="preserve">
+    <value>Comando inválido: {0}</value>
+  </data>
   <data name="WaitForOtherPlayers" xml:space="preserve">
     <value>Aguarde pelos outros jogadores</value>
   </data>
@@ -261,5 +264,8 @@
   </data>
   <data name="MasterClient" xml:space="preserve">
     <value>Cliente mestre: {0}</value>
+  </data>
+  <data name="HintCommandsUse" xml:space="preserve">
+    <value>Prima F1 para utilizar comandos</value>
   </data>
 </root>

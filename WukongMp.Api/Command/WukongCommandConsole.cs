@@ -231,6 +231,10 @@ public class WukongCommandConsole : IDisposable
                 }
                 return true;
             }
+            else
+            {
+                AddLocalizedMessageToConsole("InvalidCommand", commandParts[0]);
+            }
         }
 
         return false;

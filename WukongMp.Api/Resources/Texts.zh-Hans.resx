@@ -163,10 +163,10 @@
     <value>在多人游戏准备大厅中</value>
   </data>
   <data name="InvalidUnitName" xml:space="preserve">
-    <value>无效的单位名称</value>
+    <value>无效的单位名称：{0}</value>
   </data>
   <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>无效的单位数量</value>
+    <value>无效的单位数量：{0}</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>排队</value>
@@ -317,5 +317,8 @@
   </data>
   <data name="CustomSpiritCooldown" xml:space="preserve">
     <value>玩家{0}将精神冷却时间设置为{1}秒</value>
+  </data>
+  <data name="HintCommandsUse" xml:space="preserve">
+    <value>按 F1 使用命令</value>
   </data>
 </root>

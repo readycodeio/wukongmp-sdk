@@ -241,6 +241,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Press F1 to use commands.
+        /// </summary>
+        public static string HintCommandsUse {
+            get {
+                return ResourceManager.GetString("HintCommandsUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} disabled infinite mana.
         /// </summary>
         public static string InfManaDisabled {
@@ -340,7 +349,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid unit name.
+        ///   Looks up a localized string similar to Invalid unit name: {0}.
         /// </summary>
         public static string InvalidUnitName {
             get {
@@ -349,7 +358,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid number of units.
+        ///   Looks up a localized string similar to Invalid number of units {0}.
         /// </summary>
         public static string InvalidUnitsCount {
             get {

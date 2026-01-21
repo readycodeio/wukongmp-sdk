@@ -62,7 +62,7 @@ internal class PvpCommandConsole : IDisposable
         var unitName = args.Span[0];
         if (!UnitPathsConfig.IsValidUnitName(unitName))
         {
-            _wukongCommandConsole.AddMessageToConsole($"${Texts.InvalidUnitName}: \"{args.Span[0]}\"");
+            _wukongCommandConsole.AddMessageToConsole(string.Format(Texts.InvalidUnitName, args.Span[0]));
             return;
         }
 
@@ -97,7 +97,7 @@ internal class PvpCommandConsole : IDisposable
                 }
                 else
                 {
-                    _wukongCommandConsole.AddLocalizedMessageToConsole($"{Texts.InvalidUnitName}: \"{args.Span[1]}\"");
+                    _wukongCommandConsole.AddMessageToConsole(string.Format(Texts.InvalidUnitsCount, args.Span[1]));
                 }
 
                 break;
