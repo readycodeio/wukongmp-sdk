@@ -16,7 +16,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera
 {
-    public class FreeCameraController
+    public class FreeCameraController : IDisposable
     {
         private float _rotateDirLR;
         private float _rotateDirUD;
@@ -80,6 +80,13 @@ namespace WukongMp.Api.FreeCamera
 
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.RIGHT, OnNextStarted));
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.LEFT, OnPrevStarted));
+
+            _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
+        }
+
+        public void Dispose()
+        {
+            _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
         }
 
         public void Update(float DeltaTime)
@@ -231,6 +238,14 @@ namespace WukongMp.Api.FreeCamera
                 normalizedOffsetY = mouseOffset.Y / viewportSize.Y;
             }
             return new FVector2D(normalizedOffsetX, normalizedOffsetY);
+        }
+
+        private void OnFreeCameraModeChanged(bool enabled)
+        {
+            if (!enabled)
+            {
+                DisablePlayerSpectating();
+            }
         }
 
         private void OnRightMouseStarted()
