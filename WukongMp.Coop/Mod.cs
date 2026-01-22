@@ -306,6 +306,12 @@ namespace WukongMp.Coop
                 DI.Instance.WidgetManager.CommandHistoryUp();
             });
 
+            DI.Instance.InputManager.RegisterKeyBind(Key.TAB, () =>
+            {
+                _logger.LogDebug("TAB");
+                DI.Instance.WidgetManager.CommandSelectSuggestion();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(Key.ENTER, () =>
             {
                 _logger.LogDebug("ENTER");
