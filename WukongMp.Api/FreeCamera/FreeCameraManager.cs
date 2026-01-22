@@ -3,11 +3,12 @@ using b1.BGW;
 using System;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera;
 
-public class FreeCameraManager
+public class FreeCameraManager(WukongPlayerState playerState)
 {
     private bool _isInFreeCameraMode;
     private BGUCharacterCS? _cachePlayerPawn;
@@ -148,11 +149,11 @@ public class FreeCameraManager
         OnFreeCameraModeChanged?.Invoke(false);
     }
 
-    public FVector MoveFreeCameraToPosition(FVector position)
+    public bool MoveFreeCameraToPosition(FVector position)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
         {
-            return FVector.ZeroVector;
+            return false;
         }
 
         var currentLocation = _freeCameraActor.GetActorLocation();
@@ -160,18 +161,45 @@ public class FreeCameraManager
         return MoveFreeCameraActor(moveOffset, isLocal: false);
     }
 
-    public FVector MoveFreeCameraActor(FVector moveOffset, bool isLocal)
+
+    public bool MoveFreeCameraWithObstacleCheck(FVector targetPosition, FVector desiredCameraPosition, float safeDistance = 20f)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
         {
-            return FVector.ZeroVector;
+            return false;
+        }
+
+        var world = GameUtils.GetWorld();
+        if (world == null)
+        {
+            return false;
+        }
+
+        USystemLibrary.SphereTraceSingle(world, targetPosition, desiredCameraPosition, safeDistance, ETraceTypeQuery.TraceTypeQuery2, bTraceComplex: false, [], EDrawDebugTrace.None, out var hitResult, bIgnoreSelf: true, FLinearColor.Green, FLinearColor.Red, 1f);
+
+        FVector finalPosition = desiredCameraPosition;
+        if (hitResult.BlockingHit)
+        {
+            finalPosition = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(hitResult.Location);
+        }
+        _freeCameraActor.SetActorLocation(finalPosition, false, out _, true);
+        UpdatePawnPositionToCamera();
+        return true;
+    }
+
+
+    public bool MoveFreeCameraActor(FVector moveOffset, bool isLocal)
+    {
+        if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
+        {
+            return false;
         }
 
         FVector actorLocation = _freeCameraActor.GetActorLocation();
         FVector currentMoveOffset = (isLocal ? _freeCameraActor.GetActorTransform().TransformVectorNoScale(moveOffset) : moveOffset);
         if (!MoveDetection(actorLocation, currentMoveOffset, out var adjustedMoveOffset, 0))
         {
-            return _freeCameraActor.GetActorLocation();
+            return false;
         }
 
         _freeCameraActor.AddActorWorldOffset(adjustedMoveOffset, bSweep: true, out var sweepHitResult, bTeleport: false);
@@ -184,7 +212,8 @@ public class FreeCameraManager
                 _freeCameraActor.AddActorWorldOffset(outputOffset, bSweep: true, out var _, bTeleport: false);
             }
         }
-        return _freeCameraActor.GetActorLocation();
+        UpdatePawnPositionToCamera();
+        return true;
     }
 
     private bool MoveDetection(FVector currentCameraPos, FVector moveOffset, out FVector adjustedMoveOffset, int traceNum)
@@ -266,5 +295,13 @@ public class FreeCameraManager
             return _freeCameraActor.GetActorRotation().Pitch;
         }
         return 0f;
+    }
+
+    /// <summary>
+    /// Updates the pawn's position to align with the camera's current location in order to load level where the camera is.
+    /// </summary>
+    private void UpdatePawnPositionToCamera()
+    {
+        playerState.LocalMainCharacter?.GetLocalState().Pawn?.SetActorLocation(GetCurrentCameraPosition(), false, out _, true);
     }
 }
