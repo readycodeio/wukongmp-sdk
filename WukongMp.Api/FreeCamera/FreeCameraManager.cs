@@ -148,30 +148,30 @@ public class FreeCameraManager
         OnFreeCameraModeChanged?.Invoke(false);
     }
 
-    public void MoveFreeCameraToPosition(FVector position)
+    public FVector MoveFreeCameraToPosition(FVector position)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
         {
-            return;
+            return FVector.ZeroVector;
         }
 
         var currentLocation = _freeCameraActor.GetActorLocation();
         FVector moveOffset = position - currentLocation;
-        MoveFreeCameraActor(moveOffset, isLocal: false);
+        return MoveFreeCameraActor(moveOffset, isLocal: false);
     }
 
-    public void MoveFreeCameraActor(FVector moveOffset, bool isLocal)
+    public FVector MoveFreeCameraActor(FVector moveOffset, bool isLocal)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
         {
-            return;
+            return FVector.ZeroVector;
         }
 
         FVector actorLocation = _freeCameraActor.GetActorLocation();
         FVector currentMoveOffset = (isLocal ? _freeCameraActor.GetActorTransform().TransformVectorNoScale(moveOffset) : moveOffset);
         if (!MoveDetection(actorLocation, currentMoveOffset, out var adjustedMoveOffset, 0))
         {
-            return;
+            return _freeCameraActor.GetActorLocation();
         }
 
         _freeCameraActor.AddActorWorldOffset(adjustedMoveOffset, bSweep: true, out var sweepHitResult, bTeleport: false);
@@ -184,6 +184,7 @@ public class FreeCameraManager
                 _freeCameraActor.AddActorWorldOffset(outputOffset, bSweep: true, out var _, bTeleport: false);
             }
         }
+        return _freeCameraActor.GetActorLocation();
     }
 
     private bool MoveDetection(FVector currentCameraPos, FVector moveOffset, out FVector adjustedMoveOffset, int traceNum)

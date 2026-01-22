@@ -105,7 +105,11 @@ namespace WukongMp.Api.FreeCamera
                 var moveOffset = (upOffset + forwardOffset + rightOffset) * MoveSpeed * DeltaTime;
                 if (moveOffset.Size() > 0f)
                 {
-                    _freeCameraManager.MoveFreeCameraActor(moveOffset, false);
+                    var finalPosition = _freeCameraManager.MoveFreeCameraActor(moveOffset, false);
+                    if (finalPosition != FVector.ZeroVector)
+                    {
+                        _playerState.LocalMainCharacter?.GetLocalState().Pawn?.SetActorLocation(finalPosition, false, out _, true);
+                    }
                 }
             }
         }
@@ -156,8 +160,12 @@ namespace WukongMp.Api.FreeCamera
                 FVector orbitOffset = new(x, y, z);
                 FVector cameraPosition = targetLocation + orbitOffset;
 
-                _freeCameraManager.MoveFreeCameraToPosition(cameraPosition);
+                var finalPosition = _freeCameraManager.MoveFreeCameraToPosition(cameraPosition);
                 _freeCameraManager.SetLookAtTarget(targetLocation);
+                if (finalPosition != FVector.ZeroVector)
+                {
+                    _playerState.LocalMainCharacter?.GetLocalState().Pawn?.SetActorLocation(finalPosition, false, out _, true);
+                }
             }
         }
 

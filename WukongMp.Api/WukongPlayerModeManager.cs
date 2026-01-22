@@ -12,6 +12,7 @@ namespace WukongMp.Api;
 public class WukongPlayerModeManager(ClientState state, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
     private float _gravityScale = 0f;
+    private FVector _lastValidLocation;
 
     public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
     {
@@ -104,19 +105,22 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
             return false;
         }
 
-        var offset = new FVector(0,0, localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * 3 * (enable ? 1 : -1));
-        localMainComp.Pawn.SetActorLocation(localMainComp.Pawn.GetActorLocation() + offset, false, out _, true);
         var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreAllInput, enable);
         if (enable)
         {
             localMainComp.Pawn.CharacterMovement.GravityScale = _gravityScale;
+            PlayerUtils.TeleportLocalPlayer(mainEntity, _lastValidLocation, new FRotator(), false);
         }
         else
         {
             _gravityScale = localMainComp.Pawn.CharacterMovement.GravityScale;
             localMainComp.Pawn.CharacterMovement.GravityScale = 0;
+            _lastValidLocation = localMainComp.Pawn.GetActorLocation();
+            var offset = new FVector(0, 0, localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * -3);
+            localMainComp.Pawn.SetActorLocation(_lastValidLocation + offset, false, out _, true);
         }
         localMainComp.Pawn.CharacterMovement.StopMovementImmediately();
         PlayerUtils.SetCollisionEnabled(localMainComp.Pawn, enable);
