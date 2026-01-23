@@ -13,6 +13,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
     private bool _isInFreeCameraMode;
     private BGUCharacterCS? _cachePlayerPawn;
     private AActor? _freeCameraActor;
+    private USpringArmComponent? _springArmComponent;
     private float _gameFov;
     private AActor? _cacheCameraViewTarget;
     private const string FreeCameraActorPath = "/Game/Mods/WukongMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
@@ -34,17 +35,17 @@ public class FreeCameraManager(WukongPlayerState playerState)
             return;
         }
 
-        var aBGPPlayerController = UGSE_EngineFuncLib.GetFirstLocalPlayerController(world) as ABGPPlayerController;
-        if (aBGPPlayerController.IsNullOrDestroyed())
-        {
-            Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerController IsNull");
-            return;
-        }
-
-        _cachePlayerPawn = aBGPPlayerController.GetControlledPawn() as BGUCharacterCS;
+        _cachePlayerPawn = playerState.LocalMainCharacter?.GetLocalState().Pawn;
         if (_cachePlayerPawn.IsNullOrDestroyed())
         {
             Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerPawn IsNull");
+            return;
+        }
+
+        var aBGPPlayerController = _cachePlayerPawn.GetController() as ABGPPlayerController;
+        if (aBGPPlayerController.IsNullOrDestroyed())
+        {
+            Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerController IsNull");
             return;
         }
 
@@ -91,6 +92,11 @@ public class FreeCameraManager(WukongPlayerState playerState)
         _freeCameraActor.CallFunctionByNameWithArguments($"SetCameraFOV {_gameFov}", true);
         aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
         BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.UIAndGame, EGSInputModeChangeReason.Replay);
+        _springArmComponent = _freeCameraActor.GetComponentByClass<USpringArmComponent>();
+        if (_springArmComponent == null)
+        {
+            Logging.LogError("[FreeCameraManager] FreeCameraActor SpringArmComponent IsNull");
+        }
         _isInFreeCameraMode = true;
         OnFreeCameraModeChanged?.Invoke(true);
     }
@@ -144,6 +150,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
 
         Logging.LogInformation("[FreeCameraManager] Leaving free camera");
         _freeCameraActor = null;
+        _springArmComponent = null;
         _cachePlayerPawn = null;
         _isInFreeCameraMode = false;
         OnFreeCameraModeChanged?.Invoke(false);
@@ -297,11 +304,30 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return 0f;
     }
 
+    public void SetFreeCameraActorTransform(FVector location, FRotator rotation)
+    {
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
+        {
+            _freeCameraActor.SetActorLocationAndRotation(location, rotation, bSweep: false, out var _, bTeleport: true);
+        }
+    }
+
+    public void SetSpringArmLength(float length)
+    {
+        if (IsInFreeCameraMode && !_springArmComponent.IsNullOrDestroyed())
+        {
+            _springArmComponent.TargetArmLength = length;
+        }
+    }
+
     /// <summary>
     /// Updates the pawn's position to align with the camera's current location in order to load level where the camera is.
     /// </summary>
     private void UpdatePawnPositionToCamera()
     {
-        playerState.LocalMainCharacter?.GetLocalState().Pawn?.SetActorLocation(GetCurrentCameraPosition(), false, out _, true);
+        if (IsInFreeCameraMode && !_cachePlayerPawn.IsNullOrDestroyed())
+        {
+            _cachePlayerPawn.SetActorLocation(GetCurrentCameraPosition(), false, out _, true);
+        }
     }
 }

@@ -154,6 +154,10 @@ namespace WukongMp.Api.FreeCamera
 
                 _currentOrbitYaw = FMath.Lerp(_currentOrbitYaw, orbitYawWorld, 1f - (float)Math.Exp(-OrbitYawFollowSpeed * DeltaTime));
 
+                // Alternative way using built-in SpringArm (commented out for custom behavior)
+                //_freeCameraManager.SetFreeCameraActorTransform(targetLocation, new(_orbitPitch, _currentOrbitYaw, 0.0f));
+                //_freeCameraManager.SetSpringArmLength(_orbitDistance);
+
                 float yawRad = FMath.DegreesToRadians(_currentOrbitYaw);
                 float pitchRad = FMath.DegreesToRadians(_orbitPitch);
                 float x = _orbitDistance * FMath.Cos(pitchRad) * FMath.Cos(yawRad);
@@ -208,6 +212,7 @@ namespace WukongMp.Api.FreeCamera
         private void DisablePlayerSpectating()
         {
             _currentSpectatedIndex = -1;
+            _freeCameraManager.SetSpringArmLength(0);
             _widgetManager.HideSpectatingMessage();
         }
 
