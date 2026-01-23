@@ -83,6 +83,13 @@ public class FreeCameraManager(WukongPlayerState playerState)
             return;
         }
 
+        _springArmComponent = _freeCameraActor.GetComponentByClass<USpringArmComponent>();
+        if (_springArmComponent == null)
+        {
+            Logging.LogError("[FreeCameraManager] FreeCameraActor SpringArmComponent IsNull");
+            return;
+        }
+
         Logging.LogInformation("[FreeCameraManager] Entering free camera");
         _freeCameraActor.SetActorHiddenInGame(bNewHidden: false);
         _freeCameraActor.SetActorEnableCollision(bNewActorEnableCollision: true);
@@ -92,11 +99,6 @@ public class FreeCameraManager(WukongPlayerState playerState)
         _freeCameraActor.CallFunctionByNameWithArguments($"SetCameraFOV {_gameFov}", true);
         aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
         BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.UIAndGame, EGSInputModeChangeReason.Replay);
-        _springArmComponent = _freeCameraActor.GetComponentByClass<USpringArmComponent>();
-        if (_springArmComponent == null)
-        {
-            Logging.LogError("[FreeCameraManager] FreeCameraActor SpringArmComponent IsNull");
-        }
         _isInFreeCameraMode = true;
         OnFreeCameraModeChanged?.Invoke(true);
     }
@@ -168,7 +170,6 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return MoveFreeCameraActor(moveOffset, isLocal: false);
     }
 
-
     public bool MoveFreeCameraWithObstacleCheck(FVector targetPosition, FVector desiredCameraPosition, float safeDistance = 20f)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
@@ -193,7 +194,6 @@ public class FreeCameraManager(WukongPlayerState playerState)
         UpdatePawnPositionToCamera();
         return true;
     }
-
 
     public bool MoveFreeCameraActor(FVector moveOffset, bool isLocal)
     {
