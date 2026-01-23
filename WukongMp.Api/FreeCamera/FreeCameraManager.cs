@@ -3,6 +3,7 @@ using b1.BGW;
 using System;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -273,7 +274,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
     public FVector GetCurrentCameraPosition()
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
-            return _freeCameraActor.GetActorLocation();
+            return GetSpringArmEndTransform().GetLocation();
         return FVector.ZeroVector;
     }
 
@@ -309,7 +310,13 @@ public class FreeCameraManager(WukongPlayerState playerState)
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
         {
             _freeCameraActor.SetActorLocationAndRotation(location, rotation, bSweep: false, out var _, bTeleport: true);
+            UpdatePawnPositionToCamera();
         }
+    }
+
+    public void SetFreeCameraActorTransform(FTransform transform)
+    {
+        SetFreeCameraActorTransform(transform.GetLocation(), transform.GetRotation().Rotator());
     }
 
     public void SetSpringArmLength(float length)
@@ -317,7 +324,17 @@ public class FreeCameraManager(WukongPlayerState playerState)
         if (IsInFreeCameraMode && !_springArmComponent.IsNullOrDestroyed())
         {
             _springArmComponent.TargetArmLength = length;
+            UpdatePawnPositionToCamera();
         }
+    }
+
+    public FTransform GetSpringArmEndTransform()
+    {
+        if (IsInFreeCameraMode && !_springArmComponent.IsNullOrDestroyed())
+        {
+            return _springArmComponent.GetSocketTransform(new FName(Constants.SpringArmEndSocket));
+        }
+        return FTransform.Identity;
     }
 
     /// <summary>

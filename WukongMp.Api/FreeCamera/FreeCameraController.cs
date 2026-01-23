@@ -26,7 +26,8 @@ namespace WukongMp.Api.FreeCamera
         private float _moveDirFB;
 
         private float _orbitYaw;
-        private float _currentOrbitYaw;
+        private float _currentPlayerOrbitYaw;
+        private FVector _targetLocation;
         private float _orbitPitch;
         private float _orbitDistance = 1000f;
 
@@ -37,7 +38,7 @@ namespace WukongMp.Api.FreeCamera
         private const float OrbitDistanceSpeed = 500f;
         private const float OrbitPitchSpeed = 60f;     // degrees per second
         private const float OrbitYawSpeed = 120f;      // degrees per second
-        private const float OrbitYawFollowSpeed = 8f;
+        private const float OrbitYawFollowSpeed = 2f;
         private const float MouseOrbitSensitivity = 100f;
 
         private bool _isDragging;
@@ -148,31 +149,13 @@ namespace WukongMp.Api.FreeCamera
                 _orbitPitch = FMath.Clamp(_orbitPitch + orbitPitchInput * OrbitPitchSpeed * DeltaTime, -89f, 89f);
                 _orbitDistance = FMath.Clamp(_orbitDistance + -_moveDirFB * OrbitDistanceSpeed * DeltaTime, OrbitDistanceMin, OrbitDistanceMax);
 
-                var targetLocation = spectatedCharacter.GetActorLocation();
+                _targetLocation = spectatedCharacter.GetActorLocation();
                 float playerYaw = spectatedCharacter.GetActorRotation().Yaw;
-                float orbitYawWorld = playerYaw + _orbitYaw;
 
-                _currentOrbitYaw = FMath.Lerp(_currentOrbitYaw, orbitYawWorld, 1f - (float)Math.Exp(-OrbitYawFollowSpeed * DeltaTime));
+                _currentPlayerOrbitYaw = MathUtils.LerpAngle(_currentPlayerOrbitYaw, playerYaw, 1f - (float)Math.Exp(-OrbitYawFollowSpeed * DeltaTime));
 
-                // Alternative way using built-in SpringArm (commented out for custom behavior)
-                //_freeCameraManager.SetFreeCameraActorTransform(targetLocation, new(_orbitPitch, _currentOrbitYaw, 0.0f));
-                //_freeCameraManager.SetSpringArmLength(_orbitDistance);
-
-                float yawRad = FMath.DegreesToRadians(_currentOrbitYaw);
-                float pitchRad = FMath.DegreesToRadians(_orbitPitch);
-                float x = _orbitDistance * FMath.Cos(pitchRad) * FMath.Cos(yawRad);
-                float y = _orbitDistance * FMath.Cos(pitchRad) * FMath.Sin(yawRad);
-                float z = _orbitDistance * FMath.Sin(pitchRad);
-
-                FVector orbitOffset = new(x, y, z);
-                FVector cameraPosition = targetLocation + orbitOffset;
-
-                _freeCameraManager.MoveFreeCameraToPosition(cameraPosition);
-                if (_freeCameraManager.GetCurrentCameraPosition().Vector_DistanceSquared(targetLocation) > OrbitDistanceMax * OrbitDistanceMax)
-                {
-                    _freeCameraManager.MoveFreeCameraWithObstacleCheck(targetLocation, cameraPosition);
-                }
-                _freeCameraManager.SetLookAtTarget(targetLocation);
+                _freeCameraManager.SetFreeCameraActorTransform(_targetLocation, new(_orbitPitch, _currentPlayerOrbitYaw + _orbitYaw, 0.0f));
+                _freeCameraManager.SetSpringArmLength(_orbitDistance);
             }
         }
 
@@ -205,14 +188,15 @@ namespace WukongMp.Api.FreeCamera
             var cameraPosition = _freeCameraManager.GetCurrentCameraPosition();
             var characterLocation = spectatedCharacter!.GetActorLocation();
             SetInitialOrbitFromCamera(cameraPosition, characterLocation, spectatedCharacter!.GetActorRotation());
-            _freeCameraManager.SetLookAtTarget(characterLocation);
             _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetState().CharacterNickName);
         }
 
         private void DisablePlayerSpectating()
         {
-            _currentSpectatedIndex = -1;
+            // Reset position to spring arm position so that camera doesn't jump
+            _freeCameraManager.SetFreeCameraActorTransform(_freeCameraManager.GetSpringArmEndTransform());
             _freeCameraManager.SetSpringArmLength(0);
+            _currentSpectatedIndex = -1;
             _widgetManager.HideSpectatingMessage();
         }
 
@@ -222,14 +206,16 @@ namespace WukongMp.Api.FreeCamera
             float distance = offset.Size();
 
             float playerYaw = targetRotation.Yaw;
-            float offsetYaw = FMath.RadiansToDegrees(FMath.Atan2(offset.Y, offset.X));
+            float offsetYaw = 180 + FMath.RadiansToDegrees(FMath.Atan2(offset.Y, offset.X));
             float relativeYaw = offsetYaw - playerYaw;
+            relativeYaw = ((relativeYaw + 180f) % 360f) - 180f;
 
-            float pitch = FMath.RadiansToDegrees(FMath.Atan2(offset.Z, offset.Size2D()));
+            float pitch = -FMath.RadiansToDegrees(FMath.Atan2(offset.Z, offset.Size2D()));
 
             _orbitYaw = relativeYaw;
             _orbitPitch = pitch;
             _orbitDistance = FMath.Clamp(distance, OrbitDistanceMin, OrbitDistanceMax);
+            _currentPlayerOrbitYaw = playerYaw;
         }
 
         public void CalculateMouseRotate()
