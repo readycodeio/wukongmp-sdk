@@ -89,6 +89,11 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
 
         localMainComp.Pawn.SetActorHiddenInGame(!visible);
         localMainComp.MarkerActor?.SetActorHiddenInGame(!visible);
+
+        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantShowBlood, visible);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreBattleInfoInUnitBar, visible);
+
         return true;
     }
 

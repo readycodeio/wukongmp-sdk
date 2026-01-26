@@ -7,7 +7,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop.ECS.Systems;
 
-public class FixYellowbrowSystem(WukongAreaState areaState, WukongPlayerState playerState, FreeCameraManager freeCameraManager) : QuerySystem<TamerComponent, LocalTamerComponent, HpComponent>
+public class FixYellowbrowSystem(WukongAreaState areaState, WukongPlayerState playerState) : QuerySystem<TamerComponent, LocalTamerComponent, HpComponent>
 {
     protected override void OnUpdate()
     {

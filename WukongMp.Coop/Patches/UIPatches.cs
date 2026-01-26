@@ -157,15 +157,18 @@ public class PatchInitBloodBarUI
     }
 }
 
-[HarmonyPatch(typeof(BUI_ProjWidget), nameof(BUI_ProjWidget.SetAlwaysShowSetting))]
+[HarmonyPatch(typeof(BUS_UnitBarInfoComp), "ShowEnemyBar")]
 [HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchSetAlwaysShowSetting
+public class PatchShowEnemyBar
 {
-    public static void Prefix(IProjInfo ___ProjData, ref bool Value)
+    public static bool Prefix(BUS_UnitBarInfoComp __instance, ref bool __result)
     {
-        if (___ProjData is HPProjInfo { BindedUnit: BGUPlayerCharacterCS })
+        var owner = __instance.GetOwner();
+        if (owner is BGUPlayerCharacterCS)
         {
-            Value = true;
+            __result = !BGUFunctionLibraryCS.BGUHasUnitSimpleState(owner, EBGUSimpleState.CantShowBlood);
+            return false;
         }
+        return true;
     }
 }
