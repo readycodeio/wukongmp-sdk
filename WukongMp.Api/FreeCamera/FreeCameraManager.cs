@@ -159,6 +159,21 @@ public class FreeCameraManager(WukongPlayerState playerState)
         OnFreeCameraModeChanged?.Invoke(false);
     }
 
+    public void ReEnableFreeCamera()
+    {
+        if (_isInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed() && _cachePlayerPawn != null)
+        {
+            var aBGPPlayerController = _cachePlayerPawn.GetController() as ABGPPlayerController;
+            if (aBGPPlayerController.IsNullOrDestroyed())
+            {
+                Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerController IsNull");
+                return;
+            }
+            _cacheCameraViewTarget = aBGPPlayerController.GetViewTarget();
+            aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
+        }
+    }
+
     public bool MoveFreeCameraToPosition(FVector position)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())

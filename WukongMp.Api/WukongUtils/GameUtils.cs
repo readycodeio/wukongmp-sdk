@@ -40,12 +40,7 @@ namespace WukongMp.Api.WukongUtils
             PossessPawn(controller, possessPawn, unpossessPawn);
             controller.SetViewTargetWithBlend(possessPawn);
             controller.SetControlRotation(controllerRotation);
-            var freeCameraManager = DI.Instance.FreeCameraManager;
-            if (freeCameraManager.IsInFreeCameraMode)
-            {
-                freeCameraManager.LeaveFreeCameraMode();
-                freeCameraManager.EnterFreeCameraMode();
-            }
+            DI.Instance.FreeCameraManager.ReEnableFreeCamera();
         }
 
         public static void PossessPawn(ABGPPlayerController controller, APawn possessPawn, APawn unpossessPawn)

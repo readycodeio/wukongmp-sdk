@@ -1,16 +1,17 @@
-﻿using b1;
-using B1UI;
+﻿using B1UI;
 using CSharpModBase;
 using CSharpModBase.Input;
+using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
+using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -43,12 +44,14 @@ namespace WukongMp.Api.FreeCamera
 
         private bool _isDragging;
         private FVector2D _lastDragPos;
-        private BGUCharacterCS? spectatedCharacter;
+        private MainCharacterEntity _spectatedEntity;
 
         private readonly FreeCameraManager _freeCameraManager;
         private readonly WukongPlayerState _playerState;
         private readonly ClientState _state;
         private readonly WukongWidgetManager _widgetManager;
+        private readonly ArchetypeEventRouter _archetypeEvent;
+        private readonly ClientWukongArchetypeRegistration _wukongArchetype;
 
         private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
         {
@@ -67,12 +70,21 @@ namespace WukongMp.Api.FreeCamera
 
         private int _currentSpectatedIndex = -1;
 
-        public FreeCameraController(ClientState state, WukongPlayerState playerState, InputManager inputManager, FreeCameraManager freeCameraManager, WukongWidgetManager widgetManager)
+        public FreeCameraController(
+            ClientState state,
+            WukongPlayerState playerState,
+            InputManager inputManager,
+            FreeCameraManager freeCameraManager,
+            WukongWidgetManager widgetManager,
+            ArchetypeEventRouter archetypeEvent,
+            ClientWukongArchetypeRegistration wukongArchetype)
         {
             _state = state;
             _playerState = playerState;
             _freeCameraManager = freeCameraManager;
             _widgetManager = widgetManager;
+            _archetypeEvent = archetypeEvent;
+            _wukongArchetype = wukongArchetype;
 
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.RBUTTON, OnRightMouseStarted, OnRightMouseCompleted));
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.W, OnForwardStarted, OnForwardCompleted));
@@ -86,11 +98,15 @@ namespace WukongMp.Api.FreeCamera
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.LEFT, OnPrevStarted));
 
             _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
+
+            _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete += OnEntityDeleteHandler;
         }
 
         public void Dispose()
         {
             _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
+
+            _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
         }
 
         public void Update(float DeltaTime)
@@ -136,11 +152,13 @@ namespace WukongMp.Api.FreeCamera
             }
             else
             {
-                if (spectatedCharacter.IsNullOrDestroyed())
+                var localCharacterComp = _spectatedEntity.GetLocalState();
+                if (localCharacterComp.Pawn == null)
                 {
-                    _currentSpectatedIndex = -1;
+                    DisablePlayerSpectating();
                     return;
                 }
+                var spectatedCharacter = localCharacterComp.Pawn;
 
                 float orbitYawInput = -_moveDirLR + _rotateDirLR * MouseOrbitSensitivity;
                 float orbitPitchInput = -_moveDirUD + _rotateDirUD * MouseOrbitSensitivity;
@@ -184,7 +202,8 @@ namespace WukongMp.Api.FreeCamera
                 return;
             }
 
-            spectatedCharacter = localCharacterComp.Pawn;
+            _spectatedEntity = spectatedPlayer.Character;
+            var spectatedCharacter = localCharacterComp.Pawn;
             var cameraPosition = _freeCameraManager.GetCurrentCameraPosition();
             var characterLocation = spectatedCharacter!.GetActorLocation();
             SetInitialOrbitFromCamera(cameraPosition, characterLocation, spectatedCharacter!.GetActorRotation());
@@ -246,6 +265,14 @@ namespace WukongMp.Api.FreeCamera
                 normalizedOffsetY = mouseOffset.Y / viewportSize.Y;
             }
             return new FVector2D(normalizedOffsetX, normalizedOffsetY);
+        }
+
+        private void OnEntityDeleteHandler(EntityDelete evt)
+        {
+            if (_spectatedEntity.Entity == evt.Entity)
+            {
+                UpdateSpectatedPlayer(-1);
+            }
         }
 
         private void OnFreeCameraModeChanged(bool enabled)
