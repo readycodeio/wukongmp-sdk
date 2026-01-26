@@ -108,6 +108,8 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
         var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeLock, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeAutoLockTarget, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreAllInput, enable);
         if (enable)
         {
