@@ -1,7 +1,6 @@
 ﻿using B1UI;
 using CSharpModBase;
 using CSharpModBase.Input;
-using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
@@ -9,9 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
-using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -50,8 +47,6 @@ namespace WukongMp.Api.FreeCamera
         private readonly WukongPlayerState _playerState;
         private readonly ClientState _state;
         private readonly WukongWidgetManager _widgetManager;
-        private readonly ArchetypeEventRouter _archetypeEvent;
-        private readonly ClientWukongArchetypeRegistration _wukongArchetype;
 
         private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
         {
@@ -75,16 +70,12 @@ namespace WukongMp.Api.FreeCamera
             WukongPlayerState playerState,
             InputManager inputManager,
             FreeCameraManager freeCameraManager,
-            WukongWidgetManager widgetManager,
-            ArchetypeEventRouter archetypeEvent,
-            ClientWukongArchetypeRegistration wukongArchetype)
+            WukongWidgetManager widgetManager)
         {
             _state = state;
             _playerState = playerState;
             _freeCameraManager = freeCameraManager;
             _widgetManager = widgetManager;
-            _archetypeEvent = archetypeEvent;
-            _wukongArchetype = wukongArchetype;
 
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.RBUTTON, OnRightMouseStarted, OnRightMouseCompleted));
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.W, OnForwardStarted, OnForwardCompleted));
@@ -98,15 +89,11 @@ namespace WukongMp.Api.FreeCamera
             inputManager.RegisterKeyBind(new HotKeyItem(ModifierKeys.None, Key.LEFT, OnPrevStarted));
 
             _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
-
-            _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete += OnEntityDeleteHandler;
         }
 
         public void Dispose()
         {
             _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
-
-            _archetypeEvent[_wukongArchetype.MainCharacterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
         }
 
         public void Update(float DeltaTime)
@@ -152,10 +139,15 @@ namespace WukongMp.Api.FreeCamera
             }
             else
             {
+                if (_spectatedEntity.IsNull)
+                {
+                    UpdateSpectatedPlayer(-1);
+                    return;
+                }
                 var localCharacterComp = _spectatedEntity.GetLocalState();
                 if (localCharacterComp.Pawn == null)
                 {
-                    DisablePlayerSpectating();
+                    UpdateSpectatedPlayer(-1);
                     return;
                 }
                 var spectatedCharacter = localCharacterComp.Pawn;
@@ -265,14 +257,6 @@ namespace WukongMp.Api.FreeCamera
                 normalizedOffsetY = mouseOffset.Y / viewportSize.Y;
             }
             return new FVector2D(normalizedOffsetX, normalizedOffsetY);
-        }
-
-        private void OnEntityDeleteHandler(EntityDelete evt)
-        {
-            if (_spectatedEntity.Entity == evt.Entity)
-            {
-                UpdateSpectatedPlayer(-1);
-            }
         }
 
         private void OnFreeCameraModeChanged(bool enabled)
