@@ -347,7 +347,7 @@ namespace WukongMp.Api.Patches
                 var localMain = playerState.LocalMainCharacter.Value;
                 if (!localMain.GetState().IsTransformed)
                 {
-                    DI.Instance.FreeCameraManager.EnterFreeCameraMode();
+                    localMain.GetPvP().IsSpectator = true;
                     var netId = localMain.GetMeta().NetId;
 
                     var payload = new UnitDeadPacket(netId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);

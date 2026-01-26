@@ -17,7 +17,6 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.FreeCamera;
 using WukongMp.Api.NameCompressors;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
@@ -34,7 +33,6 @@ public partial class WukongRpcCallbacks : IDisposable
     private readonly WukongPlayerState _playerState;
     private readonly WukongPawnState _pawnState;
     private readonly ClientOwnershipManager _clientOwnership;
-    private readonly FreeCameraManager _freeCameraManager;
     private readonly GameplayEventRouter _eventRouter;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
@@ -48,7 +46,6 @@ public partial class WukongRpcCallbacks : IDisposable
         WukongPlayerState playerState,
         WukongPawnState pawnState,
         ClientOwnershipManager clientOwnership,
-        FreeCameraManager freeCameraManager,
         GameplayEventRouter eventRouter,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
@@ -61,7 +58,6 @@ public partial class WukongRpcCallbacks : IDisposable
         _playerState = playerState;
         _pawnState = pawnState;
         _clientOwnership = clientOwnership;
-        _freeCameraManager = freeCameraManager;
         _eventRouter = eventRouter;
         _ecsLoop = ecsLoop;
         _logger = logger;
@@ -426,7 +422,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (playerId0 == self._state.LocalPlayerId)
             {
-                self._freeCameraManager.LeaveFreeCameraMode();
+                mainEntity.GetPvP().IsSpectator = false;
             }
 
             ref var localMainComp = ref mainEntity.GetLocalState();
@@ -643,7 +639,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (mainEntity.GetState().IsDead)
             {
-                self._freeCameraManager.LeaveFreeCameraMode();
+                mainEntity.GetPvP().IsSpectator = false;
                 PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
                 CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             }
@@ -891,7 +887,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
 
             localMainComp.IsRespawning = true;
-            self._freeCameraManager.LeaveFreeCameraMode();
+            mainEntity.GetPvP().IsSpectator = false;
             CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
             self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
             PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
@@ -932,7 +928,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 if (mainEntity.GetState().IsDead)
                 {
                     localMainComp.IsRespawning = true;
-                    self._freeCameraManager.LeaveFreeCameraMode();
+                    mainEntity.GetPvP().IsSpectator = false;
                     PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
                 }
                 else
@@ -956,7 +952,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
 
             localMainComp.IsRespawning = true;
-            self._freeCameraManager.LeaveFreeCameraMode();
+            mainEntity.GetPvP().IsSpectator = false;
             CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
             self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
             PlayerUtils.RebirthAlivePlayer(localMainComp.Pawn, shrineId);

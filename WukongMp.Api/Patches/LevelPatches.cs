@@ -30,7 +30,8 @@ public static class PatchOnPlayerTeleportTo
 
         if (Reason is EPlayerTeleportReason.Rebirth or EPlayerTeleportReason.RebirthPoint)
         {
-            DI.Instance.FreeCameraManager.LeaveFreeCameraMode();
+            if (DI.Instance.PlayerState.LocalMainCharacter.HasValue)
+                DI.Instance.PlayerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
         }
     }
 }
