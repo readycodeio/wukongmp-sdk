@@ -1,7 +1,6 @@
-﻿using System;
-using System.Reflection;
-using b1;
+﻿using b1;
 using b1.BGW;
+using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
@@ -13,12 +12,17 @@ using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Serialization;
+using System;
+using System.Reflection;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Helpers;
 using WukongMp.Api.NameCompressors;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
@@ -34,6 +38,8 @@ public partial class WukongRpcCallbacks : IDisposable
     private readonly WukongPawnState _pawnState;
     private readonly ClientOwnershipManager _clientOwnership;
     private readonly GameplayEventRouter _eventRouter;
+    private readonly WukongWidgetManager _widgetManager;
+    private readonly TimerController _timerController;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly ILogger _logger;
 
@@ -47,6 +53,8 @@ public partial class WukongRpcCallbacks : IDisposable
         WukongPawnState pawnState,
         ClientOwnershipManager clientOwnership,
         GameplayEventRouter eventRouter,
+        WukongWidgetManager widgetManager,
+        TimerController timerController,
         IClientEcsUpdateLoop ecsLoop,
         ILogger logger)
     {
@@ -59,6 +67,8 @@ public partial class WukongRpcCallbacks : IDisposable
         _pawnState = pawnState;
         _clientOwnership = clientOwnership;
         _eventRouter = eventRouter;
+        _widgetManager = widgetManager;
+        _timerController = timerController;
         _ecsLoop = ecsLoop;
         _logger = logger;
 
@@ -1083,6 +1093,80 @@ public partial class WukongRpcCallbacks : IDisposable
             Logging.LogDebug("OnCastSkill called for caster {Caster} with skillId {SkillId} and skillType {SkillType}", BGU_DataUtil.GetActorGuid(casterPawn), skillId0, skillType0);
             BUS_EventCollectionCS.Get(casterPawn)?.Evt_UnitCastSkillTry.Invoke(new FCastSkillInfo(skillId0, skillType0));
         }, this, caster, skillId, skillType);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    internal void OnShowAntiStallWarning(int warningTime)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, warningTime0) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            if (mainEntity.GetState().IsDead)
+                return;
+
+            self._widgetManager.ShowInfoMessage(Texts.AntiStallWarning);
+            self._timerController.SetTimer(0, warningTime0);
+            self._timerController.StartTimer();
+            Logging.LogDebug("OnShowAntiStallWarning received");
+        }, this, warningTime);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    internal void OnHideAntiStallWarning()
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            self._widgetManager.HideInfoMessage();
+            self._timerController.StopTimer();
+            self._widgetManager.SetTimerVisibility(false);
+            Logging.LogDebug("OnHideAntiStallWarning received");
+        }, this);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    internal void OnStallDamage(float value)
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self, value0) =>
+        {
+            self._widgetManager.ShowInfoMessage(Texts.StallingMessage);
+
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            if (mainEntity.GetState().IsDead)
+                return;
+
+            Logging.LogDebug("Applying stall damage: {Damage}%", value0);
+            var pawn = mainEntity.GetLocalState().Pawn;
+            if (pawn == null)
+                return;
+
+            var container = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
+            var currentHp = container?.GetFloatValue(EBGUAttrFloat.Hp) ?? 0f;
+            var maxHp = container?.GetFloatValue(EBGUAttrFloat.HpMax) ?? 1f;
+            var currentStamina = container?.GetFloatValue(EBGUAttrFloat.Stamina) ?? 0f;
+            var maxStamina = container?.GetFloatValue(EBGUAttrFloat.StaminaMax) ?? 1f;
+
+            var newStamina = currentStamina - (maxStamina * value0 * 2 / 100f);
+            var events = BUS_EventCollectionCS.Get(pawn);
+
+            // TODO: Add HP loss randomization
+            FSkillDamageConfig SkillDamageConfig = new FSkillDamageConfig
+            {
+                DamageCalcType = EDamageCalcType.HPMaxRatioAbs,
+                HPMaxINV10000Damage_Abs = value0 * 1000,
+                DamageImmueLevel = 2,
+                DmgReason = EDamageReason.FallDmg
+            };
+
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Stamina, newStamina);
+            events?.Evt_TriggerNormalDamageEffect.Invoke(null, in SkillDamageConfig, default, new FBattleAttrSnapShot(null));
+        }, this, value);
     }
 
     #region PvpRPC

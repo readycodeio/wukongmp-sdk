@@ -334,4 +334,10 @@
   <data name="InfTransformEnabled" xml:space="preserve">
     <value>{0} włączył nieskończoną energię transformacji</value>
   </data>
+  <data name="AntiStallWarning" xml:space="preserve">
+    <value>Do ataku!</value>
+  </data>
+  <data name="StallingMessage" xml:space="preserve">
+    <value>Przeciąganie walki – utrata HP</value>
+  </data>
 </root>

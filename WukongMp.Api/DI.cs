@@ -32,6 +32,7 @@ using WukongMp.Api.UI;
 using WukongMp.Api.Command;
 using WukongMp.Api.Input;
 using WukongMp.Api.FreeCamera;
+using WukongMp.Api.Helpers;
 
 namespace WukongMp.Api;
 
@@ -99,6 +100,7 @@ public sealed class DI
 
 
     public WukongWidgetManager WidgetManager { get; private set; } = null!;
+    public TimerController TimerController { get; private set; } = null!;
 
     public ShimRelayMessageParser ShimParser { get; private set; } = null!;
     public ShimReplayDependencyTracker ShimDepTracker { get; set; } = null!;
@@ -184,6 +186,7 @@ public sealed class DI
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
         var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState);
+        var timerController = TimerController = new TimerController(widgetManager);
 
         var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity);
         var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
@@ -203,7 +206,7 @@ public sealed class DI
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
-        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, gameplayEventRouter, ecsLoop, logger);
+        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, gameplayEventRouter, widgetManager, timerController, ecsLoop, logger);
         var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger, widgetManager);
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
 

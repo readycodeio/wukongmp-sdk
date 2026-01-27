@@ -262,9 +262,6 @@
   <data name="WaitForOtherPlayersCount" xml:space="preserve">
     <value>Warte auf andere Spieler ({0}/{1})</value>
   </data>
-  <data name="MasterClient" xml:space="preserve">
-    <value>Hauptclient: {0}</value>
-  </data>
   <data name="HintCommandsUse" xml:space="preserve">
     <value>Drücken Sie F1, um Befehle zu verwenden</value>
   </data>
@@ -273,5 +270,14 @@
   </data>
   <data name="CameraSwitchControls" xml:space="preserve">
     <value>←/→</value>
+  </data>
+  <data name="MasterClient" xml:space="preserve">
+    <value>Hauptclient: {0}</value>
+  </data>
+  <data name="AntiStallWarning" xml:space="preserve">
+    <value>Angreifen!</value>
+  </data>
+  <data name="StallingMessage" xml:space="preserve">
+    <value>Zeitspiel – HP-Verlust</value>
   </data>
 </root>
