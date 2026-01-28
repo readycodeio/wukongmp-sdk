@@ -1152,9 +1152,6 @@ public partial class WukongRpcCallbacks : IDisposable
             var currentStamina = container?.GetFloatValue(EBGUAttrFloat.Stamina) ?? 0f;
             var maxStamina = container?.GetFloatValue(EBGUAttrFloat.StaminaMax) ?? 1f;
 
-            var newStamina = currentStamina - (maxStamina * value0 * 2 / 100f);
-            var events = BUS_EventCollectionCS.Get(pawn);
-
             // TODO: Add HP loss randomization
             FSkillDamageConfig SkillDamageConfig = new FSkillDamageConfig
             {
@@ -1164,7 +1161,8 @@ public partial class WukongRpcCallbacks : IDisposable
                 DmgReason = EDamageReason.FallDmg
             };
 
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Stamina, newStamina);
+            var events = BUS_EventCollectionCS.Get(pawn);
+            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Stamina, -(maxStamina * value0 * 2));
             events?.Evt_TriggerNormalDamageEffect.Invoke(null, in SkillDamageConfig, default, new FBattleAttrSnapShot(null));
         }, this, value);
     }
