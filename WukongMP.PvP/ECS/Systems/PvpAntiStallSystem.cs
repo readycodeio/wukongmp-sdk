@@ -1,9 +1,12 @@
 ﻿using b1;
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
@@ -12,7 +15,7 @@ using WukongMp.PvP.Configuration;
 namespace WukongMp.Api.ECS.Systems;
 
 internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks rpc)
-    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent, PvPComponent, TeamComponent>
+    : QuerySystem<LocalMainCharacterComponent, MetadataComponent, TeamComponent>
 {
     private struct PlayerEngagementData
     {
@@ -42,8 +45,8 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
     private float _activeTimer;
 
     private float _roomEngagementScore;
-    private readonly Dictionary<PlayerId, float> _playerEngagementMultipliers = [];
-    private readonly Dictionary<PlayerId, PlayerEngagementData> _playerEngagementData = [];
+    private readonly Dictionary<NetworkId, float> _playerEngagementMultipliers = [];
+    private readonly Dictionary<NetworkId, PlayerEngagementData> _playerEngagementData = [];
 
     private int _decayRounds = 0;
 
@@ -67,9 +70,9 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
             return;
         }
 
-        Query.ForEachEntity((ref localMainCharacter, ref mainCharacter, ref pvp, ref team, entity) =>
+        Query.ForEachEntity((ref localMainCharacter, ref metadata, ref team, entity) =>
         {
-            var playerId = mainCharacter.PlayerId;
+            var playerId = metadata.NetId;
             if (!_playerEngagementData.TryGetValue(playerId, out PlayerEngagementData data))
             {
                 data=new PlayerEngagementData();
@@ -91,6 +94,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
             _playerEngagementData[playerId] = data;
         });
 
+        UpdatePlayerMultipliers();
         UpdateEngagementScore();
         UpdateState();
 
@@ -106,9 +110,14 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
         if (_state == AntiStallState.Active)
         {
             _activeTimer += _elapsedTime;
-            var decayRate = (AntiStallConfig.BaseDecayRate + AntiStallConfig.DecayMultiplier * _decayRounds) * Tick.deltaTime;
-            rpc.SendStallDamage(decayRate);
-            // TODO: Per player rpc to apply corrective action with multiplier based on their engagement score
+            var baseDecayRate = AntiStallConfig.BaseAttributeDecayRate + AntiStallConfig.AttributeDecayMultiplier * _decayRounds;
+            foreach (var kvp in _playerEngagementMultipliers)
+            {
+                var playerId = kvp.Key;
+                var multiplier = kvp.Value;
+                var scaledDecay = baseDecayRate * multiplier * _elapsedTime;
+                rpc.SendStallDamage(playerId, scaledDecay);
+            }
             if (_activeTimer >= AntiStallConfig.ActiveDuration)
             {
                 _decayRounds++;
@@ -123,31 +132,87 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
     {
         foreach (var kvp in _playerEngagementData)
         {
-            var playerId = kvp.Key;
             var data = kvp.Value;
-            // TODO: Add check if players from opposing teams are close to each other or facing each other
-
             if (data.IsAttacking)
             {
-                _roomEngagementScore += _elapsedTime * AntiStallConfig.AttackEngagementScore;
+                _roomEngagementScore += _elapsedTime * AntiStallConfig.AttackRoomEngagementScore;
             }
             if (data.CurrentHp < data.PrevHp)
             {
-                _roomEngagementScore += _elapsedTime * AntiStallConfig.DamageEngagementScore;
+                _roomEngagementScore += _elapsedTime * AntiStallConfig.DamageRoomEngagementScore;
             }
         }
-        _roomEngagementScore = FMath.Min(_roomEngagementScore, AntiStallConfig.MaxEngagementScore);
-        _roomEngagementScore -= _elapsedTime * AntiStallConfig.EngagementDecayScore;
+        _roomEngagementScore = FMath.Min(_roomEngagementScore, AntiStallConfig.MaxRoomEngagementScore);
+        _roomEngagementScore -= _elapsedTime * AntiStallConfig.RoomEngagementDecayScore;
         _roomEngagementScore = FMath.Max(_roomEngagementScore, 0f);
+    }
+
+    private void UpdatePlayerMultipliers()
+    {
+        var _playerFacingDictionary = CalculatePlayerFacing();
+        foreach (var playerId in _playerEngagementData.Keys)
+        {
+            float current = _playerEngagementMultipliers.TryGetValue(playerId, out var val) ? val : 1.0f;
+
+            if (_playerFacingDictionary.TryGetValue(playerId, out bool isFacing) && isFacing)
+            {
+                current = MathF.Max(current - AntiStallConfig.PlayerEngagementMultiplierIncrease * _elapsedTime, AntiStallConfig.PlayerEngagementMultiplierMin);
+            }
+            else
+            {
+                current = MathF.Min(current + AntiStallConfig.PlayerEngagementMultiplierDecay * _elapsedTime, AntiStallConfig.PlayerEngagementMultiplierMax);
+            }
+
+            _playerEngagementMultipliers[playerId] = current;
+        }
+    }
+
+    private Dictionary<NetworkId, bool> CalculatePlayerFacing()
+    {
+        var _playerFacingDictionary = new Dictionary<NetworkId, bool>();
+        var playerIds = new List<NetworkId>(_playerEngagementData.Keys);
+        for (int i = 0; i < playerIds.Count; i++)
+        {
+            var idA = playerIds[i];
+            var dataA = _playerEngagementData[idA];
+            if (_playerFacingDictionary.TryGetValue(idA, out bool alreadyEngagedA) && alreadyEngagedA)
+                continue;
+
+            for (int j = i + 1; j < playerIds.Count; j++)
+            {
+                var idB = playerIds[j];
+                var dataB = _playerEngagementData[idB];
+                if (dataA.TeamId == dataB.TeamId)
+                    continue;
+
+                var dirAtoB = Vector3.Normalize(dataB.LastPosition.ToVector3() - dataA.LastPosition.ToVector3());
+                var dirBtoA = -dirAtoB;
+                float facingA = Vector3.Dot(dataA.ForwardDirection.ToVector3(), dirAtoB);
+                float facingB = Vector3.Dot(dataB.ForwardDirection.ToVector3(), dirBtoA);
+
+                if (facingA > AntiStallConfig.PlayersFacingThreshold)
+                {
+                    _playerFacingDictionary[idA] = true;
+                    break;
+                }
+                if (facingB > AntiStallConfig.PlayersFacingThreshold)
+                {
+                    _playerFacingDictionary[idB] = true;
+                }
+            }
+            if (!_playerFacingDictionary.ContainsKey(idA))
+                _playerFacingDictionary[idA] = false;
+        }
+        return _playerFacingDictionary;
     }
 
     private void UpdateState()
     {
-        if (_roomEngagementScore > AntiStallConfig.EngagementThreshold && _state != AntiStallState.Monitoring)
+        if (_roomEngagementScore > AntiStallConfig.RoomEngagementThreshold && _state != AntiStallState.Monitoring)
         {
             SetMonitoringState();
         }
-        if (_roomEngagementScore < AntiStallConfig.EngagementThreshold && _state == AntiStallState.Monitoring)
+        if (_roomEngagementScore < AntiStallConfig.RoomEngagementThreshold && _state == AntiStallState.Monitoring)
         {
             SetWarningState();
         }
@@ -156,7 +221,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
     private void SetMonitoringState()
     {
         _state = AntiStallState.Monitoring;
-        rpc.SendHideAntiStallWarning();
+        rpc.SendHideAntiStall();
     }
 
     private void SetWarningState()
@@ -170,7 +235,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
     {
         _state = AntiStallState.Active;
         _activeTimer = 0f;
-        //widgetManager.ShowAntiStallActiveWarning();
+        rpc.SendShowAntiStallAction();
     }
 
     private void ResetState()
@@ -181,9 +246,9 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
         _isReset = true;
         _state = AntiStallState.Monitoring;
         _decayRounds = 0;
-        _roomEngagementScore = AntiStallConfig.MaxEngagementScore;
+        _roomEngagementScore = AntiStallConfig.MaxRoomEngagementScore;
         _playerEngagementMultipliers.Clear();
         _playerEngagementData.Clear();
-        rpc.SendHideAntiStallWarning();
+        rpc.SendHideAntiStall();
     }
 }

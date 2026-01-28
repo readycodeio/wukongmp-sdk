@@ -1,5 +1,6 @@
 ﻿using b1;
 using b1.BGW;
+using b1.Plugins.SimpleCharts;
 using BtlShare;
 using CSharpModBase;
 using HarmonyLib;
@@ -1114,7 +1115,24 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnHideAntiStallWarning()
+    internal void OnShowAntiStallAction()
+    {
+        _ecsLoop.Scheduler.Schedule(static (_, self) =>
+        {
+            if (self._playerState.LocalMainCharacter is not { } mainEntity)
+                return;
+
+            if (mainEntity.GetState().IsDead)
+                return;
+
+            self._widgetManager.ShowInfoMessage(Texts.StallingMessage);
+            Logging.LogDebug("OnShowAntiStallAction received");
+
+        }, this);
+    }
+
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    internal void OnHideAntiStall()
     {
         _ecsLoop.Scheduler.Schedule(static (_, self) =>
         {
@@ -1129,42 +1147,44 @@ public partial class WukongRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnStallDamage(float value)
+    internal void OnStallDamage(NetworkId netId, float value)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, value0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, netId0, value0) =>
         {
-            self._widgetManager.ShowInfoMessage(Texts.StallingMessage);
-
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
 
             if (mainEntity.GetState().IsDead)
                 return;
 
-            Logging.LogDebug("Applying stall damage: {Damage}%", value0);
-            var pawn = mainEntity.GetLocalState().Pawn;
-            if (pawn == null)
-                return;
-
-            var container = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-            var currentHp = container?.GetFloatValue(EBGUAttrFloat.Hp) ?? 0f;
-            var maxHp = container?.GetFloatValue(EBGUAttrFloat.HpMax) ?? 1f;
-            var currentStamina = container?.GetFloatValue(EBGUAttrFloat.Stamina) ?? 0f;
-            var maxStamina = container?.GetFloatValue(EBGUAttrFloat.StaminaMax) ?? 1f;
-
-            // TODO: Add HP loss randomization
-            FSkillDamageConfig SkillDamageConfig = new FSkillDamageConfig
+            if (self._netEntity.TryGetEntityByNetworkId(netId0, out var entity) && entity == mainEntity.Entity)
             {
-                DamageCalcType = EDamageCalcType.HPMaxRatioAbs,
-                HPMaxINV10000Damage_Abs = value0 * 1000,
-                DamageImmueLevel = 2,
-                DmgReason = EDamageReason.FallDmg
-            };
+                // TODO: Move to player utils
+                Logging.LogDebug("Applying stall damage: {Damage}%", value0);
+                var pawn = mainEntity.GetLocalState().Pawn;
+                if (pawn == null)
+                    return;
 
-            var events = BUS_EventCollectionCS.Get(pawn);
-            events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Stamina, -(maxStamina * value0 * 2));
-            events?.Evt_TriggerNormalDamageEffect.Invoke(null, in SkillDamageConfig, default, new FBattleAttrSnapShot(null));
-        }, this, value);
+                var container = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
+                var currentHp = container?.GetFloatValue(EBGUAttrFloat.Hp) ?? 0f;
+                var maxHp = container?.GetFloatValue(EBGUAttrFloat.HpMax) ?? 1f;
+                var currentStamina = container?.GetFloatValue(EBGUAttrFloat.Stamina) ?? 0f;
+                var maxStamina = container?.GetFloatValue(EBGUAttrFloat.StaminaMax) ?? 1f;
+
+                FSkillDamageConfig SkillDamageConfig = new FSkillDamageConfig
+                {
+                    DamageCalcType = EDamageCalcType.HPMaxRatioAbs,
+                    HPMaxINV10000Damage_Abs = value0 * 1000,
+                    DamageImmueLevel = 2,
+                    DmgReason = EDamageReason.FallDmg
+                };
+
+                var events = BUS_EventCollectionCS.Get(pawn);
+                events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Stamina, -(maxStamina * value0 * 2));
+                events?.Evt_TriggerNormalDamageEffect.Invoke(null, in SkillDamageConfig, default, new FBattleAttrSnapShot(null));
+            }
+           
+        }, this, netId, value);
     }
 
     #region PvpRPC
