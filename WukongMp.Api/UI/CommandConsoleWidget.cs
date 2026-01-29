@@ -22,6 +22,10 @@ public class CommandConsoleWidget : GameWidgetBase
     public override void SetVisibility(bool visible)
     {
         base.SetVisibility(visible);
+        if (visible)
+        {
+            SetInputFocus();
+        }
     }
 
     public void ShowIfNotHidden()
