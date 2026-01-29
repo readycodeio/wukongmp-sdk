@@ -2,7 +2,6 @@
 using BtlB1;
 using BtlShare;
 using System;
-using CommB1;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -192,18 +191,12 @@ namespace WukongMp.Api.WukongUtils
             ref var pvp = ref mainEntity.GetPvP();
             pvp.IsSpectator = true;
             pvp.SpectatorReason = reason;
-
-            ref var localState = ref mainEntity.GetLocalState();
-            if (localState.Pawn != null)
-                localState.BeforeSpectatorLocation = localState.Pawn.GetActorLocation();
         }
 
         public static void DisableSpectator(MainCharacterEntity mainEntity)
         {
             Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickName);
             mainEntity.GetPvP().IsSpectator = false;
-            // Restore local player position instantly after disabling spectator mode
-            TeleportLocalPlayer(mainEntity, mainEntity.GetLocalState().BeforeSpectatorLocation, new FRotator(), false);
         }
     }
 }

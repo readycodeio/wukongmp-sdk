@@ -131,7 +131,6 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
             _gravityScale = localMainComp.Pawn.CharacterMovement.GravityScale;
             localMainComp.Pawn.CharacterMovement.GravityScale = 0;
             _lastValidLocation = localMainComp.Pawn.GetActorLocation();
-            localMainComp.BeforeSpectatorLocation = _lastValidLocation;
             var offset = new FVector(0, 0, localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * -3);
             localMainComp.Pawn.SetActorLocation(_lastValidLocation + offset, false, out _, true);
         }
