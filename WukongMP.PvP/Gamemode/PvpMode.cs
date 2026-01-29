@@ -232,9 +232,11 @@ internal partial class PvpMode : IDisposable
             ref var pvpComp = ref mainCharacterEntity.GetPvP();
 
             // Set IsSpectator if joining during fight.
-            pvpComp.IsSpectator = _areaState.PvpState.Value.InPvP;
-            pvpComp.SpectatorReason = SpectatorReason.Observer;
-            Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+            if (_areaState.PvpState.Value.InPvP)
+            {
+                PlayerUtils.EnableSpectator(mainCharacterEntity, SpectatorReason.Observer);
+                Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+            }
         }
     }
 
@@ -817,9 +819,10 @@ internal partial class PvpMode : IDisposable
                 // ReSharper disable once AsyncVoidMethod
                 _ecsLoop.Scheduler.Schedule(async static void (_, self) =>
                 {
+                    await Task.Delay(1000);
                     if (self._playerState.LocalMainCharacter.HasValue)
-                        self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
-                    await Task.Delay(2000);
+                        PlayerUtils.DisableSpectator(self._playerState.LocalMainCharacter.Value);
+                    await Task.Delay(1000);
                     Logging.LogInformation("End tournament");
                     self._pvpWidgetManager.SetupLobbyUi();
                     self.EndTournament();

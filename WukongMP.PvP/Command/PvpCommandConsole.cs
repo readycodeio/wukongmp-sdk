@@ -123,8 +123,14 @@ internal class PvpCommandConsole : IDisposable
             if (!_areaState.PvpState!.Value.InTournament)
             {
                 ref var pvp = ref playerEntity.Value.GetPvP();
-                pvp.IsSpectator = !pvp.IsSpectator;
-                pvp.SpectatorReason = SpectatorReason.Observer;
+                if (!pvp.IsSpectator)
+                {
+                    PlayerUtils.EnableSpectator(playerEntity.Value, SpectatorReason.Observer);
+                }
+                else
+                {
+                    PlayerUtils.DisableSpectator(playerEntity.Value);
+                }
             }
         }
     }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
@@ -31,7 +32,7 @@ public static class PatchOnPlayerTeleportTo
         if (Reason is EPlayerTeleportReason.Rebirth or EPlayerTeleportReason.RebirthPoint)
         {
             if (DI.Instance.PlayerState.LocalMainCharacter.HasValue)
-                DI.Instance.PlayerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
+                PlayerUtils.DisableSpectator(DI.Instance.PlayerState.LocalMainCharacter.Value);
         }
     }
 }
