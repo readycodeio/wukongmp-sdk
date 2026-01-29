@@ -14,6 +14,7 @@ public struct LocalMainCharacterComponent : IComponent
     public bool IsPlayerSynced;
 
     public bool IsSpectatorLocally;
+    public SpectatorReason SpectatorReason;
     public bool ShouldDisableCollision;
 
     [Ignore]

@@ -123,6 +123,7 @@ internal class PvpCommandConsole : IDisposable
             {
                 ref var pvp = ref playerEntity.Value.GetPvP();
                 pvp.IsSpectator = !pvp.IsSpectator;
+                playerEntity.Value.GetLocalState().SpectatorReason = Api.ECS.Values.SpectatorReason.Observer;
             }
         }
     }

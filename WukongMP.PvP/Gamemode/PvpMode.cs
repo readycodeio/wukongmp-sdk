@@ -177,13 +177,16 @@ internal partial class PvpMode : IDisposable
             return;
 
         ref var player = ref _playerState.LocalPlayerEntity.Value.GetState();
-        if (enabled)
+        if (_playerState.LocalMainCharacter.Value.GetLocalState().SpectatorReason == Api.ECS.Values.SpectatorReason.Observer)
         {
-            player.TeamId = PvpConstants.SpectatorTeamId;
-        }
-        else
-        {
-            player.TeamId = GetSmallerTeamId();
+            if (enabled)
+            {
+                player.TeamId = PvpConstants.SpectatorTeamId;
+            }
+            else
+            {
+                player.TeamId = GetSmallerTeamId();
+            }
         }
     }
 
@@ -221,6 +224,7 @@ internal partial class PvpMode : IDisposable
 
             // Set IsSpectator if joining during fight.
             pvpComp.IsSpectator = _areaState.PvpState.Value.InPvP;
+            mainCharacterEntity.GetLocalState().SpectatorReason = Api.ECS.Values.SpectatorReason.Observer;
             Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
         }
     }
