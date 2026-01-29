@@ -201,6 +201,7 @@ namespace WukongMp.Api.WukongUtils
         {
             Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickName);
             mainEntity.GetPvP().IsSpectator = false;
+            mainEntity.GetLocalState().IsDuringDeathAnim = false;
         }
     }
 }

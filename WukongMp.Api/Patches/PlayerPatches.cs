@@ -354,7 +354,7 @@ namespace WukongMp.Api.Patches
                     {
                         localState.DeadAnimationTime = battleData.PlayerDeathUIDelayTime;
                     }
-                    localState.DeadAnimationTime = 5f; // Value from game.
+                    localState.DeadAnimationTime = 6f; // Value from game.
 
                     var netId = localMain.GetMeta().NetId;
                     var payload = new UnitDeadPacket(netId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
