@@ -30,10 +30,10 @@ namespace WukongMp.PvP.UI
             GameWidget?.CallFunctionByNameWithArguments($"SetMaxReadyCount {maxCount}", true);
         }
 
-        public void UpdatePlayerTeam(string nickName, int teamId, bool isSpectator)
+        public void UpdatePlayerTeam(string nickName, int teamId)
         {
             RemovePlayerFromTeams(nickName);
-            if (isSpectator)
+            if (teamId == PvpConstants.SpectatorTeamId)
             {
                 AddSpectator(nickName);
             }

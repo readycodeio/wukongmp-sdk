@@ -37,7 +37,7 @@ internal sealed class PvpRoundEndSystem(
             {
                 var state = p.Character.GetState();
                 var pvp = p.Character.GetPvP();
-                return !pvp.IsSpectator && (!state.IsDead || state.IsTransformed);
+                return !pvp.IsObserver && (!state.IsDead || state.IsTransformed);
             })
             .Select(x => x.Player.GetState().TeamId)
             .ToList();

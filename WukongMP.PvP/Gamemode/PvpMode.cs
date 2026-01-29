@@ -76,7 +76,7 @@ internal partial class PvpMode : IDisposable
         if (playerEntity.HasValue)
         {
             ref var pvpComp = ref playerEntity.Value.GetPvP();
-            return pvpComp.IsSpectator == false || (pvpComp.IsSpectator == true && pvpComp.SpectatorReason == SpectatorReason.Death);
+            return !pvpComp.IsObserver;
         }
         return false;
     }
@@ -189,16 +189,13 @@ internal partial class PvpMode : IDisposable
             return;
 
         ref var player = ref _playerState.LocalPlayerEntity.Value.GetState();
-        if (_playerState.LocalMainCharacter.Value.GetPvP().SpectatorReason == SpectatorReason.Observer)
+        if (enabled && _playerState.LocalMainCharacter.Value.GetPvP().IsObserver)
         {
-            if (enabled)
-            {
-                player.TeamId = PvpConstants.SpectatorTeamId;
-            }
-            else
-            {
-                player.TeamId = GetSmallerTeamId();
-            }
+            player.TeamId = PvpConstants.SpectatorTeamId;
+        }
+        else if (!enabled && player.TeamId == PvpConstants.SpectatorTeamId)
+        {
+            player.TeamId = GetSmallerTeamId();
         }
     }
 
@@ -656,7 +653,7 @@ internal partial class PvpMode : IDisposable
     private void RefreshReadyCounts()
     {
         var readyForPvp = OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP && !x.Character.GetPvP().IsSpectator);
-        var available = OtherPlayers.Count(x => !x.Character.GetPvP().IsSpectator);
+        var available = OtherPlayers.Count(x => !x.Character.GetPvP().IsObserver);
         _pvpWidgetManager.UpdateReadyCount(readyForPvp, available);
     }
 

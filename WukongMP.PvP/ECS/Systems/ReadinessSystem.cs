@@ -27,6 +27,9 @@ internal sealed class ReadinessSystem(
         if (!areaState.CurrentArea.HasValue)
             return;
 
+        if (areaState.PvpState.HasValue && areaState.PvpState.Value.InTournament)
+            return;
+
         var players = 0;
         var readyCount = 0;
         var blueTeamAnyReady = false;
@@ -37,7 +40,7 @@ internal sealed class ReadinessSystem(
             if (scope.ScopeEntity != areaState.CurrentArea.Value.Entity)
                 return;
 
-            if (pvp.IsSpectator)
+            if (pvp.IsObserver)
                 return;
 
             players++;

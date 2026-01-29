@@ -84,8 +84,7 @@ namespace WukongMp.PvP.UI
         {
             ref var playerComp = ref playerEntity.GetState();
 
-            var isSpectator = mainCharacterEntity.GetPvP().IsSpectator;
-            _lobbyStatusWidget.Value.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId, isSpectator);
+            _lobbyStatusWidget.Value.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId);
             RefreshWidgets();
         }
 
