@@ -41,11 +41,6 @@ internal sealed class PlayerListSystem(
                 if (player.HasValue)
                 {
                     var team = player.Value.GetState().TeamId;
-                    if (pvp.IsSpectator)
-                    {
-                        spectatorsList.Add(mainCharacterComponent.CharacterNickName);
-                        return;
-                    }
 
                     switch (team)
                     {
@@ -54,6 +49,9 @@ internal sealed class PlayerListSystem(
                             return;
                         case PvpConstants.BlueTeamId:
                             blueTeamList.Add(mainCharacterComponent.CharacterNickName);
+                            return;
+                        case PvpConstants.SpectatorTeamId:
+                            spectatorsList.Add(mainCharacterComponent.CharacterNickName);
                             return;
                     }
                 }
