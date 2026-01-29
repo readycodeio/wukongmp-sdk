@@ -14,6 +14,7 @@ public struct LocalMainCharacterComponent : IComponent
     public bool IsPlayerSynced;
 
     public bool IsSpectatorLocally;
+    public FVector BeforeSpectatorLocation;
     public bool ShouldDisableCollision;
 
     [Ignore]
