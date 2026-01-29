@@ -23,6 +23,7 @@ using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.Values;
 using WukongMp.Api.Helpers;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -177,7 +178,7 @@ internal partial class PvpMode : IDisposable
             return;
 
         ref var player = ref _playerState.LocalPlayerEntity.Value.GetState();
-        if (_playerState.LocalMainCharacter.Value.GetLocalState().SpectatorReason == Api.ECS.Values.SpectatorReason.Observer)
+        if (_playerState.LocalMainCharacter.Value.GetPvP().SpectatorReason == SpectatorReason.Observer)
         {
             if (enabled)
             {
@@ -224,7 +225,7 @@ internal partial class PvpMode : IDisposable
 
             // Set IsSpectator if joining during fight.
             pvpComp.IsSpectator = _areaState.PvpState.Value.InPvP;
-            mainCharacterEntity.GetLocalState().SpectatorReason = Api.ECS.Values.SpectatorReason.Observer;
+            pvpComp.SpectatorReason = SpectatorReason.Observer;
             Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
         }
     }

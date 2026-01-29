@@ -7,6 +7,7 @@ using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Values;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
@@ -123,7 +124,7 @@ internal class PvpCommandConsole : IDisposable
             {
                 ref var pvp = ref playerEntity.Value.GetPvP();
                 pvp.IsSpectator = !pvp.IsSpectator;
-                playerEntity.Value.GetLocalState().SpectatorReason = Api.ECS.Values.SpectatorReason.Observer;
+                pvp.SpectatorReason = SpectatorReason.Observer;
             }
         }
     }

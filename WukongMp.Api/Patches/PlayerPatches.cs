@@ -347,8 +347,9 @@ namespace WukongMp.Api.Patches
                 var localMain = playerState.LocalMainCharacter.Value;
                 if (!localMain.GetState().IsTransformed)
                 {
-                    localMain.GetPvP().IsSpectator = true;
-                    localMain.GetLocalState().SpectatorReason = SpectatorReason.Death;
+                    ref var pvp = ref localMain.GetPvP();
+                    pvp.IsSpectator = true;
+                    pvp.SpectatorReason = SpectatorReason.Death;
                     var netId = localMain.GetMeta().NetId;
 
                     var payload = new UnitDeadPacket(netId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
