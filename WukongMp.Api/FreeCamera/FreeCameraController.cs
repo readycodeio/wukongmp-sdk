@@ -265,6 +265,17 @@ namespace WukongMp.Api.FreeCamera
             {
                 DisablePlayerSpectating();
             }
+            ResetInput();
+        }
+
+        private void ResetInput()
+        {
+            _isDragging = false;
+            _rotateDirLR = 0f;
+            _rotateDirUD = 0f;
+            _moveDirLR = 0f;
+            _moveDirUD = 0f;
+            _moveDirFB = 0f;
         }
 
         private void OnRightMouseStarted()
