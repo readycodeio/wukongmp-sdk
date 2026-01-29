@@ -70,6 +70,17 @@ internal partial class PvpMode : IDisposable
         return (PlayerId: playerId, Player: playerEntity.Value, Character: mainEntity.Value);
     }
 
+    private bool GetPvPPlayerIds(PlayerId playerId)
+    {
+        var playerEntity = _playerState.GetMainCharacterById(playerId);
+        if (playerEntity.HasValue)
+        {
+            ref var pvpComp = ref playerEntity.Value.GetPvP();
+            return pvpComp.IsSpectator == false || (pvpComp.IsSpectator == true && pvpComp.SpectatorReason == SpectatorReason.Death);
+        }
+        return false;
+    }
+
     public IEnumerable<PlayerId> SpectatingPlayerIds
         => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterById(p)?.GetPvP().IsSpectator == true);
 
@@ -77,7 +88,7 @@ internal partial class PvpMode : IDisposable
         => SpectatingPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
 
     public IEnumerable<PlayerId> AllPvPPlayerIds
-        => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterById(p)?.GetPvP().IsSpectator == false);
+        => _state.AreaPlayers.Where(GetPvPPlayerIds);
 
     public IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> AllPvPPlayers
         => AllPvPPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
