@@ -201,8 +201,6 @@ namespace WukongMp.Api.WukongUtils
         {
             Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickName);
             mainEntity.GetPvP().IsSpectator = false;
-            // Restore local player position instantly after disabling spectator mode
-            TeleportLocalPlayer(mainEntity, mainEntity.GetLocalState().BeforeSpectatorLocation, new FRotator(), false);
         }
     }
 }

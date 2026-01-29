@@ -821,6 +821,7 @@ internal partial class PvpMode : IDisposable
                 {
                     await Task.Delay(1000);
                     if (self._playerState.LocalMainCharacter.HasValue)
+                        self._playerState.LocalMainCharacter.Value.GetLocalState().IsDuringDeathAnim = false;
                         PlayerUtils.DisableSpectator(self._playerState.LocalMainCharacter.Value);
                     await Task.Delay(1000);
                     Logging.LogInformation("End tournament");
