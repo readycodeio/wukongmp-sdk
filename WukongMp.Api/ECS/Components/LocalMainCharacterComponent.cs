@@ -68,6 +68,10 @@ public struct LocalMainCharacterComponent : IComponent
     public float SpiritCooldownTime { get; set; }
     public bool ShouldSetSpiritCooldown { get; set; }
 
+    // Dead animation timer
+    public bool IsDuringDeathAnim { get; set; }
+    public float DeadAnimationTime { get; set; }
+
     [Ignore]
     public AActor? MarkerActor
     {

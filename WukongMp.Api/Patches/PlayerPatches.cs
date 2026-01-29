@@ -347,11 +347,16 @@ namespace WukongMp.Api.Patches
                 var localMain = playerState.LocalMainCharacter.Value;
                 if (!localMain.GetState().IsTransformed)
                 {
-                    ref var pvp = ref localMain.GetPvP();
-                    pvp.IsSpectator = true;
-                    pvp.SpectatorReason = SpectatorReason.Death;
-                    var netId = localMain.GetMeta().NetId;
+                    ref var localState = ref localMain.GetLocalState();
+                    localState.IsDuringDeathAnim = true;
+                    IBPC_BattleMainInfoData battleData = BGU_DataUtil.GetReadOnlyData<IBPC_BattleMainInfoData, BPC_BattleMainInfoData>(localState.Pawn?.GetController());
+                    if (battleData != null)
+                    {
+                        localState.DeadAnimationTime = battleData.PlayerDeathUIDelayTime;
+                    }
+                    localState.DeadAnimationTime = 3f; // Value from game.
 
+                    var netId = localMain.GetMeta().NetId;
                     var payload = new UnitDeadPacket(netId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                     localMain.GetState().IsDead = true;
                     DI.Instance.Rpc.SendUnitDead(payload);
