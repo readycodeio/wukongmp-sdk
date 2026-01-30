@@ -21,7 +21,7 @@ public class FixYellowbrowSystem(WukongAreaState areaState, WukongPlayerState pl
                 if (playerState.LocalMainCharacter.Value.GetState().IsDead)
                 {
                     // rebirth player
-                    playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
+                    PlayerUtils.DisableSpectator(playerState.LocalMainCharacter.Value);
                     PlayerUtils.RebirthPlayerInPlace(playerState.LocalMainCharacter.Value.GetLocalState().Pawn);
                 }
             }

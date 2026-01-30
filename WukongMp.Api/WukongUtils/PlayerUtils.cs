@@ -2,11 +2,11 @@
 using BtlB1;
 using BtlShare;
 using System;
-using CommB1;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.Values;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -183,6 +183,25 @@ namespace WukongMp.Api.WukongUtils
                     continue;
                 localMain.ShouldDisableCollision = false;
             }
+        }
+
+        public static void EnableSpectator(MainCharacterEntity mainEntity, SpectatorReason reason)
+        {
+            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickName, reason);
+            ref var pvp = ref mainEntity.GetPvP();
+            pvp.IsSpectator = true;
+            pvp.SpectatorReason = reason;
+
+            ref var localState = ref mainEntity.GetLocalState();
+            if (localState.Pawn != null)
+                localState.BeforeSpectatorLocation = localState.Pawn.GetActorLocation();
+        }
+
+        public static void DisableSpectator(MainCharacterEntity mainEntity)
+        {
+            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickName);
+            mainEntity.GetPvP().IsSpectator = false;
+            mainEntity.GetLocalState().IsDuringDeathAnim = false;
         }
     }
 }

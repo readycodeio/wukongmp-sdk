@@ -7,6 +7,7 @@ using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Values;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
@@ -122,7 +123,14 @@ internal class PvpCommandConsole : IDisposable
             if (!_areaState.PvpState!.Value.InTournament)
             {
                 ref var pvp = ref playerEntity.Value.GetPvP();
-                pvp.IsSpectator = !pvp.IsSpectator;
+                if (!pvp.IsSpectator)
+                {
+                    PlayerUtils.EnableSpectator(playerEntity.Value, SpectatorReason.Observer);
+                }
+                else
+                {
+                    PlayerUtils.DisableSpectator(playerEntity.Value);
+                }
             }
         }
     }

@@ -82,6 +82,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
         _syncGroup.Add(new UpdateCooldownSystem(playerState, eventBus, areaState));
         _syncGroup.Add(new FreeCameraMovementSystem(eventBus, freeCameraManager, freeCameraController));
+        _syncGroup.Add(new AfterMainCharacterDeathSystem(eventBus, playerState));
 
         _syncGroup.Add(new DebugViewSystem(eventBus, widgetManager));
 

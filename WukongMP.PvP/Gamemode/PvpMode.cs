@@ -23,6 +23,7 @@ using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.Values;
 using WukongMp.Api.Helpers;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -69,6 +70,17 @@ internal partial class PvpMode : IDisposable
         return (PlayerId: playerId, Player: playerEntity.Value, Character: mainEntity.Value);
     }
 
+    private bool GetPvPPlayerIds(PlayerId playerId)
+    {
+        var playerEntity = _playerState.GetMainCharacterById(playerId);
+        if (playerEntity.HasValue)
+        {
+            ref var pvpComp = ref playerEntity.Value.GetPvP();
+            return !pvpComp.IsObserver;
+        }
+        return false;
+    }
+
     public IEnumerable<PlayerId> SpectatingPlayerIds
         => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterById(p)?.GetPvP().IsSpectator == true);
 
@@ -76,7 +88,7 @@ internal partial class PvpMode : IDisposable
         => SpectatingPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
 
     public IEnumerable<PlayerId> AllPvPPlayerIds
-        => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterById(p)?.GetPvP().IsSpectator == false);
+        => _state.AreaPlayers.Where(GetPvPPlayerIds);
 
     public IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> AllPvPPlayers
         => AllPvPPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
@@ -177,11 +189,11 @@ internal partial class PvpMode : IDisposable
             return;
 
         ref var player = ref _playerState.LocalPlayerEntity.Value.GetState();
-        if (enabled)
+        if (enabled && _playerState.LocalMainCharacter.Value.GetPvP().IsObserver)
         {
             player.TeamId = PvpConstants.SpectatorTeamId;
         }
-        else
+        else if (!enabled && player.TeamId == PvpConstants.SpectatorTeamId)
         {
             player.TeamId = GetSmallerTeamId();
         }
@@ -220,8 +232,11 @@ internal partial class PvpMode : IDisposable
             ref var pvpComp = ref mainCharacterEntity.GetPvP();
 
             // Set IsSpectator if joining during fight.
-            pvpComp.IsSpectator = _areaState.PvpState.Value.InPvP;
-            Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+            if (_areaState.PvpState.Value.InPvP)
+            {
+                PlayerUtils.EnableSpectator(mainCharacterEntity, SpectatorReason.Observer);
+                Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+            }
         }
     }
 
@@ -472,7 +487,7 @@ internal partial class PvpMode : IDisposable
         if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null)
             return;
 
-        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InTournament: false })
+        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InTournament: false } && !_playerState.LocalMainCharacter.Value.GetPvP().IsSpectator)
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
@@ -640,7 +655,7 @@ internal partial class PvpMode : IDisposable
     private void RefreshReadyCounts()
     {
         var readyForPvp = OtherPlayers.Count(x => x.Character.GetPvP().IsReadyForPvP && !x.Character.GetPvP().IsSpectator);
-        var available = OtherPlayers.Count(x => !x.Character.GetPvP().IsSpectator);
+        var available = OtherPlayers.Count(x => !x.Character.GetPvP().IsObserver);
         _pvpWidgetManager.UpdateReadyCount(readyForPvp, available);
     }
 
@@ -804,9 +819,10 @@ internal partial class PvpMode : IDisposable
                 // ReSharper disable once AsyncVoidMethod
                 _ecsLoop.Scheduler.Schedule(async static void (_, self) =>
                 {
+                    await Task.Delay(1000);
                     if (self._playerState.LocalMainCharacter.HasValue)
-                        self._playerState.LocalMainCharacter.Value.GetPvP().IsSpectator = false;
-                    await Task.Delay(2000);
+                        PlayerUtils.DisableSpectator(self._playerState.LocalMainCharacter.Value);
+                    await Task.Delay(1000);
                     Logging.LogInformation("End tournament");
                     self._pvpWidgetManager.SetupLobbyUi();
                     self.EndTournament();

@@ -422,7 +422,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (playerId0 == self._state.LocalPlayerId)
             {
-                mainEntity.GetPvP().IsSpectator = false;
+                PlayerUtils.DisableSpectator(mainEntity);
             }
 
             ref var localMainComp = ref mainEntity.GetLocalState();
@@ -639,7 +639,7 @@ public partial class WukongRpcCallbacks : IDisposable
 
             if (mainEntity.GetState().IsDead)
             {
-                mainEntity.GetPvP().IsSpectator = false;
+                PlayerUtils.DisableSpectator(mainEntity);
                 PlayerUtils.RebirthPlayerInPlace(localMainComp.Pawn);
                 CutsceneUtils.TeleportLocalPlayerToCutsceneLocation();
             }
@@ -887,7 +887,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
 
             localMainComp.IsRespawning = true;
-            mainEntity.GetPvP().IsSpectator = false;
+            PlayerUtils.DisableSpectator(mainEntity);
             CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
             self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
             PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
@@ -928,7 +928,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 if (mainEntity.GetState().IsDead)
                 {
                     localMainComp.IsRespawning = true;
-                    mainEntity.GetPvP().IsSpectator = false;
+                    PlayerUtils.DisableSpectator(mainEntity);
                     PlayerUtils.RebirthDeadPlayer(localMainComp.Pawn, shrineId);
                 }
                 else
@@ -952,7 +952,7 @@ public partial class WukongRpcCallbacks : IDisposable
                 return;
 
             localMainComp.IsRespawning = true;
-            mainEntity.GetPvP().IsSpectator = false;
+            PlayerUtils.DisableSpectator(mainEntity);
             CutsceneUtils.ClearLocalJoiningCutsceneStatus(mainEntity);
             self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
             PlayerUtils.RebirthAlivePlayer(localMainComp.Pawn, shrineId);

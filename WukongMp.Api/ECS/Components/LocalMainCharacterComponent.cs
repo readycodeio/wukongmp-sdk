@@ -14,6 +14,7 @@ public struct LocalMainCharacterComponent : IComponent
     public bool IsPlayerSynced;
 
     public bool IsSpectatorLocally;
+    public FVector BeforeSpectatorLocation;
     public bool ShouldDisableCollision;
 
     [Ignore]
@@ -66,6 +67,10 @@ public struct LocalMainCharacterComponent : IComponent
     public bool SpiritCooldownEnabled { get; set; }
     public float SpiritCooldownTime { get; set; }
     public bool ShouldSetSpiritCooldown { get; set; }
+
+    // Dead animation timer
+    public bool IsDuringDeathAnim { get; set; }
+    public float DeadAnimationTime { get; set; }
 
     [Ignore]
     public AActor? MarkerActor

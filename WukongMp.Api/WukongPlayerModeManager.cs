@@ -116,6 +116,10 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeLock, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeAutoLockTarget, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreAllInput, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PELock, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.StaminaLock, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PlayerCantLock, enable);
+
         if (enable)
         {
             localMainComp.Pawn.CharacterMovement.GravityScale = _gravityScale;
