@@ -2,6 +2,7 @@
 using BtlShare;
 using System;
 using System.Globalization;
+using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
@@ -11,6 +12,7 @@ using WukongMp.Api.ECS.Values;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
+using WukongMp.PvP.Configuration;
 using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.Command;
@@ -56,6 +58,8 @@ internal class PvpCommandConsole : IDisposable
         _wukongCommandConsole.AddCommand("/infinite_mana", new ConsoleCommand(ToggleInfiniteMana));
         _wukongCommandConsole.AddCommand("/spirit_cooldown", new ConsoleCommand(SetSpiritCooldown));
         _wukongCommandConsole.AddCommand("/infinite_vessel", new ConsoleCommand(ToggleInfiniteVessel));
+        _wukongCommandConsole.AddCommand("/arena", new ConsoleCommand(TeleportToArena));
+        _wukongCommandConsole.AddCommand("/shrine", new ConsoleCommand(TeleportToShrine));
     }
 
     private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -232,5 +236,29 @@ internal class PvpCommandConsole : IDisposable
         events?.Evt_ResetSkillCD.Invoke();
         localState.InstantSkillCooldown = !localState.InstantSkillCooldown;
         _wukongChatter.SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", NickName);
+    }
+
+    private void TeleportToArena(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.InRoom && !mainEntity.GetPvP().IsSpectator && _areaState.PvpState is { InTournament: false })
+        {
+            var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+            PlayerUtils.TeleportLocalPlayer(mainEntity, levelData.PvpStartingLocation, FRotator.ZeroRotator);
+        }
+    }
+
+    private void TeleportToShrine(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.InRoom && !mainEntity.GetPvP().IsSpectator && _areaState.PvpState is { InTournament: false })
+        {
+            var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+            PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity, levelData.BirthPointID);
+        }
     }
 }

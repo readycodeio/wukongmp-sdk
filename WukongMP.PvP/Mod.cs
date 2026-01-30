@@ -217,6 +217,20 @@ namespace WukongMp.PvP
                     DI.Instance.WidgetManager.ToggleCommandVisibility();
             });
 
+            DI.Instance.InputManager.RegisterKeyBind(Key.F3, () =>
+            {
+                _logger.LogDebug("F3");
+                if (DI.Instance.WukongInputManager.CanApplyInput())
+                    DI.Instance.CommandConsole.ProcessCommand("/shrine");
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F4, () =>
+            {
+                _logger.LogDebug("F4");
+                if (DI.Instance.WukongInputManager.CanApplyInput())
+                    DI.Instance.CommandConsole.ProcessCommand("/arena");
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(Key.UP, () =>
             {
                 _logger.LogDebug("UP");

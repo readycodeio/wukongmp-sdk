@@ -68,9 +68,15 @@ namespace WukongMp.Api.WukongUtils
             events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.Mp, maxMana);
         }
 
-        public static void TeleportLocalPlayerToRebirthPoint(MainCharacterEntity mainEntity)
+        public static void TeleportLocalPlayerToCurrentRebirthPoint(MainCharacterEntity mainEntity)
         {
-            var transform = GetLocalRebirthPointTransform();
+            var transform = GetCurrentRebirthPointTransform();
+            TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
+        }
+
+        public static void TeleportLocalPlayerToRebirthPoint(MainCharacterEntity mainEntity, int rebirthPointId)
+        {
+            var transform = GetRebirthPointTransform(rebirthPointId);
             TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
         }
 
@@ -114,7 +120,7 @@ namespace WukongMp.Api.WukongUtils
             BUS_EventCollectionCS.Get(playerPawn).Evt_Jump_OnReleased.Invoke();
         }
 
-        private static FTransform GetLocalRebirthPointTransform()
+        private static FTransform GetCurrentRebirthPointTransform()
         {
             BPC_RebirthPointData rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
             if (rebirthPointData == null)
@@ -124,6 +130,12 @@ namespace WukongMp.Api.WukongUtils
             }
 
             UBGWFunctionLibraryCS.GetRebirthPointTransform(GameUtils.GetWorld(), rebirthPointData.CurrentBirthPoint.PointID, out var Transform);
+            return Transform;
+        }
+
+        private static FTransform GetRebirthPointTransform(int rebirthPointId)
+        {
+            UBGWFunctionLibraryCS.GetRebirthPointTransform(GameUtils.GetWorld(), rebirthPointId, out var Transform);
             return Transform;
         }
 
