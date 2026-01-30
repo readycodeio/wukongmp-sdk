@@ -487,7 +487,7 @@ internal partial class PvpMode : IDisposable
         if (_playerState.LocalMainCharacter == null || _playerState.LocalPlayerEntity == null)
             return;
 
-        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InTournament: false })
+        if (force || _areaState.InRoom && !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP && _areaState.PvpState is { InTournament: false } && !_playerState.LocalMainCharacter.Value.GetPvP().IsSpectator)
         {
             var playerEntity = _playerState.LocalPlayerEntity;
             ref var player = ref playerEntity.Value.GetState();
