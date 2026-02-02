@@ -60,6 +60,9 @@ internal class PvpCommandConsole : IDisposable
         _wukongCommandConsole.AddCommand("/infinite_vessel", new ConsoleCommand(ToggleInfiniteVessel));
         _wukongCommandConsole.AddCommand("/arena", new ConsoleCommand(TeleportToArena));
         _wukongCommandConsole.AddCommand("/shrine", new ConsoleCommand(TeleportToShrine));
+#if DEBUG
+        _wukongCommandConsole.AddCommand("/pvp_level", new ConsoleCommand(TeleportToPvpLevel));
+#endif
     }
 
     private void RequestSpawn(ReadOnlyMemory<string> args)
@@ -260,5 +263,31 @@ internal class PvpCommandConsole : IDisposable
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity, levelData.BirthPointID);
         }
+    }
+
+    private void TeleportToPvpLevel(ReadOnlyMemory<string> args)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity || !_areaState.InRoom || mainEntity.GetPvP().IsSpectator || _areaState.PvpState is { InTournament: true })
+            return;
+
+        if (args.Length < 1)
+        {
+            _wukongCommandConsole.AddMessageToConsole(Texts.InvalidCommand);
+            return;
+        }
+
+        bool success = int.TryParse(args.Span[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int pvpLevelId);
+        if (!success || pvpLevelId < 0)
+        {
+            _wukongCommandConsole.AddMessageToConsole(Texts.InvalidCommand);
+            return;
+        }
+
+        LaunchParameters.Instance.LevelId = pvpLevelId;
+        var levelData = LevelSpawnConfig.GetLevelSpawnData(pvpLevelId);
+        BPS_EventCollectionCS.GetLocal(GameUtils.GetWorld()).Evt_BPS_TeleportTo.Invoke(ETeleportTypeV2.RebirthPointTeleportOnly, new TeleportParam_RebirthPoint
+        {
+            RebirthPointId = levelData.BirthPointID,
+        }, EPlayerTeleportReason.RebirthPoint);
     }
 }

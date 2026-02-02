@@ -32,7 +32,7 @@ public class LaunchParameters
     public string? ApiBaseUrl { get; }
     public string? JwtToken { get; }
     public string Nickname { get; } = "Player";
-    public int? LevelId { get; }
+    public int? LevelId { get; set; } // TODO: this needs to be removed after testing
 
     public string? ShimDbName { get; }
     public string? ShimDbDir { get; }
