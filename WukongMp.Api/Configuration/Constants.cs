@@ -13,7 +13,7 @@ namespace WukongMp.Api.Configuration
         public const string GlobalPatches = "Global";
         public const string DisabledPatches = "Disabled";
         public const float MonsterSpawnDistance = 2000f;
-        public const float MonsterSpawnTraceHeight = 10000f;
+        public const float MonsterSpawnTraceHeight = 2000f;
         public const float MonsterHalfHeight = 200f;
         public const float MonsterSpawnSpread = 200f;
         public const float CameraArmLength = 720;
