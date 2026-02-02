@@ -18,10 +18,10 @@ namespace WukongMp.PvP.Configuration
             { 7, new LevelSpawnData(50, 2, 5008, new FVector(-28007, 93707, 39560), 3000) },
 
             { 8, new LevelSpawnData(10, 26, 1008, new FVector(-73476, 29887, 10001.03), 3000) }, // Bodhi Peak
-            { 9, new LevelSpawnData(70, 7, 7004, new FVector(000, 000, 000), 2700) }, // Corridor of Fire and Ice - no location
+            { 9, new LevelSpawnData(70, 7, 7004, new FVector(107291, -142160, 12900.79), 2700) }, // Corridor of Fire and Ice - lava damage
             { 10, new LevelSpawnData(70, 2, 7002, new FVector(200524, -45683, 31919.74), 3000) }, // Purge Pit
             { 11, new LevelSpawnData(12, 27, 1013, new FVector(-94705, -22403, -8419.67), 2700) }, // Loong Claw Grove - no shrine
-            { 12, new LevelSpawnData(20, 35, 2016, new FVector(128532, -21342, 4466.41), 2700) }, // Bottom of the Well
+            { 12, new LevelSpawnData(20, 35, 2016, new FVector(128532, -21342, 4466.41), 2600) }, // Bottom of the Well
             { 13, new LevelSpawnData(30, 33, 3020, new FVector(-153095, -271407, -45556.81), 2500) }, // Watermelon Field
             { 14, new LevelSpawnData(40, 96, 4013, new FVector(146478, -66773, -3319.89), 3000) }, // Bonevault
             { 15, new LevelSpawnData(30, 39, 3026, new FVector(-216424, -127145, -19491.41), 3500) }, // Mahavira Hall
