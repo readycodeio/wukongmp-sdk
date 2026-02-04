@@ -34,8 +34,14 @@ namespace WukongMp.Api.UI
             InitNativeFunctions();
             ClearMessages();
             ClearToolTipText();
-            SetHelperText(Texts.ChatHelperDescription);
-            SetWritable(true);
+            SetHelperText(Texts.ChatHelperNoSendDescription);
+            SetWritable(false);
+        }
+
+        public void SetWritingEnabled(bool enabled)
+        {
+            SetHelperText(enabled ? Texts.ChatHelperDescription : Texts.ChatHelperNoSendDescription);
+            SetWritable(enabled);
         }
 
         public bool HasFocus()
@@ -48,7 +54,7 @@ namespace WukongMp.Api.UI
             return GameWidget.StopAction;
         }
 
-        public void SetWritable(bool isWritable)
+        private void SetWritable(bool isWritable)
         {
             GameWidget?.CallFunctionByNameWithArguments($"SetWritable {isWritable}", true);
         }

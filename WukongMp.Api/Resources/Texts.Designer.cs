@@ -178,7 +178,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to K - Hide/Show Chat.
+        ///   Looks up a localized string similar to K - Hide/Show Event Log.
         /// </summary>
         public static string ChatHelperNoSendDescription {
             get {

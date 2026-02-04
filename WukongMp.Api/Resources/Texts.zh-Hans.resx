@@ -151,7 +151,7 @@
     <value>ENTER - 输入/发送 | K - 隐藏/显示对话框</value>
   </data>
   <data name="ChatHelperNoSendDescription" xml:space="preserve">
-    <value>K - 隐藏/显示对话框</value>
+    <value>K - 显示/隐藏事件日志</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
     <value>ENTER - 输入 | F1 - 隐藏/显示</value>

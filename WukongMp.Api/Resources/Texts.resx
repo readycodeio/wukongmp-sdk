@@ -151,7 +151,7 @@
     <value>ENTER - Type/Send   |   K - Hide/Show Chat</value>
   </data>
   <data name="ChatHelperNoSendDescription" xml:space="preserve">
-    <value>K - Hide/Show Chat</value>
+    <value>K - Hide/Show Event Log</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
     <value>ENTER - Type   |   F1 - Hide/Show</value>

@@ -151,7 +151,7 @@
     <value>ENTER - Pisz/Wyślij   |   K - Ukryj/Pokaż Czat</value>
   </data>
   <data name="ChatHelperNoSendDescription" xml:space="preserve">
-    <value>K - Ukryj/Pokaż Czat</value>
+    <value>K - Ukryj/Pokaż dziennik zdarzeń</value>
   </data>
   <data name="CommandHelperDescription" xml:space="preserve">
     <value>ENTER - Pisz |   F1 - Ukryj/Pokaż</value>

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Command;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 
@@ -167,6 +167,8 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         {
             _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().NickName);
         }
+        AreaEntity joinedAreaEntity = new(areaEntity);
+        _chatWidget.Value.SetWritingEnabled(joinedAreaEntity.GetRoom().ChatEnabled);
     }
 
     public void OnLeftArea(AreaId arg1, Entity arg2)
