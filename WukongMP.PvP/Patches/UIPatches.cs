@@ -32,7 +32,7 @@ public static class PatchStartGameUiPvp
         return AccessTools.Method("B1UI.GSUI.UIStartGame:OnUIPageConstructImpl");
     }
 
-    public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore)
+    public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore, ref UCanvasPanel ___RegionNameCon)
     {
         var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
         var hasPak = playerMarkerActorClass != null;
@@ -117,6 +117,7 @@ public static class PatchStartGameUiPvp
         ___TxtMainName.SetText(FText.FromString(""));
         ___TxtSubName.SetText(FText.FromString("Wukong Multiplayer Mod"));
         ___TxtSubName.SetRenderScale(new FVector2D(1.2, 1.2));
+        ___RegionNameCon.SetVisibility(ESlateVisibility.SelfHitTestInvisible);
     }
 }
 
