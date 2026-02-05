@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BtlShare;
+using System;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
 
@@ -23,6 +24,7 @@ namespace WukongMp.PvP.Configuration
             _configuration.IsStrongDamageImmueEnabled = true;
             _configuration.EnableCustomCameraArmLength = true;
             _configuration.EnableSpawnedTamers = true;
+            _configuration.DisableCutscenes = true;
             _configuration.SyncTamerTeamFromGameToEcs = false;
             _configuration.OverrideLocalPlayerTeamFromGlobalEntity = true;
 
@@ -31,6 +33,7 @@ namespace WukongMp.PvP.Configuration
 
             _configuration.EnableCustomIsPlayerInBattle = true;
             _configuration.SetIsPlayerInBattleQuery(() => _areaState.PvpState?.InPvP ?? false);
+            _configuration.SetIsInteractionAllowedQuery(IsInteractAllowed);
         }
 
         public void Dispose()
@@ -65,6 +68,11 @@ namespace WukongMp.PvP.Configuration
                     // more skills here
                     return true;
             }
+        }
+
+        private bool IsInteractAllowed(EInteractType interactType)
+        {
+            return interactType != EInteractType.StandardObj;
         }
     }
 }

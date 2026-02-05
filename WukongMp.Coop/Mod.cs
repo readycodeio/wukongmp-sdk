@@ -199,8 +199,8 @@ namespace WukongMp.Coop
 
             DI.Instance.InputManager.RegisterKeyBind(Key.F9, () =>
             {
-                Logging.LogDebug("F9: Show colliders markers");
-                DebugUtils.ShowMarkersForInvisibleWalls(4000);
+                Logging.LogDebug("F9: Show actors markers");
+                DebugUtils.ShowMarkersForActors(4000, "BP_DynamicObstcle");
             });
 
             DI.Instance.InputManager.RegisterKeyBind(Key.F10, () =>

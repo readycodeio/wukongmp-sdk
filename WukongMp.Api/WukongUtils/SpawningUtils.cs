@@ -416,4 +416,20 @@ public static class SpawningUtils
             return canSummon;
         }
     }
+
+    public static FVector GetCorrectedSpawnLocation(ACharacter character, FVector targetLocation)
+    {
+        FVector location = targetLocation;
+        UCapsuleComponent capsuleComponent = character.CapsuleComponent;
+        float scaledCapsuleHalfHeight = capsuleComponent.GetScaledCapsuleHalfHeight();
+        float scaledCapsuleRadius = capsuleComponent.GetScaledCapsuleRadius();
+        FVector start = targetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+        FVector end = targetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
+        if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(character, start, end, scaledCapsuleRadius, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, character, out var OutHitLocation))
+        {
+            location = OutHitLocation;
+            location.Z += 2.4f;
+        }
+        return location;
+    }
 }

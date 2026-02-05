@@ -141,6 +141,18 @@ namespace WukongMp.PvP
             }
 
 #if DEBUG
+            DI.Instance.InputManager.RegisterKeyBind(Key.F9, () =>
+            {
+                Logging.LogDebug("F9: Show actors markers");
+                DebugUtils.ShowMarkersForActors(300);
+            });
+
+            DI.Instance.InputManager.RegisterKeyBind(Key.F10, () =>
+            {
+                Logging.LogDebug("F10: Destroy tmp actors markers");
+                DebugUtils.DestroyTmpMarkerActors();
+            });
+
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
             {
                 Logging.LogDebug("Alt + 0");

@@ -109,12 +109,13 @@ public static class DebugUtils
         return null;
     }
 
-    public static List<AActor> GetInvisibleWallsAroundPlayer(float radius)
+    public static List<AActor> GetActorsAroundPlayer(float radius, string actorsName)
     {
         var world = GameUtils.GetWorld();
         var allActors = UGameplayStatics.GetAllActorsOfClass<AActor>(world);
         var playerLocation = GameUtils.GetControlledPawn()?.GetActorLocation() ?? FVector.ZeroVector;
         var wallActors = new List<AActor>();
+        var shouldFilterByName = !string.IsNullOrEmpty(actorsName);
 
         foreach (var actor in allActors)
         {
@@ -124,7 +125,7 @@ public static class DebugUtils
             if (className == null)
                 continue;
             var distance = FVector.Distance(actor.GetActorLocation(), playerLocation);
-            if (distance < radius && className.Contains("BP_DynamicObstcle"))
+            if (distance < radius && !shouldFilterByName || (shouldFilterByName && className.Contains(actorsName)))
             {
                 wallActors.Add(actor);
             }
@@ -142,7 +143,8 @@ public static class DebugUtils
         foreach (var actor in actors)
         {
             var guid = BGU_DataUtil.GetActorGuid(actor);
-            Logging.LogDebug("{Id}: Processing actor with class: {ActorClass}, name: {ActorName}, guid {ActorGuid}", i++, actor.GetClass().GetName(), actor.GetName(), guid);
+            var name = actor.GetName();
+            Logging.LogDebug("{Id}: Processing actor with class: {ActorClass}, name: {ActorName}, guid {ActorGuid}", i++, actor.GetClass().GetName(), name, guid);
             var playerMarkerActor = BGU_UnrealWorldUtil.SpawnActor(world, playerMarkerActorClass);
             if (playerMarkerActor == null)
             {
@@ -150,7 +152,7 @@ public static class DebugUtils
                 return;
             }
 
-            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {guid} ()", true);
+            playerMarkerActor.CallFunctionByNameWithArguments($"SetText {name} ()", true);
             playerMarkerActor.SetActorLocation(actor.GetActorLocation(), false, out _, true);
             TmpActors.Add(playerMarkerActor);
         }
@@ -166,9 +168,9 @@ public static class DebugUtils
         TmpActors.Clear();
     }
 
-    public static void ShowMarkersForInvisibleWalls(float radius)
+    public static void ShowMarkersForActors(float radius, string actorsName = "")
     {
-        AddMarkerToActors(GetInvisibleWallsAroundPlayer(radius));
+        AddMarkerToActors(GetActorsAroundPlayer(radius, actorsName));
     }
 
     public static void ResetPlayersAnimation()

@@ -235,9 +235,9 @@ internal partial class PvpMode : IDisposable
             if (_areaState.PvpState.Value.InPvP)
             {
                 PlayerUtils.EnableSpectator(mainCharacterEntity, SpectatorReason.Observer);
-                Logging.LogDebug("Setting IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
             }
         }
+        PlayerUtils.SetLocalPlayerDamageImmunity(mainCharacterEntity, true);
     }
 
     private void StartPvP()
@@ -564,7 +564,14 @@ internal partial class PvpMode : IDisposable
             return;
         }
 
+        if (_areaState.PvpState.HasValue && _areaState.PvpState.Value.InTournament)
+        {
+            Logging.LogDebug("Already in tournament.");
+            return;
+        }
+
         PlayerUtils.SetPlayerInteractionEnabled(_playerState.LocalMainCharacter!.Value, false);
+        PlayerUtils.SetLocalPlayerDamageImmunity(_playerState.LocalMainCharacter!.Value, false);
         if (_areaState.OwnsPvpState)
         {
             _areaState.OwnedPvpStateRef().InTournament = true;
@@ -582,6 +589,7 @@ internal partial class PvpMode : IDisposable
         }
 
         PlayerUtils.SetPlayerInteractionEnabled(_playerState.LocalMainCharacter!.Value, true);
+        PlayerUtils.SetLocalPlayerDamageImmunity(_playerState.LocalMainCharacter!.Value, true);
         if (_areaState.OwnsPvpState)
         {
             _areaState.OwnedPvpStateRef().InPvP = false;

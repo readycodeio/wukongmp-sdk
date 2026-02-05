@@ -1,4 +1,5 @@
 ﻿using System;
+using BtlShare;
 using Microsoft.Extensions.Logging;
 
 namespace WukongMp.Api.Configuration;
@@ -9,6 +10,7 @@ public class GameplayConfiguration(ILogger logger)
     public bool IsStrongDamageImmueEnabled { get; set; } = false;
     public bool EnableCustomCameraArmLength { get; set; } = false;
     public bool EnableSpawnedTamers { get; set; } = false;
+    public bool DisableCutscenes { get; set; } = false;
 
     [Obsolete("To be replaced by data sync direction after refactoring")]
     public bool SyncTamerTeamFromGameToEcs { get; set; } = false;
@@ -68,4 +70,22 @@ public class GameplayConfiguration(ILogger logger)
     }
 
     public bool IsPlayerInBattle() => isPlayerInBattleQuery?.Invoke() ?? false;
+
+    // IsInteractAllowed
+    private Func<EInteractType, bool>? isInteractionAllowedQuery;
+
+    public void SetIsInteractionAllowedQuery(Func<EInteractType, bool> query)
+    {
+        if (isInteractionAllowedQuery is not null)
+            logger.LogError("IsInteractionAllowedQuery is already set. Overriding the existing query.");
+
+        isInteractionAllowedQuery = query;
+    }
+
+    public void ClearIsInteractionAllowedQuery()
+    {
+        isPlayerInBattleQuery = null;
+    }
+
+    public bool IsInteractionAllowed(EInteractType interactType) => isInteractionAllowedQuery?.Invoke(interactType) ?? true;
 }
