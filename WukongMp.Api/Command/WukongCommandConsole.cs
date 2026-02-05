@@ -132,7 +132,7 @@ public class WukongCommandConsole : IDisposable
             return;
 
         var playerId = mainEntity.GetState().PlayerId;
-        PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity);
+        PlayerUtils.TeleportLocalPlayerToCurrentRebirthPoint(mainEntity);
         _rpc.SendRebirthPlayer(playerId);
         _wukongChatter.SendServerMessage("PlayerRequestedRebirth", NickName);
     }

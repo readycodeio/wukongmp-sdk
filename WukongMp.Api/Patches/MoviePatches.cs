@@ -188,6 +188,9 @@ public static class PatchTickForMovieSystem
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
+        if (DI.Instance.GameplayConfiguration.DisableCutscenes)
+            return false;
+
         var playerState = DI.Instance.PlayerState;
 
         // get properties
