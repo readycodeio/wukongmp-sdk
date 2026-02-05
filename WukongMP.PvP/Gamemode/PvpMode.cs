@@ -256,22 +256,25 @@ internal partial class PvpMode : IDisposable
             return;
         }
 
-        var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-        PlacePlayers(levelData.PvpStartingLocation, levelData.PvpRadius);
+        PlacePlayers();
         await Task.Delay(100);
 
         SendPvPEvent(PvpEvent.RoundStart);
     }
 
-    private void PlacePlayers(FVector center, float radius)
+    private void PlacePlayers()
     {
         if (!_areaState.OwnsPvpState)
         {
             return;
         }
 
-        var playerEntities = AllPvPPlayers.ToList();
+        var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
+        var center = levelData.PvpStartingLocation;
+        var radius = levelData.PvpRadius;
+        var customPositions = levelData.CustomTeamSpawns;
 
+        var playerEntities = AllPvPPlayers.ToList();
         var teamsIds = playerEntities.Select(p => p.Player.GetState().TeamId).Distinct().ToList();
         var teamsCount = teamsIds.Count;
         var teamAngleStep = 2 * MathF.PI / teamsCount;
@@ -289,16 +292,33 @@ internal partial class PvpMode : IDisposable
         {
             ref var localMainComp = ref mainEntity.GetLocalState();
             var team = playerEntity.GetState().TeamId;
-
-            var teamBaseAngle = teamIndex[team] * teamAngleStep;
             var memberIndex = teamMemberIndex[team];
+            var teamBaseAngle = teamIndex[team] * teamAngleStep;
 
-            var angle = teamBaseAngle + (memberIndex + 1) * entityOffsetAngle;
-            var x = center.X + radius * MathF.Cos(angle);
-            var y = center.Y + radius * MathF.Sin(angle);
+            FVector spawnLocation;
+            float teamAngleOffset = 0f;
+
+            if (customPositions != null && customPositions.TryGetSpawnPosition(team, out var teamSpawn))
+            {
+                var dir = teamSpawn - center;
+                var customTeamAngle = MathF.Atan2(dir.Y, dir.X);
+                teamAngleOffset = customTeamAngle - teamBaseAngle;
+
+                var angle = customTeamAngle + memberIndex * entityOffsetAngle;
+                var x = center.X + radius * MathF.Cos(angle);
+                var y = center.Y + radius * MathF.Sin(angle);
+                spawnLocation = new FVector(x, y, center.Z);
+            }
+            else
+            {
+                var angle = teamBaseAngle + teamAngleOffset + memberIndex * entityOffsetAngle;
+                var x = center.X + radius * MathF.Cos(angle);
+                var y = center.Y + radius * MathF.Sin(angle);
+                spawnLocation = new FVector(x, y, center.Z);
+            }
 
             teamMemberIndex[team]++;
-            var newPlayerLocation = PvpUtils.AdjustSpawnLocation(localMainComp.Pawn, new FVector(x, y, center.Z));
+            var newPlayerLocation = PvpUtils.AdjustSpawnLocation(localMainComp.Pawn, spawnLocation);
             var payload = new PlayerTransformData(playerId, newPlayerLocation, UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500)));
             _rpc.SendBroadcastPlayerTransform(payload);
         }
