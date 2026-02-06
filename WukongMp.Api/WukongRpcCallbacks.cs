@@ -1166,21 +1166,18 @@ public partial class WukongRpcCallbacks : IDisposable
                     return;
 
                 var container = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-                var currentHp = container?.GetFloatValue(EBGUAttrFloat.Hp) ?? 0f;
-                var maxHp = container?.GetFloatValue(EBGUAttrFloat.HpMax) ?? 1f;
-                var currentStamina = container?.GetFloatValue(EBGUAttrFloat.Stamina) ?? 0f;
                 var maxStamina = container?.GetFloatValue(EBGUAttrFloat.StaminaMax) ?? 1f;
 
-                FSkillDamageConfig SkillDamageConfig = new FSkillDamageConfig
+                FSkillDamageConfig SkillDamageConfig = new()
                 {
                     DamageCalcType = EDamageCalcType.HPMaxRatioAbs,
-                    HPMaxINV10000Damage_Abs = value0 * 1000,
+                    HPMaxINV10000Damage_Abs = value0 * 100,
                     DamageImmueLevel = 2,
                     DmgReason = EDamageReason.FallDmg
                 };
 
                 var events = BUS_EventCollectionCS.Get(pawn);
-                events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Stamina, -(maxStamina * value0 * 2));
+                events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Stamina, -(maxStamina * value0 / 100 * 3));
                 events?.Evt_TriggerNormalDamageEffect.Invoke(null, in SkillDamageConfig, default, new FBattleAttrSnapShot(null));
             }
            
