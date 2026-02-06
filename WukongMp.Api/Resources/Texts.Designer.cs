@@ -304,6 +304,24 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} disabled infinite transform energy.
+        /// </summary>
+        public static string InfTransformDisabled {
+            get {
+                return ResourceManager.GetString("InfTransformDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} enabled infinite transform energy.
+        /// </summary>
+        public static string InfTransformEnabled {
+            get {
+                return ResourceManager.GetString("InfTransformEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} disabled infinite vessel energy.
         /// </summary>
         public static string InfVesselDisabled {

@@ -149,6 +149,15 @@ namespace WukongMp.Api.Patches
                     }
                 }
 
+                if (AttrID == EBGUAttrFloat.CurEnergy && localPlayerState.Value.HasInfiniteTransform)
+                {
+                    var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.CurEnergy);
+                    if (NewValue < current)
+                    {
+                        return false;
+                    }
+                }
+
                 if (AttrID == EBGUAttrFloat.Mp && localPlayerState.Value.HasInfiniteMana)
                 {
                     var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.Mp);

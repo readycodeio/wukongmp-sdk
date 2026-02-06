@@ -327,4 +327,10 @@
   <data name="CameraSwitchControls" xml:space="preserve">
     <value>←/→</value>
   </data>
+  <data name="InfTransformDisabled" xml:space="preserve">
+    <value>{0} disabled infinite transform energy</value>
+  </data>
+  <data name="InfTransformEnabled" xml:space="preserve">
+    <value>{0} enabled infinite transform energy</value>
+  </data>
 </root>

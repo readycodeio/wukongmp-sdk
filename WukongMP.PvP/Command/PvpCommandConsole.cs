@@ -58,6 +58,7 @@ internal class PvpCommandConsole : IDisposable
         _wukongCommandConsole.AddCommand("/infinite_mana", new ConsoleCommand(ToggleInfiniteMana));
         _wukongCommandConsole.AddCommand("/spirit_cooldown", new ConsoleCommand(SetSpiritCooldown));
         _wukongCommandConsole.AddCommand("/infinite_vessel", new ConsoleCommand(ToggleInfiniteVessel));
+        _wukongCommandConsole.AddCommand("/infinite_transform", new ConsoleCommand(ToggleInfiniteTransform));
         _wukongCommandConsole.AddCommand("/arena", new ConsoleCommand(TeleportToArena));
         _wukongCommandConsole.AddCommand("/shrine", new ConsoleCommand(TeleportToShrine));
 #if DEBUG
@@ -221,6 +222,28 @@ internal class PvpCommandConsole : IDisposable
 
         mainEntity.GetLocalState().HasInfiniteVessel = !mainEntity.GetLocalState().HasInfiniteVessel;
         _wukongChatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", NickName);
+    }
+
+    private void ToggleInfiniteTransform(ReadOnlyMemory<string> _)
+    {
+        if (_playerState.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        {
+            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
+            return;
+        }
+
+        ref var localState = ref mainEntity.GetLocalState();
+        if (localState.Pawn != null)
+        {
+            var events = BUS_EventCollectionCS.Get(localState.Pawn);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.CurEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.TransEnergyMax));
+        }
+
+        mainEntity.GetLocalState().HasInfiniteTransform = !mainEntity.GetLocalState().HasInfiniteTransform;
+        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteTransform ? "InfTransformEnabled" : "InfTransformDisabled", NickName);
     }
 
     private void ToggleSkillsCooldown(ReadOnlyMemory<string> _)

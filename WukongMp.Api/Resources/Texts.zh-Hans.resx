@@ -327,4 +327,10 @@
   <data name="CameraSwitchControls" xml:space="preserve">
     <value>←/→</value>
   </data>
+  <data name="InfTransformDisabled" xml:space="preserve">
+    <value>{0} 禁用无限变形能量</value>
+  </data>
+  <data name="InfTransformEnabled" xml:space="preserve">
+    <value>{0} 启用无限变形能量</value>
+  </data>
 </root>
