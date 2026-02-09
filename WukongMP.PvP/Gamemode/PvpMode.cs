@@ -473,7 +473,7 @@ internal partial class PvpMode : IDisposable
 
     private void ResetRoundState()
     {
-        _ecsLoop.Scheduler.Schedule(_ => { TamerUtils.DestroyAllTamers(); });
+        _ecsLoop.Scheduler.Schedule(_ => { DestroyTamersOnArena(); });
     }
 
     private void SetReadyState(bool isReady)
@@ -687,11 +687,25 @@ internal partial class PvpMode : IDisposable
         _pvpWidgetManager.UpdateReadyCount(readyForPvp, available);
     }
 
+    private void DestroyTamersOnArena()
+    {
+        var world = GameUtils.GetWorld();
+        var currentLevelId = BGUFuncLibMap.GetCurLevelId(world);
+        var levelTamers = LevelTamersConfig.GetLevelTamers(currentLevelId);
+        var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(world);
+        foreach (var actor in allActorsOfClass)
+        {
+            var guid = actor.GetFinalGuid();
+            if (!levelTamers.Contains(guid))
+                actor.CurrentRef.DestroyTamer();
+        }
+    }
+
     #region Event Handlers
 
     private void OnBeginPlayGameplayLevel()
     {
-        TamerUtils.DestroyAllTamers();
+        DestroyTamersOnArena();
     }
 
     private void OnJoinedAreaHandler(AreaId areaId, Entity entity)

@@ -33,15 +33,6 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        public static void DestroyAllTamers()
-        {
-            var allActorsOfClass = UGameplayStatics.GetAllActorsOfClass<BUTamerActor>(GameUtils.GetWorld());
-            foreach (var actor in allActorsOfClass)
-            {
-                actor.CurrentRef.DestroyTamer();
-            }
-        }
-
         public static string UnifyUnitName(string unitName)
         {
             return unitName.ToLower().Replace("-", "").Replace("_", "");
