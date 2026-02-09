@@ -54,9 +54,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
 
     protected override void OnUpdate()
     {
-        // TODO: Run if enabled in config - areaState.CurrentArea.Value.Room.AntiStallEnabled
-
-        if (!areaState.CurrentArea.HasValue || !areaState.OwnsPvpState)
+        if (!areaState.CurrentArea.HasValue || !areaState.OwnsPvpState || !areaState.CurrentArea.Value.Room.AntiStallEnabled)
             return;
 
         if (areaState.PvpState is not { InPvP: true })
