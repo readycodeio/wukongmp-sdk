@@ -59,3 +59,20 @@ public class PatchGetInteractTypeTemplate
         }
     }
 }
+
+[HarmonyPatch(typeof(BUS_InteractCompImpl), "TickPlayerInteractive")]
+[HarmonyPatchCategory(Constants.ConnectedPatches)]
+public class PatchInterActivePreCheckFocus
+{
+    public static void Postfix(BUC_InteractData ___InteractData)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        if (!DI.Instance.GameplayConfiguration.IsInteractionAllowed(___InteractData.InteractiveUnitCommDesc.InteractType))
+        {
+            ___InteractData.InteractConstraint = EInteractConstraint.NpcHide;
+            ___InteractData.InteractUIState = EInteractUIState.Invisiable;
+        }
+    }
+}

@@ -72,7 +72,7 @@ namespace WukongMp.PvP.Configuration
 
         private bool IsInteractAllowed(EInteractType interactType)
         {
-            return interactType != EInteractType.StandardObj;
+            return interactType != EInteractType.StandardObj && interactType != EInteractType.TaskNpc;
         }
     }
 }
