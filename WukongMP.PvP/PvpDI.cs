@@ -58,6 +58,7 @@ namespace WukongMp.PvP
                 DI.RelayClient,
                 DI.EcsLoop,
                 DI.EventBus,
+                DI.Rpc,
                 widgetManager,
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,

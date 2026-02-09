@@ -61,6 +61,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Engage!.
+        /// </summary>
+        public static string AntiStallWarning {
+            get {
+                return ResourceManager.GetString("AntiStallWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Team Blue.
         /// </summary>
         public static string BlueTeam {
@@ -642,6 +651,15 @@ namespace WukongMp.Api.Resources {
         public static string Spectators {
             get {
                 return ResourceManager.GetString("Spectators", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stalling - losing HP.
+        /// </summary>
+        public static string StallingMessage {
+            get {
+                return ResourceManager.GetString("StallingMessage", resourceCulture);
             }
         }
         

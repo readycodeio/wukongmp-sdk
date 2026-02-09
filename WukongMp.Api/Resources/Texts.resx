@@ -333,4 +333,10 @@
   <data name="InfTransformEnabled" xml:space="preserve">
     <value>{0} enabled infinite transform energy</value>
   </data>
+  <data name="AntiStallWarning" xml:space="preserve">
+    <value>Engage!</value>
+  </data>
+  <data name="StallingMessage" xml:space="preserve">
+    <value>Stalling - losing HP</value>
+  </data>
 </root>

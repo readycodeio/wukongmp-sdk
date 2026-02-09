@@ -33,6 +33,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     private readonly Lazy<FreeCameraMessageWidget> _freeCameraMessageWidget = new();
     private readonly Lazy<ModVersionWidget> _modVersionWidget = new();
     private readonly Lazy<DebugViewWidget> _debugViewWidget = new();
+    private readonly Lazy<TimerWidget> _timerWidget = new();
 
     public void Dispose() { }
 
@@ -195,6 +196,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _freeCameraMessageWidget.Value.Initialize();
             _modVersionWidget.Value.Initialize();
             _debugViewWidget.Value.Initialize();
+            _timerWidget.Value.Initialize();
 
             _commandConsoleWidget.Value.SetAvailableCommands(_availableCommands);
             foreach (var kvp in _availableParameters)
@@ -213,7 +215,18 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         _freeCameraMessageWidget.Value.Deinitialize();
         _modVersionWidget.Value.Deinitialize();
         _debugViewWidget.Value.Deinitialize();
+        _timerWidget.Value.Deinitialize();
         _isInitialized = false;
+    }
+
+    public void SetTimerText(int minutes, int seconds)
+    {
+        _timerWidget.Value.SetText(minutes, seconds);
+    }
+
+    public void SetTimerVisibility(bool visible)
+    {
+        _timerWidget.Value.SetVisibility(visible);
     }
 
     public void ToggleDebugVisibility() => _debugViewWidget.Value.ToggleVisibility();

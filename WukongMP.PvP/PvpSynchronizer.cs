@@ -13,6 +13,7 @@ using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
+using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.Tamers;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.State;
@@ -43,6 +44,7 @@ internal class PvpSynchronizer : WukongSynchronizer
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
         WukongEventBus eventBus,
+        WukongRpcCallbacks rpc,
         PvpWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
@@ -60,6 +62,7 @@ internal class PvpSynchronizer : WukongSynchronizer
         _modeGroup.Add(new ReadinessSystem(world, areaState, widgetManager, playerState, pvpMode));
         _modeGroup.Add(new PlayerListSystem(playerState, areaState, widgetManager));
         _modeGroup.Add(new PvpRoundEndSystem(world, areaState, pvpMode, ecsLoop));
+        _modeGroup.Add(new PvpAntiStallSystem(areaState, rpc));
 
         _modeGroup.SetMonitorPerf(true);
         EcsLoop.AddSystem(_modeGroup);

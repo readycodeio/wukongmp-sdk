@@ -333,4 +333,10 @@
   <data name="InfTransformEnabled" xml:space="preserve">
     <value>{0} 启用无限变形能量</value>
   </data>
+  <data name="AntiStallWarning" xml:space="preserve">
+    <value>进攻！</value>
+  </data>
+  <data name="StallingMessage" xml:space="preserve">
+    <value>消极战斗——HP 减少</value>
+  </data>
 </root>
