@@ -1,7 +1,9 @@
-﻿using BtlShare;
+﻿using b1;
+using BtlShare;
 using System;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.PvP.Configuration
 {
@@ -34,6 +36,7 @@ namespace WukongMp.PvP.Configuration
             _configuration.EnableCustomIsPlayerInBattle = true;
             _configuration.SetIsPlayerInBattleQuery(() => _areaState.PvpState?.InPvP ?? false);
             _configuration.SetIsInteractionAllowedQuery(IsInteractAllowed);
+            _configuration.SetIsTamerNotSynchronizedQuery(IsTamerNotSynchronized);
         }
 
         public void Dispose()
@@ -73,6 +76,13 @@ namespace WukongMp.PvP.Configuration
         private bool IsInteractAllowed(EInteractType interactType)
         {
             return interactType != EInteractType.StandardObj && interactType != EInteractType.TaskNpc;
+        }
+
+        private bool IsTamerNotSynchronized(string guid)
+        {
+            var currentLevelId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
+            var levelTamers = LevelTamersConfig.GetLevelTamers(currentLevelId);
+            return levelTamers.Contains(guid);
         }
     }
 }

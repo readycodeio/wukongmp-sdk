@@ -137,7 +137,7 @@ public class PatchTamerLoad
             var metadata = tamerEntity.Value.GetMeta();
             TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
         }
-        else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains))
+        else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains) && !DI.Instance.GameplayConfiguration.IsTamerNotSynchronized(monsterGuid))
         {
             Logging.LogError("Spawned monster is not in the ECS, guid: {Guid}", monsterGuid);
         }
@@ -168,6 +168,7 @@ public class PatchTurnBack2Loaded
             return true;
 
         var tamerActor = __instance.InstancePtr.Get();
+        var tamerGuid = BGU_DataUtil.GetActorGuid(tamerActor);
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamerActor);
         if (tamerEntity.HasValue)
@@ -180,7 +181,7 @@ public class PatchTurnBack2Loaded
             ref var tamer = ref tamerEntity.Value.GetTamer();
             if (!tamer.ShouldBeSpawned)
             {
-                Logging.LogDebug("Unloading monster {Guid} locally", BGU_DataUtil.GetActorGuid(tamerActor));
+                Logging.LogDebug("Unloading monster {Guid} locally", tamerGuid);
                 localTamer.IsMonsterActive = false;
                 localTamer.HasPendingUnload = false;
                 MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
@@ -189,11 +190,11 @@ public class PatchTurnBack2Loaded
 
             return false;
         }
-        else
+        else if (!DI.Instance.GameplayConfiguration.IsTamerNotSynchronized(tamerGuid))
         {
-            Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", BGU_DataUtil.GetActorGuid(tamerActor.GetMonster()));
-            return true;
+            Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", tamerGuid);
         }
+        return true;
     }
 }
 

@@ -88,4 +88,22 @@ public class GameplayConfiguration(ILogger logger)
     }
 
     public bool IsInteractionAllowed(EInteractType interactType) => isInteractionAllowedQuery?.Invoke(interactType) ?? true;
+
+    // IsTamerNotSynchronized
+    private Func<string, bool>? isTamerNotSynchronizedQuery;
+
+    public void SetIsTamerNotSynchronizedQuery(Func<string, bool> query)
+    {
+        if (isTamerNotSynchronizedQuery is not null)
+            logger.LogError("IsTamerNotSynchronizedQuery is already set. Overriding the existing query.");
+
+        isTamerNotSynchronizedQuery = query;
+    }
+
+    public void ClearIsTamerNotSynchronizedQuery()
+    {
+        isTamerNotSynchronizedQuery = null;
+    }
+
+    public bool IsTamerNotSynchronized(string guid) => isTamerNotSynchronizedQuery?.Invoke(guid) ?? true;
 }
