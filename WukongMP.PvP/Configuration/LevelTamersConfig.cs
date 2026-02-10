@@ -11,7 +11,7 @@ namespace WukongMp.PvP.Configuration
 
         public static List<string> GetLevelTamers(int levelId)
         {
-            return LevelTamers[levelId];
+            return LevelTamers.TryGetValue(levelId, out var tamers) ? tamers : [];
         }
     }
 }
