@@ -106,4 +106,22 @@ public class GameplayConfiguration(ILogger logger)
     }
 
     public bool IsTamerNotSynchronized(string guid) => isTamerNotSynchronizedQuery?.Invoke(guid) ?? true;
+
+    // IsAreaOverlapDisabled
+    private Func<string, bool>? isAreaOverlapDisabledQuery;
+
+    public void SetIsAreaOverlapDisabledQuery(Func<string, bool> query)
+    {
+        if (isAreaOverlapDisabledQuery is not null)
+            logger.LogError("IsAreaOverlapDisabledQuery is already set. Overriding the existing query.");
+
+        isAreaOverlapDisabledQuery = query;
+    }
+
+    public void ClearIsAreaOverlapDisabledQuery()
+    {
+        isAreaOverlapDisabledQuery = null;
+    }
+
+    public bool IsAreaOverlapDisabled(string guid) => isAreaOverlapDisabledQuery?.Invoke(guid) ?? false;
 }

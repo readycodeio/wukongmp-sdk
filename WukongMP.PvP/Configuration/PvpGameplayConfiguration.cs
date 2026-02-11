@@ -37,6 +37,7 @@ namespace WukongMp.PvP.Configuration
             _configuration.SetIsPlayerInBattleQuery(() => _areaState.PvpState?.InPvP ?? false);
             _configuration.SetIsInteractionAllowedQuery(IsInteractAllowed);
             _configuration.SetIsTamerNotSynchronizedQuery(IsTamerNotSynchronized);
+            _configuration.SetIsAreaOverlapDisabledQuery(IsAreaOverlapDisabled);
         }
 
         public void Dispose()
@@ -83,6 +84,13 @@ namespace WukongMp.PvP.Configuration
             var currentLevelId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
             var levelTamers = LevelTamersConfig.GetLevelTamers(currentLevelId);
             return levelTamers.Contains(guid);
+        }
+
+        private bool IsAreaOverlapDisabled(string guid)
+        {
+            var currentLevelId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
+            var disabledAreas = LevelDisabledAreasConfig.GetDisabledAreas(currentLevelId);
+            return disabledAreas.Contains(guid);
         }
     }
 }
