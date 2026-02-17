@@ -5,10 +5,10 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Client.Blobs;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Client.State;
+using WukongMp.Api.Https;
 
 namespace WukongMp.Api.Shim;
 
@@ -42,7 +42,7 @@ public class ShimAutoStarter : IDisposable
         IClientEcsUpdateLoop shimEcsLoop,
         ShimPlaybackRelayClient playbackClient,
         ShimRelayRecorder recorder,
-        BlobClient recorderRelayBlobClient,
+        IBlobClient recorderRelayBlobClient,
         RelayClientService recorderRelayService,
         ILogger logger
     )

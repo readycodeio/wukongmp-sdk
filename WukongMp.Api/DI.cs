@@ -1,15 +1,13 @@
 ﻿using CSharpModBase;
-using CSharpModBase.Input;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using PreludeLib.Runtime.Public;
 using PreludeLib.Runtime.Backend.WeaverCallback;
+using PreludeLib.Runtime.Public;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Client.Blobs;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.Shim;
@@ -20,19 +18,19 @@ using ReadyM.Relay.Common.ECS.Registry;
 using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.ECS.Registry;
 using WukongMp.Api.Chat;
+using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Managers;
+using WukongMp.Api.FreeCamera;
+using WukongMp.Api.Helpers;
 using WukongMp.Api.Https;
+using WukongMp.Api.Input;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
 using WukongMp.Api.State;
 using WukongMp.Api.Tests;
 using WukongMp.Api.UI;
-using WukongMp.Api.Command;
-using WukongMp.Api.Input;
-using WukongMp.Api.FreeCamera;
-using WukongMp.Api.Helpers;
 
 namespace WukongMp.Api;
 
@@ -112,7 +110,7 @@ public sealed class DI
     public ClientEcsUpdateLoop ShimEcsLoop { get; set; } = null!;
     public RelayClientService ShimRelayClientService { get; set; } = null!;
     public NetworkedEntityManager ShimNetEntity { get; set; } = null!;
-    public BlobClient ShimRelayBlobClient { get; set; } = null!;
+    public IBlobClient ShimRelayBlobClient { get; set; } = null!;
 
     public ShimAutoStarter ShimAuto { get; set; } = null!;
 
@@ -236,7 +234,7 @@ public sealed class DI
         ]);
         var shimRecorderRelayClient = ShimRecorderRelayClient = new HotSwappableRelayClient();
         var shimRecorderRelayService = ShimRelayClientService = new RelayClientService(shimRecorderRelayClient, shimRecorderLogger);
-        var shimBlobClient = ShimRelayBlobClient = new BlobClient(shimRecorderRelayClient, shimRecorderLogger);
+        var shimBlobClient = ShimRelayBlobClient = new HttpBlobClient(shimRecorderLogger);
         var shimNetEntity = ShimNetEntity = new NetworkedEntityManager(shimWorld, shimRecorderLogger, shimRecorderRelayClient);
 
         var shimEcsLoop = ShimEcsLoop = new ClientEcsUpdateLoop(shimWorld, shimRecorderLogger);
