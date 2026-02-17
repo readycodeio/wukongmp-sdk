@@ -146,7 +146,7 @@ public class ShimAutoStarter : IDisposable
     private async Task OnRecordingStartedAsync()
     {
         _logger.LogDebug("Connecting to record");
-        await _recorderRelayService.StartAsync();
+        _recorderRelayService.Start();
 
         _recorderRelayClient.RequestConnect();
 
@@ -183,16 +183,9 @@ public class ShimAutoStarter : IDisposable
         _logger.LogDebug("Player save downloaded: {PlayerSave}, size {Size} bytes", playerSave?.Name, playerSave?.Content.Length);
     }
 
-    private async void OnRecordingStoppedHandler()
+    private void OnRecordingStoppedHandler()
     {
-        try
-        {
-            _recorderRelayClient.RequestLeaveArea();
-            await _recorderRelayService.StopAsync();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Error while stopping recorder relay service");
-        }
+        _recorderRelayClient.RequestLeaveArea();
+        _recorderRelayService.Stop();
     }
 }
