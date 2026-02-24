@@ -5,6 +5,7 @@ using System.Reflection;
 using b1;
 using B1UI.GSSvc;
 using BtlShare;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
@@ -15,6 +16,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.WukongUtils;
 using EquipPosition = BtlB1.EquipPosition;
@@ -355,10 +357,9 @@ namespace WukongMp.Api.Patches
 
                     localState.DeadAnimationTime = 6f; // Value from game.
 
-                    var netId = localMain.GetMeta().NetId;
-                    var payload = new UnitDeadData(netId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                    var @event = new UnitDeadEvent(localMain, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                     localMain.GetState().IsDead = true;
-                    DI.Instance.ClientRpc.SendUnitDead(payload);
+                    DI.Instance.MappedEvent.PropagateToEcs(@event);
                     Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", localMain.GetState().PlayerId);
                 }
 
@@ -369,9 +370,8 @@ namespace WukongMp.Api.Patches
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var meta = tamerEntity.Value.GetMeta();
-
-                var payload = new UnitDeadData(meta.NetId, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
-                DI.Instance.ClientRpc.SendUnitDead(payload);
+                var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
+                DI.Instance.MappedEvent.PropagateToEcs(payload);
                 Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
             }
 
@@ -494,7 +494,7 @@ namespace WukongMp.Api.Patches
             if (___TargetInfoData.GetTargetInfo()?.LockTargetActor == NewTargetInfo.LockTargetActor)
                 return true;
 
-            NetworkId newTargetId = default;
+            Entity newTarget = default;
             var clearTarget = true;
             string name = "null (Clear target)";
 
@@ -509,13 +509,13 @@ namespace WukongMp.Api.Patches
 
             if (newTargetPlayerEntity.HasValue)
             {
-                newTargetId = newTargetPlayerEntity.Value.GetMeta().NetId;
+                newTarget = newTargetPlayerEntity.Value;
                 name = newTargetPlayerEntity.Value.GetState().CharacterNickName;
                 clearTarget = false;
             }
             else if (newTargetMonsterEntity.HasValue)
             {
-                newTargetId = newTargetMonsterEntity.Value.GetMeta().NetId;
+                newTarget = newTargetMonsterEntity.Value;
                 name = newTargetMonsterEntity.Value.GetTamer().Guid ?? "Unknown monster";
                 clearTarget = false;
             }
@@ -526,7 +526,7 @@ namespace WukongMp.Api.Patches
                 var mainEntity = playerState.LocalMainCharacter.Value;
 
                 Logging.LogDebug("New target sent for {Subject} as: {Target}", mainEntity.GetState().CharacterNickName, name);
-                DI.Instance.ClientRpc.SendSetTarget(new SetTargetData(mainEntity.GetMeta().NetId, newTargetId, clearTarget));
+                DI.Instance.MappedEvent.PropagateToEcs(new SetTargetEvent(mainEntity, newTarget, clearTarget));
                 return true;
             }
 
@@ -535,8 +535,7 @@ namespace WukongMp.Api.Patches
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetTamer().Guid ?? "Unknown monster", name);
 
-                var meta = tamerEntity.Value.GetMeta();
-                DI.Instance.ClientRpc.SendSetTarget(new SetTargetData(meta.NetId, newTargetId, clearTarget));
+                DI.Instance.MappedEvent.PropagateToEcs(new SetTargetEvent(tamerEntity.Value, newTarget, clearTarget));
                 return true;
             }
 
@@ -839,7 +838,7 @@ namespace WukongMp.Api.Patches
             if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
             {
                 var rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
-                DI.Instance.ClientRpc.SendRestAtShrine(rebirthPointData.CurrentBirthPoint.PointID, mainEntity.Value.GetMeta().NetId);
+                DI.Instance.MappedEvent.PropagateToEcs(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID));
             }
 
             return true;
@@ -927,7 +926,7 @@ public class PatchTriggerJumpSkill
 
         if (owner == playerState.LocalMainCharacter?.Pawn)
         {
-            DI.Instance.ClientRpc.SendStartJump(new StartJumpData(playerState.LocalMainCharacter.Value.GetMeta().NetId, StartJumpDir, CurrentInputVector));
+            DI.Instance.MappedEvent.PropagateToEcs(new StartJumpEvent(playerState.LocalMainCharacter.Value, StartJumpDir, CurrentInputVector));
         }
     }
 }
@@ -946,7 +945,7 @@ public class PatchJumpOnReleased
 
         if (owner == playerState.LocalMainCharacter?.Pawn)
         {
-            DI.Instance.ClientRpc.SendStopJump(playerState.LocalMainCharacter.Value.GetMeta().NetId);
+            DI.Instance.MappedEvent.PropagateToEcs(new StopJumpEvent(playerState.LocalMainCharacter.Value));
         }
     }
 }
@@ -1060,7 +1059,7 @@ public class PatchOnRebirthFinished
         if (entity.HasValue)
         {
             entity.Value.GetLocalState().IsRespawning = false;
-            DI.Instance.ClientRpc.SendAfterRebirth(entity.Value.GetMeta().NetId);
+            DI.Instance.MappedEvent.PropagateToEcs(new AfterRebirthEvent(entity.Value));
         }
     }
 }

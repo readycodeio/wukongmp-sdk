@@ -263,7 +263,7 @@ public static class PatchTickForMovieSystem
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 
-                // DI.Instance.ClientRpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
+                // DI.Instance.MappedEvent.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
                 DI.Instance.MappedEvent.PropagateToEcs(new WaitingForSequenceEvent(peakRequest.SequenceID, main.Location.ToFVector()));
 
                 // some cutscenes cannot be triggered for multiple players
@@ -271,7 +271,7 @@ public static class PatchTickForMovieSystem
                 // but other players are stuck since they are not attacked
                 if (Constants.InstantTriggerSequences.Contains(peakRequest.SequenceID))
                 {
-                    // DI.Instance.ClientRpc.SendPlayMovieRequest(peakRequest);
+                    // DI.Instance.MappedEvent.SendPlayMovieRequest(peakRequest);
                     DI.Instance.MappedEvent.PropagateToEcs(new PlayMovieRequestEvent(peakRequest.SequenceID, peakRequest.bDisablePlayerControl, peakRequest.bDisableMovementInput, peakRequest.bDisableLookAtInput, peakRequest.bHidePlayer, peakRequest.bHideHud, peakRequest.OverlapBoxGuid, peakRequest.MatchType));
                 }
             }

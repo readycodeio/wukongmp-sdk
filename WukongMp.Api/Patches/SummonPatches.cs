@@ -4,6 +4,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -47,7 +48,12 @@ public static class PatchRequestSpawnServant
                 summonTeam = master.GetTeamIDInCS();
             SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, __result, tamerActor, summonTeam, tamerActor.PathName);
             Logging.LogDebug("Sending SpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", InServantReq.Summoner?.GetName() ?? "Null", InServantReq.ServantTamerGuid, InServantReq.TamerTemplate.GetName());
-            DI.Instance.ClientRpc.SendSpawnSummon(InServantReq.FromGame(DI.Instance.PawnState));
+
+            SpawnSummonEvent? ev = InServantReq.FromGame(DI.Instance.PawnState);
+            if (ev != null)
+            {
+                DI.Instance.MappedEvent.PropagateToEcs(ev.Value);
+            }
         }
 
         return false;

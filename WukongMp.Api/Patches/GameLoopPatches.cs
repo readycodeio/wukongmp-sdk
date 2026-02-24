@@ -4,6 +4,7 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
 
@@ -84,16 +85,14 @@ public static class ReceiveTickPatch
 
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
-                var netId = mainEntity.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
+                DI.Instance.MappedEvent.PropagateToEcs(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound));
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            var netId = mainEntity.GetMeta().NetId;
-            DI.Instance.ClientRpc.SendMontageCancel(netId);
+            DI.Instance.MappedEvent.PropagateToEcs(new MontageCancelEvent(mainEntity));
         }
 
         montageState.LocalMontage = currentMontage;

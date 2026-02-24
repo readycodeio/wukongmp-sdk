@@ -27,6 +27,9 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
     
     public readonly Entity Entity = entity;
     
+    public static implicit operator Entity(MainCharacterEntity mainCharacterEntity)
+        => mainCharacterEntity.Entity;
+    
     public bool IsNull
         => Entity.IsNull;
 

@@ -1,4 +1,5 @@
-﻿using b1;
+﻿using System;
+using b1;
 using BtlShare;
 using CSharpModBase;
 using Friflo.Engine.ECS;
@@ -372,6 +373,12 @@ internal sealed class DI
             PlayerHp = fieldMappingRegistry.Register(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(),
                 (ctx, value) =>
                 {
+                    if (value <= -80000)
+                    {
+                        Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", value);
+                        return;
+                    }
+                    
                     if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
                             Constants.FloatComparisonTolerance))
                     {

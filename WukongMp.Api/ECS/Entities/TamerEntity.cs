@@ -27,6 +27,9 @@ public readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
     
     public readonly Entity Entity = entity;
     
+    public static implicit operator Entity(TamerEntity tamerEntity)
+        => tamerEntity.Entity;
+    
     public bool IsNull
         => Entity.IsNull;
 

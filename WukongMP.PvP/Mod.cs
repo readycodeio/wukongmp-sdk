@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
@@ -180,7 +181,7 @@ namespace WukongMp.PvP
                 if (mainEntity == null)
                     return;
 
-                DI.Instance.ClientRpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                DI.Instance.MappedEvent.TriggerEvent(new MontageCallbackEvent(mainEntity.Value, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
@@ -191,7 +192,7 @@ namespace WukongMp.PvP
                 if (mainEntity == null)
                     return;
 
-                DI.Instance.ClientRpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                DI.Instance.MappedEvent.TriggerEvent(new MontageCallbackEvent(mainEntity.Value, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>

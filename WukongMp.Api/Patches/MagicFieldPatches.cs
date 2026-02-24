@@ -5,6 +5,7 @@ using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -29,7 +30,7 @@ public static class PatchOnMagicFieldDead
             Logging.LogDebug("OnMagicFieldDead send for {Class}", className);
             if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var mainEntity))
             {
-                DI.Instance.ClientRpc.SendMagicFieldDead(className, Reason, mainEntity.Value.GetMeta().NetId);
+                DI.Instance.MappedEvent.PropagateToEcs(new MagicFieldDeadEvent(mainEntity.Value, className, Reason));
             }
         }
     }

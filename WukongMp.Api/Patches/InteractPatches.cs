@@ -7,6 +7,7 @@ using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.GameEvents;
 
 namespace WukongMp.Api.Patches;
 
@@ -30,9 +31,9 @@ public static class PatchComplexSkillDoInteractAction
             var entity = DI.Instance.PawnState.GetEntityByTamerMonster(InteractiveActor);
             if (entity.HasValue)
             {
-                ref var meta = ref entity.Value.GetMeta();
+                var meta = entity.Value.GetMeta();
                 Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
-                DI.Instance.ClientRpc.SendTamerSkillInteract(new TamerSkillInteractData(meta.NetId, Action.ParamsInt[1]));
+                DI.Instance.MappedEvent.PropagateToEcs(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]));
             }
         }
     }

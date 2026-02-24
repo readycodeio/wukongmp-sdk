@@ -5,7 +5,7 @@ namespace WukongMp.Api.Mapping;
 
 public static class DataMappingExtensions
 {
-    public static void SyncToGame<TComponent, TValue>(this BoundField<TComponent, TValue> field, TComponent component)
+    public static void SyncToGame<TComponent, TValue>(this BoundField<TComponent, TValue> field, in TComponent component)
         where TComponent : IComponent
     {
         var value = field.Get(component);
@@ -18,7 +18,7 @@ public static class DataMappingExtensions
         return DI.Instance.FieldMappingRegistry.Get(field).LoadFromGame(ref component);
     }
 
-    public static void SyncToGame<TComponent, TValue, TContext>(this BoundField<TComponent, TValue, TContext> field, TContext context, TComponent component)
+    public static void SyncToGame<TComponent, TValue, TContext>(this BoundField<TComponent, TValue, TContext> field, TContext context, in TComponent component)
         where TComponent : IComponent
     {
         var value = field.Get(component);

@@ -9,6 +9,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -395,8 +396,7 @@ public class PatchOnTriggerFsmEvent
         {
             if (tamerEntity.Value.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerEntity.Value.Pawn, EventTag))
             {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
+                DI.Instance.MappedEvent.PropagateToEcs(new TriggerFsmStateEvent(tamerEntity.Value, EventTag.TagName.ToString()));
             }
         }
 
@@ -505,7 +505,7 @@ public class PatchTriggerWakeupActivated
 
             if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.ClientRpc.SendMonsterWakeUp(tamerEntity.Value.GetMeta().NetId);
+                DI.Instance.MappedEvent.PropagateToEcs(new MonsterWakeUpEvent(tamerEntity.Value));
             }
         }
     }

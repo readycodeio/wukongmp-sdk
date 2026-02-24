@@ -5,6 +5,7 @@ using b1;
 using b1.BGW;
 using BtlB1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -13,6 +14,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -115,7 +117,7 @@ public static class PatchOnCastImmobilize
             if (castingMain.PlayerId == playerState.LocalMainCharacter?.GetState().PlayerId)
             {
                 // target doesn't matter, not evaluated
-                DI.Instance.ClientRpc.SendCastImmobilize(castingMainEntity.Value.GetMeta().NetId);
+                DI.Instance.MappedEvent.PropagateToEcs(new CastImmobilizeEvent(castingMainEntity.Value));
             }
 
             return false;
@@ -207,11 +209,11 @@ public static class PatchOnCastImmobilize
             if ((immobilizedMainEntity != null || immobilizedTamerEntity.HasValue) && castingMainEntity != null)
             {
                 Logging.LogDebug("Broadcasting trigger immobilize");
-                var netId = immobilizedMainEntity == null
-                    ? immobilizedTamerEntity!.Value.GetMeta().NetId
-                    : immobilizedMainEntity.Value.GetMeta().NetId;
+                Entity netId = immobilizedMainEntity == null
+                    ? immobilizedTamerEntity!.Value
+                    : immobilizedMainEntity.Value;
 
-                DI.Instance.ClientRpc.SendTriggerImmobilize(new TriggerImmobilizeData(netId, castingMainEntity.Value.GetMeta().NetId, hasBuff));
+                DI.Instance.MappedEvent.PropagateToEcs(new TriggerImmobilizeEvent(netId, castingMainEntity.Value, hasBuff));
             }
         }
 
@@ -262,11 +264,10 @@ public static class PatchRelieveImmobilized
             return true;
         }
 
-        var netId = mainEntity != null ? mainEntity.Value.GetMeta().NetId : tamerEntity!.Value.GetMeta().NetId;
-
         if (DI.Instance.AreaState.IsMasterClient)
         {
-            DI.Instance.ClientRpc.SendRelieveImmobilize(netId);
+            Entity entity = mainEntity != null ? mainEntity.Value : tamerEntity!.Value;
+            DI.Instance.MappedEvent.PropagateToEcs(new RelieveImmobilizeEvent(entity));
             return true;
         }
 
@@ -318,7 +319,7 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (mainEntity != null)
             {
-                DI.Instance.ClientRpc.SendRelieveImmobilize(mainEntity.Value.GetMeta().NetId);
+                DI.Instance.MappedEvent.PropagateToEcs(new RelieveImmobilizeEvent(mainEntity.Value));
                 BUS_EventCollectionCS.Get(mainEntity.Value.Pawn)?.Evt_RelieveImmobilized.Invoke();
                 return false;
             }
@@ -327,8 +328,7 @@ public static class PatchOnTriggerImmobilizedBreak
 
             if (entity.HasValue)
             {
-                var meta = entity.Value.GetMeta();
-                DI.Instance.ClientRpc.SendRelieveImmobilize(meta.NetId);
+                DI.Instance.MappedEvent.PropagateToEcs(new RelieveImmobilizeEvent(entity.Value));
                 BUS_EventCollectionCS.Get(entity.Value.Pawn)?.Evt_RelieveImmobilized.Invoke();
             }
 
@@ -520,8 +520,7 @@ public static class PatchOnUnitCastSkillTry
             if (owner == playerState.LocalMainCharacter?.Pawn)
             {
                 Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
-                var netId = playerState.LocalMainCharacter.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendPhantomRush(netId, CSI.SkillDirection);
+                DI.Instance.MappedEvent.PropagateToEcs(new PhantomRushEvent(playerState.LocalMainCharacter.Value, CSI.SkillDirection));
                 return;
             }
         }
@@ -532,7 +531,7 @@ public static class PatchOnUnitCastSkillTry
             var tamerEntity = pawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.ClientRpc.SendCastSkill(tamerEntity.Value.GetMeta().NetId, CSI.SkillID, CSI.SourceType);
+                DI.Instance.MappedEvent.PropagateToEcs(new CastSkillEvent(tamerEntity.Value, CSI.SkillID, CSI.SourceType));
                 Logging.LogDebug("Sent CBG skill cast for skill {SkillId}", CSI.SkillID);
             }
         }
@@ -568,7 +567,7 @@ public static class PatchExitPhantomRush
         if ((DI.Instance.AreaState.IsMasterClient || owner == mainEntity.Value.Pawn) && !localMain.ReceivedPhantomRushExit)
         {
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", main.CharacterNickName);
-            DI.Instance.ClientRpc.SendExitPhantomRush(mainEntity.Value.GetMeta().NetId);
+            DI.Instance.MappedEvent.PropagateToEcs(new ExitPhantomRushEvent(mainEntity.Value));
             localMain.ReceivedPhantomRushExit = false;
         }
 
@@ -702,8 +701,7 @@ public class PatchOnTransBeginSpawnNewOne
         if (pawn == playerState.LocalMainCharacter?.Pawn)
         {
             Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            var netId = playerState.LocalMainCharacter.Value.GetMeta().NetId;
-            DI.Instance.ClientRpc.SendPlayerTransBegin(new PlayerTransBeginData(netId, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
+            DI.Instance.MappedEvent.PropagateToEcs(new PlayerTransBeginEvent(playerState.LocalMainCharacter.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
         }
 
         var entity = DI.Instance.PawnState.GetEntityByPlayerActor(pawn);
@@ -743,8 +741,7 @@ public class PatchOnTransBackSpawnNewOne
         if (pawn == playerState.LocalMainCharacter?.Pawn)
         {
             Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            var netId = playerState.LocalMainCharacter.Value.GetMeta().NetId;
-            DI.Instance.ClientRpc.SendPlayerTransEnd(new PlayerTransEndData(netId, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
+            DI.Instance.MappedEvent.PropagateToEcs(new PlayerTransEndEvent(playerState.LocalMainCharacter.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
         }
 
         __state = DI.Instance.PawnState.GetEntityByPlayerActor(pawn);
@@ -931,9 +928,7 @@ public static class PatchOnIronBodyStart
         var playerState = DI.Instance.PlayerState;
         if (playerState.LocalMainCharacter?.Pawn == __instance.GetOwner())
         {
-            // Send iron body trigger to others
-            var netId = playerState.LocalMainCharacter.Value.GetMeta().NetId;
-            DI.Instance.ClientRpc.SendIronBodyStart(netId);
+            DI.Instance.MappedEvent.PropagateToEcs(new IronBodyStartEvent(playerState.LocalMainCharacter.Value));
         }
     }
 }
@@ -1004,7 +999,7 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
             var playerState = DI.Instance.PlayerState;
             if (DI.Instance.State.LocalPlayerId != null && playerState.LocalMainCharacter?.Pawn == __instance.GetOwner())
             {
-                DI.Instance.ClientRpc.SendTriggerMagicallyChange(playerState.LocalMainCharacter.Value.GetMeta().NetId, _Config, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason);
+                DI.Instance.MappedEvent.PropagateToEcs(new TriggerMagicallyChangeEvent(playerState.LocalMainCharacter.Value, _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason));
             }
         }
     }
@@ -1023,8 +1018,7 @@ public static class PatchPendingReset
         var players = DI.Instance.PlayerState;
         if (players.LocalMainCharacter?.Pawn == __instance.GetOwner())
         {
-            var netId = players.LocalMainCharacter.Value.GetMeta().NetId;
-            DI.Instance.ClientRpc.SendResetMagicallyChange(netId, Reason);
+            DI.Instance.MappedEvent.PropagateToEcs(new ResetMagicallyChangeEvent(players.LocalMainCharacter.Value, Reason));
         }
     }
 }

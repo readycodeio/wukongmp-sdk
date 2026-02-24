@@ -13,6 +13,7 @@ using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Resources;
 using CultureInfo = System.Globalization.CultureInfo;
 
@@ -77,8 +78,7 @@ public static class PatchSendDamageNumbers
         if (!DI.Instance.AreaState.InRoom || !DI.Instance.PlayerState.LocalMainCharacter.HasValue)
             return;
 
-        var localCharacterNetId = DI.Instance.PlayerState.LocalMainCharacter.Value.GetMeta().NetId;
-        DI.Instance.ClientRpc.SendDamageNum(Param, localCharacterNetId);
+        DI.Instance.MappedEvent.PropagateToEcs(new DamageNumEvent(DI.Instance.PlayerState.LocalMainCharacter.Value, Param.DamageType, Param.DamageNum, Param.Amplitude, Param.RealHitLocation, Param.RealHitDir, Param.AttackerTeamType));
     }
 }
 

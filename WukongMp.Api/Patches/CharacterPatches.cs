@@ -4,7 +4,6 @@ using b1.ECS;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using PreludeLib.Compat;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
@@ -12,6 +11,8 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches
@@ -45,26 +46,9 @@ namespace WukongMp.Api.Patches
 
             if (mainEntity != null)
             {
-                ref var mainComp = ref mainEntity.Value.GetState();
-
-                // set their attributes
-                foreach (var (attr, value) in mainComp.Attributes)
-                {
-                    __instance.SetFloatValue((EBGUAttrFloat)attr, value);
-                }
-
-                if (mainComp.Hp <= -80000)
-                {
-                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", mainComp.Hp);
-                    return;
-                }
-
-                if (mainComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
-                {
-                    return; // do not reapply the same value
-                }
-
-                __instance.SetFloatValue(EBGUAttrFloat.Hp, mainComp.Hp);
+                var mainComp = mainEntity.Value.GetState();
+                DI.Instance.StandardDataMappings.PlayerAttributes.SyncToGame(__instance, mainComp);
+                DI.Instance.StandardDataMappings.PlayerHp.SyncToGame(__instance, mainComp);
                 return;
             }
 
@@ -85,17 +69,9 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            ref var hpComp = ref tamerEntity.Value.GetHp();
-
-            if (!hpComp.HpMaxBase.Equals(__instance.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
-            {
-                __instance.SetFloatValue(EBGUAttrFloat.HpMaxBase, hpComp.HpMaxBase);
-            }
-
-            if (!hpComp.Hp.Equals(__instance.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
-            {
-                __instance.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-            }
+            var hpComp = tamerEntity.Value.GetHp();
+            DI.Instance.StandardDataMappings.HpMax.SyncToGame(__instance, hpComp);
+            DI.Instance.StandardDataMappings.Hp.SyncToGame(__instance, hpComp);
         }
     }
 
@@ -135,6 +111,7 @@ namespace WukongMp.Api.Patches
                     {
                         return true;
                     }
+
                     if (NewValue > current)
                     {
                         return false;
@@ -487,19 +464,19 @@ namespace WukongMp.Api.Patches
                 return;
 
             var owner = __instance.GetOwner();
-            NetworkId? netId = null;
+            Friflo.Engine.ECS.Entity? netId = null;
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                netId = tamerEntity.Value.GetMeta().NetId;
+                netId = tamerEntity.Value.Entity;
             }
             else
             {
                 var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
                 if (playerEntity.HasValue && playerEntity.Value.Pawn == owner)
                 {
-                    netId = playerEntity.Value.GetMeta().NetId;
+                    netId = playerEntity.Value.Entity;
                 }
             }
 
@@ -508,7 +485,7 @@ namespace WukongMp.Api.Patches
                 if (SimpleState is EBGUSimpleState.Immobilizing or EBGUSimpleState.InAnimationSyncing or EBGUSimpleState.PreAnimationSyncing)
                     return;
 
-                DI.Instance.ClientRpc.SendUnitSimpleState(new SimpleStateData(netId.Value, SimpleState, IsRemove));
+                DI.Instance.MappedEvent.PropagateToEcs(new UnitSimpleStateEvent(netId.Value, SimpleState, IsRemove));
             }
         }
     }
@@ -531,16 +508,13 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
+                DI.Instance.MappedEvent.PropagateToEcs(new UnitStateTriggerEvent(tamerEntity.Value.Entity, Trigger, Time, NeedForceUpdate));
             }
 
             if (owner == playerState.LocalMainCharacter?.Pawn)
             {
                 var mainEntity = playerState.LocalMainCharacter;
-                var netId = mainEntity.Value.GetMeta().NetId;
-
-                DI.Instance.ClientRpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
+                DI.Instance.MappedEvent.PropagateToEcs(new UnitStateTriggerEvent(mainEntity.Value.Entity, Trigger, Time, NeedForceUpdate));
             }
         }
     }
@@ -560,8 +534,7 @@ namespace WukongMp.Api.Patches
             if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
-            var netId = tamerEntity.Value.GetMeta().NetId;
-            DI.Instance.ClientRpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
+            DI.Instance.MappedEvent.PropagateToEcs(new MotionMatchingStateEvent(tamerEntity.Value.Entity, MMState));
         }
     }
 
@@ -588,16 +561,14 @@ namespace WukongMp.Api.Patches
 
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendAddBuff(new BuffAddData(netId, BuffID, Duration));
+                DI.Instance.MappedEvent.PropagateToEcs(new AddBuffEvent(tamerEntity.Value, BuffID, Duration));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendAddBuff(new BuffAddData(myId, BuffID, Duration));
+                DI.Instance.MappedEvent.PropagateToEcs(new AddBuffEvent(myEntity.Value, BuffID, Duration));
             }
         }
     }
@@ -624,16 +595,14 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(tamerEntity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(myEntity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
         }
     }
@@ -660,16 +629,14 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(tamerEntity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(myEntity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
             }
         }
     }
@@ -693,16 +660,14 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendRemoveAllBuffs(new BuffRemoveAllData(netId, RemoveTriggerType, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.PropagateToEcs(new RemoveAllBuffsEvent(tamerEntity.Value, RemoveTriggerType, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.ClientRpc.SendRemoveAllBuffs(new BuffRemoveAllData(myId, RemoveTriggerType, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.PropagateToEcs(new RemoveAllBuffsEvent(myEntity.Value, RemoveTriggerType, WithTriggerRemoveEffect));
             }
         }
     }
@@ -869,14 +834,14 @@ namespace WukongMp.Api.Patches
                 if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                     return;
 
-                DI.Instance.ClientRpc.SendPlayBaneEffect(new PlayBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+                DI.Instance.MappedEvent.PropagateToEcs(new PlayBaneEffectEvent(tamerEntity.Value, ___AbnormalType, ActionType));
                 return;
             }
 
             var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (playerEntity.HasValue && playerEntity.Value.Pawn == ___OwnerChr)
             {
-                DI.Instance.ClientRpc.SendPlayBaneEffect(new PlayBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+                DI.Instance.MappedEvent.PropagateToEcs(new PlayBaneEffectEvent(playerEntity.Value, ___AbnormalType, ActionType));
             }
         }
     }
@@ -896,14 +861,14 @@ namespace WukongMp.Api.Patches
                 if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                     return;
 
-                DI.Instance.ClientRpc.SendStopBaneEffect(new StopBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType));
+                DI.Instance.MappedEvent.PropagateToEcs(new StopBaneEffectEvent(tamerEntity.Value, ___AbnormalType));
                 return;
             }
 
             var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (playerEntity.HasValue && playerEntity.Value.Pawn == ___OwnerChr)
             {
-                DI.Instance.ClientRpc.SendStopBaneEffect(new StopBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType));
+                DI.Instance.MappedEvent.PropagateToEcs(new StopBaneEffectEvent(playerEntity.Value, ___AbnormalType));
             }
         }
     }
