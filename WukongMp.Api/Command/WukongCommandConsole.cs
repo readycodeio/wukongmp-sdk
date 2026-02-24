@@ -145,8 +145,11 @@ public class WukongCommandConsole : IDisposable
         return _playerState.LocalMainCharacter.HasValue && !_playerState.LocalMainCharacter.Value.GetLocalState().IsInSequence;
     }
     
-    private List<string> GetAvailableCommands()
+    public List<string> GetAvailableCommands()
         => [.. _matcher.Registry.GetCommandNames(UseDebugCommands)];
+    
+    public List<string> GetAvailableFirstParams(string commandName)
+        => _matcher.Registry.GetCommandAvailableFirstParams(commandName);
 
     private void OnLoadingScreenClose()
     {

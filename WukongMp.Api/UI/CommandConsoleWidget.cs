@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using ReadyM.Api.Command;
 using UnrealEngine.Runtime;
+using WukongMp.Api.Command;
 using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI;
 
-public class CommandConsoleWidget() : GameWidgetBase(CommandConsoleWidgetPath)
+public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBase(CommandConsoleWidgetPath)
 {
     private const string CommandConsoleWidgetPath = "/Game/Mods/CoreMod/WBP_CommandConsole.WBP_CommandConsole_C";
 
@@ -16,6 +19,14 @@ public class CommandConsoleWidget() : GameWidgetBase(CommandConsoleWidgetPath)
         GameWidget?.AddToViewport(1001);
         InitNativeFunctions();
         SetHelperText(Texts.CommandHelperDescription);
+
+        var commands = registry.GetAvailableCommands();
+
+        SetAvailableCommands(commands);
+        foreach (var name in commands)
+        {
+            AddCommandParameters(name, registry.GetAvailableFirstParams(name));
+        }
     }
 
     public override void SetVisibility(bool visible)

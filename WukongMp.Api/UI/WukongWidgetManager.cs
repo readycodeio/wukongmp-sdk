@@ -1,12 +1,10 @@
-﻿using Friflo.Engine.ECS;
+﻿using System;
+using Friflo.Engine.ECS;
 using LiteNetLib;
-using ReadyM.Api.Multiplayer.Common;
-using ReadyM.Relay.Client.State;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Common;
+using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
@@ -22,10 +20,9 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     private string _fullModVersion = "";
     private string _shortModVersion = "";
-    private List<string> _availableCommands = [];
-    private Dictionary<string, IEnumerable<string>> _availableParameters = [];
 
-    private readonly Lazy<CommandConsoleWidget> _commandConsoleWidget = new();
+    // lazily initialized from DI, since otherwise we get a circular dependency
+    private readonly Lazy<CommandConsoleWidget> _commandConsoleWidget = new(() => new CommandConsoleWidget(DI.Instance.CommandConsole));
     private readonly Lazy<ChatWidget> _chatWidget = new();
     private readonly Lazy<InfoMessageWidget> _infoMessageWidget = new();
     private readonly Lazy<ErrorMessageWidget> _errorMessageWidget = new();
@@ -77,12 +74,6 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
                 self._infoMessageWidget.Value.SetText(self._lastDisconnectText);
             }, this);
         }
-    }
-
-    public void UpdateConsoleCommands(List<string> commands, Dictionary<string, IEnumerable<string>> availableParameters)
-    {
-        _availableCommands = commands;
-        _availableParameters = availableParameters;
     }
 
     public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
@@ -198,10 +189,6 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _modVersionWidget.Value.Initialize();
             _debugViewWidget.Value.Initialize();
             _timerWidget.Value.Initialize();
-
-            _commandConsoleWidget.Value.SetAvailableCommands(_availableCommands);
-            foreach (var kvp in _availableParameters)
-                _commandConsoleWidget.Value.AddCommandParameters(kvp.Key, kvp.Value.ToList());
         }
     }
 
