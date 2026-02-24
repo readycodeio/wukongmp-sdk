@@ -9,6 +9,8 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Api;
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Local
 
 namespace WukongMp.PvP.Patches;
 
@@ -78,9 +80,7 @@ public class PatchGameArchive
             Logging.LogError("Original OutArchiveData is null");
             return;
         }
-
-        DI.Instance.EventBus.TryInvokeBeginLoadGameplayLevel();
-
+        
         PvpDI.Instance.SaveManager.OnLoadArchive(__instance, ref __result, ArchiveId, ref OutArchiveData);
     }
 }

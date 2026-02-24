@@ -2,12 +2,9 @@
 using System.Reflection;
 using System.Threading;
 using b1;
-using b1.ECS;
 using b1.GSMUI;
 using b1.GSMUI.GSWidget;
 using b1.Localization;
-using b1.Protobuf.DataAPI;
-using b1.UI.Comm;
 using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlShare;
@@ -15,7 +12,6 @@ using GSE.GSUI;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Runtime;
-using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using CultureInfo = System.Globalization.CultureInfo;
@@ -50,14 +46,14 @@ public static class PatchDamageNumberDisplayCheck
         if (owner == null)
             return;
 
-        var entity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-        if (entity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(entity.Value.Entity))
+        var entity = DI.Instance.PawnState.GetEntityByPlayerActor(owner);
+        if (entity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(entity.Value.Entity))
         {
             return;
         }
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-        if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+        if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
         {
             return;
         }
@@ -78,10 +74,11 @@ public static class PatchSendDamageNumbers
 
     public static void Prefix(DamageNumParam Param)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!DI.Instance.AreaState.InRoom || !DI.Instance.PlayerState.LocalMainCharacter.HasValue)
             return;
 
-        DI.Instance.Rpc.SendDamageNum(Param);
+        var localCharacterNetId = DI.Instance.PlayerState.LocalMainCharacter.Value.GetMeta().NetId;
+        DI.Instance.ClientRpc.SendDamageNum(Param, localCharacterNetId);
     }
 }
 

@@ -2,40 +2,65 @@
 using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Serialization;
 using System;
 using System.Diagnostics;
-using b1;
-using b1.EventDelDefine;
-using HarmonyLib;
-using WukongMp.Api.Resources;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
 using WukongMp.Api.UI;
-using WukongMp.Api.WukongUtils;
-using ReadyM.Api.Multiplayer.Idents;
-using ReadyM.Relay.Common.Wukong.RPC;
-using UnrealEngine.Engine;
+using ReadyM.Relay.Common.Wukong.DTO;
+using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Relay.Common.Mapping;
+using ReadyM.Relay.Common.Serialization;
+using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.Mapping;
+// ReSharper disable InconsistentNaming
 
 namespace WukongMp.Api;
 
 public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 {
     protected readonly IRelayClient RelayClient;
+    protected readonly RelaySerializer Serializer;
     private readonly IClientEcsUpdateLoop _ecsLoop;
-    private readonly ILogger _logger;
+    private readonly MappedEventManager _mappedEvent;
+    private readonly WukongMappingPolicyDirectory _policyDir;
     private readonly WukongWidgetManager _widgetManager;
+    private readonly ILogger _logger;
 
     public WukongServerRpcCallbacks(
-        IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
-        ILogger logger,
-        WukongWidgetManager widgetManager)
+        MappedEventManager mappedEvent,
+        WukongMappingPolicyDirectory policyDir,
+        RelaySerializer serializer,
+        IRelayClient relayClient,
+        WukongWidgetManager widgetManager,
+        ILogger logger)
     {
         RelayClient = relayClient;
+        Serializer = serializer;
         _ecsLoop = ecsLoop;
-        _logger = logger;
+        _mappedEvent = mappedEvent;
+        _policyDir = policyDir;
         _widgetManager = widgetManager;
+        _logger = logger;
 
         InitRpc();
+        
+        _mappedEvent.RegisterGameEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
+        {
+            self.SendSkipMovie(
+                new SkipMovieData(
+                    sequenceId: ev.SequenceId,
+                    waitingPlayers: ev.WaitingPlayers,
+                    allPlayers: ev.AllPlayers
+                )
+            );
+        }, this);
+
+        _mappedEvent.RegisterGameEventHandler<BeguilingChantEvent, WukongServerRpcCallbacks>(static (ev, self) =>
+        {
+            self.SendBeguilingChant(ev.State);
+        }, this);
     }
 
     public void Dispose()
@@ -48,26 +73,27 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            self._logger.LogDebug("Received skip movie event from server, sequence id: {Id}, waiting: {Waiting}/{All}", data0.SequenceId, data0.WaitingPlayers, data0.AllPlayers);
-
-            if (data0.WaitingPlayers == data0.AllPlayers)
+            if (self._policyDir.ForEvent<SkipMovieEvent, EmptyContext>().ShouldEventPropagateToGame(default))
             {
-                self._widgetManager.HideInfoMessage();
-                CutsceneUtils.SkipCutscene(data0.SequenceId);
-            }
-            else
-            {
-                self._widgetManager.ShowInfoMessage(string.Format(Texts.WaitForOtherPlayersCount, data0.WaitingPlayers, data0.AllPlayers));
+                self._mappedEvent.PropagateToGame(
+                    new SkipMovieEvent(
+                        sequenceId: data0.SequenceId,
+                        waitingPlayers: data0.WaitingPlayers,
+                        allPlayers: data0.AllPlayers
+                    )
+                );
             }
         }, this, data);
     }
 
+    // NOTE: This is declared here in order to generate send methods
     [ServerRpcEvent("MovieStarted")]
     private void OnMovieStarted(int sequenceId, AreaId areaId)
     {
         // Do nothing on response from server.
     }
 
+    // NOTE: This is declared here in order to generate send methods
     [ServerRpcEvent("MovieFinished")]
     private void OnMovieFinished(int sequenceId, AreaId areaId)
     {
@@ -75,32 +101,17 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     }
 
     [ServerRpcEvent("BeguilingChant")]
-    private void OnBeguilingChant(byte rawState)
+    private void OnBeguilingChant(BeguilingChantState state)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, state) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
         {
-            var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
-
-            foreach (var area in areaActors)
+            if (self._policyDir.ForEvent<BeguilingChantEvent, EmptyContext>().ShouldEventPropagateToGame(default))
             {
-                var comp = area.GetComponent<BUS_IntervalTriggerImpl>();
-                if (comp != null)
-                {
-                    var isActive = state == BeguilingChantState.Active;
-                    var isWarnig = state == BeguilingChantState.Warning;
-                    AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "SetIsActive").Invoke(comp, [isActive]);
-
-                    if (isWarnig)
-                    {
-                        AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "CheckIsWarning").Invoke(comp, [0f]);
-                    }
-                    else
-                    {
-                        AccessTools.Method(typeof(BUS_IntervalTriggerImpl), "ResetNotiedWarning").Invoke(comp, []);
-                    }
-                }
+                self._mappedEvent.PropagateToEcs(new BeguilingChantEvent(
+                    state: state0
+                ));
             }
-        }, this, (BeguilingChantState)rawState);
+        }, this, state);
     }
 
     [ServerRpcEvent("EnableCheats")]

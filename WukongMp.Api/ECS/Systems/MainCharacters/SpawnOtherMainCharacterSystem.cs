@@ -4,8 +4,8 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -21,10 +21,9 @@ public class SpawnOtherMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerPawnState playerPawn,
     WukongEventBus eventBus,
-    ClientOwnershipManager ownershipManager,
     ILogger logger
 )
-    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
+    : QuerySystem<MainCharacterComponent>
 {
     protected override void OnUpdate()
     {
@@ -42,27 +41,18 @@ public class SpawnOtherMainCharactersSystem(
         if (areaId == null)
             return;
 
-        Query.ForEachEntity((
-            ref localMainComp,
-            ref mainComp, entity) =>
+        Query.ForEachEntity((ref mainComp, entity) =>
         {
-            if (mainComp.PlayerId == playerId)
-                return;
-            if (localMainComp.HasPawn)
-                return;
-
             var mainEntity = new MainCharacterEntity(entity);
 
-            var playerEntity = playerState.GetPlayerById(mainComp.PlayerId);
-            if (playerEntity == null && ownershipManager.OwnsEntity(entity))
+            // NOTE: This only applies to spawning other players' main characters, unless they are orphaned
+            if (!mainEntity.HasUnsyncedPawn &&
+                mainComp.PlayerId != playerId &&
+                playerState.GetPlayerById(mainComp.PlayerId) != null)
             {
-                // orphan player character entity after disconnection (missing global player entity)
-                CommandBuffer.DeleteEntity(entity.Id);
-                return;
+                logger.LogDebug("ATTEMPTING TO **SPAWN** OTHER MAIN CHARACTER ENTITY: {PlayerId}", mainComp.PlayerId);
+                AddPlayer(mainEntity);
             }
-
-            logger.LogDebug("ATTEMPTING TO **SPAWN** OTHER MAIN CHARACTER ENTITY: {PlayerId}", mainComp.PlayerId);
-            AddPlayer(mainEntity);
         });
     }
 
@@ -76,6 +66,6 @@ public class SpawnOtherMainCharactersSystem(
 
         localMainComp.IsPlayerSynced = true;
 
-        Debug.Assert(localMainComp.HasPawn);
+        Debug.Assert(mainEntity.HasPawn);
     }
 }

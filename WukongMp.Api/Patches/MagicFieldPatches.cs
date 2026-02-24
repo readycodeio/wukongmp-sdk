@@ -1,8 +1,8 @@
-﻿using b1;
+﻿using System.Reflection;
+using b1;
 using BtlB1;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using System.Reflection;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
@@ -18,12 +18,19 @@ public static class PatchOnMagicFieldDead
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var owner = __instance.GetOwner();
+        var owner = __instance.GetOwner() as BGU_CharacterAI;
+
+        if (owner == null)
+            return;
+
         var className = owner.GetClass().GetName();
         if (className.Contains(Constants.SupremeInspectorFirewallName))
         {
             Logging.LogDebug("OnMagicFieldDead send for {Class}", className);
-            DI.Instance.Rpc.SendMagicFieldDead(className, Reason);
+            if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var mainEntity))
+            {
+                DI.Instance.ClientRpc.SendMagicFieldDead(className, Reason, mainEntity.Value.GetMeta().NetId);
+            }
         }
     }
 }
@@ -66,7 +73,7 @@ public class PatchOSpawnAProjectileObj
             if (localMainCharacter.HasValue)
             {
                 Logging.LogDebug("Teleporting local player to firewall location");
-                PlayerUtils.TeleportLocalPlayer(localMainCharacter.Value, Constants.SupremeInspectorFirewallLocation, localMainCharacter.Value.GetLocalState().Pawn?.GetActorRotation() ?? FRotator.ZeroRotator);
+                PlayerUtils.TeleportLocalPlayer(localMainCharacter.Value, Constants.SupremeInspectorFirewallLocation, localMainCharacter.Value.Pawn?.GetActorRotation() ?? FRotator.ZeroRotator);
             }
         }
     }

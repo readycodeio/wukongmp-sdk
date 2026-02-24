@@ -9,6 +9,8 @@ using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.WukongUtils;
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Local
 
 namespace WukongMp.PvP.Patches;
 
@@ -93,6 +95,7 @@ public class FixTransformCameraLockToOriginPatch
         if (cameraState == null)
             return;
 
+        // FIXME: This seems like a hack?
         // we are forced to look at origin
         if (cameraState.TargetSoulFocusPos.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
         {
@@ -105,7 +108,7 @@ public class FixTransformCameraLockToOriginPatch
             if (entity.HasValue)
             {
                 var events = BUS_EventCollectionCS.Get(owner);
-                events?.Evt_Camera_ManualLock?.Invoke(entity.Value.GetLocalState().Pawn, Constants.ChestCameraLockNode);
+                events?.Evt_Camera_ManualLock?.Invoke(entity.Value.Pawn, Constants.ChestCameraLockNode);
             }
         }
     }

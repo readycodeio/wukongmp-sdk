@@ -5,10 +5,9 @@ using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI;
 
-public class CommandConsoleWidget : GameWidgetBase
+public class CommandConsoleWidget() : GameWidgetBase(CommandConsoleWidgetPath)
 {
     private const string CommandConsoleWidgetPath = "/Game/Mods/CoreMod/WBP_CommandConsole.WBP_CommandConsole_C";
-    public CommandConsoleWidget() : base(CommandConsoleWidgetPath) { }
 
     private bool _hiddenManually;
 

@@ -1,10 +1,12 @@
-﻿using WukongMp.Api.ECS.Entities;
+﻿using ReadyM.Api.Mapping.Events;
+using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 
 namespace WukongMp.Api.WukongUtils;
 
 public static class TeleportUtils
 {
-    public static void CheckForTeleportFinish(MainCharacterEntity mainEntity)
+    public static void CheckForTeleportFinish(IMappedEventManager mappedEvent, MainCharacterEntity mainEntity)
     {
         ref var localMainComp = ref mainEntity.GetLocalState();
         
@@ -12,7 +14,7 @@ public static class TeleportUtils
         {
             if (localMainComp.TeleportFinishFrames == 0)
             {
-                DI.Instance.Rpc.SendTeleportFinish();
+                mappedEvent.TriggerEvent(new TeleportFinishEvent(mainEntity.Entity));
             }
 
             localMainComp.TeleportFinishFrames--;

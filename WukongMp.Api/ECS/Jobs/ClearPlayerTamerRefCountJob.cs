@@ -1,5 +1,5 @@
 ﻿using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Idents;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.WukongUtils;
 
@@ -13,6 +13,6 @@ public readonly struct ClearPlayerTamerRefCountJob(PlayerId playerId) : IEach<Ta
 {
     public void Execute(ref TamerComponent tamer)
     {
-        TamerUtils.SubtractSpawnedUnitRefCount(playerId, ref tamer);
+        TamerUtils.SubtractSpawnedUnitRefCount(ref tamer, playerId);
     }
 }

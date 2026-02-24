@@ -7,10 +7,10 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct AnimationSyncingData(NetworkId host, NetworkId guest, bool compressed, string montage) : INetSerializable
+public partial struct AnimationSyncingData(NetworkId hostNetId, NetworkId guestNetId, bool compressed, string montage) : INetSerializable
 {
-    public NetworkId Host = host;
-    public NetworkId Guest = guest;
+    public NetworkId HostNetId = hostNetId;
+    public NetworkId GuestNetId = guestNetId;
     public bool Compressed = compressed;
     public string Montage = montage;
 }

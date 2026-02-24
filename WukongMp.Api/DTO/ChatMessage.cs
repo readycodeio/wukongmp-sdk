@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.DTO;

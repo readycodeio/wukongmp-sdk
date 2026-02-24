@@ -7,7 +7,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
 
-namespace WukongMp.PvP.Gamemode;
+namespace WukongMp.PvP.GameMode;
 
 internal class PvpSaveManager
 {

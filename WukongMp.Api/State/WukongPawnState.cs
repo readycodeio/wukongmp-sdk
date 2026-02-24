@@ -1,7 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using b1;
 using Friflo.Engine.ECS;
+using ReadyM.Api.ECS.Components;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Mapping;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
@@ -14,50 +18,36 @@ namespace WukongMp.Api.State;
 
 public class WukongPawnState(
     Store world,
+    MappedEntityManager<AActor> mappedEntity,
     ClientWukongArchetypeRegistration wukongArchetype,
-    ClientNetworkedEntityState netEntity
-)
+    ClientNetworkedEntityManager netEntity)
 {
-    public Entity CreateNetworkedMonster(LocalTamerComponent localTamer, TamerComponent tamer, TeamComponent team)
+    public Entity CreateNetworkedTamer(
+        LocalTamerComponent localTamerComp, 
+        TamerComponent tamerComp, 
+        TeamComponent teamComp, 
+        BUTamerActor tamer)
     {
-        var (entity, netId) = netEntity.CreateNetworkedAreaEntity(wukongArchetype.MonsterArchetype, b =>
+        var entity = netEntity.CreateAreaEntity(wukongArchetype.TamerArchetype, b =>
         {
-            b.Add(localTamer);
-            b.Add(tamer);
-            b.Add(team);
+            b.Add(localTamerComp);
+            b.Add(tamerComp);
+            b.Add(teamComp);
+            b.Add(new MappingComponent<AActor>(tamer));
         });
-        Logging.LogDebug("Creating local networked monster with {NetId}", netId);
+        Logging.LogDebug("Creating local networked monster with {NetId}", entity.GetNetId());
         return entity;
     }
 
-    public bool IsTamerEntity(Entity entity)
+    public BGUCharacterCS? GetPawnByEntity(Entity entity)
     {
-        return entity.HasComponent<TamerComponent>();
-    }
+        if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
+            return tamerEntity.Value.Pawn;
 
-    public bool IsMainCharacterEntity(Entity entity)
-    {
-        return entity.HasComponent<MainCharacterComponent>();
-    }
+        if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
+            return mainEntity.Value.Pawn;
 
-    public bool TryGetTamerEntity(Entity entity, [NotNullWhen(true)] out TamerEntity? tamerEntity)
-    {
-        tamerEntity = null;
-        if (!IsTamerEntity(entity))
-            return false;
-
-        tamerEntity = new TamerEntity(entity);
-        return true;
-    }
-
-    public bool TryGetMainCharacterEntity(Entity entity, [NotNullWhen(true)] out MainCharacterEntity? mainCharacterEntity)
-    {
-        mainCharacterEntity = null;
-        if (!IsMainCharacterEntity(entity))
-            return false;
-
-        mainCharacterEntity = new MainCharacterEntity(entity);
-        return true;
+        return null;
     }
 
     public BGUCharacterCS? GetPawnByNetworkId(NetworkId netId)
@@ -65,34 +55,23 @@ public class WukongPawnState(
         if (!netEntity.TryGetEntityByNetworkId(netId, out var entity))
             return null;
 
-        if (entity.Value.TryGetComponent<LocalTamerComponent>(out var localTamer))
-            return localTamer.Pawn;
-
-        if (entity.Value.TryGetComponent<LocalMainCharacterComponent>(out var localMain))
-            return localMain.Pawn;
-
-        return null;
+        return GetPawnByEntity(entity.Value);
     }
 
     public TamerEntity? GetEntityByTamerMonster(AActor? actor)
     {
-        if (actor == null)
+        if (actor.IsNullOrDestroyed())
             return null;
 
-        TamerEntity? result = null;
+        var owner = actor?.GetOwner();
 
-        var query = world.Query<LocalTamerComponent>();
-        query.ForEachEntity((ref localTamerComp, entity) =>
-        {
-            if (localTamerComp.Pawn == actor)
-            {
-                result = new TamerEntity(entity);
-            }
-        });
-
-        return result;
+        if (owner is not ABGUTamerBase tamer)
+            return null;
+        
+        return GetEntityByTamer(tamer);
     }
 
+    // FIXME: This should be indexed - move `_guid` to a separate component?
     public TamerEntity? GetEntityByTamerGuid(string guid)
     {
         TamerEntity? result = null;
@@ -111,43 +90,33 @@ public class WukongPawnState(
 
     public TamerEntity? GetEntityByTamer(ABGUTamerBase? owner)
     {
-        if (owner == null)
+        if (owner.IsNullOrDestroyed())
             return null;
 
-        TamerEntity? result = null;
+        if (!mappedEntity.IsMapped(owner, out var entity))
+            return null;
 
-        var query = world.Query<LocalTamerComponent>();
-        query.ForEachEntity((ref localTamerComp, entity) =>
-        {
-            if (localTamerComp.Tamer == owner)
-            {
-                result = new TamerEntity(entity);
-            }
-        });
-
-        return result;
+        if (!TamerEntity.TryGetTamer(entity.Value, out var tamerEntity))
+            return null;
+        
+        return tamerEntity;
     }
 
-    public MainCharacterEntity? GetEntityByPlayerPawn(AActor? owner)
+    public MainCharacterEntity? GetEntityByPlayerActor(AActor? owner)
     {
-        if (owner == null)
+        if (owner.IsNullOrDestroyed())
             return null;
 
-        MainCharacterEntity? result = null;
+        if (!mappedEntity.IsMapped(owner, out var entity))
+            return null;
 
-        var query = world.Query<LocalMainCharacterComponent>();
-        query.ForEachEntity((ref localMainComp, entity) =>
-        {
-            if (!localMainComp.HasPawn)
-                return;
-
-            if (localMainComp.Pawn == owner)
-                result = new MainCharacterEntity(entity);
-        });
-
-        return result;
+        if (!MainCharacterEntity.TryGetMainCharacter(entity.Value, out var mainEntity))
+            return null;
+        
+        return mainEntity;
     }
     
+    [Obsolete]
     public MainCharacterEntity? GetEntityByLastPlayerPawn(AActor? owner)
     {
         if (owner == null)
@@ -170,7 +139,7 @@ public class WukongPawnState(
         if (owner.IsNullOrDestroyed())
             return null;
         
-        var playerEntity = GetEntityByPlayerPawn(owner);
+        var playerEntity = GetEntityByPlayerActor(owner);
         if (playerEntity.HasValue)
         {
             return playerEntity.Value.GetMeta().NetId;
@@ -185,12 +154,23 @@ public class WukongPawnState(
         return null;
     }
 
+    public Entity? GetEntityByActor(AActor? owner)
+    {
+        if (owner.IsNullOrDestroyed())
+            return null;
+        
+        if (!mappedEntity.IsMapped(owner, out var entity))
+            return null;
+            
+        return entity;
+    }
+    
     public bool TryGetEntityByCharacter(BGUCharacterCS? character, [NotNullWhen(true)] out Entity? entity)
     {
         entity = null;
         if (character == null)
             return false;
-        var mainCharacterEntity = GetEntityByPlayerPawn(character);
+        var mainCharacterEntity = GetEntityByPlayerActor(character);
         if (mainCharacterEntity != null)
         {
             entity = mainCharacterEntity.Value.Entity;

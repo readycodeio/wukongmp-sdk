@@ -46,12 +46,12 @@ public sealed class DespawnTamerSystem : BaseSystem, IDisposable
         _eventBus = eventBus;
         _logger = logger;
 
-        _archetypeEvent[_wukongArchetype.MonsterArchetype].OnEntityDelete += OnEntityDeleteHandler;
+        _archetypeEvent[_wukongArchetype.TamerArchetype].OnEntityDelete += OnEntityDeleteHandler;
     }
 
     public void Dispose()
     {
-        _archetypeEvent[_wukongArchetype.MonsterArchetype].OnEntityDelete -= OnEntityDeleteHandler;
+        _archetypeEvent[_wukongArchetype.TamerArchetype].OnEntityDelete -= OnEntityDeleteHandler;
     }
 
     private void OnEntityDeleteHandler(EntityDelete evt)
@@ -64,13 +64,18 @@ public sealed class DespawnTamerSystem : BaseSystem, IDisposable
 
         var tamerEntity = new TamerEntity(evt.Entity);
         var tamerComp = tamerEntity.GetTamer();
-        var localTamerComp = tamerEntity.GetLocalTamer();
         var markerComp = tamerEntity.GetMarker();
+
+        var tamer = tamerEntity.Tamer;
+        if (tamer == null)
+        {
+            _logger.LogWarning("Tamer entity {Entity} has no associated tamer actor, cannot despawn.", evt.Entity.Id);
+        }
 
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
-            Guid = tamerComp.Guid,
-            Tamer = localTamerComp.Tamer,
+            Guid = tamerComp.Guid!,
+            Tamer = tamer,
             Marker = markerComp.MarkerActor
         });
     }

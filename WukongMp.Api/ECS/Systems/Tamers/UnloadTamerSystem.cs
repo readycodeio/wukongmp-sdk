@@ -1,8 +1,9 @@
 ﻿using b1;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
@@ -12,18 +13,22 @@ public sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerC
     {
         Query.ForEachEntity((
             ref tamerComp,
-            ref localTamerComp, _) =>
+            ref localTamerComp, 
+            entity) =>
         {
-            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null || localTamerComp.Tamer.CurrentRef == null || localTamerComp.Pawn == null)
+            var tamerEntity = new TamerEntity(entity);
+            var tamer = tamerEntity.Tamer;
+            
+            if (!localTamerComp.IsTamerSynced || tamer == null || tamer.CurrentRef == null || tamer.GetMonster() == null)
             {
                 return;
             }
 
             if (localTamerComp is { IsMonsterActive: true, IsLocallySpawned: false, HasPendingUnload: true }
-                && !tamerComp.ShouldBeSpawned
-                && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded)
+                && !tamerComp.ForceKeepSpawned
+                && tamer.CurrentRef.Phase != ETamerPhase.Loaded)
             {
-                localTamerComp.Tamer.CurrentRef.TurnBack2Loaded();
+                tamer.CurrentRef.TurnBack2Loaded();
             }
         });
     }

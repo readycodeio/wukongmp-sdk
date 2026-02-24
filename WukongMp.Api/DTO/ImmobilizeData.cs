@@ -8,9 +8,12 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct TriggerImmobilizeData(NetworkId playerId, NetworkId target, bool greatSageTalentActiveBuff) : INetSerializable
+public partial struct TriggerImmobilizeData(
+    NetworkId netId, 
+    NetworkId targetNetId, 
+    bool greatSageTalentActiveBuff) : INetSerializable
 {
-    public NetworkId PlayerId = playerId;
-    public NetworkId Target = target;
+    public NetworkId NetId = netId;
+    public NetworkId TargetNetId = targetNetId;
     public bool GreatSageTalentActiveBuff = greatSageTalentActiveBuff;
 }

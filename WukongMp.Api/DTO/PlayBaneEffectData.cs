@@ -8,9 +8,9 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct PlayBaneEffectData(NetworkId id, EAbnormalStateType stateType, EAbnromalDispActionType actionType) : INetSerializable
+public partial struct PlayBaneEffectData(NetworkId netId, EAbnormalStateType stateType, EAbnromalDispActionType actionType) : INetSerializable
 {
-    public NetworkId Id = id;
+    public NetworkId NetId = netId;
     public EAbnormalStateType StateType = stateType;
     public EAbnromalDispActionType ActionType = actionType;
 }

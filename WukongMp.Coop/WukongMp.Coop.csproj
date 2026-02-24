@@ -1,72 +1,67 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>latest</LangVersion>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <Nullable>enable</Nullable>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        <RootNamespace>WukongMp.Coop</RootNamespace>
-        <TargetName>WukongMp.Coop</TargetName>
         <Configurations>Debug;Release;NoDisconnect;Testing</Configurations>
         <Platforms>AnyCPU</Platforms>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
-    <Target Name="PrintBuildVersion" AfterTargets="AfterBuild">
-        <Message Importance="High" Text="Build Version: $(InformationalVersion)" />
-    </Target>
-
     <ItemGroup>
-        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" />
-        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj" />
-        <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
+      <ProjectReference Include="..\WukongMp.Sdk\WukongMp.Sdk.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <Reference Include="0Harmony">
             <HintPath>..\WukongMp.Api\Core\0Harmony.dll</HintPath>
         </Reference>
+        <Reference Include="b1.Managed">
+            <HintPath>..\WukongMp.Api\Game\b1.Managed.dll</HintPath>
+        </Reference>
         <Reference Include="b1.Native">
-          <HintPath>..\WukongMp.Api\Game\b1.Native.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\b1.Native.dll</HintPath>
         </Reference>
         <Reference Include="b1.NativePlugins">
-          <HintPath>..\WukongMp.Api\Game\b1.NativePlugins.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\b1.NativePlugins.dll</HintPath>
         </Reference>
         <Reference Include="B1UI_GSE.Script">
-          <HintPath>..\WukongMp.Api\Game\B1UI_GSE.Script.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\B1UI_GSE.Script.dll</HintPath>
         </Reference>
         <Reference Include="BtlSvr.Main">
-          <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBase">
-          <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBaseV2">
           <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
         <Reference Include="Google.Protobuf">
-          <HintPath>..\WukongMp.Api\Game\Google.Protobuf.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\Google.Protobuf.dll</HintPath>
         </Reference>
         <Reference Include="GSE.Core">
-          <HintPath>..\WukongMp.Api\Game\GSE.Core.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\GSE.Core.dll</HintPath>
         </Reference>
         <Reference Include="GSE.ProtobufDB">
-          <HintPath>..\WukongMp.Api\Game\GSE.ProtobufDB.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\GSE.ProtobufDB.dll</HintPath>
         </Reference>
         <Reference Include="PreludeLib">
-          <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
         </Reference>
         <Reference Include="Protobuf.RunTime">
-          <HintPath>..\WukongMp.Api\Game\Protobuf.RunTime.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\Protobuf.RunTime.dll</HintPath>
         </Reference>
         <Reference Include="UnrealEngine">
-          <HintPath>..\WukongMp.Api\Game\UnrealEngine.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\UnrealEngine.dll</HintPath>
         </Reference>
         <Reference Include="UnrealEngine.Runtime">
-          <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
         </Reference>
     </ItemGroup>
 

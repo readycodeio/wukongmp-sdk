@@ -180,7 +180,7 @@ namespace WukongMp.PvP
                 if (mainEntity == null)
                     return;
 
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
+                DI.Instance.ClientRpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
             });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
@@ -191,7 +191,7 @@ namespace WukongMp.PvP
                 if (mainEntity == null)
                     return;
 
-                DI.Instance.Rpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
+                DI.Instance.ClientRpc.OnMontageCallback(new MontageCallbackData(mainEntity.Value.GetMeta().NetId, true, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
             });
 #endif
             DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>

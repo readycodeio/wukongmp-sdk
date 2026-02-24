@@ -19,6 +19,8 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Resources;
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Local
 
 namespace WukongMp.PvP.Patches;
 

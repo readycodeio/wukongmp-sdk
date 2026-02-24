@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
+using ReadyM.Relay.Client.State;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.Resources;
+using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 
@@ -17,9 +20,8 @@ public static class PvpUtils
     private const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
     private const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
 
-    public static void ShowPvPCountDown()
+    public static void ShowPvPCountDown(WukongAreaState areaState)
     {
-        var areaState = DI.Instance.AreaState;
         var areaEntity = areaState.CurrentArea;
         if (areaEntity == null || !areaState.PvpState.HasValue)
             return;
@@ -55,9 +57,9 @@ public static class PvpUtils
         return teamId == PvpConstants.RedTeamId ? PvpConstants.BlueTeamId : PvpConstants.RedTeamId;
     }
 
-    public static void CreatePvpStateEntity()
+    public static void CreatePvpStateEntity(WukongAreaState areaState, ClientNetworkedEntityManager clientNetEntity, ClientWukongArchetypeRegistration wukongArchetype)
     {
-        DI.Instance.AreaState.PvpStateEntity = DI.Instance.ClientNetEntity.CreateNetworkedAreaEntity(DI.Instance.ArchetypeRegistration.PvPStateSingletonArchetype).Entity;
+        areaState.PvpStateEntity = clientNetEntity.CreateAreaEntity(wukongArchetype.PvPStateSingletonArchetype);
     }
 
     public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)

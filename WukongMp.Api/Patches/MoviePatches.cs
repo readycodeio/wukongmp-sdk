@@ -4,15 +4,13 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Common.Wukong.RPC;
+using ReadyM.Relay.Common.Wukong.DTO;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 
@@ -128,14 +126,14 @@ public static class PatchRequestPlayMovie
             Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
             foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
             {
-                var mainEntity = playerState.GetMainCharacterById(playerId);
+                var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
                 if (mainEntity == null)
                     continue;
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                localMain.Pawn?.SetActorHiddenInGame(true);
+                mainEntity.Value.Pawn?.SetActorHiddenInGame(true);
                 localMain.MarkerActor?.SetActorHiddenInGame(true);
                 localMain.ShouldDisableCollision = true;
-                PlayerUtils.SetCollisionEnabled(localMain.Pawn, false);
+                PlayerUtils.SetCollisionEnabled(mainEntity.Value.Pawn, false);
             }
 
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
@@ -156,11 +154,11 @@ public static class PatchRequestPlayMovie
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
                 foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
                 {
-                    var mainEntity = playerState.GetMainCharacterById(playerId);
+                    var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
                     if (!mainEntity.HasValue)
                         continue;
                     ref var localMain = ref mainEntity.Value.GetLocalState();
-                    localMain.Pawn?.SetActorHiddenInGame(false);
+                    mainEntity.Value.Pawn?.SetActorHiddenInGame(false);
                     localMain.MarkerActor?.SetActorHiddenInGame(false);
                     localMain.ShouldDisableCollision = false;
                     DI.Instance.WidgetManager.HideInfoMessage();
@@ -222,7 +220,7 @@ public static class PatchTickForMovieSystem
             var areaEntity = DI.Instance.AreaState.CurrentArea;
             var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(peakRequest.SequenceID);
 
-            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(DI.Instance.State, DI.Instance.PlayerState, peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
             {
                 DI.Instance.WidgetManager.HideInfoMessage();
                 if (mainEntity != null)
@@ -264,14 +262,17 @@ public static class PatchTickForMovieSystem
                 localMain.IsWaitingForSequence = true;
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
-                DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
+                
+                // DI.Instance.ClientRpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
+                DI.Instance.MappedEvent.PropagateToEcs(new WaitingForSequenceEvent(peakRequest.SequenceID, main.Location.ToFVector()));
 
                 // some cutscenes cannot be triggered for multiple players
                 // e.g. 3rd act boss attacks one player causing him to enter a cutscene,
                 // but other players are stuck since they are not attacked
                 if (Constants.InstantTriggerSequences.Contains(peakRequest.SequenceID))
                 {
-                    DI.Instance.Rpc.SendPlayMovieRequest(peakRequest);
+                    // DI.Instance.ClientRpc.SendPlayMovieRequest(peakRequest);
+                    DI.Instance.MappedEvent.PropagateToEcs(new PlayMovieRequestEvent(peakRequest.SequenceID, peakRequest.bDisablePlayerControl, peakRequest.bDisableMovementInput, peakRequest.bDisableLookAtInput, peakRequest.bHidePlayer, peakRequest.bHideHud, peakRequest.OverlapBoxGuid, peakRequest.MatchType));
                 }
             }
         }

@@ -1,13 +1,10 @@
-﻿using Friflo.Engine.ECS;
-using Friflo.Engine.ECS.Systems;
+﻿using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
@@ -16,12 +13,11 @@ public class SyncMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerModeManager modeManager,
     WukongEventBus eventBus,
-    WukongWidgetManager widgetManager,
     GameplayConfiguration configuration,
     GameplayEventRouter eventRouter,
     ILogger logger
 )
-    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
+    : QuerySystem<MainCharacterComponent>
 {
     protected override void OnUpdate()
     {
@@ -29,17 +25,17 @@ public class SyncMainCharactersSystem(
             return;
 
         Query.ForEachEntity((
-            ref localMainComp,
-            ref mainComp, entity) =>
+            ref mainComp, 
+            entity) =>
         {
-            if (localMainComp.Pawn == null)
+            var mainEntity = new MainCharacterEntity(entity);
+            if (mainEntity.Pawn == null)
                 return;
 
             var playerEntity = playerState.GetPlayerById(mainComp.PlayerId);
             if (playerEntity == null)
                 return;
 
-            var mainEntity = new MainCharacterEntity(entity);
             if (mainComp.PlayerId != playerState.LocalPlayerId)
             {
                 SyncOtherMainCharacterState(playerEntity.Value, mainEntity);
@@ -61,19 +57,27 @@ public class SyncMainCharactersSystem(
         if (isSpectator != localMainComp.IsSpectatorLocally)
         {
             localMainComp.IsSpectatorLocally = isSpectator;
-            if (modeManager.HandleBecameSpectator(playerEntity, mainEntity, isSpectator))
+            if (modeManager.HandleBecameSpectator(mainEntity, isSpectator))
             {
                 var playerId = playerEntity.Entity.GetComponent<MetadataComponent>().Owner;
-                Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
+                logger.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
             }
         }
 
         ref readonly var teamComp = ref mainEntity.GetTeam();
-        var pawnTeamId = localMainComp.Pawn!.GetTeamIDInCS();
+
+        var pawn = mainEntity.Pawn;
+        if (pawn == null)
+        {
+            logger.LogError("Failed to get pawn for main character entity {EntityId}", mainEntity.Entity);
+            return;
+        }
+        
+        var pawnTeamId = pawn.GetTeamIDInCS();
         if (pawnTeamId != teamComp.TeamId)
         {
             logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.NickName);
-            ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
+            ClientUtils.RegisterAndSetPlayerTeam(pawn, teamComp.TeamId);
             eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
     }
@@ -102,17 +106,17 @@ public class SyncMainCharactersSystem(
         SyncMainCharacterStateBase(playerEntity, mainEntity);
 
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
-
-        if (localMainComp.Pawn == null)
+        var pawn = mainEntity.Pawn;
+        
+        if (pawn == null)
             return;
-
+        
         var eqCopy = mainComp.Equipment;
         if (eqCopy.IsLocallyDirty)
         {
-            if (localMainComp.Pawn.GetClass().PathName != Constants.WukongDashengClassPath)
+            if (pawn.GetClass().PathName != Constants.WukongDashengClassPath)
             {
-                EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
+                EquipmentUtils.SetActorEquipment(pawn, mainComp.Equipment);
             }
 
             eqCopy.ClearLocallyDirty();

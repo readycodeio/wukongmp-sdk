@@ -2,10 +2,9 @@
 using System.Linq;
 using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 
@@ -20,12 +19,8 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
     {
         get
         {
-            var areaEntity = state.CurrentAreaEntity;
-            if (!areaEntity.HasValue)
-                return false;
-
-            var areaComp = areaEntity.Value.GetComponent<AreaScopeComponent>();
-            return areaComp.MasterClient == state.LocalPlayerId;
+            var masterClient = MasterClientId;
+            return masterClient != null && masterClient == state.LocalPlayerId;
         }
     }
 

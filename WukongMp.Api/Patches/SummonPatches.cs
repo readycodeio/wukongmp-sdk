@@ -21,13 +21,20 @@ public static class PatchRequestSpawnServant
             return true;
 
         __result = null;
-        if (SpawningUtils.CanSummon(InServantReq.Summoner, InTransform.GetLocation()))
+        if (SpawningUtils.CanSummon(
+                DI.Instance.PlayerState,
+                DI.Instance.AreaState,
+                DI.Instance.PawnState,
+                DI.Instance.World,
+                InServantReq.Summoner,
+                InTransform.GetLocation()))
         {
             var tamerActor = SpawningUtils.BeginDeferredSummonSpawn(World, TamerClass, InTransform, InServantReq.SummonID, SafeClampToLand);
             if (tamerActor == null)
             {
                 return false;
             }
+
             tamerActor.MarkAsServant();
             InServantReq.ServantTamerGuid = tamerActor.GetFinalGuid();
             BPS_EventCollectionCS.GetLocal(World).Evt_SendServantReq.Invoke(InServantReq);
@@ -38,10 +45,11 @@ public static class PatchRequestSpawnServant
             var summonTeam = Constants.DefaultMonsterTeamId;
             if (InServantReq.MasterActor is BGUCharacterCS master)
                 summonTeam = master.GetTeamIDInCS();
-            SpawningUtils.CreateMonsterInEcs(__result, tamerActor, summonTeam, tamerActor.PathName);
+            SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, __result, tamerActor, summonTeam, tamerActor.PathName);
             Logging.LogDebug("Sending SpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", InServantReq.Summoner?.GetName() ?? "Null", InServantReq.ServantTamerGuid, InServantReq.TamerTemplate.GetName());
-            DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
+            DI.Instance.ClientRpc.SendSpawnSummon(InServantReq.FromGame(DI.Instance.PawnState));
         }
+
         return false;
     }
 }
@@ -55,9 +63,15 @@ public class PatchRequestSummon
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        if (InSummonReq.SummonType == ESummonType.NeutralAnimSpawn || InSummonReq.SummonType == ESummonType.PhantomRush)
+        if (InSummonReq.SummonType is ESummonType.NeutralAnimSpawn or ESummonType.PhantomRush)
             return true;
 
-        return SpawningUtils.CanSummon(InSummonReq.Summoner, InSummonReq.HitLocation);
+        return SpawningUtils.CanSummon(
+            DI.Instance.PlayerState,
+            DI.Instance.AreaState,
+            DI.Instance.PawnState,
+            DI.Instance.World,
+            InSummonReq.Summoner,
+            InSummonReq.HitLocation);
     }
 }

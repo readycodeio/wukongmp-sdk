@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ArchiveB1;
+﻿using ArchiveB1;
 using b1;
 using B1UI.GSUI;
 using CommB1;
@@ -7,7 +6,7 @@ using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.WukongUtils;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Patches;
 
@@ -16,16 +15,15 @@ namespace WukongMp.Coop.Patches;
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public class PatchWindowsSaveGame
 {
-    public static bool Prefix(ref string __result, string SlotName, string UserId)
+    public static bool Prefix(ref string __result, string SlotName)
     {
-        if (!CoopDI.Instance.SaveManager.ShouldRedirectSaveFiles)
+        if (!Mod.Instance.SaveManager.ShouldRedirectSaveFiles)
             return true;
 
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true;
 
-        var modAssembly = typeof(PatchWindowsSaveGame).Assembly;
-        __result = GameSaveUtils.GetSaveFileFullName(modAssembly, SlotName);
+        __result = WukongFileApi.GetSaveFileFullName(Mod.Instance, SlotName);
         return false;
     }
 }
@@ -37,7 +35,7 @@ public class PatchStartNewGame
 {
     public static bool Prefix(UObject WorldContext)
     {
-        CoopDI.Instance.SaveManager.OnNewGameLoad(WorldContext);
+        Mod.Instance.SaveManager.OnNewGameLoad(WorldContext);
         return false;
     }
 }
@@ -61,9 +59,7 @@ public class PatchGameArchive
             return;
         }
 
-        DI.Instance.EventBus.TryInvokeBeginLoadGameplayLevel();
-
-        CoopDI.Instance.SaveManager.OnLoadArchive(__instance, ref __result, ArchiveId, ref OutArchiveData);
+        Mod.Instance.SaveManager.OnLoadArchive(__instance, ref __result, ArchiveId, ref OutArchiveData);
     }
 }
 
@@ -73,13 +69,13 @@ public class PatchGSWindowsPlatformSaveGame
 {
     private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!Mod.Instance.ClientApi.InRoom)
             return true;
 
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true; // only handle game save, not settings etc.
 
-        CoopDI.Instance.SaveManager.OnSaveData(InSaveData, SlotName);
+        Mod.Instance.SaveManager.OnSaveData(InSaveData, SlotName);
 
         __result = true;
         return false;

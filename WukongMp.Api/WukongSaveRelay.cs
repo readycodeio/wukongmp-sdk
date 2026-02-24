@@ -9,7 +9,7 @@ namespace WukongMp.Api;
 
 public class WukongSaveRelay(IBlobClient blobClient, ILogger logger)
 {
-    public Task<bool> UploadBlobAsync(string name, byte[] content, CancellationToken ct = default)
+    private Task<bool> UploadBlobAsync(string name, byte[] content, CancellationToken ct = default)
     {
         try
         {
@@ -21,8 +21,8 @@ public class WukongSaveRelay(IBlobClient blobClient, ILogger logger)
             throw new OperationCanceledException("Failed to upload blob", ex);
         }
     }
-    
-    public Task<BlobInfo?> DownloadBlobAsync(string name, CancellationToken ct = default)
+
+    private Task<BlobInfo?> DownloadBlobAsync(string name, CancellationToken ct = default)
     {
         try
         {

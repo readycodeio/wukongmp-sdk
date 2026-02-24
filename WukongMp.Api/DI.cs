@@ -1,9 +1,17 @@
-﻿using CSharpModBase;
+﻿using b1;
+using BtlShare;
+using CSharpModBase;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
+using PreludeLib.Compat;
 using PreludeLib.Runtime.Backend.WeaverCallback;
 using PreludeLib.Runtime.Public;
+using ReadyM.Api.Command;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Helpers;
+using ReadyM.Api.Mapping;
+using ReadyM.Api.Mapping.Api;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
@@ -11,12 +19,16 @@ using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.Shim;
+using ReadyM.Relay.Client.Shim.ECS;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
 using ReadyM.Relay.Common.ECS.Registry;
 using ReadyM.Relay.Common.Serialization;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Registry;
+using ReadyM.Relay.Common.Wukong.ECS.Values;
+using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
@@ -25,6 +37,9 @@ using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Helpers;
 using WukongMp.Api.Https;
+using WukongMp.Api.Mapping;
+using WukongMp.Api.Mapping.Data;
+using WukongMp.Api.Mapping.Events;
 using WukongMp.Api.Input;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
@@ -34,95 +49,105 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public sealed class DI
+internal sealed class DI
 {
-    public static DI Instance { get; } = new();
+    internal static DI Instance { get; } = new();
 
-    public InputManager InputManager { get; private set; } = null!;
-    public ILoggerFactory LoggerFactory { get; private set; } = null!;
-    public ILogger Logger { get; private set; } = null!;
+    internal InputManager InputManager { get; private set; } = null!;
+    internal ILoggerFactory LoggerFactory { get; private set; } = null!;
+    internal ILogger Logger { get; private set; } = null!;
 
-    public Store World { get; private set; } = null!;
-    public ClientWukongArchetypeRegistration ArchetypeRegistration { get; private set; } = null!;
-    public ArchetypeEventRouter ArchetypeEvent { get; private set; } = null!;
-    public IClientEcsUpdateLoop EcsLoop { get; private set; } = null!;
+    internal Store World { get; private set; } = null!;
+    internal ClientWukongArchetypeRegistration WukongArchetype { get; private set; } = null!;
+    internal ArchetypeEventRouter ArchetypeEvent { get; private set; } = null!;
+    internal IClientEcsUpdateLoop EcsLoop { get; private set; } = null!;
 
-    public RelaySerializer Serializer { get; private set; } = null!;
-    public HotSwappableRelayClient RelayClient { get; private set; } = null!;
-    public IBlobClient BlobClient { get; set; } = null!;
-    public NetworkedEntityManager NetEntity { get; private set; } = null!;
-    public RelayClientService RelayClientService { get; private set; } = null!;
+    internal WukongMappingPolicyDirectory MappingPolicyDir { get; private set; } = null!;
+    internal MappedEntityManager<AActor> MappedEntity { get; private set; } = null!;
+    internal MappedEventManager MappedEvent { get; private set; } = null!;
+    internal WukongClientGameEvents ClientGameEvents { get; private set; } = null!;
+    internal WukongServerGameEvents ServerGameEvents { get; private set; } = null!;
+    internal IComponentFieldMappingRegistry FieldMappingRegistry { get; private set; } = null!;
+    internal StandardDataMappings StandardDataMappings { get; private set; } = null!;
 
-    public ClientState State { get; private set; } = null!;
-    public ClientNetworkedEntityState ClientNetEntity { get; private set; } = null!;
+    internal RelaySerializer Serializer { get; private set; } = null!;
+    internal HotSwappableRelayClient RelayClient { get; private set; } = null!;
+    internal IBlobClient BlobClient { get; set; } = null!;
+    internal NetworkedEntityManager NetEntity { get; private set; } = null!;
+    internal RelayClientService RelayClientService { get; private set; } = null!;
 
-    public TextRelaySerializer TextSerializer { get; private set; } = null!;
+    internal ClientState State { get; private set; } = null!;
+    internal ClientNetworkedEntityManager ClientNetEntity { get; private set; } = null!;
 
-    public AreaComponentRegistry AreaComponentRegistry { get; private set; } = null!;
-    public PlayerComponentRegistry PlayerComponentRegistry { get; private set; } = null!;
-    public NetworkedOwnershipManager OwnershipManager { get; private set; } = null!;
-    public ClientOwnershipManager ClientOwnership { get; private set; } = null!;
+    internal TextRelaySerializer TextSerializer { get; private set; } = null!;
 
-    public WukongAreaState AreaState { get; private set; } = null!;
-    public WukongPlayerState PlayerState { get; private set; } = null!;
-    public WukongPawnState PawnState { get; private set; } = null!;
-    public WukongPlayerModeManager ModeManager { get; private set; } = null!;
-    public WukongPlayerPawnState PlayerPawnState { get; private set; } = null!;
+    internal AreaComponentRegistry AreaComponentRegistry { get; private set; } = null!;
+    internal PlayerComponentRegistry PlayerComponentRegistry { get; private set; } = null!;
+    internal NetworkedOwnershipManager OwnershipManager_ { get; private set; } = null!;
+    internal ClientOwnershipManager ClientOwnership_ { get; private set; } = null!;
 
-    public WukongRpcCallbacks Rpc { get; private set; } = null!;
-    public WukongServerRpcCallbacks ServerRpc { get; private set; } = null!;
-    public WukongSaveRelay SaveRelay { get; private set; } = null!;
-    public WukongEventBus EventBus { get; private set; } = null!;
-    public GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
-    public GameplayEventRouter GameplayEventRouter { get; private set; } = null!;
-    public ColliderDisableData ColliderDisableData { get; private set; } = null!;
+    internal WukongAreaState AreaState { get; private set; } = null!;
+    internal WukongPlayerState PlayerState { get; private set; } = null!;
+    internal WukongPawnState PawnState { get; private set; } = null!;
+    internal WukongPlayerModeManager ModeManager { get; private set; } = null!;
+    internal WukongPlayerPawnState PlayerPawnState { get; private set; } = null!;
 
-    public WukongNetworkLogger NetLogger { get; private set; } = null!;
-    public INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
-    public JobRegistry JobRegistry { get; private set; } = null!;
-    public WukongSynchronizer Synchronizer { get; private set; } = null!;
-    public WukongConnectionManager Connection { get; private set; } = null!;
-    public WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
-    public NetworkPingMonitor PingMonitor { get; private set; } = null!;
-    public PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
-    public FreeCameraManager FreeCameraManager { get; private set; } = null!;
-    public FreeCameraController FreeCameraController { get; private set; } = null!;
-    public GameStateSynchronizer GameStateSynchronizer { get; private set; } = null!;
+    internal WukongClientRpcCallbacks ClientRpc { get; private set; } = null!;
+    internal WukongServerRpcCallbacks ServerRpc { get; private set; } = null!;
+    internal WukongSaveRelay SaveRelay { get; private set; } = null!;
+    internal WukongEventBus EventBus { get; private set; } = null!;
+    internal GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
+    internal GameplayEventRouter GameplayEventRouter { get; private set; } = null!;
 
-    public WukongCommandConsole CommandConsole { get; set; } = null!;
-    public WukongChatter Chatter { get; private set; } = null!;
-    public WukongInputManager WukongInputManager { get; private set; } = null!;
+    internal WukongNetworkLogger NetLogger { get; private set; } = null!;
+    internal INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
+    internal JobRegistry JobRegistry { get; private set; } = null!;
+    internal WukongSynchronizer Synchronizer { get; private set; } = null!;
+    internal WukongConnectionManager Connection { get; private set; } = null!;
+    internal WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
+    internal NetworkPingMonitor PingMonitor { get; private set; } = null!;
+    internal PingWidgetUpdater PingWidgetUpdater { get; private set; } = null!;
+    internal FreeCameraManager FreeCameraManager { get; private set; } = null!;
+    internal FreeCameraController FreeCameraController { get; private set; } = null!;
+    internal GameStateSynchronizer GameStateSynchronizer { get; private set; } = null!;
 
-    public RuntimePrelude Prelude { get; private set; } = null!;
-    public RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
+    internal ConsoleCommandRegistry CommandRegistry { get; set; } = null!;
+    internal ConsoleCommandParser CommandParser { get; set; } = null!;
+    internal ConsoleArgumentTypeConverter ArgConverter { get; set; } = null!;
+    internal ConsoleCommandMatcher CommandMatcher { get; set; } = null!;
+    internal WukongCommandConsole CommandConsole { get; set; } = null!;
+    internal WukongChatter Chatter { get; private set; } = null!;
+    internal WukongInputManager WukongInputManager { get; private set; } = null!;
 
+    internal RuntimePrelude Prelude { get; private set; } = null!;
+    internal RuntimeWeaverBackend PreludeBackend { get; private set; } = null!;
 
-    public WukongWidgetManager WidgetManager { get; private set; } = null!;
-    public TimerController TimerController { get; private set; } = null!;
+    internal WukongWidgetManager WidgetManager { get; private set; } = null!;
+    internal TimerController TimerController { get; private set; } = null!;
 
-    public ShimRelayMessageParser ShimParser { get; private set; } = null!;
-    public ShimReplayDependencyTracker ShimDepTracker { get; set; } = null!;
-    public ShimReplayDependencyTracker ShimReplayDependencyTracker { get; private set; } = null!;
-    public HotSwappableRelayClient ShimRecorderRelayClient { get; set; } = null!;
-    public ShimRelayRecorder ShimRecorder { get; private set; } = null!;
-    public ShimController ShimController { get; private set; } = null!;
-    public ShimPlaybackRelayClient ShimPlaybackRelayClient { get; private set; } = null!;
-    public ClientEcsUpdateLoop ShimEcsLoop { get; set; } = null!;
-    public RelayClientService ShimRelayClientService { get; set; } = null!;
-    public NetworkedEntityManager ShimNetEntity { get; set; } = null!;
-    public IBlobClient ShimRelayBlobClient { get; set; } = null!;
+    internal ShimRelayMessageParser ShimParser { get; private set; } = null!;
+    internal ShimReplayDependencyTracker ShimDepTracker { get; set; } = null!;
+    internal ShimReplayDependencyTracker ShimReplayDependencyTracker { get; private set; } = null!;
+    internal HotSwappableRelayClient ShimRecorderRelayClient { get; set; } = null!;
+    internal ShimRelayRecorder ShimRecorder { get; private set; } = null!;
+    internal ShimController ShimController { get; private set; } = null!;
+    internal ShimPlaybackRelayClient ShimPlaybackRelayClient { get; private set; } = null!;
+    internal ClientEcsUpdateLoop ShimEcsLoop { get; set; } = null!;
+    internal RelayClientService ShimRelayClientService { get; set; } = null!;
+    internal NetworkedEntityManager ShimNetEntity { get; set; } = null!;
+    internal HttpBlobClient ShimRelayBlobClient { get; set; } = null!;
 
-    public ShimAutoStarter ShimAuto { get; set; } = null!;
+    internal ShimAutoStarter ShimAuto { get; set; } = null!;
 
-    public TestsRunner TestsRunner { get; set; } = null!;
+    internal TestsRunner TestsRunner { get; set; } = null!;
 
-    public void InitLogging(ILoggerFactory loggerFactory)
+    internal void InitLogging(ILoggerFactory loggerFactory)
     {
         LoggerFactory = loggerFactory;
         Logger = LoggerFactory.CreateLogger("");
     }
 
-    public void Init()
+    internal void Init()
     {
         Logger.LogDebug("Initializing DI...");
 
@@ -139,7 +164,12 @@ public sealed class DI
         ]);
         var areaArchetype = new DefaultAreaArchetypeRegistration(areaComponentRegistry);
         var playerArchetype = new DefaultPlayerArchetypeRegistration(playerComponentRegistry);
-        var wukongArchetype = ArchetypeRegistration = new ClientWukongArchetypeRegistration();
+        var wukongArchetype = WukongArchetype = new ClientWukongArchetypeRegistration();
+
+        var netComponentRegistry = NetComponentRegistry = new NetworkedComponentRegistry([
+            new DefaultNetworkedComponentRegistration(),
+            new WukongNetworkedComponentRegistration(),
+        ]);
 
         // TODO: the ArchetypeId on client and server are only in sync because the order of registration is the same
         // This is fragile and should be fixed
@@ -157,7 +187,7 @@ public sealed class DI
 
         var relayClient = RelayClient = new HotSwappableRelayClient();
         var blobClient = BlobClient = new HttpBlobClient(logger);
-        var netEntity = NetEntity = new NetworkedEntityManager(world, logger, relayClient);
+        var netEntity = NetEntity = new NetworkedEntityManager(world, relayClient, logger);
         var relayClientService = RelayClientService = new RelayClientService(relayClient, logger);
 
         var eventBus = EventBus = new WukongEventBus();
@@ -173,43 +203,77 @@ public sealed class DI
 
         var ecsLoop = EcsLoop = new ClientEcsUpdateLoop(world, logger);
 
-        var netComponentRegistry = NetComponentRegistry = new NetworkedComponentRegistry([
-            new DefaultNetworkedComponentRegistration(),
-            new WukongNetworkedComponentRegistration(),
-        ]);
         var jobRegistry = JobRegistry = new JobRegistry(netComponentRegistry, netEntity, relayClient, logger);
 
         var state = State = new ClientState(world, netEntity, relayClient, ecsLoop, jobRegistry, areaArchetype, playerArchetype, logger);
-        var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityState(netEntity, state, logger);
+        var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityManager(state, netEntity);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
-        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState);
+        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, relayClient);
         var timerController = TimerController = new TimerController(widgetManager);
-
-        var pawnState = PawnState = new WukongPawnState(world, wukongArchetype, clientNetEntity);
-        var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(world, playerState, logger);
-
-        var ownershipManager = OwnershipManager = new NetworkedOwnershipManager(world, logger);
-        var clientOwnership = ClientOwnership = new ClientOwnershipManager(state, ownershipManager);
 
         var freeCameraManager = FreeCameraManager = new FreeCameraManager(playerState);
         var freeCameraController = FreeCameraController = new FreeCameraController(state, playerState, inputManager, freeCameraManager, widgetManager);
 
+        var mappedEntity = MappedEntity = new MappedEntityManager<AActor>(world);
+        var pawnState = PawnState = new WukongPawnState(world, mappedEntity, wukongArchetype, clientNetEntity);
+        var playerPawnState = PlayerPawnState = new WukongPlayerPawnState(freeCameraManager, world, playerState, logger);
+
+        var ownershipManager = OwnershipManager_ = new NetworkedOwnershipManager(world, logger);
+        var clientOwnership = ClientOwnership_ = new ClientOwnershipManager(state, ownershipManager);
+
         var gameStateSynchronizer = GameStateSynchronizer = new GameStateSynchronizer(state, playerState);
 
-        var colliderDisableData = ColliderDisableData = new ColliderDisableData(playerState, logger);
         var areaState = AreaState = new WukongAreaState(state, world, clientOwnership);
         var modeManager = ModeManager = new WukongPlayerModeManager(state, gameplayEventRouter, freeCameraManager);
 
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
-        var rpc = Rpc = new WukongRpcCallbacks(serializer, relayClient, state, areaState, clientNetEntity, playerState, pawnState, clientOwnership, gameplayEventRouter, widgetManager, timerController, ecsLoop, logger);
-        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(relayClient, ecsLoop, logger, widgetManager);
-        var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
+        var sideChannel = new DataSideChannel();
 
-        var chatter = Chatter = new WukongChatter(playerState, rpc, widgetManager);
-        var commandConsole = CommandConsole = new WukongCommandConsole(connection, playerState, rpc, serverRpc, Chatter, widgetManager, eventBus, areaState, ecsLoop);
+        var policyDir = new MappingPolicyDirectory();
+        policyDir.RegisterDefaultCreateDelete<AActor>(
+            actor => areaState.IsMasterClient,
+            entity => clientOwnership.OwnsEntity(entity));
+        policyDir.RegisterDefaultData(new OwnershipDataPolicyFactory(clientOwnership));
+        policyDir.RegisterDefaultData(new MasterClientDataPolicyFactory(areaState));
+        policyDir.RegisterDefaultEvent(new OwnershipEventPolicyFactory(clientOwnership, sideChannel));
+        policyDir.RegisterDefaultEvent(new MasterClientEventPolicyFactory(areaState, sideChannel));
+        policyDir.RegisterDefaultEvent(new RunOnMasterClientOnlyEventPolicyFactory(clientOwnership, areaState, sideChannel));
+        policyDir.RegisterDefaultEvent(new SpawnSummonEventEventPolicyFactory(clientOwnership, playerState, areaState, world, sideChannel));
+        policyDir.RegisterDefaultEvent(new AlwaysPropagatesEventPolicyFactory(sideChannel));
+
+        var mappedEvent = MappedEvent = new MappedEventManager(sideChannel);
+        var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);
+
+        var fieldMappingRegistry = new ComponentFieldMappingRegistry();
+        FieldMappingRegistry = fieldMappingRegistry;
+        RegisterDataMappings(fieldMappingRegistry);
+
+        var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
+        var clientGameEvents = ClientGameEvents = new WukongClientGameEvents(mappedEvent, mappingPolicyDir, state, pawnState, playerState, widgetManager, gameplayEventRouter, logger);
+        var serverGameEvents = ServerGameEvents = new WukongServerGameEvents(mappedEvent, widgetManager, logger);
+
+        var clientRpc = ClientRpc = new WukongClientRpcCallbacks(ecsLoop, playerState, areaState, mappedEvent, mappingPolicyDir, serializer, relayClient, clientNetEntity, widgetManager, timerController, logger);
+        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(ecsLoop, mappedEvent, mappingPolicyDir, serializer, relayClient, widgetManager, logger);
+        var chatter = Chatter = new WukongChatter(playerState, clientRpc, widgetManager, logger);
+
+        var commandRegistry = CommandRegistry = new ConsoleCommandRegistry([
+            new CheatCommandRegistration(playerState, areaState, chatter, serverRpc),
+            new ConnectionCommandRegistration(playerState, connection, chatter),
+            new ExecuteWukongCommandRegistration(),
+            new GiveUpCommandRegistration(ecsLoop, playerState, chatter),
+            new ObstacleCommandRegistration(),
+            new RebirthCommandRegistration(playerState, mappedEvent, chatter),
+            new WorkaroundCommandRegistration(world, mappedEvent, playerState),
+        ]);
+        var commandParser = CommandParser = new ConsoleCommandParser([
+            new StandardArgumentParserRegistration(),
+        ]);
+        var commandTypeConverter = ArgConverter = new ConsoleArgumentTypeConverter([]);
+        var commandMatcher = CommandMatcher = new ConsoleCommandMatcher(commandParser, commandRegistry, commandTypeConverter);
+        var commandConsole = CommandConsole = new WukongCommandConsole(commandMatcher, areaState, playerState, eventBus, chatter, widgetManager);
         var wukongInputManager = WukongInputManager = new WukongInputManager(commandConsole, chatter, widgetManager);
 
         var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection);
@@ -234,8 +298,8 @@ public sealed class DI
         ]);
         var shimRecorderRelayClient = ShimRecorderRelayClient = new HotSwappableRelayClient();
         var shimRecorderRelayService = ShimRelayClientService = new RelayClientService(shimRecorderRelayClient, shimRecorderLogger);
+        var shimNetEntity = ShimNetEntity = new NetworkedEntityManager(shimWorld, shimRecorderRelayClient, shimRecorderLogger);
         var shimBlobClient = ShimRelayBlobClient = new HttpBlobClient(shimRecorderLogger);
-        var shimNetEntity = ShimNetEntity = new NetworkedEntityManager(shimWorld, shimRecorderLogger, shimRecorderRelayClient);
 
         var shimEcsLoop = ShimEcsLoop = new ClientEcsUpdateLoop(shimWorld, shimRecorderLogger);
         var shimState = new ClientState(
@@ -299,5 +363,76 @@ public sealed class DI
         // ---
 
         Logger.LogDebug("DI Initialized");
+    }
+
+    private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
+    {
+        StandardDataMappings = new StandardDataMappings
+        {
+            PlayerHp = fieldMappingRegistry.Register(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(),
+                (ctx, value) =>
+                {
+                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
+                            Constants.FloatComparisonTolerance))
+                    {
+                        ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
+                    }
+                }, (ref main, ctx) =>
+                {
+                    main.Hp_SetFromGame(ctx.GetFloatValue(EBGUAttrFloat.Hp));
+                    if (main.Hp > 0)
+                    {
+                        main.IsDead_SetFromGame(false);
+                    }
+                }),
+
+            PlayerHpMax = fieldMappingRegistry.Register(MainCharacterComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
+                (ctx, value) =>
+                {
+                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
+                            Constants.FloatComparisonTolerance))
+                    {
+                        ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
+                    }
+                }, ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase)),
+
+            PlayerAttributes = fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(),
+                (ctx, attrs) =>
+                {
+                    foreach (var (attr, value) in attrs)
+                    {
+                        ctx.SetFloatValue((EBGUAttrFloat)attr, value);
+                    }
+                }, (ref main, ctx) =>
+                {
+                    foreach (var attr in Constants.SyncedAttributes)
+                    {
+                        var value = ctx.GetFloatValue(attr);
+                        main.Attributes.SetAttribute((byte)attr, value);
+                    }
+                }),
+
+            Hp = fieldMappingRegistry.Register(HpComponent.Fields.Hp.In<BUC_AttrContainer>(),
+                (ctx, value) =>
+                {
+                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
+                            Constants.FloatComparisonTolerance))
+                    {
+                        ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
+                    }
+                },
+                ctx => ctx.GetFloatValue(EBGUAttrFloat.Hp)),
+
+            HpMax = fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
+                (ctx, value) =>
+                {
+                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
+                            Constants.FloatComparisonTolerance))
+                    {
+                        ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
+                    }
+                },
+                ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase)),
+        };
     }
 }

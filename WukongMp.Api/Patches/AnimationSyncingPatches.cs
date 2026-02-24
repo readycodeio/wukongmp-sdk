@@ -24,7 +24,7 @@ public class PatchOnBeginAnimationSyncPreCheck
                 if (target != null)
                 {
                     // another player is being attacked by a monster, only allow for owned monsters
-                    return DI.Instance.ClientOwnership.OwnsEntity(entity.Value.Entity);
+                    return DI.Instance.ClientOwnership_.OwnsEntity(entity.Value.Entity);
                 }
             }
         }

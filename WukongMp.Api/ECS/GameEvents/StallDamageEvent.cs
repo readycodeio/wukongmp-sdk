@@ -1,0 +1,10 @@
+using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Relay.Common.Mapping;
+
+namespace WukongMp.Api.ECS.GameEvents;
+
+public struct StallDamageEvent(NetworkId target, float damage) : IAlwaysPropagatesToEcsOnly
+{
+    public NetworkId Target { get; } = target;
+    public float Damage { get; } = damage;
+}

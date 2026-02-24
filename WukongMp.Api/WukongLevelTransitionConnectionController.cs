@@ -1,8 +1,7 @@
 ﻿using b1;
-using ReadyM.Api.Multiplayer.Idents;
 using System;
 using System.Diagnostics;
-using WukongMp.Api.UI;
+using ReadyM.Api.Idents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;

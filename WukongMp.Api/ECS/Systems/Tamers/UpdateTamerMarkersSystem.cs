@@ -1,17 +1,19 @@
-﻿using Friflo.Engine.ECS;
-using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+﻿using Friflo.Engine.ECS.Systems;
 using System;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
 // FIXME: In the future this should support both TamerEntities and MainCharacterEntities
-public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, MarkerComponent, TransformComponent, NicknameComponent, TamerComponent>
+public sealed class UpdateTamerMarkersSystem : QuerySystem<MarkerComponent>
 {
+    private const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
+    private const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
+
     protected override void OnUpdate()
     {
         var localPlayerController = GameUtils.GetPlayerController();
@@ -21,32 +23,34 @@ public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, 
         var viewTargetLocation = viewTarget.GetActorLocation();
 
         Query.ForEachEntity((
-            ref localTamerComp,
             ref markerComp,
-            ref transComp,
-            ref nameComp,
-            ref tamerComp, _) =>
+            entity) =>
         {
+            var tamerEntity = new TamerEntity(entity);
+            
             if (markerComp.MarkerActor == null)
                 return;
 
-            if (localTamerComp.Tamer != null && localTamerComp.Pawn != null)
+            var tamer = tamerEntity.Tamer;
+            var pawn = tamerEntity.Pawn;
+            
+            if (tamer != null && pawn != null)
             {
-                var location = localTamerComp.Pawn.GetActorLocation();
+                var location = pawn.GetActorLocation();
                 var distance = FVector.Dist2D(viewTargetLocation, location);
                 var coefficient = Math.Min(distance / Constants.MaxMarkerHeightDistance, 1);
-                var markerHeight = localTamerComp.Tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * (1 + Constants.BaseMarkerHeightCoefficient + coefficient);
-                markerComp.MarkerActor.SetActorLocation(location + new FVector(0, 0, markerHeight), false, out var _, true);
+                var markerHeight = tamer.CapsuleComponent.GetScaledCapsuleHalfHeight() * (1 + Constants.BaseMarkerHeightCoefficient + coefficient);
+                markerComp.MarkerActor.SetActorLocation(location + new FVector(0, 0, markerHeight), false, out _, true);
             }
-#if TESTING
-            string title = localTamerComp.Tamer?.GetClass()?.GetName() ?? "";
-            if (localTamerComp.Pawn != null)
+#if !TESTING
+            string title = tamer?.GetClass()?.GetName() ?? "";
+            if (pawn != null)
             {
-                markerComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.BlueTeamColor}", true);
+                markerComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {BlueTeamColor}", true);
             }
-            else if (localTamerComp.Tamer != null)
+            else if (tamer != null)
             {
-                markerComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {Constants.RedTeamColor}", true);
+                markerComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {title} {RedTeamColor}", true);
             }
 #endif
         });

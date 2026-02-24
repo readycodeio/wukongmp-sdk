@@ -1,8 +1,6 @@
 ﻿using b1;
-using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
@@ -39,41 +37,42 @@ public static class ReceiveTickPatch
 #endif
         }
     }
+    
+    private static SyncMontageJob? _syncMontageJob;
 
     private static void RunMontageSync()
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-        if (mainEntity == null)
-            return;
+        DI.Instance.World.Query<LocalMainCharacterComponent>().ForEachEntity((ref _, entity) =>
+        {
+            var mainEntity = new MainCharacterEntity(entity);
 
-        SyncPlayerMontage(mainEntity.Value);
+            SyncPlayerMontage(mainEntity);
+        });
 
-        var playerId = DI.Instance.State.LocalPlayerId;
-        if (playerId == null)
-            return;
-
-        DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
-    }
+        _syncMontageJob ??= new SyncMontageJob(DI.Instance.MappingPolicyDir, DI.Instance.MappedEvent, DI.Instance.Logger);
+        
+        DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity(static (ref localTamerComp, entity) 
+            => _syncMontageJob.Value.Execute(ref localTamerComp, entity));    }
 
     private static void SyncPlayerMontage(MainCharacterEntity mainEntity)
     {
         ref var localMainComp = ref mainEntity.GetLocalState();
 
-        if (localMainComp.Pawn == null || localMainComp.Pawn.Mesh == null)
+        if (mainEntity.Pawn == null || mainEntity.Pawn.Mesh == null)
             return;
 
         var montageState = localMainComp.MontageState;
         if (montageState.LocalAnimationInstance == null)
         {
-            montageState.LocalAnimationInstance = localMainComp.Pawn.Mesh.GetAnimInstance();
+            montageState.LocalAnimationInstance = mainEntity.Pawn.Mesh.GetAnimInstance();
             if (montageState.LocalAnimationInstance == null)
                 return;
         }
 
-        var currentMontage = localMainComp.Pawn.GetCurrentMontage();
+        var currentMontage = mainEntity.Pawn.GetCurrentMontage();
 
         if (currentMontage != null)
         {
@@ -86,7 +85,7 @@ public static class ReceiveTickPatch
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
                 var netId = mainEntity.GetMeta().NetId;
-                DI.Instance.Rpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
+                DI.Instance.ClientRpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
             }
 
             montageState.LocalMontagePosition = currentPosition;
@@ -94,7 +93,7 @@ public static class ReceiveTickPatch
         else if (montageState.LocalMontage != null)
         {
             var netId = mainEntity.GetMeta().NetId;
-            DI.Instance.Rpc.SendMontageCancel(netId);
+            DI.Instance.ClientRpc.SendMontageCancel(netId);
         }
 
         montageState.LocalMontage = currentMontage;

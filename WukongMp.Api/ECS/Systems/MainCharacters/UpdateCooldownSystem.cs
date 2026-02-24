@@ -20,16 +20,16 @@ public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus 
         if (areaState.CurrentArea.HasValue && !areaState.CurrentArea.Value.Room.CheatsAllowed)
             return;
 
-        var mainCharacterEntity = playerState.LocalMainCharacter;
-        if (mainCharacterEntity == null)
+        var mainEntity = playerState.LocalMainCharacter;
+        if (mainEntity == null)
             return;
 
-        ref var localMainComp = ref mainCharacterEntity.Value.GetLocalState();
+        ref var localMainComp = ref mainEntity.Value.GetLocalState();
 
         if (!localMainComp.SpiritCooldownEnabled)
             return;
 
-        var localPawn = localMainComp.Pawn;
+        var localPawn = mainEntity.Value.Pawn;
         if (localPawn == null)
             return;
 

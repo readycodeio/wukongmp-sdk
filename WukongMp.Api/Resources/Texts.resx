@@ -339,4 +339,28 @@
   <data name="StallingMessage" xml:space="preserve">
     <value>Stalling - losing HP</value>
   </data>
+  <data name="ExecutionError" xml:space="preserve">
+    <value>Execution error: {0}</value>
+  </data>
+  <data name="InvalidCommandFormat" xml:space="preserve">
+    <value>Invalid command format: {0}</value>
+  </data>
+  <data name="InvalidArgumentFormat" xml:space="preserve">
+    <value>Invalid argument format: {0}</value>
+  </data>
+  <data name="UnrecognizedCommand" xml:space="preserve">
+    <value>Unrecognized command: {0}</value>
+  </data>
+  <data name="TooFewArguments" xml:space="preserve">
+    <value>Too few arguments: min {0}, actual {1}</value>
+  </data>
+  <data name="TooManyArguments" xml:space="preserve">
+    <value>Too many arguments: max {0}, actual {1}</value>
+  </data>
+  <data name="InvalidArgumentType" xml:space="preserve">
+    <value>Invalid argument at index {0}. Expected {1}, got {2}</value>
+  </data>
+  <data name="MasterClient" xml:space="preserve">
+    <value>Master client: {0}</value>
+  </data>
 </root>

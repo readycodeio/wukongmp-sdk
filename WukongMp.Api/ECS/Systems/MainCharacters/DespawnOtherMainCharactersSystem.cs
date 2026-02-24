@@ -4,13 +4,12 @@ using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Idents;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
@@ -74,11 +73,16 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
             return;
 
         var localComp = mainEntity.GetLocalState();
+        var pawn = mainEntity.Pawn;
+        if (pawn == null)
+        {
+            _logger.LogWarning("Could not find pawn for main character entity of player {PlayerId} during despawn.", playerId);
+        }
 
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
             PlayerId = playerId,
-            PlayerCharacter = localComp.Pawn,
+            PlayerCharacter = pawn,
             PlayerMarker = localComp.MarkerActor
         });
     }

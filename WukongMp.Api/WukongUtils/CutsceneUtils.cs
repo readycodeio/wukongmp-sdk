@@ -1,13 +1,16 @@
 using System.Linq;
 using b1;
-using WukongMp.Api.DTO;
+using ReadyM.Relay.Client.State;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.State;
+using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils;
 
 public static class CutsceneUtils
 {
-    public static void PlayCutscene(PlayMovieData data)
+    public static void PlayCutscene(PlayMovieRequestEvent ev)
     {
         var events = BGW_EventCollection.Get(GameUtils.GetWorld());
         if (events == null)
@@ -18,33 +21,28 @@ public static class CutsceneUtils
 
         events.Evt_RequestPlayMovie.Invoke(new FPlayMovieRequest
         {
-            SequenceID = data.SequenceId,
-            bDisablePlayerControl = data.DisablePlayerControl,
-            bDisableMovementInput = data.DisableMovementInput,
-            bDisableLookAtInput = data.DisableLookAtInput,
-            bHidePlayer = data.HidePlayer,
-            bHideHud = data.HideHud,
-            OverlapBoxGuid = data.OverlapBoxGuid,
-            MatchType = data.MatchType,
+            SequenceID = ev.SequenceId,
+            bDisablePlayerControl = ev.DisablePlayerControl,
+            bDisableMovementInput = ev.DisableMovementInput,
+            bDisableLookAtInput = ev.DisableLookAtInput,
+            bHidePlayer = ev.HidePlayer,
+            bHideHud = ev.HideHud,
+            OverlapBoxGuid = ev.OverlapBoxGuid,
+            MatchType = ev.MatchType,
         });
     }
 
-    public static void SetJoiningCutsceneStatus(SequenceWaitingData sequenceWaitingData)
+    public static void SetJoiningCutsceneStatus(MainCharacterEntity mainEntity, WukongWidgetManager widgetManager, WaitingForSequenceEvent ev)
     {
-        Logging.LogDebug("Setting JoiningCutsceneStatus for sequenceId {SequenceId}", sequenceWaitingData.SequenceID);
-        var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-        if (mainEntity == null)
-        {
-            Logging.LogError("Local player not found");
-            return;
-        }
+        Logging.LogDebug("Setting JoiningCutsceneStatus for sequenceId {SequenceId}", ev.SequenceId);
 
-        ref var localMain = ref mainEntity.Value.GetLocalState();
+        // FIXME: Cutscene data should be moved to PlayerEntity
+        ref var localMain = ref mainEntity.GetLocalState();
         if (!localMain.IsWaitingForSequence)
         {
-            localMain.JoiningSequenceLocation = sequenceWaitingData.SequenceLocation;
+            localMain.JoiningSequenceLocation = ev.SequenceLocation;
             localMain.IsJoiningSequence = true;
-            DI.Instance.WidgetManager.ShowInfoMessage(Resources.Texts.JoinOtherPlayersToProceed);
+            widgetManager.ShowInfoMessage(Resources.Texts.JoinOtherPlayersToProceed);
         }
     }
 
@@ -69,30 +67,25 @@ public static class CutsceneUtils
         }
     }
 
-    public static bool CheckAllPlayersWaitingForCutscene(int sequenceId)
+    public static bool CheckAllPlayersWaitingForCutscene(ClientState clientState, WukongPlayerState playerState, int sequenceId)
     {
-        var playerState = DI.Instance.PlayerState;
-        return DI.Instance.State.AllPlayers.All(p => playerState.GetMainCharacterById(p)?.GetState().WaitingSequenceId == sequenceId);
+        return clientState.AllPlayers.All(p => playerState.GetMainCharacterByPlayerId(p)?.GetState().WaitingSequenceId == sequenceId);
     }
 
-    public static void TeleportLocalPlayerToCutsceneLocation()
+    public static void TeleportLocalPlayerToCutsceneLocation(MainCharacterEntity mainEntity)
     {
-        var playerState = DI.Instance.PlayerState;
-        var mainEntity = playerState.LocalMainCharacter;
-        if (mainEntity == null)
-            return;
-        ref var main = ref mainEntity.Value.GetState();
-        ref var localMain = ref mainEntity.Value.GetLocalState();
+        ref var main = ref mainEntity.GetState();
+        ref var localMain = ref mainEntity.GetLocalState();
         if (localMain.IsJoiningSequence)
         {
-            PlayerUtils.TeleportLocalPlayer(mainEntity.Value, localMain.JoiningSequenceLocation, main.Rotation.ToFRotator(), false);
+            PlayerUtils.TeleportLocalPlayer(mainEntity, localMain.JoiningSequenceLocation, main.Rotation.ToFRotator(), false);
         }
     }
 
     public static void ClearLocalJoiningCutsceneStatus(MainCharacterEntity mainCharacter)
     {
         ref var localMain = ref mainCharacter.GetLocalState();
-        BIC_MovieData? movieData = BGWGameInstanceCS.GetObject<BGW_GameDataMgr>(localMain.Pawn)?.GetGameInstanceWritableData<BIC_MovieData>();
+        BIC_MovieData? movieData = BGWGameInstanceCS.GetObject<BGW_GameDataMgr>(mainCharacter.Pawn)?.GetGameInstanceWritableData<BIC_MovieData>();
         movieData?.PlayMovieRequestQueue.Clear();
 
         localMain.IsJoiningSequence = false;

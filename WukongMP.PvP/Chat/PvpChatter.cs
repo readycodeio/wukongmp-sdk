@@ -3,6 +3,7 @@ using ReadyM.Relay.Client.State;
 using System;
 using WukongMp.Api;
 using WukongMp.Api.Chat;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 
 namespace WukongMp.PvP.Chat;
@@ -12,14 +13,12 @@ internal class PvpChatter : IDisposable
     private readonly WukongChatter _wukongChatter;
     private readonly GameplayEventRouter _eventRouter;
     private readonly WukongAreaState _areaState;
-    private readonly WukongPawnState _pawnState;
     private readonly ClientOwnershipManager _clientOwnership;
 
     public PvpChatter(
         WukongChatter wukongChatter,
         GameplayEventRouter eventRouter,
         WukongAreaState areaState,
-        WukongPawnState pawnState,
         ClientOwnershipManager clientOwnership
     )
     {
@@ -28,7 +27,6 @@ internal class PvpChatter : IDisposable
         _wukongChatter = wukongChatter;
         _eventRouter = eventRouter;
         _areaState = areaState;
-        _pawnState = pawnState;
         _clientOwnership = clientOwnership;
 
         _eventRouter.OnUnitDead += OnUnitDead;
@@ -47,8 +45,8 @@ internal class PvpChatter : IDisposable
         {
             if (victim != attacker)
             {
-                if (_pawnState.TryGetMainCharacterEntity(victim, out var victimMainEntity) &&
-                    _pawnState.TryGetMainCharacterEntity(attacker, out var attackerMainEntity))
+                if (MainCharacterEntity.TryGetMainCharacter(victim, out var victimMainEntity) &&
+                    MainCharacterEntity.TryGetMainCharacter(attacker, out var attackerMainEntity))
                 {
                     if (!_clientOwnership.OwnsEntity(victimMainEntity.Value.Entity))
                         return;

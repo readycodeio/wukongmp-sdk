@@ -8,8 +8,8 @@ namespace WukongMp.Api.DTO;
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
 public partial struct BeginSyncAnimationData(
-    NetworkId host,
-    bool shortened,
+    NetworkId hostNetId,
+    bool compressed,
     string guestMontage,
     bool bFoundHostSyncPointOnDummyMesh,
     string selfSyncPointOnHost,
@@ -19,11 +19,10 @@ public partial struct BeginSyncAnimationData(
     bool bEnableDebugDraw,
     float notifyBeginTime,
     float totalDuration,
-    int animationSyncMontageInstanceId
-) : INetSerializable
+    int animationSyncMontageInstanceId) : INetSerializable
 {
-    public NetworkId Host = host;
-    public bool Shortened = shortened;
+    public NetworkId HostNetId = hostNetId;
+    public bool compressed = compressed;
     public string GuestMontage = guestMontage;
     public bool bFoundHostSyncPointOnDummyMesh = bFoundHostSyncPointOnDummyMesh;
     public string SelfSyncPointOnHost = selfSyncPointOnHost;

@@ -5,9 +5,8 @@ using CSharpModBase;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.Shim;
-using WukongMp.Tests;
 
-namespace WukongMp.Testing
+namespace WukongMp.Tests
 {
     // ReSharper disable once UnusedType.Global
     public class Mod : ICSharpModExV2

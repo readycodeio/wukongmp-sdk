@@ -1,12 +1,19 @@
-﻿using b1;
-using Friflo.Engine.ECS;
+﻿using System.Diagnostics;
+using b1;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Mapping;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class ChangeTamerTargetSystem : QuerySystem<LocalTamerComponent>
+public sealed class ChangeTamerTargetSystem(
+    WukongMappingPolicyDirectory policyDir, 
+    // NOTE(api): API refactoring only
+    ClientOwnershipManager ownershipManager) : QuerySystem<LocalTamerComponent>
 {
     private float _elapsedTime;
 
@@ -16,12 +23,25 @@ public sealed class ChangeTamerTargetSystem : QuerySystem<LocalTamerComponent>
         {
             _elapsedTime = 0;
 
-            Query.ForEachEntity((
-                ref localTamerComp, entity) =>
+            Query.ForEachEntity((ref _, entity) =>
             {
-                if (DI.Instance.ClientOwnership.OwnsEntity(entity) && BGUFunctionLibraryCS.BGUIsUnitInBattle(localTamerComp.Pawn))
+                var tamerEntity = new TamerEntity(entity);
+                var pawn = tamerEntity.Pawn;
+
+                if (policyDir.TamerData<TamerComponent>().ShouldGameCopyToEcs(tamerEntity))
                 {
-                    BGUFuncLibAICS.SearchTargetSP(localTamerComp.Pawn);
+                    // NOTE(api): API refactoring only
+                    Debug.Assert(ownershipManager.OwnsEntity(entity));
+
+                    if (BGUFunctionLibraryCS.BGUIsUnitInBattle(pawn))
+                    {
+                        BGUFuncLibAICS.SearchTargetSP(pawn);
+                    }
+                }
+                else
+                {
+                    // NOTE(api): API refactoring only
+                    Debug.Assert(!ownershipManager.OwnsEntity(entity));
                 }
             });
         }

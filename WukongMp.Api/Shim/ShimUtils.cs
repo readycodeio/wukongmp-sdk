@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Shim;
 
@@ -34,7 +34,7 @@ public static class ShimUtils
         return relayClient;
     }
 
-    public static void InitRelayPlayShim(DI container, string shimPath)
+    internal static void InitRelayPlayShim(DI container, string shimPath)
     {
         var shimSerializer = new ShimSerializer(container.TextSerializer);
 
@@ -47,7 +47,7 @@ public static class ShimUtils
         container.ShimAuto.ShouldAutoPlay = true;
     }
 
-    public static void InitRelayRecordShim(DI container, string host, int port, Guid userGuid, bool noDisconnect, string shimPath)
+    internal static void InitRelayRecordShim(DI container, string host, int port, Guid userGuid, bool noDisconnect, string shimPath)
     {
         var shimDbPath = Path.GetDirectoryName(shimPath);
         
@@ -80,7 +80,7 @@ public static class ShimUtils
         container.ShimRecorderRelayClient.Attach(recordRelayClient);
     }
 
-    public static void InitRelay(DI container, string host, int port, Guid userGuid, bool noDisconnect)
+    internal static void InitRelay(DI container, string host, int port, Guid userGuid, bool noDisconnect)
     {
         var relayClient = CreateRelayNetworked(container, host, port, userGuid, noDisconnect);
         

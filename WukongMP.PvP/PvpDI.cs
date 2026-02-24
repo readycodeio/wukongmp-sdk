@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
+using ReadyM.Api;
 using WukongMp.Api;
-using WukongMp.Api.FreeCamera;
 using WukongMp.PvP.Chat;
 using WukongMp.PvP.Command;
 using WukongMp.PvP.Configuration;
-using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.GameMode;
 using WukongMp.PvP.UI;
 
 namespace WukongMp.PvP
@@ -16,12 +16,11 @@ namespace WukongMp.PvP
         public DI DI { get; private set; } = null!;
 
         public PvpChatter PvpChatter { get; private set; } = null!;
-        public PvpCommandConsole PvpCommandConsole { get; private set; } = null!;
         public PvpGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public PvpSynchronizer Synchronizer { get; private set; } = null!;
         public PvpSaveManager SaveManager { get; private set; } = null!;
         public PvpWidgetManager WidgetManager { get; private set; } = null!;
-        public WukongPatcher Patcher { get; private set; } = null!;
+        public PatcherBase Patcher { get; private set; } = null!;
 
         public PvpMode PVP { get; private set; } = null!;
 
@@ -31,34 +30,58 @@ namespace WukongMp.PvP
 
             DI = wukongDI;
 
-            var patcher = Patcher = new PvpPatcher(DI.Prelude);
+            var patcher = Patcher = new WukongPatcher(typeof(Mod).Assembly, "WukongMp.PvP", DI.Prelude);
 
-            var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.GameplayEventRouter, DI.AreaState, DI.PawnState, DI.ClientOwnership);
-            var commandConsole = PvpCommandConsole = new PvpCommandConsole(DI.CommandConsole, DI.Chatter, DI.PlayerState, DI.Rpc, DI.AreaState);
+            var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.GameplayEventRouter, DI.AreaState, DI.ClientOwnership_);
+            
+            DI.CommandRegistry.AddCommands([
+                new PvpCommandRegistration(DI.PlayerState, DI.AreaState, DI.ClientRpc, DI.Chatter, DI.CommandConsole),
+            ]);
+            
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
 
             var saveManager = SaveManager = new PvpSaveManager(DI.Logger);
             var widgetManager = WidgetManager = new PvpWidgetManager(DI.WidgetManager, DI.State, DI.PlayerState, DI.EventBus, DI.FreeCameraManager, DI.AreaState, DI.GameplayEventRouter);
 
-            var pvp = PVP = new PvpMode(DI.World, DI.Serializer, DI.RelayClient, DI.State, DI.AreaState, DI.PlayerState, DI.PlayerPawnState, DI.EventBus, DI.Rpc, DI.Chatter, DI.GameplayEventRouter, DI.ClientOwnership, DI.PawnState, DI.EcsLoop, widgetManager, DI.Logger);
+            var pvp = PVP = new PvpMode(
+                DI.World,
+                DI.MappedEvent,
+                DI.Serializer,
+                DI.RelayClient, 
+                DI.State,
+                DI.AreaState, 
+                DI.PlayerState, 
+                DI.PlayerPawnState, 
+                DI.EventBus, 
+                DI.ClientRpc,
+                DI.Chatter,
+                DI.GameplayEventRouter, 
+                DI.MappingPolicyDir,
+                DI.ClientOwnership_,
+                DI.PawnState, 
+                DI.EcsLoop, 
+                widgetManager, 
+                DI.Logger);
 
             var synchronizer = Synchronizer = new PvpSynchronizer(
                 DI.ArchetypeEvent,
                 DI.State,
-                DI.ArchetypeRegistration,
+                DI.WukongArchetype,
                 DI.World,
                 DI.AreaState,
+                DI.MappingPolicyDir,
                 DI.PlayerState,
                 DI.PlayerPawnState,
                 DI.ModeManager,
                 DI.NetEntity,
-                DI.ClientOwnership,
+                DI.ClientOwnership_,
+                DI.ClientNetEntity,
                 DI.JobRegistry,
                 DI.NetComponentRegistry,
                 DI.RelayClient,
                 DI.EcsLoop,
                 DI.EventBus,
-                DI.Rpc,
+                DI.ClientRpc,
                 widgetManager,
                 DI.GameplayEventRouter,
                 DI.GameplayConfiguration,

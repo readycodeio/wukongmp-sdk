@@ -1,13 +1,12 @@
-﻿using b1;
+﻿using System.Reflection;
+using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Api.Multiplayer.ECS.Values;
-using System.Reflection;
 using PreludeLib.Attributes;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.Patches;
 
@@ -41,12 +40,12 @@ public class PatchOnSwitchBulletTarget
             return true;
         }
 
-        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn)
         {
             var newTargetId = default(NetworkId);
             if (InnerTarget is BGUPlayerCharacterCS)
             {
-                var mainCharacterEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(InnerTarget);
+                var mainCharacterEntity = DI.Instance.PawnState.GetEntityByPlayerActor(InnerTarget);
 
                 if (mainCharacterEntity == null)
                 {
@@ -71,9 +70,9 @@ public class PatchOnSwitchBulletTarget
             if (projectileClass != null)
             {
                 Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, InnerTarget.GetName());
-                DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(projectileClass.GetName(), newTargetId, SocketName));
+                var characterId = DI.Instance.PlayerState.LocalMainCharacter.Value.GetMeta().NetId;
+                DI.Instance.ClientRpc.SendProjectileTarget(new ProjectileTargetData(characterId, projectileClass.GetName(), newTargetId, SocketName));
             }
-            return true;
         }
         return true;
     }
@@ -97,7 +96,7 @@ public class PatchOnSwitchBulletInfoIfNeed
         if (DI.Instance.PlayerState.LocalMainCharacter == null)
             return true;
 
-        var owner = __instance?.GetOwner();
+        var owner = __instance.GetOwner();
         if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
@@ -109,15 +108,15 @@ public class PatchOnSwitchBulletInfoIfNeed
             return true;
         }
 
-        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn)
         {
             var projectileClass = ProjectileActor.GetClass();
             if (projectileClass != null)
             {
                 Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, BulletSwitchID);
-                DI.Instance.Rpc.SendSwitchOneProjectile(new ProjectileSwitchData(projectileClass.GetName(), BulletSwitchID, SwitchIdx));
+                var netId = DI.Instance.PlayerState.LocalMainCharacter.Value.GetMeta().NetId;
+                DI.Instance.ClientRpc.SendProjectileSwitch(new ProjectileSwitchData(netId, projectileClass.GetName(), BulletSwitchID, SwitchIdx));
             }
-            return true;
         }
         return true;
     }
@@ -137,13 +136,14 @@ public static class PatchOnProjectileDead
 
         var master = ___MasterData.GetMasterActor();
         var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
-        if (projectile != null && DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
+        if (projectile != null && DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn == master)
         {
             var projectileClass = projectile.GetClass();
             if (projectileClass != null)
             {
                 Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
-                DI.Instance.Rpc.SendProjectileDead(new ProjectileDeadData(projectileClass.GetName(), Reason));
+                var ownerId = DI.Instance.PlayerState.LocalMainCharacter.Value.GetMeta().NetId;
+                DI.Instance.ClientRpc.SendProjectileDead(new ProjectileDeadData(ownerId, projectileClass.GetName(), Reason));
             }
         }
     }
@@ -175,13 +175,14 @@ public static class PatchOnSetMoveMode
 
         var master = masterData.GetMasterActor();
 
-        if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
+        if (DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn == master)
         {
             var projectileClass = projectile.GetClass();
             if (projectileClass != null)
             {
                 Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, MoveMode);
-                DI.Instance.Rpc.SendProjectileMoveMode(new ProjectileMoveModeData(projectileClass.GetName(), MoveMode));
+                var netId = DI.Instance.PlayerState.LocalMainCharacter.Value.GetMeta().NetId;
+                DI.Instance.ClientRpc.SendProjectileMoveMode(new ProjectileMoveModeData(netId, projectileClass.GetName(), MoveMode));
             }
         }
     }
@@ -211,7 +212,7 @@ public static class PatchApplyBySkill_Implement
         if (DI.Instance.PlayerState.LocalMainCharacter == null)
             return true;
 
-        if (masterActor is BGUPlayerCharacterCS && masterActor != DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+        if (masterActor is BGUPlayerCharacterCS && masterActor != DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn)
         {
             Logging.LogDebug("Skipping BUEffectBulletSwitchSelf ApplyBySkill_Implement called for non local player");
             return false;

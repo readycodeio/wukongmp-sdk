@@ -1,11 +1,12 @@
 ﻿using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Multiplayer.Common;
-using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.Client;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Resources;
@@ -13,7 +14,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.UI;
 
-public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerState playerState) : IDisposable
+public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerState playerState, IRelayClient relayClient) : IDisposable
 {
     private string _lastDisconnectText = Texts.Disconnected;
 
@@ -52,7 +53,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
         _modVersionWidget.Value.SetVisibility(true);
     }
 
-    public void SetModVersion(string version)
+    internal void SetModVersion(string version)
     {
         _fullModVersion = version;
         var subVersions = version.Split('+');
@@ -69,7 +70,7 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
         if (!clientState.IsConnected)
         {
-            DI.Instance.RelayClient.Scheduler.Schedule(static (ctx, self) =>
+            relayClient.Scheduler.Schedule(static (ctx, self) =>
             {
                 self._infoMessageWidget.Value.SetVisibility(true);
                 self._lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;

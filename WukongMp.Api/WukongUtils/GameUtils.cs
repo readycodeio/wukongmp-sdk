@@ -1,7 +1,7 @@
 ﻿using b1;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
-using WukongMp.Api.UI;
+using WukongMp.Api.FreeCamera;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -35,12 +35,12 @@ namespace WukongMp.Api.WukongUtils
 
         public static bool IsWorldValid() => GetWorld() != null;
 
-        public static void PossesPawnWithViewTarget(ABGPPlayerController controller, APawn possessPawn, APawn unpossessPawn, FRotator controllerRotation)
+        public static void PossesPawnWithViewTarget(FreeCameraManager freeCameraManager, ABGPPlayerController controller, APawn possessPawn, APawn unpossessPawn, FRotator controllerRotation)
         {
             PossessPawn(controller, possessPawn, unpossessPawn);
             controller.SetViewTargetWithBlend(possessPawn);
             controller.SetControlRotation(controllerRotation);
-            DI.Instance.FreeCameraManager.ReEnableFreeCamera();
+            freeCameraManager.ReEnableFreeCamera();
         }
 
         public static void PossessPawn(ABGPPlayerController controller, APawn possessPawn, APawn unpossessPawn)

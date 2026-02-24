@@ -8,9 +8,8 @@ public static class TransformationUtils
     public static void TransformPlayer(in MainCharacterEntity mainEntity, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
     {
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
 
-        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
 
         if (events == null)
         {
@@ -25,8 +24,7 @@ public static class TransformationUtils
     public static void TransformPlayerBack(in MainCharacterEntity mainEntity, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransEndType transEndType)
     {
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
-        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
 
         if (events == null)
         {

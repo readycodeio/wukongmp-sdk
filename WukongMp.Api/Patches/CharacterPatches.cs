@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using b1;
+using b1.ECS;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
@@ -33,12 +34,12 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (__instance.Owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+            if (__instance.Owner == DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn)
             {
                 return; // players own their characters
             }
 
-            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(__instance.Owner);
+            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(__instance.Owner);
 
             // remote player - sync properties and HP
 
@@ -73,7 +74,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             // owned, skip
-            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
             ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
@@ -110,7 +111,7 @@ namespace WukongMp.Api.Patches
 
             var owner = __instance.GetOwner();
             var localPlayerState = DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState();
-            var isLocalPlayer = owner == DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState().Pawn;
+            var isLocalPlayer = owner == DI.Instance.PlayerState.LocalMainCharacter?.Pawn;
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
@@ -120,7 +121,7 @@ namespace WukongMp.Api.Patches
 #endif
                 var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
                 if (netId.HasValue)
-                    return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
+                    return DI.Instance.ClientOwnership_.OwnsEntity(netId.Value);
             }
 
             var cheatsEnabled = DI.Instance.AreaState.CurrentArea.HasValue && DI.Instance.AreaState.CurrentArea.Value.Room.CheatsAllowed;
@@ -191,7 +192,7 @@ namespace WukongMp.Api.Patches
 
             if (AttrID == EBGUAttrFloat.Hp)
             {
-                if (mainEntity != null && owner == mainEntity.Value.GetLocalState().Pawn)
+                if (mainEntity != null && owner == mainEntity.Value.Pawn)
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
 
@@ -212,7 +213,7 @@ namespace WukongMp.Api.Patches
                     if (!tamerEntity.HasValue)
                         return; // not found
 
-                    if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                    if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                         return; // not owned
 
                     ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
@@ -227,7 +228,7 @@ namespace WukongMp.Api.Patches
                 }
             }
 
-            if (mainEntity != null && Constants.SyncedAttributes.Contains(AttrID) && owner == mainEntity.Value.GetLocalState().Pawn)
+            if (mainEntity != null && Constants.SyncedAttributes.Contains(AttrID) && owner == mainEntity.Value.Pawn)
             {
                 ref var mainComp = ref mainEntity.Value.GetState();
 
@@ -280,7 +281,7 @@ namespace WukongMp.Api.Patches
 
             var mainEntity = playerState.LocalMainCharacter;
 
-            if (mainEntity != null && character == mainEntity.Value.GetLocalState().Pawn)
+            if (mainEntity != null && character == mainEntity.Value.Pawn)
             {
                 ref var main = ref mainEntity.Value.GetState();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
@@ -326,11 +327,11 @@ namespace WukongMp.Api.Patches
                     main.Rotation = __instance.ActorRotation.ToVector3();
                 }
 
-                TeleportUtils.CheckForTeleportFinish(mainEntity.Value);
+                TeleportUtils.CheckForTeleportFinish(DI.Instance.MappedEvent, mainEntity.Value);
             }
             else
             {
-                var otherMainEntity = pawnState.GetEntityByPlayerPawn(character);
+                var otherMainEntity = pawnState.GetEntityByPlayerActor(character);
 
                 if (otherMainEntity != null)
                 {
@@ -370,7 +371,7 @@ namespace WukongMp.Api.Patches
                         __instance.LastVelocity = FVector.ZeroVector;
                     }
 
-                    TeleportUtils.CheckForTeleportFinish(otherMainEntity.Value);
+                    TeleportUtils.CheckForTeleportFinish(DI.Instance.MappedEvent, otherMainEntity.Value);
                 }
                 else
                 {
@@ -381,10 +382,10 @@ namespace WukongMp.Api.Patches
                     {
                         ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
 
-                        if (!localTamer.IsTamerSynced || !localTamer.IsTamerValid || localTamer.Pawn == null)
+                        if (!localTamer.IsTamerSynced || !tamerEntity.Value.IsTamerValid || tamerEntity.Value.Pawn == null)
                             return;
 
-                        if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                        if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                         {
                             ref var anim = ref tamerEntity.Value.GetAnimation();
                             anim.Velocity = __instance.Velocity.ToVector3();
@@ -410,7 +411,7 @@ namespace WukongMp.Api.Patches
                             __instance.MoveAcceleration = anim.MoveAcceleration.ToFVector();
                             __instance.MovementComp.Velocity = anim.Velocity.ToFVector();
 
-                            var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
+                            var events = BUS_EventCollectionCS.Get(tamerEntity.Value.Pawn);
 
                             ref var trans = ref tamerEntity.Value.GetTransform();
                             var location = trans.Position.ToFVector();
@@ -435,7 +436,7 @@ namespace WukongMp.Api.Patches
             if (distanceSq > Constants.RestrictedMovementRadiusSquare)
             {
                 characterData.ActorLocation = localMainComp.JoiningSequenceLocation + Constants.RestrictedMovementRadius * (characterData.ActorLocation - localMainComp.JoiningSequenceLocation).GetSafeNormal(); // cast from above
-                localMainComp.Pawn?.SetActorLocation(characterData.ActorLocation, false, out _, true);
+                mainEntity.Pawn?.SetActorLocation(characterData.ActorLocation, false, out _, true);
             }
         }
     }
@@ -489,14 +490,14 @@ namespace WukongMp.Api.Patches
             NetworkId? netId = null;
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 netId = tamerEntity.Value.GetMeta().NetId;
             }
             else
             {
                 var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
-                if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == owner)
+                if (playerEntity.HasValue && playerEntity.Value.Pawn == owner)
                 {
                     netId = playerEntity.Value.GetMeta().NetId;
                 }
@@ -507,7 +508,7 @@ namespace WukongMp.Api.Patches
                 if (SimpleState is EBGUSimpleState.Immobilizing or EBGUSimpleState.InAnimationSyncing or EBGUSimpleState.PreAnimationSyncing)
                     return;
 
-                DI.Instance.Rpc.SendUnitSimpleState(new SimpleStateData(netId.Value, SimpleState, IsRemove));
+                DI.Instance.ClientRpc.SendUnitSimpleState(new SimpleStateData(netId.Value, SimpleState, IsRemove));
             }
         }
     }
@@ -528,18 +529,18 @@ namespace WukongMp.Api.Patches
             var owner = __instance.GetOwner();
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
+                DI.Instance.ClientRpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
             }
 
-            if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+            if (owner == playerState.LocalMainCharacter?.Pawn)
             {
                 var mainEntity = playerState.LocalMainCharacter;
                 var netId = mainEntity.Value.GetMeta().NetId;
 
-                DI.Instance.Rpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
+                DI.Instance.ClientRpc.SendUnitStateTrigger(new StateTriggerData(netId, Trigger, Time, NeedForceUpdate));
             }
         }
     }
@@ -556,11 +557,11 @@ namespace WukongMp.Api.Patches
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
             var netId = tamerEntity.Value.GetMeta().NetId;
-            DI.Instance.Rpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
+            DI.Instance.ClientRpc.SendMotionMatchingState(new MotionMatchingStateData(netId, MMState));
         }
     }
 
@@ -585,18 +586,18 @@ namespace WukongMp.Api.Patches
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendAddBuff(new BuffAddData(netId, BuffID, Duration));
+                DI.Instance.ClientRpc.SendAddBuff(new BuffAddData(netId, BuffID, Duration));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
+            if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
                 var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendAddBuff(new BuffAddData(myId, BuffID, Duration));
+                DI.Instance.ClientRpc.SendAddBuff(new BuffAddData(myId, BuffID, Duration));
             }
         }
     }
@@ -621,18 +622,18 @@ namespace WukongMp.Api.Patches
 
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
+            if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
                 var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
         }
     }
@@ -657,18 +658,18 @@ namespace WukongMp.Api.Patches
 
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(netId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
+            if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
                 var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                DI.Instance.ClientRpc.SendRemoveBuff(new BuffRemoveData(myId, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
             }
         }
     }
@@ -690,18 +691,18 @@ namespace WukongMp.Api.Patches
 
             var owner = __instance.GetOwner();
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(netId, RemoveTriggerType, WithTriggerRemoveEffect));
+                DI.Instance.ClientRpc.SendRemoveAllBuffs(new BuffRemoveAllData(netId, RemoveTriggerType, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (myEntity.HasValue && myEntity.Value.GetLocalState().Pawn == owner)
+            if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
                 var myId = myEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendRemoveAllBuffs(new BuffRemoveAllData(myId, RemoveTriggerType, WithTriggerRemoveEffect));
+                DI.Instance.ClientRpc.SendRemoveAllBuffs(new BuffRemoveAllData(myId, RemoveTriggerType, WithTriggerRemoveEffect));
             }
         }
     }
@@ -716,7 +717,7 @@ namespace WukongMp.Api.Patches
                 return;
 
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance);
-            if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
             tamerEntity.Value.SetTeam(new TeamComponent { TeamId = NewTeamID });
@@ -744,7 +745,7 @@ namespace WukongMp.Api.Patches
                 return true;
 
             // Owned entity - do not trigger unit dead
-            if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return false;
 
             return true;
@@ -770,7 +771,7 @@ namespace WukongMp.Api.Patches
             if (!tamerEntity.HasValue)
                 return; // not found
 
-            if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return; // not owned
 
             ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
@@ -811,9 +812,9 @@ namespace WukongMp.Api.Patches
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchGetActorEntity
     {
-        public static bool Prefix(BIC_GlobalActorData __instance, ref bool __result, string UnitGuid, out b1.ECS.Entity Entity)
+        public static bool Prefix(BIC_GlobalActorData __instance, ref bool __result, string UnitGuid, out Entity Entity)
         {
-            Entity = b1.ECS.Entity.Null;
+            Entity = Entity.Null;
             if (string.IsNullOrEmpty(UnitGuid))
             {
                 __result = false;
@@ -826,8 +827,8 @@ namespace WukongMp.Api.Patches
                 // Return local player entity if player guid is queried.
                 if (count > 1 && DI.Instance.PlayerState.LocalMainCharacter.HasValue && value[0] is BGUPlayerCharacterCS)
                 {
-                    Entity = ECSExtension.ToEntity(DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn);
-                    if (Entity != b1.ECS.Entity.Null)
+                    Entity = ECSExtension.ToEntity(DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn);
+                    if (Entity != Entity.Null)
                     {
                         __result = true;
                         return false;
@@ -839,7 +840,7 @@ namespace WukongMp.Api.Patches
                     for (var num = count - 1; num >= 0; num--)
                     {
                         Entity = ECSExtension.ToEntity(value[num]);
-                        if (Entity != b1.ECS.Entity.Null)
+                        if (Entity != Entity.Null)
                         {
                             __result = true;
                             return false;
@@ -865,17 +866,17 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerChr);
             if (tamerEntity.HasValue)
             {
-                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                     return;
 
-                DI.Instance.Rpc.SendPlayBaneEffect(new PlayBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+                DI.Instance.ClientRpc.SendPlayBaneEffect(new PlayBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
                 return;
             }
 
             var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == ___OwnerChr)
+            if (playerEntity.HasValue && playerEntity.Value.Pawn == ___OwnerChr)
             {
-                DI.Instance.Rpc.SendPlayBaneEffect(new PlayBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
+                DI.Instance.ClientRpc.SendPlayBaneEffect(new PlayBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType, ActionType));
             }
         }
     }
@@ -892,17 +893,17 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerChr);
             if (tamerEntity.HasValue)
             {
-                if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+                if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                     return;
 
-                DI.Instance.Rpc.SendStopBaneEffect(new StopBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType));
+                DI.Instance.ClientRpc.SendStopBaneEffect(new StopBaneEffectData(tamerEntity.Value.GetMeta().NetId, ___AbnormalType));
                 return;
             }
 
             var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (playerEntity.HasValue && playerEntity.Value.GetLocalState().Pawn == ___OwnerChr)
+            if (playerEntity.HasValue && playerEntity.Value.Pawn == ___OwnerChr)
             {
-                DI.Instance.Rpc.SendStopBaneEffect(new StopBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType));
+                DI.Instance.ClientRpc.SendStopBaneEffect(new StopBaneEffectData(playerEntity.Value.GetMeta().NetId, ___AbnormalType));
             }
         }
     }

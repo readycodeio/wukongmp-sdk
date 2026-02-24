@@ -2,10 +2,10 @@
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
-using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.ECS.Jobs;
@@ -16,9 +16,10 @@ using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.Tamers;
 using WukongMp.Api.FreeCamera;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.PvP.ECS.Systems;
-using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.GameMode;
 using WukongMp.PvP.UI;
 using WukongMp.PvP.WukongUtils;
 
@@ -27,6 +28,7 @@ namespace WukongMp.PvP;
 internal class PvpSynchronizer : WukongSynchronizer
 {
     private readonly SystemGroup _modeGroup;
+    private readonly ClientNetworkedEntityManager _clientNetEntity;
 
     public PvpSynchronizer(
         ArchetypeEventRouter archetypeEvent,
@@ -34,17 +36,19 @@ internal class PvpSynchronizer : WukongSynchronizer
         ClientWukongArchetypeRegistration wukongArchetype,
         Store world,
         WukongAreaState areaState,
+        WukongMappingPolicyDirectory policyDir,
         WukongPlayerState playerState,
         WukongPlayerPawnState playerPawnState,
         WukongPlayerModeManager modeManager,
         NetworkedEntityManager netManager,
         ClientOwnershipManager clientOwnership,
+        ClientNetworkedEntityManager clientNetEntity,
         JobRegistry jobRegistry,
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
         WukongEventBus eventBus,
-        WukongRpcCallbacks rpc,
+        WukongClientRpcCallbacks rpc,
         PvpWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
         GameplayConfiguration configuration,
@@ -52,8 +56,32 @@ internal class PvpSynchronizer : WukongSynchronizer
         FreeCameraController freeCameraController,
         PvpMode pvpMode,
         ILogger logger)
-        : base(archetypeEvent, state, wukongArchetype, world, areaState, playerState, playerPawnState, modeManager, netManager, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, eventBus, widgetManager.widgetManager, gameplayEventRouter, configuration, freeCameraManager, freeCameraController, logger)
+        : base(
+            archetypeEvent, 
+            state, 
+            wukongArchetype, 
+            world, 
+            policyDir, 
+            areaState, 
+            playerState, 
+            playerPawnState,
+            modeManager, 
+            netManager, 
+            clientOwnership, 
+            jobRegistry, 
+            netComponentRegistry, 
+            relayClient, 
+            ecsLoop, 
+            eventBus, 
+            widgetManager.WidgetManager, 
+            gameplayEventRouter, 
+            configuration, 
+            freeCameraManager,
+            freeCameraController,
+            logger)
     {
+        _clientNetEntity = clientNetEntity;
+        
         State.OnJoinedArea += OnJoinedAreaHandler;
 
         _modeGroup = new SystemGroup("Pvp");
@@ -84,7 +112,7 @@ internal class PvpSynchronizer : WukongSynchronizer
 
         if (isFirst)
         {
-            PvpUtils.CreatePvpStateEntity();
+            PvpUtils.CreatePvpStateEntity(AreaState, _clientNetEntity, WukongArchetype);
         }
     }
 }

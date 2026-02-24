@@ -1,19 +1,32 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Friflo.Engine.ECS;
+using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api
 {
+    public delegate void ObstacleCollisionDelegate(MainCharacterEntity mainEntity, AActor obstacle, out bool shouldBlock);
+    
     public class GameplayEventRouter
     {
         public event Action<CultureInfo>? OnLanguageChanged;
         public event Action<Entity, Entity>? OnUnitDead;
-        public event Action<Entity, int>? OnRebirthPointChanged;
         public event Action<Entity>? OnMonsterSpawned;
         public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
         public event Action<bool>? OnLocalPlayerChangedSpectator;
         public event Action? OnLocalPlayerBeforeRebirth;
+        
+        private readonly List<ObstacleCollisionDelegate> _obstacleCollisionHandlers = new();
+        
+        public event ObstacleCollisionDelegate OnObstacleCollision
+        {
+            add => _obstacleCollisionHandlers.Add(value);
+            remove => _obstacleCollisionHandlers.Remove(value);
+        }
+        
+        public event Action<AActor>? OnDisableObstacle;
         
         public void RaiseOnLanguageChanged(CultureInfo culture)
         {
@@ -23,11 +36,6 @@ namespace WukongMp.Api
         public void RaiseOnUnitDead(Entity victimEntity, Entity attackerEntity)
         {
             OnUnitDead?.Invoke(victimEntity, attackerEntity);
-        }
-
-        public void RaiseOnRebirthPointChanged(Entity playerEntity, int rebirthPointId)
-        {
-            OnRebirthPointChanged?.Invoke(playerEntity, rebirthPointId);
         }
         
         public void RaiseOnMonsterSpawned(Entity monsterEntity)
@@ -48,6 +56,26 @@ namespace WukongMp.Api
         public void RaiseOnLocalPlayerBeforeRebirth()
         {
             OnLocalPlayerBeforeRebirth?.Invoke();
+        }
+
+        public void NotifyObstacleCollision(MainCharacterEntity mainEntity, AActor obstacle, out bool shouldBlock)
+        {
+            shouldBlock = false;
+            
+            foreach (var handler in _obstacleCollisionHandlers)
+            {
+                handler.Invoke(mainEntity, obstacle, out var b);
+                
+                if (b)
+                {
+                    shouldBlock = true;
+                }
+            }
+        }
+
+        public void NotifyDisableObstacle(AActor obstacle)
+        {
+            OnDisableObstacle?.Invoke(obstacle);
         }
     }
 }

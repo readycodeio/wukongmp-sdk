@@ -36,7 +36,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
             return;
         }
 
-        _cachePlayerPawn = playerState.LocalMainCharacter?.GetLocalState().Pawn;
+        _cachePlayerPawn = playerState.LocalMainCharacter?.Pawn;
         if (_cachePlayerPawn.IsNullOrDestroyed())
         {
             Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerPawn IsNull");
@@ -159,7 +159,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         OnFreeCameraModeChanged?.Invoke(false);
     }
 
-    public void ReEnableFreeCamera()
+    internal void ReEnableFreeCamera()
     {
         if (_isInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed() && _cachePlayerPawn != null)
         {
@@ -174,7 +174,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         }
     }
 
-    public bool MoveFreeCameraToPosition(FVector position)
+    internal bool MoveFreeCameraToPosition(FVector position)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
         {
@@ -186,7 +186,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return MoveFreeCameraActor(moveOffset, isLocal: false);
     }
 
-    public bool MoveFreeCameraWithObstacleCheck(FVector targetPosition, FVector desiredCameraPosition, float safeDistance = 20f)
+    internal bool MoveFreeCameraWithObstacleCheck(FVector targetPosition, FVector desiredCameraPosition, float safeDistance = 20f)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
         {
@@ -211,7 +211,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return true;
     }
 
-    public bool MoveFreeCameraActor(FVector moveOffset, bool isLocal)
+    internal bool MoveFreeCameraActor(FVector moveOffset, bool isLocal)
     {
         if (!IsInFreeCameraMode || _freeCameraActor.IsNullOrDestroyed())
         {
@@ -261,7 +261,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return true;
     }
 
-    public void RotateFreeCameraActor(FRotator rotatorOffset, bool isLocal)
+    internal void RotateFreeCameraActor(FRotator rotatorOffset, bool isLocal)
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
         {
@@ -276,7 +276,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         }
     }
 
-    public void SetLookAtTarget(FVector targetLocation)
+    internal void SetLookAtTarget(FVector targetLocation)
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
         {

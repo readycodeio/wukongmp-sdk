@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>14</LangVersion>
         <OutputType>Library</OutputType>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
@@ -23,6 +23,7 @@
     <ItemGroup>
         <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" />
         <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
+        <ProjectReference Include="..\WukongMp.Sdk\WukongMp.Sdk.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -84,6 +85,5 @@
         <LastGenOutput>PvpTexts.Designer.cs</LastGenOutput>
       </EmbeddedResource>
     </ItemGroup>
-
 
 </Project>

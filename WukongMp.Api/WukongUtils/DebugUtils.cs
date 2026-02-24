@@ -5,10 +5,11 @@ using System.IO;
 using b1;
 using b1.BGU.BUAnim;
 using b1.BGW;
-using Microsoft.Extensions.Logging;
+using ReadyM.Relay.Client.State;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -27,16 +28,16 @@ public static class DebugUtils
 
         if (File.Exists(dwmApiPath))
         {
-            DI.Instance.Logger.LogInformation("dwmapi.dll file found at {Path}", dwmApiPath);
+            Logging.LogInformation("dwmapi.dll file found at {Path}", dwmApiPath);
         }
         else
         {
-            DI.Instance.Logger.LogInformation("dwmapi.dll file not found");
+            Logging.LogInformation("dwmapi.dll file not found");
         }
 
         if (Directory.Exists(ue4ssFolder))
         {
-            DI.Instance.Logger.LogInformation("ue4ss folder found at {Path}", ue4ssFolder);
+            Logging.LogInformation("ue4ss folder found at {Path}", ue4ssFolder);
             var modsPath = FPaths.Combine(ue4ssFolder, "Mods");
 
             if (Directory.Exists(modsPath))
@@ -45,13 +46,13 @@ public static class DebugUtils
                 foreach (var mod in mods)
                 {
                     var dirName = Path.GetFileName(mod);
-                    DI.Instance.Logger.LogInformation("Found UE4SS mod folder: {ModFolder}", dirName);
+                    Logging.LogInformation("Found UE4SS mod folder: {ModFolder}", dirName);
                 }
             }
         }
         else
         {
-            DI.Instance.Logger.LogInformation("ue4ss folder not found");
+            Logging.LogInformation("ue4ss folder not found");
         }
     }
 
@@ -173,34 +174,34 @@ public static class DebugUtils
         AddMarkerToActors(GetActorsAroundPlayer(radius, actorsName));
     }
 
-    public static void ResetPlayersAnimation()
+    public static void ResetPlayersAnimation(ClientState clientState, WukongPlayerState playerState)
     {
-        foreach (var playerId in DI.Instance.State.AllPlayers)
+        foreach (var playerId in clientState.AllPlayers)
         {
-            if (playerId != DI.Instance.PlayerState.LocalPlayerId)
+            if (playerId != playerState.LocalPlayerId)
             {
-                var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-                if (characterEntity == null)
+                var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
+                if (mainEntity == null)
                     return;
 
-                var character = characterEntity.Value.GetLocalState().Pawn;
-                if (character != null)
-                    ResetActorAnimation(character);
+                var pawn = mainEntity.Value.Pawn;
+                if (pawn != null)
+                    ResetActorAnimation(pawn);
             }
         }
     }
 
-    public static void DumpPlayersAnimationDebugInfo()
+    public static void DumpPlayersAnimationDebugInfo(ClientState clientState, WukongPlayerState playerState)
     {
-        foreach (var playerId in DI.Instance.State.AllPlayers)
+        foreach (var playerId in clientState.AllPlayers)
         {
-            var characterEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
-            if (characterEntity == null)
+            var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
+            if (mainEntity == null)
                 return;
 
-            var character = characterEntity.Value.GetLocalState().Pawn;
-            if (character != null)
-                DumpActorAnimationDebugInfo(character);
+            var pawn = mainEntity.Value.Pawn;
+            if (pawn != null)
+                DumpActorAnimationDebugInfo(pawn);
         }
     }
 

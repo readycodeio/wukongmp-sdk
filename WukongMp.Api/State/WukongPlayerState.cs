@@ -2,7 +2,8 @@
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Archetypes;
@@ -15,13 +16,18 @@ public class WukongPlayerState
     private readonly ComponentIndex<MainCharacterComponent, PlayerId> _ix;
 
     private readonly ClientWukongArchetypeRegistration _wukongArchetype;
-    private readonly ClientNetworkedEntityState _clientNetEntity;
+    private readonly ClientNetworkedEntityManager _clientNetEntity;
     private readonly ClientState _state;
     private readonly ILogger _logger;
     
     public event Action<MainCharacterEntity>? OnMainCharacterEntityInitialized;
 
-    public WukongPlayerState(Store world, ClientWukongArchetypeRegistration wukongArchetype, ClientNetworkedEntityState clientNetEntity, ClientState state, ILogger logger)
+    public WukongPlayerState(
+        Store world, 
+        ClientWukongArchetypeRegistration wukongArchetype, 
+        ClientNetworkedEntityManager clientNetEntity, 
+        ClientState state, 
+        ILogger logger)
     {
         _wukongArchetype = wukongArchetype;
         _clientNetEntity = clientNetEntity;
@@ -81,7 +87,7 @@ public class WukongPlayerState
         }
     }
 
-    public MainCharacterEntity? GetMainCharacterById(PlayerId playerId)
+    public MainCharacterEntity? GetMainCharacterByPlayerId(PlayerId playerId)
     {
         var matching = _ix[playerId];
 
@@ -97,6 +103,17 @@ public class WukongPlayerState
         }
     }
 
+    public MainCharacterEntity? GetMainCharacterById(NetworkId netId)
+    {
+        if (!_clientNetEntity.TryGetEntityByNetworkId(netId, out var entity))
+            return null;
+        
+        if (!MainCharacterEntity.TryGetMainCharacter(entity.Value, out var mainEntity))
+            return null;
+
+        return mainEntity;
+    }
+
     public MainCharacterEntity CreateLocalMainCharacter()
     {
         if (_state.LocalPlayerId == null)
@@ -106,13 +123,13 @@ public class WukongPlayerState
         if (mainEntity != null)
             return mainEntity.Value;
 
-        var result = _clientNetEntity.CreateNetworkedAreaEntity(_wukongArchetype.MainCharacterArchetype, b =>
+        var entity = _clientNetEntity.CreateAreaEntity(_wukongArchetype.MainCharacterArchetype, b =>
         {
             b.Add(new MainCharacterComponent()
             {
                 PlayerId = _state.LocalPlayerId.Value,
             });
         });
-        return new MainCharacterEntity(result.Entity);
+        return new MainCharacterEntity(entity);
     }
 }

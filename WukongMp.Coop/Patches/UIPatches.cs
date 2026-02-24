@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using b1;
 using b1.BGW;
 using b1.ECS;
@@ -51,12 +50,15 @@ public static class PatchStartGameUiCoop
                     UiUtils.ShowTip(Texts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
-                else if (!DI.Instance.State.IsConnected)
+                else if (!Mod.Instance.ClientApi.IsConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
 
-                    DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected); }); });
+                    Mod.Instance.ClientApi.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() =>
+                    {
+                        Mod.Instance.LocalApi.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                    }); });
                     Logging.LogError("Disconnected. Could not continue game.");
                 }
                 else
@@ -99,7 +101,7 @@ public class PatchShrineRegisterFunc
 
     public static bool Prefix(int FuncId)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!Mod.Instance.ClientApi.InRoom)
             return true;
 
         var interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
@@ -127,7 +129,7 @@ public class PatchInitBloodBarUI
         if (battleInfoExtendDesc == null)
             return false;
 
-        var maybePlayer = DI.Instance.PawnState.GetEntityByPlayerPawn(actor);
+        var maybePlayer = Mod.Instance.ClientApi.GetEntityByPlayerActor(actor);
         var isPlayer = maybePlayer.HasValue;
         var bloodBarShowType = isPlayer ? EBGUBloodBarShowType.Always : EBGUBloodBarShowType.Change;
 
@@ -169,6 +171,7 @@ public class PatchShowEnemyBar
             __result = !BGUFunctionLibraryCS.BGUHasUnitSimpleState(owner, EBGUSimpleState.CantShowBlood);
             return false;
         }
+
         return true;
     }
 }

@@ -1,12 +1,12 @@
-﻿using b1;
+﻿using System.Reflection;
+using b1;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
-using System.Reflection;
 using PreludeLib.Attributes;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.DTO;
 
 namespace WukongMp.Api.Patches;
 
@@ -32,7 +32,7 @@ public static class PatchComplexSkillDoInteractAction
             {
                 ref var meta = ref entity.Value.GetMeta();
                 Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
-                DI.Instance.Rpc.SendTamerSkillInteract(new DTO.SkillInteractData(meta.NetId, Action.ParamsInt[1]));
+                DI.Instance.ClientRpc.SendTamerSkillInteract(new TamerSkillInteractData(meta.NetId, Action.ParamsInt[1]));
             }
         }
     }

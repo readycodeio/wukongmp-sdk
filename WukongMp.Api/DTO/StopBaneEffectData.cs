@@ -8,8 +8,8 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct StopBaneEffectData(NetworkId id, EAbnormalStateType stateType) : INetSerializable
+public partial struct StopBaneEffectData(NetworkId netId, EAbnormalStateType stateType) : INetSerializable
 {
-    public NetworkId Id = id;
+    public NetworkId NetId = netId;
     public EAbnormalStateType StateType = stateType;
 }

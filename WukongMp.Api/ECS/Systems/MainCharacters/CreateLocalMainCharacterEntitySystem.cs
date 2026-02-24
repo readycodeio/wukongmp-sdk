@@ -4,8 +4,10 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Relay.Common.Wukong.ECS.Values;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -14,7 +16,12 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
+public class CreateLocalMainCharacterEntitySystem(
+    ClientState clientState,
+    WukongPlayerState playerState,
+    WukongEventBus eventBus,
+    ILogger logger
+) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
@@ -47,28 +54,18 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
 
         var mainEntity = playerState.CreateLocalMainCharacter();
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
 
         logger.LogDebug("Local main character pawn: {Pawn}", pawn.PathName);
 
-        localMainComp.Pawn = pawn;
+        mainEntity.SetPawn(pawn, true);
 
         mainComp.Location = pawn.GetActorLocation().ToVector3();
         mainComp.Rotation = pawn.GetActorRotation().ToVector3();
 
-        var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-        mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
-        mainComp.HpMaxBase = attrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-        if (mainComp.Hp > 0)
-        {
-            mainComp.IsDead = false;
-        }
-
-        foreach (var attr in Constants.SyncedAttributes)
-        {
-            var value = attrContainer.GetFloatValue(attr);
-            mainComp.Attributes.SetAttribute((byte)attr, value);
-        }
+        var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(pawn);
+        DI.Instance.StandardDataMappings.PlayerHp.LoadFromGame(ref mainComp, attrContainer);
+        DI.Instance.StandardDataMappings.PlayerHpMax.LoadFromGame(ref mainComp, attrContainer);
+        DI.Instance.StandardDataMappings.PlayerAttributes.LoadFromGame(ref mainComp, attrContainer);
 
         mainComp.CharacterNickName = player.NickName;
 
@@ -81,9 +78,8 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
             TeamId = pawnTeamId,
         });
 
-        localMainComp.IsPlayerSynced = true;
         playerState.InvokeMainCharacterEntityInitialized(mainEntity);
 
-        Logging.LogDebug("Finished setting initial player properties");
+        logger.LogDebug("Finished setting initial player properties");
     }
 }

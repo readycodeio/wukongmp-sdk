@@ -103,7 +103,7 @@ public class PatchTamerBeginPlayCS_Implementation
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
                 if (tamerEntity == null)
                 {
-                    SpawningUtils.CreateMonsterInEcs(guid, __instance, Constants.DefaultMonsterTeamId, __instance.PathName);
+                    SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, guid, __instance, Constants.DefaultMonsterTeamId, __instance.PathName);
                 }
                 else
                 {
@@ -133,9 +133,7 @@ public class PatchTamerLoad
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
         if (tamerEntity.HasValue)
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            var metadata = tamerEntity.Value.GetMeta();
-            TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
+            TamerUtils.MarkMonsterLocallySpawned(DI.Instance.MappedEvent, tamerEntity.Value);
         }
         else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains) && !DI.Instance.GameplayConfiguration.IsTamerNotSynchronized(monsterGuid))
         {
@@ -174,12 +172,11 @@ public class PatchTurnBack2Loaded
         if (tamerEntity.HasValue)
         {
             ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            ref var meta = ref tamerEntity.Value.GetMeta();
-            TamerUtils.MarkMonsterLocallyDespawned(ref localTamer, meta);
+            TamerUtils.MarkMonsterLocallyDespawned(DI.Instance.MappedEvent, tamerEntity.Value);
             localTamer.HasPendingUnload = true;
 
             ref var tamer = ref tamerEntity.Value.GetTamer();
-            if (!tamer.ShouldBeSpawned)
+            if (!tamer.ForceKeepSpawned)
             {
                 Logging.LogDebug("Unloading monster {Guid} locally", tamerGuid);
                 localTamer.IsMonsterActive = false;
@@ -210,9 +207,9 @@ public class PatchTamerUnload
         if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.EnableSpawnedTamers))
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                tamerEntity.Value.GetLocalTamer().Tamer = null;
+                tamerEntity.Value.SetTamer(null, false);
                 Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.GetMeta().NetId);
                 DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
             }
@@ -234,7 +231,7 @@ public class PatchOnAIPerceptionSetting
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -256,7 +253,7 @@ public class PatchOnAIPauseBT
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -278,7 +275,7 @@ public class PatchOnEnableCanSetBT
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -300,7 +297,7 @@ public class PatchOnAIPauseFsm
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 Logging.LogDebug("Setting FSM pause state to {IsPause} for tamer {Tamer}", IsPause, tamerEntity.Value.GetTamer().Guid);
                 tamerEntity.Value.GetTamer().HasFsmPaused = IsPause;
@@ -335,7 +332,7 @@ public class PatchOnEnableCanUpdateHatred
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -394,13 +391,12 @@ public class PatchOnTriggerFsmEvent
         }
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-        if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+        if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            if (localTamer.Pawn != null && !BGU_CommonUtil.IsInFsmState(localTamer.Pawn, EventTag))
+            if (tamerEntity.Value.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerEntity.Value.Pawn, EventTag))
             {
                 var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
+                DI.Instance.ClientRpc.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
             }
         }
 
@@ -436,19 +432,17 @@ public class PatchMovementTickForMonster
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
         if (tamerEntity.HasValue)
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-
-            if (!localTamer.IsTamerValid)
+            if (!tamerEntity.Value.IsTamerValid)
                 return;
 
             ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
-            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 anim.MoveAiType = (byte)___MovementData.MoveAIType;
             }
             else
             {
-                var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
+                var events = BUS_EventCollectionCS.Get(tamerEntity.Value.Pawn);
                 events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
             }
         }
@@ -481,7 +475,7 @@ public class PatchAfterMonsterDead
             ref var meta = ref tamerEntity.Value.GetMeta();
             localTamer.IsMonsterActive = false;
             MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
-            TamerUtils.MarkMonsterLocallyDespawned(ref tamerEntity.Value.GetLocalTamer(), tamerEntity.Value.GetMeta());
+            TamerUtils.MarkMonsterLocallyDespawned(DI.Instance.MappedEvent, tamerEntity.Value);
             Logging.LogDebug("Unloading monster locally. NetId: {NetId}, guid {Guid} (MonsterDead)", meta.NetId, BGU_DataUtil.GetActorGuid(monster));
         }
     }
@@ -506,13 +500,12 @@ public class PatchTriggerWakeupActivated
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
         if (tamerEntity.HasValue)
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            if (!localTamer.IsTamerValid)
+            if (!tamerEntity.Value.IsTamerValid)
                 return;
 
-            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.Rpc.SendMonsterWakeUp(tamerEntity.Value.GetMeta().NetId);
+                DI.Instance.ClientRpc.SendMonsterWakeUp(tamerEntity.Value.GetMeta().NetId);
             }
         }
     }
@@ -553,12 +546,11 @@ public class PatchPatrolTick
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
         if (tamerEntity.HasValue)
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            if (!localTamer.IsTamerValid)
+            if (!tamerEntity.Value.IsTamerValid)
                 return true;
 
             ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
-            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
                 anim.AnimationPlayRate = dumperTruckTriggerData.ControlledUnit.Mesh.GetPlayRate();
                 return true;

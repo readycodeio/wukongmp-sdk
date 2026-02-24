@@ -9,49 +9,19 @@ namespace WukongMp.Api.ECS.Components;
 
 public struct LocalMainCharacterComponent : IComponent
 {
-    private BGUCharacterCS? _pawn;
-
     public bool IsPlayerSynced;
 
     public bool IsSpectatorLocally;
-    public FVector BeforeSpectatorLocation;
     public bool ShouldDisableCollision;
 
     [Ignore]
-    public BGUCharacterCS? LastPawn { get; private set; }
-
-    [Ignore]
-    public BGUCharacterCS? Pawn
-    {
-        get
-        {
-            if (!IsPlayerSynced)
-            {
-                return null;
-            }
-
-            if (_pawn.IsNullOrDestroyed())
-            {
-                Logging.LogWarning("Player pawn is null or destroyed");
-                return null;
-            }
-
-            return _pawn;
-        }
-        set
-        {
-            LastPawn = _pawn;
-            _pawn = value;
-        }
-    }
-
-    public bool HasPawn => !_pawn.IsNullOrDestroyed();
+    public BGUCharacterCS? LastPawn { get; set; }
 
     public bool IsRespawning { get; set; }
-    public bool RunImmobilizePatches { get; set; }
-    public MontageState MontageState { get; set; }
-
     public bool ReceivedPhantomRushExit { get; set; }
+    public bool RunImmobilizePatches { get; set; }
+    public MontageStateData MontageState { get; set; }
+
     public int TeleportFinishFrames { get; set; }
 
     // FIXME: Move to PlayerComponent?

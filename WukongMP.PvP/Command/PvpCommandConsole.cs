@@ -1,7 +1,8 @@
 ﻿using b1;
 using BtlShare;
-using System;
 using System.Globalization;
+using ReadyM.Api.Command;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Chat;
@@ -17,292 +18,220 @@ using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.Command;
 
-internal class PvpCommandConsole : IDisposable
+public class PvpCommandRegistration(
+    WukongPlayerState playerState,
+    WukongAreaState areaState,
+    WukongClientRpcCallbacks clientRpc,
+    WukongChatter chatter,
+    WukongCommandConsole console
+) : IConsoleCommandRegistration
 {
-    private readonly WukongCommandConsole _wukongCommandConsole;
-    private readonly WukongChatter _wukongChatter;
-    private readonly WukongPlayerState _playerState;
-    private readonly WukongRpcCallbacks _rpc;
-    private readonly WukongAreaState _areaState;
-    private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
-
-    public PvpCommandConsole(
-        WukongCommandConsole wukongCommandConsole,
-        WukongChatter wukongChatter,
-        WukongPlayerState playerState,
-        WukongRpcCallbacks rpc,
-        WukongAreaState areaState
-    )
+    public void RegisterCommands(ConsoleCommandRegistry registry)
     {
-        Logging.LogDebug("Initializing PvpCommandConsole");
+        registry.AddCommand("spawn", ConsoleCommand.Create(RequestSpawn, false), UnitPathUtils.GetAllValidUnitNames());
+        registry.AddCommand("spectator", ConsoleCommand.Create(SetSpectatorStatus, false));
+        registry.AddCommand("instant_cooldown", ConsoleCommand.Create(ToggleSkillsCooldown, false));
+        registry.AddCommand("infinite_mana", ConsoleCommand.Create(ToggleInfiniteMana, false));
+        registry.AddCommand("spirit_cooldown", ConsoleCommand.Create(SetSpiritCooldown, false));
+        registry.AddCommand("infinite_vessel", ConsoleCommand.Create(ToggleInfiniteVessel, false));
+        registry.AddCommand("infinite_transform", ConsoleCommand.Create(ToggleInfiniteTransform, false));
+        registry.AddCommand("arena", ConsoleCommand.Create(TeleportToArena, false));
+        registry.AddCommand("shrine", ConsoleCommand.Create(TeleportToShrine, false));
 
-        _wukongCommandConsole = wukongCommandConsole;
-        _wukongChatter = wukongChatter;
-        _playerState = playerState;
-        _rpc = rpc;
-        _areaState = areaState;
-
-        SetupCommands();
+        registry.AddCommand("pvp_level", ConsoleCommand.Create(TeleportToPvpLevel, true));
     }
 
-    public void Dispose()
+    private void RequestSpawn(string unitName, int count = 1)
     {
-        Logging.LogDebug("Disposing PvpCommandConsole");
-    }
-
-    private void SetupCommands()
-    {
-        _wukongCommandConsole.AddCommand("/spawn", new ConsoleCommand(RequestSpawn), UnitPathsConfig.GetAllValidUnitNames());
-        _wukongCommandConsole.AddCommand("/spectator", new ConsoleCommand(SetSpectatorStatus));
-        _wukongCommandConsole.AddCommand("/instant_cooldown", new ConsoleCommand(ToggleSkillsCooldown));
-        _wukongCommandConsole.AddCommand("/infinite_mana", new ConsoleCommand(ToggleInfiniteMana));
-        _wukongCommandConsole.AddCommand("/spirit_cooldown", new ConsoleCommand(SetSpiritCooldown));
-        _wukongCommandConsole.AddCommand("/infinite_vessel", new ConsoleCommand(ToggleInfiniteVessel));
-        _wukongCommandConsole.AddCommand("/infinite_transform", new ConsoleCommand(ToggleInfiniteTransform));
-        _wukongCommandConsole.AddCommand("/arena", new ConsoleCommand(TeleportToArena));
-        _wukongCommandConsole.AddCommand("/shrine", new ConsoleCommand(TeleportToShrine));
-#if DEBUG
-        _wukongCommandConsole.AddCommand("/pvp_level", new ConsoleCommand(TeleportToPvpLevel));
-#endif
-    }
-
-    private void RequestSpawn(ReadOnlyMemory<string> args)
-    {
-        var unitName = args.Span[0];
-        if (!UnitPathsConfig.IsValidUnitName(unitName))
         {
-            _wukongCommandConsole.AddMessageToConsole(string.Format(Texts.InvalidUnitName, args.Span[0]));
+            console.AddMessage(string.Format(Texts.InvalidUnitName, unitName));
             return;
         }
 
-        var playerEntity = _playerState.LocalPlayerEntity;
+        var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
 
-        var characterEntity = _playerState.LocalMainCharacter;
+        var characterEntity = playerState.LocalMainCharacter;
         if (characterEntity == null)
             return;
 
         var teamId = PvpUtils.GetOppositeTeam(playerEntity.Value.GetState().TeamId);
-        var playerPawn = characterEntity.Value.GetLocalState().Pawn;
+        var playerPawn = characterEntity.Value.Pawn;
         if (playerPawn == null)
             return;
 
         var location = SpawningUtils.CalculateSpawnLocation(playerPawn.GetActorLocation(), playerPawn.GetActorForwardVector());
-        var count = 0;
-        var shouldSpawn = false;
 
-        switch (args.Length)
-        {
-            case 1:
-                count = 1;
-                shouldSpawn = true;
-                break;
-            case 2:
-            {
-                if (int.TryParse(args.Span[1], out count))
-                {
-                    shouldSpawn = true;
-                }
-                else
-                {
-                    _wukongCommandConsole.AddMessageToConsole(string.Format(Texts.InvalidUnitsCount, args.Span[1]));
-                }
-
-                break;
-            }
-        }
-
-        if (shouldSpawn)
-        {
-            _rpc.SendRequestSpawnUnits(new UnitSpawnRequestData(unitName, count, teamId, location));
-            _wukongChatter.SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), args.Span[0]);
-        }
+        clientRpc.SendRequestSpawnUnits(new RequestSpawnUnitsData(unitName, count, teamId, location));
+        chatter.SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), unitName);
     }
 
-    private void SetSpectatorStatus(ReadOnlyMemory<string> args)
+    private void SetSpectatorStatus()
     {
-        if (args.Length == 0)
-        {
-            var playerEntity = _playerState.LocalMainCharacter;
-            if (playerEntity == null)
-                return;
+        var playerEntity = playerState.LocalMainCharacter;
+        if (playerEntity == null)
+            return;
 
-            if (!_areaState.PvpState!.Value.InTournament)
+        if (!areaState.PvpState!.Value.InTournament)
+        {
+            ref var pvp = ref playerEntity.Value.GetPvP();
+            if (!pvp.IsSpectator)
             {
-                ref var pvp = ref playerEntity.Value.GetPvP();
-                if (!pvp.IsSpectator)
-                {
-                    PlayerUtils.EnableSpectator(playerEntity.Value, SpectatorReason.Observer);
-                }
-                else
-                {
-                    PlayerUtils.DisableSpectator(playerEntity.Value);
-                }
+                PlayerUtils.EnableSpectator(playerEntity.Value, SpectatorReason.Observer);
+            }
+            else
+            {
+                PlayerUtils.DisableSpectator(playerEntity.Value);
             }
         }
     }
 
-    private void ToggleInfiniteMana(ReadOnlyMemory<string> _)
+    private void ToggleInfiniteMana()
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity)
+        if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (areaState.CurrentArea.HasValue && !areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
+            console.AddLocalizedMessage("CheatsAreDisabled");
             return;
         }
 
-        ref var localState = ref mainEntity.GetLocalState();
-        if (localState.Pawn != null)
+        ref var localStateComp = ref mainEntity.GetLocalState();
+        if (mainEntity.Pawn != null)
         {
-            PlayerUtils.ResetMana(localState.Pawn);
+            PlayerUtils.ResetMana(mainEntity.Pawn);
         }
 
-        localState.HasInfiniteMana = !localState.HasInfiniteMana;
-        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteMana ? "InfManaEnabled" : "InfManaDisabled", NickName);
+        localStateComp.HasInfiniteMana = !localStateComp.HasInfiniteMana;
+        chatter.SendServerMessage(localStateComp.HasInfiniteMana ? "InfManaEnabled" : "InfManaDisabled", playerState.NickName);
     }
 
-    private void SetSpiritCooldown(ReadOnlyMemory<string> args)
+    private void SetSpiritCooldown(float spiritCooldownTime)
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity)
+        if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (areaState.CurrentArea.HasValue && !areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
-            return;
-        }
-
-        if (args.Length < 1)
-        {
-            _wukongCommandConsole.AddLocalizedMessageToConsole("InvalidCooldown");
+            console.AddLocalizedMessage("CheatsAreDisabled");
             return;
         }
 
-        bool success = float.TryParse(args.Span[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float spiritCooldownTime);
-        if (!success || spiritCooldownTime < 0)
+        if (spiritCooldownTime < 0)
         {
-            _wukongCommandConsole.AddLocalizedMessageToConsole("InvalidCooldown");
+            console.AddLocalizedMessage("InvalidCooldown");
             return;
         }
 
-        ref var localState = ref mainEntity.GetLocalState();
-        if (localState.Pawn != null)
+        ref var localStateComp = ref mainEntity.GetLocalState();
+        if (mainEntity.Pawn != null)
         {
-            var events = BUS_EventCollectionCS.Get(localState.Pawn);
-            mainEntity.GetLocalState().ShouldSetSpiritCooldown = true;
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.VigorEnergyMax));
-            mainEntity.GetLocalState().ShouldSetSpiritCooldown = false;
+            var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
+            localStateComp.ShouldSetSpiritCooldown = true;
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(mainEntity.Pawn, EBGUAttrFloat.VigorEnergyMax));
+            localStateComp.ShouldSetSpiritCooldown = false;
         }
 
-        mainEntity.GetLocalState().SpiritCooldownEnabled = true;
-        mainEntity.GetLocalState().SpiritCooldownTime = spiritCooldownTime;
-        _wukongChatter.SendServerMessage("CustomSpiritCooldown", NickName, spiritCooldownTime.ToString());
+        localStateComp.SpiritCooldownEnabled = true;
+        localStateComp.SpiritCooldownTime = spiritCooldownTime;
+        chatter.SendServerMessage("CustomSpiritCooldown", playerState.NickName, spiritCooldownTime.ToString(CultureInfo.InvariantCulture));
     }
 
-    private void ToggleInfiniteVessel(ReadOnlyMemory<string> _)
+    private void ToggleInfiniteVessel()
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity)
+        if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (areaState.CurrentArea is { Room.CheatsAllowed: false })
         {
-            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
+            console.AddLocalizedMessage("CheatsAreDisabled");
             return;
         }
 
-        ref var localState = ref mainEntity.GetLocalState();
-        if (localState.Pawn != null)
+        if (mainEntity.Pawn != null)
         {
-            var events = BUS_EventCollectionCS.Get(localState.Pawn);
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.FabaoEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.FabaoEnergyMax));
+            var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.FabaoEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(mainEntity.Pawn, EBGUAttrFloat.FabaoEnergyMax));
         }
 
         mainEntity.GetLocalState().HasInfiniteVessel = !mainEntity.GetLocalState().HasInfiniteVessel;
-        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", NickName);
+        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", playerState.NickName);
     }
 
-    private void ToggleInfiniteTransform(ReadOnlyMemory<string> _)
+    private void ToggleInfiniteTransform()
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity)
+        if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (areaState.CurrentArea is { Room.CheatsAllowed: false })
         {
-            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
+            console.AddLocalizedMessage("CheatsAreDisabled");
             return;
         }
 
-        ref var localState = ref mainEntity.GetLocalState();
-        if (localState.Pawn != null)
+        if (mainEntity.HasPawn)
         {
-            var events = BUS_EventCollectionCS.Get(localState.Pawn);
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.CurEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(localState.Pawn, EBGUAttrFloat.TransEnergyMax));
+            var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
+            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.CurEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(mainEntity.Pawn, EBGUAttrFloat.TransEnergyMax));
         }
 
         mainEntity.GetLocalState().HasInfiniteTransform = !mainEntity.GetLocalState().HasInfiniteTransform;
-        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteTransform ? "InfTransformEnabled" : "InfTransformDisabled", NickName);
+        var playerComp = mainEntity.GetState();
+        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteTransform ? "InfTransformEnabled" : "InfTransformDisabled", playerComp.CharacterNickName);
     }
 
-    private void ToggleSkillsCooldown(ReadOnlyMemory<string> _)
+    private void ToggleSkillsCooldown()
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity)
+        if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (_areaState.CurrentArea.HasValue && !_areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (areaState.CurrentArea.HasValue && !areaState.CurrentArea.Value.Room.CheatsAllowed)
         {
-            _wukongCommandConsole.AddLocalizedMessageToConsole("CheatsAreDisabled");
+            console.AddLocalizedMessage("CheatsAreDisabled");
             return;
         }
 
-        ref var localState = ref mainEntity.GetLocalState();
-        var events = BUS_EventCollectionCS.Get(localState.Pawn);
+        ref var localStateComp = ref mainEntity.GetLocalState();
+        var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
         events?.Evt_ResetSkillCD.Invoke();
-        localState.InstantSkillCooldown = !localState.InstantSkillCooldown;
-        _wukongChatter.SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", NickName);
+        localStateComp.InstantSkillCooldown = !localStateComp.InstantSkillCooldown;
+        chatter.SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", playerState.NickName);
     }
 
-    private void TeleportToArena(ReadOnlyMemory<string> _)
+    private void TeleportToArena()
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity)
+        if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (_areaState.InRoom && !mainEntity.GetPvP().IsSpectator && _areaState.PvpState is { InTournament: false })
+        if (areaState.InRoom && !mainEntity.GetPvP().IsSpectator && areaState.PvpState is { InTournament: false })
         {
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             PlayerUtils.TeleportLocalPlayer(mainEntity, levelData.PvpStartingLocation, FRotator.ZeroRotator);
         }
     }
 
-    private void TeleportToShrine(ReadOnlyMemory<string> _)
+    private void TeleportToShrine()
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity)
+        if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (_areaState.InRoom && !mainEntity.GetPvP().IsSpectator && _areaState.PvpState is { InTournament: false })
+        if (areaState.InRoom && !mainEntity.GetPvP().IsSpectator && areaState.PvpState is { InTournament: false })
         {
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity, levelData.BirthPointID);
         }
     }
 
-    private void TeleportToPvpLevel(ReadOnlyMemory<string> args)
+    private void TeleportToPvpLevel(int pvpLevelId)
     {
-        if (_playerState.LocalMainCharacter is not { } mainEntity || !_areaState.InRoom || mainEntity.GetPvP().IsSpectator || _areaState.PvpState is { InTournament: true })
+        if (playerState.LocalMainCharacter is not { } mainEntity || !areaState.InRoom || mainEntity.GetPvP().IsSpectator || areaState.PvpState is { InTournament: true })
             return;
 
-        if (args.Length < 1)
+        if (pvpLevelId < 0)
         {
-            _wukongCommandConsole.AddMessageToConsole(Texts.InvalidCommand);
-            return;
-        }
-
-        bool success = int.TryParse(args.Span[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int pvpLevelId);
-        if (!success || pvpLevelId < 0)
-        {
-            _wukongCommandConsole.AddMessageToConsole(Texts.InvalidCommand);
+            console.AddMessage(Texts.InvalidCommand);
             return;
         }
 

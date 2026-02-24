@@ -5,6 +5,7 @@ using BtlB1;
 using System.Collections.Generic;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -23,13 +24,13 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
 
         if (pawn == null)
         {
-            Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
+            Logging.LogError("Could not find immobilized pawn");
             return;
         }
 
         if (caster == null)
         {
-            Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
+            Logging.LogError("Could not find caster pawn");
             return;
         }
 
@@ -47,12 +48,14 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
     }
 
-    internal static void RelieveImmobilize(BGUCharacterCS pawn)
+    internal static void RelieveImmobilize(WukongPawnState pawnState, BGUCharacterCS pawn)
     {
         Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
         var playerEvents = BUS_EventCollectionCS.Get(pawn);
 
-        var entity = DI.Instance.PawnState.GetEntityByTamerMonster(pawn);
+        // NOTE: This should be taken care of by the game event origin system
+        /*
+        var entity = pawnState.GetEntityByTamerMonster(pawn);
         if (entity.HasValue)
         {
             ref var localTamer = ref entity.Value.GetLocalTamer();
@@ -60,13 +63,15 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         }
         else
         {
-            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(pawn);
+            var mainEntity = pawnState.GetEntityByPlayerPawn(pawn);
             if (mainEntity != null)
             {
                 mainEntity.Value.GetLocalState().RunImmobilizePatches = true;
             }
         }
+        */
 
+        
         playerEvents?.Evt_RelieveImmobilized.Invoke();
     }
 

@@ -35,9 +35,9 @@ internal sealed class PlayerListSystem(
 
         Query
             .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity)
-            .ForEachEntity((ref mainCharacterComponent, ref pvp, _) =>
+            .ForEachEntity((ref mainComp, ref pvp, _) =>
             {
-                var player = playerState.GetPlayerById(mainCharacterComponent.PlayerId);
+                var player = playerState.GetPlayerById(mainComp.PlayerId);
                 if (player.HasValue)
                 {
                     var team = player.Value.GetState().TeamId;
@@ -45,13 +45,13 @@ internal sealed class PlayerListSystem(
                     switch (team)
                     {
                         case PvpConstants.RedTeamId:
-                            redTeamList.Add(mainCharacterComponent.CharacterNickName);
+                            redTeamList.Add(mainComp.CharacterNickName);
                             return;
                         case PvpConstants.BlueTeamId:
-                            blueTeamList.Add(mainCharacterComponent.CharacterNickName);
+                            blueTeamList.Add(mainComp.CharacterNickName);
                             return;
                         case PvpConstants.SpectatorTeamId:
-                            spectatorsList.Add(mainCharacterComponent.CharacterNickName);
+                            spectatorsList.Add(mainComp.CharacterNickName);
                             return;
                     }
                 }

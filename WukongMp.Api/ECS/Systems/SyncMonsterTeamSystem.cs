@@ -1,23 +1,37 @@
-﻿using Friflo.Engine.ECS;
+﻿using System.Diagnostics;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class SyncMonsterTeamSystem : QuerySystem<TeamComponent, LocalTamerComponent>
+public class SyncMonsterTeamSystem(WukongMappingPolicyDirectory policyDir) 
+    : QuerySystem<TeamComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((ref team, ref localTamer, entity) =>
+        Query.ForEachEntity((ref teamComp, ref _, entity) =>
         {
-            if (!localTamer.IsMonsterActive || localTamer.Pawn == null)
+            var tamerEntity = new TamerEntity(entity);
+            var pawn = tamerEntity.Pawn;
+
+            if (pawn == null)
                 return;
 
-            if (team.TeamId != localTamer.Pawn.GetTeamIDInCS())
+            if (teamComp.TeamId != pawn.GetTeamIDInCS())
             {
-                ClientUtils.RegisterAndSetPlayerTeam(localTamer.Pawn, team.TeamId);
+                if (policyDir.TamerData<TeamComponent>().ShouldEcsCopyToGame(tamerEntity))
+                {
+                    ClientUtils.RegisterAndSetPlayerTeam(pawn, teamComp.TeamId);
+                }
+                else
+                {
+                    // NOTE(api): API refactoring only
+                    Debug.Assert(false);
+                }
             }
         });
     }

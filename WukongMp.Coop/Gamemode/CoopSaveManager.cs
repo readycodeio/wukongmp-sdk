@@ -1,23 +1,18 @@
-﻿using ArchiveB1;
+﻿using System.Diagnostics;
+using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
 using BtlB1;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using PreludeLib.Compat;
 using UnrealEngine.Runtime;
-using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Coop.Configuration;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Gamemode;
 
-internal class CoopSaveManager(ILogger logger)
+internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localApi, ILogger logger)
 {
     public bool ShouldRedirectSaveFiles => true;
 
@@ -35,7 +30,7 @@ internal class CoopSaveManager(ILogger logger)
         });
     }
 
-    public void OnLoadArchive(BGW_GameArchiveMgr __instance, ref ReadArchiveResult __result, int ArchiveId, ref FUStBEDArchivesData OutArchiveData)
+    public void OnLoadArchive(BGW_GameArchiveMgr __instance, ref ReadArchiveResult __result, int ArchiveId, ref FUStBEDArchivesData? OutArchiveData)
     {
         // Read archive with our co-op save.
         bool startNewGame = false;
@@ -45,11 +40,11 @@ internal class CoopSaveManager(ILogger logger)
         try
         {
             var timer = Stopwatch.StartNew();
-            var worldDownloadTask = DI.Instance.SaveRelay.DownloadWorldSaveAsync();
-            var playerDownloadTask = DI.Instance.SaveRelay.DownloadPlayerSaveAsync();
+            var worldDownloadTask = clientApi.Saves.DownloadWorldSaveAsync();
+            var playerDownloadTask = clientApi.Saves.DownloadPlayerSaveAsync();
 
             var task = Task.WhenAll(worldDownloadTask, playerDownloadTask);
-            DI.Instance.EcsLoop.Wait(task);
+            localApi.Wait(task);
 
             timer.Stop();
             logger.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
@@ -107,14 +102,14 @@ internal class CoopSaveManager(ILogger logger)
             var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(playerSavePath, playerData);
 
-            var readWorldResult = __instance.ReadArchiveData(CoopConstants.CoopWorldArchiveId, out worldArchiveData, out var archiveCanBeRepaired);
+            var readWorldResult = __instance.ReadArchiveData(CoopConstants.CoopWorldArchiveId, out worldArchiveData, out _);
             if (readWorldResult != ReadArchiveResult.Success)
             {
                 logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
                 return;
             }
 
-            var readPlayerResult = __instance.ReadArchiveData(CoopConstants.CoopPlayerArchiveId, out playerArchiveData, out archiveCanBeRepaired);
+            var readPlayerResult = __instance.ReadArchiveData(CoopConstants.CoopPlayerArchiveId, out playerArchiveData, out _);
             if (readPlayerResult != ReadArchiveResult.Success)
             {
                 logger.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);
@@ -182,15 +177,15 @@ internal class CoopSaveManager(ILogger logger)
 
         Task.Run(async () =>
         {
-            if (DI.Instance.AreaState.IsMasterClient)
+            if (clientApi.IsMasterClient)
             {
                 var worldTimer = Stopwatch.StartNew();
-                var uploadedWorld = await DI.Instance.SaveRelay.UploadWorldSaveAsync(data);
+                var uploadedWorld = await clientApi.Saves.UploadWorldSaveAsync(data);
                 LogSuccess(worldTimer, uploadedWorld, "world save");
             }
 
             var playerTimer = Stopwatch.StartNew();
-            var uploadedPlayer = await DI.Instance.SaveRelay.UploadPlayerSaveAsync(data);
+            var uploadedPlayer = await clientApi.Saves.UploadPlayerSaveAsync(data);
             LogSuccess(playerTimer, uploadedPlayer, "player save");
         });
     }
