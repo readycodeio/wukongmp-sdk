@@ -22,6 +22,7 @@ public class WukongClientGameEvents : IDisposable
 {
     // ReSharper disable once InconsistentNaming
     private static readonly MethodInfo PlayDBC_ByType = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType");
+
     // ReSharper disable once InconsistentNaming
     private static readonly MethodInfo EndAllDBC = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC");
 
@@ -35,10 +36,10 @@ public class WukongClientGameEvents : IDisposable
     private readonly ILogger _logger;
 
     public WukongClientGameEvents(
-        IMappedEventManager mappedEvent, 
+        IMappedEventManager mappedEvent,
         WukongMappingPolicyDirectory policyDir,
         ClientState state,
-        WukongPawnState pawnState, 
+        WukongPawnState pawnState,
         WukongPlayerState playerState,
         WukongWidgetManager widgetManager,
         GameplayEventRouter eventRouter,
@@ -61,11 +62,11 @@ public class WukongClientGameEvents : IDisposable
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
             events?.Evt_RelievePhantomRush.Invoke();
         }, this);
-        
+
         _mappedEvent.RegisterGameEventHandler<AddBuffEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
-                            
+
             if (pawn == null)
                 return;
 
@@ -122,15 +123,9 @@ public class WukongClientGameEvents : IDisposable
             SpawningUtils.SpawnSummonedUnitWithGuid(ev.ToGame(self._pawnState));
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<RequestSpawnUnitsEvent, WukongClientGameEvents>(static (ev, self) =>
-        {
-            SpawningUtils.SpawnUnitsAsOwner(self._playerState, self._pawnState, self._policyDir, new TamerKind(ev.UnitName), ev.Count, ev.TeamId, ev.Location);
-        }, this);
+        _mappedEvent.RegisterGameEventHandler<RequestSpawnUnitsEvent, WukongClientGameEvents>(static (ev, self) => { SpawningUtils.SpawnUnitsAsOwner(self._playerState, self._pawnState, self._policyDir, new TamerKind(ev.UnitName), ev.Count, ev.TeamId, ev.Location); }, this);
 
-        _mappedEvent.RegisterGameEventHandler<BroadcastUnitSpawnEvent>(static ev =>
-        {
-            SpawningUtils.SpawnUnitLocallyByName(ev.Guid, new TamerKind(ev.UnitName), ev.Location);
-        });
+        _mappedEvent.RegisterGameEventHandler<BroadcastUnitSpawnEvent>(static ev => { SpawningUtils.SpawnUnitLocallyByName(ev.Guid, new TamerKind(ev.UnitName), ev.Location); });
 
         _mappedEvent.RegisterGameEventHandler<PlayerTransBeginEvent, WukongClientGameEvents>(static (ev, self) =>
         {
@@ -188,7 +183,7 @@ public class WukongClientGameEvents : IDisposable
         {
             var caster = self._pawnState.GetPawnByEntity(ev.Entity);
             var target = self._pawnState.GetPawnByEntity(ev.Target);
-            ImmobilizeUtils.TriggerImmobilize(target, caster, ev.GreatSageTalentActiveBuff);
+            ImmobilizeUtils.TriggerImmobilize(caster, target, ev.GreatSageTalentActiveBuff);
         }, this);
 
         _mappedEvent.RegisterGameEventHandler<RelieveImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
@@ -206,7 +201,7 @@ public class WukongClientGameEvents : IDisposable
         _mappedEvent.RegisterGameEventHandler<PhantomRushEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
-            
+
             if (mainEntity.Pawn == null)
             {
                 self._logger.LogError("Main character not found: {Entity}", ev.Entity);
@@ -257,7 +252,7 @@ public class WukongClientGameEvents : IDisposable
                 // NOTE(api): Moved from WukongChatter
                 PlayerUtils.TeleportLocalPlayerToCurrentRebirthPoint(mainEntity);
             }
-            
+
             if (mainEntity == self._playerState.LocalMainCharacter)
             {
                 PlayerUtils.DisableSpectator(mainEntity);
@@ -273,7 +268,7 @@ public class WukongClientGameEvents : IDisposable
         {
             var uiEvt = BGW_UIEventCollection.Get(GameUtils.GetWorld());
             var param = new DamageNumParam(
-                InDamageType: ev.DamageType, 
+                InDamageType: ev.DamageType,
                 InDamageNum: ev.DamageNum,
                 InAmplitude: ev.Amplitude,
                 InRealHitLocation: ev.RealHitLocation,
@@ -293,7 +288,7 @@ public class WukongClientGameEvents : IDisposable
         _mappedEvent.RegisterGameEventHandler<MontageCallbackEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             // FIXME(api): Move this logic to utils
-            
+
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
             if (pawn == null)
             {
@@ -369,7 +364,7 @@ public class WukongClientGameEvents : IDisposable
         _mappedEvent.RegisterGameEventHandler<AnimationSyncingEvent, WukongClientGameEvents>((ev, self) =>
         {
             self._logger.LogDebug("OnPreAnimationSyncing called for Host {Host} and Guest {Guest}", ev.Host, ev.Guest);
-            
+
             var hostPawn = self._pawnState.GetPawnByEntity(ev.Host);
             if (hostPawn == null)
             {
@@ -399,7 +394,7 @@ public class WukongClientGameEvents : IDisposable
         _mappedEvent.RegisterGameEventHandler<BeginSyncAnimationEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("OnBeginSyncAnimation called for Host {Entity} with GuestMontage '{MontagePath}'", ev.Host, ev.FullGuestMontage);
-            
+
             var hostPawn = self._pawnState.GetPawnByEntity(ev.Host);
             if (hostPawn == null)
             {
@@ -446,7 +441,7 @@ public class WukongClientGameEvents : IDisposable
                 Logging.LogError("Local player not found");
                 return;
             }
-            
+
             CutsceneUtils.SetJoiningCutsceneStatus(mainEntity, self._widgetManager, ev);
 
             if (mainEntity.Pawn == null)
@@ -463,7 +458,7 @@ public class WukongClientGameEvents : IDisposable
         _mappedEvent.RegisterGameEventHandler<IronBodyStartEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
-            
+
             if (mainEntity.Pawn == null)
             {
                 self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
@@ -478,7 +473,7 @@ public class WukongClientGameEvents : IDisposable
             self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity: {Entity}", ev.PlayerId, ev.Entity);
 
             var playerId = ev.PlayerId != default ? ev.PlayerId : self._playerState.LocalPlayerId;
-            
+
             if (playerId == null || self._playerState.GetMainCharacterByPlayerId(playerId.Value) == null)
             {
                 self._logger.LogError("Player not found: {PlayerId}", playerId);
@@ -491,7 +486,7 @@ public class WukongClientGameEvents : IDisposable
         _mappedEvent.RegisterGameEventHandler<UnitDespawnedEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", ev.PlayerId, ev.Entity);
-            
+
             var playerId = ev.PlayerId != default ? ev.PlayerId : self._playerState.LocalPlayerId;
 
             if (playerId == null || self._playerState.GetMainCharacterByPlayerId(playerId.Value) == null)
@@ -503,10 +498,7 @@ public class WukongClientGameEvents : IDisposable
             TamerUtils.SubtractSpawnedUnitRefCount(new TamerEntity(ev.Entity), playerId.Value);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<TamerSkillInteractEvent, WukongClientGameEvents>(static (ev, self) =>
-        {
-            TamerUtils.TriggerSkillInteract(ev.Entity, ev.SkillId);
-        }, this);
+        _mappedEvent.RegisterGameEventHandler<TamerSkillInteractEvent, WukongClientGameEvents>(static (ev, self) => { TamerUtils.TriggerSkillInteract(ev.Entity, ev.SkillId); }, this);
 
         _mappedEvent.RegisterGameEventHandler<TriggerMagicallyChangeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
@@ -584,10 +576,7 @@ public class WukongClientGameEvents : IDisposable
             ProjectileUtils.DestroyProjectile(mainEntity.Pawn, ev.ProjectileClassName, ev.Reason);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<MagicFieldDeadEvent, WukongClientGameEvents>(static (ev, self) =>
-        {
-            MagicFieldUtils.DestroyMagicField(ev.ClassName, ev.Reason);
-        }, this);
+        _mappedEvent.RegisterGameEventHandler<MagicFieldDeadEvent, WukongClientGameEvents>(static (ev, self) => { MagicFieldUtils.DestroyMagicField(ev.ClassName, ev.Reason); }, this);
 
         _mappedEvent.RegisterGameEventHandler<ProjectileMoveModeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
@@ -675,7 +664,7 @@ public class WukongClientGameEvents : IDisposable
         _mappedEvent.RegisterGameEventHandler<StartJumpEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
-            
+
             if (mainEntity.Pawn == null)
             {
                 self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
@@ -712,7 +701,7 @@ public class WukongClientGameEvents : IDisposable
 
             TamerUtils.TriggerWakeUp(pawn);
         }, this);
-        
+
         _mappedEvent.RegisterGameEventHandler<PlayBaneEffectEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);

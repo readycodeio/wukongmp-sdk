@@ -58,9 +58,9 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
             );
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<BeguilingChantEvent, WukongServerRpcCallbacks>(static (ev, self) =>
+        _mappedEvent.RegisterEcsEventHandler<BeguilingChantEvent, WukongServerRpcCallbacks>(static (ev, self) =>
         {
-            self.SendBeguilingChant(ev.State);
+            self.SendBeguilingChant((byte)ev.State);
         }, this);
     }
 
@@ -102,8 +102,9 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     }
 
     [ServerRpcEvent("BeguilingChant")]
-    private void OnBeguilingChant(BeguilingChantState state)
+    private void OnBeguilingChant(byte stateRaw)
     {
+        var state = (BeguilingChantState)stateRaw;
         _ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
         {
             if (self._policyDir.ForEvent<BeguilingChantEvent, EmptyContext>().ShouldEventPropagateToGame(default))

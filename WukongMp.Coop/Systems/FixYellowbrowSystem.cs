@@ -16,7 +16,7 @@ public class FixYellowbrowSystem(WukongLocalApi localApi, WukongClientApi client
         {
             // FIXME(api): Define Guid constants somewhere
             // FIXME(api): Rename `Guid` to something less confusing
-            if (tamer.IsMonsterActive && tamer.Hp < 1f && tamer.Guid == "UGuid.LYS.HuangMei.Big")
+            if (tamer is { IsMonsterActive: true, Hp: < 1f, Guid: "UGuid.LYS.HuangMei.Big" })
             {
                 if (ClientApi.LocalMainCharacter.Value.IsDead)
                 {

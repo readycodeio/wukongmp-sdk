@@ -53,7 +53,10 @@ public static class ReceiveTickPatch
         {
             var mainEntity = new MainCharacterEntity(entity);
 
-            SyncPlayerMontage(mainEntity);
+            if (DI.Instance.ClientOwnership_.OwnsEntity(mainEntity))
+            {
+                SyncPlayerMontage(mainEntity);
+            }
         });
 
         _syncMontageJob ??= new SyncMontageJob(DI.Instance.World, DI.Instance.PlayerState.LocalPlayerId!.Value);
