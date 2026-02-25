@@ -12,9 +12,9 @@ namespace WukongMp.Api.ECS.Jobs;
 /// <summary>
 /// This job is used to discover already spawned monsters.
 /// </summary>
-public class DiscoverLocallySpawnedMonstersJob(IMappedEventManager mappedEvent, ILogger logger)
+public readonly struct DiscoverLocallySpawnedMonstersJob(IMappedEventManager mappedEvent, ILogger logger)
 {
-    public void OnUpdate(ref LocalTamerComponent localTamerComp, ref MetadataComponent metaComp, Entity entity)
+    public void OnUpdate(Entity entity)
     {
         var tamerEntity = new TamerEntity(entity);
         var tamer = tamerEntity.Tamer;

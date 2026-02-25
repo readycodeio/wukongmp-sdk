@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using ReadyM.Api.Command;
+using System.Runtime.CompilerServices;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Command;
 using WukongMp.Api.Resources;
@@ -131,7 +130,7 @@ public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBas
         byte* ptr = stackalloc byte[(int)(uint)(CommitCommand_ParamsSize + 16)];
         int num = (int)((16L - (long)ptr) & 0xF);
         byte* ptr2 = ptr + num;
-        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)CommitCommand_ParamsSize);
+        Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)CommitCommand_ParamsSize);
         IntPtr intPtr = new IntPtr(ptr2);
 
         NativeReflection.InvokeFunctionOptimized(GameWidget.Address, CommitCommand_FunctionAddress, intPtr, CommitCommand_ParamsSize);
@@ -157,7 +156,7 @@ public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBas
         byte* ptr = stackalloc byte[(int)(uint)(SetAvailableCommands_ParamsSize + 16)];
         int num = (int)((16L - (long)ptr) & 0xF);
         byte* ptr2 = ptr + num;
-        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetAvailableCommands_ParamsSize);
+        Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetAvailableCommands_ParamsSize);
         IntPtr intPtr = new IntPtr(ptr2);
 
         TArrayCopyMarshaler<string> readTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetAvailableCommands_Commands_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
@@ -185,7 +184,7 @@ public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBas
         byte* ptr = stackalloc byte[(int)(uint)(AddCommandParameters_ParamsSize + 16)];
         int num = (int)((16L - (long)ptr) & 0xF);
         byte* ptr2 = ptr + num;
-        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddCommandParameters_ParamsSize);
+        Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddCommandParameters_ParamsSize);
         IntPtr intPtr = new IntPtr(ptr2);
 
         FStringMarshaler.ToNative(IntPtr.Add(intPtr, AddCommandParameters_Command_Offset), 0, AddCommandParameters_Command_PropertyAddress.Address, command);
@@ -215,7 +214,7 @@ public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBas
         byte* ptr = stackalloc byte[(int)(uint)(AddMessage_ParamsSize + 16)];
         int num = (int)((16L - (long)ptr) & 0xF);
         byte* ptr2 = ptr + num;
-        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddMessage_ParamsSize);
+        Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddMessage_ParamsSize);
         IntPtr intPtr = new IntPtr(ptr2);
 
         FStringMarshaler.ToNative(IntPtr.Add(intPtr, AddMessage_Message_Offset), 0, AddMessage_Message_PropertyAddress.Address, message);
@@ -242,7 +241,7 @@ public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBas
         byte* ptr = stackalloc byte[(int)(uint)(IsConsoleVisible_ParamsSize + 16)];
         int num = (int)((16L - (long)ptr) & 0xF);
         byte* ptr2 = ptr + num;
-        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)IsConsoleVisible_ParamsSize);
+        Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)IsConsoleVisible_ParamsSize);
         IntPtr intPtr = new IntPtr(ptr2);
 
         NativeReflection.InvokeFunctionOptimized(GameWidget.Address, IsConsoleVisible_FunctionAddress, intPtr, IsConsoleVisible_ParamsSize);
@@ -266,7 +265,7 @@ public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBas
         byte* ptr = stackalloc byte[(int)(uint)(HasFocus_ParamsSize + 16)];
         int num = (int)((16L - (long)ptr) & 0xF);
         byte* ptr2 = ptr + num;
-        System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)HasFocus_ParamsSize);
+        Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)HasFocus_ParamsSize);
         IntPtr intPtr = new IntPtr(ptr2);
 
         NativeReflection.InvokeFunctionOptimized(GameWidget.Address, HasFocus_FunctionAddress, intPtr, HasFocus_ParamsSize);

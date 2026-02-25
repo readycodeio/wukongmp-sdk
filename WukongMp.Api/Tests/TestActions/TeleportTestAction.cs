@@ -1,5 +1,6 @@
-﻿using b1;
-using System;
+﻿using System;
+using b1;
+using b1.EventDelDefine;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Tests.TestActions
@@ -32,7 +33,7 @@ namespace WukongMp.Api.Tests.TestActions
                 case InnerState.TeleportNewLevel:
                     var world = GameUtils.GetWorld();
                     BGW_EventCollection bGW_EventCollection = BGW_EventCollection.Get(world);
-                    bGW_EventCollection.Evt_PostLoadMapWithWorld = (b1.EventDelDefine.Del_Void)Delegate.Combine(bGW_EventCollection.Evt_PostLoadMapWithWorld, new b1.EventDelDefine.Del_Void(OnPostLoadMapWithWorld));
+                    bGW_EventCollection.Evt_PostLoadMapWithWorld = (Del_Void)Delegate.Combine(bGW_EventCollection.Evt_PostLoadMapWithWorld, new Del_Void(OnPostLoadMapWithWorld));
                     BPS_EventCollectionCS.Get(GameUtils.GetControlledPawn()?.PlayerState).Evt_BPS_TeleportTo.Invoke(ETeleportTypeV2.RebirthPointTeleportOnly, new TeleportParam_RebirthPoint
                     {
                         RebirthPointId = _rebirthPointId
@@ -43,7 +44,7 @@ namespace WukongMp.Api.Tests.TestActions
                     if (_loadMapCompleted)
                     {
                         BGW_EventCollection bGW_EventCollection2 = BGW_EventCollection.Get(GameUtils.GetWorld());
-                        bGW_EventCollection2.Evt_PostLoadMapWithWorld = (b1.EventDelDefine.Del_Void)Delegate.Remove(bGW_EventCollection2.Evt_PostLoadMapWithWorld, new b1.EventDelDefine.Del_Void(OnPostLoadMapWithWorld))!;
+                        bGW_EventCollection2.Evt_PostLoadMapWithWorld = (Del_Void)Delegate.Remove(bGW_EventCollection2.Evt_PostLoadMapWithWorld, new Del_Void(OnPostLoadMapWithWorld))!;
                         TransferState(InnerState.WaitForAreaConnection);
                     }
                     break;

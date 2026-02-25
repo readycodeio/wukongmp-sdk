@@ -80,6 +80,7 @@ namespace WukongMp.PvP
                 DI.NetComponentRegistry,
                 DI.RelayClient,
                 DI.EcsLoop,
+                DI.MappedEvent,
                 DI.EventBus,
                 DI.ClientRpc,
                 widgetManager,

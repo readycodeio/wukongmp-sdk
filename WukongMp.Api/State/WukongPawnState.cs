@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using b1;
 using Friflo.Engine.ECS;
@@ -60,15 +59,22 @@ public class WukongPawnState(
 
     public TamerEntity? GetEntityByTamerMonster(AActor? actor)
     {
-        if (actor.IsNullOrDestroyed())
+        if (actor == null)
             return null;
 
-        var owner = actor?.GetOwner();
+        TamerEntity? result = null;
 
-        if (owner is not ABGUTamerBase tamer)
-            return null;
+        var query = world.Query<LocalTamerComponent>();
+        query.ForEachEntity((ref _, entity) =>
+        {
+            var tamerEntity = new TamerEntity(entity);
+            if (tamerEntity.Pawn == actor)
+            {
+                result = tamerEntity;
+            }
+        });
         
-        return GetEntityByTamer(tamer);
+        return result;
     }
 
     // FIXME: This should be indexed - move `_guid` to a separate component?

@@ -6,7 +6,6 @@ using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.GameEvents;
 
 namespace WukongMp.Api.Patches;

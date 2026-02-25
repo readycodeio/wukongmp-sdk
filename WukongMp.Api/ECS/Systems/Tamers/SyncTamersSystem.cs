@@ -1,20 +1,17 @@
 ﻿using System.Linq;
 using b1;
 using Friflo.Engine.ECS.Systems;
-using Microsoft.Extensions.Logging;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class SyncTamersSystem(IMappedEventManager mappedEvent, ILogger logger)
-    : QuerySystem<TamerComponent, LocalTamerComponent, TransformComponent, MetadataComponent>
+public sealed class SyncTamersSystem(IMappedEventManager mappedEvent) : QuerySystem<TamerComponent, LocalTamerComponent, TransformComponent, MetadataComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;
@@ -32,25 +29,24 @@ public sealed class SyncTamersSystem(IMappedEventManager mappedEvent, ILogger lo
 
         Query.ForEachEntity((ref tamerComp, ref localTamerComp, ref translation, ref metaComp, entity) =>
         {
-            var tamerEntity = new TamerEntity(entity);
-            
             if (!localTamerComp.IsTamerSynced)
             {
                 if (tamerComp.Guid is null)
                 {
-                    logger.LogError("Entity {EntityId} has a TamerComponent with a null Guid. Cannot sync tamer.", entity.Id);
+                    Logging.LogError("Entity {EntityId} has a TamerComponent with a null Guid. Cannot sync tamer.", entity.Id);
                     return;
                 }
 
-                if (allTamers.TryGetValue(tamerComp.Guid, out var tamer))
+                if (allTamers.TryGetValue(tamerComp.Guid, out var actor))
                 {
-                    tamerEntity.SetTamer(tamer, true);
+                    var tamerEntity = new TamerEntity(entity);
                     
-                    logger.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);
+                    tamerEntity.SetTamer(actor, true);
+                    Logging.LogDebug("Found matching tamer with guid: {Guid}", tamerComp.Guid);
 
-                    if (tamer.GetMonster() != null)
+                    if (tamerEntity.Tamer?.GetMonster() != null)
                     {
-                        logger.LogDebug("Monster already spawned on the level, guid: {Guid}, netId: {NetId}. Marking as spawned.", tamerComp.Guid, metaComp.NetId);
+                        Logging.LogDebug("Monster already spawned on the level, guid: {Guid}, netId: {NetId}. Marking as spawned.", tamerComp.Guid, metaComp.NetId);
                         TamerUtils.MarkMonsterLocallySpawned(mappedEvent, tamerEntity);
                     }
                 }

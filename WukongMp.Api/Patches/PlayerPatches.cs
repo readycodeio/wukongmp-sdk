@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using b1;
 using B1UI.GSSvc;
@@ -9,13 +8,11 @@ using Friflo.Engine.ECS;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
-using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.WukongUtils;
@@ -832,7 +829,7 @@ namespace WukongMp.Api.Patches
             if (!DI.Instance.AreaState.InRoom)
                 return true;
 
-            var playerController = GameUtils.GetPlayerController();
+            var playerController = GameUtils.GetPlayerController()!;
             var owner = playerController.GetControlledPawn();
 
             if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))

@@ -73,16 +73,11 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
             return;
 
         var localComp = mainEntity.GetLocalState();
-        var pawn = mainEntity.Pawn;
-        if (pawn == null)
-        {
-            _logger.LogWarning("Could not find pawn for main character entity of player {PlayerId} during despawn.", playerId);
-        }
 
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
             PlayerId = playerId,
-            PlayerCharacter = pawn,
+            PlayerCharacter = mainEntity.Pawn,
             PlayerMarker = localComp.MarkerActor
         });
     }

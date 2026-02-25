@@ -3,6 +3,7 @@ using b1;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 
@@ -42,7 +43,7 @@ public static class CutsceneUtils
         {
             localMain.JoiningSequenceLocation = ev.SequenceLocation;
             localMain.IsJoiningSequence = true;
-            widgetManager.ShowInfoMessage(Resources.Texts.JoinOtherPlayersToProceed);
+            widgetManager.ShowInfoMessage(Texts.JoinOtherPlayersToProceed);
         }
     }
 

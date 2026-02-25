@@ -3,6 +3,7 @@ using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Managers;
@@ -49,6 +50,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
+        IMappedEventManager mappedEvent,
         WukongEventBus eventBus,
         WukongWidgetManager widgetManager,
         GameplayEventRouter gameplayEventRouter,
@@ -66,18 +68,18 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
 
         _syncGroup = new SystemGroup("Sync");
 
-        _syncGroup.Add(new SpawnTamersSystem(policyDir, state, gameplayEventRouter, configuration, logger));
-        _syncGroup.Add(new SyncTamersSystem(policyDir.MappedEvent, logger));
+        _syncGroup.Add(new SpawnTamersSystem(state, gameplayEventRouter, configuration));
+        _syncGroup.Add(new SyncTamersSystem(mappedEvent));
         _syncGroup.Add(new UnloadTamersSystem());
-        _syncGroup.Add(new KillAlreadyDeadMonstersSystem(policyDir, clientOwnership, playerState, logger));
+        _syncGroup.Add(new KillAlreadyDeadMonstersSystem(clientOwnership, playerState));
         _syncGroup.Add(new UpdateTamerMarkersSystem());
 
-        _syncGroup.Add(new SyncMonsterTeamSystem(policyDir));
-        _syncGroup.Add(new ChangeTamerTargetSystem(policyDir, clientOwnership));
+        _syncGroup.Add(new SyncMonsterTeamSystem());
+        _syncGroup.Add(new ChangeTamerTargetSystem(clientOwnership));
 
         _syncGroup.Add(new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, Logger));
-        _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, Logger));
-        _syncGroup.Add(new DeleteOrphanedMainCharactersSystem(state, playerState, eventBus, policyDir, clientOwnership, Logger));
+        _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
+        // _syncGroup.Add(new DeleteOrphanedMainCharactersSystem(state, playerState, eventBus, policyDir, clientOwnership, Logger));
         _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, eventBus, Logger));
         _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, configuration, gameplayEventRouter, logger));
         _syncGroup.Add(new EnableCollisionAfterCutsceneSystem(playerState));

@@ -3,6 +3,7 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
@@ -47,6 +48,7 @@ internal class PvpSynchronizer : WukongSynchronizer
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
         IClientEcsUpdateLoop ecsLoop,
+        IMappedEventManager mappedEvent,
         WukongEventBus eventBus,
         WukongClientRpcCallbacks rpc,
         PvpWidgetManager widgetManager,
@@ -72,6 +74,7 @@ internal class PvpSynchronizer : WukongSynchronizer
             netComponentRegistry, 
             relayClient, 
             ecsLoop, 
+            mappedEvent,
             eventBus, 
             widgetManager.WidgetManager, 
             gameplayEventRouter, 

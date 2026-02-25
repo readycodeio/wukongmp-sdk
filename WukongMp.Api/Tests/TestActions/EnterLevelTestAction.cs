@@ -1,12 +1,14 @@
-﻿using b1;
+﻿using System;
+using b1;
 using b1.BGW;
-using System;
+using b1.EventDelDefine;
 using UnrealEngine.Engine;
 using UnrealEngine.Plugins.EnhancedInput;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
+using FInputActionValue = b1.FInputActionValue;
 
 namespace WukongMp.Api.Tests.TestActions
 {
@@ -86,11 +88,11 @@ namespace WukongMp.Api.Tests.TestActions
                         _roll = !_roll;
                         if (_roll)
                         {
-                            BGW_EventCollection.Get(_worldContext).Evt_InjectInputTriggerEvent("IA_GSUIConfirm", ETriggerEvent.Started, b1.FInputActionValue.True);
+                            BGW_EventCollection.Get(_worldContext).Evt_InjectInputTriggerEvent("IA_GSUIConfirm", ETriggerEvent.Started, FInputActionValue.True);
                         }
                         else
                         {
-                            BGW_EventCollection.Get(_worldContext).Evt_InjectInputTriggerEvent("IA_GSUIConfirm", ETriggerEvent.Completed, b1.FInputActionValue.False);
+                            BGW_EventCollection.Get(_worldContext).Evt_InjectInputTriggerEvent("IA_GSUIConfirm", ETriggerEvent.Completed, FInputActionValue.False);
                         }
                         break;
                     }
@@ -115,7 +117,7 @@ namespace WukongMp.Api.Tests.TestActions
                         if (FoundWidgets.Count > 0)
                         {
                             BGW_EventCollection bGW_EventCollection = BGW_EventCollection.Get(_worldContext);
-                            bGW_EventCollection.Evt_PostLoadMapWithWorld = (b1.EventDelDefine.Del_Void)Delegate.Combine(bGW_EventCollection.Evt_PostLoadMapWithWorld, new b1.EventDelDefine.Del_Void(OnPostLoadMapWithWorld));
+                            bGW_EventCollection.Evt_PostLoadMapWithWorld = (Del_Void)Delegate.Combine(bGW_EventCollection.Evt_PostLoadMapWithWorld, new Del_Void(OnPostLoadMapWithWorld));
                             BGW_EventCollection.Get(_worldContext).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
                             {
                                 ArchiveId = Constants.NewCharacterArchiveId
@@ -128,7 +130,7 @@ namespace WukongMp.Api.Tests.TestActions
                     if (_loadMapCompleted)
                     {
                         BGW_EventCollection bGW_EventCollection2 = BGW_EventCollection.Get(_worldContext);
-                        bGW_EventCollection2.Evt_PostLoadMapWithWorld = (b1.EventDelDefine.Del_Void)Delegate.Remove(bGW_EventCollection2.Evt_PostLoadMapWithWorld, new b1.EventDelDefine.Del_Void(OnPostLoadMapWithWorld))!;
+                        bGW_EventCollection2.Evt_PostLoadMapWithWorld = (Del_Void)Delegate.Remove(bGW_EventCollection2.Evt_PostLoadMapWithWorld, new Del_Void(OnPostLoadMapWithWorld))!;
                         TransferState(InnerState.WaitForBeginPlay);
                     }
                     break;

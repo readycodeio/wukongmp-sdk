@@ -1,12 +1,12 @@
-﻿using b1;
-using b1.BGW;
-using BtlShare;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using b1;
+using b1.BGW;
+using BtlShare;
 using ReadyM.Api.ECS.Worlds;
+using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -16,7 +16,6 @@ using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -76,7 +75,7 @@ public static class SpawningUtils
         }
 
         var oldController = GameUtils.GetPlayerController();
-        var controllerCameraRotation = oldController.GetControlRotation();
+        var controllerCameraRotation = oldController!.GetControlRotation();
         var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
         if (newPawn == null)

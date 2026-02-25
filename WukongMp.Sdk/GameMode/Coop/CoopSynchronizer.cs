@@ -3,6 +3,7 @@ using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Managers;
@@ -45,6 +46,7 @@ internal class CoopSynchronizer : WukongSynchronizer
         WukongPlayerModeManager modeManager,
         NetworkedEntityManager netManager,
         ClientOwnershipManager clientOwnership,
+        IMappedEventManager mappedEvent,
         JobRegistry jobRegistry,
         INetworkedComponentRegistry netComponentRegistry,
         IRelayClient relayClient,
@@ -72,6 +74,7 @@ internal class CoopSynchronizer : WukongSynchronizer
             netComponentRegistry,
             relayClient,
             ecsLoop,
+            mappedEvent,
             eventBus,
             widgetManager,
             gameplayEventRouter,
@@ -144,6 +147,6 @@ internal class CoopSynchronizer : WukongSynchronizer
     private void OnApplySnapshot()
     {
         // TODO: Probably can be deleted.
-        World.Query<LocalTamerComponent, MetadataComponent>().ForEachEntity(_discoverLocallySpawnedMonstersJob.OnUpdate);
+        World.Query<LocalTamerComponent, MetadataComponent>().ForEachEntity((ref _, ref _, entity) => _discoverLocallySpawnedMonstersJob.OnUpdate(entity));
     }
 }

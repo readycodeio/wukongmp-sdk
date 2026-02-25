@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
@@ -45,7 +46,7 @@ public class HttpBlobClient(ILogger logger) : IBlobClient
         if (uploadUrl is not null)
         {
             // compress the blob with GZIP
-            using var stream = new System.IO.MemoryStream();
+            using var stream = new MemoryStream();
             using (var gzip = new GZipStream(stream, CompressionLevel.Optimal, true))
             {
                 await gzip.WriteAsync(blob.Content, 0, blob.Content.Length, ct);

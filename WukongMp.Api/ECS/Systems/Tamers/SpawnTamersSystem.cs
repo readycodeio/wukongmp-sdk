@@ -2,14 +2,12 @@
 using b1;
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
-using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
@@ -19,12 +17,7 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// whether they require spawning.
 /// </summary>
 /// <param name="state"></param>
-public sealed class SpawnTamersSystem(
-    WukongMappingPolicyDirectory policyDir,
-    ClientState state,
-    GameplayEventRouter router,
-    GameplayConfiguration configuration,
-    ILogger logger) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router, GameplayConfiguration configuration) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private readonly HashSet<string?> _notYetSpawnedGuids = [];
 
@@ -35,8 +28,7 @@ public sealed class SpawnTamersSystem(
             ref hpComp,
             ref teamComp,
             ref tamerComp,
-            ref localTamerComp,
-            entity) =>
+            ref localTamerComp, entity) =>
         {
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
@@ -44,34 +36,33 @@ public sealed class SpawnTamersSystem(
             {
                 return;
             }
-
+            
             var tamerEntity = new TamerEntity(entity);
-            var tamer = tamerEntity.Tamer;
 
-            if (!tamerEntity.GetLocalTamer().IsTamerSynced || tamer == null)
+            if (!localTamerComp.IsTamerSynced || tamerEntity.Tamer == null)
             {
                 return;
             }
 
-            if (tamer.CurrentRef?.Phase == ETamerPhase.Dead)
+            if (tamerEntity.Tamer.CurrentRef?.Phase == ETamerPhase.Dead)
             {
                 return;
             }
 
-            var monster = tamer.GetMonster();
-            var currentPhase = tamer.CurrentRef?.Phase;
+            var monster = tamerEntity.Tamer?.GetMonster();
+            var currentPhase = tamerEntity.Tamer!.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 TamerUtils.SpawnMonsterLocally(new TamerEntity(entity));
             }
 
-            monster = tamer.GetMonster();
-            currentPhase = tamer.CurrentRef?.Phase;
+            monster = tamerEntity.Tamer.GetMonster();
+            currentPhase = tamerEntity.Tamer.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 if (_notYetSpawnedGuids.Add(tamerComp.Guid))
                 {
-                    logger.LogInformation("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
+                    Logging.LogInformation("Monster {Guid} not yet spawned, waiting...", tamerComp.Guid);
                 }
 
                 return;
@@ -85,7 +76,7 @@ public sealed class SpawnTamersSystem(
 
             if (attrs != null)
             {
-                if (policyDir.TamerData<HpComponent>().ShouldGameCopyToEcs(tamerEntity))
+                if (DI.Instance.ClientOwnership_.OwnsEntity(entity))
                 {
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
@@ -98,10 +89,10 @@ public sealed class SpawnTamersSystem(
                 }
             }
 
-            var events = BUS_EventCollectionCS.Get(tamer);
+            var events = BUS_EventCollectionCS.Get(tamerEntity.Tamer);
             if (events == null)
             {
-                logger.LogError("events are null");
+                Logging.LogError("events are null");
                 return;
             }
 
@@ -116,7 +107,7 @@ public sealed class SpawnTamersSystem(
                 events.Evt_AIPauseBT.Invoke(true);
                 events.Evt_AIPauseFsm.Invoke(true);
                 events.Evt_AIPerceptionSetting.Invoke(false);
-                logger.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
+                Logging.LogDebug("Tamer actor disabled, guid: {Guid}.", tamerComp.Guid);
                 if (tamerComp.Guid == "UGuid.HYS.JiRuHuo01")
                 {
                     monster.Mesh.SetSimulatePhysics(false);
@@ -128,19 +119,19 @@ public sealed class SpawnTamersSystem(
                 var fsmData = BGU_DataUtil.GetReadOnlyData<IBUC_FsmData, BUC_FsmData>(monster);
                 if (fsmData != null)
                 {
-                    logger.LogDebug("Initial tamer bFsmPaused state {State}, guid: {Guid}.", fsmData.bFsmPaused, tamerComp.Guid);
+                    Logging.LogDebug("Initial tamer bFsmPaused state {State}, guid: {Guid}.", fsmData.bFsmPaused, tamerComp.Guid);
                     tamerComp.HasFsmPaused = fsmData.bFsmPaused;
                 }
             }
 
             localTamerComp.IsMonsterActive = true;
 
-            if (tamer.TamerType == ETamerType.Spawned)
+            if (tamerEntity.Tamer.TamerType == ETamerType.Spawned)
             {
                 router.RaiseOnMonsterSpawned(entity);
             }
 
-            logger.LogDebug("Monster {Guid} synced", tamerComp.Guid);
+            Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
         });
     }
 }

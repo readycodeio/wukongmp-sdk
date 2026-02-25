@@ -8,11 +8,9 @@ using BtlShare;
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Api.Multiplayer.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
@@ -845,7 +843,7 @@ public class PatchSpawnAndPossess
         var actor = (ACharacter)newPawn;
 
         var mainPlayerPawn = GameUtils.GetControlledPawn();
-        var mainPlayerController = GameUtils.GetPlayerController();
+        var mainPlayerController = GameUtils.GetPlayerController()!;
         bool isNonLocalTransform = false;
         var cameraRotation = FRotator.ZeroRotator;
         if (controller != mainPlayerController && mainPlayerPawn != null)

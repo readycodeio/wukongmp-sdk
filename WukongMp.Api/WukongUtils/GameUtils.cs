@@ -26,9 +26,9 @@ namespace WukongMp.Api.WukongUtils
             return pawn.IsNullOrDestroyed() ? null : pawn;
         }
 
-        public static BGP_PlayerControllerB1 GetPlayerController()
+        public static BGP_PlayerControllerB1? GetPlayerController()
         {
-            return (BGP_PlayerControllerB1)UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld());
+            return (BGP_PlayerControllerB1?)UGSE_EngineFuncLib.GetFirstLocalPlayerController(GetWorld());
         }
 
         public static bool IsGameInstanceValid() => BGWGameInstanceCS.Get(null) != null;

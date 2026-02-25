@@ -1,11 +1,9 @@
 ﻿using System.Diagnostics;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -21,6 +19,7 @@ public class SpawnOtherMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerPawnState playerPawn,
     WukongEventBus eventBus,
+    ClientOwnershipManager ownershipManager,
     ILogger logger
 )
     : QuerySystem<MainCharacterComponent>
@@ -41,18 +40,27 @@ public class SpawnOtherMainCharactersSystem(
         if (areaId == null)
             return;
 
-        Query.ForEachEntity((ref mainComp, entity) =>
+        Query.ForEachEntity((
+            ref mainComp, entity) =>
         {
+            if (mainComp.PlayerId == playerId)
+                return;
+
             var mainEntity = new MainCharacterEntity(entity);
 
-            // NOTE: This only applies to spawning other players' main characters, unless they are orphaned
-            if (!mainEntity.HasUnsyncedPawn &&
-                mainComp.PlayerId != playerId &&
-                playerState.GetPlayerById(mainComp.PlayerId) != null)
+            if (mainEntity.HasPawn)
+                return;
+
+            var playerEntity = playerState.GetPlayerById(mainComp.PlayerId);
+            if (playerEntity == null && ownershipManager.OwnsEntity(entity))
             {
-                logger.LogDebug("ATTEMPTING TO **SPAWN** OTHER MAIN CHARACTER ENTITY: {PlayerId}", mainComp.PlayerId);
-                AddPlayer(mainEntity);
+                // orphan player character entity after disconnection (missing global player entity)
+                CommandBuffer.DeleteEntity(entity.Id);
+                return;
             }
+
+            logger.LogDebug("ATTEMPTING TO **SPAWN** OTHER MAIN CHARACTER ENTITY: {PlayerId}", mainComp.PlayerId);
+            AddPlayer(mainEntity);
         });
     }
 

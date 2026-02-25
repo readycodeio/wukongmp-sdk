@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Resources;
@@ -110,7 +111,7 @@ namespace WukongMp.Api.UI
                 byte* ptr = stackalloc byte[(int)(uint)(AddMessageWithColor_ParamsSize + 16)];
                 int num = (int)((16L - (long)ptr) & 0xF);
                 byte* ptr2 = ptr + num;
-                System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddMessageWithColor_ParamsSize);
+                Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)AddMessageWithColor_ParamsSize);
                 IntPtr intPtr = new IntPtr(ptr2);
 
                 BoolMarshaler.ToNative(IntPtr.Add(intPtr, AddMessageWithColor_ShowSender_Offset), 0, AddMessageWithColor_ShowSender_PropertyAddress.Address, showSender);
@@ -263,7 +264,7 @@ namespace WukongMp.Api.UI
             byte* ptr = stackalloc byte[(int)(uint)(IsChatVisible_ParamsSize + 16)];
             int num = (int)((16L - (long)ptr) & 0xF);
             byte* ptr2 = ptr + num;
-            System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)IsChatVisible_ParamsSize);
+            Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)IsChatVisible_ParamsSize);
             IntPtr intPtr = new IntPtr(ptr2);
 
             NativeReflection.InvokeFunctionOptimized(GameWidget.Address, IsChatVisible_FunctionAddress, intPtr, IsChatVisible_ParamsSize);

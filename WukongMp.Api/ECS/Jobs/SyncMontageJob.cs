@@ -1,25 +1,29 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.ECS.Components;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.Mapping;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob(WukongMappingPolicyDirectory policyDir, IMappedEventManager mappedEvent, ILogger logger)
+public readonly struct SyncMontageJob(Store world, PlayerId ownerPlayerId) : IEachEntity<MappingComponent<AActor>, LocalTamerComponent, MetadataComponent>
 {
-    // TODO: Replace by system
-    public void Execute(ref LocalTamerComponent localTamerComp, Entity entity)
+    public void Execute(ref MappingComponent<AActor> mappingComp, ref LocalTamerComponent tamerComponent, ref MetadataComponent meta, int entityId)
     {
-        var tamerEntity = new TamerEntity(entity);
+        if (meta.Owner != ownerPlayerId)
+            return;
 
-        var pawn = tamerEntity.Pawn;
+        var entity = new TamerEntity(world.GetEntityById(entityId));
+        var pawn = entity.Pawn;
+
         if (pawn == null || pawn.Mesh == null)
             return;
 
-        var montageState = localTamerComp.MontageState;
+        var montageState = tamerComponent.MontageState;
         if (montageState.LocalAnimationInstance == null)
         {
             montageState.LocalAnimationInstance = pawn.Mesh.GetAnimInstance();
@@ -39,30 +43,19 @@ public readonly struct SyncMontageJob(WukongMappingPolicyDirectory policyDir, IM
 
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
-                if (policyDir.TamerEvent<MontageCallbackEvent>().ShouldEventPropagateToEcs(tamerEntity))
-                {
-                    mappedEvent.PropagateToEcs(new MontageCallbackEvent(
-                        entity: tamerEntity.Entity,
-                        fullMontagePath: currentMontage.PathName,
-                        position: currentPosition,
-                        reset: hasMontageRewound
-                    ));
-                }
+                // TODO: Replace by system
+                DI.Instance.ClientRpc.SendMontageCallback(meta.NetId, currentMontage, currentPosition, hasMontageRewound);
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            logger.LogDebug("Sent cancel at {Position} for montage {Montage}", montageState.LocalMontagePosition, montageState.LocalMontage.PathName);
-
-            if (policyDir.TamerEvent<MontageCancelEvent>().ShouldEventPropagateToEcs(tamerEntity))
-            {
-                mappedEvent.PropagateToEcs(new MontageCancelEvent(tamerEntity.Entity));
-            }
+            DI.Instance.Logger.LogDebug("Sent cancel at {Position} for montage {Montage}", montageState.LocalMontagePosition, montageState.LocalMontage.PathName);
+            DI.Instance.ClientRpc.SendMontageCancel(meta.NetId);
         }
 
         montageState.LocalMontage = currentMontage;
-        localTamerComp.MontageState = montageState;
+        tamerComponent.MontageState = montageState;
     }
 }

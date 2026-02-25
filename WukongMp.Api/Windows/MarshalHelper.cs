@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -13,7 +14,7 @@ public static class MarshalHelper
     {
         var hInst = module.ModuleHandle;
         if (hInst == ModuleHandle.EmptyHandle)
-            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+            throw new Win32Exception(Marshal.GetLastWin32Error());
         return GetModuleHandle(module.Name);
     }
 }

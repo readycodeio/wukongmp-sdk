@@ -1,6 +1,9 @@
 ﻿using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
+using ReadyM.Api.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
@@ -38,7 +41,7 @@ public static class ReceiveTickPatch
 #endif
         }
     }
-    
+
     private static SyncMontageJob? _syncMontageJob;
 
     private static void RunMontageSync()
@@ -53,10 +56,10 @@ public static class ReceiveTickPatch
             SyncPlayerMontage(mainEntity);
         });
 
-        _syncMontageJob ??= new SyncMontageJob(DI.Instance.MappingPolicyDir, DI.Instance.MappedEvent, DI.Instance.Logger);
-        
-        DI.Instance.World.Query<LocalTamerComponent>().ForEachEntity(static (ref localTamerComp, entity) 
-            => _syncMontageJob.Value.Execute(ref localTamerComp, entity));    }
+        _syncMontageJob ??= new SyncMontageJob(DI.Instance.World, DI.Instance.PlayerState.LocalPlayerId!.Value);
+
+        DI.Instance.World.Query<MappingComponent<AActor>, LocalTamerComponent, MetadataComponent>().EachEntity(_syncMontageJob.Value);
+    }
 
     private static void SyncPlayerMontage(MainCharacterEntity mainEntity)
     {

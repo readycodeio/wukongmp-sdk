@@ -1,8 +1,8 @@
- using System;
- using Friflo.Engine.ECS;
- using ReadyM.Relay.Common.Mapping;
+using System;
+using Friflo.Engine.ECS;
+using ReadyM.Relay.Common.Mapping;
 
- namespace WukongMp.Api.ECS.GameEvents;
+namespace WukongMp.Api.ECS.GameEvents;
 
 public readonly struct StopJumpEvent(Entity entity) : IEquatable<StopJumpEvent>, IOwnershipManaged
 {

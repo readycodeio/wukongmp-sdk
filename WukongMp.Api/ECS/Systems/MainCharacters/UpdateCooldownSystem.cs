@@ -2,7 +2,6 @@
 using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
 
@@ -10,26 +9,26 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
 public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus eventBus, WukongAreaState areaState) : BaseSystem
 {
-    private float _vigorRegenAccumulator = 0f;
+    private float _vigorRegenAccumulator;
 
     protected override void OnUpdateGroup()
     {
         if (!eventBus.IsGameplayLevel)
             return;
 
-        if (areaState.CurrentArea.HasValue && !areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (areaState.CurrentArea is { Room.CheatsAllowed: false })
             return;
 
-        var mainEntity = playerState.LocalMainCharacter;
-        if (mainEntity == null)
+        var mainCharacterEntity = playerState.LocalMainCharacter;
+        if (mainCharacterEntity == null)
             return;
 
-        ref var localMainComp = ref mainEntity.Value.GetLocalState();
+        ref var localMainComp = ref mainCharacterEntity.Value.GetLocalState();
 
         if (!localMainComp.SpiritCooldownEnabled)
             return;
 
-        var localPawn = mainEntity.Value.Pawn;
+        var localPawn = mainCharacterEntity.Value.Pawn;
         if (localPawn == null)
             return;
 

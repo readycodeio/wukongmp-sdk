@@ -1,8 +1,8 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using b1;
 using b1.BGW;
 using b1.ECS;
 using BtlB1;
-using System.Collections.Generic;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.State;
@@ -44,7 +44,7 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
             return;
         }
 
-        var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
+        var immobilizeConfigInstance = CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
         BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
     }
 

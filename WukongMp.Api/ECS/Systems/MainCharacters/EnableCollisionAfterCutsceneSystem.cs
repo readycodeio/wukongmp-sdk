@@ -9,8 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState)
-    : QuerySystem<MainCharacterComponent, LocalMainCharacterComponent>
+public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) : QuerySystem<MainCharacterComponent, LocalMainCharacterComponent>
 {
     protected override void OnUpdate()
     {
@@ -20,27 +19,25 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState)
         var myPawn = playerState.LocalMainCharacter.Value.Pawn;
         if (myPawn == null)
             return;
-        
+
         var myCapsuleCenter = myPawn.GetActorLocation();
         var myCapsuleRadius = myPawn.CapsuleComponent.GetScaledCapsuleRadius();
 
-        Query.ForEachEntity((ref mainComp, ref localMainComp, entity) =>
+        Query.ForEachEntity((ref main, ref local, entity) =>
         {
-            var mainEntity = new MainCharacterEntity(entity);
+            if (playerState.LocalPlayerId == main.PlayerId)
+                return;
             
-            // NOTE(api): It is supposed to affect only the controlled character since it's arena collision-related
-            if (playerState.LocalMainCharacter == mainEntity)
+            var mainEntity = new MainCharacterEntity(entity);
+
+            if (mainEntity.Pawn == null)
                 return;
 
-            var pawn = mainEntity.Pawn;
-            if (pawn == null)
-                return;
-
-            if (!localMainComp.ShouldDisableCollision && pawn.CapsuleComponent.GetCollisionProfileName() == B1GlobalFNames.WindWalk_Pawn) // actually, it's set to Custom in cutscenes
+            if (!local.ShouldDisableCollision && mainEntity.Pawn.CapsuleComponent.GetCollisionProfileName() == B1GlobalFNames.WindWalk_Pawn) // actually, it's set to Custom in cutscenes
             {
                 // check if we can disable it now if the player is no longer intersecting with the local player
-                var playerCenter = pawn.GetActorLocation();
-                var capsuleRadius = pawn.CapsuleComponent.GetScaledCapsuleRadius();
+                var playerCenter = mainEntity.Pawn.GetActorLocation();
+                var capsuleRadius = mainEntity.Pawn.CapsuleComponent.GetScaledCapsuleRadius();
 
                 // check if the two capsules are intersecting
                 var distanceSq = FVector.Dist2D(myCapsuleCenter, playerCenter);
@@ -48,7 +45,7 @@ public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState)
                 if (distanceSq > radiusSum)
                 {
                     // we are far enough away, enable collision
-                    PlayerUtils.SetCollisionEnabled(pawn, true);
+                    PlayerUtils.SetCollisionEnabled(mainEntity.Pawn, true);
                 }
             }
         });

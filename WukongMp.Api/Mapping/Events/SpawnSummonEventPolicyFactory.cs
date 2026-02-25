@@ -5,7 +5,6 @@ using ReadyM.Api.Helpers;
 using ReadyM.Api.Mapping;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Mapping;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.Mapping.Events;

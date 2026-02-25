@@ -66,16 +66,10 @@ public sealed class DespawnTamerSystem : BaseSystem, IDisposable
         var tamerComp = tamerEntity.GetTamer();
         var markerComp = tamerEntity.GetMarker();
 
-        var tamer = tamerEntity.Tamer;
-        if (tamer == null)
-        {
-            _logger.LogWarning("Tamer entity {Entity} has no associated tamer actor, cannot despawn.", evt.Entity.Id);
-        }
-
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
-            Guid = tamerComp.Guid!,
-            Tamer = tamer,
+            Guid = tamerComp.Guid,
+            Tamer = tamerEntity.Tamer,
             Marker = markerComp.MarkerActor
         });
     }

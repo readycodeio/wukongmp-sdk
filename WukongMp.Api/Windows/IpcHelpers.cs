@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,7 +27,7 @@ public class IpcHelpers
             if (error == 0 && buffer.Length == 0)
                 return null;
 
-            throw new System.ComponentModel.Win32Exception(error);
+            throw new Win32Exception(error);
         }
 
         if (size > buffer.Capacity)

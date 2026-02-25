@@ -1,14 +1,15 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using System.Linq;
+using b1;
 using b1.BGW;
 using ReadyM.Relay.Common.Wukong.ECS.Values;
-using System.Collections.Generic;
-using System.Linq;
 using UnrealEngine.Engine;
 using UnrealEngine.Plugins.Niagara;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
+using EquipPosition = BtlB1.EquipPosition;
 
 namespace WukongMp.Api.ECS.GameEvents
 {
@@ -27,7 +28,7 @@ namespace WukongMp.Api.ECS.GameEvents
             if (!string.IsNullOrEmpty(value.BornMontagePath))
                 bornMontage = preloadAssetMgr.TryGetCachedResourceObj<UAnimMontage>(value.BornMontagePath, ELoadResourceType.SyncLoadAndCache);
 
-            Dictionary<BtlB1.EquipPosition, int> equipmentMap = [];
+            Dictionary<EquipPosition, int> equipmentMap = [];
             foreach (var (position, item) in value.EquipmentState.GetItems())
             {
                 equipmentMap.Add(position.ToGame(), item);

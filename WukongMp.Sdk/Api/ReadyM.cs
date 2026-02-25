@@ -25,6 +25,7 @@ public static class ReadyM
         DI.Instance.ModeManager,
         DI.Instance.NetEntity,
         DI.Instance.ClientOwnership_,
+        DI.Instance.MappedEvent,
         DI.Instance.JobRegistry,
         DI.Instance.NetComponentRegistry,
         DI.Instance.RelayClient,

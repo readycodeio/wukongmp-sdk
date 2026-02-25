@@ -1,11 +1,8 @@
 ﻿using b1;
-using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
-using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
@@ -16,12 +13,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(
-    ClientState clientState,
-    WukongPlayerState playerState,
-    WukongEventBus eventBus,
-    ILogger logger
-) : BaseSystem
+public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
@@ -54,10 +46,11 @@ public class CreateLocalMainCharacterEntitySystem(
 
         var mainEntity = playerState.CreateLocalMainCharacter();
         ref var mainComp = ref mainEntity.GetState();
+        ref var localMainComp = ref mainEntity.GetLocalState();
 
         logger.LogDebug("Local main character pawn: {Pawn}", pawn.PathName);
 
-        mainEntity.SetPawn(pawn, true);
+        mainEntity.SetPawn(pawn, false);
 
         mainComp.Location = pawn.GetActorLocation().ToVector3();
         mainComp.Rotation = pawn.GetActorRotation().ToVector3();
@@ -78,8 +71,9 @@ public class CreateLocalMainCharacterEntitySystem(
             TeamId = pawnTeamId,
         });
 
+        localMainComp.IsPlayerSynced = true;
         playerState.InvokeMainCharacterEntityInitialized(mainEntity);
 
-        logger.LogDebug("Finished setting initial player properties");
+        Logging.LogDebug("Finished setting initial player properties");
     }
 }
