@@ -57,9 +57,9 @@ public class WukongPawnState(
         return GetPawnByEntity(entity.Value);
     }
 
-    public TamerEntity? GetEntityByTamerMonster(AActor? actor)
+    public TamerEntity? GetEntityByTamerMonster(AActor? monster)
     {
-        if (actor == null)
+        if (monster == null)
             return null;
 
         TamerEntity? result = null;
@@ -68,7 +68,7 @@ public class WukongPawnState(
         query.ForEachEntity((ref _, entity) =>
         {
             var tamerEntity = new TamerEntity(entity);
-            if (tamerEntity.Pawn == actor)
+            if (tamerEntity.Pawn == monster)
             {
                 result = tamerEntity;
             }

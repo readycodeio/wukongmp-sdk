@@ -53,8 +53,7 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
         var playerEvents = BUS_EventCollectionCS.Get(pawn);
 
-        // NOTE: This should be taken care of by the game event origin system
-        /*
+        // TODO: This should be taken care of by the game event origin system
         var entity = pawnState.GetEntityByTamerMonster(pawn);
         if (entity.HasValue)
         {
@@ -63,14 +62,9 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         }
         else
         {
-            var mainEntity = pawnState.GetEntityByPlayerPawn(pawn);
-            if (mainEntity != null)
-            {
-                mainEntity.Value.GetLocalState().RunImmobilizePatches = true;
-            }
+            var mainEntity = pawnState.GetEntityByPlayerActor(pawn);
+            mainEntity?.GetLocalState().RunImmobilizePatches = true;
         }
-        */
-
         
         playerEvents?.Evt_RelieveImmobilized.Invoke();
     }
