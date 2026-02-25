@@ -7,7 +7,6 @@ using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Common.Mapping;
-using ReadyM.Relay.Common.Serialization;
 using ReadyM.Relay.Common.Wukong.DTO;
 using ReadyM.Relay.Common.Wukong.ECS.Values;
 using WukongMp.Api.ECS.GameEvents;
@@ -21,7 +20,6 @@ namespace WukongMp.Api;
 public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 {
     protected readonly IRelayClient RelayClient;
-    protected readonly RelaySerializer Serializer;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly MappedEventManager _mappedEvent;
     private readonly WukongMappingPolicyDirectory _policyDir;
@@ -32,13 +30,11 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         IClientEcsUpdateLoop ecsLoop,
         MappedEventManager mappedEvent,
         WukongMappingPolicyDirectory policyDir,
-        RelaySerializer serializer,
         IRelayClient relayClient,
         WukongWidgetManager widgetManager,
         ILogger logger)
     {
         RelayClient = relayClient;
-        Serializer = serializer;
         _ecsLoop = ecsLoop;
         _mappedEvent = mappedEvent;
         _policyDir = policyDir;
@@ -47,7 +43,7 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 
         InitRpc();
         
-        _mappedEvent.RegisterGameEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
+        _mappedEvent.RegisterEcsEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
         {
             self.SendSkipMovie(
                 new SkipMovieData(

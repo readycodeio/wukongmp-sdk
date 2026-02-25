@@ -243,7 +243,7 @@ internal sealed class DI
         policyDir.RegisterDefaultEvent(new SpawnSummonEventEventPolicyFactory(clientOwnership, playerState, areaState, world, sideChannel));
         policyDir.RegisterDefaultEvent(new AlwaysPropagatesEventPolicyFactory(sideChannel));
 
-        var mappedEvent = MappedEvent = new MappedEventManager(sideChannel);
+        var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, logger);
         var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);
 
         var fieldMappingRegistry = new ComponentFieldMappingRegistry();
@@ -255,7 +255,7 @@ internal sealed class DI
         var serverGameEvents = ServerGameEvents = new WukongServerGameEvents(mappedEvent, widgetManager, logger);
 
         var clientRpc = ClientRpc = new WukongClientRpcCallbacks(ecsLoop, playerState, areaState, mappedEvent, mappingPolicyDir, serializer, relayClient, clientNetEntity, widgetManager, timerController, logger);
-        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(ecsLoop, mappedEvent, mappingPolicyDir, serializer, relayClient, widgetManager, logger);
+        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(ecsLoop, mappedEvent, mappingPolicyDir, relayClient, widgetManager, logger);
         var chatter = Chatter = new WukongChatter(playerState, clientRpc, widgetManager, logger);
 
         var commandRegistry = CommandRegistry = new ConsoleCommandRegistry([

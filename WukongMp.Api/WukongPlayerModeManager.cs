@@ -24,7 +24,6 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
     public bool HandleBecameSpectator(MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
         var isMyself = mainComp.PlayerId == state.LocalPlayerId;
 
         if (isMyself)
