@@ -89,9 +89,9 @@ namespace WukongMp.Api.ECS.GameEvents
             var summoner = pawnState.GetEntityByActor(value.Summoner);
             var catchTarget = pawnState.GetEntityByActor(value.CatchTarget);
             
-            if (!summoner.HasValue || !catchTarget.HasValue)
+            if (!summoner.HasValue)
             {
-                Logging.LogWarning("Summoner or catch target not found for SpawnSummonEvent.FromGame");
+                Logging.LogWarning("Summoner not found for SpawnSummonEvent.FromGame");
                 return null;
             }
 
@@ -132,7 +132,7 @@ namespace WukongMp.Api.ECS.GameEvents
                 searchTargetType: value.SearchTargetType,
                 cooperativeSCGuid: value.CooperativeSCGuid,
                 aliveTime: value.AliveTime,
-                catchTarget: catchTarget.Value,
+                catchTarget: catchTarget ?? default,
 
                 delayBornTime: value.DelayBornTime,
                 bornMontagePath: bornMontagePath,

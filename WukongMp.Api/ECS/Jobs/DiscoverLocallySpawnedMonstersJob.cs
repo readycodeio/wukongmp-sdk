@@ -5,7 +5,6 @@ using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Jobs;

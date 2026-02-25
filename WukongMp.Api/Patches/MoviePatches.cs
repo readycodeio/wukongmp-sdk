@@ -141,7 +141,7 @@ public static class PatchRequestPlayMovie
                 var areaEntity = DI.Instance.AreaState.CurrentArea;
                 if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(SequenceId))
                 {
-                    DI.Instance.ServerRpc.SendMovieFinished(SequenceId, areaEntity.Value.Scope.AreaId);
+                    DI.Instance.MappedEvent.PropagateToEcs(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId));
                 }
 
                 var playerState = DI.Instance.PlayerState;
@@ -329,10 +329,7 @@ public static class PatchOnSkipCurrentCameraMovie
         if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            DI.Instance.ServerRpc.SendSkipMovie(new SkipMovieData
-            {
-                SequenceId = sequenceId
-            });
+            DI.Instance.MappedEvent.PropagateToEcs(new SkipMovieEvent(sequenceId));
             return false;
         }
 
