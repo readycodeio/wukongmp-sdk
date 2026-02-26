@@ -165,6 +165,12 @@ namespace WukongMp.PvP
                 _logger.LogDebug("Alt + C");
                 DI.Instance.NetLogger.DumpDebugInfo();
             });
+            
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.N, () =>
+            {
+                _logger.LogDebug("Alt + N");
+                DI.Instance.NetworkSessionStats.DumpToLog(DI.Instance.Logger);
+            });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {

@@ -235,6 +235,12 @@ namespace WukongMp.Coop
                     _logger.LogError(ex, "Error while dumping debug info");
                 }
             });
+            
+            DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.N, () =>
+            {
+                _logger.LogDebug("Alt + N");
+                DI.Instance.NetworkSessionStats.DumpToLog(DI.Instance.Logger);
+            });
 
             DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
             {

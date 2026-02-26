@@ -30,7 +30,7 @@ public static class ShimUtils
             }
         }
         
-        var relayClient = new RelayClient(host, port, options, container.LoggerFactory.CreateLogger("Relay Client"), noDisconnect);
+        var relayClient = new RelayClient(host, port, options, container.NetworkSessionStats, container.LoggerFactory.CreateLogger("Relay Client"), noDisconnect);
         return relayClient;
     }
 
@@ -63,7 +63,7 @@ public static class ShimUtils
     private static void AttachRecording(DI container, string host, int port, bool noDisconnect)
     {
         var recordGuid = new Guid("deadbeef-3333-3333-3333-deadbeef0001");
-        var recordOptions = new RelayConnectionOptions()
+        var recordOptions = new RelayConnectionOptions
         {
             UserGuid = recordGuid,
             PlayerIdMode = PlayerIdMode.ExactId,
@@ -73,6 +73,7 @@ public static class ShimUtils
             host,
             port,
             recordOptions,
+            container.NetworkSessionStats,
             container.LoggerFactory.CreateLogger("Recorder Relay"),
             noDisconnect
         );
