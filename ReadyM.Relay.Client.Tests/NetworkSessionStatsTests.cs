@@ -5,6 +5,8 @@ namespace ReadyM.Relay.Client.Tests;
 
 public sealed class NetworkSessionStatsTests
 {
+    private NetworkSessionStats MakeStats() => new NetworkSessionStats("testSession", 0, maxValidPingMs: 1000);
+    
     // ---------------------------
     // Ping tests
     // ---------------------------
@@ -12,7 +14,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Defaults_WhenNoData_ReturnZeroes()
     {
-        var s = new NetworkSessionStats();
+        var s = MakeStats();
 
         Assert.Equal(0, s.TotalPingPackets);
         Assert.Equal(0, s.LostPingPackets);
@@ -48,7 +50,7 @@ public sealed class NetworkSessionStatsTests
         // nearest-rank:
         // p50 rank=ceil(0.5*5)=3 => 30
         // p90 rank=ceil(0.9*5)=5 => 50
-        var s = new NetworkSessionStats();
+        var s = MakeStats();
 
         s.AddPing(10);
         s.AddPing(20);
@@ -70,7 +72,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Ping_AboveMax_IsCountedAsLoss_AndDoesNotAffectLatencyDistribution()
     {
-        var s = new NetworkSessionStats(maxValidPingMs: 1000);
+        var s = MakeStats();
 
         s.AddPing(100);
         s.AddPing(2000); // loss
@@ -89,7 +91,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Ping_LossStreak_IsTracked_Correctly()
     {
-        var s = new NetworkSessionStats(maxValidPingMs: 1000);
+        var s = new NetworkSessionStats("dummy", 0, maxValidPingMs: 1000);
 
         // Two losses in a row
         s.AddPing(2001);
@@ -121,7 +123,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Transfer_FirstUpdate_SetsBaseline_NoSamplesAdded()
     {
-        var s = new NetworkSessionStats();
+        var s = MakeStats();
         var ns = new NetStatistics();
 
         // Baseline at t=0
@@ -135,7 +137,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Transfer_ComputesBytesPerSecond_FromDeltas_AndTracksPercentiles()
     {
-        var s = new NetworkSessionStats();
+        var s = MakeStats();
         var ns = new NetStatistics();
 
         // Baseline (0 bytes at t=0)
@@ -167,7 +169,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Transfer_NonUnitDt_NormalizesByDeltaTime()
     {
-        var s = new NetworkSessionStats();
+        var s = MakeStats();
         var ns = new NetStatistics();
 
         s.UpdateTransfer(ns, nowSeconds: 0.0);
@@ -183,7 +185,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Transfer_IgnoresNonPositiveDt_DoesNotAddSamples()
     {
-        var s = new NetworkSessionStats();
+        var s = MakeStats();
         var ns = new NetStatistics();
 
         s.UpdateTransfer(ns, nowSeconds: 1.0);
@@ -201,7 +203,7 @@ public sealed class NetworkSessionStatsTests
     [Fact]
     public void Reset_ClearsAllStats()
     {
-        var s = new NetworkSessionStats();
+        var s = MakeStats();
         var ns = new NetStatistics();
 
         s.AddPing(10);

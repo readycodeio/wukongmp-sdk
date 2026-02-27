@@ -129,7 +129,7 @@ public sealed class DI
 
         var loggerFactory = LoggerFactory;
         var logger = Logger;
-        var pingStatistics = NetworkSessionStats = new NetworkSessionStats();
+        var pingStatistics = NetworkSessionStats = new NetworkSessionStats(LaunchParameters.Instance.UserGuid.ToString(), LaunchParameters.Instance.Region);
 
         var inputManager = InputManager = InputManager.Instance;
 
