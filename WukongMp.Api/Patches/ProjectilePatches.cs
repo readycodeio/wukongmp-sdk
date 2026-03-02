@@ -71,7 +71,7 @@ public class PatchOnSwitchBulletTarget
             {
                 Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, InnerTarget.GetName());
                 var characterId = DI.Instance.PlayerState.LocalMainCharacter.Value;
-                DI.Instance.MappedEvent.PropagateToEcs(new ProjectileTargetEvent(characterId, projectileClass.GetName(), newTarget.Value, SocketName));
+                DI.Instance.MappedEvent.NotifyEcs(new ProjectileTargetEvent(characterId, projectileClass.GetName(), newTarget.Value, SocketName));
             }
         }
         return true;
@@ -115,7 +115,7 @@ public class PatchOnSwitchBulletInfoIfNeed
             {
                 Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, BulletSwitchID);
                 var entity = DI.Instance.PlayerState.LocalMainCharacter.Value;
-                DI.Instance.MappedEvent.PropagateToEcs(new ProjectileSwitchEvent(entity, projectileClass.GetName(), BulletSwitchID, SwitchIdx));
+                DI.Instance.MappedEvent.NotifyEcs(new ProjectileSwitchEvent(entity, projectileClass.GetName(), BulletSwitchID, SwitchIdx));
             }
         }
         return true;
@@ -143,7 +143,7 @@ public static class PatchOnProjectileDead
             {
                 Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
                 var owner = DI.Instance.PlayerState.LocalMainCharacter.Value;
-                DI.Instance.MappedEvent.PropagateToEcs(new ProjectileDeadEvent(owner, projectileClass.GetName(), Reason));
+                DI.Instance.MappedEvent.NotifyEcs(new ProjectileDeadEvent(owner, projectileClass.GetName(), Reason));
             }
         }
     }
@@ -182,7 +182,7 @@ public static class PatchOnSetMoveMode
             if (projectileClass != null)
             {
                 Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, MoveMode);
-                DI.Instance.MappedEvent.PropagateToEcs(new ProjectileMoveModeEvent(entity.Value, projectileClass.GetName(), MoveMode));
+                DI.Instance.MappedEvent.NotifyEcs(new ProjectileMoveModeEvent(entity.Value, projectileClass.GetName(), MoveMode));
             }
         }
     }

@@ -30,7 +30,7 @@ public static class PatchOnMagicFieldDead
             Logging.LogDebug("OnMagicFieldDead send for {Class}", className);
             if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var mainEntity))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new MagicFieldDeadEvent(mainEntity.Value, className, Reason));
+                DI.Instance.MappedEvent.NotifyEcs(new MagicFieldDeadEvent(mainEntity.Value, className, Reason));
             }
         }
     }

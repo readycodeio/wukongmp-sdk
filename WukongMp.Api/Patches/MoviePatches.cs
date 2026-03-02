@@ -140,7 +140,7 @@ public static class PatchRequestPlayMovie
                 var areaEntity = DI.Instance.AreaState.CurrentArea;
                 if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(SequenceId))
                 {
-                    DI.Instance.MappedEvent.PropagateToEcs(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId));
+                    DI.Instance.MappedEvent.NotifyEcs(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId));
                 }
 
                 var playerState = DI.Instance.PlayerState;
@@ -263,7 +263,7 @@ public static class PatchTickForMovieSystem
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 
                 // DI.Instance.MappedEvent.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
-                DI.Instance.MappedEvent.PropagateToEcs(new WaitingForSequenceEvent(peakRequest.SequenceID, main.Location.ToFVector()));
+                DI.Instance.MappedEvent.NotifyEcs(new WaitingForSequenceEvent(peakRequest.SequenceID, main.Location.ToFVector()));
 
                 // some cutscenes cannot be triggered for multiple players
                 // e.g. 3rd act boss attacks one player causing him to enter a cutscene,
@@ -271,7 +271,7 @@ public static class PatchTickForMovieSystem
                 if (Constants.InstantTriggerSequences.Contains(peakRequest.SequenceID))
                 {
                     // DI.Instance.MappedEvent.SendPlayMovieRequest(peakRequest);
-                    DI.Instance.MappedEvent.PropagateToEcs(new PlayMovieRequestEvent(peakRequest.SequenceID, peakRequest.bDisablePlayerControl, peakRequest.bDisableMovementInput, peakRequest.bDisableLookAtInput, peakRequest.bHidePlayer, peakRequest.bHideHud, peakRequest.OverlapBoxGuid, peakRequest.MatchType));
+                    DI.Instance.MappedEvent.NotifyEcs(new PlayMovieRequestEvent(peakRequest.SequenceID, peakRequest.bDisablePlayerControl, peakRequest.bDisableMovementInput, peakRequest.bDisableLookAtInput, peakRequest.bHidePlayer, peakRequest.bHideHud, peakRequest.OverlapBoxGuid, peakRequest.MatchType));
                 }
             }
         }
@@ -328,7 +328,7 @@ public static class PatchOnSkipCurrentCameraMovie
         if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            DI.Instance.MappedEvent.PropagateToEcs(new SkipMovieEvent(sequenceId));
+            DI.Instance.MappedEvent.NotifyEcs(new SkipMovieEvent(sequenceId));
             return false;
         }
 

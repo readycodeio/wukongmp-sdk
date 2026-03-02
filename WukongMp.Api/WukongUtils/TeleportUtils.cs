@@ -14,7 +14,7 @@ public static class TeleportUtils
         {
             if (localMainComp.TeleportFinishFrames == 0)
             {
-                mappedEvent.TriggerEvent(new TeleportFinishEvent(mainEntity.Entity));
+                mappedEvent.InvokeInGameAndNotifyEcs(new TeleportFinishEvent(mainEntity.Entity));
             }
 
             localMainComp.TeleportFinishFrames--;

@@ -91,14 +91,14 @@ public static class ReceiveTickPatch
 
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound));
+                DI.Instance.MappedEvent.NotifyEcs(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound));
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            DI.Instance.MappedEvent.PropagateToEcs(new MontageCancelEvent(mainEntity));
+            DI.Instance.MappedEvent.NotifyEcs(new MontageCancelEvent(mainEntity));
         }
 
         montageState.LocalMontage = currentMontage;

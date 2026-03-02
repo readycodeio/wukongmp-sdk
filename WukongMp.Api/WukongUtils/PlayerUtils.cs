@@ -192,7 +192,7 @@ namespace WukongMp.Api.WukongUtils
             ref var localMainComp = ref mainEntity.GetLocalState();
             localMainComp.IsRespawning = true;
             
-            mappedEvent.TriggerEvent(new PartySoftlockEvent(
+            mappedEvent.InvokeInGameAndNotifyEcs(new PartySoftlockEvent(
                 entity: mainEntity.Entity,
                 birthPointId: maxComp
             ));

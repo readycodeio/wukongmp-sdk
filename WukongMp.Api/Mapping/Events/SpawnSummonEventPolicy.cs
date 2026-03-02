@@ -64,17 +64,17 @@ public class SpawnSummonEventPolicy<TEvent>(
         return canSummon;
     }
 
-    protected override bool ShouldEventPropagateToEcsImpl(in SpawnSummonContext context)
+    protected override bool CanGameEventNotifyEcsImpl(in SpawnSummonContext context)
     {
         return CanSummon(context.SummonerEntity, context.SummonLocation);
     }
 
-    protected override bool ShouldEventPropagateToGameImpl(in SpawnSummonContext context)
+    protected override bool CanEcsInvokeGameEventImpl(in SpawnSummonContext context)
     {
         return true;
     }
 
-    protected override bool ShouldGameEventRunLocallyImpl(in SpawnSummonContext context)
+    protected override bool CanGameEventRunLocallyImpl(in SpawnSummonContext context)
     {
         return CanSummon(context.SummonerEntity, context.SummonLocation);
     }

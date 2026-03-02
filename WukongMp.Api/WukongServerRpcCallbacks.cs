@@ -65,9 +65,9 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            if (self._policyDir.ForEvent<SkipMovieEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<SkipMovieEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(
+                self._mappedEvent.InvokeInGame(
                     new SkipMovieEvent(
                         sequenceId: data0.SequenceId,
                         waitingPlayers: data0.WaitingPlayers,
@@ -98,9 +98,9 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         var state = (BeguilingChantState)stateRaw;
         _ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
         {
-            if (self._policyDir.ForEvent<BeguilingChantEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<BeguilingChantEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new BeguilingChantEvent(
+                self._mappedEvent.InvokeInGame(new BeguilingChantEvent(
                     state: state0
                 ));
             }

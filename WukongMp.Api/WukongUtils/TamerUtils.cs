@@ -79,7 +79,7 @@ namespace WukongMp.Api.WukongUtils
                 localTamerComp.IsLocallySpawned = true;
 
                 var playerId = DI.Instance.PlayerState.LocalPlayerId ?? default;
-                mappedEvent.TriggerEvent(new UnitSpawnedEvent(tamerEntity.Entity, playerId));
+                mappedEvent.InvokeInGameAndNotifyEcs(new UnitSpawnedEvent(tamerEntity.Entity, playerId));
             }
         }
 
@@ -93,7 +93,7 @@ namespace WukongMp.Api.WukongUtils
                 localTamerComp.IsLocallySpawned = false;
 
                 var playerId = DI.Instance.PlayerState.LocalPlayerId ?? default;
-                mappedEvent.TriggerEvent(new UnitDespawnedEvent(tamerEntity.Entity, playerId));
+                mappedEvent.InvokeInGameAndNotifyEcs(new UnitDespawnedEvent(tamerEntity.Entity, playerId));
             }
         }
 

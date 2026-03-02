@@ -11,7 +11,7 @@ public readonly struct MappedEntityEventPolicy(IMappingEventPolicy<Entity> dataP
         if (!tamerEntity.HasValue)
             return false;
 
-        return dataPolicy.ShouldEventPropagateToEcs(tamerEntity.Value);
+        return dataPolicy.CanGameEventNotifyEcs(tamerEntity.Value);
     }
 
     [Obsolete("Is this event needed in the API?")]
@@ -20,7 +20,7 @@ public readonly struct MappedEntityEventPolicy(IMappingEventPolicy<Entity> dataP
         if (!tamerEntity.HasValue)
             return false;
 
-        return dataPolicy.ShouldEventPropagateToGame(tamerEntity.Value);
+        return dataPolicy.CanEcsInvokeGameEvent(tamerEntity.Value);
     }
 
     public bool ShouldGameEventRunLocally(Entity? tamerEntity, out EventSource source)
@@ -31,6 +31,6 @@ public readonly struct MappedEntityEventPolicy(IMappingEventPolicy<Entity> dataP
             return false;
         }
 
-        return dataPolicy.ShouldGameEventRunLocally(tamerEntity.Value, out source);
+        return dataPolicy.CanGameEventRunLocally(tamerEntity.Value, out source);
     }
 }

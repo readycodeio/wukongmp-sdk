@@ -483,7 +483,7 @@ namespace WukongMp.Api.Patches
                 if (SimpleState is EBGUSimpleState.Immobilizing or EBGUSimpleState.InAnimationSyncing or EBGUSimpleState.PreAnimationSyncing)
                     return;
 
-                DI.Instance.MappedEvent.PropagateToEcs(new UnitSimpleStateEvent(netId.Value, SimpleState, IsRemove));
+                DI.Instance.MappedEvent.NotifyEcs(new UnitSimpleStateEvent(netId.Value, SimpleState, IsRemove));
             }
         }
     }
@@ -506,13 +506,13 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new UnitStateTriggerEvent(tamerEntity.Value.Entity, Trigger, Time, NeedForceUpdate));
+                DI.Instance.MappedEvent.NotifyEcs(new UnitStateTriggerEvent(tamerEntity.Value.Entity, Trigger, Time, NeedForceUpdate));
             }
 
             if (owner == playerState.LocalMainCharacter?.Pawn)
             {
                 var mainEntity = playerState.LocalMainCharacter;
-                DI.Instance.MappedEvent.PropagateToEcs(new UnitStateTriggerEvent(mainEntity.Value.Entity, Trigger, Time, NeedForceUpdate));
+                DI.Instance.MappedEvent.NotifyEcs(new UnitStateTriggerEvent(mainEntity.Value.Entity, Trigger, Time, NeedForceUpdate));
             }
         }
     }
@@ -532,7 +532,7 @@ namespace WukongMp.Api.Patches
             if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                 return;
 
-            DI.Instance.MappedEvent.PropagateToEcs(new MotionMatchingStateEvent(tamerEntity.Value.Entity, MMState));
+            DI.Instance.MappedEvent.NotifyEcs(new MotionMatchingStateEvent(tamerEntity.Value.Entity, MMState));
         }
     }
 
@@ -559,14 +559,14 @@ namespace WukongMp.Api.Patches
 
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new AddBuffEvent(tamerEntity.Value, BuffID, Duration));
+                DI.Instance.MappedEvent.NotifyEcs(new AddBuffEvent(tamerEntity.Value, BuffID, Duration));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new AddBuffEvent(myEntity.Value, BuffID, Duration));
+                DI.Instance.MappedEvent.NotifyEcs(new AddBuffEvent(myEntity.Value, BuffID, Duration));
             }
         }
     }
@@ -593,14 +593,14 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(tamerEntity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.NotifyEcs(new RemoveBuffEvent(tamerEntity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(myEntity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.NotifyEcs(new RemoveBuffEvent(myEntity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
             }
         }
     }
@@ -627,14 +627,14 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(tamerEntity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.NotifyEcs(new RemoveBuffEvent(tamerEntity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new RemoveBuffEvent(myEntity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.NotifyEcs(new RemoveBuffEvent(myEntity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
             }
         }
     }
@@ -658,14 +658,14 @@ namespace WukongMp.Api.Patches
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new RemoveAllBuffsEvent(tamerEntity.Value, RemoveTriggerType, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.NotifyEcs(new RemoveAllBuffsEvent(tamerEntity.Value, RemoveTriggerType, WithTriggerRemoveEffect));
                 return;
             }
 
             var myEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (myEntity.HasValue && myEntity.Value.Pawn == owner)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new RemoveAllBuffsEvent(myEntity.Value, RemoveTriggerType, WithTriggerRemoveEffect));
+                DI.Instance.MappedEvent.NotifyEcs(new RemoveAllBuffsEvent(myEntity.Value, RemoveTriggerType, WithTriggerRemoveEffect));
             }
         }
     }
@@ -832,14 +832,14 @@ namespace WukongMp.Api.Patches
                 if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                     return;
 
-                DI.Instance.MappedEvent.PropagateToEcs(new PlayBaneEffectEvent(tamerEntity.Value, ___AbnormalType, ActionType));
+                DI.Instance.MappedEvent.NotifyEcs(new PlayBaneEffectEvent(tamerEntity.Value, ___AbnormalType, ActionType));
                 return;
             }
 
             var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (playerEntity.HasValue && playerEntity.Value.Pawn == ___OwnerChr)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new PlayBaneEffectEvent(playerEntity.Value, ___AbnormalType, ActionType));
+                DI.Instance.MappedEvent.NotifyEcs(new PlayBaneEffectEvent(playerEntity.Value, ___AbnormalType, ActionType));
             }
         }
     }
@@ -859,14 +859,14 @@ namespace WukongMp.Api.Patches
                 if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
                     return;
 
-                DI.Instance.MappedEvent.PropagateToEcs(new StopBaneEffectEvent(tamerEntity.Value, ___AbnormalType));
+                DI.Instance.MappedEvent.NotifyEcs(new StopBaneEffectEvent(tamerEntity.Value, ___AbnormalType));
                 return;
             }
 
             var playerEntity = DI.Instance.PlayerState.LocalMainCharacter;
             if (playerEntity.HasValue && playerEntity.Value.Pawn == ___OwnerChr)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new StopBaneEffectEvent(playerEntity.Value, ___AbnormalType));
+                DI.Instance.MappedEvent.NotifyEcs(new StopBaneEffectEvent(playerEntity.Value, ___AbnormalType));
             }
         }
     }

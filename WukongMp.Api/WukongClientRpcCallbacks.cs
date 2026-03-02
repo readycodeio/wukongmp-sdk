@@ -583,7 +583,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<ExitPhantomRushEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new ExitPhantomRushEvent(mainEntity.Entity));
+                self._mappedEvent.InvokeInGame(new ExitPhantomRushEvent(mainEntity.Entity));
             }
         }, this, netId);
     }
@@ -598,7 +598,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<AddBuffEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new AddBuffEvent(
+                self._mappedEvent.InvokeInGame(new AddBuffEvent(
                     entity: mainEntity.Entity,
                     buffId: data0.BuffId,
                     duration: data0.Duration
@@ -615,9 +615,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<RemoveBuffEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<RemoveBuffEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new RemoveBuffEvent(
+                self._mappedEvent.InvokeInGame(new RemoveBuffEvent(
                     entity: entity.Value,
                     buffId: data0.BuffId,
                     triggerType: data0.TriggerType,
@@ -636,9 +636,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<RemoveAllBuffsEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<RemoveAllBuffsEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new RemoveAllBuffsEvent(
+                self._mappedEvent.InvokeInGame(new RemoveAllBuffsEvent(
                     entity: entity.Value,
                     triggerType: data0.TriggerType,
                     withTriggerRemoveEffect: data0.WithTriggerRemoveEffect
@@ -655,9 +655,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitStateTriggerEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<UnitStateTriggerEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new UnitStateTriggerEvent(
+                self._mappedEvent.InvokeInGame(new UnitStateTriggerEvent(
                     entity: entity.Value,
                     trigger: data0.Trigger,
                     time: data0.Time,
@@ -675,9 +675,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitSimpleStateEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<UnitSimpleStateEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new UnitSimpleStateEvent(
+                self._mappedEvent.InvokeInGame(new UnitSimpleStateEvent(
                     entity: entity.Value,
                     simpleState: data0.SimpleState,
                     isRemove: data0.IsRemove
@@ -694,9 +694,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<TriggerFsmStateEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<TriggerFsmStateEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new TriggerFsmStateEvent(
+                self._mappedEvent.InvokeInGame(new TriggerFsmStateEvent(
                     entity: entity.Value,
                     fsmStateName: data0.FsmStateName
                 ));
@@ -712,9 +712,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<MotionMatchingStateEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<MotionMatchingStateEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new MotionMatchingStateEvent(
+                self._mappedEvent.InvokeInGame(new MotionMatchingStateEvent(
                     entity: entity.Value,
                     state: data0.State
                 ));
@@ -735,9 +735,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             var context = new SpawnSummonContext(summoner, data0.Location);
 
-            if (self._policyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().ShouldEventPropagateToGame(context))
+            if (self._policyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanEcsInvokeGameEvent(context))
             {
-                self._mappedEvent.PropagateToGame(new SpawnSummonEvent(
+                self._mappedEvent.InvokeInGame(new SpawnSummonEvent(
                     summoner: summoner.Value,
                     summonGuid: data0.SummonGuid,
                     summonClassPath: data0.SummonClassPath,
@@ -773,9 +773,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            if (self._policyDir.ForEvent<RequestSpawnUnitsEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<RequestSpawnUnitsEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new RequestSpawnUnitsEvent(
+                self._mappedEvent.InvokeInGame(new RequestSpawnUnitsEvent(
                     unitName: data0.UnitName,
                     count: data0.Count,
                     teamId: data0.TeamId,
@@ -796,9 +796,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<BroadcastUnitSpawnEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<BroadcastUnitSpawnEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new BroadcastUnitSpawnEvent(
+                self._mappedEvent.InvokeInGame(new BroadcastUnitSpawnEvent(
                     entity: entity.Value,
                     unitName: data0.UnitName,
                     guid: data0.Guid,
@@ -818,7 +818,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<PlayerTransBeginEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new PlayerTransBeginEvent(
+                self._mappedEvent.InvokeInGame(new PlayerTransBeginEvent(
                     entity: mainEntity.Entity,
                     unitResId: data0.UnitResId,
                     unitBornSkillId: data0.UnitBornSkillId,
@@ -839,7 +839,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<PlayerTransEndEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new PlayerTransEndEvent(
+                self._mappedEvent.InvokeInGame(new PlayerTransEndEvent(
                     entity: mainEntity.Entity,
                     unitResId: data0.UnitResId,
                     unitBornSkillId: data0.UnitBornSkillId,
@@ -855,9 +855,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0, sender) =>
         {
-            if (self._policyDir.ForEvent<PlayMovieRequestEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<PlayMovieRequestEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new PlayMovieRequestEvent(
+                self._mappedEvent.InvokeInGame(new PlayMovieRequestEvent(
                     sequenceId: data0.SequenceId,
                     disablePlayerControl: data0.DisablePlayerControl,
                     disableMovementInput: data0.DisableMovementInput,
@@ -884,7 +884,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (data0.ClearTarget)
             {
-                self._mappedEvent.PropagateToGame(new SetTargetEvent(
+                self._mappedEvent.InvokeInGame(new SetTargetEvent(
                     character: character.Value,
                     target: default,
                     clearTarget: true
@@ -898,9 +898,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<SetTargetEvent>().ShouldEventPropagateToGame(character.Value))
+            if (self._policyDir.ForEvent<SetTargetEvent>().CanEcsInvokeGameEvent(character.Value))
             {
-                self._mappedEvent.PropagateToGame(new SetTargetEvent(
+                self._mappedEvent.InvokeInGame(new SetTargetEvent(
                     character: character.Value,
                     target: target.Value,
                     clearTarget: false
@@ -924,9 +924,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<CastImmobilizeEvent>().ShouldEventPropagateToGame(casterEntity.Value))
+            if (self._policyDir.ForEvent<CastImmobilizeEvent>().CanEcsInvokeGameEvent(casterEntity.Value))
             {
-                self._mappedEvent.PropagateToGame(new CastImmobilizeEvent(casterEntity.Value));
+                self._mappedEvent.InvokeInGame(new CastImmobilizeEvent(casterEntity.Value));
             }
         }, this, caster);
     }
@@ -948,9 +948,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<TriggerImmobilizeEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<TriggerImmobilizeEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new TriggerImmobilizeEvent(
+                self._mappedEvent.InvokeInGame(new TriggerImmobilizeEvent(
                     entity: caster.Value,
                     target: target.Value,
                     greatSageTalentActiveBuff: data0.GreatSageTalentActiveBuff
@@ -970,9 +970,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<TriggerImmobilizeEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<TriggerImmobilizeEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new RelieveImmobilizeEvent(affectedEntity.Value));
+                self._mappedEvent.InvokeInGame(new RelieveImmobilizeEvent(affectedEntity.Value));
             }
         }, this, affected);
     }
@@ -987,7 +987,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<PhantomRushEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new PhantomRushEvent(mainEntity.Entity, direction0));
+                self._mappedEvent.InvokeInGame(new PhantomRushEvent(mainEntity.Entity, direction0));
             }
         }, this, netId, direction);
     }
@@ -1001,9 +1001,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.ForEvent<BroadcastPlayerTransformEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<BroadcastPlayerTransformEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new BroadcastPlayerTransformEvent(
+                self._mappedEvent.InvokeInGame(new BroadcastPlayerTransformEvent(
                     entity: mainEntity.Entity,
                     location: data0.Location,
                     rotation: data0.Rotation
@@ -1023,9 +1023,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.ForEvent<RebirthPlayerEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<RebirthPlayerEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new RebirthPlayerEvent(
+                self._mappedEvent.InvokeInGame(new RebirthPlayerEvent(
                     entity: mainEntity.Entity,
                     teleport: isTeleport0
                 ));
@@ -1044,9 +1044,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<DamageNumEvent, Entity>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<DamageNumEvent, Entity>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new DamageNumEvent(
+                self._mappedEvent.InvokeInGame(new DamageNumEvent(
                     entity: entity.Value,
                     damageType: damageNum0.DamageType,
                     damageNum: damageNum0.DamageNum,
@@ -1071,9 +1071,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<TeleportFinishEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<TeleportFinishEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new TeleportFinishEvent(mainEntity.Entity));
+                self._mappedEvent.InvokeInGame(new TeleportFinishEvent(mainEntity.Entity));
             }
         }, this, netId);
     }
@@ -1092,9 +1092,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             var fullMontagePath = string.IsNullOrEmpty(data0.MontagePath) ? ""
                 : data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.MontagePath) : data0.MontagePath;
 
-            if (self._policyDir.ForEvent<MontageCallbackEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<MontageCallbackEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new MontageCallbackEvent(
+                self._mappedEvent.InvokeInGame(new MontageCallbackEvent(
                     entity: entity.Value,
                     fullMontagePath: fullMontagePath,
                     position: data0.Position,
@@ -1187,9 +1187,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<UnitDeadEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<UnitDeadEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new UnitDeadEvent(
+                self._mappedEvent.InvokeInGame(new UnitDeadEvent(
                     entity: entity.Value,
                     deadReason: data0.DeadReason,
                     dmgId: data0.DmgId,
@@ -1206,9 +1206,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            if (self._policyDir.ForEvent<WaitingForSequenceEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<WaitingForSequenceEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new WaitingForSequenceEvent(
+                self._mappedEvent.InvokeInGame(new WaitingForSequenceEvent(
                     sequenceId: data0.SequenceID,
                     sequenceLocation: data0.SequenceLocation
                 ));
@@ -1229,7 +1229,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<IronBodyStartEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new IronBodyStartEvent(mainEntity.Entity));
+                self._mappedEvent.InvokeInGame(new IronBodyStartEvent(mainEntity.Entity));
             }
         }, this, netId);
     }
@@ -1246,9 +1246,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitSpawnedEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<UnitSpawnedEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new UnitSpawnedEvent(
+                self._mappedEvent.InvokeInGame(new UnitSpawnedEvent(
                     entity: entity.Value,
                     playerId: sender
                 ));
@@ -1270,9 +1270,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitDespawnedEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<UnitDespawnedEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new UnitDespawnedEvent(
+                self._mappedEvent.InvokeInGame(new UnitDespawnedEvent(
                     entity: entity.Value,
                     playerId: sender
                 ));
@@ -1288,9 +1288,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(interactData0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<TamerSkillInteractEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<TamerSkillInteractEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new TamerSkillInteractEvent(
+                self._mappedEvent.InvokeInGame(new TamerSkillInteractEvent(
                     entity: entity.Value,
                     skillId: interactData0.SkillId
                 ));
@@ -1312,7 +1312,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._policyDir.MainCharacterEvent<TriggerMagicallyChangeEvent>().ShouldEventPropagateToGame(mainEntity))
             {
                 var fullPath = data0.Compressed ? Compressors.VigorNameCompressor.Decompress(data0.ConfigAssetName) : data0.ConfigAssetName;
-                self._mappedEvent.PropagateToGame(new TriggerMagicallyChangeEvent(
+                self._mappedEvent.InvokeInGame(new TriggerMagicallyChangeEvent(
                     entity: mainEntity.Entity,
                     configPathName: fullPath,
                     skillId: data0.SkillID,
@@ -1337,7 +1337,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<ResetMagicallyChangeEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new ResetMagicallyChangeEvent(
+                self._mappedEvent.InvokeInGame(new ResetMagicallyChangeEvent(
                     entity: mainEntity.Entity,
                     reason: reason0
                 ));
@@ -1364,7 +1364,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<ProjectileTargetEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new ProjectileTargetEvent(
+                self._mappedEvent.InvokeInGame(new ProjectileTargetEvent(
                     character: mainEntity.Entity,
                     projectileName: targetData0.ProjectileName,
                     target: target.Value,
@@ -1387,7 +1387,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<ProjectileSwitchEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new ProjectileSwitchEvent(
+                self._mappedEvent.InvokeInGame(new ProjectileSwitchEvent(
                     entity: mainEntity.Entity,
                     projectileClassName: switchData0.ProjectileClassName,
                     bulletSwitchId: switchData0.BulletSwitchID,
@@ -1410,7 +1410,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<ProjectileDeadEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new ProjectileDeadEvent(
+                self._mappedEvent.InvokeInGame(new ProjectileDeadEvent(
                     entity: mainEntity.Entity,
                     projectileClassName: data0.ProjectileClassName,
                     reason: data0.Reason
@@ -1430,9 +1430,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<MagicFieldDeadEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<MagicFieldDeadEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new MagicFieldDeadEvent(
+                self._mappedEvent.InvokeInGame(new MagicFieldDeadEvent(
                     entity: entity.Value,
                     className: magicFieldClassName0,
                     reason: reason0
@@ -1454,7 +1454,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<ProjectileMoveModeEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new ProjectileMoveModeEvent(
+                self._mappedEvent.InvokeInGame(new ProjectileMoveModeEvent(
                     entity: mainEntity.Entity,
                     projectileClassName: data0.ProjectileClassName,
                     moveMode: data0.MoveMode
@@ -1475,9 +1475,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<PartyRespawnEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<PartyRespawnEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new PartyRespawnEvent(
+                self._mappedEvent.InvokeInGame(new PartyRespawnEvent(
                     entity: entity.Value,
                     birthShrineId: shrineId
                 ));
@@ -1495,7 +1495,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<AfterRebirthEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new AfterRebirthEvent(mainEntity.Entity));
+                self._mappedEvent.InvokeInGame(new AfterRebirthEvent(mainEntity.Entity));
             }
         }, this, netId);
     }
@@ -1511,9 +1511,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<RestAtShrineEvent, Entity>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<RestAtShrineEvent, Entity>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new RestAtShrineEvent(
+                self._mappedEvent.InvokeInGame(new RestAtShrineEvent(
                     entity: entity.Value,
                     rebirthPointId: shrineId
                 ));
@@ -1533,9 +1533,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<PartySoftlockEvent, EmptyContext>().ShouldEventPropagateToGame(default))
+            if (self._policyDir.ForEvent<PartySoftlockEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
             {
-                self._mappedEvent.PropagateToGame(new PartySoftlockEvent(
+                self._mappedEvent.InvokeInGame(new PartySoftlockEvent(
                     entity: entity.Value,
                     birthPointId: shrineId
                 ));
@@ -1556,7 +1556,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<StartJumpEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new StartJumpEvent(
+                self._mappedEvent.InvokeInGame(new StartJumpEvent(
                     entity: mainEntity.Entity,
                     startJumpDir: jumpData0.StartJumpDir,
                     inputVector: jumpData0.InputVector
@@ -1578,7 +1578,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (self._policyDir.MainCharacterEvent<StopJumpEvent>().ShouldEventPropagateToGame(mainEntity))
             {
-                self._mappedEvent.PropagateToGame(new StopJumpEvent(mainEntity.Entity));
+                self._mappedEvent.InvokeInGame(new StopJumpEvent(mainEntity.Entity));
             }
         }, this, netId);
     }
@@ -1594,9 +1594,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<MonsterWakeUpEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<MonsterWakeUpEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new MonsterWakeUpEvent(entity.Value));
+                self._mappedEvent.InvokeInGame(new MonsterWakeUpEvent(entity.Value));
             }
         }, this, netId);
     }
@@ -1612,9 +1612,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<PlayBaneEffectEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<PlayBaneEffectEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new PlayBaneEffectEvent(
+                self._mappedEvent.InvokeInGame(new PlayBaneEffectEvent(
                     entity: entity.Value,
                     stateType: data0.StateType,
                     actionType: data0.ActionType
@@ -1634,9 +1634,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<StopBaneEffectEvent>().ShouldEventPropagateToGame(entity.Value))
+            if (self._policyDir.ForEvent<StopBaneEffectEvent>().CanEcsInvokeGameEvent(entity.Value))
             {
-                self._mappedEvent.PropagateToGame(new StopBaneEffectEvent(
+                self._mappedEvent.InvokeInGame(new StopBaneEffectEvent(
                     entity: entity.Value,
                     stateType: data0.StateType
                 ));
@@ -1655,9 +1655,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<CastSkillEvent>().ShouldEventPropagateToGame(casterEntity.Value))
+            if (self._policyDir.ForEvent<CastSkillEvent>().CanEcsInvokeGameEvent(casterEntity.Value))
             {
-                self._mappedEvent.PropagateToGame(new CastSkillEvent(
+                self._mappedEvent.InvokeInGame(new CastSkillEvent(
                     entity: casterEntity.Value,
                     skillId: skillId0,
                     skillType: skillType0

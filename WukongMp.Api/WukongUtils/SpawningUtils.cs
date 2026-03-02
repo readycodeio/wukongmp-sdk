@@ -243,7 +243,7 @@ public static class SpawningUtils
             // NOTE(api): PolicyDir check always true because newly created entity is owned locally.
             if (policyDir.TamerEvent<BroadcastUnitSpawnEvent>().ShouldEventPropagateToEcs(tamerEntity))
             {
-                policyDir.MappedEvent.PropagateToEcs(new BroadcastUnitSpawnEvent(
+                policyDir.MappedEvent.NotifyEcs(new BroadcastUnitSpawnEvent(
                     entity: tamerEntity.Entity,
                     unitName: tamerKind.Name, 
                     guid: guid, 

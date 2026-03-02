@@ -395,7 +395,7 @@ public class PatchOnTriggerFsmEvent
         {
             if (tamerEntity.Value.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerEntity.Value.Pawn, EventTag))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new TriggerFsmStateEvent(tamerEntity.Value, EventTag.TagName.ToString()));
+                DI.Instance.MappedEvent.NotifyEcs(new TriggerFsmStateEvent(tamerEntity.Value, EventTag.TagName.ToString()));
             }
         }
 
@@ -504,7 +504,7 @@ public class PatchTriggerWakeupActivated
 
             if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
             {
-                DI.Instance.MappedEvent.PropagateToEcs(new MonsterWakeUpEvent(tamerEntity.Value));
+                DI.Instance.MappedEvent.NotifyEcs(new MonsterWakeUpEvent(tamerEntity.Value));
             }
         }
     }

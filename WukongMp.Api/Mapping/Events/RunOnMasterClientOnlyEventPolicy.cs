@@ -12,7 +12,7 @@ public class RunOnMasterClientOnlyEventPolicy<TEvent>(
     DataSideChannel sideChannel
 ) : MappingEventPolicyBase<TEvent, Entity>(sideChannel)
 {
-    protected override bool ShouldEventPropagateToEcsImpl(in Entity context)
+    protected override bool CanGameEventNotifyEcsImpl(in Entity context)
     {
         if (areaState.IsMasterClient)
         {
@@ -29,7 +29,7 @@ public class RunOnMasterClientOnlyEventPolicy<TEvent>(
         return false;
     }
 
-    protected override bool ShouldEventPropagateToGameImpl(in Entity context)
+    protected override bool CanEcsInvokeGameEventImpl(in Entity context)
     {
         if (areaState.IsMasterClient)
         {
@@ -41,7 +41,7 @@ public class RunOnMasterClientOnlyEventPolicy<TEvent>(
         return false;
     }
 
-    protected override bool ShouldGameEventRunLocallyImpl(in Entity context)
+    protected override bool CanGameEventRunLocallyImpl(in Entity context)
     {
         // on non-master client, we don't run the event at all as it is meant to be run on the master
         return areaState.IsMasterClient;

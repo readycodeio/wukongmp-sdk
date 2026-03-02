@@ -356,7 +356,7 @@ namespace WukongMp.Api.Patches
 
                     var @event = new UnitDeadEvent(localMain, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
                     localMain.GetState().IsDead = true;
-                    DI.Instance.MappedEvent.PropagateToEcs(@event);
+                    DI.Instance.MappedEvent.NotifyEcs(@event);
                     Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", localMain.GetState().PlayerId);
                 }
 
@@ -368,7 +368,7 @@ namespace WukongMp.Api.Patches
             {
                 var meta = tamerEntity.Value.GetMeta();
                 var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
-                DI.Instance.MappedEvent.PropagateToEcs(payload);
+                DI.Instance.MappedEvent.NotifyEcs(payload);
                 Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
             }
 
@@ -523,7 +523,7 @@ namespace WukongMp.Api.Patches
                 var mainEntity = playerState.LocalMainCharacter.Value;
 
                 Logging.LogDebug("New target sent for {Subject} as: {Target}", mainEntity.GetState().CharacterNickName, name);
-                DI.Instance.MappedEvent.PropagateToEcs(new SetTargetEvent(mainEntity, newTarget, clearTarget));
+                DI.Instance.MappedEvent.NotifyEcs(new SetTargetEvent(mainEntity, newTarget, clearTarget));
                 return true;
             }
 
@@ -532,7 +532,7 @@ namespace WukongMp.Api.Patches
             {
                 Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetTamer().Guid ?? "Unknown monster", name);
 
-                DI.Instance.MappedEvent.PropagateToEcs(new SetTargetEvent(tamerEntity.Value, newTarget, clearTarget));
+                DI.Instance.MappedEvent.NotifyEcs(new SetTargetEvent(tamerEntity.Value, newTarget, clearTarget));
                 return true;
             }
 
@@ -835,7 +835,7 @@ namespace WukongMp.Api.Patches
             if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
             {
                 var rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
-                DI.Instance.MappedEvent.PropagateToEcs(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID));
+                DI.Instance.MappedEvent.NotifyEcs(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID));
             }
 
             return true;
@@ -923,7 +923,7 @@ public class PatchTriggerJumpSkill
 
         if (owner == playerState.LocalMainCharacter?.Pawn)
         {
-            DI.Instance.MappedEvent.PropagateToEcs(new StartJumpEvent(playerState.LocalMainCharacter.Value, StartJumpDir, CurrentInputVector));
+            DI.Instance.MappedEvent.NotifyEcs(new StartJumpEvent(playerState.LocalMainCharacter.Value, StartJumpDir, CurrentInputVector));
         }
     }
 }
@@ -942,7 +942,7 @@ public class PatchJumpOnReleased
 
         if (owner == playerState.LocalMainCharacter?.Pawn)
         {
-            DI.Instance.MappedEvent.PropagateToEcs(new StopJumpEvent(playerState.LocalMainCharacter.Value));
+            DI.Instance.MappedEvent.NotifyEcs(new StopJumpEvent(playerState.LocalMainCharacter.Value));
         }
     }
 }
@@ -1056,7 +1056,7 @@ public class PatchOnRebirthFinished
         if (entity.HasValue)
         {
             entity.Value.GetLocalState().IsRespawning = false;
-            DI.Instance.MappedEvent.PropagateToEcs(new AfterRebirthEvent(entity.Value));
+            DI.Instance.MappedEvent.NotifyEcs(new AfterRebirthEvent(entity.Value));
         }
     }
 }

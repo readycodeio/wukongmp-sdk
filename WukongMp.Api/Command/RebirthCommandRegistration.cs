@@ -22,7 +22,7 @@ public class RebirthCommandRegistration(
         if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        mappedEvent.TriggerEvent(new RebirthPlayerEvent(
+        mappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(
             entity: mainEntity.Entity,
             teleport: false
         ));
@@ -34,7 +34,7 @@ public class RebirthCommandRegistration(
         if (playerState.LocalMainCharacter is not { } mainEntity)
             return;
 
-        mappedEvent.TriggerEvent(new RebirthPlayerEvent(
+        mappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(
             entity: mainEntity.Entity,
             teleport: true
         ));

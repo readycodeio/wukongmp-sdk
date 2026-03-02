@@ -78,7 +78,7 @@ public static class PatchSendDamageNumbers
         if (!DI.Instance.AreaState.InRoom || !DI.Instance.PlayerState.LocalMainCharacter.HasValue)
             return;
 
-        DI.Instance.MappedEvent.PropagateToEcs(new DamageNumEvent(DI.Instance.PlayerState.LocalMainCharacter.Value, Param.DamageType, Param.DamageNum, Param.Amplitude, Param.RealHitLocation, Param.RealHitDir, Param.AttackerTeamType));
+        DI.Instance.MappedEvent.NotifyEcs(new DamageNumEvent(DI.Instance.PlayerState.LocalMainCharacter.Value, Param.DamageType, Param.DamageNum, Param.Amplitude, Param.RealHitLocation, Param.RealHitDir, Param.AttackerTeamType));
     }
 }
 

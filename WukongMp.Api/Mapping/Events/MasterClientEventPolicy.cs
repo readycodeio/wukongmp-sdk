@@ -10,17 +10,17 @@ public class MasterClientEventPolicy<TEvent>(
     DataSideChannel sideChannel
 ) : MappingEventPolicyBase<TEvent, EmptyContext>(sideChannel)
 {
-    protected override bool ShouldEventPropagateToEcsImpl(in EmptyContext context)
+    protected override bool CanGameEventNotifyEcsImpl(in EmptyContext context)
     {
         return areaState.IsMasterClient;
     }
 
-    protected override bool ShouldEventPropagateToGameImpl(in EmptyContext context)
+    protected override bool CanEcsInvokeGameEventImpl(in EmptyContext context)
     {
         return !areaState.IsMasterClient;
     }
 
-    protected override bool ShouldGameEventRunLocallyImpl(in EmptyContext context)
+    protected override bool CanGameEventRunLocallyImpl(in EmptyContext context)
     {
         return areaState.IsMasterClient;
     }

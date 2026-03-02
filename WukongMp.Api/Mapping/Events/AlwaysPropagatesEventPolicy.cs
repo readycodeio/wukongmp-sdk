@@ -6,17 +6,17 @@ namespace WukongMp.Api.Mapping.Events;
 
 public class AlwaysPropagatesEventPolicy<TEvent>(DataSideChannel sideChannel) : MappingEventPolicyBase<TEvent, EmptyContext>(sideChannel)
 {
-    protected override bool ShouldEventPropagateToEcsImpl(in EmptyContext context)
+    protected override bool CanGameEventNotifyEcsImpl(in EmptyContext context)
     {
         return true;
     }
 
-    protected override bool ShouldEventPropagateToGameImpl(in EmptyContext context)
+    protected override bool CanEcsInvokeGameEventImpl(in EmptyContext context)
     {
         return true;
     }
 
-    protected override bool ShouldGameEventRunLocallyImpl(in EmptyContext context)
+    protected override bool CanGameEventRunLocallyImpl(in EmptyContext context)
     {
         return true;
     }

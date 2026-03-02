@@ -108,7 +108,7 @@ public readonly struct ReadyMainCharacter : IReadyEntity<ReadyMainCharacter>,
     
     public void Teleport(Vector3 location, Vector3 rotation)
     {
-        Api.MappedEvent.TriggerEvent(new BroadcastPlayerTransformEvent(
+        Api.MappedEvent.InvokeInGameAndNotifyEcs(new BroadcastPlayerTransformEvent(
             entity: Entity,
             location: location.ToFVector(),
             rotation: rotation.ToFRotator()
@@ -119,7 +119,7 @@ public readonly struct ReadyMainCharacter : IReadyEntity<ReadyMainCharacter>,
     {
         var mainEntity = new MainCharacterEntity(Entity);
         
-        Api.MappedEvent.TriggerEvent(new RebirthPlayerEvent(mainEntity.Entity, false));
+        Api.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(mainEntity.Entity, false));
     }
 
     public void Respawn(int maxComp)
@@ -128,7 +128,7 @@ public readonly struct ReadyMainCharacter : IReadyEntity<ReadyMainCharacter>,
         var localMainComp = mainEntity.GetLocalState();
         
         localMainComp.IsRespawning = true;
-        Api.MappedEvent.TriggerEvent(new PartyRespawnEvent(
+        Api.MappedEvent.InvokeInGameAndNotifyEcs(new PartyRespawnEvent(
             entity: mainEntity.Entity,
             birthShrineId: maxComp
         ));

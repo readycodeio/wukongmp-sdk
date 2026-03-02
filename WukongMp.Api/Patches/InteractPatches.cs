@@ -32,7 +32,7 @@ public static class PatchComplexSkillDoInteractAction
             {
                 var meta = entity.Value.GetMeta();
                 Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
-                DI.Instance.MappedEvent.PropagateToEcs(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]));
+                DI.Instance.MappedEvent.NotifyEcs(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]));
             }
         }
     }

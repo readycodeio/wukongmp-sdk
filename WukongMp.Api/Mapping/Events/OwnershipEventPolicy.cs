@@ -10,17 +10,17 @@ public class OwnershipEventPolicy<TEvent>(
     DataSideChannel sideChannel
 ) : MappingEventPolicyBase<TEvent, Entity>(sideChannel)
 {
-    protected override bool ShouldEventPropagateToEcsImpl(in Entity context)
+    protected override bool CanGameEventNotifyEcsImpl(in Entity context)
     {
         return ownership.OwnsEntity(context);
     }
 
-    protected override bool ShouldEventPropagateToGameImpl(in Entity context)
+    protected override bool CanEcsInvokeGameEventImpl(in Entity context)
     {
         return !ownership.OwnsEntity(context);
     }
 
-    protected override bool ShouldGameEventRunLocallyImpl(in Entity context)
+    protected override bool CanGameEventRunLocallyImpl(in Entity context)
     {
         return ownership.OwnsEntity(context);
     }

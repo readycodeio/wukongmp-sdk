@@ -51,7 +51,7 @@ public static class PatchRequestSpawnServant
             SpawnSummonEvent? ev = InServantReq.FromGame(DI.Instance.PawnState);
             if (ev != null)
             {
-                DI.Instance.MappedEvent.PropagateToEcs(ev.Value);
+                DI.Instance.MappedEvent.NotifyEcs(ev.Value);
             }
         }
 
