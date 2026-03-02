@@ -246,7 +246,7 @@ internal sealed class DI
         policyDir.RegisterDefaultEvent(new SpawnSummonEventEventPolicyFactory(clientOwnership, playerState, areaState, world, sideChannel));
         policyDir.RegisterDefaultEvent(new AlwaysPropagatesEventPolicyFactory(sideChannel));
 
-        var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, logger);
+        var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, policyDir, logger);
         var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);
 
         var fieldMappingRegistry = new ComponentFieldMappingRegistry();

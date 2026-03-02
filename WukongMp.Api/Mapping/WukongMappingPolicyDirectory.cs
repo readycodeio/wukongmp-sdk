@@ -191,22 +191,22 @@ public class WukongMappingPolicyDirectory(
     public MainCharacterMappingCreateDeletePolicy MainCharacterCreateDelete()
         => new(policyDir.ForCreateDelete<AActor>(wukongArchetype.MainCharacterArchetype));
 
-    public MainCharacterMappingDataPolicy MainCharacterData<TData>()
+    public MappedEntityDataPolicy MainCharacterData<TData>()
         where TData : struct, IMappingContext<Entity>
         => new(policyDir.ForData<TData>(wukongArchetype.MainCharacterArchetype));
 
-    public MainCharacterMappingEventPolicy MainCharacterEvent<TEvent>()
+    public MappedEntityEventPolicy MainCharacterEvent<TEvent>()
         where TEvent : struct, IMappingContext<Entity>
         => new(policyDir.ForEvent<TEvent>());
 
     public TamerMappingCreateDeletePolicy TamerCreateDelete()
         => new(policyDir.ForCreateDelete<AActor>(wukongArchetype.TamerArchetype));
 
-    public TamerMappingDataPolicy TamerData<TData>()
+    public MappedEntityDataPolicy TamerData<TData>()
         where TData : struct, IMappingContext<Entity>
         => new(policyDir.ForData<TData>(wukongArchetype.TamerArchetype));
 
-    public TamerMappingEventPolicy TamerEvent<TEvent>()
+    public MappedEntityEventPolicy TamerEvent<TEvent>()
         where TEvent : struct, IMappingContext<Entity>
         => new(policyDir.ForEvent<TEvent>());
 
