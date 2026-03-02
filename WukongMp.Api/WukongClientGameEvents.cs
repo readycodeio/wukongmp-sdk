@@ -361,59 +361,6 @@ public class WukongClientGameEvents : IDisposable
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<AnimationSyncingEvent, WukongClientGameEvents>((ev, self) =>
-        {
-            self._logger.LogDebug("OnPreAnimationSyncing called for Host {Host} and Guest {Guest}", ev.Host, ev.Guest);
-
-            var hostPawn = self._pawnState.GetPawnByEntity(ev.Host);
-            if (hostPawn == null)
-            {
-                self._logger.LogNullDebug(nameof(ev.Host));
-                return;
-            }
-
-            var guestPawn = self._pawnState.GetPawnByEntity(ev.Guest);
-            if (guestPawn == null)
-            {
-                self._logger.LogNullDebug(nameof(ev.Guest));
-                return;
-            }
-
-            BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnHost?.Invoke(guestPawn, []);
-            BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterPreAnimationSyncingStateOnGuest?.Invoke(hostPawn, []);
-
-            var montage = string.IsNullOrEmpty(ev.FullMontagePath) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(ev.FullMontagePath, ELoadResourceType.SyncLoadAndCache);
-
-            BUS_EventCollectionCS.Get(hostPawn)?.Evt_NotifyEnterAnimationSyncingStateOnHost?.Invoke([], montage);
-            BUS_EventCollectionCS.Get(guestPawn)?.Evt_NotifyEnterAnimationSyncingStateOnGuest?.Invoke([]);
-
-            var data = BGU_DataUtil.GetReadOnlyData<BGC_AnimationSyncData>(UGameplayStatics.GetGameState(GameUtils.GetWorld()));
-            data?.AddParticipants(hostPawn, guestPawn);
-        }, this);
-
-        _mappedEvent.RegisterGameEventHandler<BeginSyncAnimationEvent, WukongClientGameEvents>(static (ev, self) =>
-        {
-            self._logger.LogDebug("OnBeginSyncAnimation called for Host {Entity} with GuestMontage '{MontagePath}'", ev.Host, ev.FullGuestMontage);
-
-            var hostPawn = self._pawnState.GetPawnByEntity(ev.Host);
-            if (hostPawn == null)
-            {
-                self._logger.LogNullDebug(nameof(ev.Host));
-                return;
-            }
-
-            var montage = string.IsNullOrEmpty(ev.FullGuestMontage) ? null : BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UAnimMontage>(ev.FullGuestMontage, ELoadResourceType.SyncLoadAndCache);
-
-            var events = BGS_GSEventCollection.Get(hostPawn);
-            if (events == null)
-            {
-                self._logger.LogError("Failed to get event collection for unit {Unit}", hostPawn.GetName());
-                return;
-            }
-
-            events.Evt_BGS_BeginSyncAnimation?.Invoke(hostPawn, montage, ev.FoundHostSyncPointOnDummyMesh, new FName(ev.SelfSyncPointOnHost), new FName(ev.TargetSyncPointOnHost), new FName(ev.SelfSyncPointOnGuest), ev.ForceSyncDummyMeshAnimation, ev.EnableDebugDraw, ev.NotifyBeginTime, ev.TotalDuration, ev.AnimationSyncMontageInstanceId);
-        }, this);
-
         _mappedEvent.RegisterGameEventHandler<UnitDeadEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);

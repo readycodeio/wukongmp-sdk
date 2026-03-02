@@ -301,38 +301,6 @@ public partial class WukongClientRpcCallbacks : IDisposable
             );
         }, this);
 
-        _mappedEvent.RegisterEcsEventHandler<AnimationSyncingEvent, WukongClientRpcCallbacks>((ev, self) =>
-        {
-            var compressed = Compressors.MontageNameCompressor.Compress(ev.FullMontagePath, out var montage);
-
-            self.SendAnimationSyncing(new AnimationSyncingData(
-                hostNetId: ev.Host.GetNetId(),
-                guestNetId: ev.Guest.GetNetId(),
-                compressed: compressed,
-                montage: montage
-            ));
-        }, this);
-
-        _mappedEvent.RegisterEcsEventHandler<BeginSyncAnimationEvent, WukongClientRpcCallbacks>(static (ev, self) =>
-        {
-            var compressed = Compressors.MontageNameCompressor.Compress(ev.FullGuestMontage, out var guestMontage);
-
-            self.SendBeginSyncAnimation(new BeginSyncAnimationData(
-                hostNetId: ev.Host.GetNetId(),
-                compressed: compressed,
-                guestMontage: guestMontage,
-                bFoundHostSyncPointOnDummyMesh: ev.FoundHostSyncPointOnDummyMesh,
-                selfSyncPointOnHost: ev.SelfSyncPointOnHost,
-                targetSyncPointOnHost: ev.TargetSyncPointOnHost,
-                selfSyncPointOnGuest: ev.SelfSyncPointOnGuest,
-                bForceSyncDummyMeshAnimation: ev.ForceSyncDummyMeshAnimation,
-                bEnableDebugDraw: ev.EnableDebugDraw,
-                notifyBeginTime: ev.NotifyBeginTime,
-                totalDuration: ev.TotalDuration,
-                animationSyncMontageInstanceId: ev.AnimationSyncMontageInstanceId
-            ));
-        }, this);
-
         _mappedEvent.RegisterEcsEventHandler<UnitDeadEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
             self.SendUnitDead(new UnitDeadData(
@@ -574,219 +542,188 @@ public partial class WukongClientRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnExitPhantomRush(NetworkId netId)
+    private void OnExitPhantomRush(NetworkId netId)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.MainCharacterEvent<ExitPhantomRushEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new ExitPhantomRushEvent(mainEntity.Entity));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new ExitPhantomRushEvent(mainEntity.Entity), mainEntity.Entity);
         }, this, netId);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnAddBuff(BuffAddData data)
+    private void OnAddBuff(BuffAddData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.MainCharacterEvent<AddBuffEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new AddBuffEvent(
-                    entity: mainEntity.Entity,
-                    buffId: data0.BuffId,
-                    duration: data0.Duration
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new AddBuffEvent(
+                entity: mainEntity.Entity,
+                buffId: data0.BuffId,
+                duration: data0.Duration
+            ), mainEntity.Entity);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnRemoveBuff(BuffRemoveData data)
+    private void OnRemoveBuff(BuffRemoveData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<RemoveBuffEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new RemoveBuffEvent(
-                    entity: entity.Value,
-                    buffId: data0.BuffId,
-                    triggerType: data0.TriggerType,
-                    layer: data0.Layer,
-                    withTriggerRemoveEffect: data0.WithTriggerRemoveEffect
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new RemoveBuffEvent(
+                entity: entity.Value,
+                buffId: data0.BuffId,
+                triggerType: data0.TriggerType,
+                layer: data0.Layer,
+                withTriggerRemoveEffect: data0.WithTriggerRemoveEffect
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnRemoveAllBuffs(BuffRemoveAllData data)
+    private void OnRemoveAllBuffs(BuffRemoveAllData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<RemoveAllBuffsEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new RemoveAllBuffsEvent(
-                    entity: entity.Value,
-                    triggerType: data0.TriggerType,
-                    withTriggerRemoveEffect: data0.WithTriggerRemoveEffect
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new RemoveAllBuffsEvent(
+                entity: entity.Value,
+                triggerType: data0.TriggerType,
+                withTriggerRemoveEffect: data0.WithTriggerRemoveEffect
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnUnitStateTrigger(StateTriggerData data)
+    private void OnUnitStateTrigger(StateTriggerData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitStateTriggerEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new UnitStateTriggerEvent(
-                    entity: entity.Value,
-                    trigger: data0.Trigger,
-                    time: data0.Time,
-                    needForceUpdate: data0.NeedForceUpdate
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new UnitStateTriggerEvent(
+                entity: entity.Value,
+                trigger: data0.Trigger,
+                time: data0.Time,
+                needForceUpdate: data0.NeedForceUpdate
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnUnitSimpleState(SimpleStateData data)
+    private void OnUnitSimpleState(SimpleStateData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitSimpleStateEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new UnitSimpleStateEvent(
-                    entity: entity.Value,
-                    simpleState: data0.SimpleState,
-                    isRemove: data0.IsRemove
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new UnitSimpleStateEvent(
+                entity: entity.Value,
+                simpleState: data0.SimpleState,
+                isRemove: data0.IsRemove
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnTriggerFsmState(FsmStateData data)
+    private void OnTriggerFsmState(FsmStateData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<TriggerFsmStateEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new TriggerFsmStateEvent(
-                    entity: entity.Value,
-                    fsmStateName: data0.FsmStateName
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new TriggerFsmStateEvent(
+                entity: entity.Value,
+                fsmStateName: data0.FsmStateName
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnMotionMatchingState(MotionMatchingStateData data)
+    private void OnMotionMatchingState(MotionMatchingStateData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<MotionMatchingStateEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new MotionMatchingStateEvent(
-                    entity: entity.Value,
-                    state: data0.State
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new MotionMatchingStateEvent(
+                entity: entity.Value,
+                state: data0.State
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnSpawnSummon(SpawnSummonData data)
+    private void OnSpawnSummon(SpawnSummonData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             self._netEntity.TryGetEntityByNetworkId(data0.SummonerNetId, out var summoner);
             self._netEntity.TryGetEntityByNetworkId(data0.CatchTargetNetId, out var catchTarget);
-            
+
             if (!summoner.HasValue)
                 return;
 
             var context = new SpawnSummonContext(summoner, data0.Location);
-
-            if (self._policyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanEcsInvokeGameEvent(context))
-            {
-                self._mappedEvent.InvokeInGame(new SpawnSummonEvent(
-                    summoner: summoner.Value,
-                    summonGuid: data0.SummonGuid,
-                    summonClassPath: data0.SummonClassPath,
-                    location: data0.Location,
-                    rotation: data0.Rotation,
-                    safeClampToLand: data0.SafeClampToLand,
-                    summonId: data0.SummonId,
-                    summonInstanceId: data0.SummonInstanceId,
-                    servantType: data0.ServantType,
-                    searchTargetType: data0.SearchTargetType,
-                    cooperativeSCGuid: data0.CooperativeSCGuid,
-                    aliveTime: data0.AliveTime,
-                    catchTarget: catchTarget ?? default,
-                    delayBornTime: data0.DelayBornTime,
-                    bornMontagePath: data0.BornMontagePath,
-                    bornSkill: data0.BornSkill,
-                    delayEffectTime: data0.DelayEffectTime,
-                    delaySummonTime: data0.DelaySummonTime,
-                    isSummonerAsMaster: data0.IsSummonerAsMaster,
-                    equipmentState: data0.EquipmentState,
-                    initSpeed: data0.InitSpeed,
-                    bornEffectPath: data0.BornEffectPath,
-                    disappearMontagePathList: data0.DisappearMontagePathList,
-                    destroyDelayTime: data0.DestroyDelayTime
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new SpawnSummonEvent(
+                summoner: summoner.Value,
+                summonGuid: data0.SummonGuid,
+                summonClassPath: data0.SummonClassPath,
+                location: data0.Location,
+                rotation: data0.Rotation,
+                safeClampToLand: data0.SafeClampToLand,
+                summonId: data0.SummonId,
+                summonInstanceId: data0.SummonInstanceId,
+                servantType: data0.ServantType,
+                searchTargetType: data0.SearchTargetType,
+                cooperativeSCGuid: data0.CooperativeSCGuid,
+                aliveTime: data0.AliveTime,
+                catchTarget: catchTarget ?? default,
+                delayBornTime: data0.DelayBornTime,
+                bornMontagePath: data0.BornMontagePath,
+                bornSkill: data0.BornSkill,
+                delayEffectTime: data0.DelayEffectTime,
+                delaySummonTime: data0.DelaySummonTime,
+                isSummonerAsMaster: data0.IsSummonerAsMaster,
+                equipmentState: data0.EquipmentState,
+                initSpeed: data0.InitSpeed,
+                bornEffectPath: data0.BornEffectPath,
+                disappearMontagePathList: data0.DisappearMontagePathList,
+                destroyDelayTime: data0.DestroyDelayTime
+            ), context);
         }, this, data);
     }
 
     // NOTE(api): Changed from AreaOfInterestAll
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnRequestSpawnUnits(RequestSpawnUnitsData data)
+    private void OnRequestSpawnUnits(RequestSpawnUnitsData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            if (self._policyDir.ForEvent<RequestSpawnUnitsEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new RequestSpawnUnitsEvent(
-                    unitName: data0.UnitName,
-                    count: data0.Count,
-                    teamId: data0.TeamId,
-                    location: data0.Location
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new RequestSpawnUnitsEvent(
+                unitName: data0.UnitName,
+                count: data0.Count,
+                teamId: data0.TeamId,
+                location: data0.Location
+            ), default(EmptyContext));
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnBroadcastUnitSpawn(BroadcastUnitSpawnData data)
+    private void OnBroadcastUnitSpawn(BroadcastUnitSpawnData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
@@ -796,83 +733,71 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<BroadcastUnitSpawnEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new BroadcastUnitSpawnEvent(
-                    entity: entity.Value,
-                    unitName: data0.UnitName,
-                    guid: data0.Guid,
-                    location: data0.Location
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new BroadcastUnitSpawnEvent(
+                entity: entity.Value,
+                unitName: data0.UnitName,
+                guid: data0.Guid,
+                location: data0.Location
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnPlayerTransBegin(PlayerTransBeginData data)
+    private void OnPlayerTransBegin(PlayerTransBeginData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.MainCharacterEvent<PlayerTransBeginEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new PlayerTransBeginEvent(
-                    entity: mainEntity.Entity,
-                    unitResId: data0.UnitResId,
-                    unitBornSkillId: data0.UnitBornSkillId,
-                    enableBlendViewTarget: data0.EnableBlendViewTarget,
-                    transBeginType: data0.TransBeginType
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new PlayerTransBeginEvent(
+                entity: mainEntity.Entity,
+                unitResId: data0.UnitResId,
+                unitBornSkillId: data0.UnitBornSkillId,
+                enableBlendViewTarget: data0.EnableBlendViewTarget,
+                transBeginType: data0.TransBeginType
+            ), mainEntity.Entity);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnPlayerTransEnd(PlayerTransEndData data)
+    private void OnPlayerTransEnd(PlayerTransEndData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.MainCharacterEvent<PlayerTransEndEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new PlayerTransEndEvent(
-                    entity: mainEntity.Entity,
-                    unitResId: data0.UnitResId,
-                    unitBornSkillId: data0.UnitBornSkillId,
-                    enableBlendViewTarget: data0.EnableBlendViewTarget,
-                    transEndType: data0.TransEndType
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new PlayerTransEndEvent(
+                entity: mainEntity.Entity,
+                unitResId: data0.UnitResId,
+                unitBornSkillId: data0.UnitBornSkillId,
+                enableBlendViewTarget: data0.EnableBlendViewTarget,
+                transEndType: data0.TransEndType
+            ), mainEntity.Entity);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnPlayMovieRequest(PlayerId __sender, PlayMovieRequestData requestData)
+    private void OnPlayMovieRequest(PlayerId __sender, PlayMovieRequestData requestData)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, data0, sender) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data0, _) =>
         {
-            if (self._policyDir.ForEvent<PlayMovieRequestEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new PlayMovieRequestEvent(
-                    sequenceId: data0.SequenceId,
-                    disablePlayerControl: data0.DisablePlayerControl,
-                    disableMovementInput: data0.DisableMovementInput,
-                    disableLookAtInput: data0.DisableLookAtInput,
-                    hidePlayer: data0.HidePlayer,
-                    hideHud: data0.HideHud,
-                    overlapBoxGuid: data0.OverlapBoxGuid,
-                    matchType: data0.MatchType
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new PlayMovieRequestEvent(
+                sequenceId: data0.SequenceId,
+                disablePlayerControl: data0.DisablePlayerControl,
+                disableMovementInput: data0.DisableMovementInput,
+                disableLookAtInput: data0.DisableLookAtInput,
+                hidePlayer: data0.HidePlayer,
+                hideHud: data0.HideHud,
+                overlapBoxGuid: data0.OverlapBoxGuid,
+                matchType: data0.MatchType
+            ), default(EmptyContext));
         }, this, requestData, __sender);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnSetTarget(SetTargetData data)
+    private void OnSetTarget(SetTargetData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
@@ -884,11 +809,11 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
             if (data0.ClearTarget)
             {
-                self._mappedEvent.InvokeInGame(new SetTargetEvent(
+                self._mappedEvent.InvokeInGameIfApplicable(new SetTargetEvent(
                     character: character.Value,
                     target: default,
                     clearTarget: true
-                ));
+                ), character.Value);
                 return;
             }
 
@@ -898,19 +823,16 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<SetTargetEvent>().CanEcsInvokeGameEvent(character.Value))
-            {
-                self._mappedEvent.InvokeInGame(new SetTargetEvent(
-                    character: character.Value,
-                    target: target.Value,
-                    clearTarget: false
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new SetTargetEvent(
+                character: character.Value,
+                target: target.Value,
+                clearTarget: false
+            ), character.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnCastImmobilize(NetworkId caster)
+    private void OnCastImmobilize(NetworkId caster)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, caster0) =>
         {
@@ -924,15 +846,12 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<CastImmobilizeEvent>().CanEcsInvokeGameEvent(casterEntity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new CastImmobilizeEvent(casterEntity.Value));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new CastImmobilizeEvent(casterEntity.Value), casterEntity.Value);
         }, this, caster);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnTriggerImmobilize(TriggerImmobilizeData data)
+    private void OnTriggerImmobilize(TriggerImmobilizeData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
@@ -948,19 +867,16 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<TriggerImmobilizeEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new TriggerImmobilizeEvent(
-                    entity: caster.Value,
-                    target: target.Value,
-                    greatSageTalentActiveBuff: data0.GreatSageTalentActiveBuff
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new TriggerImmobilizeEvent(
+                entity: caster.Value,
+                target: target.Value,
+                greatSageTalentActiveBuff: data0.GreatSageTalentActiveBuff
+            ), default(EmptyContext));
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnRelieveImmobilize(NetworkId affected)
+    private void OnRelieveImmobilize(NetworkId affected)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, affected0) =>
         {
@@ -970,51 +886,42 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<TriggerImmobilizeEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new RelieveImmobilizeEvent(affectedEntity.Value));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new RelieveImmobilizeEvent(affectedEntity.Value), default(EmptyContext));
         }, this, affected);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnPhantomRush(NetworkId netId, ESkillDirection direction)
+    private void OnPhantomRush(NetworkId netId, ESkillDirection direction)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, netId0, direction0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.MainCharacterEvent<PhantomRushEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new PhantomRushEvent(mainEntity.Entity, direction0));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new PhantomRushEvent(mainEntity.Entity, direction0), mainEntity.Entity);
         }, this, netId, direction);
     }
 
     // NOTE(api): Changed from AreaOfInterestAll
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    public void OnBroadcastPlayerTransform(BroadcastPlayerTransformData data)
+    private void OnBroadcastPlayerTransform(BroadcastPlayerTransformData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.ForEvent<BroadcastPlayerTransformEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new BroadcastPlayerTransformEvent(
-                    entity: mainEntity.Entity,
-                    location: data0.Location,
-                    rotation: data0.Rotation
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new BroadcastPlayerTransformEvent(
+                entity: mainEntity.Entity,
+                location: data0.Location,
+                rotation: data0.Rotation
+            ), default(EmptyContext));
         }, this, data);
     }
 
     // NOTE(api): Changed from AreaOfInterestAll
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnRebirthPlayer(NetworkId netId, bool isTeleport)
+    private void OnRebirthPlayer(NetworkId netId, bool isTeleport)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, netId0, isTeleport0) =>
         {
@@ -1023,18 +930,15 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.ForEvent<RebirthPlayerEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new RebirthPlayerEvent(
-                    entity: mainEntity.Entity,
-                    teleport: isTeleport0
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new RebirthPlayerEvent(
+                entity: mainEntity.Entity,
+                teleport: isTeleport0
+            ), default(EmptyContext));
         }, this, netId, isTeleport);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnDamageNum(DamageNumParam damageNum, NetworkId netId)
+    private void OnDamageNum(DamageNumParam damageNum, NetworkId netId)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, damageNum0, netId0) =>
         {
@@ -1044,24 +948,21 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<DamageNumEvent, Entity>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new DamageNumEvent(
-                    entity: entity.Value,
-                    damageType: damageNum0.DamageType,
-                    damageNum: damageNum0.DamageNum,
-                    amplitude: damageNum0.Amplitude,
-                    realHitLocation: damageNum0.RealHitLocation,
-                    realHitDir: damageNum0.RealHitDir,
-                    attackerTeamType: damageNum0.AttackerTeamType
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new DamageNumEvent(
+                entity: entity.Value,
+                damageType: damageNum0.DamageType,
+                damageNum: damageNum0.DamageNum,
+                amplitude: damageNum0.Amplitude,
+                realHitLocation: damageNum0.RealHitLocation,
+                realHitDir: damageNum0.RealHitDir,
+                attackerTeamType: damageNum0.AttackerTeamType
+            ), entity.Value);
         }, this, damageNum, netId);
     }
 
     // NOTE(api): Changed from AreaOfInterestAll
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnTeleportFinish(NetworkId netId)
+    private void OnTeleportFinish(NetworkId netId)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
         {
@@ -1071,10 +972,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<TeleportFinishEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new TeleportFinishEvent(mainEntity.Entity));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new TeleportFinishEvent(mainEntity.Entity), default(EmptyContext));
         }, this, netId);
     }
 
@@ -1092,92 +990,17 @@ public partial class WukongClientRpcCallbacks : IDisposable
             var fullMontagePath = string.IsNullOrEmpty(data0.MontagePath) ? ""
                 : data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.MontagePath) : data0.MontagePath;
 
-            if (self._policyDir.ForEvent<MontageCallbackEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new MontageCallbackEvent(
-                    entity: entity.Value,
-                    fullMontagePath: fullMontagePath,
-                    position: data0.Position,
-                    reset: data0.Reset
-                ));
-            }
-        }, this, data);
-    }
-
-    // FIXME(api): Seems like this is unused
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    public void OnAnimationSyncing(AnimationSyncingData data)
-    {
-        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
-        {
-            /*
-            self._logger.LogDebug("OnPreAnimationSyncing called for Host {Host} and Guest {Guest}", data0.HostNetId, data0.GuestNetId);
-
-            if (!self._netEntity.TryGetEntityByNetworkId(data0.HostNetId, out var hostEntity))
-            {
-                self._logger.LogNullDebug(nameof(data0.HostNetId));
-                return;
-            }
-
-            if (!self._netEntity.TryGetEntityByNetworkId(data0.GuestNetId, out var guestEntity))
-            {
-                self._logger.LogNullDebug(nameof(data0.GuestNetId));
-                return;
-            }
-
-            if (self._policyDir.ForEvent<AnimationSyncingEvent>().ShouldEventPropagateToGame(hostEntity.Value))
-            {
-                var fullMontagePath = data0.Compressed ? Compressors.MontageNameCompressor.Decompress(data0.Montage) : data0.Montage;
-
-                self._mappedEvent.PropagateToGame(new AnimationSyncingEvent(
-                    host: hostEntity.Value,
-                    guest: guestEntity.Value,
-                    fullMontagePath: fullMontagePath
-                ));
-            }
-            */
-        }, this, data);
-    }
-
-    // FIXME(api): Seems like this is unused
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnBeginSyncAnimation(BeginSyncAnimationData data)
-    {
-        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
-        {
-            /*
-            self._logger.LogDebug("OnBeginSyncAnimation called for Host {NetId} with GuestMontage '{MontagePath}'", data0.HostNetId, data0.GuestMontage);
-
-            if (!self._netEntity.TryGetEntityByNetworkId(data0.HostNetId, out var hostEntity))
-            {
-                self._logger.LogNullDebug(nameof(data0.HostNetId));
-                return;
-            }
-
-            var fullMontagePath = data0.compressed ? Compressors.MontageNameCompressor.Decompress(data0.GuestMontage) : data0.GuestMontage;
-
-            if (self._policyDir.ForEvent<BeginSyncAnimationEvent>().ShouldEventPropagateToGame(hostEntity.Value))
-            {
-                self._mappedEvent.PropagateToGame(new BeginSyncAnimationEvent(
-                    host: hostEntity.Value,
-                    fullGuestMontage: fullMontagePath,
-                    foundHostSyncPointOnDummyMesh: data0.bFoundHostSyncPointOnDummyMesh,
-                    selfSyncPointOnHost: data0.SelfSyncPointOnHost,
-                    targetSyncPointOnHost: data0.TargetSyncPointOnHost,
-                    selfSyncPointOnGuest: data0.SelfSyncPointOnGuest,
-                    forceSyncDummyMeshAnimation: data0.bForceSyncDummyMeshAnimation,
-                    enableDebugDraw: data0.bEnableDebugDraw,
-                    notifyBeginTime: data0.NotifyBeginTime,
-                    totalDuration: data0.TotalDuration,
-                    animationSyncMontageInstanceId: data0.AnimationSyncMontageInstanceId
-                ));
-            }
-            */
+            self._mappedEvent.InvokeInGameIfApplicable(new MontageCallbackEvent(
+                entity: entity.Value,
+                fullMontagePath: fullMontagePath,
+                position: data0.Position,
+                reset: data0.Reset
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnUnitDead(UnitDeadData data)
+    private void OnUnitDead(UnitDeadData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
@@ -1187,37 +1010,31 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<UnitDeadEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new UnitDeadEvent(
-                    entity: entity.Value,
-                    deadReason: data0.DeadReason,
-                    dmgId: data0.DmgId,
-                    stiffLevel: data0.StiffLevel,
-                    isDotDmg: data0.IsDotDmg,
-                    abnormalType: data0.AbnormalType
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new UnitDeadEvent(
+                entity: entity.Value,
+                deadReason: data0.DeadReason,
+                dmgId: data0.DmgId,
+                stiffLevel: data0.StiffLevel,
+                isDotDmg: data0.IsDotDmg,
+                abnormalType: data0.AbnormalType
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.GlobalOthers)]
-    internal void OnWaitingForSequence(SequenceWaitingData data)
+    private void OnWaitingForSequence(SequenceWaitingData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            if (self._policyDir.ForEvent<WaitingForSequenceEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new WaitingForSequenceEvent(
-                    sequenceId: data0.SequenceID,
-                    sequenceLocation: data0.SequenceLocation
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new WaitingForSequenceEvent(
+                sequenceId: data0.SequenceID,
+                sequenceLocation: data0.SequenceLocation
+            ), default(EmptyContext));
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnIronBodyStart(NetworkId netId)
+    private void OnIronBodyStart(NetworkId netId)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
         {
@@ -1227,10 +1044,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<IronBodyStartEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new IronBodyStartEvent(mainEntity.Entity));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new IronBodyStartEvent(mainEntity.Entity), mainEntity.Entity);
         }, this, netId);
     }
 
@@ -1246,13 +1060,10 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitSpawnedEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new UnitSpawnedEvent(
-                    entity: entity.Value,
-                    playerId: sender
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new UnitSpawnedEvent(
+                entity: entity.Value,
+                playerId: sender
+            ), default(EmptyContext));
         }, this, __sender, netId);
     }
 
@@ -1270,13 +1081,10 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<UnitDespawnedEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new UnitDespawnedEvent(
-                    entity: entity.Value,
-                    playerId: sender
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new UnitDespawnedEvent(
+                entity: entity.Value,
+                playerId: sender
+            ), default(EmptyContext));
         }, this, __sender, netId);
     }
 
@@ -1288,13 +1096,10 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (!self._netEntity.TryGetEntityByNetworkId(interactData0.NetId, out var entity))
                 return;
 
-            if (self._policyDir.ForEvent<TamerSkillInteractEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new TamerSkillInteractEvent(
-                    entity: entity.Value,
-                    skillId: interactData0.SkillId
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new TamerSkillInteractEvent(
+                entity: entity.Value,
+                skillId: interactData0.SkillId
+            ), entity.Value);
         }, this, interactData);
     }
 
@@ -1309,18 +1114,15 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<TriggerMagicallyChangeEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                var fullPath = data0.Compressed ? Compressors.VigorNameCompressor.Decompress(data0.ConfigAssetName) : data0.ConfigAssetName;
-                self._mappedEvent.InvokeInGame(new TriggerMagicallyChangeEvent(
-                    entity: mainEntity.Entity,
-                    configPathName: fullPath,
-                    skillId: data0.SkillID,
-                    recoverSkillId: data0.RecoverSkillID,
-                    curVigorSkillId: data0.CurVigorSkillID,
-                    castReason: data0.CastReason
-                ));
-            }
+            var fullPath = data0.Compressed ? Compressors.VigorNameCompressor.Decompress(data0.ConfigAssetName) : data0.ConfigAssetName;
+            self._mappedEvent.InvokeInGameIfApplicable(new TriggerMagicallyChangeEvent(
+                entity: mainEntity.Entity,
+                configPathName: fullPath,
+                skillId: data0.SkillID,
+                recoverSkillId: data0.RecoverSkillID,
+                curVigorSkillId: data0.CurVigorSkillID,
+                castReason: data0.CastReason
+            ), mainEntity.Entity);
         }, this, data);
     }
 
@@ -1335,13 +1137,10 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<ResetMagicallyChangeEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new ResetMagicallyChangeEvent(
-                    entity: mainEntity.Entity,
-                    reason: reason0
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new ResetMagicallyChangeEvent(
+                entity: mainEntity.Entity,
+                reason: reason0
+            ), mainEntity.Entity);
         }, this, netId, reason);
     }
 
@@ -1362,15 +1161,12 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<ProjectileTargetEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new ProjectileTargetEvent(
-                    character: mainEntity.Entity,
-                    projectileName: targetData0.ProjectileName,
-                    target: target.Value,
-                    socketName: targetData0.SocketName
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new ProjectileTargetEvent(
+                character: mainEntity.Entity,
+                projectileName: targetData0.ProjectileName,
+                target: target.Value,
+                socketName: targetData0.SocketName
+            ), mainEntity.Entity);
         }, this, targetData);
     }
 
@@ -1385,15 +1181,12 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<ProjectileSwitchEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new ProjectileSwitchEvent(
-                    entity: mainEntity.Entity,
-                    projectileClassName: switchData0.ProjectileClassName,
-                    bulletSwitchId: switchData0.BulletSwitchID,
-                    switchIdx: switchData0.SwitchIdx
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new ProjectileSwitchEvent(
+                entity: mainEntity.Entity,
+                projectileClassName: switchData0.ProjectileClassName,
+                bulletSwitchId: switchData0.BulletSwitchID,
+                switchIdx: switchData0.SwitchIdx
+            ), mainEntity.Entity);
         }, this, switchData);
     }
 
@@ -1408,14 +1201,11 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<ProjectileDeadEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new ProjectileDeadEvent(
-                    entity: mainEntity.Entity,
-                    projectileClassName: data0.ProjectileClassName,
-                    reason: data0.Reason
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new ProjectileDeadEvent(
+                entity: mainEntity.Entity,
+                projectileClassName: data0.ProjectileClassName,
+                reason: data0.Reason
+            ), mainEntity.Entity);
         }, this, data);
     }
 
@@ -1430,14 +1220,11 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<MagicFieldDeadEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new MagicFieldDeadEvent(
-                    entity: entity.Value,
-                    className: magicFieldClassName0,
-                    reason: reason0
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new MagicFieldDeadEvent(
+                entity: entity.Value,
+                className: magicFieldClassName0,
+                reason: reason0
+            ), entity.Value);
         }, this, magicFieldClassName, reason, netId);
     }
 
@@ -1452,14 +1239,11 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<ProjectileMoveModeEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new ProjectileMoveModeEvent(
-                    entity: mainEntity.Entity,
-                    projectileClassName: data0.ProjectileClassName,
-                    moveMode: data0.MoveMode
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new ProjectileMoveModeEvent(
+                entity: mainEntity.Entity,
+                projectileClassName: data0.ProjectileClassName,
+                moveMode: data0.MoveMode
+            ), mainEntity.Entity);
         }, this, data);
     }
 
@@ -1475,13 +1259,10 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<PartyRespawnEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new PartyRespawnEvent(
-                    entity: entity.Value,
-                    birthShrineId: shrineId
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new PartyRespawnEvent(
+                entity: entity.Value,
+                birthShrineId: shrineId
+            ), default(EmptyContext));
         }, this, birthPointId, netId);
     }
 
@@ -1493,10 +1274,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            if (self._policyDir.MainCharacterEvent<AfterRebirthEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new AfterRebirthEvent(mainEntity.Entity));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new AfterRebirthEvent(mainEntity.Entity), mainEntity.Entity);
         }, this, netId);
     }
 
@@ -1511,13 +1289,10 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<RestAtShrineEvent, Entity>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new RestAtShrineEvent(
-                    entity: entity.Value,
-                    rebirthPointId: shrineId
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new RestAtShrineEvent(
+                entity: entity.Value,
+                rebirthPointId: shrineId
+            ), entity.Value);
         }, this, birthPointId, netId);
     }
 
@@ -1533,13 +1308,10 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<PartySoftlockEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new PartySoftlockEvent(
-                    entity: entity.Value,
-                    birthPointId: shrineId
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new PartySoftlockEvent(
+                entity: entity.Value,
+                birthPointId: shrineId
+            ), default(EmptyContext));
         }, this, birthPointId, netId);
     }
 
@@ -1554,14 +1326,11 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<StartJumpEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new StartJumpEvent(
-                    entity: mainEntity.Entity,
-                    startJumpDir: jumpData0.StartJumpDir,
-                    inputVector: jumpData0.InputVector
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new StartJumpEvent(
+                entity: mainEntity.Entity,
+                startJumpDir: jumpData0.StartJumpDir,
+                inputVector: jumpData0.InputVector
+            ), mainEntity.Entity);
         }, this, jumpData);
     }
 
@@ -1576,10 +1345,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.MainCharacterEvent<StopJumpEvent>().ShouldEventPropagateToGame(mainEntity))
-            {
-                self._mappedEvent.InvokeInGame(new StopJumpEvent(mainEntity.Entity));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new StopJumpEvent(mainEntity.Entity), mainEntity.Entity);
         }, this, netId);
     }
 
@@ -1594,10 +1360,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<MonsterWakeUpEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new MonsterWakeUpEvent(entity.Value));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new MonsterWakeUpEvent(entity.Value), entity.Value);
         }, this, netId);
     }
 
@@ -1612,14 +1375,11 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<PlayBaneEffectEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new PlayBaneEffectEvent(
-                    entity: entity.Value,
-                    stateType: data0.StateType,
-                    actionType: data0.ActionType
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new PlayBaneEffectEvent(
+                entity: entity.Value,
+                stateType: data0.StateType,
+                actionType: data0.ActionType
+            ), entity.Value);
         }, this, data);
     }
 
@@ -1634,18 +1394,15 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<StopBaneEffectEvent>().CanEcsInvokeGameEvent(entity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new StopBaneEffectEvent(
-                    entity: entity.Value,
-                    stateType: data0.StateType
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new StopBaneEffectEvent(
+                entity: entity.Value,
+                stateType: data0.StateType
+            ), entity.Value);
         }, this, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnCastSkill(NetworkId casterNetId, int skillId, ECastSkillSourceType skillType)
+    private void OnCastSkill(NetworkId casterNetId, int skillId, ECastSkillSourceType skillType)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, casterNetId0, skillId0, skillType0) =>
         {
@@ -1655,14 +1412,11 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 return;
             }
 
-            if (self._policyDir.ForEvent<CastSkillEvent>().CanEcsInvokeGameEvent(casterEntity.Value))
-            {
-                self._mappedEvent.InvokeInGame(new CastSkillEvent(
-                    entity: casterEntity.Value,
-                    skillId: skillId0,
-                    skillType: skillType0
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new CastSkillEvent(
+                entity: casterEntity.Value,
+                skillId: skillId0,
+                skillType: skillType0
+            ), casterEntity.Value);
         }, this, casterNetId, skillId, skillType);
     }
 
@@ -1670,7 +1424,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
     public event Action<ChatMessage>? OnGetChatMessage;
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnChatMessage(ChatMessage message)
+    private void OnChatMessage(ChatMessage message)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, message0) => { self.OnGetChatMessage?.Invoke(message0); }, this, message);
     }
@@ -1682,13 +1436,13 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
     // NOTE(api): Changed from AreaOfInterestAll
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    internal void OnPvpEvent(PlayerId __sender, int[] data)
+    private void OnPvpEvent(PlayerId __sender, int[] data)
     {
         OnPvpEventReceived?.Invoke(__sender, data);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnShowAntiStallWarning(int warningTime)
+    private void OnShowAntiStallWarning(int warningTime)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, warningTime0) =>
         {
@@ -1706,7 +1460,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnShowAntiStallAction()
+    private void OnShowAntiStallAction()
     {
         _ecsLoop.Scheduler.Schedule(static (_, self) =>
         {
@@ -1722,7 +1476,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnHideAntiStall()
+    private void OnHideAntiStall()
     {
         _ecsLoop.Scheduler.Schedule(static (_, self) =>
         {
@@ -1737,7 +1491,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
-    internal void OnStallDamage(NetworkId netId, float value)
+    private void OnStallDamage(NetworkId netId, float value)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, netId0, value0) =>
         {

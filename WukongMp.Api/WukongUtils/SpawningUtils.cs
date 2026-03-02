@@ -241,7 +241,7 @@ public static class SpawningUtils
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", tamerKind, location.ToString());
 
             // NOTE(api): PolicyDir check always true because newly created entity is owned locally.
-            if (policyDir.TamerEvent<BroadcastUnitSpawnEvent>().ShouldEventPropagateToEcs(tamerEntity))
+            if (policyDir.TamerEvent<BroadcastUnitSpawnEvent>().CanGameEventNotifyEcs(tamerEntity))
             {
                 policyDir.MappedEvent.NotifyEcs(new BroadcastUnitSpawnEvent(
                     entity: tamerEntity.Entity,

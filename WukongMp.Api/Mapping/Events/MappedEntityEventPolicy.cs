@@ -6,7 +6,7 @@ namespace WukongMp.Api.Mapping.Events;
 
 public readonly struct MappedEntityEventPolicy(IMappingEventPolicy<Entity> dataPolicy)
 {
-    public bool ShouldEventPropagateToEcs(Entity? tamerEntity)
+    public bool CanGameEventNotifyEcs(Entity? tamerEntity)
     {
         if (!tamerEntity.HasValue)
             return false;
@@ -15,7 +15,7 @@ public readonly struct MappedEntityEventPolicy(IMappingEventPolicy<Entity> dataP
     }
 
     [Obsolete("Is this event needed in the API?")]
-    public bool ShouldEventPropagateToGame(Entity? tamerEntity)
+    public bool CanEcsInvokeGameEvent(Entity? tamerEntity)
     {
         if (!tamerEntity.HasValue)
             return false;
@@ -23,7 +23,7 @@ public readonly struct MappedEntityEventPolicy(IMappingEventPolicy<Entity> dataP
         return dataPolicy.CanEcsInvokeGameEvent(tamerEntity.Value);
     }
 
-    public bool ShouldGameEventRunLocally(Entity? tamerEntity, out EventSource source)
+    public bool CanGameEventRunLocally(Entity? tamerEntity, out EventSource source)
     {
         if (!tamerEntity.HasValue)
         {

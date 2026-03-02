@@ -42,7 +42,7 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         _logger = logger;
 
         InitRpc();
-        
+
         _mappedEvent.RegisterEcsEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
         {
             self.SendSkipMovie(
@@ -65,16 +65,13 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            if (self._policyDir.ForEvent<SkipMovieEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(
-                    new SkipMovieEvent(
-                        sequenceId: data0.SequenceId,
-                        waitingPlayers: data0.WaitingPlayers,
-                        allPlayers: data0.AllPlayers
-                    )
-                );
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(
+                new SkipMovieEvent(
+                    sequenceId: data0.SequenceId,
+                    waitingPlayers: data0.WaitingPlayers,
+                    allPlayers: data0.AllPlayers
+                ), default(EmptyContext)
+            );
         }, this, data);
     }
 
@@ -98,12 +95,9 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         var state = (BeguilingChantState)stateRaw;
         _ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
         {
-            if (self._policyDir.ForEvent<BeguilingChantEvent, EmptyContext>().CanEcsInvokeGameEvent(default))
-            {
-                self._mappedEvent.InvokeInGame(new BeguilingChantEvent(
-                    state: state0
-                ));
-            }
+            self._mappedEvent.InvokeInGameIfApplicable(new BeguilingChantEvent(
+                state: state0
+            ), default(EmptyContext));
         }, this, state);
     }
 
@@ -132,7 +126,7 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
         _widgetManager.UpdatePingIndicator(rtt);
-        
+
         DI.Instance.NetworkSessionStats.AddPing(rtt);
     }
 
