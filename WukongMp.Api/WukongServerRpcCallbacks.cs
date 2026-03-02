@@ -132,6 +132,8 @@ public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
         _widgetManager.UpdatePingIndicator(rtt);
+        
+        DI.Instance.NetworkSessionStats.AddPing(rtt);
     }
 
     public void SendPing()

@@ -21,6 +21,7 @@ using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Client.Shim.ECS;
 using ReadyM.Relay.Client.State;
+using ReadyM.Relay.Client.Utilities;
 using ReadyM.Relay.Common.ECS.Archetypes;
 using ReadyM.Relay.Common.ECS.Jobs;
 using ReadyM.Relay.Common.ECS.Registry;
@@ -55,6 +56,7 @@ internal sealed class DI
     internal InputManager InputManager { get; private set; } = null!;
     internal ILoggerFactory LoggerFactory { get; private set; } = null!;
     internal ILogger Logger { get; private set; } = null!;
+    internal NetworkSessionStats NetworkSessionStats { get; private set; } = null!;
 
     internal Store World { get; private set; } = null!;
     internal ClientWukongArchetypeRegistration WukongArchetype { get; private set; } = null!;
@@ -152,6 +154,7 @@ internal sealed class DI
 
         var loggerFactory = LoggerFactory;
         var logger = Logger;
+        var pingStatistics = NetworkSessionStats = new NetworkSessionStats(LaunchParameters.Instance.UserGuid.ToString(), LaunchParameters.Instance.Region);
 
         var inputManager = InputManager = InputManager.Instance;
 

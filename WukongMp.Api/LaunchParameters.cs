@@ -32,6 +32,7 @@ public class LaunchParameters
     public string? ApiBaseUrl { get; }
     public string? JwtToken { get; }
     public string Nickname { get; } = "Player";
+    public int Region { get; } = -1;
     public int? LevelId { get; set; } // TODO: this needs to be removed after testing
 
     public string? ShimDbName { get; }
@@ -90,14 +91,21 @@ public class LaunchParameters
         // BOTH: server IP and port number
         ServerIp = data.GetValueOrDefault("SERVER_IP");
 
-        var serverPort = data.GetValueOrDefault("SERVER_PORT");
-        if (!string.IsNullOrWhiteSpace(serverPort) && int.TryParse(serverPort, out var port))
+        var serverPort = data.GetValueOrDefault("SERVER_PORT", "");
+        if (int.TryParse(serverPort, out var port))
         {
             ServerPort = port;
         }
 
         // BOTH: user nickname
         Nickname = data.GetValueOrDefault("NICKNAME");
+        
+        // BOTH: server region
+        var region = data.GetValueOrDefault("REGION", "");
+        if (int.TryParse(region, out var regionId))
+        {
+            Region = regionId;
+        }
 
         // PvP: Level ID
         var level = data.GetValueOrDefault("LEVEL_ID");
