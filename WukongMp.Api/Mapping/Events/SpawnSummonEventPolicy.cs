@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
@@ -18,81 +17,65 @@ public class SpawnSummonEventPolicy<TEvent>(
     WukongPlayerState playerState,
     WukongAreaState areaState,
     Store world,
-    DataSideChannel sideChannel) : IMappingEventPolicy<SpawnSummonContext>
+    DataSideChannel sideChannel
+) : MappingEventPolicyBase<TEvent, SpawnSummonContext>(sideChannel)
 {
     private bool CanSummon(Entity? summonerEntity, FVector summonLocation)
     {
         if (summonerEntity != null && MainCharacterEntity.IsMainCharacter(summonerEntity.Value))
         {
-            // Local player summons.
-            // Other player summons.
+            // If a player is the summoner, apply ownership semantics.
             return ownership.OwnsEntity(summonerEntity.Value);
         }
-        else // Summoner is not a player e.g. spawn point
-        {
-            var localMainEntity = playerState.LocalMainCharacter;
-            if (localMainEntity == null)
-            {
-                return false;
-            }
 
-            if (playerState.LocalPlayerId == null)
-                return false;
-
-            if (areaState.IsMasterClient)
-                return true;
-
-            var localPlayerId = playerState.LocalPlayerId.Value;
-            var localPosition = localMainEntity.Value.GetState().Location;
-            var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
-            var squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
-            if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
-            {
-                return false; // Distant summon -> master as owner
-            }
-
-            // Check if master or another player with lower id is nearby
-            bool canSummon = true;
-            world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, entity) =>
-            {
-                if (entity == localMainEntity.Value.Entity)
-                    return;
-
-                var squaredDistance = Vector3.DistanceSquared(localPosition, mainComp.Location);
-                if (squaredDistance < squaredSpawnOwnershipRadius && (areaState.MasterClientId == mainComp.PlayerId || mainComp.PlayerId.RawValue < localPlayerId.RawValue))
-                {
-                    canSummon = false;
-                }
-            });
-            return canSummon;
-        }
-    }
-
-    public Type ContextType
-        => typeof(Entity);
-    
-    public bool ShouldEventPropagateToEcs(in SpawnSummonContext context)
-    {
-        if (sideChannel.HasData<PropagatingToGameScope<TEvent>>())
+        // Summoner is not a player e.g. spawn point or enemy
+        var localMainEntity = playerState.LocalMainCharacter;
+        if (localMainEntity == null)
             return false;
 
+        if (playerState.LocalPlayerId == null)
+            return false;
+
+        if (areaState.IsMasterClient) // Master client can always summon, to avoid issues with distant summons and no players around.
+            return true;
+
+        var localPlayerId = playerState.LocalPlayerId.Value;
+        var localPosition = localMainEntity.Value.GetState().Location;
+        var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
+        const float squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
+        if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
+        {
+            return false; // Distant summon -> master as owner
+        }
+
+        // Check if master or another player with lower id is nearby
+        bool canSummon = true;
+        world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, entity) =>
+        {
+            if (entity == localMainEntity.Value.Entity)
+                return;
+
+            var squaredDistance = Vector3.DistanceSquared(localPosition, mainComp.Location);
+            if (squaredDistance < squaredSpawnOwnershipRadius && (areaState.MasterClientId == mainComp.PlayerId || mainComp.PlayerId.RawValue < localPlayerId.RawValue))
+            {
+                canSummon = false;
+            }
+        });
+        return canSummon;
+    }
+
+    protected override bool ShouldEventPropagateToEcsImpl(in SpawnSummonContext context)
+    {
         return CanSummon(context.SummonerEntity, context.SummonLocation);
     }
 
-    public bool ShouldEventPropagateToGame(in SpawnSummonContext context)
+    protected override bool ShouldEventPropagateToGameImpl(in SpawnSummonContext context)
     {
-        if (sideChannel.HasData<PropagatingToEcsScope<TEvent>>())
-            return false;
-        
         return true;
     }
 
-    public bool ShouldGameEventRunLocally(in SpawnSummonContext context, out EventSource eventSource)
+    protected override bool ShouldGameEventRunLocallyImpl(in SpawnSummonContext context)
     {
-        eventSource = sideChannel.HasData<PropagatingToGameScope<TEvent>>()
-            ? EventSource.Trigger
-            : EventSource.Game;
-
         return CanSummon(context.SummonerEntity, context.SummonLocation);
     }
 }

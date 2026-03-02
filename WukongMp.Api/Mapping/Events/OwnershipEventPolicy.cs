@@ -1,5 +1,4 @@
-﻿using System;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using ReadyM.Api.Helpers;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Client.State;
@@ -8,32 +7,21 @@ namespace WukongMp.Api.Mapping.Events;
 
 public class OwnershipEventPolicy<TEvent>(
     ClientOwnershipManager ownership,
-    DataSideChannel sideChannel) : IMappingEventPolicy<Entity>
+    DataSideChannel sideChannel
+) : MappingEventPolicyBase<TEvent, Entity>(sideChannel)
 {
-    public Type ContextType
-        => typeof(Entity);
-    
-    public bool ShouldEventPropagateToEcs(in Entity context)
+    protected override bool ShouldEventPropagateToEcsImpl(in Entity context)
     {
-        if (sideChannel.HasData<PropagatingToGameScope<TEvent>>())
-            return false;
-        
         return ownership.OwnsEntity(context);
     }
 
-    public bool ShouldEventPropagateToGame(in Entity context)
+    protected override bool ShouldEventPropagateToGameImpl(in Entity context)
     {
-        if (sideChannel.HasData<PropagatingToEcsScope<TEvent>>())
-            return false;
-        
         return !ownership.OwnsEntity(context);
     }
 
-    public bool ShouldGameEventRunLocally(in Entity context, out EventSource eventSource)
+    protected override bool ShouldGameEventRunLocallyImpl(in Entity context)
     {
-        eventSource = sideChannel.HasData<PropagatingToGameScope<TEvent>>()
-            ? EventSource.Trigger
-            : EventSource.Game;
-        return true;
+        return ownership.OwnsEntity(context);
     }
 }

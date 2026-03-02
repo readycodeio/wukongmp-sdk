@@ -234,7 +234,7 @@ internal sealed class DI
 
         var sideChannel = new DataSideChannel();
 
-        var policyDir = new MappingPolicyDirectory();
+        var policyDir = new MappingPolicyDirectory(sideChannel);
         policyDir.RegisterDefaultCreateDelete<AActor>(
             actor => areaState.IsMasterClient,
             entity => clientOwnership.OwnsEntity(entity));

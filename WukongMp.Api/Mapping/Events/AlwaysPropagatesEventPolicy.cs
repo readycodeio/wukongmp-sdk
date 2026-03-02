@@ -1,36 +1,23 @@
-﻿using System;
-using ReadyM.Api.Helpers;
+﻿using ReadyM.Api.Helpers;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Common.Mapping;
 
 namespace WukongMp.Api.Mapping.Events;
 
-public class AlwaysPropagatesEventPolicy<TEvent>(DataSideChannel sideChannel) : IMappingEventPolicy<EmptyContext>
+public class AlwaysPropagatesEventPolicy<TEvent>(DataSideChannel sideChannel) : MappingEventPolicyBase<TEvent, EmptyContext>(sideChannel)
 {
-    public Type ContextType
-        => typeof(EmptyContext);
-    
-    public bool ShouldEventPropagateToEcs(in EmptyContext context)
+    protected override bool ShouldEventPropagateToEcsImpl(in EmptyContext context)
     {
-        if (sideChannel.HasData<PropagatingToGameScope<TEvent>>())
-            return false;
-        
         return true;
     }
 
-    public bool ShouldEventPropagateToGame(in EmptyContext context)
+    protected override bool ShouldEventPropagateToGameImpl(in EmptyContext context)
     {
-        if (sideChannel.HasData<PropagatingToEcsScope<TEvent>>())
-            return false;
-
         return true;
     }
 
-    public bool ShouldGameEventRunLocally(in EmptyContext context, out EventSource eventSource)
+    protected override bool ShouldGameEventRunLocallyImpl(in EmptyContext context)
     {
-        eventSource = sideChannel.HasData<PropagatingToGameScope<TEvent>>()
-            ? EventSource.Trigger
-            : EventSource.Game;
         return true;
     }
 }

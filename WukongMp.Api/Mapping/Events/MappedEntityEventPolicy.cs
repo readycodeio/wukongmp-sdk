@@ -1,3 +1,4 @@
+using System;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Mapping.Events;
 
@@ -13,6 +14,7 @@ public readonly struct MappedEntityEventPolicy(IMappingEventPolicy<Entity> dataP
         return dataPolicy.ShouldEventPropagateToEcs(tamerEntity.Value);
     }
 
+    [Obsolete("Is this event needed in the API?")]
     public bool ShouldEventPropagateToGame(Entity? tamerEntity)
     {
         if (!tamerEntity.HasValue)

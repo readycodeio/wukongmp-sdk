@@ -1,33 +1,24 @@
-﻿using System;
-using ReadyM.Api.Helpers;
+﻿using ReadyM.Api.Helpers;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Common.Mapping;
 
 namespace WukongMp.Api.Mapping.Events;
 
-public class AlwaysPropagatesToGameOnlyEventPolicy<TEvent>(DataSideChannel sideChannel) : IMappingEventPolicy<EmptyContext>
+/// Used for events that are only sent to clients from the server and therefore are never triggered locally.
+public class AlwaysPropagatesToGameOnlyEventPolicy<TEvent>(DataSideChannel sideChannel) : MappingEventPolicyBase<TEvent, EmptyContext>(sideChannel)
 {
-    public Type ContextType
-        => typeof(EmptyContext);
-    
-    public bool ShouldEventPropagateToEcs(in EmptyContext context)
+    protected override bool ShouldEventPropagateToEcsImpl(in EmptyContext context)
     {
         return false;
     }
 
-    public bool ShouldEventPropagateToGame(in EmptyContext context)
+    protected override bool ShouldEventPropagateToGameImpl(in EmptyContext context)
     {
-        if (sideChannel.HasData<PropagatingToEcsScope<TEvent>>())
-            return false;
-
         return true;
     }
 
-    public bool ShouldGameEventRunLocally(in EmptyContext context, out EventSource eventSource)
+    protected override bool ShouldGameEventRunLocallyImpl(in EmptyContext context)
     {
-        eventSource = sideChannel.HasData<PropagatingToGameScope<TEvent>>()
-            ? EventSource.Trigger
-            : EventSource.Game;
         return true;
     }
 }

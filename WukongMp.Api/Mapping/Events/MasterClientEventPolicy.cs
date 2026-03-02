@@ -1,6 +1,4 @@
-﻿using System;
-using Friflo.Engine.ECS;
-using ReadyM.Api.Helpers;
+﻿using ReadyM.Api.Helpers;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Common.Mapping;
 using WukongMp.Api.State;
@@ -8,37 +6,22 @@ using WukongMp.Api.State;
 namespace WukongMp.Api.Mapping.Events;
 
 public class MasterClientEventPolicy<TEvent>(
-    WukongAreaState areaState, 
-    DataSideChannel sideChannel) : IMappingEventPolicy<EmptyContext>
+    WukongAreaState areaState,
+    DataSideChannel sideChannel
+) : MappingEventPolicyBase<TEvent, EmptyContext>(sideChannel)
 {
-    public Type ContextType
-        => typeof(Entity);
-    
-    public bool ShouldEventPropagateToEcs(in EmptyContext clientManaged)
+    protected override bool ShouldEventPropagateToEcsImpl(in EmptyContext context)
     {
-        if (sideChannel.HasData<PropagatingToGameScope<TEvent>>())
-            return false;
-        
         return areaState.IsMasterClient;
     }
 
-    public bool ShouldEventPropagateToGame(in EmptyContext clientManaged)
+    protected override bool ShouldEventPropagateToGameImpl(in EmptyContext context)
     {
-        if (sideChannel.HasData<PropagatingToEcsScope<TEvent>>())
-            return false;
-        
         return !areaState.IsMasterClient;
     }
 
-    public bool ShouldGameEventRunLocally(in EmptyContext clientManaged, out EventSource eventSource)
+    protected override bool ShouldGameEventRunLocallyImpl(in EmptyContext context)
     {
-        eventSource = sideChannel.HasData<PropagatingToGameScope<TEvent>>()
-            ? EventSource.Trigger
-            : EventSource.Game;
-
-        if (eventSource == EventSource.Trigger)
-            return true;
-
         return areaState.IsMasterClient;
     }
 }
