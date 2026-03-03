@@ -7,7 +7,7 @@ namespace WukongMp.Sdk;
 public static class ReadyCharacterExtensions
 {
     extension<TSelf>(TSelf obj)
-        where TSelf : struct, IReadyEntity<TSelf>, IReadyConvertable<TSelf, ReadyCharacter> 
+        where TSelf : struct, IReadyEntity<TSelf>, IReadyConvertable<TSelf, ReadyCharacter>
     {
         public float Hp
         {
@@ -19,15 +19,14 @@ public static class ReadyCharacterExtensions
                     ref var hpComp = ref tamerEntity.Value.GetHp();
                     return hpComp.Hp;
                 }
-                else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
+
+                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
                     return mainComp.Hp;
                 }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+
+                throw new InvalidOperationException();
             }
             set
             {
@@ -59,15 +58,14 @@ public static class ReadyCharacterExtensions
                     ref var hpComp = ref tamerEntity.Value.GetHp();
                     return hpComp.HpMaxBase;
                 }
-                else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
+
+                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
                     return mainComp.HpMaxBase;
                 }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+
+                throw new InvalidOperationException();
             }
             set
             {
@@ -75,12 +73,12 @@ public static class ReadyCharacterExtensions
                 if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
                 {
                     ref var hpComp = ref tamerEntity.Value.GetHp();
-                    hpComp.HpMaxBase = value;
+                    hpComp.HpMaxBase_SetFromApi(value);
                 }
                 else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
-                    mainComp.HpMaxBase = value;
+                    mainComp.HpMaxBase_SetFromApi(value);
                 }
                 else
                 {
@@ -88,7 +86,7 @@ public static class ReadyCharacterExtensions
                 }
             }
         }
-        
+
         public int TeamId
         {
             get
@@ -97,13 +95,6 @@ public static class ReadyCharacterExtensions
                 if (!entity.TryGetComponent<TeamComponent>(out var teamComp))
                     throw new InvalidOperationException($"Entity does not have TeamComponent: {entity}");
                 return teamComp.TeamId;
-            }
-            set
-            {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (!entity.TryGetComponent<TeamComponent>(out var teamComp))
-                    throw new InvalidOperationException($"Entity does not have TeamComponent: {entity}");
-                teamComp.TeamId = value;
             }
         }
 
@@ -117,15 +108,14 @@ public static class ReadyCharacterExtensions
                     ref var hpComp = ref tamerEntity.Value.GetHp();
                     return hpComp.IsDead;
                 }
-                else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
+
+                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
                     return mainComp.IsDead;
                 }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+
+                throw new InvalidOperationException();
             }
         }
     }

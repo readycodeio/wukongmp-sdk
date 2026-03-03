@@ -1,4 +1,6 @@
 using System;
+using b1;
+using BtlShare;
 using Friflo.Engine.ECS;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Sdk.Api;
@@ -92,19 +94,16 @@ public readonly struct ReadyTamer : IReadyEntity<ReadyTamer>,
         }
     }
 
-    public bool IsBoss
+    public bool IsBossOrElite
     {
         get
         {
-            throw new NotImplementedException();
-        }
-    }
-
-    public bool IsElite
-    {
-        get
-        {
-            throw new NotImplementedException();
+            if (this.Pawn == null)
+                return false;
+            
+            var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(this.Pawn.GetFinalBattleInfoExtendID());
+            var healthBarType = info?.BloodBarType;
+            return healthBarType is EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar;
         }
     }
 }

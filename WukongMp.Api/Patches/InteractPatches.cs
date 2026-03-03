@@ -3,6 +3,7 @@ using b1;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
+using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
 using ReadyM.Relay.Common.Mapping;
 using UnrealEngine.Engine;
@@ -27,13 +28,16 @@ public static class PatchComplexSkillDoInteractAction
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS)
+        if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS character)
         {
             // TODO: Before refactoring this only checked Tamers
-            if (!DI.Instance.MappedEntity.IsMapped(InteractiveActor, out var entity))
+            if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(character, out var entity))
+            {
+                Logging.LogWarning("Failed to find entity for character {Name} when processing skillinteract.", character.GetName());
                 return;
+            }
 
-            Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), entity.Value.GetNetId());
+            Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", character.GetName(), entity.Value.Entity.GetNetId());
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]), default(EmptyContext));
         }
     }
