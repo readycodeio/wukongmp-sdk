@@ -26,6 +26,7 @@ namespace WukongMp.Api.WukongUtils
                 Logging.LogError("Failed to teleport local player: Pawn is null");
                 return;
             }
+
             BUS_EventCollectionCS.Get(pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
             localMainComp.TeleportFinishFrames = 5;
             var correctedLocation = SpawningUtils.GetCorrectedSpawnLocation(pawn, location);
@@ -94,7 +95,7 @@ namespace WukongMp.Api.WukongUtils
         public static void TeleportLocalPlayerToCurrentRebirthPoint(MainCharacterEntity mainEntity)
         {
             var transform = GetCurrentRebirthPointTransform();
-            TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
+            TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), true);
         }
 
         public static void TeleportLocalPlayerToRebirthPoint(MainCharacterEntity mainEntity, int rebirthPointId)
@@ -184,14 +185,11 @@ namespace WukongMp.Api.WukongUtils
         public static void RespawnSoftlockedParty(Store world, IMappedEventManager mappedEvent, MainCharacterEntity mainEntity)
         {
             var maxComp = 0;
-            world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, _) =>
-            {
-                maxComp = Math.Max(maxComp, mainComp.RebirthPointId);
-            });
+            world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
 
             ref var localMainComp = ref mainEntity.GetLocalState();
             localMainComp.IsRespawning = true;
-            
+
             mappedEvent.InvokeInGameAndNotifyEcs(new PartySoftlockEvent(
                 entity: mainEntity.Entity,
                 birthPointId: maxComp
@@ -205,11 +203,11 @@ namespace WukongMp.Api.WukongUtils
                 var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
                 if (mainEntity == null)
                     continue;
-                
+
                 var pawn = mainEntity.Value.Pawn;
                 if (pawn == null)
                     continue;
-                
+
                 ref var localMainComp = ref mainEntity.Value.GetLocalState();
                 SetCollisionEnabled(pawn, false);
                 localMainComp.ShouldDisableCollision = true;

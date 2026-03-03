@@ -26,7 +26,6 @@ public class WukongClientGameEvents : IDisposable
     // ReSharper disable once InconsistentNaming
     private static readonly MethodInfo EndAllDBC = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC");
 
-    private readonly IMappedEventManager _mappedEvent;
     private readonly WukongMappingPolicyDirectory _policyDir;
     private readonly ClientState _state;
     private readonly WukongPawnState _pawnState;
@@ -45,7 +44,6 @@ public class WukongClientGameEvents : IDisposable
         GameplayEventRouter eventRouter,
         ILogger logger)
     {
-        _mappedEvent = mappedEvent;
         _policyDir = policyDir;
         _state = state;
         _pawnState = pawnState;
@@ -54,7 +52,7 @@ public class WukongClientGameEvents : IDisposable
         _eventRouter = eventRouter;
         _logger = logger;
 
-        _mappedEvent.RegisterGameEventHandler<ExitPhantomRushEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<ExitPhantomRushEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             ref var mainComp = ref mainEntity.GetState();
@@ -63,7 +61,7 @@ public class WukongClientGameEvents : IDisposable
             events?.Evt_RelievePhantomRush.Invoke();
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<AddBuffEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<AddBuffEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
 
@@ -73,7 +71,7 @@ public class WukongClientGameEvents : IDisposable
             BuffUtils.AddBuff(pawn, ev.BuffId, ev.Duration);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<RemoveBuffEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<RemoveBuffEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
 
@@ -83,7 +81,7 @@ public class WukongClientGameEvents : IDisposable
             BuffUtils.RemoveBuff(pawn, ev.BuffId, ev.TriggerType, ev.Layer, ev.WithTriggerRemoveEffect);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<RemoveAllBuffsEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<RemoveAllBuffsEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
 
@@ -93,55 +91,55 @@ public class WukongClientGameEvents : IDisposable
             BuffUtils.RemoveAllBuffs(pawn, ev.TriggerType, ev.WithTriggerRemoveEffect);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<UnitStateTriggerEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<UnitStateTriggerEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var character = self._pawnState.GetPawnByEntity(ev.Entity);
             NpcLocomotionUtils.SetStateTrigger(character, ev.Trigger, ev.Time, ev.NeedForceUpdate);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<UnitSimpleStateEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<UnitSimpleStateEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var character = self._pawnState.GetPawnByEntity(ev.Entity);
             NpcLocomotionUtils.SetSimpleState(character, ev.SimpleState, ev.IsRemove);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<TriggerFsmStateEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<TriggerFsmStateEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var character = self._pawnState.GetPawnByEntity(ev.Entity);
             NpcLocomotionUtils.SetFsmState(character, ev.FsmStateName);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<MotionMatchingStateEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<MotionMatchingStateEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var character = self._pawnState.GetPawnByEntity(ev.Entity);
             NpcLocomotionUtils.SetMotionMatchingState(character, ev.State);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<SpawnSummonEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<SpawnSummonEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("Received OnSpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", ev.Summoner, ev.SummonGuid, ev.SummonClassPath);
             SpawningUtils.SpawnSummonedUnitWithGuid(ev.ToGame(self._pawnState));
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<RequestSpawnUnitsEvent, WukongClientGameEvents>(static (ev, self) => { SpawningUtils.SpawnUnitsAsOwner(self._playerState, self._pawnState, self._policyDir, new TamerKind(ev.UnitName), ev.Count, ev.TeamId, ev.Location); }, this);
+        mappedEvent.RegisterGameEventHandler<RequestSpawnUnitsEvent, WukongClientGameEvents>(static (ev, self) => { SpawningUtils.SpawnUnitsAsOwner(self._playerState, self._pawnState, self._policyDir, new TamerKind(ev.UnitName), ev.Count, ev.TeamId, ev.Location); }, this);
 
-        _mappedEvent.RegisterGameEventHandler<BroadcastUnitSpawnEvent>(static ev => { SpawningUtils.SpawnUnitLocallyByName(ev.Guid, new TamerKind(ev.UnitName), ev.Location); });
+        mappedEvent.RegisterGameEventHandler<BroadcastUnitSpawnEvent>(static ev => { SpawningUtils.SpawnUnitLocallyByName(ev.Guid, new TamerKind(ev.UnitName), ev.Location); });
 
-        _mappedEvent.RegisterGameEventHandler<PlayerTransBeginEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<PlayerTransBeginEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             TransformationUtils.TransformPlayer(mainEntity, ev.UnitResId, ev.UnitBornSkillId, ev.EnableBlendViewTarget, ev.TransBeginType);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<PlayerTransEndEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<PlayerTransEndEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             TransformationUtils.TransformPlayerBack(mainEntity, ev.UnitResId, ev.UnitBornSkillId, ev.EnableBlendViewTarget, ev.TransEndType);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<PlayMovieRequestEvent>(CutsceneUtils.PlayCutscene);
+        mappedEvent.RegisterGameEventHandler<PlayMovieRequestEvent>(CutsceneUtils.PlayCutscene);
 
-        _mappedEvent.RegisterGameEventHandler<SetTargetEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<SetTargetEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Character);
             if (pawn == null)
@@ -167,7 +165,7 @@ public class WukongClientGameEvents : IDisposable
             TargetingUtils.SetTarget(pawn, target);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<CastImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<CastImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var character = self._pawnState.GetPawnByEntity(ev.Caster);
             if (character == null)
@@ -179,14 +177,14 @@ public class WukongClientGameEvents : IDisposable
             ImmobilizeUtils.CastImmobilize(character);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<TriggerImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<TriggerImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var caster = self._pawnState.GetPawnByEntity(ev.Entity);
             var target = self._pawnState.GetPawnByEntity(ev.Target);
             ImmobilizeUtils.TriggerImmobilize(caster, target, ev.GreatSageTalentActiveBuff);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<RelieveImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<RelieveImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var character = self._pawnState.GetPawnByEntity(ev.Affected);
             if (character == null)
@@ -198,7 +196,7 @@ public class WukongClientGameEvents : IDisposable
             ImmobilizeUtils.RelieveImmobilize(self._pawnState, character);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<PhantomRushEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<PhantomRushEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -234,14 +232,14 @@ public class WukongClientGameEvents : IDisposable
             }
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<BroadcastPlayerTransformEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<BroadcastPlayerTransformEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
             PlayerUtils.TeleportLocalPlayer(mainEntity, ev.Location, ev.Rotation, true);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<RebirthPlayerEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<RebirthPlayerEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("RebirthPlayer for main character {Entity} called", ev.Entity);
 
@@ -264,7 +262,7 @@ public class WukongClientGameEvents : IDisposable
             }
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<DamageNumEvent>(static ev =>
+        mappedEvent.RegisterGameEventHandler<DamageNumEvent>(static ev =>
         {
             var uiEvt = BGW_UIEventCollection.Get(GameUtils.GetWorld());
             var param = new DamageNumParam(
@@ -277,7 +275,7 @@ public class WukongClientGameEvents : IDisposable
             uiEvt.Evt_UI_ShowHPChangeNum(param);
         });
 
-        _mappedEvent.RegisterGameEventHandler<TeleportFinishEvent>(static ev =>
+        mappedEvent.RegisterGameEventHandler<TeleportFinishEvent>(static ev =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
@@ -285,7 +283,7 @@ public class WukongClientGameEvents : IDisposable
             events?.Evt_TeleportFinish.Invoke();
         });
 
-        _mappedEvent.RegisterGameEventHandler<MontageCallbackEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<MontageCallbackEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             // FIXME(api): Move this logic to utils
 
@@ -361,7 +359,7 @@ public class WukongClientGameEvents : IDisposable
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<UnitDeadEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<UnitDeadEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
             if (pawn == null)
@@ -381,7 +379,7 @@ public class WukongClientGameEvents : IDisposable
             events.Evt_UnitDead.Invoke(GameUtils.GetControlledPawn(), ev.DeadReason, ev.DmgId, ev.StiffLevel, null, default, ev.IsDotDmg, ev.AbnormalType);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<WaitingForSequenceEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<WaitingForSequenceEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
             {
@@ -402,7 +400,7 @@ public class WukongClientGameEvents : IDisposable
             }
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<IronBodyStartEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<IronBodyStartEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -415,7 +413,7 @@ public class WukongClientGameEvents : IDisposable
             IronBodyUtils.TriggerIronBody(mainEntity.Pawn);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<UnitSpawnedEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<UnitSpawnedEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity: {Entity}", ev.PlayerId, ev.Entity);
 
@@ -430,7 +428,7 @@ public class WukongClientGameEvents : IDisposable
             TamerUtils.AddSpawnedUnitRefCount(new TamerEntity(ev.Entity), playerId.Value);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<UnitDespawnedEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<UnitDespawnedEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", ev.PlayerId, ev.Entity);
 
@@ -445,9 +443,9 @@ public class WukongClientGameEvents : IDisposable
             TamerUtils.SubtractSpawnedUnitRefCount(new TamerEntity(ev.Entity), playerId.Value);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<TamerSkillInteractEvent, WukongClientGameEvents>(static (ev, self) => { TamerUtils.TriggerSkillInteract(ev.Entity, ev.SkillId); }, this);
+        mappedEvent.RegisterGameEventHandler<TamerSkillInteractEvent, WukongClientGameEvents>(static (ev, self) => { TamerUtils.TriggerSkillInteract(ev.Entity, ev.SkillId); }, this);
 
-        _mappedEvent.RegisterGameEventHandler<TriggerMagicallyChangeEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<TriggerMagicallyChangeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             ref var mainComp = ref mainEntity.GetState();
@@ -462,7 +460,7 @@ public class WukongClientGameEvents : IDisposable
             MagicallyChangeUtils.TriggerMagicallyChange(mainEntity.Pawn, ev.ConfigPathName, ev.SkillId, ev.RecoverSkillId, ev.CurVigorSkillId, ev.CastReason);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<ResetMagicallyChangeEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<ResetMagicallyChangeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             ref var mainComp = ref mainEntity.GetState();
@@ -477,7 +475,7 @@ public class WukongClientGameEvents : IDisposable
             MagicallyChangeUtils.ResetMagicallyChange(mainEntity.Pawn, ev.Reason);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<ProjectileTargetEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<ProjectileTargetEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Character);
 
@@ -497,7 +495,7 @@ public class WukongClientGameEvents : IDisposable
             ProjectileUtils.SetProjectileTarget(mainEntity.Pawn, ev.ProjectileName, target, ev.SocketName);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<ProjectileSwitchEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<ProjectileSwitchEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -510,7 +508,7 @@ public class WukongClientGameEvents : IDisposable
             ProjectileUtils.SwitchProjectileInfo(mainEntity.Pawn, ev.ProjectileClassName, ev.BulletSwitchId, ev.SwitchIdx);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<ProjectileDeadEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<ProjectileDeadEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -523,9 +521,9 @@ public class WukongClientGameEvents : IDisposable
             ProjectileUtils.DestroyProjectile(mainEntity.Pawn, ev.ProjectileClassName, ev.Reason);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<MagicFieldDeadEvent, WukongClientGameEvents>(static (ev, self) => { MagicFieldUtils.DestroyMagicField(ev.ClassName, ev.Reason); }, this);
+        mappedEvent.RegisterGameEventHandler<MagicFieldDeadEvent, WukongClientGameEvents>(static (ev, self) => { MagicFieldUtils.DestroyMagicField(ev.ClassName, ev.Reason); }, this);
 
-        _mappedEvent.RegisterGameEventHandler<ProjectileMoveModeEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<ProjectileMoveModeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -538,7 +536,7 @@ public class WukongClientGameEvents : IDisposable
             ProjectileUtils.SetProjectileMode(mainEntity.Pawn, ev.ProjectileClassName, ev.MoveMode);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<PartyRespawnEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<PartyRespawnEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
@@ -554,7 +552,7 @@ public class WukongClientGameEvents : IDisposable
             PlayerUtils.RebirthDeadPlayer(mainEntity.Pawn, ev.BirthShrineId);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<AfterRebirthEvent>(static ev =>
+        mappedEvent.RegisterGameEventHandler<AfterRebirthEvent>(static ev =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -566,7 +564,7 @@ public class WukongClientGameEvents : IDisposable
             }
         });
 
-        _mappedEvent.RegisterGameEventHandler<RestAtShrineEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<RestAtShrineEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             foreach (var player in self._state.AreaPlayers)
             {
@@ -592,7 +590,7 @@ public class WukongClientGameEvents : IDisposable
             }
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<PartySoftlockEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<PartySoftlockEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
@@ -608,7 +606,7 @@ public class WukongClientGameEvents : IDisposable
             PlayerUtils.RebirthAlivePlayer(mainEntity.Pawn, ev.BirthPointId);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<StartJumpEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<StartJumpEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -621,7 +619,7 @@ public class WukongClientGameEvents : IDisposable
             PlayerUtils.StartJump(mainEntity.Pawn, ev.StartJumpDir, ev.InputVector);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<StopJumpEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<StopJumpEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -634,7 +632,7 @@ public class WukongClientGameEvents : IDisposable
             PlayerUtils.StopJump(mainEntity.Pawn);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<MonsterWakeUpEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<MonsterWakeUpEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
             if (pawn == null)
@@ -649,7 +647,7 @@ public class WukongClientGameEvents : IDisposable
             TamerUtils.TriggerWakeUp(pawn);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<PlayBaneEffectEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<PlayBaneEffectEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
             if (pawn == null)
@@ -667,7 +665,7 @@ public class WukongClientGameEvents : IDisposable
             PlayDBC_ByType.Invoke(handler, [ev.ActionType, default(FTransform), -1]);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<StopBaneEffectEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<StopBaneEffectEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var pawn = self._pawnState.GetPawnByEntity(ev.Entity);
             if (pawn == null)
@@ -684,7 +682,7 @@ public class WukongClientGameEvents : IDisposable
             EndAllDBC.Invoke(handler, []);
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<CastSkillEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<CastSkillEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             if (self._pawnState.GetPawnByEntity(ev.Entity) is not { } casterPawn)
             {

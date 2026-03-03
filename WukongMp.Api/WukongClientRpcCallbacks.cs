@@ -1096,7 +1096,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
             self._mappedEvent.InvokeInGameIfApplicable(new TamerSkillInteractEvent(
                 entity: entity.Value,
                 skillId: interactData0.SkillId
-            ), entity.Value);
+            ), default(EmptyContext));
         }, this, interactData);
     }
 

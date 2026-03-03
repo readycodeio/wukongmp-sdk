@@ -4,6 +4,7 @@ using BtlB1;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Relay.Common.Mapping;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
@@ -33,7 +34,7 @@ public static class PatchComplexSkillDoInteractAction
                 return;
 
             Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), entity.Value.GetNetId());
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]), entity.Value);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]), default(EmptyContext));
         }
     }
 }
@@ -42,7 +43,7 @@ public static class PatchComplexSkillDoInteractAction
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchGetInteractTypeTemplate
 {
-    public static bool Prefix(EInteractType InteractType, BUInteractTypeTemplate? __result)
+    public static bool Prefix(EInteractType InteractType, ref BUInteractTypeTemplate? __result)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;

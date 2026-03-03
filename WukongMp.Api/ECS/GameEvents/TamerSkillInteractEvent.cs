@@ -6,7 +6,8 @@ namespace WukongMp.Api.ECS.GameEvents;
 
 public readonly struct TamerSkillInteractEvent(
     Entity entity,
-    int skillId) : IEquatable<TamerSkillInteractEvent>, IOwnershipManaged
+    int skillId
+) : IEquatable<TamerSkillInteractEvent>, IAlwaysPropagates
 {
     public readonly Entity Entity = entity;
     public readonly int SkillId = skillId;

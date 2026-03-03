@@ -9,14 +9,15 @@ namespace WukongMp.Api.Command;
 public class RebirthCommandRegistration(
     WukongPlayerState playerState,
     IMappedEventManager mappedEvent,
-    WukongChatter chatter) : IConsoleCommandRegistration
+    WukongChatter chatter
+) : IConsoleCommandRegistration
 {
     public void RegisterCommands(ConsoleCommandRegistry registry)
     {
         registry.AddCommand("rebirth", ConsoleCommand.Create(RequestRebirth, isDebugOnly: false));
         registry.AddCommand("rebirth_shrine", ConsoleCommand.Create(RequestPointRebirth, isDebugOnly: false));
     }
-    
+
     private void RequestRebirth()
     {
         if (playerState.LocalMainCharacter is not { } mainEntity)
@@ -38,7 +39,7 @@ public class RebirthCommandRegistration(
             entity: mainEntity.Entity,
             teleport: true
         ));
+
         chatter.SendServerMessage("PlayerRequestedRebirth", playerState.NickName);
     }
-
 }
