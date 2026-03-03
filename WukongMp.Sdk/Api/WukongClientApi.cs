@@ -58,9 +58,7 @@ public class WukongClientApi(
 
     public ReadyMainCharacter? LocalMainCharacter
         => playerState.LocalMainCharacter != null ? new ReadyMainCharacter(this, playerState.LocalMainCharacter.Value.Entity) : null;
-
-    public event Action<PluginTick>? OnUpdate;
-
+    
     public IReadOnlyList<PlayerId> AreaPlayers
         => state.AreaPlayers;
 
@@ -134,12 +132,5 @@ public class WukongClientApi(
         }
 
         return null;
-    }
-
-    // ---
-
-    public void TriggerUpdate(PluginTick tick)
-    {
-        OnUpdate?.Invoke(tick);
     }
 }

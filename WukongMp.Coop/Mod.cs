@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using ReadyM.Api;
 using WukongMp.Coop.Command;
 using WukongMp.Coop.Gamemode;
 using WukongMp.Coop.Systems;
@@ -14,30 +13,20 @@ public sealed class Mod : ModBase
     public override string Name => "WukongMp.Coop";
     public override string Version => "1.0.0";
 
-    private readonly List<PluginSystemBase> _systems = [];
-
     public static Mod Instance { get; private set; } = null!;
 
     internal WukongClientApi ClientApi { get; private set; } = null!;
     internal WukongLocalApi LocalApi { get; private set; } = null!;
     internal CoopSaveManager SaveManager { get; private set; } = null!;
 
-    public override void Init()
+    protected override void Initialize()
     {
-        base.Init();
-        
         Instance = this;
         var localApi = LocalApi = Sdk.Api.ReadyM.Local;
         var clientApi = ClientApi = Sdk.Api.ReadyM.Client;
         SaveManager = new CoopSaveManager(clientApi, localApi, Logger);
 
         Logger.LogInformation("Initializing {PluginName} v{PluginVersion}", Name, Version);
-
-        _systems.Add(new DetectSoftlockSystem(localApi, clientApi, Logger));
-        _systems.Add(new FixYellowbrowSystem(localApi, clientApi, Logger));
-        _systems.Add(new ReEnableCollidersSystem(localApi, clientApi, Logger));
-        _systems.Add(new RespawnMainCharacterSystem(localApi, clientApi, Logger));
-        _systems.Add(new ScaleMonsterHpSystem(localApi, clientApi, Logger));
 
         localApi.AddCommands([
             new CoopCommandRegistration(),
@@ -56,11 +45,12 @@ public sealed class Mod : ModBase
         Logger.LogInformation("Initialized {PluginName}", Name);
     }
 
-    public override void DeInit()
+    protected override IEnumerable<PluginSystemBase> DefineSystems()
     {
-        _systems.ForEach(x => x.Dispose());
-        _systems.Clear();
-        
-        base.DeInit();
+        yield return new DetectSoftlockSystem(LocalApi, ClientApi, Logger);
+        yield return new FixYellowbrowSystem(LocalApi, ClientApi, Logger);
+        yield return new ReEnableCollidersSystem(LocalApi, ClientApi, Logger);
+        yield return new RespawnMainCharacterSystem(LocalApi, ClientApi, Logger);
+        yield return new ScaleMonsterHpSystem(LocalApi, ClientApi, Logger);
     }
 }

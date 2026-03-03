@@ -393,12 +393,12 @@ public class PatchOnTriggerFsmEvent
             }
         }
 
-        if (DI.Instance.MappedEntity.IsMapped(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner as BGUCharacterCS, out var entity))
         {
-            Debug.Assert(owner == new TamerEntity(entity.Value).Pawn, "owner == tamerEntity.Pawn");
+            Debug.Assert(owner == entity.Value.Pawn, "owner == tamerEntity.Pawn");
             if (!BGU_CommonUtil.IsInFsmState(owner, EventTag))
             {
-                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerFsmStateEvent(entity.Value, EventTag.TagName.ToString()), entity.Value);
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerFsmStateEvent(entity.Value, EventTag.TagName.ToString()), entity.Value.Entity);
             }
         }
 

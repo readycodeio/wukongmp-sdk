@@ -7,7 +7,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 public readonly struct SkipMovieEvent(
     int sequenceId,
     int waitingPlayers = 0,
-    int allPlayers = 0) : IEquatable<SkipMovieEvent>, IAlwaysPropagatesToEcsOnly
+    int allPlayers = 0) : IEquatable<SkipMovieEvent>, IAlwaysPropagates
 {
     public readonly int SequenceId = sequenceId;
     public readonly int WaitingPlayers = waitingPlayers;

@@ -1,5 +1,6 @@
 ﻿using b1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -11,10 +12,10 @@ using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Systems;
 
-public class ReEnableCollidersSystem : PluginSystemBase
+public sealed class ReEnableCollidersSystem : PluginSystemBase, IDisposable
 {
     private const float TickIntervalSeconds = 1; // Check every second
-    
+
     private float _elapsedTime;
 
     private readonly Dictionary<AActor, float> _colliderDisableTimes = [];
@@ -26,10 +27,8 @@ public class ReEnableCollidersSystem : PluginSystemBase
         LocalApi.OnDisableObstacle += OnDisableObstacle;
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
-        base.Dispose();
-        
         LocalApi.OnDisableObstacle -= OnDisableObstacle;
         LocalApi.OnObstacleCollision -= OnObstacleCollision;
     }
@@ -49,7 +48,7 @@ public class ReEnableCollidersSystem : PluginSystemBase
             var owner = mainEntity.UnsyncedPawn;
             if (owner == null)
                 return;
-            
+
             var bossActor = GetClosestBossActor(owner, owner.GetActorLocation());
             if (bossActor == null)
                 return;
@@ -63,7 +62,7 @@ public class ReEnableCollidersSystem : PluginSystemBase
             }
         }
     }
-    
+
     private static AActor? GetClosestBossActor(UObject context, FVector position)
     {
         AActor? closestBoss = null;
@@ -92,7 +91,7 @@ public class ReEnableCollidersSystem : PluginSystemBase
 
         return closestBoss;
     }
-    
+
     private void PermanentlyDisableCollider(AActor actor)
     {
         if (_colliderDisableTimes.ContainsKey(actor))
@@ -123,6 +122,7 @@ public class ReEnableCollidersSystem : PluginSystemBase
                 _colliderDisableTimes[collider] = remainingTime;
             }
         }
+
         foreach (var collider in collidersToEnable)
         {
             collider.SetActorEnableCollision(true);
@@ -161,12 +161,12 @@ public class ReEnableCollidersSystem : PluginSystemBase
         return playerCharacter.CharacterMovement.GetCurrentAcceleration().GetSafeNormal2D();
     }
 
-    protected override void OnUpdate(PluginTick tick)
+    protected override void OnUpdate(UpdateTick tick)
     {
         if (!LocalApi.IsGameplayLevel)
             return;
 
-        _elapsedTime += tick.DeltaTime;
+        _elapsedTime += tick.deltaTime;
 
         if (_elapsedTime < TickIntervalSeconds)
             return;

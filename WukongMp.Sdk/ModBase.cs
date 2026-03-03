@@ -1,4 +1,8 @@
-﻿using CSharpModBase;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CSharpModBase;
+using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api;
 using WukongMp.Api;
@@ -20,10 +24,42 @@ public abstract class ModBase : ICSharpModExV2
             => false;
 #endif
 
-    public virtual void Init() { }
+    private List<BaseSystem> _systems = [];
+
+    private SystemGroup _systemGroup = null!;
+
+    public void Init()
+    {
+        Initialize();
+
+        _systems = DefineSystems().Select(x => x.ToBaseSystem()).ToList();
+        _systemGroup = new SystemGroup(Name);
+
+        foreach (var system in _systems)
+        {
+            _systemGroup.Add(system);
+        }
+
+        _systemGroup.SetMonitorPerf(true);
+        DI.Instance.World.SystemRoot.Add(_systemGroup);
+    }
+
+    protected virtual void Initialize() { }
+
+    protected virtual IEnumerable<PluginSystemBase> DefineSystems()
+    {
+        yield break;
+    }
 
     public virtual void DeInit()
     {
+        // TODO: Replace with proper DI container
+        _systems.ForEach(x =>
+        {
+            if (x is IDisposable disposable)
+                disposable.Dispose();
+        });
+
         if (_patcher.IsPatched)
         {
             _patcher.Unpatch();

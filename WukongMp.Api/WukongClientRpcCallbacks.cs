@@ -498,15 +498,12 @@ public partial class WukongClientRpcCallbacks : IDisposable
         var shortened = Compressors.MontageNameCompressor.Compress(fullPathName, out var shortMontagePath);
         var data = shortened ? shortMontagePath : fullPathName;
         var evData = new MontageCallbackData(netId, shortened, data, position, reset);
-
-        _logger.LogDebug("Sent montage for {NetId} at {Position} - {Montage}", netId, position, data);
         SendMontageCallback(evData);
     }
 
     public void SendMontageCancel(NetworkId netId)
     {
         var evData = new MontageCallbackData(netId, false, "", 0f, false);
-        _logger.LogDebug("Sent montage cancel for entity {NetId}", netId);
         SendMontageCallback(evData);
     }
 

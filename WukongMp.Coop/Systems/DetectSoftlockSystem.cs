@@ -1,16 +1,17 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Friflo.Engine.ECS;
+using Microsoft.Extensions.Logging;
 using WukongMp.Api.Resources;
 using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Systems;
 
-public class DetectSoftlockSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
+public sealed class DetectSoftlockSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
     : PluginSystemBase(localApi, clientApi, logger)
 {
     private readonly HashSet<int> _waitingSequencesIds = [];
     
-    protected override void OnUpdate(PluginTick tick)
+    protected override void OnUpdate(UpdateTick tick)
     {
         if (!ClientApi.IsMasterClient)
             return;

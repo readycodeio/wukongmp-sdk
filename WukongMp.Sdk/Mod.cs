@@ -41,10 +41,8 @@ internal class Mod : ModBase
     }
 #endif
 
-    public override void Init()
+    protected override void Initialize()
     {
-        base.Init();
-
 #if DEBUG
         Trace.Listeners.Clear();
         Trace.Listeners.Add(new LoggingListener(Logger));

@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Friflo.Engine.ECS;
+using Microsoft.Extensions.Logging;
 using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Systems;
 
-public class RespawnMainCharacterSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger) 
+public sealed class RespawnMainCharacterSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger) 
     : PluginSystemBase(localApi, clientApi, logger)
 {
-    protected override void OnUpdate(PluginTick tick)
+    protected override void OnUpdate(UpdateTick tick)
     {
         var allDead = true;
         var players = 0;
