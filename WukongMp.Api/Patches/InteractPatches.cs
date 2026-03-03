@@ -6,6 +6,7 @@ using HarmonyLib;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 
 namespace WukongMp.Api.Patches;
@@ -20,20 +21,19 @@ public static class PatchComplexSkillDoInteractAction
         return AccessTools.Method("b1.BUIAComplexSkill:DoInteractAction");
     }
 
-    public static void Prefix(int InteractiveActorID, AActor User, AActor InteractiveActor, FUStInteractionMappingDesc Action)
+    public static void Prefix(AActor InteractiveActor, FUStInteractionMappingDesc Action)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
         if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS)
         {
-            var entity = DI.Instance.PawnState.GetEntityByTamerMonster(InteractiveActor);
-            if (entity.HasValue)
-            {
-                var meta = entity.Value.GetMeta();
-                Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), meta.NetId);
-                DI.Instance.MappedEvent.NotifyEcs(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]));
-            }
+            // TODO: Before refactoring this only checked Tamers
+            if (!DI.Instance.MappedEntity.IsMapped(InteractiveActor, out var entity))
+                return;
+
+            Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", InteractiveActor.GetName(), entity.Value.GetNetId());
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]), entity.Value);
         }
     }
 }

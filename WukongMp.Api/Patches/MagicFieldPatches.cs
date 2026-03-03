@@ -28,9 +28,10 @@ public static class PatchOnMagicFieldDead
         if (className.Contains(Constants.SupremeInspectorFirewallName))
         {
             Logging.LogDebug("OnMagicFieldDead send for {Class}", className);
-            if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var mainEntity))
+            if (DI.Instance.MappedEntity.IsMapped(owner, out var entity))
             {
-                DI.Instance.MappedEvent.NotifyEcs(new MagicFieldDeadEvent(mainEntity.Value, className, Reason));
+                // TODO: The ownership check before refactoring was missing
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MagicFieldDeadEvent(entity.Value, className, Reason), entity.Value);
             }
         }
     }

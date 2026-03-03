@@ -9,6 +9,7 @@ namespace WukongMp.Api
 {
     public delegate void ObstacleCollisionDelegate(MainCharacterEntity mainEntity, AActor obstacle, out bool shouldBlock);
     
+    [Obsolete("This class can be replaced by registering ECS event handlers")]
     public class GameplayEventRouter
     {
         public event Action<CultureInfo>? OnLanguageChanged;

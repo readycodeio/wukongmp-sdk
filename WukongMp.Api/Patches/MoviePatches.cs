@@ -4,6 +4,7 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Relay.Common.Mapping;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
@@ -140,7 +141,7 @@ public static class PatchRequestPlayMovie
                 var areaEntity = DI.Instance.AreaState.CurrentArea;
                 if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(SequenceId))
                 {
-                    DI.Instance.MappedEvent.NotifyEcs(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId));
+                    DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId), default(EmptyContext));
                 }
 
                 var playerState = DI.Instance.PlayerState;
@@ -234,6 +235,7 @@ public static class PatchTickForMovieSystem
                     var movieRequest = GlobalMovieData.PlayMovieRequestQueue.Dequeue();
                     if (areaEntity != null && !areaEntity.Value.GetMovie().StartedSequences.Contains(movieRequest.SequenceID))
                     {
+                        // TODO: Event?
                         DI.Instance.ServerRpc.SendMovieStarted(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
                     }
 
@@ -262,16 +264,14 @@ public static class PatchTickForMovieSystem
                 localMain.JoiningSequenceLocation = main.Location.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
                 
-                // DI.Instance.MappedEvent.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
-                DI.Instance.MappedEvent.NotifyEcs(new WaitingForSequenceEvent(peakRequest.SequenceID, main.Location.ToFVector()));
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new WaitingForSequenceEvent(peakRequest.SequenceID, main.Location.ToFVector()), default(EmptyContext));
 
                 // some cutscenes cannot be triggered for multiple players
                 // e.g. 3rd act boss attacks one player causing him to enter a cutscene,
                 // but other players are stuck since they are not attacked
                 if (Constants.InstantTriggerSequences.Contains(peakRequest.SequenceID))
                 {
-                    // DI.Instance.MappedEvent.SendPlayMovieRequest(peakRequest);
-                    DI.Instance.MappedEvent.NotifyEcs(new PlayMovieRequestEvent(peakRequest.SequenceID, peakRequest.bDisablePlayerControl, peakRequest.bDisableMovementInput, peakRequest.bDisableLookAtInput, peakRequest.bHidePlayer, peakRequest.bHideHud, peakRequest.OverlapBoxGuid, peakRequest.MatchType));
+                    DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayMovieRequestEvent(peakRequest.SequenceID, peakRequest.bDisablePlayerControl, peakRequest.bDisableMovementInput, peakRequest.bDisableLookAtInput, peakRequest.bHidePlayer, peakRequest.bHideHud, peakRequest.OverlapBoxGuid, peakRequest.MatchType), default(EmptyContext));
                 }
             }
         }
@@ -328,7 +328,7 @@ public static class PatchOnSkipCurrentCameraMovie
         if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            DI.Instance.MappedEvent.NotifyEcs(new SkipMovieEvent(sequenceId));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new SkipMovieEvent(sequenceId), default(EmptyContext));
             return false;
         }
 

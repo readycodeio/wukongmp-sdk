@@ -13,6 +13,7 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.WukongUtils;
@@ -301,7 +302,7 @@ namespace WukongMp.Api.Patches
                 return;
             }
 
-            if (owner is not BGUCharacterCS ownerCharacter || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
+            if (owner is not BGUCharacterCS || ___UnitStateData.HasState(EBGUUnitState.Dead) || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PendingDeathInAnimationSyncing))
             {
                 return;
             }
@@ -325,7 +326,6 @@ namespace WukongMp.Api.Patches
             if (DeadReason == EDeadReason.PlayerTrans)
                 return;
 
-            var playerState = DI.Instance.PlayerState;
             var owner = __instance.GetOwner();
 
             if (owner.IsNullOrDestroyed())
@@ -335,18 +335,16 @@ namespace WukongMp.Api.Patches
             }
 
             if (owner is not BGUCharacterCS ownerCharacter)
-            {
                 return;
-            }
 
-            if (playerState.LocalMainCharacter.HasValue && owner == playerState.LocalMainCharacter.Value.Pawn)
+            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(ownerCharacter, out var entity) &&
+                DI.Instance.MappingPolicyDir.ForEvent<UnitDeadEvent>().CanGameEventNotifyEcs(entity.Value))
             {
-                var localMain = playerState.LocalMainCharacter.Value;
-                if (!localMain.GetState().IsTransformed)
+                if (!entity.Value.GetState().IsTransformed)
                 {
-                    ref var localState = ref localMain.GetLocalState();
+                    ref var localState = ref entity.Value.GetLocalState();
                     localState.IsDuringDeathAnim = true;
-                    IBPC_BattleMainInfoData battleData = BGU_DataUtil.GetReadOnlyData<IBPC_BattleMainInfoData, BPC_BattleMainInfoData>(localMain.Pawn?.GetController());
+                    var battleData = BGU_DataUtil.GetReadOnlyData<IBPC_BattleMainInfoData, BPC_BattleMainInfoData>(entity.Value.Pawn?.GetController());
                     if (battleData != null)
                     {
                         localState.DeadAnimationTime = battleData.PlayerDeathUIDelayTime;
@@ -354,22 +352,19 @@ namespace WukongMp.Api.Patches
 
                     localState.DeadAnimationTime = 6f; // Value from game.
 
-                    var @event = new UnitDeadEvent(localMain, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
-                    localMain.GetState().IsDead = true;
-                    DI.Instance.MappedEvent.NotifyEcs(@event);
-                    Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", localMain.GetState().PlayerId);
+                    entity.Value.GetState().IsDead_SetFromGame(true);
+                    DI.Instance.MappedEvent.NotifyEcs(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType)); // TODO: Check required before call to this
+                    Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", entity.Value.GetState().PlayerId);
                 }
 
                 return;
             }
 
-            var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(ownerCharacter, out var tamerEntity))
             {
-                var meta = tamerEntity.Value.GetMeta();
                 var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
-                DI.Instance.MappedEvent.NotifyEcs(payload);
-                Logging.LogDebug("Entity {Entity} died, sending UnitDead event", meta.NetId);
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload, tamerEntity.Value.Entity);
+                Logging.LogDebug("Entity {Entity} died, sending UnitDead event", tamerEntity.Value.GetMeta().NetId);
             }
 
             if (Attacker is BGUCharacterCS attackerCharacter &&
@@ -656,89 +651,6 @@ namespace WukongMp.Api.Patches
         }
     }
 
-    // TODO: Replaced with a system in co-op, check if it works
-    // [HarmonyPatch(typeof(BUS_QuestDynamicObstacleComp), "DisableCollision")]
-    // [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    // public class PatchDisableCollision
-    // {
-    //     public static void Postfix(BUS_QuestDynamicObstacleComp __instance)
-    //     {
-    //         if (!DI.Instance.AreaState.InRoom)
-    //             return;
-    //
-    //         var obstacle = __instance.GetOwner();
-    //         DI.Instance.ColliderDisableData.PermanentlyDisableCollider(obstacle);
-    //     }
-    // }
-
-    // [HarmonyPatch(typeof(BUS_TouchWallFeedbackComp), "CheckCanTrigger_HitDynamicObstacleWall")]
-    // [HarmonyPatchCategory(Constants.ConnectedPatches)]
-    // public class PatchCheckCanTrigger_HitDynamicObstacleWall
-    // {
-    //     public static bool Prefix(BUS_TouchWallFeedbackComp __instance, AActor HitActor)
-    //     {
-    //         if (!DI.Instance.AreaState.InRoom)
-    //             return true;
-    //
-    //         BGU_QuestActor? questActor = HitActor as BGU_QuestActor;
-    //         if (questActor == null)
-    //             return true;
-    //
-    //         if (questActor.QuestActorType != EQuestActorType.DynamicObstacle)
-    //             return true;
-    //
-    //         var player = __instance.GetOwner() as BGUPlayerCharacterCS;
-    //         if (player == null)
-    //             return true;
-    //
-    //         if (player != DI.Instance.PlayerState.LocalMainCharacter?.Pawn)
-    //             return true;
-    //
-    //         var bossActor = GetClosestBossActor(player, player.GetActorLocation());
-    //         if (bossActor == null)
-    //             return true;
-    //
-    //         var bossLocation = bossActor.GetActorLocation();
-    //         if (UBGUSelectUtil.MultiSphereTraceForObjects(player, player.GetActorLocation(), bossLocation, 10, [EObjectTypeQuery.ObjectTypeQuery15], false, out var HitResult) > 0 && HitResult.Any(x => x.HitActor == HitActor))
-    //         {
-    //             Logging.LogDebug("Hit dynamic obstacle wall is between boss and player, disabling collision temporarily");
-    //             DI.Instance.ColliderDisableData.DisableCollider(questActor, Constants.ColliderDisableTime);
-    //             return false;
-    //         }
-    //
-    //         return true;
-    //     }
-
-    //     private static AActor? GetClosestBossActor(UObject context, FVector position)
-    //     {
-    //         AActor? closestBoss = null;
-    //         var closestDistanceSquared = double.MaxValue;
-    //         var monsters = UGameplayStatics.GetAllActorsOfClass<BGU_CharacterAI?>(context);
-    //         foreach (var monster in monsters)
-    //         {
-    //             if (monster.IsNullOrDestroyed())
-    //                 continue;
-    //
-    //             var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(monster.GetFinalBattleInfoExtendID());
-    //
-    //             if (info == null)
-    //                 continue;
-    //
-    //             if (!(monster.bBossRoomMonster || info.QualityType is EUnitQualityType.NormalBoss or EUnitQualityType.FinalBoss || info.BloodBarType == EBGUBloodBarType.BossBar))
-    //                 continue;
-    //
-    //             var distanceSquared = FVector.DistSquared2D(monster.GetActorLocation(), position);
-    //             if (distanceSquared < closestDistanceSquared)
-    //             {
-    //                 closestDistanceSquared = distanceSquared;
-    //                 closestBoss = monster;
-    //             }
-    //         }
-    //
-    //         return closestBoss;
-    //     }
-    // }
-
     [HarmonyPatch(typeof(InteractStepMatchPos), "StepBegin")]
     [HarmonyPatchCategory(Constants.ConnectedPatches)]
     public class PatchOnInteractStepBegin
@@ -835,7 +747,7 @@ namespace WukongMp.Api.Patches
             if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
             {
                 var rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
-                DI.Instance.MappedEvent.NotifyEcs(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID));
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID), mainEntity.Value.Entity);
             }
 
             return true;
@@ -919,11 +831,10 @@ public class PatchTriggerJumpSkill
             return;
 
         var owner = __instance.GetOwner();
-        var playerState = DI.Instance.PlayerState;
 
-        if (owner == playerState.LocalMainCharacter?.Pawn)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
         {
-            DI.Instance.MappedEvent.NotifyEcs(new StartJumpEvent(playerState.LocalMainCharacter.Value, StartJumpDir, CurrentInputVector));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StartJumpEvent(mainEntity.Value, StartJumpDir, CurrentInputVector), mainEntity.Value.Entity);
         }
     }
 }
@@ -938,11 +849,10 @@ public class PatchJumpOnReleased
             return;
 
         var owner = __instance.GetOwner();
-        var playerState = DI.Instance.PlayerState;
 
-        if (owner == playerState.LocalMainCharacter?.Pawn)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
         {
-            DI.Instance.MappedEvent.NotifyEcs(new StopJumpEvent(playerState.LocalMainCharacter.Value));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StopJumpEvent(mainEntity.Value), mainEntity.Value.Entity);
         }
     }
 }
@@ -1051,12 +961,11 @@ public class PatchOnRebirthFinished
     public static void Postfix(UActorCompBaseCS __instance)
     {
         var owner = __instance.GetOwner();
-        var entity = DI.Instance.PawnState.GetEntityByPlayerActor(owner);
 
-        if (entity.HasValue)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
         {
             entity.Value.GetLocalState().IsRespawning = false;
-            DI.Instance.MappedEvent.NotifyEcs(new AfterRebirthEvent(entity.Value));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new AfterRebirthEvent(entity.Value), entity.Value.Entity);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using b1;
@@ -8,6 +9,7 @@ using ReadyM.Relay.Common.Wukong.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
@@ -191,6 +193,7 @@ public class PatchTurnBack2Loaded
         {
             Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", tamerGuid);
         }
+
         return true;
     }
 }
@@ -390,12 +393,12 @@ public class PatchOnTriggerFsmEvent
             }
         }
 
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-        if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+        if (DI.Instance.MappedEntity.IsMapped(owner, out var entity))
         {
-            if (tamerEntity.Value.Pawn != null && !BGU_CommonUtil.IsInFsmState(tamerEntity.Value.Pawn, EventTag))
+            Debug.Assert(owner == new TamerEntity(entity.Value).Pawn, "owner == tamerEntity.Pawn");
+            if (!BGU_CommonUtil.IsInFsmState(owner, EventTag))
             {
-                DI.Instance.MappedEvent.NotifyEcs(new TriggerFsmStateEvent(tamerEntity.Value, EventTag.TagName.ToString()));
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerFsmStateEvent(entity.Value, EventTag.TagName.ToString()), entity.Value);
             }
         }
 
@@ -497,16 +500,10 @@ public class PatchTriggerWakeupActivated
             return;
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
-        if (tamerEntity.HasValue)
-        {
-            if (!tamerEntity.Value.IsTamerValid)
-                return;
+        if (tamerEntity is not { IsTamerValid: true })
+            return;
 
-            if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
-            {
-                DI.Instance.MappedEvent.NotifyEcs(new MonsterWakeUpEvent(tamerEntity.Value));
-            }
-        }
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MonsterWakeUpEvent(tamerEntity.Value), tamerEntity.Value.Entity);
     }
 }
 
