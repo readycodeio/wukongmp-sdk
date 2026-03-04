@@ -2,24 +2,26 @@
 using System.Diagnostics;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Helpers;
-using ReadyM.Api.Mapping.Events;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
 using ReadyM.Relay.Client.State;
+using WukongMp.Api.Mapping.Tags;
+using WukongMp.Api.State;
 
-namespace WukongMp.Api.Mapping.Events;
+namespace WukongMp.Api.Mapping.Policies.Event;
 
-public class OwnershipEventPolicyFactory(
+public class RunOnMasterClientOnlyEventPolicyFactory(
     ClientOwnershipManager ownership,
+    WukongAreaState areaState, 
     DataSideChannel sideChannel) : IMappingEventPolicyFactory
 {
     public bool Supports(Type eventType, Type contextType)
-        => contextType == typeof(Entity) && typeof(IOwnershipManaged).IsAssignableFrom(eventType);
+        => contextType == typeof(Entity) && typeof(IRunOnMasterClientOnly).IsAssignableFrom(eventType);
 
     public IMappingEventPolicyBase CreatePolicy(Type eventType, Type contextType)
     {
         Debug.Assert(contextType == typeof(Entity));
-        var policyType = typeof(OwnershipEventPolicy<>).MakeGenericType(eventType);
-        return (IMappingEventPolicyBase)Activator.CreateInstance(policyType, ownership, sideChannel);
+        var policyType = typeof(RunOnMasterClientOnlyEventPolicy<>).MakeGenericType(eventType);
+        return (IMappingEventPolicyBase)Activator.CreateInstance(policyType, ownership, areaState, sideChannel);
     }
 
     public IMappingEventPolicy<TContext> CreatePolicy<TContext>(Type eventType)

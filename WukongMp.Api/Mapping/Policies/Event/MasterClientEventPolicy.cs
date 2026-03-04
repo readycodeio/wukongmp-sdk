@@ -1,9 +1,9 @@
 ﻿using ReadyM.Api.Helpers;
-using ReadyM.Api.Mapping.Events;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.Mapping.Events;
+namespace WukongMp.Api.Mapping.Policies.Event;
 
 public class MasterClientEventPolicy<TEvent>(
     WukongAreaState areaState,

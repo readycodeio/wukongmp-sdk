@@ -1,4 +1,4 @@
-﻿using ReadyM.Api.Mapping.Events;
+﻿using ReadyM.Api.Multiplayer.Mapping.Events;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 

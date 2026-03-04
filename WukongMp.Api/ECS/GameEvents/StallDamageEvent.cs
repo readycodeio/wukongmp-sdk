@@ -1,5 +1,5 @@
 using ReadyM.Api.Multiplayer.ECS.Values;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 

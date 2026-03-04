@@ -1,6 +1,6 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Relay.Client.Mapping;
+using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 

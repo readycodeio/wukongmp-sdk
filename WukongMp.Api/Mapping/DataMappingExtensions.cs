@@ -1,5 +1,5 @@
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Api;
+using ReadyM.Api.Multiplayer.Mapping.Api;
 
 namespace WukongMp.Api.Mapping;
 

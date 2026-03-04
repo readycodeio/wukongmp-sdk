@@ -7,7 +7,7 @@ using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 
-namespace WukongMp.Common.Patches;
+namespace WukongMp.Api.Patches;
 
 public static class PatchOverlapUtils
 {

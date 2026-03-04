@@ -2,12 +2,12 @@
 using System.Diagnostics;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
-using ReadyM.Api.Mapping;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.Mapping.Events;
+namespace WukongMp.Api.Mapping.Policies.Event;
 
 public class SpawnSummonEventEventPolicyFactory(
     ClientOwnershipManager ownership,

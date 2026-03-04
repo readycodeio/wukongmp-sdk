@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using WukongMp.Api.PathCompressors;
 
 namespace WukongMp.Api.NameCompressors;
 

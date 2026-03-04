@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping;
+using ReadyM.Api.Multiplayer.Mapping;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Mapping.Events;
+using WukongMp.Api.Mapping.Policies.Event;
 
 namespace WukongMp.Api.ECS.GameEvents;
 

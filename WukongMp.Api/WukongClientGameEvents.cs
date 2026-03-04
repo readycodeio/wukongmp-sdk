@@ -4,7 +4,7 @@ using b1;
 using b1.BGW;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;

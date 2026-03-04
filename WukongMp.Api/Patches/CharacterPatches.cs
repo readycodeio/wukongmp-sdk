@@ -736,7 +736,7 @@ public class PatchGetActorEntity
             // Return local player entity if player guid is queried.
             if (count > 1 && DI.Instance.PlayerState.LocalMainCharacter.HasValue && value[0] is BGUPlayerCharacterCS)
             {
-                Entity = ECSExtension.ToEntity(DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn);
+                Entity = DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn.ToEntity();
                 if (Entity != Entity.Null)
                 {
                     __result = true;
@@ -748,7 +748,7 @@ public class PatchGetActorEntity
             {
                 for (var num = count - 1; num >= 0; num--)
                 {
-                    Entity = ECSExtension.ToEntity(value[num]);
+                    Entity = value[num].ToEntity();
                     if (Entity != Entity.Null)
                     {
                         __result = true;

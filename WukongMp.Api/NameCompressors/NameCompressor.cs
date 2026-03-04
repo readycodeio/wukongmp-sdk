@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace WukongMp.Api.PathCompressors;
+namespace WukongMp.Api.NameCompressors;
 
 public class NameCompressor
 {

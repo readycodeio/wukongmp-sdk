@@ -1,7 +1,7 @@
 ﻿using System;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 

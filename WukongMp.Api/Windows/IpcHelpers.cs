@@ -8,7 +8,8 @@ using System.Text.RegularExpressions;
 
 namespace WukongMp.Api.Windows;
 
-public class IpcHelpers
+// TODO: Move to common API
+public static class IpcHelpers
 {
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern uint GetEnvironmentVariable(string lpName, StringBuilder lpBuffer, uint nSize);

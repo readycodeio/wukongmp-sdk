@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Mapping.Data;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.Mapping.Data;
+namespace WukongMp.Api.Mapping.Policies.Data;
 
 public class MasterClientDataPolicyFactory(WukongAreaState areaState) : IMappingDataPolicyFactory
 {

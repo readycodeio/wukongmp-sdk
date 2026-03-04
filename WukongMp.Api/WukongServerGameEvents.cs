@@ -2,7 +2,7 @@
 using b1;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.GameEvents;

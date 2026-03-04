@@ -1,7 +1,7 @@
 using Friflo.Engine.ECS;
 using UnrealEngine.Runtime;
 
-namespace WukongMp.Api.Mapping.Events;
+namespace WukongMp.Api.Mapping.Policies.Event;
 
 public readonly struct SpawnSummonContext(Entity? summonerEntity, FVector summonLocation)
 {

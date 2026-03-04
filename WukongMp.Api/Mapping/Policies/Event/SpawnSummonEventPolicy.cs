@@ -2,7 +2,7 @@
 using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Runtime;
@@ -10,7 +10,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.Mapping.Events;
+namespace WukongMp.Api.Mapping.Policies.Event;
 
 public class SpawnSummonEventPolicy<TEvent>(
     ClientOwnershipManager ownership,

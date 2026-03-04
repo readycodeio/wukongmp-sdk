@@ -1,9 +1,9 @@
 ﻿using b1;
-using ReadyM.Api.Mapping.CreateDestroy;
+using ReadyM.Api.Multiplayer.Mapping.CreateDestroy;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Entities;
 
-namespace WukongMp.Api.Mapping.CreateDestroy;
+namespace WukongMp.Api.Mapping.Policies.CreateDelete;
 
 public readonly struct MainCharacterMappingCreateDeletePolicy(IMappingCreateDeletePolicy<AActor> policy)
 {

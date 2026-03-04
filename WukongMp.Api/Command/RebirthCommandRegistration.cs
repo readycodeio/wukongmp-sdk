@@ -1,5 +1,5 @@
 ﻿using ReadyM.Api.Command;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Events;
 using WukongMp.Api.Chat;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.State;

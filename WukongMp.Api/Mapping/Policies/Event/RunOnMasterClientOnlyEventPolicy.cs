@@ -1,10 +1,10 @@
 ﻿using Friflo.Engine.ECS;
 using ReadyM.Api.Helpers;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.Mapping.Events;
+namespace WukongMp.Api.Mapping.Policies.Event;
 
 public class RunOnMasterClientOnlyEventPolicy<TEvent>(
     ClientOwnershipManager ownership,

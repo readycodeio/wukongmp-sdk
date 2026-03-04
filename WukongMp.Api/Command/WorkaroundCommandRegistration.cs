@@ -1,6 +1,6 @@
 ﻿using ReadyM.Api.Command;
 using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Events;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 

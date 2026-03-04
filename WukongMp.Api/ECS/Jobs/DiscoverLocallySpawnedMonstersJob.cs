@@ -1,7 +1,7 @@
 ﻿using b1;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Events;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 

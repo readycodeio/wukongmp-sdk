@@ -1,5 +1,5 @@
 using b1;
-using ReadyM.Api.Mapping.Api;
+using ReadyM.Api.Multiplayer.Mapping.Api;
 using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Values;
 

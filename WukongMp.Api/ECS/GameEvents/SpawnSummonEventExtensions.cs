@@ -102,7 +102,7 @@ namespace WukongMp.Api.ECS.GameEvents
             EquipmentState equipment = new();
             if (value.MapEquip != null)
             {
-                equipment = new EquipmentState(value.MapEquip.Select(kvp => (EquipPositionExtensions.FromGame(kvp.Key), kvp.Value)));
+                equipment = new EquipmentState(value.MapEquip.Select(kvp => (kvp.Key.FromGame(), kvp.Value)));
             }
 
             string bornEffectPath = "";

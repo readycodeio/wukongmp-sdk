@@ -3,16 +3,17 @@ using System.Diagnostics.CodeAnalysis;
 using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Mapping;
-using ReadyM.Api.Mapping.Data;
-using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Data.Common;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
+using ReadyM.Api.Multiplayer.Mapping.Policies.Event.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping.CreateDestroy;
-using WukongMp.Api.Mapping.Data;
-using WukongMp.Api.Mapping.Events;
+using WukongMp.Api.Mapping.Policies.CreateDelete;
 
 namespace WukongMp.Api.Mapping;
 

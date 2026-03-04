@@ -1,5 +1,5 @@
 ﻿using System;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.PvP.GameEvents;
 
