@@ -5,7 +5,7 @@ using BtlShare;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;

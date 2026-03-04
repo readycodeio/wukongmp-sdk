@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using b1;
 using HarmonyLib;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Values;
 

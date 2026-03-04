@@ -4,7 +4,7 @@ using System.Reflection;
 using b1;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Relay.Common.Mapping;
+using ReadyM.Relay.Client.Mapping;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;

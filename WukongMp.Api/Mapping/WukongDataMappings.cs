@@ -1,11 +1,11 @@
 using b1;
 using ReadyM.Api.Mapping.Api;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Values;
 
 namespace WukongMp.Api.Mapping;
 
-public class StandardDataMappings
+public class WukongDataMappings
 {
     public BoundField<MainCharacterComponent, float, BUC_AttrContainer> PlayerHp { get; set; }
     public BoundField<MainCharacterComponent, float, BUC_AttrContainer> PlayerHpMax { get; set; }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Mapping;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Mapping.Events;
 

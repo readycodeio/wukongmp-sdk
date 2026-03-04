@@ -1,6 +1,6 @@
 ﻿using ReadyM.Api.Helpers;
 using ReadyM.Api.Mapping.Events;
-using ReadyM.Relay.Common.Mapping;
+using ReadyM.Relay.Client.Mapping;
 
 namespace WukongMp.Api.Mapping.Events;
 

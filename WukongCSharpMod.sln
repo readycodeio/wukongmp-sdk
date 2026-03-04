@@ -9,9 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.PvP", "WukongMP.Pv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Client", "readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj", "{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common", "readym-gameserver\src\ReadyM.Relay.Common\ReadyM.Relay.Common.csproj", "{3FE0896E-45E6-4698-B620-FA532B53D7EA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Common.Wukong", "readym-gameserver\src\ReadyM.Relay.Common.Wukong\ReadyM.Relay.Common.Wukong.csproj", "{D08A4198-D19A-419C-A942-CA084974DC73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Wukong.Common", "readym-gameserver\src\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj", "{D08A4198-D19A-419C-A942-CA084974DC73}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Api", "readym-gameserver\src\ReadyM.Api\ReadyM.Api.csproj", "{C9C2A21B-79D2-47B0-8FE0-34C6987B9303}"
 EndProject
@@ -65,14 +63,6 @@ Global
 		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
 		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Testing|Any CPU.Build.0 = Testing|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
-		{3FE0896E-45E6-4698-B620-FA532B53D7EA}.Testing|Any CPU.Build.0 = Testing|Any CPU
 		{D08A4198-D19A-419C-A942-CA084974DC73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D08A4198-D19A-419C-A942-CA084974DC73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D08A4198-D19A-419C-A942-CA084974DC73}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU

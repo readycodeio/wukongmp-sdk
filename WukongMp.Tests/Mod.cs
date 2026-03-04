@@ -5,6 +5,7 @@ using CSharpModBase;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.Shim;
+using WukongMp.Api.Tests.TestActionSequences;
 
 namespace WukongMp.Tests
 {
@@ -119,7 +120,7 @@ namespace WukongMp.Tests
 
                 if (!DI.Instance.TestsRunner.IsRunning)
                 {
-                    DI.Instance.TestsRunner.Init(new Api.Tests.TestActionSequences.ReconnectTestsSequence(DI.Instance.Logger));
+                    DI.Instance.TestsRunner.Init(new ReconnectTestsSequence(DI.Instance.Logger));
                     DI.Instance.TestsRunner.Start();
                 }
             });

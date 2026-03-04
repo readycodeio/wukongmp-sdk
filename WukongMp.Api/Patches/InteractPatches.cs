@@ -3,9 +3,8 @@ using b1;
 using BtlB1;
 using BtlShare;
 using HarmonyLib;
-using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
-using ReadyM.Relay.Common.Mapping;
+using ReadyM.Relay.Client.Mapping;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
@@ -30,7 +29,6 @@ public static class PatchComplexSkillDoInteractAction
 
         if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS character)
         {
-            // TODO: Before refactoring this only checked Tamers
             if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(character, out var entity))
             {
                 Logging.LogWarning("Failed to find entity for character {Name} when processing skillinteract.", character.GetName());

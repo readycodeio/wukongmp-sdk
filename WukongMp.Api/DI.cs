@@ -13,8 +13,11 @@ using ReadyM.Api.Mapping;
 using ReadyM.Api.Mapping.Api;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Archetypes;
+using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Serialization;
@@ -22,12 +25,8 @@ using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Client.Shim.ECS;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Client.Utilities;
-using ReadyM.Relay.Common.ECS.Archetypes;
-using ReadyM.Relay.Common.ECS.Jobs;
-using ReadyM.Relay.Common.ECS.Registry;
-using ReadyM.Relay.Common.Serialization;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Registry;
+using ReadyM.Wukong.Common.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Registry;
 using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
@@ -69,7 +68,7 @@ internal sealed class DI
     internal WukongClientGameEvents ClientGameEvents { get; private set; } = null!;
     internal WukongServerGameEvents ServerGameEvents { get; private set; } = null!;
     internal IComponentFieldMappingRegistry FieldMappingRegistry { get; private set; } = null!;
-    internal StandardDataMappings StandardDataMappings { get; private set; } = null!;
+    internal WukongDataMappings WukongDataMappings { get; private set; } = null!;
 
     internal RelaySerializer Serializer { get; private set; } = null!;
     internal HotSwappableRelayClient RelayClient { get; private set; } = null!;
@@ -369,7 +368,7 @@ internal sealed class DI
 
     private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
     {
-        StandardDataMappings = new StandardDataMappings
+        WukongDataMappings = new WukongDataMappings
         {
             PlayerHp = fieldMappingRegistry.Register(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(),
                 (ctx, value) =>

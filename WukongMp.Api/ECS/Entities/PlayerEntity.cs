@@ -1,5 +1,5 @@
 using Friflo.Engine.ECS;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 
 namespace WukongMp.Api.ECS.Entities;
 

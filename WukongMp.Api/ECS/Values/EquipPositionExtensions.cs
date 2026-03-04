@@ -4,9 +4,9 @@ namespace WukongMp.Api.ECS.Values;
 
 public static class EquipPositionExtensions
 {
-    public static EquipPosition ToGame(this ReadyM.Relay.Common.Wukong.ECS.Values.EquipPosition value)
+    public static EquipPosition ToGame(this ReadyM.Wukong.Common.ECS.Values.EquipPosition value)
         => (EquipPosition)(byte)value;
     
-    public static ReadyM.Relay.Common.Wukong.ECS.Values.EquipPosition FromGame(this EquipPosition value)
-        => (ReadyM.Relay.Common.Wukong.ECS.Values.EquipPosition)(byte)value;
+    public static ReadyM.Wukong.Common.ECS.Values.EquipPosition FromGame(this EquipPosition value)
+        => (ReadyM.Wukong.Common.ECS.Values.EquipPosition)(byte)value;
 }

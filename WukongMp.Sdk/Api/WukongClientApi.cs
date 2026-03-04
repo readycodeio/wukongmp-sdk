@@ -8,7 +8,7 @@ using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.State;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;

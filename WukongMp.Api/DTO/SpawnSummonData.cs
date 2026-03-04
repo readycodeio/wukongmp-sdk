@@ -4,7 +4,7 @@ using b1;
 using LiteNetLib.Utils;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Serialization;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Serialization;
 

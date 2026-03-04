@@ -7,7 +7,7 @@ using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.State;
 

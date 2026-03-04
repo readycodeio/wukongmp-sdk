@@ -4,7 +4,7 @@ using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
 

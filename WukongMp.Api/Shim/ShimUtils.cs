@@ -3,8 +3,8 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Shim;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Shim;
 
 namespace WukongMp.Api.Shim;
 

@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping.Data;
-using ReadyM.Relay.Common.Mapping;
+using ReadyM.Relay.Client.Mapping;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.Mapping.Data;

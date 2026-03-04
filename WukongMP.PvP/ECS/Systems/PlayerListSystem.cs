@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.UI;

@@ -1,5 +1,5 @@
 ﻿using b1;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Values;
 
 namespace WukongMp.Api.ECS.Values;
 

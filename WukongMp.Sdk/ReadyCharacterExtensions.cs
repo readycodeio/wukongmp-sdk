@@ -1,5 +1,5 @@
 using System;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Sdk;

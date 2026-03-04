@@ -1,5 +1,5 @@
 ﻿using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.UI;

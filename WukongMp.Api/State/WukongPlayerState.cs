@@ -5,7 +5,7 @@ using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 

@@ -2,7 +2,7 @@
 using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
-using ReadyM.Relay.Common.Mapping;
+using ReadyM.Relay.Client.Mapping;
 
 namespace WukongMp.Api.ECS.GameEvents;
 

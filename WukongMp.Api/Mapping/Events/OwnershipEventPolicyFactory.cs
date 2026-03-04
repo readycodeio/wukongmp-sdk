@@ -3,8 +3,8 @@ using System.Diagnostics;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Helpers;
 using ReadyM.Api.Mapping.Events;
+using ReadyM.Relay.Client.Mapping;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Mapping;
 
 namespace WukongMp.Api.Mapping.Events;
 

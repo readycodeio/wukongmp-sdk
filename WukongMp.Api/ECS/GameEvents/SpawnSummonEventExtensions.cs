@@ -2,7 +2,7 @@
 using System.Linq;
 using b1;
 using b1.BGW;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Plugins.Niagara;
 using UnrealEngine.Runtime;
@@ -102,7 +102,7 @@ namespace WukongMp.Api.ECS.GameEvents
             EquipmentState equipment = new();
             if (value.MapEquip != null)
             {
-                equipment = new EquipmentState(value.MapEquip.Select(kvp => (kvp.Key.FromGame(), kvp.Value)));
+                equipment = new EquipmentState(value.MapEquip.Select(kvp => (EquipPositionExtensions.FromGame(kvp.Key), kvp.Value)));
             }
 
             string bornEffectPath = "";

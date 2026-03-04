@@ -3,7 +3,7 @@ using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping.Events;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;

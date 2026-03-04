@@ -4,7 +4,7 @@ using b1.ECS;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -45,8 +45,8 @@ public static class PatchAttrs
         if (mainEntity != null)
         {
             var mainComp = mainEntity.Value.GetState();
-            DI.Instance.StandardDataMappings.PlayerAttributes.SyncToGame(__instance, mainComp);
-            DI.Instance.StandardDataMappings.PlayerHp.SyncToGame(__instance, mainComp);
+            DI.Instance.WukongDataMappings.PlayerAttributes.SyncToGame(__instance, mainComp);
+            DI.Instance.WukongDataMappings.PlayerHp.SyncToGame(__instance, mainComp);
             return;
         }
 
@@ -68,8 +68,8 @@ public static class PatchAttrs
         }
 
         var hpComp = tamerEntity.Value.GetHp();
-        DI.Instance.StandardDataMappings.HpMax.SyncToGame(__instance, hpComp);
-        DI.Instance.StandardDataMappings.Hp.SyncToGame(__instance, hpComp);
+        DI.Instance.WukongDataMappings.HpMax.SyncToGame(__instance, hpComp);
+        DI.Instance.WukongDataMappings.Hp.SyncToGame(__instance, hpComp);
     }
 }
 
@@ -504,11 +504,10 @@ public class PatchOnChangeMotionMatchingState
 
         var owner = __instance.GetOwner();
 
-        // TODO: This used to be only for Tamers
-        if (!DI.Instance.MappedEntity.IsMapped(owner, out var entity))
+        if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner as BGUCharacterCS, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MotionMatchingStateEvent(entity.Value, MMState), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MotionMatchingStateEvent(entity.Value, MMState), entity.Value.Entity);
     }
 }
 

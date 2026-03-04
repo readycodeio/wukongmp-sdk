@@ -11,8 +11,7 @@ $modFilesCore = @(
     "ReadyM.Api.dll",
     "ReadyM.Api.Multiplayer.dll",
     "ReadyM.Relay.Client.dll",
-    "ReadyM.Relay.Common.dll",
-    "ReadyM.Relay.Common.Wukong.dll",
+    "ReadyM.Wukong.Common.dll",
     "Friflo.Engine.ECS.dll",
     "Friflo.Engine.ECS.Boost.dll",
     "Friflo.Json.Burst.dll",
@@ -38,8 +37,7 @@ $modFilesDebugCore = @(
     "ReadyM.Api.pdb",
     "ReadyM.Api.Multiplayer.pdb",
     "ReadyM.Relay.Client.pdb",
-    "ReadyM.Relay.Common.pdb",
-    "ReadyM.Relay.Common.Wukong.pdb",
+    "ReadyM.Wukong.Common.pdb",
     "Friflo.Engine.ECS.pdb",
     "Friflo.Engine.ECS.Boost.pdb"
 )

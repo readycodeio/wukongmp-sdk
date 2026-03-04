@@ -22,7 +22,6 @@ public class WukongMappingPolicyDirectory(
     MappedEventManager mappedEvent,
     ClientWukongArchetypeRegistration wukongArchetype)
 {
-    public IMappingPolicyDirectory PolicyDir => policyDir;
     public MappedEventManager MappedEvent => mappedEvent;
     
     public bool IsCharacterMapped([NotNullWhen(true)] AActor? character, [NotNullWhen(true)] out Entity? entity)

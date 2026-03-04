@@ -1,6 +1,6 @@
-﻿using Friflo.Engine.ECS;
+﻿using System;
+using Friflo.Engine.ECS;
 using ReadyM.Relay.Client.State;
-using System;
 using WukongMp.Api;
 using WukongMp.Api.Chat;
 using WukongMp.Api.ECS.Entities;

@@ -1,7 +1,7 @@
 ﻿using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
+using AreaScopeComponent = ReadyM.Api.Multiplayer.ECS.Components.AreaScopeComponent;
 
 namespace WukongMp.Api.ECS.Entities;
 

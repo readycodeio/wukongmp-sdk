@@ -1,6 +1,6 @@
 ﻿using System;
-using ReadyM.Relay.Common.Mapping;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Relay.Client.Mapping;
+using ReadyM.Wukong.Common.ECS.Values;
 
 namespace WukongMp.Api.ECS.GameEvents;
 

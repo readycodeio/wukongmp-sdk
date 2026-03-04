@@ -7,7 +7,7 @@ using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Mapping;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;

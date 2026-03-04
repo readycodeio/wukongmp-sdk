@@ -2,8 +2,8 @@ using System;
 using System.Numerics;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using AreaScopeComponent = ReadyM.Api.Multiplayer.ECS.Components.AreaScopeComponent;
 
 namespace WukongMp.Sdk;
 

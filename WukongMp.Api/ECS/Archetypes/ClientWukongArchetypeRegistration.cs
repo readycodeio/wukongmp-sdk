@@ -2,7 +2,7 @@
 using ReadyM.Api.ECS.Registry;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
-using ReadyM.Relay.Common.Wukong.ECS.Registry;
+using ReadyM.Wukong.Common.ECS.Registry;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
 

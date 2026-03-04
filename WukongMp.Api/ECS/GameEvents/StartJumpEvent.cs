@@ -1,7 +1,7 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Relay.Common.Mapping;
+using ReadyM.Relay.Client.Mapping;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;

@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;

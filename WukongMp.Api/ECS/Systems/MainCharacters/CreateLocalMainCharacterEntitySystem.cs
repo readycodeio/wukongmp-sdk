@@ -2,7 +2,7 @@
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
@@ -56,9 +56,9 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         mainComp.Rotation = pawn.GetActorRotation().ToVector3();
 
         var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(pawn);
-        DI.Instance.StandardDataMappings.PlayerHp.LoadFromGame(ref mainComp, attrContainer);
-        DI.Instance.StandardDataMappings.PlayerHpMax.LoadFromGame(ref mainComp, attrContainer);
-        DI.Instance.StandardDataMappings.PlayerAttributes.LoadFromGame(ref mainComp, attrContainer);
+        DI.Instance.WukongDataMappings.PlayerHp.LoadFromGame(ref mainComp, attrContainer);
+        DI.Instance.WukongDataMappings.PlayerHpMax.LoadFromGame(ref mainComp, attrContainer);
+        DI.Instance.WukongDataMappings.PlayerAttributes.LoadFromGame(ref mainComp, attrContainer);
 
         mainComp.CharacterNickName = player.NickName;
 
