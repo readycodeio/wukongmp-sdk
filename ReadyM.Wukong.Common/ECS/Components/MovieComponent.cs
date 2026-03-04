@@ -20,7 +20,7 @@ public partial struct MovieComponent
         get
         {
             var str = StartedSequencesEncoded;
-            return str == null ? ImmutableHashSet<int>.Empty : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToImmutableHashSet();
+            return str == null ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToImmutableHashSet();
         }
 
         set => StartedSequencesEncoded = string.Join(";", value.Select(s => s.ToString()));
@@ -32,7 +32,7 @@ public partial struct MovieComponent
         get
         {
             var str = FinishedSequencesEncoded;
-            return str == null ? ImmutableHashSet<int>.Empty : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToImmutableHashSet();
+            return str == null ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToImmutableHashSet();
         }
 
         set => FinishedSequencesEncoded = string.Join(";", value.Select(s => s.ToString()));

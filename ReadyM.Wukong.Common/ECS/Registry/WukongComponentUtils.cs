@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Idents;
+﻿using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
 
@@ -11,7 +9,7 @@ public static class WukongComponentUtils
     public static void SetupServerMonsterArchetype(EntityBuilder b)
         => b.Add(new TamerComponent
             {
-                HoldingPlayers = ImmutableHashSet<PlayerId>.Empty
+                HoldingPlayers = []
             })
             .Add<AnimationComponent>()
             .Add(new HpComponent

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using Friflo.Json.Fliox;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Generators;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
@@ -24,7 +24,7 @@ public partial struct TamerComponent : IOwnershipManaged
         get
         {
             var str = HoldingPlayersEncoded;
-            return str == null ? ImmutableHashSet<PlayerId>.Empty : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => new PlayerId(ushort.Parse(s))).ToImmutableHashSet();
+            return str == null ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => new PlayerId(ushort.Parse(s))).ToImmutableHashSet();
         }
 
         set => HoldingPlayersEncoded = string.Join(";", value.Select(s => s.RawValue.ToString()));

@@ -15,12 +15,12 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="System.Collections.Immutable" Version="10.0.0" />
         <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj" />
-        <ProjectReference Include="..\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj" />
         <ProjectReference Include="..\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>
 

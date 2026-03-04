@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using LiteNetLib.Utils;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 

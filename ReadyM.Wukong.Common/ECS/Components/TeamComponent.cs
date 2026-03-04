@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using ReadyM.Api.Multiplayer.Generators;
-using ReadyM.Relay.Client.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
