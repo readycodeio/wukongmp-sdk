@@ -241,19 +241,12 @@ public static class SpawningUtils
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", tamerKind, location.ToString());
 
             // NOTE(api): PolicyDir check always true because newly created entity is owned locally.
-            if (policyDir.TamerEvent<BroadcastUnitSpawnEvent>().CanGameEventNotifyEcs(tamerEntity))
-            {
-                policyDir.MappedEvent.NotifyEcs(new BroadcastUnitSpawnEvent(
-                    entity: tamerEntity.Entity,
-                    unitName: tamerKind.Name, 
-                    guid: guid, 
-                    location: location 
-                ));
-            }
-            else
-            {
-                Debug.Assert(false);
-            }
+            policyDir.MappedEvent.NotifyEcsIfApplicable(new BroadcastUnitSpawnEvent(
+                entity: tamerEntity.Entity,
+                unitName: tamerKind.Name,
+                guid: guid,
+                location: location
+            ), tamerEntity.Entity);
         }
     }
 
@@ -327,6 +320,7 @@ public static class SpawningUtils
     public static BUTamerActor? BeginDeferredSummonSpawn(UWorld? world, TSubclassOf<BUTamerActor> tamerClass, FTransform transform, int summonId, bool safeClampToLand = false)
     {
         #region InlineOriginalCode
+
         if (world == null || tamerClass.Value == null)
         {
             return null;
@@ -361,6 +355,7 @@ public static class SpawningUtils
                 tamerActor.ApplyServantPropertyOverride(value);
             }
         }
+
         #endregion
 
         return tamerActor;
@@ -449,6 +444,7 @@ public static class SpawningUtils
             location = OutHitLocation;
             location.Z += 2.4f;
         }
+
         return location;
     }
 }

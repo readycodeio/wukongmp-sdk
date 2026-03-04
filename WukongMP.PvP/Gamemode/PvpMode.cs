@@ -360,7 +360,7 @@ internal partial class PvpMode : IDisposable
         }
 
         // disable pvp until next round
-        _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.RoundEnd, winner));
+        _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.RoundEnd, winner)); // TODO: policy for owning the PvP state
 
         // increment round number
         pvpState.SetLastRoundWinnerTeam(winner);

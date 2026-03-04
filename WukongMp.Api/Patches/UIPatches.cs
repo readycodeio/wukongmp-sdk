@@ -8,6 +8,7 @@ using b1.Localization;
 using B1UI.GSSvc;
 using B1UI.GSUI;
 using BtlShare;
+using Friflo.Engine.ECS;
 using GSE.GSUI;
 using HarmonyLib;
 using PreludeLib.Attributes;
@@ -47,16 +48,12 @@ public static class PatchDamageNumberDisplayCheck
         if (owner == null)
             return;
 
-        var entity = DI.Instance.PawnState.GetEntityByPlayerActor(owner);
-        if (entity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(entity.Value.Entity))
+        if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            return;
-        }
-
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-        if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
-        {
-            return;
+            if (DI.Instance.MappingPolicyDir.ForEvent<DamageNumEvent, Entity>().CanGameEventNotifyEcs(entity.Value))
+            {
+                return; // allow to continue to PatchSendDamageNumbers
+            }
         }
 
         __result = false;
@@ -77,8 +74,10 @@ public static class PatchSendDamageNumbers
     {
         if (!DI.Instance.AreaState.InRoom || !DI.Instance.PlayerState.LocalMainCharacter.HasValue)
             return;
-
-        DI.Instance.MappedEvent.NotifyEcs(new DamageNumEvent(DI.Instance.PlayerState.LocalMainCharacter.Value, Param.DamageType, Param.DamageNum, Param.Amplitude, Param.RealHitLocation, Param.RealHitDir, Param.AttackerTeamType));
+        
+        // we already checked in PatchDamageNumberDisplayCheck if the event can be sent, so we can refer to local player entity here which would always pass
+        var entity = DI.Instance.PlayerState.LocalMainCharacter.Value;
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new DamageNumEvent(entity, Param.DamageType, Param.DamageNum, Param.Amplitude, Param.RealHitLocation, Param.RealHitDir, Param.AttackerTeamType), entity.Entity);
     }
 }
 

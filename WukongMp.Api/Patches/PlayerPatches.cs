@@ -472,8 +472,6 @@ public static class PatchSetTargetToData
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var playerState = DI.Instance.PlayerState;
-
         var owner = __instance.GetOwner();
         if (owner.IsNullOrDestroyed())
         {
@@ -486,7 +484,7 @@ public static class PatchSetTargetToData
 
         Entity newTarget = default;
         var clearTarget = true;
-        string name = "null (Clear target)";
+        var name = "null (Clear target)";
 
         var newTargetPlayerEntity = DI.Instance.PawnState.GetEntityByPlayerActor(NewTargetInfo?.LockTargetActor);
         var newTargetMonsterEntity = DI.Instance.PawnState.GetEntityByTamerMonster(NewTargetInfo?.LockTargetActor);
@@ -510,22 +508,10 @@ public static class PatchSetTargetToData
             clearTarget = false;
         }
 
-        // send only own updates
-        if (owner == playerState.LocalMainCharacter?.Pawn)
+        if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            var mainEntity = playerState.LocalMainCharacter.Value;
-
-            Logging.LogDebug("New target sent for {Subject} as: {Target}", mainEntity.GetState().CharacterNickName, name);
-            DI.Instance.MappedEvent.NotifyEcs(new SetTargetEvent(mainEntity, newTarget, clearTarget));
-            return true;
-        }
-
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-        if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
-        {
-            Logging.LogDebug("New target sent for monster: {Subject} as: {Target}", tamerEntity.Value.GetTamer().Guid ?? "Unknown monster", name);
-
-            DI.Instance.MappedEvent.NotifyEcs(new SetTargetEvent(tamerEntity.Value, newTarget, clearTarget));
+            Logging.LogDebug("New target sent for {Subject} as: {Target}", owner.GetName(), name);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new SetTargetEvent(entity.Value, newTarget, clearTarget), entity.Value);
             return true;
         }
 

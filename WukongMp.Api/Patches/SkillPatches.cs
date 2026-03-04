@@ -923,10 +923,11 @@ public static class PatchOnIronBodyStart
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var playerState = DI.Instance.PlayerState;
-        if (playerState.LocalMainCharacter?.Pawn == __instance.GetOwner())
+        var owner = __instance.GetOwner();
+
+        if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            DI.Instance.MappedEvent.NotifyEcs(new IronBodyStartEvent(playerState.LocalMainCharacter.Value));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new IronBodyStartEvent(entity.Value), entity.Value);
         }
     }
 }

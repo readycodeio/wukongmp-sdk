@@ -122,7 +122,7 @@ public static class PvpUtils
         var b = MyDir.Vector() with { Z = 0.0f };
         List<ABGUCharacter> OutArray;
         UBGUSelectUtil.SphereOverlapBGUCharacters(Owner, actorLocation, FirstFilterMaxRange, out OutArray);
-        ABGUCharacter TargetActor = null;
+        ABGUCharacter? TargetActor = null;
         var SkeletonSocketName = "";
         var num1 = -1000f;
         var num2 = FirstFilterMaxRange;
