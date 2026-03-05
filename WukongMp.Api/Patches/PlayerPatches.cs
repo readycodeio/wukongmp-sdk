@@ -338,7 +338,8 @@ public class PatchOnUnitDead
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(ownerCharacter, out var entity) &&
             DI.Instance.MappingPolicyDir.ForEvent<UnitDeadEvent>().CanGameEventNotifyEcs(entity.Value))
         {
-            if (!entity.Value.GetState().IsTransformed)
+            ref var state = ref entity.Value.GetState();
+            if (!state.IsTransformed)
             {
                 ref var localState = ref entity.Value.GetLocalState();
                 localState.IsDuringDeathAnim = true;
@@ -350,9 +351,11 @@ public class PatchOnUnitDead
 
                 localState.DeadAnimationTime = 6f; // Value from game.
 
-                entity.Value.GetState().IsDead_SetFromGame(true);
-                DI.Instance.MappedEvent.NotifyEcs(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType)); // TODO: Check required before call to this
-                Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", entity.Value.GetState().PlayerId);
+                state.IsDead_SetFromGame(true);
+
+                // TODO: Check required before call to this
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType), entity.Value.Entity);
+                Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", state.PlayerId);
             }
 
             return;

@@ -754,7 +754,7 @@ internal partial class PvpMode : IDisposable
             {
                 // FIXME(api): This whole block should be wrapped into a "Replace" utility method so that
                 // the policyDir checks can be done jointly.
-                if (!_policyDir.TamerEvent<BroadcastUnitSpawnEvent>().CanGameEventNotifyEcs(victimTamerEntity))
+                if (!_policyDir.ForEvent<BroadcastUnitSpawnEvent>().CanGameEventNotifyEcs(victimTamerEntity.Value.Entity))
                     return;
 
                 var tamerClass = victimTamerEntity.Value.Tamer?.GetClass();

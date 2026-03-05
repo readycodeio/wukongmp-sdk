@@ -379,58 +379,6 @@ public static class SpawningUtils
         UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, servantReq.BornTransform);
     }
 
-    [Obsolete]
-    public static bool CanSummon(WukongPlayerState playerState, WukongAreaState areaState, WukongPawnState pawnState, Store world, AActor? summoner, FVector summonLocation)
-    {
-        var localMainEntity = playerState.LocalMainCharacter;
-        if (localMainEntity == null)
-        {
-            return false;
-        }
-
-        var summonerEntity = pawnState.GetEntityByPlayerActor(summoner);
-        if (summonerEntity.HasValue && summoner == localMainEntity.Value.Pawn)
-        {
-            return true; // Local player summons.
-        }
-        else if (summonerEntity.HasValue)
-        {
-            return false; // Other player summons.
-        }
-        else // Summoner is not a player e.g. spawn point
-        {
-            if (playerState.LocalPlayerId == null)
-                return false;
-
-            if (areaState.IsMasterClient)
-                return true;
-
-            var localPlayerId = playerState.LocalPlayerId.Value;
-            var localPosition = localMainEntity.Value.GetState().Location;
-            var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
-            var squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
-            if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
-            {
-                return false; // Distant summon -> master as owner
-            }
-
-            // Check if master or another player with lower id is nearby
-            bool canSummon = true;
-            world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, entity) =>
-            {
-                if (entity == localMainEntity.Value.Entity)
-                    return;
-
-                var squaredDistance = Vector3.DistanceSquared(localPosition, mainComp.Location);
-                if (squaredDistance < squaredSpawnOwnershipRadius && (areaState.MasterClientId == mainComp.PlayerId || mainComp.PlayerId.RawValue < localPlayerId.RawValue))
-                {
-                    canSummon = false;
-                }
-            });
-            return canSummon;
-        }
-    }
-
     public static FVector GetCorrectedSpawnLocation(ACharacter character, FVector targetLocation)
     {
         FVector location = targetLocation;

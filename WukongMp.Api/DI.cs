@@ -40,7 +40,6 @@ using WukongMp.Api.Helpers;
 using WukongMp.Api.Https;
 using WukongMp.Api.Input;
 using WukongMp.Api.Mapping;
-using WukongMp.Api.Mapping.Policies.Data;
 using WukongMp.Api.Mapping.Policies.Event;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.Shim;
@@ -240,7 +239,6 @@ internal sealed class DI
             actor => areaState.IsMasterClient,
             entity => clientOwnership.OwnsEntity(entity));
         policyDir.RegisterDefaultData(new OwnershipDataPolicyFactory(clientOwnership));
-        policyDir.RegisterDefaultData(new MasterClientDataPolicyFactory(areaState));
         policyDir.RegisterDefaultEvent(new OwnershipEventPolicyFactory(clientOwnership, sideChannel));
         policyDir.RegisterDefaultEvent(new MasterClientEventPolicyFactory(areaState, sideChannel));
         policyDir.RegisterDefaultEvent(new RunOnMasterClientOnlyEventPolicyFactory(clientOwnership, areaState, sideChannel));

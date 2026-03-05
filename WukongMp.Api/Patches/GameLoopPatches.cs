@@ -53,7 +53,7 @@ public static class ReceiveTickPatch
         {
             var mainEntity = new MainCharacterEntity(entity);
 
-            if (DI.Instance.ClientOwnership_.OwnsEntity(mainEntity))
+            if (DI.Instance.MappingPolicyDir.ForEvent<MontageCallbackEvent>().CanGameEventNotifyEcs(mainEntity))
             {
                 SyncPlayerMontage(mainEntity);
             }
@@ -91,14 +91,16 @@ public static class ReceiveTickPatch
 
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
-                DI.Instance.MappedEvent.NotifyEcs(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound));
+                // TODO: Check was performed beforehand
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound), mainEntity.Entity);
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            DI.Instance.MappedEvent.NotifyEcs(new MontageCancelEvent(mainEntity));
+            // TODO: Check was performed beforehand
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCancelEvent(mainEntity), mainEntity.Entity);
         }
 
         montageState.LocalMontage = currentMontage;

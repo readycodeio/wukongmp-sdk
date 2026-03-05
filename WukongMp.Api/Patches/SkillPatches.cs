@@ -8,6 +8,7 @@ using BtlShare;
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Api.Idents;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -504,7 +505,6 @@ public static class PatchOnUnitCastSkillTry
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var playerState = DI.Instance.PlayerState;
         var owner = __instance.GetOwner();
 
         if (___SkillInstsData.GetLastSkillCastResult() != 0)
@@ -515,22 +515,20 @@ public static class PatchOnUnitCastSkillTry
 
         if (CSI.SourceType == ECastSkillSourceType.PhantomRush)
         {
-            if (owner == playerState.LocalMainCharacter?.Pawn)
+            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
             {
-                Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
-                DI.Instance.MappedEvent.NotifyEcs(new PhantomRushEvent(playerState.LocalMainCharacter.Value, CSI.SkillDirection));
-                return;
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PhantomRushEvent(entity.Value, CSI.SkillDirection), entity.Value.Entity);
+                if (sent)
+                    Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
             }
         }
-
-        var pawnState = DI.Instance.PawnState;
-        if (CSI.SourceType == ECastSkillSourceType.CBG && CSI.SkillID == 471236)
+        else if (CSI is { SourceType: ECastSkillSourceType.CBG, SkillID: 471236 })
         {
-            var tamerEntity = pawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner as BGUCharacterCS, out var entity))
             {
-                DI.Instance.MappedEvent.NotifyEcs(new CastSkillEvent(tamerEntity.Value, CSI.SkillID, CSI.SourceType));
-                Logging.LogDebug("Sent CBG skill cast for skill {SkillId}", CSI.SkillID);
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastSkillEvent(entity.Value, CSI.SkillID, CSI.SourceType), entity.Value.Entity);
+                if (sent)
+                    Logging.LogDebug("Sent CBG skill cast for skill {SkillId}", CSI.SkillID);
             }
         }
     }
@@ -540,7 +538,7 @@ public static class PatchOnUnitCastSkillTry
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public static class PatchExitPhantomRush
 {
-    public static void Prefix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData)
+    public static void Prefix(BUS_PhantomRushComp __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
@@ -554,24 +552,17 @@ public static class PatchExitPhantomRush
             return;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(owner);
-
-        if (mainEntity == null)
+        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
             return;
 
-        ref var main = ref mainEntity.Value.GetState();
-        ref var localMain = ref mainEntity.Value.GetLocalState();
+        var main = mainEntity.Value.GetState();
 
-        if ((DI.Instance.AreaState.IsMasterClient || owner == mainEntity.Value.Pawn) && !localMain.ReceivedPhantomRushExit)
-        {
+        var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ExitPhantomRushEvent(mainEntity.Value), mainEntity.Value.Entity);
+        if (sent)
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", main.CharacterNickName);
-            DI.Instance.MappedEvent.NotifyEcs(new ExitPhantomRushEvent(mainEntity.Value));
-            localMain.ReceivedPhantomRushExit = false;
-        }
 
-        var playerId = main.PlayerId;
-        var playerEntity = DI.Instance.PlayerState.GetPlayerById(playerId);
-
+        // show other players again
+        var playerEntity = DI.Instance.PlayerState.GetPlayerById(main.PlayerId);
         if (mainEntity != playerState.LocalMainCharacter && playerEntity.HasValue)
         {
             DI.Instance.ModeManager.SetPlayerVisibility(mainEntity.Value, true);
@@ -696,16 +687,15 @@ public class PatchOnTransBeginSpawnNewOne
         var playerState = DI.Instance.PlayerState;
 
         var pawn = __instance.GetOwner();
-        if (pawn == playerState.LocalMainCharacter?.Pawn)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(pawn, out var mainEntity))
         {
-            Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            DI.Instance.MappedEvent.NotifyEcs(new PlayerTransBeginEvent(playerState.LocalMainCharacter.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
-        }
+            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransBeginEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType), mainEntity.Value.Entity);
+            if (sent)
+            {
+                Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
+            }
 
-        var entity = DI.Instance.PawnState.GetEntityByPlayerActor(pawn);
-        if (entity != null)
-        {
-            ref var mainComp = ref entity.Value.GetState();
+            ref var mainComp = ref mainEntity.Value.GetState();
             mainComp.IsTransformed = true;
         }
     }
@@ -734,15 +724,16 @@ public class PatchOnTransBackSpawnNewOne
             return;
         }
 
-        var playerState = DI.Instance.PlayerState;
         var pawn = __instance.GetOwner();
-        if (pawn == playerState.LocalMainCharacter?.Pawn)
+
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(pawn, out var mainEntity))
         {
-            Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            DI.Instance.MappedEvent.NotifyEcs(new PlayerTransEndEvent(playerState.LocalMainCharacter.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
+            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransEndEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType), mainEntity.Value.Entity);
+            if (sent)
+                Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", mainEntity.Value.GetState().CharacterNickName, ToReplaceUnitResID);
         }
 
-        __state = DI.Instance.PawnState.GetEntityByPlayerActor(pawn);
+        __state = mainEntity;
     }
 
     public static void Postfix(UActorCompBaseCS __instance, object? __state)
@@ -753,6 +744,7 @@ public class PatchOnTransBackSpawnNewOne
         var state = (MainCharacterEntity?)__state;
         if (state.HasValue)
         {
+            // TODO: Setters for raw values so we don't have to do this rigamarole
             ref var mainComp = ref state.Value.GetState();
             mainComp.IsTransformed = false;
             var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Value.Pawn);
@@ -992,14 +984,15 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        if (_Config != null)
+        if (_Config == null)
+            return;
+
+        Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}, CurVigorSkillID {CurVigorSkillID}", _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID);
+
+        var owner = __instance.GetOwner();
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
         {
-            Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}, CurVigorSkillID {CurVigorSkillID}", _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID);
-            var playerState = DI.Instance.PlayerState;
-            if (DI.Instance.State.LocalPlayerId != null && playerState.LocalMainCharacter?.Pawn == __instance.GetOwner())
-            {
-                DI.Instance.MappedEvent.NotifyEcs(new TriggerMagicallyChangeEvent(playerState.LocalMainCharacter.Value, _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason));
-            }
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerMagicallyChangeEvent(entity.Value, _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason), entity.Value.Entity);
         }
     }
 }
@@ -1014,10 +1007,11 @@ public static class PatchPendingReset
             return;
 
         Logging.LogDebug("BUS_MagicallyChangeComp PendingReset called with reason: {Reason}", Reason);
-        var players = DI.Instance.PlayerState;
-        if (players.LocalMainCharacter?.Pawn == __instance.GetOwner())
+
+        var owner = __instance.GetOwner();
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
         {
-            DI.Instance.MappedEvent.NotifyEcs(new ResetMagicallyChangeEvent(players.LocalMainCharacter.Value, Reason));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ResetMagicallyChangeEvent(entity.Value, Reason), entity.Value.Entity);
         }
     }
 }

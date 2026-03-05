@@ -18,7 +18,6 @@ public struct LocalMainCharacterComponent : IComponent
     public BGUCharacterCS? LastPawn { get; set; }
 
     public bool IsRespawning { get; set; }
-    public bool ReceivedPhantomRushExit { get; set; }
     public bool RunImmobilizePatches { get; set; }
     public MontageStateData MontageState { get; set; }
 

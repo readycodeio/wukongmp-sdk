@@ -7,13 +7,10 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Mapping;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Data.Common;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event.Common;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping.Policies.CreateDelete;
 
 namespace WukongMp.Api.Mapping;
 
@@ -21,10 +18,11 @@ public class WukongMappingPolicyDirectory(
     IMappingPolicyDirectory policyDir,
     IMappedEntityManager<AActor> mappedEntity,
     MappedEventManager mappedEvent,
-    ClientWukongArchetypeRegistration wukongArchetype)
+    ClientWukongArchetypeRegistration wukongArchetype
+)
 {
     public MappedEventManager MappedEvent => mappedEvent;
-    
+
     public bool IsCharacterMapped([NotNullWhen(true)] AActor? character, [NotNullWhen(true)] out Entity? entity)
     {
         if (character.IsNullOrDestroyed())
@@ -54,7 +52,7 @@ public class WukongMappingPolicyDirectory(
         entity = null;
         return false;
     }
-    
+
     public bool IsCharacterMapped([NotNullWhen(true)] AActor? character, [NotNullWhen(true)] out Entity? entity, [NotNullWhen(true)] out ArchetypeId? archetype)
     {
         if (character.IsNullOrDestroyed())
@@ -97,7 +95,7 @@ public class WukongMappingPolicyDirectory(
             mainEntity = null;
             return false;
         }
-        
+
         if (!mappedEntity.IsMapped(character, out var entity))
         {
             mainEntity = null;
@@ -110,7 +108,7 @@ public class WukongMappingPolicyDirectory(
             mainEntity = null;
             return false;
         }
-        
+
         mainEntity = new(entity.Value);
 
         if (mainEntity.Value.Pawn != character)
@@ -118,10 +116,10 @@ public class WukongMappingPolicyDirectory(
             mainEntity = null;
             return false;
         }
-        
+
         return true;
     }
-    
+
     public bool IsTamerMapped_([NotNullWhen(true)] BUTamerActor? tamer, [NotNullWhen(true)] out TamerEntity? tamerEntity)
     {
         if (tamer.IsNullOrDestroyed())
@@ -144,7 +142,7 @@ public class WukongMappingPolicyDirectory(
         }
 
         tamerEntity = new(entity.Value);
-        
+
         if (tamer != tamerEntity.Value.Tamer)
         {
             tamerEntity = null;
@@ -161,7 +159,7 @@ public class WukongMappingPolicyDirectory(
             tamerEntity = null;
             return false;
         }
-        
+
         var tamerOwner = monsterCharacter?.GetTamerOwner();
 
         if (!mappedEntity.IsMapped(tamerOwner, out var entity))
@@ -169,7 +167,7 @@ public class WukongMappingPolicyDirectory(
             tamerEntity = null;
             return false;
         }
-        
+
         var archetype = entity.Value.GetComponent<MetadataComponent>().Archetype;
         if (archetype != wukongArchetype.TamerArchetype)
         {
@@ -187,33 +185,11 @@ public class WukongMappingPolicyDirectory(
 
         return true;
     }
-    
-    public MainCharacterMappingCreateDeletePolicy MainCharacterCreateDelete()
-        => new(policyDir.ForCreateDelete<AActor>(wukongArchetype.MainCharacterArchetype));
-
-    public MappedEntityDataPolicy MainCharacterData<TData>()
-        where TData : struct, IMappingContext<Entity>
-        => new(policyDir.ForData<TData>(wukongArchetype.MainCharacterArchetype));
-
-    public MappedEntityEventPolicy MainCharacterEvent<TEvent>()
-        where TEvent : struct, IMappingContext<Entity>
-        => new(policyDir.ForEvent<TEvent>());
-
-    public TamerMappingCreateDeletePolicy TamerCreateDelete()
-        => new(policyDir.ForCreateDelete<AActor>(wukongArchetype.TamerArchetype));
-
-    public MappedEntityDataPolicy TamerData<TData>()
-        where TData : struct, IMappingContext<Entity>
-        => new(policyDir.ForData<TData>(wukongArchetype.TamerArchetype));
-
-    public MappedEntityEventPolicy TamerEvent<TEvent>()
-        where TEvent : struct, IMappingContext<Entity>
-        => new(policyDir.ForEvent<TEvent>());
 
     public IMappingDataPolicy<Entity> ForData<TData>(ArchetypeId archetypeId)
         where TData : struct, IMappingContext<Entity>
         => policyDir.ForData<TData>(archetypeId);
-    
+
     public IMappingDataPolicy<TContext> ForData<TData, TContext>(ArchetypeId archetypeId)
         where TData : struct, IMappingContext<TContext>
         where TContext : struct
