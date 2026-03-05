@@ -1,5 +1,6 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk;
@@ -31,7 +32,7 @@ public sealed class ScaleMonsterHpSystem(WukongLocalApi localApi, WukongClientAp
             if (tamer.Owner != ClientApi.LocalPlayerId)
                 continue;
 
-            if (Equals(0f, Constants.FloatComparisonTolerance) && Equals(0, Constants.FloatComparisonTolerance))
+            if (tamer.HpMaxBase.Equals(0f, Constants.FloatComparisonTolerance) && tamer.Hp.Equals(0, Constants.FloatComparisonTolerance))
                 continue; // no need to scale if monster is not active
 
             if (Math.Abs(targetScaling - tamer.HpMultiplier) > Constants.FloatComparisonTolerance)

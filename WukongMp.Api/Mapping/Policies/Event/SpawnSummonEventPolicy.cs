@@ -22,13 +22,13 @@ public class SpawnSummonEventPolicy<TEvent>(
 {
     private bool CanSummon(Entity? summonerEntity, FVector summonLocation)
     {
-        if (summonerEntity != null && MainCharacterEntity.IsMainCharacter(summonerEntity.Value))
+        if (summonerEntity != null && (MainCharacterEntity.IsMainCharacter(summonerEntity.Value) || TamerEntity.IsTamer(summonerEntity.Value)))
         {
             // If a player is the summoner, apply ownership semantics.
             return ownership.OwnsEntity(summonerEntity.Value);
         }
 
-        // Summoner is not a player e.g. spawn point or enemy
+        // Summoner is not a mapped entity, e.g. a BGU_QuestActor spawn point
         var localMainEntity = playerState.LocalMainCharacter;
         if (localMainEntity == null)
             return false;
@@ -49,7 +49,7 @@ public class SpawnSummonEventPolicy<TEvent>(
         }
 
         // Check if master or another player with lower id is nearby
-        bool canSummon = true;
+        var canSummon = true;
         world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, entity) =>
         {
             if (entity == localMainEntity.Value.Entity)

@@ -117,7 +117,7 @@ public class WukongClientGameEvents : IDisposable
 
         mappedEvent.RegisterGameEventHandler<SpawnSummonEvent, WukongClientGameEvents>(static (ev, self) =>
         {
-            self._logger.LogDebug("Received OnSpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", ev.Summoner, ev.SummonGuid, ev.SummonClassPath);
+            self._logger.LogDebug("Received OnSpawnSummon with guid {Guid} for tamer path {Path}", ev.SummonGuid, ev.SummonClassPath);
             SpawningUtils.SpawnSummonedUnitWithGuid(ev.ToGame(self._pawnState));
         }, this);
 

@@ -139,7 +139,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
         _mappedEvent.RegisterEcsEventHandler<SpawnSummonEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
             self.SendSpawnSummon(new SpawnSummonData(
-                summonerNetId: ev.Summoner.GetNetId(),
+                summonerNetId: ev.Summoner?.GetNetId() ?? default,
                 summonGuid: ev.SummonGuid,
                 summonClassPath: ev.SummonClassPath,
                 location: ev.Location,
@@ -151,7 +151,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 searchTargetType: ev.SearchTargetType,
                 cooperativeSCGuid: ev.CooperativeSCGuid,
                 aliveTime: ev.AliveTime,
-                catchTargetNetId: ev.CatchTarget.GetNetId(),
+                catchTargetNetId: ev.CatchTarget?.GetNetId() ?? default,
                 delayBornTime: ev.DelayBornTime,
                 bornMontagePath: ev.BornMontagePath,
                 bornSkill: ev.BornSkill,
@@ -397,8 +397,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
         {
             self.SendMagicFieldDead(
                 ev.ClassName,
-                ev.Reason,
-                ev.Entity.GetNetId()
+                ev.Reason
             );
         }, this);
 
@@ -670,12 +669,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             self._netEntity.TryGetEntityByNetworkId(data0.SummonerNetId, out var summoner);
             self._netEntity.TryGetEntityByNetworkId(data0.CatchTargetNetId, out var catchTarget);
 
-            if (!summoner.HasValue)
-                return;
-
             var context = new SpawnSummonContext(summoner, data0.Location);
             self._mappedEvent.InvokeInGameIfApplicable(new SpawnSummonEvent(
-                summoner: summoner.Value,
+                summoner: summoner,
                 summonGuid: data0.SummonGuid,
                 summonClassPath: data0.SummonClassPath,
                 location: data0.Location,
@@ -687,7 +683,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 searchTargetType: data0.SearchTargetType,
                 cooperativeSCGuid: data0.CooperativeSCGuid,
                 aliveTime: data0.AliveTime,
-                catchTarget: catchTarget ?? default,
+                catchTarget: catchTarget,
                 delayBornTime: data0.DelayBornTime,
                 bornMontagePath: data0.BornMontagePath,
                 bornSkill: data0.BornSkill,
@@ -1206,22 +1202,15 @@ public partial class WukongClientRpcCallbacks : IDisposable
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    void OnMagicFieldDead(string magicFieldClassName, EBGUBulletDestroyReason reason, NetworkId netId)
+    void OnMagicFieldDead(string magicFieldClassName, EBGUBulletDestroyReason reason)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0, netId0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0) =>
         {
-            if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
-            {
-                self._logger.LogError("Character not found: {NetId}", netId0);
-                return;
-            }
-
             self._mappedEvent.InvokeInGameIfApplicable(new MagicFieldDeadEvent(
-                entity: entity.Value,
                 className: magicFieldClassName0,
                 reason: reason0
-            ), entity.Value);
-        }, this, magicFieldClassName, reason, netId);
+            ), default(EmptyContext));
+        }, this, magicFieldClassName, reason);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestOthers)]

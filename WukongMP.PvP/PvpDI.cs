@@ -33,11 +33,11 @@ namespace WukongMp.PvP
             var patcher = Patcher = new WukongPatcher(typeof(Mod).Assembly, "WukongMp.PvP", DI.Prelude);
 
             var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.GameplayEventRouter, DI.AreaState, DI.ClientOwnership_);
-            
+
             DI.CommandRegistry.AddCommands([
                 new PvpCommandRegistration(DI.PlayerState, DI.AreaState, DI.ClientRpc, DI.Chatter, DI.CommandConsole),
             ]);
-            
+
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
 
             var saveManager = SaveManager = new PvpSaveManager(DI.Logger);
@@ -47,19 +47,19 @@ namespace WukongMp.PvP
                 DI.World,
                 DI.MappedEvent,
                 DI.Serializer,
-                DI.RelayClient, 
+                DI.RelayClient,
                 DI.State,
-                DI.AreaState, 
-                DI.PlayerState, 
-                DI.PlayerPawnState, 
-                DI.EventBus, 
+                DI.AreaState,
+                DI.PlayerState,
+                DI.PlayerPawnState,
+                DI.EventBus,
                 DI.ClientRpc,
                 DI.Chatter,
-                DI.GameplayEventRouter, 
+                DI.GameplayEventRouter,
                 DI.MappingPolicyDir,
-                DI.PawnState, 
-                DI.EcsLoop, 
-                widgetManager, 
+                DI.PawnState,
+                DI.EcsLoop,
+                widgetManager,
                 DI.Logger);
 
             var synchronizer = Synchronizer = new PvpSynchronizer(

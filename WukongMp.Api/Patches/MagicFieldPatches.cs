@@ -3,6 +3,7 @@ using b1;
 using BtlB1;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.GameEvents;
@@ -19,20 +20,12 @@ public static class PatchOnMagicFieldDead
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var owner = __instance.GetOwner() as BGU_CharacterAI;
-
-        if (owner == null)
-            return;
-
+        var owner = __instance.GetOwner();
         var className = owner.GetClass().GetName();
         if (className.Contains(Constants.SupremeInspectorFirewallName))
         {
             Logging.LogDebug("OnMagicFieldDead send for {Class}", className);
-            if (DI.Instance.MappedEntity.IsMapped(owner, out var entity))
-            {
-                // TODO: The ownership check before refactoring was missing
-                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MagicFieldDeadEvent(entity.Value, className, Reason), entity.Value);
-            }
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MagicFieldDeadEvent(className, Reason), default(EmptyContext));
         }
     }
 }

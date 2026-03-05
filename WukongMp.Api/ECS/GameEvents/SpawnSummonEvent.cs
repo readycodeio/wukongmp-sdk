@@ -9,10 +9,10 @@ using WukongMp.Api.Mapping.Policies.Event;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct SpawnSummonEvent(Entity summoner, string summonGuid, string summonClassPath)
+public readonly struct SpawnSummonEvent(Entity? summoner, string summonGuid, string summonClassPath)
     : IEquatable<SpawnSummonEvent>, IMappingContext<SpawnSummonContext>
 {
-    public readonly Entity Summoner = summoner;
+    public readonly Entity? Summoner = summoner;
     public readonly string SummonGuid = summonGuid;
     public readonly string SummonClassPath = summonClassPath;
 
@@ -25,7 +25,7 @@ public readonly struct SpawnSummonEvent(Entity summoner, string summonGuid, stri
     public readonly EServantSearchTargetType SearchTargetType;
     public readonly string CooperativeSCGuid = "";
     public readonly float AliveTime;
-    public readonly Entity CatchTarget;
+    public readonly Entity? CatchTarget;
 
     public readonly float DelayBornTime;
     public readonly string BornMontagePath = "";
@@ -40,7 +40,7 @@ public readonly struct SpawnSummonEvent(Entity summoner, string summonGuid, stri
     public readonly float DestroyDelayTime;
 
     public SpawnSummonEvent(
-        Entity summoner,
+        Entity? summoner,
         string summonGuid, 
         string summonClassPath, 
         FVector location, 
@@ -52,7 +52,7 @@ public readonly struct SpawnSummonEvent(Entity summoner, string summonGuid, stri
         EServantSearchTargetType searchTargetType, 
         string cooperativeSCGuid, 
         float aliveTime,
-        Entity catchTarget,
+        Entity? catchTarget,
         float delayBornTime,
         string bornMontagePath, 
         int bornSkill, 

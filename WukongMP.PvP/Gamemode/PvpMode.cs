@@ -13,7 +13,6 @@ using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;

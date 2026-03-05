@@ -2,6 +2,7 @@
 using System.Linq;
 using b1;
 using b1.BGW;
+using Friflo.Engine.ECS;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Plugins.Niagara;
@@ -20,8 +21,8 @@ namespace WukongMp.Api.ECS.GameEvents
         {
             BGW_PreloadAssetMgr preloadAssetMgr = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld());
 
-            var summoner = pawnState.GetPawnByEntity(value.Summoner);
-            var catchTarget = pawnState.GetPawnByEntity(value.CatchTarget);
+            var summoner = pawnState.GetPawnByEntity(value.Summoner ?? default);
+            var catchTarget = pawnState.GetPawnByEntity(value.CatchTarget ?? default);
 
             UClass tamerTemplate = preloadAssetMgr.TryGetCachedResourceObj<UClass>(value.SummonClassPath, ELoadResourceType.SyncLoadAndCache);
             UAnimMontage? bornMontage = null;
@@ -85,67 +86,61 @@ namespace WukongMp.Api.ECS.GameEvents
             };
         }
 
-        public static SpawnSummonEvent? FromGame(this FServantReq value, WukongPawnState pawnState)
+        public static SpawnSummonEvent? FromGame(this FServantReq req, WukongPawnState pawnState)
         {
-            var summoner = pawnState.GetEntityByActor(value.Summoner);
-            var catchTarget = pawnState.GetEntityByActor(value.CatchTarget);
-            
-            if (!summoner.HasValue)
-            {
-                Logging.LogWarning("Summoner not found for SpawnSummonEvent.FromGame");
-                return null;
-            }
+            var summoner = pawnState.GetEntityByActor(req.Summoner);
+            var catchTarget = pawnState.GetEntityByActor(req.CatchTarget);
 
-            var summonClassPath = value.TamerTemplate.PathName;
-            var bornMontagePath = value.BornMontage?.PathName ?? "";
+            var summonClassPath = req.TamerTemplate.PathName;
+            var bornMontagePath = req.BornMontage?.PathName ?? "";
 
             EquipmentState equipment = new();
-            if (value.MapEquip != null)
+            if (req.MapEquip != null)
             {
-                equipment = new EquipmentState(value.MapEquip.Select(kvp => (kvp.Key.FromGame(), kvp.Value)));
+                equipment = new EquipmentState(req.MapEquip.Select(kvp => (kvp.Key.FromGame(), kvp.Value)));
             }
 
-            string bornEffectPath = "";
-            if (value.BornDBC != null)
+            var bornEffectPath = "";
+            if (req.BornDBC != null)
             {
-                bornEffectPath = value.BornDBC.PathName;
+                bornEffectPath = req.BornDBC.PathName;
             }
-            else if (value.BornNiagara != null)
+            else if (req.BornNiagara != null)
             {
-                bornEffectPath = value.BornNiagara.PathName;
+                bornEffectPath = req.BornNiagara.PathName;
             }
-            else if (value.BornParticle != null)
+            else if (req.BornParticle != null)
             {
-                bornEffectPath = value.BornParticle.PathName;
+                bornEffectPath = req.BornParticle.PathName;
             }
 
             return new SpawnSummonEvent(
-                summoner: summoner.Value,
-                summonGuid: value.ServantTamerGuid,
+                summoner: summoner,
+                summonGuid: req.ServantTamerGuid,
                 summonClassPath: summonClassPath,
 
-                location: value.BornTransform.GetLocation(),
-                rotation: value.BornTransform.GetRotation().Rotator(),
-                safeClampToLand: value.SafeClampToLand,
-                summonId: value.SummonID,
-                summonInstanceId: value.SummonInstanceID.ConvertToGuid(),
-                servantType: value.ServantType,
-                searchTargetType: value.SearchTargetType,
-                cooperativeSCGuid: value.CooperativeSCGuid,
-                aliveTime: value.AliveTime,
-                catchTarget: catchTarget ?? default,
+                location: req.BornTransform.GetLocation(),
+                rotation: req.BornTransform.GetRotation().Rotator(),
+                safeClampToLand: req.SafeClampToLand,
+                summonId: req.SummonID,
+                summonInstanceId: req.SummonInstanceID.ConvertToGuid(),
+                servantType: req.ServantType,
+                searchTargetType: req.SearchTargetType,
+                cooperativeSCGuid: req.CooperativeSCGuid,
+                aliveTime: req.AliveTime,
+                catchTarget: catchTarget,
 
-                delayBornTime: value.DelayBornTime,
+                delayBornTime: req.DelayBornTime,
                 bornMontagePath: bornMontagePath,
-                bornSkill: value.BornSkill,
-                delayEffectTime: value.DelayEffectTime,
-                delaySummonTime: value.DelaySummonTime,
-                isSummonerAsMaster: value.MasterActor == value.Summoner,
+                bornSkill: req.BornSkill,
+                delayEffectTime: req.DelayEffectTime,
+                delaySummonTime: req.DelaySummonTime,
+                isSummonerAsMaster: req.MasterActor == req.Summoner,
                 equipmentState: equipment,
-                initSpeed: value.InitSpeed,
+                initSpeed: req.InitSpeed,
                 bornEffectPath: bornEffectPath,
-                disappearMontagePathList: value.DisappearMontagePathList ?? [],
-                destroyDelayTime: value.DestroyDelayTime
+                disappearMontagePathList: req.DisappearMontagePathList ?? [],
+                destroyDelayTime: req.DestroyDelayTime
             );
         }
     }
