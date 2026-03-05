@@ -57,7 +57,6 @@ namespace WukongMp.PvP
                 DI.Chatter,
                 DI.GameplayEventRouter, 
                 DI.MappingPolicyDir,
-                DI.ClientOwnership_,
                 DI.PawnState, 
                 DI.EcsLoop, 
                 widgetManager, 

@@ -1,20 +1,21 @@
 using System;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
+using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 public readonly struct TriggerImmobilizeEvent(
-    Entity entity,
     Entity target,
-    bool greatSageTalentActiveBuff) : IEquatable<TriggerImmobilizeEvent>, IAlwaysPropagates
+    Entity caster,
+    bool greatSageTalentActiveBuff) : IEquatable<TriggerImmobilizeEvent>, IMasterClientManaged
 {
-    public readonly Entity Entity = entity;
     public readonly Entity Target = target;
+    public readonly Entity Caster = caster;
     public readonly bool GreatSageTalentActiveBuff = greatSageTalentActiveBuff;
 
     public bool Equals(TriggerImmobilizeEvent other)
-        => Entity == other.Entity && Target == other.Target && GreatSageTalentActiveBuff == other.GreatSageTalentActiveBuff;
+        => Target == other.Target && Caster == other.Caster && GreatSageTalentActiveBuff == other.GreatSageTalentActiveBuff;
 
     public override bool Equals(object? obj)
         => obj is TriggerImmobilizeEvent other && Equals(other);
@@ -23,8 +24,8 @@ public readonly struct TriggerImmobilizeEvent(
     {
         unchecked
         {
-            var hashCode = Entity.GetHashCode();
-            hashCode = (hashCode * 397) ^ Target.GetHashCode();
+            var hashCode = Target.GetHashCode();
+            hashCode = (hashCode * 397) ^ Caster.GetHashCode();
             hashCode = (hashCode * 397) ^ GreatSageTalentActiveBuff.GetHashCode();
             return hashCode;
         }

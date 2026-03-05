@@ -179,9 +179,9 @@ public class WukongClientGameEvents : IDisposable
 
         mappedEvent.RegisterGameEventHandler<TriggerImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
         {
-            var caster = self._pawnState.GetPawnByEntity(ev.Entity);
             var target = self._pawnState.GetPawnByEntity(ev.Target);
-            ImmobilizeUtils.TriggerImmobilize(caster, target, ev.GreatSageTalentActiveBuff);
+            var caster = self._pawnState.GetPawnByEntity(ev.Caster);
+            ImmobilizeUtils.TriggerImmobilize(target, caster, ev.GreatSageTalentActiveBuff);
         }, this);
 
         mappedEvent.RegisterGameEventHandler<RelieveImmobilizeEvent, WukongClientGameEvents>(static (ev, self) =>
@@ -193,7 +193,7 @@ public class WukongClientGameEvents : IDisposable
                 return;
             }
 
-            ImmobilizeUtils.RelieveImmobilize(self._pawnState, character);
+            ImmobilizeUtils.RelieveImmobilize(character);
         }, this);
 
         mappedEvent.RegisterGameEventHandler<PhantomRushEvent, WukongClientGameEvents>(static (ev, self) =>

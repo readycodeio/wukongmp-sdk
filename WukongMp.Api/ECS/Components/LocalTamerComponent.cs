@@ -16,5 +16,4 @@ public struct LocalTamerComponent : IComponent
     public bool IsLocallySpawned;
     public bool HasPendingUnload;
     public bool IsCheckedForDead;
-    public bool RunImmobilizePatches;
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using b1;
 using b1.BGW;
@@ -9,6 +10,7 @@ using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -83,19 +85,17 @@ public static class PatchOnCastImmobilize
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var playerState = DI.Instance.PlayerState;
-
         // get properties
-        MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
-        BUC_CastImmobilizeData CastImmobilizeData = (BUC_CastImmobilizeData)getter.Invoke(__instance, null);
+        var getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
+        var castImmobilizeData = (BUC_CastImmobilizeData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "TargetInfoData");
-        IBUC_TargetInfoData TargetInfoData = (IBUC_TargetInfoData)getter.Invoke(__instance, null);
+        var targetInfoData = (IBUC_TargetInfoData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "PassiveSkillData");
-        IBUC_PassiveSkillData PassiveSkillData = (IBUC_PassiveSkillData)getter.Invoke(__instance, null);
+        var passiveSkillData = (IBUC_PassiveSkillData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "BuffData");
-        IBUC_BuffData BuffData = (IBUC_BuffData)getter.Invoke(__instance, null);
+        var buffData = (IBUC_BuffData)getter.Invoke(__instance, null);
 
-        AActor castingCharacter = __instance.GetOwner();
+        var castingCharacter = __instance.GetOwner();
 
         if (castingCharacter.IsNullOrDestroyed())
         {
@@ -103,69 +103,59 @@ public static class PatchOnCastImmobilize
             return false;
         }
 
-        var castingMainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(castingCharacter);
-
-        if (!DI.Instance.AreaState.IsMasterClient)
-        {
-            if (!castingMainEntity.HasValue)
-                return false;
-
-            ref var castingMain = ref castingMainEntity.Value.GetState();
-
-            // Broadcast that you have cast a spell
-            if (castingMain.PlayerId == playerState.LocalMainCharacter?.GetState().PlayerId)
-            {
-                // target doesn't matter, not evaluated
-                DI.Instance.MappedEvent.NotifyEcs(new CastImmobilizeEvent(castingMainEntity.Value));
-            }
-
+        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(castingCharacter, out var castingMainEntity))
             return false;
-        }
+
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastImmobilizeEvent(castingMainEntity.Value), castingMainEntity.Value.Entity);
+        if (!DI.Instance.MappingPolicyDir.ForEvent<CastImmobilizeEvent>().CanGameEventRunLocally(castingMainEntity.Value.Entity))
+            return false;
+
+        Debug.Assert(DI.Instance.AreaState.IsMasterClient, "DI.Instance.AreaState.IsMasterClient");
+        // inlined OnCastImmobilize code with some modifications follows
 
         if (ConfigID == 0)
         {
-            ConfigID = CastImmobilizeData.ResId;
+            ConfigID = castImmobilizeData.ResId;
         }
 
-        if (!PassiveSkillData.TryGetCachedDesc<FUStImmobilizeSkillConfigDesc>(ConfigID, out var cachedDesc) || BGW_LogUtil.LogIfNull(castingCharacter as ABGUCharacter, "CurCharacter is null"))
+        if (!passiveSkillData.TryGetCachedDesc<FUStImmobilizeSkillConfigDesc>(ConfigID, out var cachedDesc) || BGW_LogUtil.LogIfNull(castingCharacter as ABGUCharacter, "CurCharacter is null"))
         {
             return false;
         }
 
-        var aBGUCharacter = TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
-        if (aBGUCharacter == null)
+        var aBguCharacter = targetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
+        if (aBguCharacter == null)
         {
-            aBGUCharacter = TargetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
+            aBguCharacter = targetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
         }
 
-        if (aBGUCharacter == null || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedDesc.AffiliationTypeFilter))
+        if (aBguCharacter == null || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBguCharacter, cachedDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBguCharacter, cachedDesc.AffiliationTypeFilter))
         {
             Logging.LogDebug("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
             return false;
         }
 
-        int num = ((cachedDesc.TargetCount <= 0) ? 1 : cachedDesc.TargetCount);
-        List<AActor> outActors = new();
+        var num = cachedDesc.TargetCount <= 0 ? 1 : cachedDesc.TargetCount;
+        List<AActor> outActors = [];
         if (num > 1)
         {
-            List<int> list = [cachedDesc.RangeRadius];
-            AActor owner2 = __instance.GetOwner();
-            FVector baseLoc = aBGUCharacter.BGUGetActorLocation();
-            int targetFilter = cachedDesc.TargetFilter;
-            int targetTypeFilter = cachedDesc.TargetTypeFilter;
-            int affiliationTypeFilter = cachedDesc.AffiliationTypeFilter;
-            IList<int> Prams = list;
-            BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out outActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in Prams);
+            IList<int> list = [cachedDesc.RangeRadius];
+            var owner2 = __instance.GetOwner();
+            var baseLoc = aBguCharacter.BGUGetActorLocation();
+            var targetFilter = cachedDesc.TargetFilter;
+            var targetTypeFilter = cachedDesc.TargetTypeFilter;
+            var affiliationTypeFilter = cachedDesc.AffiliationTypeFilter;
+            BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out outActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in list);
         }
 
-        if (outActors.Contains(aBGUCharacter))
+        if (outActors.Contains(aBguCharacter))
         {
-            outActors.Remove(aBGUCharacter);
+            outActors.Remove(aBguCharacter);
         }
 
-        outActors.Insert(0, aBGUCharacter);
+        outActors.Insert(0, aBguCharacter);
 
-        int num2 = 0;
+        var num2 = 0;
         foreach (var item in outActors)
         {
             if (num2 >= num)
@@ -180,8 +170,8 @@ public static class PatchOnCastImmobilize
 
             if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.ImmueImmobilizing))
             {
-                int actorResID = BGU_DataUtil.GetActorResID(item);
-                var fXAssetByResID = ImmobilizeUtils.GetFxAssetByResId(castingCharacter, cachedDesc.FailedFXs, actorResID, CastImmobilizeData.ResId, CastImmobilizeData);
+                var actorResID = BGU_DataUtil.GetActorResID(item);
+                var fXAssetByResID = ImmobilizeUtils.GetFxAssetByResId(castingCharacter, cachedDesc.FailedFXs, actorResID, castImmobilizeData.ResId, castImmobilizeData);
                 if (fXAssetByResID != null)
                 {
                     BUS_EventCollectionCS.Get(item)?.Evt_RequestSpawnFXByDispConfigDA.Invoke(fXAssetByResID, out var _);
@@ -191,28 +181,22 @@ public static class PatchOnCastImmobilize
             }
 
             num2++;
-            int actorResID2 = BGU_DataUtil.GetActorResID(item);
+            var actorResID2 = BGU_DataUtil.GetActorResID(item);
             if (BGW_LogUtil.LogIfNull(BGW_GameDB.GetUnitCommDesc(actorResID2), "BGW_GameDB.GetUnitCommDesc is null, ResID:%d", actorResID2))
             {
                 continue;
             }
 
-            var hasBuff = BuffData.HasBuff(cachedDesc.GreatSageTalentActiveBuff);
-            ImmobilizeConfigInstance immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(item, castingCharacter, cachedDesc, CastImmobilizeData.ResId, hasBuff, CastImmobilizeData);
+            var hasBuff = buffData.HasBuff(cachedDesc.GreatSageTalentActiveBuff);
+            var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(item, castingCharacter, cachedDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
             BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
 
-            // broadcast
-            var immobilizedMainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(item);
-            var immobilizedTamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(item);
-
-            if ((immobilizedMainEntity != null || immobilizedTamerEntity.HasValue) && castingMainEntity != null)
+            // broadcast trigger immobilize on targets
+            if (DI.Instance.MappingPolicyDir.IsCharacterMapped(item, out var entity))
             {
-                Logging.LogDebug("Broadcasting trigger immobilize");
-                Entity netId = immobilizedMainEntity == null
-                    ? immobilizedTamerEntity!.Value
-                    : immobilizedMainEntity.Value;
-
-                DI.Instance.MappedEvent.NotifyEcs(new TriggerImmobilizeEvent(netId, castingMainEntity.Value, hasBuff));
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerImmobilizeEvent(entity.Value, castingMainEntity.Value, hasBuff), default(EmptyContext));
+                if (sent)
+                    Logging.LogDebug("Broadcasting trigger immobilize for target {Target}", item.GetName());
             }
         }
 
@@ -255,43 +239,12 @@ public static class PatchRelieveImmobilized
             return false;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(owner);
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-
-        if (mainEntity == null && !tamerEntity.HasValue)
-        {
+        if (!DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
             return true;
-        }
 
-        if (DI.Instance.AreaState.IsMasterClient)
-        {
-            Entity entity = mainEntity != null ? mainEntity.Value : tamerEntity!.Value;
-            DI.Instance.MappedEvent.NotifyEcs(new RelieveImmobilizeEvent(entity));
-            return true;
-        }
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value), default(EmptyContext));
 
-        if (mainEntity != null)
-        {
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-
-            if (!localMain.RunImmobilizePatches)
-            {
-                return false;
-            }
-
-            localMain.RunImmobilizePatches = false;
-            return true;
-        }
-
-        ref var localTamer = ref tamerEntity!.Value.GetLocalTamer();
-
-        if (!localTamer.RunImmobilizePatches)
-        {
-            return false;
-        }
-
-        localTamer.RunImmobilizePatches = false;
-        return true;
+        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanGameEventRunLocally(default);
     }
 }
 
@@ -304,7 +257,7 @@ public static class PatchOnTriggerImmobilizedBreak
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var owner = __instance.GetOwner();
+        var owner = __instance.GetOwner() as BGUCharacterCS;
 
         if (owner.IsNullOrDestroyed())
         {
@@ -312,30 +265,13 @@ public static class PatchOnTriggerImmobilizedBreak
             return false;
         }
 
-        if (DI.Instance.AreaState.IsMasterClient)
+        // TODO: This used to be forcibly replaced by RelieveImmobilize, find out why
+        if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(owner);
-
-            if (mainEntity != null)
-            {
-                DI.Instance.MappedEvent.NotifyEcs(new RelieveImmobilizeEvent(mainEntity.Value));
-                BUS_EventCollectionCS.Get(mainEntity.Value.Pawn)?.Evt_RelieveImmobilized.Invoke();
-                return false;
-            }
-
-            var entity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-
-            if (entity.HasValue)
-            {
-                DI.Instance.MappedEvent.NotifyEcs(new RelieveImmobilizeEvent(entity.Value));
-                BUS_EventCollectionCS.Get(entity.Value.Pawn)?.Evt_RelieveImmobilized.Invoke();
-            }
-
-            Logging.LogDebug("Character state is null - continuing standard execution");
-            return true;
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value), default(EmptyContext));
         }
 
-        return false;
+        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanEcsInvokeGameEvent(default);
     }
 }
 
@@ -368,7 +304,7 @@ public static class PatchOnTriggerPhantomRush
             return false;
         }
 
-        AActor owner = __instance.GetOwner();
+        var owner = __instance.GetOwner();
 
         if (owner.IsNullOrDestroyed())
         {
@@ -380,15 +316,15 @@ public static class PatchOnTriggerPhantomRush
             return true;
 
         // Modified original implementation
-        MethodInfo GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
+        var GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
         if (GetActualUseConfigIDMethod == null)
         {
             Logging.LogError("GetActualUseConfigID method info is null");
             return false;
         }
 
-        BUS_GSEventCollection BUSEventCollection = BUS_EventCollectionCS.Get(owner);
-        BGS_GSEventCollection BGSEventCollection = BGS_GSEventCollection.Get(owner);
+        var BUSEventCollection = BUS_EventCollectionCS.Get(owner);
+        var BGSEventCollection = BGS_GSEventCollection.Get(owner);
         var aCharacter = owner as ACharacter;
         if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
         {
@@ -396,7 +332,7 @@ public static class PatchOnTriggerPhantomRush
             return false;
         }
 
-        FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
+        var phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
         if (phantomRushSkillConfigDesc == null)
         {
             Logging.LogError("phantomRushSkillConfigDesc is null");
@@ -404,14 +340,14 @@ public static class PatchOnTriggerPhantomRush
         }
 
         __instance.PreloadAssetMgr.TryGetCachedResourceObj<BGWDataAsset_PhantomRushRelatedeSkillConfig>(phantomRushSkillConfigDesc.PhantomRushRelatedSkillConfigPath, ELoadResourceType.AsyncLoadAndCache, EAssetPriority.Medium);
-        FPoseSnapshot Snapshot = default(FPoseSnapshot);
+        var Snapshot = default(FPoseSnapshot);
         aCharacter.Mesh.SnapshotPose(ref Snapshot);
         ___PhantomRushData.PoseSnapshot = Snapshot;
-        UAnimInstance animInstance = aCharacter.Mesh.GetAnimInstance();
-        FContinueBehaviorInfo cBI = default(FContinueBehaviorInfo);
+        var animInstance = aCharacter.Mesh.GetAnimInstance();
+        var cBI = default(FContinueBehaviorInfo);
         if (animInstance != null)
         {
-            UAnimMontage currentActiveMontage = animInstance.GetCurrentActiveMontage();
+            var currentActiveMontage = animInstance.GetCurrentActiveMontage();
             if (currentActiveMontage != null)
             {
                 if (___SimpleStateData.HasSimpleState(EBGUSimpleState.InAnimationSyncing))
@@ -453,10 +389,10 @@ public static class PatchOnTriggerPhantomRush
             EAbnormalStateType.Abnormal_Poison,
             EAbnormalStateType.Abnormal_Thunder
         ]);
-        int phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
+        var phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
         BUSEventCollection.Evt_SummonSkillCastByPhantomRush.Invoke(phantomRushSummonID, cBI);
         BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PhantomRush);
-        foreach (int phantomRushBeginAddBuffID in phantomRushSkillConfigDesc.PhantomRushBeginAddBuffIDList)
+        foreach (var phantomRushBeginAddBuffID in phantomRushSkillConfigDesc.PhantomRushBeginAddBuffIDList)
         {
             BUSEventCollection.Evt_BuffAdd.Invoke(phantomRushBeginAddBuffID, owner, owner, -1f, EBuffSourceType.PhantomRush);
         }
@@ -582,10 +518,10 @@ public static class PatchBuffPlayerWinePartnerAttr
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        ABGUCharacter? abguCharacter = Target as ABGUCharacter;
+        var abguCharacter = Target as ABGUCharacter;
         if (abguCharacter != null)
         {
-            IBPC_PlayerRoleData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBPC_PlayerRoleData, BPC_PlayerRoleData>(abguCharacter.GetController());
+            var readOnlyData = BGU_DataUtil.GetReadOnlyData<IBPC_PlayerRoleData, BPC_PlayerRoleData>(abguCharacter.GetController());
             if (readOnlyData is { RoleData: null })
                 return false;
         }
@@ -836,7 +772,7 @@ public class PatchSpawnAndPossess
 
         var mainPlayerPawn = GameUtils.GetControlledPawn();
         var mainPlayerController = GameUtils.GetPlayerController()!;
-        bool isNonLocalTransform = false;
+        var isNonLocalTransform = false;
         var cameraRotation = FRotator.ZeroRotator;
         if (controller != mainPlayerController && mainPlayerPawn != null)
         {

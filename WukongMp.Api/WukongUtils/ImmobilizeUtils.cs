@@ -18,11 +18,11 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         playerEvents.Evt_CastImmobilize.Invoke(0);
     }
 
-    internal static void TriggerImmobilize(BGUCharacterCS? pawn, BGUCharacterCS? caster, bool hasBuff)
+    internal static void TriggerImmobilize(BGUCharacterCS? target, BGUCharacterCS? caster, bool hasBuff)
     {
-        Logging.LogDebug("Received trigger immobilize for character {Pawn}", pawn?.GetName());
+        Logging.LogDebug("Received trigger immobilize for character {Pawn}", target?.GetName());
 
-        if (pawn == null)
+        if (target == null)
         {
             Logging.LogError("Could not find immobilized pawn");
             return;
@@ -44,28 +44,14 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
             return;
         }
 
-        var immobilizeConfigInstance = CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
-        BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+        var immobilizeConfigInstance = CreateImmobilizeConfig(target, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
+        BUS_EventCollectionCS.Get(target)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
     }
 
-    internal static void RelieveImmobilize(WukongPawnState pawnState, BGUCharacterCS pawn)
+    internal static void RelieveImmobilize(BGUCharacterCS pawn)
     {
         Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
         var playerEvents = BUS_EventCollectionCS.Get(pawn);
-
-        // TODO: This should be taken care of by the game event origin system
-        var entity = pawnState.GetEntityByTamerMonster(pawn);
-        if (entity.HasValue)
-        {
-            ref var localTamer = ref entity.Value.GetLocalTamer();
-            localTamer.RunImmobilizePatches = true;
-        }
-        else
-        {
-            var mainEntity = pawnState.GetEntityByPlayerActor(pawn);
-            mainEntity?.GetLocalState().RunImmobilizePatches = true;
-        }
-        
         playerEvents?.Evt_RelieveImmobilized.Invoke();
     }
 

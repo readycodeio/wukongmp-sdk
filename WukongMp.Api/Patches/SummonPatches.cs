@@ -75,6 +75,6 @@ public class PatchRequestSummon
             return true;
 
         var ctx = new SpawnSummonContext(summoner, InSummonReq.HitLocation);
-        return DI.Instance.MappingPolicyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanGameEventRunLocally(ctx, out _);
+        return DI.Instance.MappingPolicyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanGameEventRunLocally(ctx);
     }
 }

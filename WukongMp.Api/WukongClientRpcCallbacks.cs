@@ -247,8 +247,8 @@ public partial class WukongClientRpcCallbacks : IDisposable
         _mappedEvent.RegisterEcsEventHandler<TriggerImmobilizeEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
             self.SendTriggerImmobilize(new TriggerImmobilizeData(
-                netId: ev.Entity.GetNetId(),
-                targetNetId: ev.Target.GetNetId(),
+                netId: ev.Target.GetNetId(),
+                targetNetId: ev.Caster.GetNetId(),
                 greatSageTalentActiveBuff: ev.GreatSageTalentActiveBuff
             ));
         }, this);
@@ -864,8 +864,8 @@ public partial class WukongClientRpcCallbacks : IDisposable
             }
 
             self._mappedEvent.InvokeInGameIfApplicable(new TriggerImmobilizeEvent(
-                entity: caster.Value,
-                target: target.Value,
+                target: caster.Value,
+                caster: target.Value,
                 greatSageTalentActiveBuff: data0.GreatSageTalentActiveBuff
             ), default(EmptyContext));
         }, this, data);

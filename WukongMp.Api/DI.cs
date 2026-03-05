@@ -63,6 +63,8 @@ internal sealed class DI
     internal ArchetypeEventRouter ArchetypeEvent { get; private set; } = null!;
     internal IClientEcsUpdateLoop EcsLoop { get; private set; } = null!;
 
+    internal DataSideChannel DataSideChannel { get; private set; } = null!;
+    internal IMappingPolicyDirectoryRegistration MappingPolicyRegistration { get; private set; } = null!;
     internal WukongMappingPolicyDirectory MappingPolicyDir { get; private set; } = null!;
     internal MappedEntityManager<AActor> MappedEntity { get; private set; } = null!;
     internal MappedEventManager MappedEvent { get; private set; } = null!;
@@ -232,7 +234,7 @@ internal sealed class DI
         var connection = Connection = new WukongConnectionManager(relayClientService, state, playerState, areaState, logger);
         var netLogger = NetLogger = new WukongNetworkLogger(world, state, areaState, playerState, logger);
 
-        var sideChannel = new DataSideChannel();
+        var sideChannel = DataSideChannel = new DataSideChannel();
 
         var policyDir = new MappingPolicyDirectory(sideChannel);
         policyDir.RegisterDefaultCreateDelete<AActor>(
@@ -244,6 +246,7 @@ internal sealed class DI
         policyDir.RegisterDefaultEvent(new RunOnMasterClientOnlyEventPolicyFactory(clientOwnership, areaState, sideChannel));
         policyDir.RegisterDefaultEvent(new SpawnSummonEventEventPolicyFactory(clientOwnership, playerState, areaState, world, sideChannel));
         policyDir.RegisterDefaultEvent(new AlwaysPropagatesEventPolicyFactory(sideChannel));
+        MappingPolicyRegistration = policyDir;
 
         var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, policyDir, logger);
         var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);

@@ -56,7 +56,6 @@ internal partial class PvpMode : IDisposable
     private readonly WukongChatter _chatter;
     private readonly GameplayEventRouter _eventRouter;
     private readonly WukongMappingPolicyDirectory _policyDir;
-    private readonly ClientOwnershipManager _clientOwnership;
     private readonly WukongPawnState _pawnState;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly PvpWidgetManager _pvpWidgetManager;
@@ -120,7 +119,6 @@ internal partial class PvpMode : IDisposable
         WukongChatter chatter,
         GameplayEventRouter eventRouter,
         WukongMappingPolicyDirectory policyDir,
-        ClientOwnershipManager clientOwnership,
         WukongPawnState pawnState,
         IClientEcsUpdateLoop ecsLoop,
         PvpWidgetManager pvpWidgetManager,
@@ -140,7 +138,6 @@ internal partial class PvpMode : IDisposable
         _chatter = chatter;
         _eventRouter = eventRouter;
         _policyDir = policyDir;
-        _clientOwnership = clientOwnership;
         _pawnState = pawnState;
         _ecsLoop = ecsLoop;
         _pvpWidgetManager = pvpWidgetManager;
@@ -271,7 +268,7 @@ internal partial class PvpMode : IDisposable
         PlacePlayers();
         await Task.Delay(100);
 
-        _mappedEvent.InvokeInGameAndNotifyEcs(new PvpEvent(PvpEventKind.RoundStart));
+        SendPvPEvent(new PvpEvent(PvpEventKind.RoundStart));
     }
 
     private void PlacePlayers()
@@ -360,7 +357,7 @@ internal partial class PvpMode : IDisposable
         }
 
         // disable pvp until next round
-        _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.RoundEnd, winner)); // TODO: policy for owning the PvP state
+        SendPvPEvent(new PvpEvent(PvpEventKind.RoundEnd, winner)); // TODO: policy for owning the PvP state
 
         // increment round number
         pvpState.SetLastRoundWinnerTeam(winner);
@@ -383,7 +380,7 @@ internal partial class PvpMode : IDisposable
         // check if only one team is present
         if (AllPvPPlayers.Select(p => p.Player.GetState().TeamId).Distinct().Count() == 1)
         {
-            _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.TournamentEnd, winner));
+            SendPvPEvent(new PvpEvent(PvpEventKind.TournamentEnd, winner));
             IsRoundEnding = false;
             return;
         }
@@ -392,7 +389,7 @@ internal partial class PvpMode : IDisposable
         var winnerTeam = winnersByTeam.FirstOrDefault(w => w.Value > areaEntity.Value.GetRoom().TournamentRounds / 2);
         if (winnerTeam.Key != 0)
         {
-            _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.TournamentEnd, winnerTeam.Key));
+            SendPvPEvent(new PvpEvent(PvpEventKind.TournamentEnd, winnerTeam.Key));
             IsRoundEnding = false;
             return;
         }
@@ -407,17 +404,17 @@ internal partial class PvpMode : IDisposable
                 var winningTeams = winnersByTeam.Where(t => t.Value == maxWins).Select(t => t.Key).ToList();
                 if (winningTeams.Count == 1)
                 {
-                    _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.TournamentEnd, winningTeams[0]));
+                    SendPvPEvent(new PvpEvent(PvpEventKind.TournamentEnd, winningTeams[0]));
                 }
                 else
                 {
-                    _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.TournamentEnd, PvpConstants.DrawTeamId));
+                    SendPvPEvent(new PvpEvent(PvpEventKind.TournamentEnd, PvpConstants.DrawTeamId));
                 }
             }
             else
             {
                 // that was the final round
-                _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.TournamentEnd, PvpConstants.DrawTeamId));
+                SendPvPEvent(new PvpEvent(PvpEventKind.TournamentEnd, PvpConstants.DrawTeamId));
             }
         }
         else
@@ -437,7 +434,7 @@ internal partial class PvpMode : IDisposable
         }
 
         // resurrect dead players and restore health to living ones
-        _mappedEvent.NotifyEcs(new PvpEvent(PvpEventKind.ResetStats));
+        SendPvPEvent(new PvpEvent(PvpEventKind.ResetStats));
 
         foreach (var (_, _, mainEntity) in AllPlayers)
         {
@@ -815,13 +812,100 @@ internal partial class PvpMode : IDisposable
 
     internal void OnPvpEvent(PlayerId playerId, int[] data)
     {
-        var kind = (PvpEventKind)data[0];
-        var winnerTeamId = data[1];
+        var ev = new PvpEvent((PvpEventKind)data[0], data[1]);
+        var winnerTeamId = ev.Data;
 
-        _mappedEvent.InvokeInGameIfApplicable(new PvpEvent(
-            kind: kind,
-            data: winnerTeamId
-        ), default(EmptyContext));
+        Logging.LogInformation("Received PvP event: {Event}", ev);
+
+        switch (ev.Kind)
+        {
+            case PvpEventKind.RoundStart:
+            {
+                _ecsLoop.Scheduler.Schedule(static (_, areaState) => PvpUtils.ShowPvPCountDown(areaState), _areaState);
+
+                var mainEntity = _playerState.LocalMainCharacter;
+                if (mainEntity.HasValue)
+                {
+                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) => { ResetPlayer(mainEntity0); }, mainEntity.Value);
+                }
+
+                StartRound();
+                EnablePvP();
+                StartTournament();
+                break;
+            }
+            case PvpEventKind.RoundEnd:
+            {
+                DisablePvP();
+                EndRound();
+
+                if (winnerTeamId == PvpConstants.DrawTeamId)
+                {
+                    UiUtils.ShowTip(Texts.RoundDraw, true);
+                }
+                else
+                {
+                    UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                }
+
+                if (winnerTeamId == PvpConstants.DrawTeamId)
+                    return;
+
+                var playerEntity = _playerState.LocalPlayerEntity;
+                if (playerEntity == null)
+                    return;
+
+                if (winnerTeamId == playerEntity.Value.GetState().TeamId)
+                {
+                    AssetUtils.PlayBossDefeatedSound();
+                }
+
+                break;
+            }
+            case PvpEventKind.TournamentEnd:
+            {
+                if (winnerTeamId == PvpConstants.DrawTeamId)
+                {
+                    UiUtils.ShowTip(Texts.TournamentDraw, true);
+                }
+                else
+                {
+                    UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                }
+
+                // ReSharper disable once AsyncVoidMethod
+                _ecsLoop.Scheduler.Schedule(async static void (_, self) =>
+                {
+                    await Task.Delay(1000);
+                    if (self._playerState.LocalMainCharacter.HasValue)
+                        PlayerUtils.DisableSpectator(self._playerState.LocalMainCharacter.Value);
+                    await Task.Delay(1000);
+                    Logging.LogInformation("End tournament");
+                    self._pvpWidgetManager.SetupLobbyUi();
+                    self.EndTournament();
+                    self.SetReadyState(false);
+                }, this);
+
+                break;
+            }
+            case PvpEventKind.ResetStats:
+            {
+                ResetRoundState();
+
+                var mainEntity = _playerState.LocalMainCharacter;
+                if (mainEntity == null)
+                    return;
+
+                if (!mainEntity.Value.GetState().IsDead)
+                {
+                    _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) => { ResetPlayer(mainEntity0); }, mainEntity.Value);
+                }
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ev));
+        }
     }
 
     #endregion
