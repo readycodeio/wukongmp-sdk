@@ -1,5 +1,6 @@
 using System;
 using ReadyM.Wukong.Common.ECS.Components;
+using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Sdk;
@@ -33,13 +34,17 @@ public static class ReadyCharacterExtensions
                 default(TSelf).Deconstruct(obj, out _, out var entity);
                 if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
                 {
-                    ref var hpComp = ref tamerEntity.Value.GetHp();
-                    hpComp.Hp_SetFromApi(value);
+                    if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(tamerEntity.Value.Entity, out var sync))
+                    {
+                        sync.SetFromApi(HpComponent.Fields.Hp, value);
+                    }
                 }
                 else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
                 {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    mainComp.Hp_SetFromApi(value);
+                    if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(mainEntity.Value.Entity, out var sync))
+                    {
+                        sync.SetFromApi(MainCharacterComponent.Fields.Hp, value);
+                    }
                 }
                 else
                 {
@@ -72,13 +77,17 @@ public static class ReadyCharacterExtensions
                 default(TSelf).Deconstruct(obj, out _, out var entity);
                 if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
                 {
-                    ref var hpComp = ref tamerEntity.Value.GetHp();
-                    hpComp.HpMaxBase_SetFromApi(value);
+                    if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(tamerEntity.Value.Entity, out var sync))
+                    {
+                        sync.SetFromApi(HpComponent.Fields.HpMaxBase, value);
+                    }
                 }
                 else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
                 {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    mainComp.HpMaxBase_SetFromApi(value);
+                    if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(mainEntity.Value.Entity, out var sync))
+                    {
+                        sync.SetFromApi(MainCharacterComponent.Fields.HpMaxBase, value);
+                    }
                 }
                 else
                 {
