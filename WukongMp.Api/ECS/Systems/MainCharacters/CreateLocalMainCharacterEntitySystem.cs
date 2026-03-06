@@ -56,9 +56,13 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         mainComp.Rotation = pawn.GetActorRotation().ToVector3();
 
         var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(pawn);
-        DI.Instance.WukongDataMappings.PlayerHp.LoadFromGame(ref mainComp, attrContainer);
-        DI.Instance.WukongDataMappings.PlayerHpMax.LoadFromGame(ref mainComp, attrContainer);
-        DI.Instance.WukongDataMappings.PlayerAttributes.LoadFromGame(ref mainComp, attrContainer);
+
+        if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity, out var load))
+        {
+            load.LoadFromGame(MainCharacterComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
+            load.LoadFromGame(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
+            load.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
+        }
 
         mainComp.CharacterNickName = player.NickName;
 

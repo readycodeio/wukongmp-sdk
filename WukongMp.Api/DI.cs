@@ -15,7 +15,7 @@ using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Api.Multiplayer.Mapping;
-using ReadyM.Api.Multiplayer.Mapping.Api;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.Serialization;
@@ -70,8 +70,7 @@ internal sealed class DI
     internal MappedEventManager MappedEvent { get; private set; } = null!;
     internal WukongClientGameEvents ClientGameEvents { get; private set; } = null!;
     internal WukongServerGameEvents ServerGameEvents { get; private set; } = null!;
-    internal IComponentFieldMappingRegistry FieldMappingRegistry { get; private set; } = null!;
-    internal WukongDataMappings WukongDataMappings { get; private set; } = null!;
+    internal IComponentFieldMappingRegistry MappedField { get; private set; } = null!;
 
     internal RelaySerializer Serializer { get; private set; } = null!;
     internal HotSwappableRelayClient RelayClient { get; private set; } = null!;
@@ -240,7 +239,7 @@ internal sealed class DI
         policyDir.RegisterDefaultCreateDelete<AActor>(
             actor => areaState.IsMasterClient,
             entity => clientOwnership.OwnsEntity(entity));
-        policyDir.RegisterDefaultData(new OwnershipDataPolicyFactory(clientOwnership));
+        policyDir.RegisterDefaultData(new OwnershipDataPolicyFactory(clientOwnership, sideChannel));
         policyDir.RegisterDefaultEvent(new OwnershipEventPolicyFactory(clientOwnership, sideChannel));
         policyDir.RegisterDefaultEvent(new MasterClientEventPolicyFactory(areaState, sideChannel));
         policyDir.RegisterDefaultEvent(new RunOnMasterClientOnlyEventPolicyFactory(clientOwnership, areaState, sideChannel));
@@ -251,8 +250,8 @@ internal sealed class DI
         var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, policyDir, logger);
         var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);
 
-        var fieldMappingRegistry = new ComponentFieldMappingRegistry();
-        FieldMappingRegistry = fieldMappingRegistry;
+        var fieldMappingRegistry = new ComponentFieldMappingRegistry(policyDir, sideChannel);
+        MappedField = fieldMappingRegistry;
         RegisterDataMappings(fieldMappingRegistry);
 
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
@@ -371,78 +370,99 @@ internal sealed class DI
 
     private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
     {
-        WukongDataMappings = new WukongDataMappings
-        {
-            PlayerHp = fieldMappingRegistry.Register(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(),
-                (ctx, value) =>
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(),
+            (ctx, value) =>
+            {
+                if (value <= -80000)
                 {
-                    if (value <= -80000)
-                    {
-                        Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", value);
-                        return;
-                    }
-                    
-                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
-                            Constants.FloatComparisonTolerance))
-                    {
-                        ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
-                    }
-                }, (ref main, ctx) =>
-                {
-                    main.Hp_SetFromGame(ctx.GetFloatValue(EBGUAttrFloat.Hp));
-                    if (main.Hp > 0)
-                    {
-                        main.IsDead_SetFromGame(false);
-                    }
-                }),
+                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", value);
+                    return;
+                }
 
-            PlayerHpMax = fieldMappingRegistry.Register(MainCharacterComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
-                (ctx, value) =>
+                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
+                        Constants.FloatComparisonTolerance))
                 {
-                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
-                            Constants.FloatComparisonTolerance))
-                    {
-                        ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
-                    }
-                }, ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase)),
+                    ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
+                }
+            }, (ref main, ctx) =>
+            {
+                main.Hp_SetFromGame(ctx.GetFloatValue(EBGUAttrFloat.Hp));
+                if (main.Hp > 0)
+                {
+                    main.IsDead_SetFromGame(false);
+                }
+            });
 
-            PlayerAttributes = fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(),
-                (ctx, attrs) =>
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
+            (ctx, value) =>
+            {
+                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
+                        Constants.FloatComparisonTolerance))
                 {
-                    foreach (var (attr, value) in attrs)
-                    {
-                        ctx.SetFloatValue((EBGUAttrFloat)attr, value);
-                    }
-                }, (ref main, ctx) =>
-                {
-                    foreach (var attr in Constants.SyncedAttributes)
-                    {
-                        var value = ctx.GetFloatValue(attr);
-                        main.Attributes.SetAttribute((byte)attr, value);
-                    }
-                }),
+                    ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
+                }
+            }, ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase));
 
-            Hp = fieldMappingRegistry.Register(HpComponent.Fields.Hp.In<BUC_AttrContainer>(),
-                (ctx, value) =>
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(),
+            (ctx, attrs) =>
+            {
+                foreach (var (attr, value) in attrs)
                 {
-                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
-                            Constants.FloatComparisonTolerance))
-                    {
-                        ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
-                    }
-                },
-                ctx => ctx.GetFloatValue(EBGUAttrFloat.Hp)),
+                    ctx.SetFloatValue((EBGUAttrFloat)attr, value);
+                }
+            }, (ref main, ctx) =>
+            {
+                foreach (var attr in Constants.SyncedAttributes)
+                {
+                    var value = ctx.GetFloatValue(attr);
+                    main.Attributes.SetAttribute((byte)attr, value);
+                }
+            });
 
-            HpMax = fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
-                (ctx, value) =>
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<(EBGUAttrFloat Attr, BUC_AttrContainer Container)>(),
+            (ctx, attrs) =>
+            {
+                if (!Constants.SyncedAttributes.Contains(ctx.Attr))
+                    return;
+
+                ctx.Container.SetFloatValue(ctx.Attr, attrs.GetAttribute((byte)ctx.Attr));
+            }, (ref main, ctx) =>
+            {
+                if (!Constants.SyncedAttributes.Contains(ctx.Attr))
+                    return;
+
+                var value = ctx.Container.GetFloatValue(ctx.Attr);
+                main.Attributes.SetAttribute((byte)ctx.Attr, value);
+
+                // Some attributes have derivatives (computed properties, if you will)
+                var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(ctx.Attr, out var valid);
+                if (valid)
                 {
-                    if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
-                            Constants.FloatComparisonTolerance))
-                    {
-                        ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
-                    }
-                },
-                ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase)),
-        };
+                    var finalVal = ctx.Container.GetFloatValue(calc.finalVal);
+                    main.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
+                }
+            });
+
+        fieldMappingRegistry.Register(HpComponent.Fields.Hp.In<BUC_AttrContainer>(),
+            (ctx, value) =>
+            {
+                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
+                        Constants.FloatComparisonTolerance))
+                {
+                    ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
+                }
+            },
+            ctx => ctx.GetFloatValue(EBGUAttrFloat.Hp));
+
+        fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
+            (ctx, value) =>
+            {
+                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
+                        Constants.FloatComparisonTolerance))
+                {
+                    ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
+                }
+            },
+            ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase));
     }
 }

@@ -34,12 +34,12 @@ public static class ReadyCharacterExtensions
                 if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
                 {
                     ref var hpComp = ref tamerEntity.Value.GetHp();
-                    hpComp.Hp = value;
+                    hpComp.Hp_SetFromApi(value);
                 }
                 else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
                 {
                     ref var mainComp = ref mainEntity.Value.GetState();
-                    mainComp.Hp = value;
+                    mainComp.Hp_SetFromApi(value);
                 }
                 else
                 {

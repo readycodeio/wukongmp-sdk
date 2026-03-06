@@ -49,14 +49,6 @@ public class WukongPawnState(
         return null;
     }
 
-    public BGUCharacterCS? GetPawnByNetworkId(NetworkId netId)
-    {
-        if (!netEntity.TryGetEntityByNetworkId(netId, out var entity))
-            return null;
-
-        return GetPawnByEntity(entity.Value);
-    }
-
     public TamerEntity? GetEntityByTamerMonster(AActor? monster)
     {
         if (monster == null)

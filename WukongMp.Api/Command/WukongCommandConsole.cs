@@ -70,7 +70,7 @@ public class WukongCommandConsole : IDisposable
         var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
         _widgetManager.AddMessageToConsole(translatedMessage);
     }
-    
+
     public void Clear()
     {
         // TODO
@@ -122,7 +122,7 @@ public class WukongCommandConsole : IDisposable
         {
             return false;
         }
-        
+
         if (CanExecuteCommand())
         {
             try
@@ -136,18 +136,18 @@ public class WukongCommandConsole : IDisposable
                 return false;
             }
         }
-        
+
         return true;
     }
 
     private bool CanExecuteCommand()
     {
-        return _playerState.LocalMainCharacter.HasValue && !_playerState.LocalMainCharacter.Value.GetLocalState().IsInSequence;
+        return !_playerState.LocalMainCharacter.HasValue || !_playerState.LocalMainCharacter.Value.GetLocalState().IsInSequence;
     }
-    
+
     public List<string> GetAvailableCommands()
         => [.. _matcher.Registry.GetCommandNames(UseDebugCommands)];
-    
+
     public List<string> GetAvailableFirstParams(string commandName)
         => _matcher.Registry.GetCommandAvailableFirstParams(commandName);
 

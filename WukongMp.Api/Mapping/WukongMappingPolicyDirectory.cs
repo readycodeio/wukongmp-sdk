@@ -186,14 +186,13 @@ public class WukongMappingPolicyDirectory(
         return true;
     }
 
-    public IMappingDataPolicy<Entity> ForData<TData>(ArchetypeId archetypeId)
-        where TData : struct, IMappingContext<Entity>
-        => policyDir.ForData<TData>(archetypeId);
+    public IMappingDataPolicy<Entity> ForData<TComponent>()
+        where TComponent : struct, IMappingContext<Entity>
+        => policyDir.ForData<TComponent>();
 
-    public IMappingDataPolicy<TContext> ForData<TData, TContext>(ArchetypeId archetypeId)
-        where TData : struct, IMappingContext<TContext>
-        where TContext : struct
-        => policyDir.ForData<TData, TContext>(archetypeId);
+    public IMappingDataPolicy<TContext> ForData<TComponent, TContext>()
+        where TComponent : struct, IMappingContext<TContext>
+        => policyDir.ForData<TComponent, TContext>();
 
     public IMappingEventPolicy<Entity> ForEvent<TEvent>()
         where TEvent : struct, IEquatable<TEvent>, IMappingContext<Entity>

@@ -23,7 +23,6 @@ public class MasterClientEventPolicyFactory(
     }
 
     public IMappingEventPolicy<TContext> CreatePolicy<TContext>(Type eventType)
-        where TContext : struct
     {
         Debug.Assert(typeof(TContext) == typeof(EmptyContext));
         return (IMappingEventPolicy<TContext>)CreatePolicy(eventType, typeof(TContext));

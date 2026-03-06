@@ -10,7 +10,6 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -24,52 +23,38 @@ public static class PatchAttrs
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        if (DI.Instance.PlayerState.LocalMainCharacter == null)
-            return;
-
         if (__instance.Owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
             return;
         }
 
-        if (__instance.Owner == DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn)
+        // this patch is an example of an ECS -> Game data sync point
+        // if the ECS state is authoritative, we need to sync it to the game here
+        // authority is determined either by policy, or setting from API
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(__instance.Owner, out var mainEntity))
         {
-            return; // players own their characters
+            if (DI.Instance.MappedField.CanSyncToGame<MainCharacterComponent>(mainEntity.Value.Entity, out var sync))
+            {
+                sync.SyncToGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), __instance);
+                sync.SyncToGame(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(), __instance);
+            }
         }
-
-        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(__instance.Owner);
-
-        // remote player - sync properties and HP
-
-        if (mainEntity != null)
+        else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(__instance.Owner as BGUCharacterCS, out var tamerEntity))
         {
-            var mainComp = mainEntity.Value.GetState();
-            DI.Instance.WukongDataMappings.PlayerAttributes.SyncToGame(__instance, mainComp);
-            DI.Instance.WukongDataMappings.PlayerHp.SyncToGame(__instance, mainComp);
-            return;
+            if (DI.Instance.MappedField.CanSyncToGame<HpComponent>(tamerEntity.Value.Entity, out var sync))
+            {
+                var localTamer = tamerEntity.Value.GetLocalTamer();
+                if (!localTamer.IsTamerSynced)
+                {
+                    Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
+                    return;
+                }
+
+                sync.SyncToGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), __instance);
+                sync.SyncToGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), __instance);
+            }
         }
-
-        // remote monster - sync HP
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance.Owner as BGUCharacterCS);
-        if (!tamerEntity.HasValue)
-            return;
-
-        // owned, skip
-        if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
-            return;
-
-        ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-
-        if (!localTamer.IsTamerSynced)
-        {
-            Logging.LogDebug("Monster {Name} is not synced, skipping HP update", __instance.Owner.GetName());
-            return;
-        }
-
-        var hpComp = tamerEntity.Value.GetHp();
-        DI.Instance.WukongDataMappings.HpMax.SyncToGame(__instance, hpComp);
-        DI.Instance.WukongDataMappings.Hp.SyncToGame(__instance, hpComp);
     }
 }
 
@@ -151,8 +136,7 @@ public static class PatchHp
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var playerState = DI.Instance.PlayerState;
-        var owner = __instance.GetOwner();
+        var owner = __instance.GetOwner() as BGUCharacterCS;
 
         if (owner.IsNullOrDestroyed())
         {
@@ -160,66 +144,31 @@ public static class PatchHp
             return;
         }
 
-        var result = ___AttrContainer.GetFloatValue(AttrID);
-
-        var mainEntity = playerState.LocalMainCharacter;
-
-        if (AttrID == EBGUAttrFloat.Hp)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
         {
-            if (mainEntity != null && owner == mainEntity.Value.Pawn)
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value.Entity, out var loader))
             {
-                ref var mainComp = ref mainEntity.Value.GetState();
-
-                if (!mainComp.Hp.Equals(result, Constants.FloatComparisonTolerance))
+                if (AttrID == EBGUAttrFloat.Hp)
                 {
-                    mainComp.Hp = result;
-
-                    if (mainComp.Hp > 0)
-                    {
-                        mainComp.IsDead = false;
-                    }
+                    loader.LoadFromGame(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
+                }
+                else
+                {
+                    loader.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<(EBGUAttrFloat, BUC_AttrContainer)>(), (AttrID, ___AttrContainer));
                 }
             }
-            else
+        }
+        else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var tamerEntity))
+        {
+            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value.Entity, out var loader))
             {
-                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner as BGUCharacterCS);
-
-                if (!tamerEntity.HasValue)
-                    return; // not found
-
-                if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
-                    return; // not owned
-
-                ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                var localTamer = tamerEntity.Value.GetLocalTamer();
 
                 if (!localTamer.IsTamerSynced)
                     return; // not synced
 
-                ref var hpComp = ref tamerEntity.Value.GetHp();
-
-                hpComp.HpMaxBase = ___AttrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-                hpComp.Hp = result;
-            }
-        }
-
-        if (mainEntity != null && Constants.SyncedAttributes.Contains(AttrID) && owner == mainEntity.Value.Pawn)
-        {
-            ref var mainComp = ref mainEntity.Value.GetState();
-
-            if (mainComp.Attributes.TryGetAttribute((byte)AttrID, out var existing)
-                && existing.Equals(result, Constants.FloatComparisonTolerance))
-            {
-                return;
-            }
-
-            mainComp.Attributes.SetAttribute((byte)AttrID, result);
-
-            // some attributes may influence other attributes
-            var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(AttrID, out var valid);
-            if (valid)
-            {
-                var finalVal = ___AttrContainer.GetFloatValue(calc.finalVal);
-                mainComp.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
+                loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), ___AttrContainer);
+                loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
             }
         }
     }
