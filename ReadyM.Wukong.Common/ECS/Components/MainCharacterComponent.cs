@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Generators;
+using ReadyM.Api.Multiplayer.Mapping;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Values;
 
@@ -10,7 +11,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IOwnershipManaged
+public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IReadyComponent, IOwnershipManaged
 {
     private PlayerId _playerId;
 

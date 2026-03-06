@@ -6,7 +6,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 namespace ReadyM.Wukong.Common.ECS.Components;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public unsafe struct EquipmentComponent : INetSerializable, IOwnershipManaged
+public unsafe struct EquipmentComponent : INetSerializable
 {
     public fixed int Slots[8]; // This is packed inline
 
