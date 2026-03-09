@@ -20,7 +20,6 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
             => TextSerialize(writer, value, options);
     }
 
-    private bool _locallyDirty;
     private int[] _equipments;
 
     public EquipmentState()
@@ -30,13 +29,11 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     private EquipmentState(int[] eq)
     {
-        _locallyDirty = true;
         _equipments = eq;
     }
 
     public EquipmentState(IEnumerable<(EquipPosition, int)> equipments)
     {
-        _locallyDirty = true;
         _equipments = [0, 0, 0, 0, 0, 0, 0, 0];
         foreach (var (position, id) in equipments)
         {
@@ -53,6 +50,7 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
         }
     };
 
+    [Pure]
     public IEnumerable<(EquipPosition, int)> GetItems()
     {
         for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
@@ -63,14 +61,6 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
                 yield return ((EquipPosition)i, id);
             }
         }
-    }
-
-    public bool IsLocallyDirty
-        => _locallyDirty;
-
-    public void ClearLocallyDirty()
-    {
-        _locallyDirty = false;
     }
 
     public void Serialize(NetDataWriter writer)
@@ -86,9 +76,7 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
     {
         if (_equipments == null)
             _equipments = new int[(int)EquipPosition.EnumMax];
-
-        _locallyDirty = true;
-
+        
         for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
         {
             var item = reader.GetInt();
@@ -152,6 +140,7 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
             if (_equipments[i] != other._equipments[i])
                 return false;
         }
+
         return true;
     }
 
@@ -169,7 +158,13 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
             {
                 hashCode = (hashCode * 397) ^ _equipments[i];
             }
+
             return hashCode;
         }
+    }
+
+    public int GetItem(EquipPosition pos)
+    {
+        return _equipments[(int)pos];
     }
 }
