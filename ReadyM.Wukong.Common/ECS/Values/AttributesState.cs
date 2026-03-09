@@ -1,22 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using LiteNetLib.Utils;
-using ReadyM.Api.Helpers;
 using ReadyM.Api.Serialization;
 
 namespace ReadyM.Wukong.Common.ECS.Values;
 
 public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesState>
 {
-    private Dictionary<byte, float> _data = new();
-    
-    public ReadOnlyDictionary<byte, float> Data
-        => new(_data);
+    private ReadOnlyDictionary<byte, float>? _data = null;
+
+    public AttributesState(Dictionary<byte, float>? data) : this()
+    {
+        _data = new ReadOnlyDictionary<byte, float>(data ?? []);
+    }
 
     public void Serialize(NetDataWriter writer)
     {
-        writer.Put((byte)Data.Count);
-        foreach (var kvp in Data)
+        if (_data is null)
+            return;
+
+        writer.Put((byte)_data.Count);
+        foreach (var kvp in _data)
         {
             writer.Put(kvp.Key);
             writer.Put(kvp.Value);
@@ -26,30 +31,32 @@ public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesSt
     public void Deserialize(NetDataReader reader)
     {
         var count = reader.GetByte();
+        var data = new Dictionary<byte, float>(count);
 
-        _data ??= new Dictionary<byte, float>();
-        
-        _data.Clear();
-        _data.EnsureCapacity(count);
         for (var i = 0; i < count; i++)
         {
             var key = reader.GetByte();
             var value = reader.GetFloat();
-            _data?.Add(key, value);
+            data.Add(key, value);
         }
+
+        _data = new ReadOnlyDictionary<byte, float>(data);
     }
 
     public bool DeltaEquals(AttributesState other, float delta)
     {
+        if (_data is null && other._data is null)
+            return true;
+
+        if (_data is null || other._data is null)
+            return false;
+
+        if (_data.Count != other._data.Count)
+            return false;
+
         foreach (var d in _data)
         {
             if (!other._data.TryGetValue(d.Key, out var otherValue) || Math.Abs(d.Value - otherValue) > delta)
-                return false;
-        }
-        
-        foreach (var d in other._data)
-        {
-            if (!_data.ContainsKey(d.Key))
                 return false;
         }
 
@@ -57,14 +64,42 @@ public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesSt
     }
 
     public float GetAttribute(byte attr)
-        => _data[attr];
+    {
+        if (_data is null)
+            return 0;
+
+        return _data[attr];
+    }
+
+    public AttributesState WithSetAttribute(byte key, float value)
+    {
+        var newData = _data != null ? new Dictionary<byte, float>(_data) : [];
+        newData[key] = value;
+        return new AttributesState(newData);
+    }
     
-    public void SetAttribute(byte key, float value)
-        => _data[key] = value;
-    
-    public Dictionary<byte, float>.Enumerator GetEnumerator()
-        => _data.GetEnumerator();
+    public Dictionary<byte, float> ToDictionary()
+    {
+        return _data != null ? new Dictionary<byte, float>(_data) : [];
+    }
+
+    public IEnumerator<KeyValuePair<byte, float>> GetEnumerator()
+    {
+        if (_data is null)
+            yield break;
+
+        foreach (var kvp in _data)
+            yield return kvp;
+    }
 
     public bool TryGetAttribute(byte key, out float value)
-        => _data.TryGetValue(key, out value);
+    {
+        if (_data is null)
+        {
+            value = 0;
+            return false;
+        }
+
+        return _data.TryGetValue(key, out value);
+    }
 }

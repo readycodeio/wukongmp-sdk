@@ -32,10 +32,10 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IR
 
     // NOTE: This describes the nick displayed over the Wukong character
     private string _characterNickName = "";
-    
+
     private bool _isDead;
     private bool _beguilingChantEligible;
-    
+
     #region Animation
 
     private bool _inJump;
