@@ -16,7 +16,7 @@ public static class ReadyM
         DI.Instance.State,
         DI.Instance.WukongArchetype,
         DI.Instance.World,
-        DI.Instance.MappingPolicyDir,
+        DI.Instance.MappedField,
         DI.Instance.AreaState,
         DI.Instance.PawnState,
         DI.Instance.PlayerState,

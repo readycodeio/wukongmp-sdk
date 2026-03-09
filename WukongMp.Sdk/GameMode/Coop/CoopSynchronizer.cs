@@ -8,6 +8,7 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
@@ -38,7 +39,7 @@ internal class CoopSynchronizer : WukongSynchronizer
         ClientState state,
         ClientWukongArchetypeRegistration wukongArchetype,
         Store world,
-        WukongMappingPolicyDirectory policyDir,
+        IComponentFieldMappingRegistry mappedField,
         WukongAreaState areaState,
         WukongPawnState pawnState,
         WukongPlayerState playerState,
@@ -63,7 +64,7 @@ internal class CoopSynchronizer : WukongSynchronizer
             state,
             wukongArchetype,
             world,
-            policyDir,
+            mappedField,
             areaState,
             playerState,
             playerPawnState,
@@ -85,7 +86,7 @@ internal class CoopSynchronizer : WukongSynchronizer
     {
         _playerState = playerState;
         _pawnState = pawnState;
-        _discoverLocallySpawnedMonstersJob = new DiscoverLocallySpawnedMonstersJob(policyDir.MappedEvent, logger);
+        _discoverLocallySpawnedMonstersJob = new DiscoverLocallySpawnedMonstersJob(mappedEvent, logger);
     }
 
     internal void Initialize()

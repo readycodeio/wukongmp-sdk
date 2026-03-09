@@ -5,6 +5,7 @@ using b1;
 using HarmonyLib;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Values;
 
 namespace WukongMp.Api.WukongUtils;
@@ -21,14 +22,32 @@ public static class EquipmentUtils
 
     public static void SetActorEquipment(BGUCharacterCS actor, EquipmentState equipment)
     {
-        var equipComp = GetEquipComp(actor);
+        if (actor.GetClass().PathName == Constants.WukongDashengClassPath)
+            return;
+
+        var currentEq = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(actor.PlayerState).EquipList;
+        BUS_EquipComp? equipComp = null; // lazily initialized
 
         foreach (var (position, item) in equipment.GetItems())
         {
-            OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), item]);
+            if (currentEq[position.ToGame()] != item)
+            {
+                equipComp ??= GetEquipComp(actor);
+                OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), item]);
+            }
         }
     }
 
+    public static void SetActorEquipment(BGUCharacterCS actor, EquipPosition position, int itemId)
+    {
+        if (actor.GetClass().PathName == Constants.WukongDashengClassPath)
+            return;
+
+        var equipComp = GetEquipComp(actor);
+        OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), itemId]);
+    }
+
+    // Expensive, consider compiling
     private static BUS_EquipComp? GetEquipComp(BGUCharacterCS actor)
     {
         return Traverse

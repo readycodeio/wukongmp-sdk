@@ -7,6 +7,7 @@ using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
@@ -36,7 +37,7 @@ internal class PvpSynchronizer : WukongSynchronizer
         ClientWukongArchetypeRegistration wukongArchetype,
         Store world,
         WukongAreaState areaState,
-        WukongMappingPolicyDirectory policyDir,
+        IComponentFieldMappingRegistry mappedField,
         WukongPlayerState playerState,
         WukongPlayerPawnState playerPawnState,
         WukongPlayerModeManager modeManager,
@@ -62,7 +63,7 @@ internal class PvpSynchronizer : WukongSynchronizer
             state, 
             wukongArchetype, 
             world, 
-            policyDir, 
+            mappedField, 
             areaState, 
             playerState, 
             playerPawnState,

@@ -62,12 +62,10 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
             load.LoadFromGame(MainCharacterComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
             load.LoadFromGame(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
             load.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
+            load.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), pawn);
         }
 
         mainComp.CharacterNickName = player.NickName;
-
-        var eq = EquipmentUtils.GetCurrentEquipmentStateForActor(pawn);
-        mainComp.Equipment = eq;
 
         var pawnTeamId = pawn.GetTeamIDInCS();
         mainEntity.SetTeam(new TeamComponent

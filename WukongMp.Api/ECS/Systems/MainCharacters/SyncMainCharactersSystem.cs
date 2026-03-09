@@ -1,6 +1,8 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using b1;
+using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
@@ -15,6 +17,7 @@ public class SyncMainCharactersSystem(
     WukongEventBus eventBus,
     GameplayConfiguration configuration,
     GameplayEventRouter eventRouter,
+    IComponentFieldMappingRegistry mappedField,
     ILogger logger
 )
     : QuerySystem<MainCharacterComponent>
@@ -24,11 +27,10 @@ public class SyncMainCharactersSystem(
         if (!eventBus.IsGameplayLevel)
             return;
 
-        Query.ForEachEntity((
-            ref mainComp, entity) =>
+        Query.ForEachEntity((ref mainComp, entity) =>
         {
             var mainEntity = new MainCharacterEntity(entity);
-            
+
             if (mainEntity.Pawn == null)
                 return;
 
@@ -97,23 +99,12 @@ public class SyncMainCharactersSystem(
     {
         SyncMainCharacterStateBase(playerEntity, mainEntity);
 
-        ref var mainComp = ref mainEntity.GetState();
-
         if (mainEntity.Pawn == null)
             return;
 
-        var eqCopy = mainComp.Equipment;
-        if (eqCopy.IsLocallyDirty)
+        if (mappedField.CanSyncToGame<MainCharacterComponent>(mainEntity.Entity, out var sync))
         {
-            if (mainEntity.Pawn.GetClass().PathName != Constants.WukongDashengClassPath)
-            {
-                EquipmentUtils.SetActorEquipment(mainEntity.Pawn, mainComp.Equipment);
-            }
-
-            eqCopy.ClearLocallyDirty();
-            mainComp.Equipment = eqCopy;
-            // Equipment is passed by value, so we need to reassign it
-            // This sets the dirty flag, but since we're not the owner of the entity, it won't be sent back to the server
+            sync.SyncToGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), mainEntity.Pawn);
         }
     }
 }

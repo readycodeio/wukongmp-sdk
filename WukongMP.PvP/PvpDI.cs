@@ -68,7 +68,7 @@ namespace WukongMp.PvP
                 DI.WukongArchetype,
                 DI.World,
                 DI.AreaState,
-                DI.MappingPolicyDir,
+                DI.MappedField,
                 DI.PlayerState,
                 DI.PlayerPawnState,
                 DI.ModeManager,

@@ -8,6 +8,7 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
@@ -39,7 +40,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         ClientState state,
         ClientWukongArchetypeRegistration wukongArchetype,
         Store world,
-        WukongMappingPolicyDirectory policyDir,
+        IComponentFieldMappingRegistry mappedField,
         WukongAreaState areaState,
         WukongPlayerState playerState,
         WukongPlayerPawnState playerPawnState,
@@ -81,7 +82,7 @@ public class WukongSynchronizer : ClientNetworkedStateSynchronizer
         _syncGroup.Add(new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, Logger));
         // _syncGroup.Add(new DeleteOrphanedMainCharactersSystem(state, playerState, eventBus, policyDir, clientOwnership, Logger));
         _syncGroup.Add(new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, eventBus, Logger));
-        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, configuration, gameplayEventRouter, logger));
+        _syncGroup.Add(new SyncMainCharactersSystem(playerState, modeManager, eventBus, configuration, gameplayEventRouter, mappedField, logger));
         _syncGroup.Add(new EnableCollisionAfterCutsceneSystem(playerState));
         _syncGroup.Add(new UpdateMainCharacterMarkerSystem());
         _syncGroup.Add(new UpdateCooldownSystem(playerState, eventBus, areaState));

@@ -253,13 +253,12 @@ public class PatchBasicData
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchEqCompUpdate
 {
-    public static bool Prefix(BUS_EquipComp __instance, EquipPosition EquipPosition, int EquipID)
+    public static bool Prefix(BUS_EquipComp __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var playerState = DI.Instance.PlayerState;
-        var owner = __instance.GetOwner();
+        var owner = __instance.GetOwner() as BGUCharacterCS;
 
         if (owner.IsNullOrDestroyed())
         {
@@ -267,14 +266,26 @@ public class PatchEqCompUpdate
             return false;
         }
 
-        var mainEntity = playerState.LocalMainCharacter;
-        if (owner == mainEntity?.Pawn)
-        {
-            ref var main = ref mainEntity.Value.GetState();
-            main.Equipment = main.Equipment.WithSetItem(EquipPosition.FromGame(), EquipID);
-        }
+        return owner == GameUtils.GetControlledPawn() // own pawn
+               || owner.GetName().Contains("Preview") // preview actor in EQ view
+               || owner.GetName().Contains("Performer") // cutscene actor?
+               || owner.GetName().Contains("monkeysummon"); // summoned clones
+    }
 
-        return owner == GameUtils.GetControlledPawn() || owner.GetName().Contains("Preview") || owner.GetName().Contains("Performer") || owner.GetName().Contains("monkeysummon"); // TODO: Exact comparison
+    public static void Postfix(BUS_EquipComp __instance, EquipPosition EquipPosition)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var owner = __instance.GetOwner() as BGUCharacterCS;
+
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        {
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(entity.Value, out var loader))
+            {
+                loader.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<(BGUCharacterCS, ReadyM.Wukong.Common.ECS.Values.EquipPosition)>(), (owner, EquipPosition.FromGame()));
+            }
+        }
     }
 }
 

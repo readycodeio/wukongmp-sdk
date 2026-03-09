@@ -1,4 +1,5 @@
 ﻿using b1;
+using BtlB1;
 using BtlShare;
 using CSharpModBase;
 using Friflo.Engine.ECS;
@@ -46,6 +47,8 @@ using WukongMp.Api.Shim;
 using WukongMp.Api.State;
 using WukongMp.Api.Tests;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
+using EquipPosition = ReadyM.Wukong.Common.ECS.Values.EquipPosition;
 
 namespace WukongMp.Api;
 
@@ -464,5 +467,22 @@ internal sealed class DI
                 }
             },
             ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase));
+
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(),
+            EquipmentUtils.SetActorEquipment,
+            EquipmentUtils.GetCurrentEquipmentStateForActor);
+
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.Equipment.In<(BGUCharacterCS Pawn, EquipPosition Position)>(),
+            (ctx, state) =>
+            {
+                var item = state.GetItem(ctx.Position);
+                EquipmentUtils.SetActorEquipment(ctx.Pawn, ctx.Position, item);
+            },
+            (ref comp, ctx) =>
+            {
+                var pawnEq = EquipmentUtils.GetCurrentEquipmentStateForActor(ctx.Pawn);
+                var item = pawnEq.GetItem(ctx.Position);
+                comp.Equipment_SetFromGame(comp.Equipment.WithSetItem(ctx.Position, item));
+            });
     }
 }
