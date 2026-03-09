@@ -30,6 +30,7 @@ using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Client.Utilities;
 using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Registry;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
@@ -253,7 +254,7 @@ internal sealed class DI
         var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, policyDir, logger);
         var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);
 
-        var fieldMappingRegistry = new ComponentFieldMappingRegistry(policyDir, sideChannel);
+        var fieldMappingRegistry = new ComponentFieldMappingRegistry(policyDir, sideChannel, logger);
         MappedField = fieldMappingRegistry;
         RegisterDataMappings(fieldMappingRegistry);
 
@@ -415,11 +416,15 @@ internal sealed class DI
                 }
             }, (ref main, ctx) =>
             {
+                var attrs = main.Attributes.ToDictionary();
+
                 foreach (var attr in Constants.SyncedAttributes)
                 {
                     var value = ctx.GetFloatValue(attr);
-                    main.Attributes.SetAttribute((byte)attr, value);
+                    attrs[(byte)attr] = value;
                 }
+
+                main.Attributes = new AttributesState(attrs);
             });
 
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<(EBGUAttrFloat Attr, BUC_AttrContainer Container)>(),
@@ -435,14 +440,14 @@ internal sealed class DI
                     return;
 
                 var value = ctx.Container.GetFloatValue(ctx.Attr);
-                main.Attributes.SetAttribute((byte)ctx.Attr, value);
+                main.Attributes = main.Attributes.WithSetAttribute((byte)ctx.Attr, value);
 
                 // Some attributes have derivatives (computed properties, if you will)
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(ctx.Attr, out var valid);
                 if (valid)
                 {
                     var finalVal = ctx.Container.GetFloatValue(calc.finalVal);
-                    main.Attributes.SetAttribute((byte)calc.finalVal, finalVal);
+                    main.Attributes = main.Attributes.WithSetAttribute((byte)calc.finalVal, finalVal);
                 }
             });
 

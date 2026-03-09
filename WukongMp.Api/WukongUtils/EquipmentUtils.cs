@@ -20,22 +20,46 @@ public static class EquipmentUtils
         return new EquipmentState(roleData.EquipList.Select(kvp => (kvp.Key.FromGame(), kvp.Value)));
     }
 
+    private static readonly HashSet<BGUCharacterCS> InitializedEqs = [];
+
     public static void SetActorEquipment(BGUCharacterCS actor, EquipmentState equipment)
     {
         if (actor.GetClass().PathName == Constants.WukongDashengClassPath)
             return;
 
-        var currentEq = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(actor.PlayerState).EquipList;
-        BUS_EquipComp? equipComp = null; // lazily initialized
+        var currentEq = GetCurrentEq(actor);
+        if (currentEq == null)
+        {
+            Logging.LogError("Cannot set equipment for actor {ActorName} because current equipment list is unavailable", actor.GetName());
+            return;
+        }
 
         foreach (var (position, item) in equipment.GetItems())
         {
-            if (currentEq[position.ToGame()] != item)
-            {
-                equipComp ??= GetEquipComp(actor);
-                OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), item]);
-            }
+            currentEq[position.ToGame()] = item;
         }
+    }
+
+    private static BindDictEquipPosition_Int? GetCurrentEq(BGUCharacterCS actor)
+    {
+        var currentEq = BGU_DataUtil.GetReadOnlyData<IBPC_RoleBaseData, BPC_RoleBaseData>(actor.PlayerState).EquipList;
+
+        if (currentEq == null)
+            return null;
+
+        if (InitializedEqs.Add(actor))
+        {
+            var equipComp = GetEquipComp(actor);
+            if (equipComp == null)
+            {
+                Logging.LogError("Failed to initialize equipment for actor {ActorName}: could not find BUS_EquipComp", actor.GetName());
+                return currentEq;
+            }
+
+            equipComp.OnAttach();
+        }
+
+        return currentEq;
     }
 
     public static void SetActorEquipment(BGUCharacterCS actor, EquipPosition position, int itemId)
@@ -43,8 +67,14 @@ public static class EquipmentUtils
         if (actor.GetClass().PathName == Constants.WukongDashengClassPath)
             return;
 
-        var equipComp = GetEquipComp(actor);
-        OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), itemId]);
+        var currentEq = GetCurrentEq(actor);
+        if (currentEq == null)
+        {
+            Logging.LogError("Cannot set equipment for actor {ActorName} because current equipment list is unavailable", actor.GetName());
+            return;
+        }
+
+        currentEq[position.ToGame()] = itemId;
     }
 
     // Expensive, consider compiling

@@ -258,7 +258,7 @@ public class PatchEqCompUpdate
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var owner = __instance.GetOwner() as BGUCharacterCS;
+        var owner = __instance.GetOwner();
 
         if (owner.IsNullOrDestroyed())
         {
@@ -266,10 +266,17 @@ public class PatchEqCompUpdate
             return false;
         }
 
-        return owner == GameUtils.GetControlledPawn() // own pawn
-               || owner.GetName().Contains("Preview") // preview actor in EQ view
-               || owner.GetName().Contains("Performer") // cutscene actor?
-               || owner.GetName().Contains("monkeysummon"); // summoned clones
+        if (owner.GetName().Contains("Preview") // preview actor in EQ view
+            || owner.GetName().Contains("Performer") // cutscene actor?
+            || owner.GetName().Contains("monkeysummon")) // summoned clones
+            return true;
+
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        {
+            return DI.Instance.MappingPolicyDir.ForData<MainCharacterComponent>().CanGameSetLocally(entity.Value);
+        }
+
+        return false;
     }
 
     public static void Postfix(BUS_EquipComp __instance, EquipPosition EquipPosition)
@@ -278,6 +285,9 @@ public class PatchEqCompUpdate
             return;
 
         var owner = __instance.GetOwner() as BGUCharacterCS;
+
+        if (owner.IsNullOrDestroyed())
+            return;
 
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
         {
