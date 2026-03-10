@@ -372,7 +372,7 @@ public class PatchOnUnitDead
 
                 localState.DeadAnimationTime = 6f; // Value from game.
 
-                state.IsDead_SetFromGame(true);
+                state.IsDead = true;
 
                 // TODO: Check required before call to this
                 DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType), entity.Value.Entity);
@@ -920,7 +920,7 @@ public class PatchOnSetRebirthPointAsCurrentBirthPoint
         var owner = __instance.GetOwner();
         if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
-            entity.Value.GetComponent<MainCharacterComponent>().RebirthPointId_SetFromGame(RebirthPointID);
+            entity.Value.GetComponent<MainCharacterComponent>().RebirthPointId = RebirthPointID;
         }
     }
 }
@@ -935,7 +935,7 @@ public class PatchOnSetCurrentBirthPoint
         var owner = __instance.GetOwner();
         if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
-            entity.Value.GetComponent<MainCharacterComponent>().RebirthPointId_SetFromGame(BirthPointID);
+            entity.Value.GetComponent<MainCharacterComponent>().RebirthPointId = BirthPointID;
         }
     }
 }
@@ -950,7 +950,7 @@ public class PatchOnForceSetRebirthPoint
         var owner = __instance.GetOwner();
         if (owner is BGUCharacterCS character && DI.Instance.PawnState.TryGetEntityByCharacter(character, out var entity))
         {
-            entity.Value.GetComponent<MainCharacterComponent>().RebirthPointId_SetFromGame(RebirthPointId);
+            entity.Value.GetComponent<MainCharacterComponent>().RebirthPointId = RebirthPointId;
         }
     }
 }

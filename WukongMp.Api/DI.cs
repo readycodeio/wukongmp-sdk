@@ -390,10 +390,10 @@ internal sealed class DI
                 }
             }, (ref main, ctx) =>
             {
-                main.Hp_SetFromGame(ctx.GetFloatValue(EBGUAttrFloat.Hp));
+                main.Hp = ctx.GetFloatValue(EBGUAttrFloat.Hp);
                 if (main.Hp > 0)
                 {
-                    main.IsDead_SetFromGame(false);
+                    main.IsDead = false;
                 }
             });
 
@@ -487,7 +487,7 @@ internal sealed class DI
             {
                 var pawnEq = EquipmentUtils.GetCurrentEquipmentStateForActor(ctx.Pawn);
                 var item = pawnEq.GetItem(ctx.Position);
-                comp.Equipment_SetFromGame(comp.Equipment.WithSetItem(ctx.Position, item));
+                comp.Equipment = comp.Equipment.WithSetItem(ctx.Position, item);
             });
     }
 }
