@@ -22,9 +22,6 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IR
     private MoveSpeedLevel _moveSpeedLevel = MoveSpeedLevel.Run;
     private MoveSpeedLevel _moveSpeedState = MoveSpeedLevel.Run;
 
-    private float _hp;
-    private float _hpMaxBase;
-
     private int _rebirthPointId;
     private int _waitingSequenceId;
 
@@ -33,7 +30,6 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IR
     // NOTE: This describes the nick displayed over the Wukong character
     private string _characterNickName = "";
 
-    private bool _isDead;
     private bool _beguilingChantEligible;
 
     #region Animation
