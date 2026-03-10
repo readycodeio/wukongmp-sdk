@@ -15,7 +15,7 @@ public class AfterMainCharacterDeathSystem(WukongEventBus eventBus, WukongPlayer
         if (playerState.LocalMainCharacter.HasValue)
         {
             var localMain = playerState.LocalMainCharacter.Value;
-            if (localMain.GetState().IsDead && localMain.GetLocalState().IsDuringDeathAnim)
+            if (localMain.GetHp().IsDead && localMain.GetLocalState().IsDuringDeathAnim)
             {
                 ref var localState = ref localMain.GetLocalState();
                 localState.DeadAnimationTime -= Tick.deltaTime;

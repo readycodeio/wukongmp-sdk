@@ -437,7 +437,7 @@ internal partial class PvpMode : IDisposable
 
         foreach (var (_, _, mainEntity) in AllPlayers)
         {
-            if (mainEntity.GetState().IsDead)
+            if (mainEntity.GetHp().IsDead)
             {
                 ref var metaComp = ref mainEntity.GetMeta();
 
@@ -895,7 +895,7 @@ internal partial class PvpMode : IDisposable
                 if (mainEntity == null)
                     return;
 
-                if (!mainEntity.Value.GetState().IsDead)
+                if (!mainEntity.Value.GetHp().IsDead)
                 {
                     _ecsLoop.Scheduler.Schedule(static (_, mainEntity0) => { ResetPlayer(mainEntity0); }, mainEntity.Value);
                 }

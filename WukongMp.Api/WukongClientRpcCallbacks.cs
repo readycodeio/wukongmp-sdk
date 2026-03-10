@@ -1434,7 +1434,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
 
-            if (mainEntity.GetState().IsDead)
+            if (mainEntity.GetHp().IsDead)
                 return;
 
             self._widgetManager.ShowInfoMessage(Texts.AntiStallWarning);
@@ -1452,7 +1452,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
 
-            if (mainEntity.GetState().IsDead)
+            if (mainEntity.GetHp().IsDead)
                 return;
 
             self._widgetManager.ShowInfoMessage(Texts.StallingMessage);
@@ -1483,7 +1483,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;
 
-            if (mainEntity.GetState().IsDead)
+            if (mainEntity.GetHp().IsDead)
                 return;
 
             if (self._netEntity.TryGetEntityByNetworkId(netId0, out var entity) && entity == mainEntity.Entity)

@@ -374,39 +374,6 @@ internal sealed class DI
 
     private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
     {
-        fieldMappingRegistry.Register(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(),
-            (ctx, value) =>
-            {
-                if (value <= -80000)
-                {
-                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", value);
-                    return;
-                }
-
-                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
-                        Constants.FloatComparisonTolerance))
-                {
-                    ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
-                }
-            }, (ref main, ctx) =>
-            {
-                main.Hp = ctx.GetFloatValue(EBGUAttrFloat.Hp);
-                if (main.Hp > 0)
-                {
-                    main.IsDead = false;
-                }
-            });
-
-        fieldMappingRegistry.Register(MainCharacterComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
-            (ctx, value) =>
-            {
-                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
-                        Constants.FloatComparisonTolerance))
-                {
-                    ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
-                }
-            }, ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase));
-
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(),
             (ctx, attrs) =>
             {
@@ -454,13 +421,27 @@ internal sealed class DI
         fieldMappingRegistry.Register(HpComponent.Fields.Hp.In<BUC_AttrContainer>(),
             (ctx, value) =>
             {
+                if (value <= -80000)
+                {
+                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", value);
+                    return;
+                }
+
                 if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
                         Constants.FloatComparisonTolerance))
                 {
                     ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
                 }
             },
-            ctx => ctx.GetFloatValue(EBGUAttrFloat.Hp));
+            (ref hp, ctx) =>
+            {
+                hp.Hp = ctx.GetFloatValue(EBGUAttrFloat.Hp);
+
+                if (hp.Hp > 0)
+                {
+                    hp.IsDead = false;
+                }
+            });
 
         fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
             (ctx, value) =>

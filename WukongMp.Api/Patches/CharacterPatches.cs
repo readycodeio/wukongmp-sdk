@@ -34,10 +34,14 @@ public static class PatchAttrs
         // authority is determined either by policy, or setting from API
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(__instance.Owner, out var mainEntity))
         {
-            if (DI.Instance.MappedField.CanSyncToGame<MainCharacterComponent>(mainEntity.Value.Entity, out var sync))
+            if (DI.Instance.MappedField.CanSyncToGame<HpComponent>(mainEntity.Value.Entity, out var syncHp))
             {
-                sync.SyncToGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), __instance);
-                sync.SyncToGame(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(), __instance);
+                syncHp.SyncToGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), __instance);
+            }
+
+            if (DI.Instance.MappedField.CanSyncToGame<MainCharacterComponent>(mainEntity.Value.Entity, out var syncMain))
+            {
+                syncMain.SyncToGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), __instance);
             }
         }
         else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(__instance.Owner as BGUCharacterCS, out var tamerEntity))
@@ -144,31 +148,34 @@ public static class PatchHp
             return;
         }
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
+        if (AttrID == EBGUAttrFloat.Hp)
         {
-            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value.Entity, out var loader))
+            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
             {
-                if (AttrID == EBGUAttrFloat.Hp)
+                if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(mainEntity.Value, out var loadHp))
                 {
-                    loader.LoadFromGame(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
+                    loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
                 }
-                else
+            }
+            else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var tamerEntity))
+            {
+                if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value, out var loader))
                 {
-                    loader.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<(EBGUAttrFloat, BUC_AttrContainer)>(), (AttrID, ___AttrContainer));
+                    var localTamer = tamerEntity.Value.GetLocalTamer();
+
+                    if (!localTamer.IsTamerSynced)
+                        return; // not synced
+
+                    loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), ___AttrContainer);
+                    loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
                 }
             }
         }
-        else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var tamerEntity))
+        else if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
         {
-            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value.Entity, out var loader))
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var loadMain))
             {
-                var localTamer = tamerEntity.Value.GetLocalTamer();
-
-                if (!localTamer.IsTamerSynced)
-                    return; // not synced
-
-                loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), ___AttrContainer);
-                loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
+                loadMain.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<(EBGUAttrFloat, BUC_AttrContainer)>(), (AttrID, ___AttrContainer));
             }
         }
     }

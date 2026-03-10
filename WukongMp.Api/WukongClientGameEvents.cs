@@ -392,7 +392,7 @@ public class WukongClientGameEvents : IDisposable
             if (mainEntity.Pawn == null)
                 return;
 
-            if (mainEntity.GetState().IsDead)
+            if (mainEntity.GetHp().IsDead)
             {
                 PlayerUtils.DisableSpectator(mainEntity);
                 PlayerUtils.RebirthPlayerInPlace(mainEntity.Pawn);
@@ -577,7 +577,7 @@ public class WukongClientGameEvents : IDisposable
                 if (mainEntity.Pawn == null)
                     continue;
 
-                if (mainEntity.GetState().IsDead)
+                if (mainEntity.GetHp().IsDead)
                 {
                     localMainComp.IsRespawning = true;
                     PlayerUtils.DisableSpectator(mainEntity);

@@ -379,10 +379,10 @@ public class PatchOnTriggerFsmEvent
         if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGazeAndSurround)
         {
             var anyPlayerAlive = false;
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-                ref playerComp, _) =>
+            DI.Instance.World.Query<MainCharacterComponent, HpComponent>().ForEachEntity((
+                ref _, ref hp, _) =>
             {
-                if (!playerComp.IsDead)
+                if (!hp.IsDead)
                     anyPlayerAlive = true;
             });
 

@@ -15,36 +15,15 @@ public static class ReadyCharacterExtensions
             get
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-                {
-                    ref var hpComp = ref tamerEntity.Value.GetHp();
-                    return hpComp.Hp;
-                }
-
-                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
-                {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    return mainComp.Hp;
-                }
-
-                throw new InvalidOperationException();
+                return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.Hp : throw new InvalidOperationException();
             }
             set
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
+
+                if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(entity, out var sync))
                 {
-                    if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(tamerEntity.Value.Entity, out var sync))
-                    {
-                        sync.SetFromApi(HpComponent.Fields.Hp, value);
-                    }
-                }
-                else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
-                {
-                    if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(mainEntity.Value.Entity, out var sync))
-                    {
-                        sync.SetFromApi(MainCharacterComponent.Fields.Hp, value);
-                    }
+                    sync.SetFromApi(HpComponent.Fields.Hp, value);
                 }
                 else
                 {
@@ -58,36 +37,15 @@ public static class ReadyCharacterExtensions
             get
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-                {
-                    ref var hpComp = ref tamerEntity.Value.GetHp();
-                    return hpComp.HpMaxBase;
-                }
-
-                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
-                {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    return mainComp.HpMaxBase;
-                }
-
-                throw new InvalidOperationException();
+                return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.HpMaxBase : throw new InvalidOperationException();
             }
             set
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
+
+                if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(entity, out var sync))
                 {
-                    if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(tamerEntity.Value.Entity, out var sync))
-                    {
-                        sync.SetFromApi(HpComponent.Fields.HpMaxBase, value);
-                    }
-                }
-                else if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
-                {
-                    if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(mainEntity.Value.Entity, out var sync))
-                    {
-                        sync.SetFromApi(MainCharacterComponent.Fields.HpMaxBase, value);
-                    }
+                    sync.SetFromApi(HpComponent.Fields.HpMaxBase, value);
                 }
                 else
                 {
@@ -112,19 +70,7 @@ public static class ReadyCharacterExtensions
             get
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-                {
-                    ref var hpComp = ref tamerEntity.Value.GetHp();
-                    return hpComp.IsDead;
-                }
-
-                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
-                {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    return mainComp.IsDead;
-                }
-
-                throw new InvalidOperationException();
+                return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.IsDead : throw new InvalidOperationException();
             }
         }
     }

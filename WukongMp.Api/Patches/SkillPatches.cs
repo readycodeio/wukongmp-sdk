@@ -9,6 +9,7 @@ using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -670,7 +671,7 @@ public class PatchOnTransBackSpawnNewOne
         __state = mainEntity;
     }
 
-    public static void Postfix(UActorCompBaseCS __instance, object? __state)
+    public static void Postfix(object? __state)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
@@ -678,12 +679,17 @@ public class PatchOnTransBackSpawnNewOne
         var state = (MainCharacterEntity?)__state;
         if (state.HasValue)
         {
-            // TODO: Setters for raw values so we don't have to do this rigamarole
-            ref var mainComp = ref state.Value.GetState();
-            mainComp.IsTransformed = false;
-            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Value.Pawn);
-            mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
-            mainComp.IsDead = false;
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(state.Value, out var loadState))
+            {
+                loadState.SetFromGame(MainCharacterComponent.Fields.IsTransformed, false);
+            }
+
+            // TODO: Used to load HpMax, not Hp, possibly healing the player to full. Check if this is intended and if not - change it back.
+            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(state.Value, out var load))
+            {
+                var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(state.Value.Pawn);
+                load.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
+            }
         }
     }
 }

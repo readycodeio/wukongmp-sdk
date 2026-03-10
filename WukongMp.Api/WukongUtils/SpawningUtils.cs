@@ -22,6 +22,7 @@ public static class SpawningUtils
     public static BGUCharacterCS? SpawnCloneForPlayer(FreeCameraManager freeCameraManager, WukongPlayerState playerState, in MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
+        ref var hpComp = ref mainEntity.GetHp();
         var pvpComp = mainEntity.GetPvP();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
@@ -103,10 +104,10 @@ public static class SpawningUtils
         var teamId = teamComp.TeamId;
 
         // get initial Hp and HpMax
-        var initialHp = mainComp.Hp;
+        var initialHp = hpComp.Hp;
         Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
 
-        var initialHpMaxBase = mainComp.HpMaxBase;
+        var initialHpMaxBase = hpComp.HpMaxBase;
         Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
 
         mainEntity.SetPawn(newPawn, false);

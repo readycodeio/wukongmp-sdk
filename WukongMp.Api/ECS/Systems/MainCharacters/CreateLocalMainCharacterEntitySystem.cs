@@ -57,12 +57,16 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
 
         var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(pawn);
 
-        if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity, out var load))
+        if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(mainEntity, out var loadHp))
         {
-            load.LoadFromGame(MainCharacterComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
-            load.LoadFromGame(MainCharacterComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
-            load.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
-            load.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), pawn);
+            loadHp.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
+            loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
+        }
+        
+        if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity, out var loadMain))
+        {
+            loadMain.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
+            loadMain.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), pawn);
         }
 
         mainComp.CharacterNickName = player.NickName;

@@ -37,7 +37,8 @@ internal sealed class PvpRoundEndSystem(
             {
                 var state = p.Character.GetState();
                 var pvp = p.Character.GetPvP();
-                return !pvp.IsObserver && (!state.IsDead || state.IsTransformed);
+                var hp = p.Character.GetHp();
+                return !pvp.IsObserver && (!hp.IsDead || state.IsTransformed);
             })
             .Select(x => x.Player.GetState().TeamId)
             .ToList();
@@ -79,7 +80,7 @@ internal sealed class PvpRoundEndSystem(
         if (aliveTeamCount == 1)
         {
             Logging.LogInformation("One team with alive players, ending round");
-            var winner = playerEntities.First(p => !p.Character.GetState().IsDead);
+            var winner = playerEntities.First(p => !p.Character.GetHp().IsDead);
             ecsLoop.Scheduler.ScheduleFunc(async (_, pvp, winner0) => { await pvp.EndRoundAsync(winner0.Player.GetState().TeamId); }, pvpMode, winner);
         }
     }
