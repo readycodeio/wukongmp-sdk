@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Friflo.Engine.ECS;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
@@ -112,14 +113,14 @@ public readonly struct ReadyMainCharacter : IReadyEntity<ReadyMainCharacter>,
             entity: Entity,
             location: location.ToFVector(),
             rotation: rotation.ToFRotator()
-        ));
+        ), default(EmptyContext));
     }
 
     public void RebirthInPlace()
     {
         var mainEntity = new MainCharacterEntity(Entity);
         
-        Api.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(mainEntity.Entity, false));
+        Api.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(mainEntity.Entity, false), default(EmptyContext));
     }
 
     public void Respawn(int maxComp)
@@ -131,6 +132,6 @@ public readonly struct ReadyMainCharacter : IReadyEntity<ReadyMainCharacter>,
         Api.MappedEvent.InvokeInGameAndNotifyEcs(new PartyRespawnEvent(
             entity: mainEntity.Entity,
             birthShrineId: maxComp
-        ));
+        ), default(EmptyContext));
     }
 }

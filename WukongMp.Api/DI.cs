@@ -115,7 +115,6 @@ internal sealed class DI
     internal WukongNetworkLogger NetLogger { get; private set; } = null!;
     internal INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
     internal JobRegistry JobRegistry { get; private set; } = null!;
-    internal WukongSynchronizer Synchronizer { get; private set; } = null!;
     internal WukongConnectionManager Connection { get; private set; } = null!;
     internal WukongLevelTransitionConnectionController ConnectionController { get; private set; } = null!;
     internal NetworkPingMonitor PingMonitor { get; private set; } = null!;
@@ -321,27 +320,27 @@ internal sealed class DI
         var shimBlobClient = ShimRelayBlobClient = new HttpBlobClient(shimRecorderLogger);
 
         var shimEcsLoop = ShimEcsLoop = new ClientEcsUpdateLoop(shimWorld, shimRecorderLogger);
-        var shimState = new ClientState(
-            shimWorld,
-            shimNetEntity,
-            shimRecorderRelayClient,
-            shimEcsLoop,
-            jobRegistry,
-            areaArchetype,
-            playerArchetype,
-            shimRecorderLogger
-        );
-
-        var shimSynchronizer = new ClientNetworkedStateSynchronizer(
-            shimNetEntity,
-            shimState,
-            jobRegistry,
-            netComponentRegistry,
-            shimRecorderRelayClient,
-            shimEcsLoop,
-            clientOwnership,
-            shimRecorderLogger
-        );
+        // var shimState = new ClientState(
+        //     shimWorld,
+        //     shimNetEntity,
+        //     shimRecorderRelayClient,
+        //     shimEcsLoop,
+        //     jobRegistry,
+        //     areaArchetype,
+        //     playerArchetype,
+        //     shimRecorderLogger
+        // );
+        //
+        // var shimSynchronizer = new ClientNetworkedStateSynchronizer(
+        //     shimNetEntity,
+        //     shimState,
+        //     jobRegistry,
+        //     netComponentRegistry,
+        //     shimRecorderRelayClient,
+        //     shimEcsLoop,
+        //     clientOwnership,
+        //     shimRecorderLogger
+        // );
 
         var shimParser = ShimParser = new ShimRelayMessageParser([
             new BlobClientShimParserImpl(),

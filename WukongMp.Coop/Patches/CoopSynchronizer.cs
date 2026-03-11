@@ -21,12 +21,11 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.FreeCamera;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Sdk.GameMode.Coop;
+namespace WukongMp.Coop.Patches;
 
 internal class CoopSynchronizer : WukongSynchronizer
 {

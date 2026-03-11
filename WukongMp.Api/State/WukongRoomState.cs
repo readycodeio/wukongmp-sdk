@@ -38,12 +38,10 @@ public class WukongAreaState(ClientState state, Store world, ClientOwnershipMana
         }
     }
 
-    private Entity? _pvpStateEntity;
-
     public Entity? PvpStateEntity
     {
-        get => _pvpStateEntity?.IsNull is true ? null : _pvpStateEntity;
-        set => _pvpStateEntity = value;
+        get => field?.IsNull is true ? null : field;
+        set;
     }
 
     public PvpStateComponent? PvpState

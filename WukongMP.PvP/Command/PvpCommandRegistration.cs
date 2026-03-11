@@ -58,7 +58,7 @@ public class PvpCommandRegistration(
 
         var location = SpawningUtils.CalculateSpawnLocation(playerPawn.GetActorLocation(), playerPawn.GetActorForwardVector());
 
-        mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(characterEntity.Value, unitName, count, teamId, location));
+        mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(characterEntity.Value, unitName, count, teamId, location), characterEntity.Value.Entity);
         chatter.SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), unitName);
     }
 

@@ -20,7 +20,6 @@ using WukongMp.Api.ECS.Systems;
 using WukongMp.Api.ECS.Systems.MainCharacters;
 using WukongMp.Api.ECS.Systems.Tamers;
 using WukongMp.Api.FreeCamera;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 

@@ -158,7 +158,8 @@ internal class Mod : ModBase
         di.InputManager.RegisterKeyBind(Key.F5, () =>
         {
             Logger.LogDebug("F5: Toggle debug widget visibility");
-            di.WidgetManager.ToggleDebugVisibility();
+            if (DI.Instance.WukongInputManager.CanApplyInput())
+                DI.Instance.WidgetManager.ToggleDebugVisibility();
         });
 #if DEBUG
         di.InputManager.RegisterKeyBind(Key.F6, () =>
@@ -241,6 +242,12 @@ internal class Mod : ModBase
             {
                 Logger.LogError(ex, "Error while dumping debug info");
             }
+        });
+        
+        DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.N, () =>
+        {
+            Logger.LogDebug("Alt + N");
+            DI.Instance.NetworkSessionStats.DumpToLog(Logger);
         });
 
         di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>

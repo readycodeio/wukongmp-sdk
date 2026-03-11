@@ -1,5 +1,7 @@
-﻿using ReadyM.Api.Command;
+﻿using b1.CppExport;
+using ReadyM.Api.Command;
 using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using WukongMp.Api.Chat;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.State;
@@ -26,7 +28,7 @@ public class RebirthCommandRegistration(
         mappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(
             entity: mainEntity.Entity,
             teleport: false
-        ));
+        ), default(EmptyContext));
         chatter.SendServerMessage("PlayerRequestedRebirth", playerState.NickName);
     }
 
@@ -38,7 +40,7 @@ public class RebirthCommandRegistration(
         mappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(
             entity: mainEntity.Entity,
             teleport: true
-        ));
+        ), default(EmptyContext));
 
         chatter.SendServerMessage("PlayerRequestedRebirth", playerState.NickName);
     }

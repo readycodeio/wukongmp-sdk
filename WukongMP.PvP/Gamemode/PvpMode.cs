@@ -13,6 +13,7 @@ using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
@@ -38,7 +39,7 @@ using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.GameMode;
 
-internal partial class PvpMode : IDisposable
+internal class PvpMode : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;
@@ -330,7 +331,7 @@ internal partial class PvpMode : IDisposable
                 entity: mainEntity.Entity,
                 location: newPlayerLocation,
                 rotation: UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500))
-            ));
+            ), default(EmptyContext));
         }
     }
 
@@ -804,7 +805,7 @@ internal partial class PvpMode : IDisposable
             return;
         }
 
-        Logging.LogInformation("Sending PvP event: {Event}", ev);
+        Logging.LogInformation("Sending PvP event: {Event}", ev.Kind);
 
         _clientRpc.SendPvpEvent([(int)ev.Kind, ev.Data]);
     }

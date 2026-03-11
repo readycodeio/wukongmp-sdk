@@ -77,54 +77,7 @@ public sealed class Mod : ModBase
             if (LaunchParameters.Instance.RecordShimFile != null)
                 DI.Instance.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
         });
-
-        DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
-        {
-            Logger.LogDebug("Alt + C");
-            DI.Instance.NetLogger.DumpDebugInfo();
-        });
-
-        DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.N, () =>
-        {
-            Logger.LogDebug("Alt + N");
-            DI.Instance.NetworkSessionStats.DumpToLog(Logger);
-        });
-
-        DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
-        {
-            Logger.LogDebug("Alt + X");
-            PlayerUtils.ResetLocalPlayerCooldown();
-        });
-
-        DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
-        {
-            Logger.LogDebug("Alt + J");
-
-            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (mainEntity == null)
-                return;
-
-            DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new MontageCallbackEvent(mainEntity.Value, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02_weak", 0f, false));
-        });
-
-        DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
-        {
-            Logger.LogDebug("Alt + K");
-
-            var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-            if (mainEntity == null)
-                return;
-
-            DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new MontageCallbackEvent(mainEntity.Value, "Player/Wukong/AM/Attack/ComboB/AM_wukong_combob_z_02", 0f, false));
-        });
 #endif
-        DI.Instance.InputManager.RegisterKeyBind(Key.F5, () =>
-        {
-            Logger.LogDebug("F5");
-            if (DI.Instance.WukongInputManager.CanApplyInput())
-                DI.Instance.WidgetManager.ToggleDebugVisibility();
-        });
-
         DI.Instance.InputManager.RegisterKeyBind(Key.J, () =>
         {
             Logger.LogDebug("J");
@@ -137,20 +90,6 @@ public sealed class Mod : ModBase
             Logger.LogDebug("L");
             if (DI.Instance.WukongInputManager.CanApplyInput())
                 PvpDI.Instance.PVP.SwitchTeam();
-        });
-
-        DI.Instance.InputManager.RegisterKeyBind(Key.K, () =>
-        {
-            Logger.LogDebug("K");
-            if (DI.Instance.WukongInputManager.CanApplyInput())
-                DI.Instance.WidgetManager.ToggleChatVisibility();
-        });
-
-        DI.Instance.InputManager.RegisterKeyBind(Key.F1, () =>
-        {
-            Logger.LogDebug("F1");
-            if (DI.Instance.WukongInputManager.CanApplyInput())
-                DI.Instance.WidgetManager.ToggleCommandVisibility();
         });
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Common;
@@ -11,7 +10,7 @@ using WukongMp.Api.FreeCamera;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
 
-namespace WukongMp.Sdk.GameMode.Coop
+namespace WukongMp.Coop.Patches
 {
     internal class CoopWidgetManager : IDisposable
     {

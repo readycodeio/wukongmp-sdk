@@ -1426,8 +1426,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
     [Obsolete("To be removed once per-project RPC is implemented")]
     public event Action<PlayerId, int[]>? OnPvpEventReceived;
 
-    // NOTE(api): Changed from AreaOfInterestAll
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnPvpEvent(PlayerId __sender, int[] data)
     {
         OnPvpEventReceived?.Invoke(__sender, data);
