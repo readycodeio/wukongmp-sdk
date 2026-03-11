@@ -17,7 +17,7 @@ public class MasterClientEventPolicyFactory(
 
     public IMappingEventPolicyBase CreatePolicy(Type eventType, Type contextType)
     {
-        Debug.Assert(contextType == typeof(EmptyContext));
+        Debug.Assert(contextType == typeof(EmptyContext), "contextType == typeof(EmptyContext)");
         var policyType = typeof(MasterClientEventPolicy<>).MakeGenericType(eventType);
         return (IMappingEventPolicyBase)Activator.CreateInstance(policyType, areaState, sideChannel);
     }

@@ -21,7 +21,7 @@ public class SpawnSummonEventEventPolicyFactory(
 
     public IMappingEventPolicyBase CreatePolicy(Type eventType, Type contextType)
     {
-        Debug.Assert(contextType == typeof(SpawnSummonContext));
+        Debug.Assert(contextType == typeof(SpawnSummonContext), "contextType == typeof(SpawnSummonContext)");
         var policyType = typeof(SpawnSummonEventPolicy<>).MakeGenericType(eventType);
         // TODO: This is prone to runtime errors if you mismatch constructor parameters
         return (IMappingEventPolicyBase)Activator.CreateInstance(policyType, ownership, playerState, areaState, world, sideChannel);
@@ -29,7 +29,7 @@ public class SpawnSummonEventEventPolicyFactory(
 
     public IMappingEventPolicy<TContext> CreatePolicy<TContext>(Type eventType)
     {
-        Debug.Assert(typeof(TContext) == typeof(SpawnSummonContext));
+        Debug.Assert(typeof(TContext) == typeof(SpawnSummonContext), "typeof(TContext) == typeof(SpawnSummonContext)");
         return (IMappingEventPolicy<TContext>)CreatePolicy(eventType, typeof(TContext));
     }
 }

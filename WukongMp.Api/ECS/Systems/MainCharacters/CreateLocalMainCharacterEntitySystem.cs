@@ -1,6 +1,7 @@
 ﻿using b1;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
@@ -13,7 +14,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
+public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, IComponentFieldMappingRegistry mappedField, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
@@ -52,8 +53,11 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
 
         mainEntity.SetPawn(pawn, false);
 
-        mainComp.Location = pawn.GetActorLocation().ToVector3();
-        mainComp.Rotation = pawn.GetActorRotation().ToVector3();
+        if (mappedField.CanLoadFromGame<TransformComponent>(mainEntity, out var load))
+        {
+            load.SetFromGame(TransformComponent.Fields.Position, pawn.GetActorLocation().ToVector3());
+            load.SetFromGame(TransformComponent.Fields.Rotation, pawn.GetActorRotation().ToVector3());
+        }
 
         var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(pawn);
 
@@ -62,14 +66,13 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
             loadHp.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
             loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
         }
-        
+
         if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity, out var loadMain))
         {
             loadMain.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
             loadMain.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), pawn);
+            loadMain.SetFromGame(MainCharacterComponent.Fields.CharacterNickName, player.NickName);
         }
-
-        mainComp.CharacterNickName = player.NickName;
 
         var pawnTeamId = pawn.GetTeamIDInCS();
         mainEntity.SetTeam(new TeamComponent

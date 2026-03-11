@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.PvP.Configuration
 {
-    public class AntiStallConfig
+    public static class AntiStallConfig
     {
         public const int WarningDuration = 6; // seconds
         public const float ActiveDuration = 2f; // seconds

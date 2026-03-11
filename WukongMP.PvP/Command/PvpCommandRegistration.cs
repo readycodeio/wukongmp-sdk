@@ -2,12 +2,14 @@
 using b1;
 using BtlShare;
 using ReadyM.Api.Command;
+using ReadyM.Api.Multiplayer.Mapping.Events;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.ECS.Values;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
@@ -20,7 +22,7 @@ namespace WukongMp.PvP.Command;
 public class PvpCommandRegistration(
     WukongPlayerState playerState,
     WukongAreaState areaState,
-    WukongClientRpcCallbacks clientRpc,
+    IMappedEventManager mappedEvent,
     WukongChatter chatter,
     WukongCommandConsole console
 ) : IConsoleCommandRegistration
@@ -36,17 +38,11 @@ public class PvpCommandRegistration(
         registry.AddCommand("infinite_transform", ConsoleCommand.Create(ToggleInfiniteTransform, false));
         registry.AddCommand("arena", ConsoleCommand.Create(TeleportToArena, false));
         registry.AddCommand("shrine", ConsoleCommand.Create(TeleportToShrine, false));
-
         registry.AddCommand("pvp_level", ConsoleCommand.Create(TeleportToPvpLevel, true));
     }
 
     private void RequestSpawn(string unitName, int count = 1)
     {
-        {
-            console.AddMessage(string.Format(Texts.InvalidUnitName, unitName));
-            return;
-        }
-
         var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity == null)
             return;
@@ -62,7 +58,7 @@ public class PvpCommandRegistration(
 
         var location = SpawningUtils.CalculateSpawnLocation(playerPawn.GetActorLocation(), playerPawn.GetActorForwardVector());
 
-        clientRpc.SendRequestSpawnUnits(new RequestSpawnUnitsData(unitName, count, teamId, location));
+        mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(characterEntity.Value, unitName, count, teamId, location));
         chatter.SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), unitName);
     }
 

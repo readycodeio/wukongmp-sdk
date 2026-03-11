@@ -8,6 +8,7 @@ using PreludeLib.Compat;
 using PreludeLib.Runtime.Backend.WeaverCallback;
 using PreludeLib.Runtime.Public;
 using ReadyM.Api.Command;
+using ReadyM.Api.Command.Converters;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
 using ReadyM.Api.Multiplayer.Client;
@@ -32,6 +33,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Registry;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
@@ -55,6 +57,11 @@ namespace WukongMp.Api;
 
 internal sealed class DI
 {
+    // TODO: Refactor into a "real" DI container
+    // example: var areaState = DI.Instance.GetService<WukongAreaState>();
+    // GetService: accesses Dictionary<Type, object> _singletons
+    //  if not exists, create by populating arguments (Activator.CreateInstance) and store in dictionary
+    //  return (T)_singletons[(typeof(T))];
     internal static DI Instance { get; } = new();
 
     internal InputManager InputManager { get; private set; } = null!;
@@ -278,7 +285,12 @@ internal sealed class DI
         var commandParser = CommandParser = new ConsoleCommandParser([
             new StandardArgumentParserRegistration(),
         ]);
-        var commandTypeConverter = ArgConverter = new ConsoleArgumentTypeConverter([]);
+        var commandTypeConverter = ArgConverter = new ConsoleArgumentTypeConverter([
+            new IdentToStringTypeConversion(),
+            new DecimalToIntTypeConversion(),
+            new DecimalToFloatTypeConversion(),
+            new DecimalToDoubleTypeConversion(),
+        ]);
         var commandMatcher = CommandMatcher = new ConsoleCommandMatcher(commandParser, commandRegistry, commandTypeConverter);
         var commandConsole = CommandConsole = new WukongCommandConsole(commandMatcher, areaState, playerState, eventBus, chatter, widgetManager);
         var wukongInputManager = WukongInputManager = new WukongInputManager(commandConsole, chatter, widgetManager);
@@ -374,6 +386,31 @@ internal sealed class DI
 
     private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
     {
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.Velocity.In<BUC_ABPCharacterData>(),
+            (ctx, vec) =>
+            {
+                ctx.Velocity = vec.ToFVector();
+                
+                if (ctx.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                {
+                    ctx.Velocity = FVector.ZeroVector;
+                    // vec = FVector.ZeroVector.ToVector3(); // TODO: is this needed?
+                }
+            }, ctx => ctx.Velocity.ToVector3());
+        
+        fieldMappingRegistry.Register(MainCharacterComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(),
+            (ctx, vec) =>
+            {
+                ctx.MoveAcceleration = vec.ToFVector();
+                
+                if (ctx.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                {
+                    ctx.MoveAcceleration = FVector.ZeroVector;
+                    // vec = FVector.ZeroVector.ToVector3(); // TODO: is this needed?
+                }
+            }, ctx => ctx.MoveAcceleration.ToVector3());
+        
+
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(),
             (ctx, attrs) =>
             {
@@ -427,8 +464,7 @@ internal sealed class DI
                     return;
                 }
 
-                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp),
-                        Constants.FloatComparisonTolerance))
+                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                 {
                     ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
                 }
@@ -436,7 +472,6 @@ internal sealed class DI
             (ref hp, ctx) =>
             {
                 hp.Hp = ctx.GetFloatValue(EBGUAttrFloat.Hp);
-
                 if (hp.Hp > 0)
                 {
                     hp.IsDead = false;

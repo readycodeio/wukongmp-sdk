@@ -40,7 +40,7 @@ public class SpawnSummonEventPolicy<TEvent>(
             return true;
 
         var localPlayerId = playerState.LocalPlayerId.Value;
-        var localPosition = localMainEntity.Value.GetState().Location;
+        var localPosition = localMainEntity.Value.GetTransform().Position;
         var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
         const float squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
         if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
@@ -50,12 +50,12 @@ public class SpawnSummonEventPolicy<TEvent>(
 
         // Check if master or another player with lower id is nearby
         var canSummon = true;
-        world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, entity) =>
+        world.Query<MainCharacterComponent, TransformComponent>().ForEachEntity((ref mainComp, ref trans, entity) =>
         {
             if (entity == localMainEntity.Value.Entity)
                 return;
 
-            var squaredDistance = Vector3.DistanceSquared(localPosition, mainComp.Location);
+            var squaredDistance = Vector3.DistanceSquared(localPosition, trans.Position);
             if (squaredDistance < squaredSpawnOwnershipRadius && (areaState.MasterClientId == mainComp.PlayerId || mainComp.PlayerId.RawValue < localPlayerId.RawValue))
             {
                 canSummon = false;

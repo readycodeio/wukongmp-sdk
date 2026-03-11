@@ -21,8 +21,9 @@ public static class SpawningUtils
 {
     public static BGUCharacterCS? SpawnCloneForPlayer(FreeCameraManager freeCameraManager, WukongPlayerState playerState, in MainCharacterEntity mainEntity)
     {
-        ref var mainComp = ref mainEntity.GetState();
-        ref var hpComp = ref mainEntity.GetHp();
+        var mainComp = mainEntity.GetState();
+        var hpComp = mainEntity.GetHp();
+        var transComp = mainEntity.GetTransform();
         var pvpComp = mainEntity.GetPvP();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
@@ -62,8 +63,8 @@ public static class SpawningUtils
             return null;
         }
 
-        var loc = mainComp.Location.ToFVector();
-        var rot = mainComp.Rotation.ToFRotator();
+        var loc = transComp.Position.ToFVector();
+        var rot = transComp.Rotation.ToFRotator();
 
         var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
 

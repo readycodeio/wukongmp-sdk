@@ -392,7 +392,7 @@ public class PatchOnTriggerFsmEvent
             }
         }
 
-        if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner as BGUCharacterCS, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner as BGUCharacterCS, out var entity))
         {
             Debug.Assert(owner == entity.Value.Pawn, "owner == tamerEntity.Pawn");
             if (!BGU_CommonUtil.IsInFsmState(owner, EventTag))

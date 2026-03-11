@@ -31,19 +31,19 @@ public class WukongMappingPolicyDirectory(
             return false;
         }
 
-        if (IsMainCharacterMapped_(character, out var mainEntity))
+        if (IsMainCharacterMapped(character, out var mainEntity))
         {
             entity = mainEntity.Value.Entity;
             return true;
         }
 
-        if (IsTamerMapped_(character as BUTamerActor, out var tamerEntity))
+        if (IsTamerMapped(character as BUTamerActor, out var tamerEntity))
         {
             entity = tamerEntity.Value.Entity;
             return true;
         }
 
-        if (IsMonsterTamerMapped_(character as BGUCharacterCS, out tamerEntity))
+        if (IsMonsterTamerMapped(character as BGUCharacterCS, out tamerEntity))
         {
             entity = tamerEntity.Value.Entity;
             return true;
@@ -62,21 +62,21 @@ public class WukongMappingPolicyDirectory(
             return false;
         }
 
-        if (IsMainCharacterMapped_(character, out var mainEntity))
+        if (IsMainCharacterMapped(character, out var mainEntity))
         {
             entity = mainEntity.Value.Entity;
             archetype = wukongArchetype.MainCharacterArchetype;
             return true;
         }
 
-        if (IsTamerMapped_(character as BUTamerActor, out var tamerEntity))
+        if (IsTamerMapped(character as BUTamerActor, out var tamerEntity))
         {
             entity = tamerEntity.Value.Entity;
             archetype = wukongArchetype.TamerArchetype;
             return true;
         }
 
-        if (IsMonsterTamerMapped_(character as BGUCharacterCS, out tamerEntity))
+        if (IsMonsterTamerMapped(character as BGUCharacterCS, out tamerEntity))
         {
             entity = tamerEntity.Value.Entity;
             archetype = wukongArchetype.TamerArchetype;
@@ -88,7 +88,7 @@ public class WukongMappingPolicyDirectory(
         return false;
     }
 
-    public bool IsMainCharacterMapped_([NotNullWhen(true)] AActor? character, [NotNullWhen(true)] out MainCharacterEntity? mainEntity)
+    public bool IsMainCharacterMapped([NotNullWhen(true)] AActor? character, [NotNullWhen(true)] out MainCharacterEntity? mainEntity)
     {
         if (character.IsNullOrDestroyed())
         {
@@ -120,7 +120,7 @@ public class WukongMappingPolicyDirectory(
         return true;
     }
 
-    public bool IsTamerMapped_([NotNullWhen(true)] BUTamerActor? tamer, [NotNullWhen(true)] out TamerEntity? tamerEntity)
+    public bool IsTamerMapped([NotNullWhen(true)] BUTamerActor? tamer, [NotNullWhen(true)] out TamerEntity? tamerEntity)
     {
         if (tamer.IsNullOrDestroyed())
         {
@@ -152,7 +152,7 @@ public class WukongMappingPolicyDirectory(
         return true;
     }
 
-    public bool IsMonsterTamerMapped_([NotNullWhen(true)] BGUCharacterCS? monsterCharacter, [NotNullWhen(true)] out TamerEntity? tamerEntity)
+    public bool IsMonsterTamerMapped([NotNullWhen(true)] BGUCharacterCS? monsterCharacter, [NotNullWhen(true)] out TamerEntity? tamerEntity)
     {
         if (monsterCharacter.IsNullOrDestroyed())
         {

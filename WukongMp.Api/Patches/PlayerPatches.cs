@@ -271,7 +271,7 @@ public class PatchEqCompUpdate
             || owner.GetName().Contains("monkeysummon")) // summoned clones
             return true;
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             return DI.Instance.MappingPolicyDir.ForData<MainCharacterComponent>().CanGameSetLocally(entity.Value);
         }
@@ -289,7 +289,7 @@ public class PatchEqCompUpdate
         if (owner.IsNullOrDestroyed())
             return;
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(entity.Value, out var loader))
             {
@@ -356,7 +356,7 @@ public class PatchOnUnitDead
         if (owner is not BGUCharacterCS ownerCharacter)
             return;
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(ownerCharacter, out var entity) &&
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(ownerCharacter, out var entity) &&
             DI.Instance.MappingPolicyDir.ForEvent<UnitDeadEvent>().CanGameEventNotifyEcs(entity.Value))
         {
             var state = entity.Value.GetState();
@@ -385,7 +385,7 @@ public class PatchOnUnitDead
             return;
         }
 
-        if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(ownerCharacter, out var tamerEntity))
+        if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(ownerCharacter, out var tamerEntity))
         {
             var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload, tamerEntity.Value.Entity);
@@ -755,7 +755,7 @@ public class PatchOnRebirthPointRest
         var playerController = GameUtils.GetPlayerController()!;
         var owner = playerController.GetControlledPawn();
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
         {
             var rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID), mainEntity.Value.Entity);
@@ -842,7 +842,7 @@ public class PatchTriggerJumpSkill
 
         var owner = __instance.GetOwner();
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
         {
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StartJumpEvent(mainEntity.Value, StartJumpDir, CurrentInputVector), mainEntity.Value.Entity);
         }
@@ -860,7 +860,7 @@ public class PatchJumpOnReleased
 
         var owner = __instance.GetOwner();
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
         {
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StopJumpEvent(mainEntity.Value), mainEntity.Value.Entity);
         }
@@ -972,7 +972,7 @@ public class PatchOnRebirthFinished
     {
         var owner = __instance.GetOwner();
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             entity.Value.GetLocalState().IsRespawning = false;
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new AfterRebirthEvent(entity.Value), entity.Value.Entity);

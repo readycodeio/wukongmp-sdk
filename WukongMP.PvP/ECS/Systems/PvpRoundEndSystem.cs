@@ -81,7 +81,10 @@ internal sealed class PvpRoundEndSystem(
         {
             Logging.LogInformation("One team with alive players, ending round");
             var winner = playerEntities.First(p => !p.Character.GetHp().IsDead);
-            ecsLoop.Scheduler.ScheduleFunc(async (_, pvp, winner0) => { await pvp.EndRoundAsync(winner0.Player.GetState().TeamId); }, pvpMode, winner);
+            ecsLoop.Scheduler.ScheduleFunc(async (_, pvp, winner0) =>
+            {
+                await pvp.EndRoundAsync(winner0.Player.GetState().TeamId);
+            }, pvpMode, winner);
         }
     }
 }

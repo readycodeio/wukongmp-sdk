@@ -6,19 +6,19 @@ using WukongMp.Sdk.Api;
 namespace WukongMp.Sdk;
 
 /// Base class for plugin systems. Adds itself to the update loop on creation and removes itself on disposal.
-public abstract class PluginSystemBase(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
+public abstract class ModSystemBase(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
 {
     protected readonly WukongLocalApi LocalApi = localApi;
     protected readonly WukongClientApi ClientApi = clientApi;
     protected readonly ILogger Logger = logger;
 
-    private class PluginSystemWrapper(PluginSystemBase pluginSystem) : BaseSystem
+    private class PluginSystemWrapper(ModSystemBase modSystem) : BaseSystem
     {
-        public override string Name { get; } = pluginSystem.GetType().Name;
+        public override string Name { get; } = modSystem.GetType().Name;
 
         protected override void OnUpdateGroup()
         {
-            pluginSystem.OnUpdate(Tick);
+            modSystem.OnUpdate(Tick);
         }
     }
 

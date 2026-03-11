@@ -31,8 +31,6 @@ public class WukongLevelTransitionConnectionController : IDisposable
     
     private void OnBeginPlayGameplayLevel()
     {
-        Debug.Assert(_connection.RequestedAreaId != null);
-
         var areaId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
         if (areaId > ushort.MaxValue)
         {

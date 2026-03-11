@@ -12,7 +12,7 @@ using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Systems;
 
-public sealed class ReEnableCollidersSystem : PluginSystemBase, IDisposable
+public sealed class ReEnableCollidersSystem : ModSystemBase, IDisposable
 {
     private const float TickIntervalSeconds = 1; // Check every second
 

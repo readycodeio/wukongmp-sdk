@@ -42,7 +42,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongClientRpcCall
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong _tickCounter;
     private float _elapsedTime;
-    private bool _isReset = false;
+    private bool _isReset;
 
     private float _warningTimer;
     private float _activeTimer;
@@ -52,7 +52,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongClientRpcCall
     private readonly Dictionary<NetworkId, PlayerEngagementData> _playerEngagementData = [];
     private readonly Random _rng = new();
 
-    private int _decayRounds = 0;
+    private int _decayRounds;
 
     protected override void OnUpdate()
     {
@@ -72,10 +72,10 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongClientRpcCall
             return;
         }
 
-        Query.ForEachEntity((ref mapping, ref metadata, ref team, entity) =>
+        Query.ForEachEntity((ref mapping, ref metadata, ref team, _) =>
         {
             var playerId = metadata.NetId;
-            if (!_playerEngagementData.TryGetValue(playerId, out PlayerEngagementData data))
+            if (!_playerEngagementData.TryGetValue(playerId, out var data))
             {
                 data=new PlayerEngagementData();
                 _playerEngagementData[playerId] = data;
@@ -139,12 +139,12 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongClientRpcCall
 
     private void UpdatePlayerMultipliers()
     {
-        var _playerFacingDictionary = CalculatePlayerFacing();
+        var playerFacingDictionary = CalculatePlayerFacing();
         foreach (var playerId in _playerEngagementData.Keys)
         {
             float current = _playerEngagementMultipliers.TryGetValue(playerId, out var val) ? val : 1.0f;
 
-            if (_playerFacingDictionary.TryGetValue(playerId, out bool isFacing) && isFacing)
+            if (playerFacingDictionary.TryGetValue(playerId, out bool isFacing) && isFacing)
             {
                 current = MathF.Max(current - AntiStallConfig.PlayerEngagementMultiplierIncrease * _elapsedTime, AntiStallConfig.PlayerEngagementMultiplierMin);
             }

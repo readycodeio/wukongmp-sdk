@@ -31,14 +31,9 @@ public class RunOnMasterClientOnlyEventPolicy<TEvent>(
 
     protected override bool CanEcsInvokeGameEventImpl(in Entity context)
     {
-        if (areaState.IsMasterClient)
-        {
-            // on master client propagate event to the game to be run locally
-            return true;
-        }
-
+        // on master client propagate event to the game to be run locally
         // on non-master client, we should ignore the event. In fact this should never execute 
-        return false;
+        return areaState.IsMasterClient;
     }
 
     protected override bool CanGameEventRunLocallyImpl(in Entity context)

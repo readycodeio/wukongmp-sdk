@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using WukongMp.Api;
 using WukongMp.Coop.Command;
 using WukongMp.Coop.Gamemode;
 using WukongMp.Coop.Systems;
@@ -21,14 +22,20 @@ public sealed class Mod : ModBase
 
     protected override void Initialize()
     {
+        if (!LaunchParameters.Instance.ValidForCoOp)
+        {
+            Logger.LogDebug("Co-op not launching.");
+            return;
+        }
+        
         Instance = this;
-        var localApi = LocalApi = Sdk.Api.ReadyM.Local;
-        var clientApi = ClientApi = Sdk.Api.ReadyM.Client;
-        SaveManager = new CoopSaveManager(clientApi, localApi, Logger);
+        LocalApi = Sdk.Api.ReadyM.Local;
+        ClientApi = Sdk.Api.ReadyM.Client;
+        SaveManager = new CoopSaveManager(ClientApi, LocalApi, Logger);
 
         Logger.LogInformation("Initializing {PluginName} v{PluginVersion}", Name, Version);
 
-        localApi.AddCommands([
+        LocalApi.AddCommands([
             new CoopCommandRegistration(),
         ]);
 
@@ -45,7 +52,7 @@ public sealed class Mod : ModBase
         Logger.LogInformation("Initialized {PluginName}", Name);
     }
 
-    protected override IEnumerable<PluginSystemBase> DefineSystems()
+    protected override IEnumerable<ModSystemBase> DefineSystems()
     {
         yield return new DetectSoftlockSystem(LocalApi, ClientApi, Logger);
         yield return new FixYellowbrowSystem(LocalApi, ClientApi, Logger);

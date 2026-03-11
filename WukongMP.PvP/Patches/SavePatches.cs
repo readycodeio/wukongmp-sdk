@@ -20,7 +20,7 @@ namespace WukongMp.PvP.Patches;
 [HarmonyPatchCategory(Constants.GlobalPatches)]
 public class PatchWindowsSaveGame
 {
-    public static bool Prefix(ref string __result, string SlotName, string UserId)
+    public static bool Prefix(ref string __result, string SlotName)
     {
         if (!PvpDI.Instance.SaveManager.ShouldRedirectSaveFiles)
             return true;

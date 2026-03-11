@@ -102,7 +102,7 @@ public static class PatchOnCastImmobilize
             return false;
         }
 
-        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(castingCharacter, out var castingMainEntity))
+        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped(castingCharacter, out var castingMainEntity))
             return false;
 
         DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastImmobilizeEvent(castingMainEntity.Value), castingMainEntity.Value.Entity);
@@ -450,7 +450,7 @@ public static class PatchOnUnitCastSkillTry
 
         if (CSI.SourceType == ECastSkillSourceType.PhantomRush)
         {
-            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
             {
                 var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PhantomRushEvent(entity.Value, CSI.SkillDirection), entity.Value.Entity);
                 if (sent)
@@ -459,7 +459,7 @@ public static class PatchOnUnitCastSkillTry
         }
         else if (CSI is { SourceType: ECastSkillSourceType.CBG, SkillID: 471236 })
         {
-            if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner as BGUCharacterCS, out var entity))
+            if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner as BGUCharacterCS, out var entity))
             {
                 var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastSkillEvent(entity.Value, CSI.SkillID, CSI.SourceType), entity.Value.Entity);
                 if (sent)
@@ -487,7 +487,7 @@ public static class PatchExitPhantomRush
             return;
         }
 
-        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
+        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
             return;
 
         var main = mainEntity.Value.GetState();
@@ -622,7 +622,7 @@ public class PatchOnTransBeginSpawnNewOne
         var playerState = DI.Instance.PlayerState;
 
         var pawn = __instance.GetOwner();
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(pawn, out var mainEntity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(pawn, out var mainEntity))
         {
             var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransBeginEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType), mainEntity.Value.Entity);
             if (sent)
@@ -661,7 +661,7 @@ public class PatchOnTransBackSpawnNewOne
 
         var pawn = __instance.GetOwner();
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(pawn, out var mainEntity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(pawn, out var mainEntity))
         {
             var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransEndEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType), mainEntity.Value.Entity);
             if (sent)
@@ -930,7 +930,7 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
         Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}, CurVigorSkillID {CurVigorSkillID}", _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID);
 
         var owner = __instance.GetOwner();
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerMagicallyChangeEvent(entity.Value, _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason), entity.Value.Entity);
         }
@@ -949,7 +949,7 @@ public static class PatchPendingReset
         Logging.LogDebug("BUS_MagicallyChangeComp PendingReset called with reason: {Reason}", Reason);
 
         var owner = __instance.GetOwner();
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ResetMagicallyChangeEvent(entity.Value, Reason), entity.Value.Entity);
         }

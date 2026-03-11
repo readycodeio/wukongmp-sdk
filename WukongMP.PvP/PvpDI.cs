@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using ReadyM.Api;
 using WukongMp.Api;
 using WukongMp.PvP.Chat;
-using WukongMp.PvP.Command;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.GameMode;
 using WukongMp.PvP.UI;
@@ -13,15 +11,13 @@ namespace WukongMp.PvP
     {
         public static PvpDI Instance { get; } = new();
 
-        public DI DI { get; private set; } = null!;
+        private DI DI { get; set; } = null!;
 
         public PvpChatter PvpChatter { get; private set; } = null!;
         public PvpGameplayConfiguration GameplayConfiguration { get; private set; } = null!;
         public PvpSynchronizer Synchronizer { get; private set; } = null!;
         public PvpSaveManager SaveManager { get; private set; } = null!;
         public PvpWidgetManager WidgetManager { get; private set; } = null!;
-        public PatcherBase Patcher { get; private set; } = null!;
-
         public PvpMode PVP { get; private set; } = null!;
 
         public void Init(DI wukongDI)
@@ -29,14 +25,8 @@ namespace WukongMp.PvP
             wukongDI.Logger.LogDebug("Initializing PvP DI...");
 
             DI = wukongDI;
-
-            var patcher = Patcher = new WukongPatcher(typeof(Mod).Assembly, "WukongMp.PvP", DI.Prelude);
-
+            
             var chatter = PvpChatter = new PvpChatter(DI.Chatter, DI.GameplayEventRouter, DI.AreaState, DI.ClientOwnership_);
-
-            DI.CommandRegistry.AddCommands([
-                new PvpCommandRegistration(DI.PlayerState, DI.AreaState, DI.ClientRpc, DI.Chatter, DI.CommandConsole),
-            ]);
 
             var gameplayConfig = GameplayConfiguration = new PvpGameplayConfiguration(DI.GameplayConfiguration, DI.AreaState);
 

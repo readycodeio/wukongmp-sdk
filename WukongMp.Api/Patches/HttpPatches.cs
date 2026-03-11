@@ -32,11 +32,11 @@ public class HttpPatches
             if (!_connectionInit)
             {
                 var f = typeof(ServicePointManager).GetField("manager", BindingFlags.Static | BindingFlags.NonPublic);
-                Debug.Assert(f != null);
+                Debug.Assert(f != null, "f != null");
                 if (f!.GetValue(null) == null)
                 {
                     var connDataType = f.FieldType;
-                    Debug.Assert(connDataType != null);
+                    Debug.Assert(connDataType != null, "connDataType != null");
                     var connData = Activator.CreateInstance(connDataType, [null]);
                     f.SetValue(null, connData);
                 }

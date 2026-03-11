@@ -39,7 +39,7 @@ public class PatchOnSwitchBulletTarget
             return true;
         }
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             if (DI.Instance.MappingPolicyDir.IsCharacterMapped(InnerTarget, out var targetEntity))
             {
@@ -91,7 +91,7 @@ public class PatchOnSwitchBulletInfoIfNeed
             return true;
         }
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             var projectileClass = ProjectileActor.GetClass();
             if (projectileClass != null)
@@ -121,7 +121,7 @@ public static class PatchOnProjectileDead
         var master = ___MasterData.GetMasterActor();
         var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
 
-        if (projectile != null && DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(master, out var entity))
+        if (projectile != null && DI.Instance.MappingPolicyDir.IsMainCharacterMapped(master, out var entity))
         {
             var projectileClass = projectile.GetClass();
             if (projectileClass != null)
@@ -157,7 +157,7 @@ public static class PatchOnSetMoveMode
 
         var master = masterData.GetMasterActor();
 
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(master, out var entity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(master, out var entity))
         {
             var projectileClass = projectile.GetClass();
             if (projectileClass != null)

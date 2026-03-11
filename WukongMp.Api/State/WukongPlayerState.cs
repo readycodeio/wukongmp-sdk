@@ -125,7 +125,7 @@ public class WukongPlayerState
 
         var entity = _clientNetEntity.CreateAreaEntity(_wukongArchetype.MainCharacterArchetype, b =>
         {
-            b.Add(new MainCharacterComponent()
+            b.Add(new MainCharacterComponent
             {
                 PlayerId = _state.LocalPlayerId.Value,
             });

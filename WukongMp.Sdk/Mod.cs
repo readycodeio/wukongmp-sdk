@@ -54,13 +54,6 @@ internal class Mod : ModBase
             return;
         }
 
-        // TODO: Generalize SDK to both Co-op and PvP, remove this check
-        if (!LaunchParameters.Instance.ValidForCoOp)
-        {
-            Logger.LogDebug("Co-op not launching.");
-            return;
-        }
-
         DI.Instance.Init();
 
         // Start the relay client
@@ -110,12 +103,6 @@ internal class Mod : ModBase
         if (!LaunchParameters.Instance.Valid)
         {
             Logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
-            return;
-        }
-
-        if (!LaunchParameters.Instance.ValidForCoOp)
-        {
-            Logger.LogDebug("Co-op not launching.");
             return;
         }
 

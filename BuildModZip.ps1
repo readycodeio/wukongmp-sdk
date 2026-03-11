@@ -62,7 +62,8 @@ foreach ($p in $Mods)
 # Append non-SDK mod files
 $allFiles += @(
     @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
+    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop"),
+    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp")
 )
 
 # Create destination directories

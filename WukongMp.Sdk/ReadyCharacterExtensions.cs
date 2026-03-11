@@ -1,7 +1,6 @@
 using System;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
-using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Sdk;
 

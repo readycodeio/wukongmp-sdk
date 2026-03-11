@@ -29,8 +29,6 @@ internal static class GameSaveUtils
         return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", modName);
     }
 
-    // TODO: We need a universal way to get mod DLL name. We pass Assembly for now, but it's a hack.
-    [Obsolete("Not compatible with the plugins system")]
     internal static string GetSaveFileFullName(Assembly modAssembly, string slotName)
     {
         slotName += ".sav";

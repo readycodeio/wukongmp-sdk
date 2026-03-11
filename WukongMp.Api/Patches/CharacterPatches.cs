@@ -8,6 +8,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
@@ -32,7 +33,7 @@ public static class PatchAttrs
         // this patch is an example of an ECS -> Game data sync point
         // if the ECS state is authoritative, we need to sync it to the game here
         // authority is determined either by policy, or setting from API
-        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(__instance.Owner, out var mainEntity))
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(__instance.Owner, out var mainEntity))
         {
             if (DI.Instance.MappedField.CanSyncToGame<HpComponent>(mainEntity.Value.Entity, out var syncHp))
             {
@@ -44,7 +45,7 @@ public static class PatchAttrs
                 syncMain.SyncToGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), __instance);
             }
         }
-        else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(__instance.Owner as BGUCharacterCS, out var tamerEntity))
+        else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(__instance.Owner as BGUCharacterCS, out var tamerEntity))
         {
             if (DI.Instance.MappedField.CanSyncToGame<HpComponent>(tamerEntity.Value.Entity, out var sync))
             {
@@ -150,14 +151,14 @@ public static class PatchHp
 
         if (AttrID == EBGUAttrFloat.Hp)
         {
-            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
+            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
             {
                 if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(mainEntity.Value, out var loadHp))
                 {
                     loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
                 }
             }
-            else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner, out var tamerEntity))
+            else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner, out var tamerEntity))
             {
                 if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value, out var loader))
                 {
@@ -171,7 +172,7 @@ public static class PatchHp
                 }
             }
         }
-        else if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped_(owner, out var mainEntity))
+        else if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
         {
             if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var loadMain))
             {
@@ -186,7 +187,7 @@ public static class PatchHp
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchCharacterAnimation
 {
-    public static void Postfix(BUC_ABPCharacterData? __instance, AActor Owner, IBUC_ABPHelperData HelperData, float DeltaTime)
+    public static void Postfix(BUC_ABPCharacterData? __instance, AActor Owner)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
@@ -206,153 +207,112 @@ public class PatchCharacterAnimation
             return;
         }
 
-        var playerState = DI.Instance.PlayerState;
-        var pawnState = DI.Instance.PawnState;
-
-        var mainEntity = playerState.LocalMainCharacter;
-
-        if (mainEntity != null && character == mainEntity.Value.Pawn)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(character, out var mainEntity))
         {
-            ref var main = ref mainEntity.Value.GetState();
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-
-            if (localMain.IsWaitingForSequence)
+            if (mainEntity.Value.GetLocalState().IsWaitingForSequence)
             {
                 // update local player location
                 RestrictPlayerLocation(mainEntity.Value, __instance);
             }
 
-            if (main.IsFlying != __instance.IsFlying)
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var load))
             {
-                main.IsFlying = __instance.IsFlying;
+                load.SetFromGame(MainCharacterComponent.Fields.IsFlying, __instance.IsFlying);
+                load.SetFromGame(MainCharacterComponent.Fields.IsFalling, __instance.IsFalling);
+                load.SetFromGame(MainCharacterComponent.Fields.IsLandingMove, __instance.IsLandingMove);
+                load.SetFromGame(MainCharacterComponent.Fields.Velocity, __instance.Velocity.ToVector3());
+                load.SetFromGame(MainCharacterComponent.Fields.MoveAcceleration, __instance.MoveAcceleration.ToVector3());
+            }
+            else if (DI.Instance.MappedField.CanSyncToGame<MainCharacterComponent>(mainEntity.Value, out var sync))
+            {
+                sync.SyncToGame(MainCharacterComponent.Fields.IsFlying, static (x, c) => c.IsFlying = x, __instance);
+                sync.SyncToGame(MainCharacterComponent.Fields.IsFalling, static (x, c) => c.IsFalling = x, __instance);
+                sync.SyncToGame(MainCharacterComponent.Fields.IsLandingMove, static (x, c) => c.IsLandingMove = x, __instance);
+                sync.SyncToGame(MainCharacterComponent.Fields.Velocity.In<BUC_ABPCharacterData>(), __instance);
+                sync.SyncToGame(MainCharacterComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(), __instance);
             }
 
-            if (main.IsFalling != __instance.IsFalling)
+            if (DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(mainEntity.Value, out var loadTransform))
             {
-                main.IsFalling = __instance.IsFalling;
+                loadTransform.SetFromGame(TransformComponent.Fields.Position, __instance.ActorLocation.ToVector3());
+                loadTransform.SetFromGame(TransformComponent.Fields.Rotation, __instance.ActorRotation.ToVector3());
             }
-
-            if (main.IsLandingMove != __instance.IsLandingMove)
+            else if (DI.Instance.MappedField.CanSyncToGame<TransformComponent>(mainEntity.Value, out var syncTransform))
             {
-                main.IsLandingMove = __instance.IsLandingMove;
-            }
-
-            if (!main.Velocity.ToFVector().Equals(__instance.Velocity, Constants.FloatComparisonTolerance))
-            {
-                main.Velocity = __instance.Velocity.ToVector3();
-            }
-
-            if (!main.MoveAcceleration.ToFVector().Equals(__instance.MoveAcceleration, Constants.FloatComparisonTolerance))
-            {
-                main.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
-            }
-
-            if (!main.Location.ToFVector().Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
-            {
-                main.Location = __instance.ActorLocation.ToVector3();
-            }
-
-            if (!main.Rotation.ToFRotator().Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
-            {
-                main.Rotation = __instance.ActorRotation.ToVector3();
-            }
-
-            TeleportUtils.CheckForTeleportFinish(DI.Instance.MappedEvent, mainEntity.Value);
-        }
-        else
-        {
-            var otherMainEntity = pawnState.GetEntityByPlayerActor(character);
-
-            if (otherMainEntity != null)
-            {
-                ref var otherMain = ref otherMainEntity.Value.GetState();
-
                 var events = BUS_EventCollectionCS.Get(character);
-
-                __instance.IsFlying = otherMain.IsFlying;
-                __instance.IsFalling = otherMain.IsFalling;
-                __instance.IsLandingMove = otherMain.IsLandingMove;
-                __instance.Velocity = otherMain.Velocity.ToFVector();
-
-                if (__instance.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                syncTransform.SyncToGame(static (comp, pair) =>
                 {
-                    __instance.Velocity = FVector.ZeroVector;
-                    otherMain.Velocity = FVector.ZeroVector.ToVector3();
-                }
-
-                __instance.MoveAcceleration = otherMain.MoveAcceleration.ToFVector();
-                if (__instance.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
-                {
-                    __instance.MoveAcceleration = FVector.ZeroVector;
-                    otherMain.MoveAcceleration = FVector.ZeroVector.ToVector3();
-                }
-
-                if (!otherMain.Location.ToFVector().Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance))
-                {
-                    events.Evt_InterpolationMove.Invoke(otherMain.Location.ToFVector(), otherMain.Rotation.ToFRotator(), Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                }
+                    if (!comp.Position.ToFVector().Equals(pair.__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
+                        !comp.Rotation.ToFRotator().Equals(pair.__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                    {
+                        pair.events.Evt_InterpolationMove.Invoke(comp.Position.ToFVector(), comp.Rotation.ToFRotator(), Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                    }
+                }, (events, __instance));
 
                 if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                 {
                     __instance.Velocity = FVector.ZeroVector;
-                    otherMain.Velocity = FVector.ZeroVector.ToVector3();
+                    // mainEntity.Velocity = FVector.ZeroVector.ToVector3();
                     __instance.MoveAcceleration = FVector.ZeroVector;
-                    otherMain.MoveAcceleration = FVector.ZeroVector.ToVector3();
+                    // mainEntity.MoveAcceleration = FVector.ZeroVector.ToVector3();
                     __instance.LastVelocity = FVector.ZeroVector;
                 }
-
-                TeleportUtils.CheckForTeleportFinish(DI.Instance.MappedEvent, otherMainEntity.Value);
             }
-            else
+
+            TeleportUtils.CheckForTeleportFinish(DI.Instance.MappedEvent, mainEntity.Value);
+        }
+        else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(character, out var tamerEntity))
+        {
+            var localTamer = tamerEntity.Value.GetLocalTamer();
+
+            if (!localTamer.IsTamerSynced || !tamerEntity.Value.IsTamerValid || tamerEntity.Value.Pawn == null)
+                return;
+
+            if (DI.Instance.MappedField.CanLoadFromGame<AnimationComponent>(tamerEntity.Value, out var loadAnim))
             {
-                // maybe it's a monster
-                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
+                loadAnim.SetFromGame(AnimationComponent.Fields.Velocity, __instance.Velocity.ToVector3());
+                loadAnim.SetFromGame(AnimationComponent.Fields.MoveAcceleration, __instance.MoveAcceleration.ToVector3());
+            }
+            else if (DI.Instance.MappedField.CanSyncToGame<AnimationComponent>(tamerEntity.Value, out var syncAnim))
+            {
+                syncAnim.SyncToGame(AnimationComponent.Fields.Velocity.In<BUC_ABPCharacterData>(), __instance);
+                syncAnim.SyncToGame(AnimationComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(), __instance);
+            }
 
-                if (tamerEntity.HasValue)
+            if (DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(tamerEntity.Value, out var loadTrans))
+            {
+                loadTrans.SetFromGame(TransformComponent.Fields.Position, __instance.ActorLocation.ToVector3());
+                if (character is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
                 {
-                    ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
+                    loadTrans.SetFromGame(TransformComponent.Fields.Rotation, ai.Mesh.GetSocketRotation(new FName("Head")).ToVector3());
+                }
+                else
+                {
+                    loadTrans.SetFromGame(TransformComponent.Fields.Rotation, __instance.ActorRotation.ToVector3());
+                }
+            }
+            else if (DI.Instance.MappedField.CanSyncToGame<TransformComponent>(tamerEntity.Value, out var syncTrans))
+            {
+                var events = BUS_EventCollectionCS.Get(character);
+                syncTrans.SyncToGame(static (comp, pair) =>
+                {
+                    var location = comp.Position.ToFVector();
+                    var rotation = comp.Rotation.ToFRotator();
 
-                    if (!localTamer.IsTamerSynced || !tamerEntity.Value.IsTamerValid || tamerEntity.Value.Pawn == null)
-                        return;
-
-                    if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+                    if (!location.Equals(pair.__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
+                        !rotation.Equals(pair.__instance.ActorRotation, Constants.FloatComparisonTolerance))
                     {
-                        ref var anim = ref tamerEntity.Value.GetAnimation();
-                        anim.Velocity = __instance.Velocity.ToVector3();
-                        anim.MoveAcceleration = __instance.MoveAcceleration.ToVector3();
-
-                        ref var trans = ref tamerEntity.Value.GetTransform();
-                        trans.Position = __instance.ActorLocation.ToVector3();
-
-                        if (character is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
-                        {
-                            trans.Rotation = ai.Mesh.GetSocketRotation(new FName("Head")).ToVector3();
-                        }
-                        else
-                        {
-                            trans.Rotation = __instance.ActorRotation.ToVector3();
-                        }
+                        pair.events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }
-                    else
-                    {
-                        ref var anim = ref tamerEntity.Value.GetAnimation();
+                }, (events, __instance));
 
-                        __instance.Velocity = anim.Velocity.ToFVector();
-                        __instance.MoveAcceleration = anim.MoveAcceleration.ToFVector();
-                        __instance.MovementComp.Velocity = anim.Velocity.ToFVector();
-
-                        var events = BUS_EventCollectionCS.Get(tamerEntity.Value.Pawn);
-
-                        ref var trans = ref tamerEntity.Value.GetTransform();
-                        var location = trans.Position.ToFVector();
-                        var rotation = trans.Rotation.ToFRotator();
-
-                        if (!location.Equals(__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
-                            !rotation.Equals(__instance.ActorRotation, Constants.FloatComparisonTolerance))
-                        {
-                            events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                        }
-                    }
+                if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                {
+                    __instance.Velocity = FVector.ZeroVector;
+                    // mainEntity.Velocity = FVector.ZeroVector.ToVector3();
+                    __instance.MoveAcceleration = FVector.ZeroVector;
+                    // mainEntity.MoveAcceleration = FVector.ZeroVector.ToVector3();
+                    __instance.LastVelocity = FVector.ZeroVector;
                 }
             }
         }
@@ -460,7 +420,7 @@ public class PatchOnChangeMotionMatchingState
 
         var owner = __instance.GetOwner();
 
-        if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(owner as BGUCharacterCS, out var entity))
+        if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner as BGUCharacterCS, out var entity))
             return;
 
         DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MotionMatchingStateEvent(entity.Value, MMState), entity.Value.Entity);

@@ -58,7 +58,7 @@ public class WukongClientApi(
 
     public ReadyMainCharacter? LocalMainCharacter
         => playerState.LocalMainCharacter != null ? new ReadyMainCharacter(this, playerState.LocalMainCharacter.Value.Entity) : null;
-    
+
     public IReadOnlyList<PlayerId> AreaPlayers
         => state.AreaPlayers;
 
@@ -84,10 +84,14 @@ public class WukongClientApi(
     {
         var entity = entityManager.CreateAreaEntity(wukongArchetype.MainCharacterArchetype, b =>
         {
-            b.Add(new MainCharacterComponent
+            b.Add(new TransformComponent
             {
-                Location = location,
-                Rotation = rotation,
+                Position = location,
+                Rotation = rotation
+            });
+            b.Add(new TeamComponent
+            {
+                TeamId = teamId
             });
         });
         return new ReadyMainCharacter(this, entity);

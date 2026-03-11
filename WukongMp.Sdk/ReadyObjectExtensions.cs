@@ -2,6 +2,8 @@ using System;
 using System.Numerics;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
+using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;
 using AreaScopeComponent = ReadyM.Api.Multiplayer.ECS.Components.AreaScopeComponent;
 
@@ -41,34 +43,19 @@ public static class ReadyObjectExtensions
             get
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
-                {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    return mainComp.Location;
-                }
-                else if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-                {
-                    ref var transComp = ref tamerEntity.Value.GetTransform();
-                    return transComp.Position;
-                }
-                else
-                    throw new InvalidOperationException($"Invalid entity type for GetLocation: {entity}");
+                return entity.TryGetComponent(out TransformComponent transComp) ? transComp.Position : throw new InvalidOperationException();
             }
             set
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
+                if (DI.Instance.MappedField.CanSetFromApi<TransformComponent>(entity, out var sync))
                 {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    mainComp.Location = value;
-                }
-                else if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-                {
-                    ref var transComp = ref tamerEntity.Value.GetTransform();
-                    transComp.Position = value;
+                    sync.SetFromApi(TransformComponent.Fields.Position, value);
                 }
                 else
-                    throw new InvalidOperationException($"Invalid entity type for SetLocation: {entity}");
+                {
+                    throw new InvalidOperationException();
+                }
             }
         }
 
@@ -77,54 +64,34 @@ public static class ReadyObjectExtensions
             get
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
-                {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    return mainComp.Rotation;
-                }
-                else if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-                {
-                    ref var transComp = ref tamerEntity.Value.GetTransform();
-                    return transComp.Rotation;
-                }
-                else
-                    throw new InvalidOperationException($"Invalid entity type for GetRotation: {entity}");
+                return entity.TryGetComponent(out TransformComponent transComp) ? transComp.Rotation : throw new InvalidOperationException();
             }
             set
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
-                if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
+                if (DI.Instance.MappedField.CanSetFromApi<TransformComponent>(entity, out var sync))
                 {
-                    ref var mainComp = ref mainEntity.Value.GetState();
-                    mainComp.Rotation = value;
-                }
-                else if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-                {
-                    ref var transComp = ref tamerEntity.Value.GetTransform();
-                    transComp.Rotation = value;
+                    sync.SetFromApi(TransformComponent.Fields.Rotation, value);
                 }
                 else
-                    throw new InvalidOperationException($"Invalid entity type for SetRotation: {entity}");
+                {
+                    throw new InvalidOperationException();
+                }
             }
         }
 
         public void SetLocationRotation(Vector3 location, Vector3 rotation)
         {
             default(TSelf).Deconstruct(obj, out _, out var entity);
-            if (MainCharacterEntity.TryGetMainCharacter(entity, out var mainEntity))
+            if (DI.Instance.MappedField.CanSetFromApi<TransformComponent>(entity, out var sync))
             {
-                ref var mainComp = ref mainEntity.Value.GetState();
-                mainComp.Location = location;
-                mainComp.Rotation = rotation;
-            }
-            else if (TamerEntity.TryGetTamer(entity, out var tamerEntity))
-            {
-                ref var transComp = ref tamerEntity.Value.GetTransform();
-                transComp.Position = location;
-                transComp.Rotation = rotation;
+                sync.SetFromApi(TransformComponent.Fields.Position, location);
+                sync.SetFromApi(TransformComponent.Fields.Rotation, rotation);
             }
             else
-                throw new InvalidOperationException($"Invalid entity type for SetRotation: {entity}");
+            {
+                throw new InvalidOperationException();
+            }
         }
     }
 }

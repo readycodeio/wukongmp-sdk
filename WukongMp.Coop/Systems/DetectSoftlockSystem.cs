@@ -7,7 +7,7 @@ using WukongMp.Sdk.Api;
 namespace WukongMp.Coop.Systems;
 
 public sealed class DetectSoftlockSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
-    : PluginSystemBase(localApi, clientApi, logger)
+    : ModSystemBase(localApi, clientApi, logger)
 {
     private readonly HashSet<int> _waitingSequencesIds = [];
     

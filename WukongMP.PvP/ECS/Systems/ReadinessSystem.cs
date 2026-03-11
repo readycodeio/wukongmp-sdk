@@ -28,7 +28,7 @@ internal sealed class ReadinessSystem(
         if (!areaState.CurrentArea.HasValue)
             return;
 
-        if (areaState.PvpState.HasValue && areaState.PvpState.Value.InTournament)
+        if (areaState.PvpState is { InTournament: true })
             return;
 
         var players = 0;

@@ -42,6 +42,9 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
     public ref HpComponent GetHp()
         => ref Entity.GetComponent<HpComponent>();
     
+    public ref readonly TransformComponent GetTransform()
+        => ref Entity.GetComponent<TransformComponent>();
+    
     public ref LocalMainCharacterComponent GetLocalState()
         => ref Entity.GetComponent<LocalMainCharacterComponent>();
 

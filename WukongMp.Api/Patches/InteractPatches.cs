@@ -29,7 +29,7 @@ public static class PatchComplexSkillDoInteractAction
 
         if (Action.ParamsInt.Count > 1 && InteractiveActor is BGUCharacterCS character)
         {
-            if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped_(character, out var entity))
+            if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(character, out var entity))
             {
                 Logging.LogWarning("Failed to find entity for character {Name} when processing skillinteract.", character.GetName());
                 return;

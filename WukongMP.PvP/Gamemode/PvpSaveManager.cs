@@ -13,7 +13,7 @@ internal class PvpSaveManager
 {
     private readonly ILogger _logger;
 
-    private bool _redirectSaveFiles = false;
+    private bool _redirectSaveFiles;
     private bool _shouldCacheSave;
 
     public bool ShouldRedirectSaveFiles => _redirectSaveFiles;

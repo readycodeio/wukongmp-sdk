@@ -9,7 +9,8 @@ namespace WukongMp.Sdk.Command;
 
 public class DebugApiCommandRegistration(
     WukongClientApi clientApi,
-    WukongLocalApi localApi) : IConsoleCommandRegistration
+    WukongLocalApi localApi
+) : IConsoleCommandRegistration
 {
     public void RegisterCommands(ConsoleCommandRegistry registry)
     {
@@ -18,7 +19,7 @@ public class DebugApiCommandRegistration(
         registry.AddCommand("show_all_main_characters", ConsoleCommand.Create(ShowAllMainCharacters, isDebugOnly: true));
         registry.AddCommand("show_main_character", ConsoleCommand.Create(ShowMainCharacter, isDebugOnly: true));
     }
-    
+
     private void CreateMainCharacter(Vector3? location = null, Vector3? rotation = null, int? teamId = null)
     {
         if (clientApi.LocalMainCharacter?.Pawn != null)
@@ -29,7 +30,7 @@ public class DebugApiCommandRegistration(
             {
                 location = SpawningUtils.CalculateSpawnLocation(pawn.GetActorLocation(), pawn.GetActorForwardVector()).ToVector3();
             }
-            
+
             if (rotation == null)
             {
                 rotation = Vector3.Zero;
@@ -40,14 +41,14 @@ public class DebugApiCommandRegistration(
                 teamId = clientApi.LocalMainCharacter.Value.TeamId;
             }
         }
-        
+
         if (location == null)
             return;
         if (rotation == null)
             return;
         if (teamId == null)
             return;
-        
+
         clientApi.CreateMainCharacter(location.Value, rotation.Value, teamId.Value);
     }
 
@@ -61,7 +62,7 @@ public class DebugApiCommandRegistration(
             {
                 location = SpawningUtils.CalculateSpawnLocation(pawn.GetActorLocation(), pawn.GetActorForwardVector()).ToVector3();
             }
-            
+
             if (rotation == null)
             {
                 rotation = Vector3.Zero;
@@ -72,7 +73,7 @@ public class DebugApiCommandRegistration(
                 teamId = clientApi.LocalMainCharacter.Value.TeamId;
             }
         }
-        
+
         if (location == null)
             return;
         if (rotation == null)
@@ -83,7 +84,7 @@ public class DebugApiCommandRegistration(
         var tamerKind = TamerConstants.GetTamerKind(ident.Name);
         clientApi.CreateTamer(location.Value, rotation.Value, tamerKind, teamId.Value);
     }
-    
+
     private void ShowAllMainCharacters()
     {
         foreach (var mainCharacter in clientApi.AllMainCharacters)

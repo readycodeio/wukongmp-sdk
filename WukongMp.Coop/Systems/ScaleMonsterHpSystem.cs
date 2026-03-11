@@ -9,7 +9,7 @@ using WukongMp.Sdk.Api;
 namespace WukongMp.Coop.Systems;
 
 public sealed class ScaleMonsterHpSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
-    : PluginSystemBase(localApi, clientApi, logger)
+    : ModSystemBase(localApi, clientApi, logger)
 {
     protected override void OnUpdate(UpdateTick tick)
     {

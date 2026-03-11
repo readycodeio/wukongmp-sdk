@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
@@ -10,6 +12,7 @@ using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
@@ -257,14 +260,15 @@ public static class PatchTickForMovieSystem
                 }
 
                 ref var main = ref mainEntity.Value.GetState();
+                var trans = mainEntity.Value.GetTransform();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 DI.Instance.WidgetManager.ShowInfoMessage(Texts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
-                localMain.JoiningSequenceLocation = main.Location.ToFVector();
+                localMain.JoiningSequenceLocation = trans.Position.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
-                
-                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new WaitingForSequenceEvent(peakRequest.SequenceID, main.Location.ToFVector()), default(EmptyContext));
+
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new WaitingForSequenceEvent(peakRequest.SequenceID, trans.Position.ToFVector()), default(EmptyContext));
 
                 // some cutscenes cannot be triggered for multiple players
                 // e.g. 3rd act boss attacks one player causing him to enter a cutscene,

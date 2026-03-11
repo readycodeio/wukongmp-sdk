@@ -169,6 +169,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
         _mappedEvent.RegisterEcsEventHandler<RequestSpawnUnitsEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
             self.SendRequestSpawnUnits(new RequestSpawnUnitsData(
+                requesterId:ev.Requester.GetNetId(),
                 unitName: ev.UnitName,
                 count: ev.Count,
                 teamId: ev.TeamId,
@@ -324,14 +325,14 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
         _mappedEvent.RegisterEcsEventHandler<UnitSpawnedEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
-            Debug.Assert(ev.PlayerId == self._playerState.LocalPlayerId);
+            Debug.Assert(ev.PlayerId == self._playerState.LocalPlayerId, "ev.PlayerId == self._playerState.LocalPlayerId");
 
             self.SendUnitSpawned(ev.Entity.GetNetId());
         }, this);
 
         _mappedEvent.RegisterEcsEventHandler<UnitDespawnedEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
-            Debug.Assert(ev.PlayerId == self._playerState.LocalPlayerId);
+            Debug.Assert(ev.PlayerId == self._playerState.LocalPlayerId, "ev.PlayerId == self._playerState.LocalPlayerId");
 
             self.SendUnitDespawned(ev.Entity.GetNetId());
         }, this);
@@ -699,18 +700,24 @@ public partial class WukongClientRpcCallbacks : IDisposable
         }, this, data);
     }
 
-    // NOTE(api): Changed from AreaOfInterestAll
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnRequestSpawnUnits(RequestSpawnUnitsData data)
     {
         _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
+            if (!self._netEntity.TryGetEntityByNetworkId(data0.RequesterId, out var entity))
+            {
+                self._logger.LogError("Entity not found: {NetId}", data0.RequesterId);
+                return;
+            }
+            
             self._mappedEvent.InvokeInGameIfApplicable(new RequestSpawnUnitsEvent(
+                requester: entity.Value,
                 unitName: data0.UnitName,
                 count: data0.Count,
                 teamId: data0.TeamId,
                 location: data0.Location
-            ), default(EmptyContext));
+            ), entity.Value);
         }, this, data);
     }
 

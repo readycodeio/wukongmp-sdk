@@ -100,7 +100,7 @@ namespace WukongMp.Tests
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
             {
-                Debug.Assert(Patcher.IsPatched);
+                Debug.Assert(Patcher.IsPatched, "Patcher.IsPatched");
 
                 if (!DI.Instance.Connection.IsRunning)
                 {

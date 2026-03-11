@@ -74,6 +74,6 @@ public class SpawnOtherMainCharactersSystem(
 
         localMainComp.IsPlayerSynced = true;
 
-        Debug.Assert(mainEntity.HasPawn);
+        Debug.Assert(mainEntity.HasPawn, "mainEntity.HasPawn");
     }
 }
