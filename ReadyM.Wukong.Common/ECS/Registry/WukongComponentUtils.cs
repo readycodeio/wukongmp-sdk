@@ -23,7 +23,11 @@ public static class WukongComponentUtils
 
     public static void SetupServerMainCharacterArchetype(EntityBuilder b)
         => b.Add(new MainCharacterComponent())
-            .Add<HpComponent>()
+            .Add(new HpComponent
+            {
+                HpMultiplier = 1.0f,
+            })
+            .Add<TransformComponent>()
             .Add<TeamComponent>()
             .Add<PvPComponent>()
             .AddTag<DisallowOwnershipTransferTag>();

@@ -14,9 +14,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IReadyComponent, IOwnershipManaged
 {
     private PlayerId _playerId;
-
-    private Vector3 _location;
-    private Vector3 _rotation;
+    
     private Vector3 _velocity;
     private Vector3 _moveAcceleration;
     private MoveSpeedLevel _moveSpeedLevel = MoveSpeedLevel.Run;

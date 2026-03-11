@@ -11,6 +11,6 @@ public partial struct HpComponent : IReadyComponent, IOwnershipManaged
 {
     private float _hp;
     private float _hpMaxBase;
-    private float _hpMultiplier;
     private bool _isDead;
+    private float _hpMultiplier;
 }
