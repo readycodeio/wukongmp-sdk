@@ -4,7 +4,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 
 namespace ReadyM.Wukong.Common.ECS.Registry;
 
-public static class WukongComponentUtils
+internal static class WukongComponentUtils
 {
     public static void SetupServerMonsterArchetype(EntityBuilder b)
         => b.Add(new TamerComponent

@@ -4,7 +4,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 
 namespace ReadyM.Wukong.Common.ECS.Registry;
 
-public class WukongNetworkedComponentRegistration : INetworkedComponentRegistration
+internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistration
 {
     public void Register(INetworkedComponentRegistry registry)
     {

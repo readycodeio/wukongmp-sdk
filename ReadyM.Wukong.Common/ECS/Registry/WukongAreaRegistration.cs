@@ -3,7 +3,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 
 namespace ReadyM.Wukong.Common.ECS.Registry;
 
-public class WukongAreaRegistration : IAreaComponentRegistration
+internal class WukongAreaRegistration : IAreaComponentRegistration
 {
     public void Register(IAreaComponentRegistry registry)
     {

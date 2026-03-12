@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 

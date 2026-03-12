@@ -3,7 +3,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 
 namespace ReadyM.Wukong.Common.ECS.Registry;
 
-public class WukongPlayerRegistration : IPlayerComponentRegistration
+internal class WukongPlayerRegistration : IPlayerComponentRegistration
 {
     public void Register(IPlayerComponentRegistry registry)
     {
