@@ -1,4 +1,5 @@
 using System;
+using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
 
@@ -59,7 +60,7 @@ public static class ReadyCharacterExtensions
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
                 if (!entity.TryGetComponent<TeamComponent>(out var teamComp))
-                    throw new InvalidOperationException($"Entity does not have TeamComponent: {entity}");
+                    throw new InvalidOperationException($"Entity does not have TeamComponent: {entity.GetNetId()}");
                 return teamComp.TeamId;
             }
         }

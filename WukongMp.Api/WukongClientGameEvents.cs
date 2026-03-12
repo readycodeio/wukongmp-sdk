@@ -57,7 +57,7 @@ public class WukongClientGameEvents : IDisposable
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             ref var mainComp = ref mainEntity.GetState();
-            self._logger.LogDebug("Received exit phantom rush for main character {Entity} and {Nickname}", mainEntity, mainComp.CharacterNickName);
+            self._logger.LogDebug("Received exit phantom rush for main character {Entity} and {Nickname}", mainEntity.GetNetId(), mainComp.CharacterNickName);
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
             events?.Evt_RelievePhantomRush.Invoke();
         }, this);
@@ -203,12 +203,12 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Main character not found: {Entity}", ev.Entity);
+                self._logger.LogError("Main character not found: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
             ref var mainComp = ref mainEntity.GetState();
-            self._logger.LogDebug("Received phantom rush for main character {Entity} and {Nickname} in direction {Direction}", ev.Entity, mainComp.CharacterNickName, ev.Direction);
+            self._logger.LogDebug("Received phantom rush for main character {Entity} and {Nickname} in direction {Direction}", ev.Entity.GetNetId(), mainComp.CharacterNickName, ev.Direction);
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(ev.Direction);
 
@@ -247,13 +247,13 @@ public class WukongClientGameEvents : IDisposable
             }
             else
             {
-                self._logger.LogError("Received RequestTeleportEvent for unsupported entity {Entity}", ev.Entity);
+                self._logger.LogError("Received RequestTeleportEvent for unsupported entity {Entity}", ev.Entity.GetNetId());
             }
         }, this);
 
         mappedEvent.RegisterGameEventHandler<RebirthPlayerEvent, WukongClientGameEvents>(static (ev, self) =>
         {
-            self._logger.LogDebug("RebirthPlayer for main character {Entity} called", ev.Entity);
+            self._logger.LogDebug("RebirthPlayer for main character {Entity} called", ev.Entity.GetNetId());
 
             var mainEntity = new MainCharacterEntity(ev.Entity);
 
@@ -312,7 +312,7 @@ public class WukongClientGameEvents : IDisposable
                 if (current != null)
                 {
                     var time = pawn.Mesh.GetAnimInstance().Montage_GetPosition(current);
-                    self._logger.LogDebug("Received montage cancel at {Time} for entity {Entity} - {Montage}", time, ev.Entity, current.PathName);
+                    self._logger.LogDebug("Received montage cancel at {Time} for entity {Entity} - {Montage}", time, ev.Entity.GetNetId(), current.PathName);
                 }
 
                 pawn.StopAnimMontage(null);
@@ -418,7 +418,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
@@ -427,7 +427,7 @@ public class WukongClientGameEvents : IDisposable
 
         mappedEvent.RegisterGameEventHandler<UnitSpawnedEvent, WukongClientGameEvents>(static (ev, self) =>
         {
-            self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity: {Entity}", ev.PlayerId, ev.Entity);
+            self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity: {Entity}", ev.PlayerId, ev.Entity.GetNetId());
 
             var playerId = ev.PlayerId != default ? ev.PlayerId : self._playerState.LocalPlayerId;
 
@@ -442,7 +442,7 @@ public class WukongClientGameEvents : IDisposable
 
         mappedEvent.RegisterGameEventHandler<UnitDespawnedEvent, WukongClientGameEvents>(static (ev, self) =>
         {
-            self._logger.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", ev.PlayerId, ev.Entity);
+            self._logger.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {Entity}", ev.PlayerId, ev.Entity.GetNetId());
 
             var playerId = ev.PlayerId != default ? ev.PlayerId : self._playerState.LocalPlayerId;
 
@@ -464,7 +464,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character {Entity}", ev.Entity.GetNetId();
                 return;
             }
 
@@ -479,7 +479,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
@@ -493,7 +493,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for character main character: {Entity}", ev.Character);
+                self._logger.LogError("Pawn is null for character main character: {Entity}", ev.Character.GetNetId());
                 return;
             }
 
@@ -513,7 +513,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
@@ -526,7 +526,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
@@ -541,7 +541,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
@@ -624,7 +624,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
@@ -637,7 +637,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity);
+                self._logger.LogError("Pawn is null for main character: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
@@ -698,7 +698,7 @@ public class WukongClientGameEvents : IDisposable
         {
             if (self._pawnState.GetPawnByEntity(ev.Entity) is not { } casterPawn)
             {
-                self._logger.LogError("Caster pawn not found: {Entity}", ev.Entity);
+                self._logger.LogError("Caster pawn not found: {Entity}", ev.Entity.GetNetId());
                 return;
             }
 

@@ -77,7 +77,7 @@ namespace WukongMp.Api.WukongUtils
 
             if (!localTamerComp.IsLocallySpawned)
             {
-                Logging.LogDebug("Sending UnitSpawn for tamer with guid: {Guid} (Entity {Entity})", BGU_DataUtil.GetActorGuid(tamerEntity.Tamer), tamerEntity.Entity);
+                Logging.LogDebug("Sending UnitSpawn for tamer with guid: {Guid} (Entity {Entity})", BGU_DataUtil.GetActorGuid(tamerEntity.Tamer), tamerEntity.Entity.GetNetId());
                 localTamerComp.IsLocallySpawned = true;
 
                 var playerId = DI.Instance.PlayerState.LocalPlayerId ?? default;
@@ -91,7 +91,7 @@ namespace WukongMp.Api.WukongUtils
 
             if (localTamerComp.IsLocallySpawned)
             {
-                Logging.LogDebug("Sending UnitDespawn for tamer with guid: {Guid} (Entity {Entity})", BGU_DataUtil.GetActorGuid(tamerEntity.Tamer), tamerEntity.Entity);
+                Logging.LogDebug("Sending UnitDespawn for tamer with guid: {Guid} (Entity {Entity})", BGU_DataUtil.GetActorGuid(tamerEntity.Tamer), tamerEntity.Entity.GetNetId());
                 localTamerComp.IsLocallySpawned = false;
 
                 var playerId = DI.Instance.PlayerState.LocalPlayerId ?? default;
@@ -132,7 +132,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void TriggerSkillInteract(Entity entity, int skillId)
         {
-            Logging.LogDebug("TriggerInteract for entity: {Entity}", entity.ToString());
+            Logging.LogDebug("TriggerInteract for entity: {Entity}", entity.GetNetId());
             var tamerEntity = new TamerEntity(entity);
             BUS_EventCollectionCS.Get(tamerEntity.Pawn).Evt_UnitCastSkillTryCMultiCast.Invoke(new FCastSkillInfo(skillId, ECastSkillSourceType.Interact));
         }

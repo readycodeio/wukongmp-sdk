@@ -4,6 +4,7 @@ using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
@@ -137,11 +138,14 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
         => Entity.GetHashCode();
 
     public override string ToString()
-        => $"MainCharacterEntity({Entity})";
+        => $"MainCharacterEntity({Entity.GetNetId()})";
 
     public static bool operator ==(MainCharacterEntity left, MainCharacterEntity right)
         => left.Entity == right.Entity;
 
     public static bool operator !=(MainCharacterEntity left, MainCharacterEntity right)
         => left.Entity != right.Entity;
+
+    public NetworkId GetNetId()
+        => Entity.GetNetId();
 }

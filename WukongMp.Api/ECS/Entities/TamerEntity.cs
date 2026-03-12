@@ -4,6 +4,7 @@ using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
@@ -142,4 +143,6 @@ public readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
 
     public static bool operator !=(TamerEntity left, TamerEntity right)
         => left.Entity != right.Entity;
+
+    public NetworkId GetNetId() => GetMeta().NetId;
 }

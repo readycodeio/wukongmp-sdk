@@ -20,7 +20,7 @@ public static class ReadyObjectExtensions
             {
                 default(TSelf).Deconstruct(obj, out _, out var entity);
                 if (!entity.TryGetComponent<MetadataComponent>(out var metaComp))
-                    throw new InvalidOperationException($"Entity does not have MetadataComponent: {entity}");
+                    throw new InvalidOperationException($"Entity does not have MetadataComponent: {entity.GetNetId()}");
                 return metaComp.Owner;
             }
         }

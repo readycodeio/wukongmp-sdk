@@ -392,7 +392,7 @@ public class PatchOnUnitDead
         {
             var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload, tamerEntity.Value.Entity);
-            Logging.LogDebug("Entity {Entity} died, sending UnitDead event", tamerEntity.Value.GetMeta().NetId);
+            Logging.LogDebug("Entity {Entity} died, sending UnitDead event", tamerEntity.Value.GetNetId());
         }
 
         if (Attacker is BGUCharacterCS attackerCharacter &&
