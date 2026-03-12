@@ -299,8 +299,7 @@ public class PatchCharacterAnimation
                     var location = comp.Position.ToFVector();
                     var rotation = comp.Rotation.ToFRotator();
 
-                    if (!location.Equals(pair.__instance.ActorLocation, Constants.FloatComparisonTolerance) ||
-                        !rotation.Equals(pair.__instance.ActorRotation, Constants.FloatComparisonTolerance))
+                    if (!location.Equals(pair.__instance.ActorLocation, Constants.FloatComparisonTolerance))
                     {
                         pair.events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
                     }

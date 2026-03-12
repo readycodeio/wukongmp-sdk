@@ -43,7 +43,8 @@ public static class EquipmentUtils
         var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
         foreach (var (position, item) in equipment.GetItems())
         {
-            if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item)
+            // FIXME: Wukong can have no head if no headwear is equipped
+            if (item != 0 && (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item))
             {
                 OnChangeEquipReal(equipComp, position.ToGame(), item);
             }
@@ -60,7 +61,8 @@ public static class EquipmentUtils
             return;
 
         var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
-        if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item)
+        // FIXME: Wukong can have no head if no headwear is equipped
+        if (item != 0 && (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item))
         {
             OnChangeEquipReal(equipComp, position.ToGame(), item);
         }

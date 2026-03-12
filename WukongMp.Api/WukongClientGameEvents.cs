@@ -464,7 +464,7 @@ public class WukongClientGameEvents : IDisposable
 
             if (mainEntity.Pawn == null)
             {
-                self._logger.LogError("Pawn is null for main character {Entity}", ev.Entity.GetNetId();
+                self._logger.LogError("Pawn is null for main character {Entity}", ev.Entity.GetNetId());
                 return;
             }
 
