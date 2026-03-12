@@ -27,7 +27,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop.Patches;
 
-internal class CoopSynchronizer : WukongSynchronizer
+public class CoopSynchronizer : WukongSynchronizer
 {
     private readonly WukongPlayerState _playerState;
     private readonly WukongPawnState _pawnState;

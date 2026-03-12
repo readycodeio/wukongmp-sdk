@@ -6,7 +6,7 @@ using WukongMp.Api.Serialization;
 namespace WukongMp.Api.DTO;
 
 [DeriveJsonSerializable]
-public partial struct SequenceWaitingData(int sequenceID, FVector sequenceLocation) : INetSerializable
+internal partial struct SequenceWaitingData(int sequenceID, FVector sequenceLocation) : INetSerializable
 {
     public int SequenceID = sequenceID;
     public FVector SequenceLocation = sequenceLocation;

@@ -5,8 +5,8 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(UObject), nameof(UObject.GetName))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchGetName
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchGetName
 {
     public static bool Prefix(UObject? __instance, ref string? __result)
     {
@@ -21,8 +21,8 @@ public static class PatchGetName
 }
 
 [HarmonyPatch(typeof(UObject), nameof(UObject.GetPathName))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchGetPathName
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchGetPathName
 {
     public static bool Prefix(UObject? __instance, ref string? __result)
     {
@@ -37,8 +37,8 @@ public static class PatchGetPathName
 }
 
 [HarmonyPatch(typeof(UObject), nameof(UObject.GetFullName))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchGetFullName
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchGetFullName
 {
     public static bool Prefix(UObject? __instance, ref string? __result)
     {

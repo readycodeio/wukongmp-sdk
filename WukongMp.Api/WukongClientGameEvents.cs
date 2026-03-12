@@ -19,7 +19,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongClientGameEvents : IDisposable
+internal class WukongClientGameEvents : IDisposable
 {
     // ReSharper disable once InconsistentNaming
     private static readonly MethodInfo PlayDBC_ByType = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType");

@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct PartySoftlockEvent(Entity entity, int birthPointId) 
+internal readonly struct PartySoftlockEvent(Entity entity, int birthPointId) 
     : IEquatable<PartySoftlockEvent>, IAlwaysPropagates
 {
     public readonly Entity Entity = entity;

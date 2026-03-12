@@ -12,8 +12,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_MFOverlapCompImpl), "OnMagicFieldDead")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnMagicFieldDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnMagicFieldDead
 {
     public static void Postfix(BUS_MFOverlapCompImpl __instance, EBGUBulletDestroyReason Reason)
     {
@@ -31,8 +31,8 @@ public static class PatchOnMagicFieldDead
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOSpawnAProjectileObj
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOSpawnAProjectileObj
 {
     [HarmonyTargetMethodHint("b1.BGS_ProjectileManager", "SpawnAProjectileObj")]
     private static MethodBase TargetMethod()

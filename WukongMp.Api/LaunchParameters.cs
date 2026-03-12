@@ -6,7 +6,7 @@ using WukongMp.Api.Windows;
 
 namespace WukongMp.Api;
 
-public class LaunchParameters
+internal class LaunchParameters
 {
     private static LaunchParameters? _instance;
     public static LaunchParameters Instance => _instance ??= new LaunchParameters();

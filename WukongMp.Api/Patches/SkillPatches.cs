@@ -20,8 +20,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerMagicSkill")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTriggerMagicSkill
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchTriggerMagicSkill
 {
     public static bool Prefix(int SkillID)
     {
@@ -33,8 +33,8 @@ public static class PatchTriggerMagicSkill
 }
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerItemSkill")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTriggerItemSkill
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchTriggerItemSkill
 {
     public static bool Prefix(BUS_PlayerInputActionComp __instance)
     {
@@ -48,8 +48,8 @@ public static class PatchTriggerItemSkill
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchDoPoleDrink
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchDoPoleDrink
 {
     [HarmonyTargetMethodHint("b1.BUS_PoleDrinkComp", "DoPoleDrink")]
     private static MethodBase TargetMethod()
@@ -76,8 +76,8 @@ public static class PatchDoPoleDrink
 }
 
 [HarmonyPatch(typeof(BUS_CastImmobilizeComp), "OnCastImmobilize")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnCastImmobilize
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnCastImmobilize
 {
     public static bool Prefix(int ConfigID, BUS_CastImmobilizeComp __instance)
     {
@@ -204,8 +204,8 @@ public static class PatchOnCastImmobilize
 }
 
 [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTickWithGroup")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchImmobilizeOnTickWithGroup
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchImmobilizeOnTickWithGroup
 {
     public static bool Prefix()
     {
@@ -222,8 +222,8 @@ public static class PatchImmobilizeOnTickWithGroup
 }
 
 [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "RelieveImmobilized")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRelieveImmobilized
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRelieveImmobilized
 {
     public static bool Prefix(BUS_BeImmobilizedComp __instance)
     {
@@ -248,8 +248,8 @@ public static class PatchRelieveImmobilized
 }
 
 [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTriggerImmobilizedBreak")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnTriggerImmobilizedBreak
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnTriggerImmobilizedBreak
 {
     public static bool Prefix(BUS_BeImmobilizedComp __instance)
     {
@@ -275,8 +275,8 @@ public static class PatchOnTriggerImmobilizedBreak
 }
 
 [HarmonyPatch(typeof(BUS_PhantomRushComp), "OnTriggerPhantomRush")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnTriggerPhantomRush
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnTriggerPhantomRush
 {
     public static bool Prefix(
         BUS_PhantomRushComp __instance,
@@ -432,8 +432,8 @@ public static class PatchOnTriggerPhantomRush
 }
 
 [HarmonyPatch(typeof(BUS_SkillInstsCompSvr), "OnUnitCastSkillTry", typeof(FCastSkillInfo))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnUnitCastSkillTry
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnUnitCastSkillTry
 {
     public static void Postfix(FCastSkillInfo CSI, BUC_SkillInstsData ___SkillInstsData, BUS_SkillInstsCompSvr __instance)
     {
@@ -470,8 +470,8 @@ public static class PatchOnUnitCastSkillTry
 }
 
 [HarmonyPatch(typeof(BUS_PhantomRushComp), "ExitPhantomRush")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchExitPhantomRush
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchExitPhantomRush
 {
     public static void Prefix(BUS_PhantomRushComp __instance)
     {
@@ -506,8 +506,8 @@ public static class PatchExitPhantomRush
 }
 
 [HarmonyPatch(typeof(BUFFPlayerWinePartnerAttr), "Apply")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchBuffPlayerWinePartnerAttr
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchBuffPlayerWinePartnerAttr
 {
     public static bool Prefix(AActor Target, out float OutAbs, out float OutMul)
     {
@@ -530,8 +530,8 @@ public static class PatchBuffPlayerWinePartnerAttr
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class TransformationPatch
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class TransformationPatch
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "TransferData")]
     private static MethodBase TargetMethod()
@@ -575,8 +575,8 @@ public static class TransformationPatch
 }
 
 [HarmonyPatch(typeof(BPC_BattleMainInfoData), "GetCommonDisabledState")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchLogs4
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchLogs4
 {
     public static bool Prefix(BPC_BattleMainInfoData __instance, ref bool __result, out bool IsDisabled)
     {
@@ -598,8 +598,8 @@ public class PatchLogs4
     }
 }
 
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnTransBeginSpawnNewOne
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnTransBeginSpawnNewOne
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "OnTransBeginSpawnNewOne")]
     private static MethodBase TargetMethod()
@@ -636,8 +636,8 @@ public class PatchOnTransBeginSpawnNewOne
     }
 }
 
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnTransBackSpawnNewOne
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnTransBackSpawnNewOne
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "OnTransBackSpawnNewOne")]
     private static MethodBase TargetMethod()
@@ -694,8 +694,8 @@ public class PatchOnTransBackSpawnNewOne
     }
 }
 
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchSpawnAndPossess
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchSpawnAndPossess
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "SpawnAndPossessTransUnit")]
     private static MethodBase TargetMethod()
@@ -810,8 +810,8 @@ public class PatchSpawnAndPossess
 }
 
 [HarmonyPatch(typeof(BUS_TransGuideComp), "UpdateTransGuideData")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchUpdateTransGuideData
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchUpdateTransGuideData
 {
     public static bool Prefix(BUS_TransGuideComp __instance)
     {
@@ -828,8 +828,8 @@ public class PatchUpdateTransGuideData
 }
 
 [HarmonyPatch(typeof(BUS_TransPlayerDataBindComp), "OnPostTransBindData")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnPostTransBindData
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnPostTransBindData
 {
     public static bool Prefix(BUS_TransPlayerDataBindComp __instance)
     {
@@ -847,8 +847,8 @@ public class PatchOnPostTransBindData
 
 // TODO: Possibly synced by a buff, maybe we can disable this
 [HarmonyPatch(typeof(BUS_IronBodyComp), "OnIronBodyStart")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnIronBodyStart
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnIronBodyStart
 {
     public static void Postfix(BUS_IronBodyComp __instance)
     {
@@ -865,8 +865,8 @@ public static class PatchOnIronBodyStart
 }
 
 [HarmonyPatch(typeof(BPS_BattleMainInfoComp), "OnPossessed")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchBattleMainInfoCompOnPossessed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchBattleMainInfoCompOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
@@ -882,8 +882,8 @@ public static class PatchBattleMainInfoCompOnPossessed
 }
 
 [HarmonyPatch(typeof(BPS_InputSystem), "OnPossessed")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchInputSystemOnPossessed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchInputSystemOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
@@ -899,8 +899,8 @@ public static class PatchInputSystemOnPossessed
 }
 
 [HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "OnPossessed")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchMultiTargetOnPossessed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchMultiTargetOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
@@ -916,8 +916,8 @@ public static class PatchMultiTargetOnPossessed
 }
 
 [HarmonyPatch(typeof(BUS_MagicallyChangeComp), "DoCastMagicallyChangeSkill_PendingCast")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchDoCastMagicallyChangeSkill_PendingCast
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchDoCastMagicallyChangeSkill_PendingCast
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset? _Config, int _SkillID, int _RecoverSkillID, BUC_MagicallyChangeData ___MagicallyChangeData)
     {
@@ -938,8 +938,8 @@ public static class PatchDoCastMagicallyChangeSkill_PendingCast
 }
 
 [HarmonyPatch(typeof(BUS_MagicallyChangeComp), "PendingReset")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchPendingReset
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchPendingReset
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, EResetReason_MagicallyChange Reason)
     {
@@ -957,8 +957,8 @@ public static class PatchPendingReset
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnSweepCheckHit
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnSweepCheckHit
 {
     [HarmonyTargetMethodHint("b1.BUS_SweepCheckHitComp", "OnSweepCheckHit")]
     private static MethodBase TargetMethod()
@@ -984,8 +984,8 @@ public static class PatchOnSweepCheckHit
 }
 
 [HarmonyPatch(typeof(FInputMappingContextProcessor), nameof(FInputMappingContextProcessor.SetCloudInputEnable))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchSetCloudInputEnable
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchSetCloudInputEnable
 {
     public static bool Prefix(bool bEnable)
     {

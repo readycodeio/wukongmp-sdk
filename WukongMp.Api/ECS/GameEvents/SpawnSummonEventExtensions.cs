@@ -14,7 +14,7 @@ using EquipPosition = BtlB1.EquipPosition;
 
 namespace WukongMp.Api.ECS.GameEvents
 {
-    public static class SpawnSummonEventExtensions
+    internal static class SpawnSummonEventExtensions
     {
         // FIXME(api): Move to utils
         public static FServantReq ToGame(this SpawnSummonEvent value, WukongPawnState pawnState)

@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.UI
 {
-    public class InfoMessageWidget : GameWidgetBase
+    internal class InfoMessageWidget : GameWidgetBase
     {
         private const string InfoMessageWidgetPath = "/Game/Mods/WukongMod/WBP_InfoMessage.WBP_InfoMessage_C";
 

@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.UI
 {
-    public static class TextUtils
+    internal static class TextUtils
     {
         public static string GetReadyText(int playersCount, bool isReady)
         {

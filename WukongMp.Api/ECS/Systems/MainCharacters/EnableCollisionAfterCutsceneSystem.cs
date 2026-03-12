@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) : QuerySystem<MainCharacterComponent, LocalMainCharacterComponent>
+internal class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState) : QuerySystem<MainCharacterComponent, LocalMainCharacterComponent>
 {
     protected override void OnUpdate()
     {

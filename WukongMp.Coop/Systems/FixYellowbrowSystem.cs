@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Logging;
 using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.Systems;
 
-public class FixYellowbrowSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
-    : ModSystemBase(localApi, clientApi, logger)
+public class FixYellowbrowSystem : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {

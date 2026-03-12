@@ -20,8 +20,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRequestPlayMovie
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRequestPlayMovie
 {
     [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "RequestPlayMovie")]
     private static MethodBase TargetMethod()
@@ -172,8 +172,8 @@ public static class PatchRequestPlayMovie
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTickForMovieSystem
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchTickForMovieSystem
 {
     [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "TickForMovieSystem")]
     private static MethodBase TargetMethod()
@@ -306,8 +306,8 @@ public static class PatchTickForMovieSystem
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnSkipCurrentCameraMovie
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnSkipCurrentCameraMovie
 {
     [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "OnSkipCurrentCameraMovie")]
     private static MethodBase TargetMethod()

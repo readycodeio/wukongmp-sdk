@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Logging;
 using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.Systems;
 
-public sealed class RespawnMainCharacterSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger) 
-    : ModSystemBase(localApi, clientApi, logger)
+public sealed class RespawnMainCharacterSystem : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {

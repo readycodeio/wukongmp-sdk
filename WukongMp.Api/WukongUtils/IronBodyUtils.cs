@@ -3,7 +3,7 @@ using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.WukongUtils
 {
-    public static class IronBodyUtils
+    internal static class IronBodyUtils
     {
         public static void TriggerIronBody(BGUCharacterCS pawn)
         {

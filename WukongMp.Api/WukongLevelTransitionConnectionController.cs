@@ -6,7 +6,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongLevelTransitionConnectionController : IDisposable
+internal class WukongLevelTransitionConnectionController : IDisposable
 {
     private readonly WukongEventBus _eventBus;
     private readonly WukongConnectionManager _connection;

@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct MontageCallbackEvent(
+internal readonly struct MontageCallbackEvent(
     Entity entity,
     string fullMontagePath,
     float position,

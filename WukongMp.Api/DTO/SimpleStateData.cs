@@ -8,7 +8,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct SimpleStateData(NetworkId netId, EBGUSimpleState simpleState, bool isRemove) : INetSerializable
+internal partial struct SimpleStateData(NetworkId netId, EBGUSimpleState simpleState, bool isRemove) : INetSerializable
 {
     public NetworkId NetId = netId;
     public EBGUSimpleState SimpleState = simpleState;

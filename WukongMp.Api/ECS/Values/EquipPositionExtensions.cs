@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.ECS.Values;
 
-public static class EquipPositionExtensions
+internal static class EquipPositionExtensions
 {
     public static EquipPosition ToGame(this ReadyM.Wukong.Common.ECS.Values.EquipPosition value)
         => (EquipPosition)(byte)value;

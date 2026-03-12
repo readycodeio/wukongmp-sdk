@@ -1,15 +1,12 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using WukongMp.Api;
-using WukongMp.Api.Configuration;
-using WukongMp.Api.WukongUtils;
+using WukongMp.Coop.Configuration;
 using WukongMp.Sdk;
-using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.Systems;
 
-public sealed class ScaleMonsterHpSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
-    : ModSystemBase(localApi, clientApi, logger)
+public sealed class ScaleMonsterHpSystem : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {
@@ -18,7 +15,7 @@ public sealed class ScaleMonsterHpSystem(WukongLocalApi localApi, WukongClientAp
         var targetScaling = 1 + 1.5f * (areaPlayers - 1);
 
 #if DEBUG
-        if (DebugUtils.ScaleMonsterHpToHalf)
+        if (CoopConfig.ScaleMonsterHpToHalf)
         {
             targetScaling = .5f;
         }
@@ -32,10 +29,10 @@ public sealed class ScaleMonsterHpSystem(WukongLocalApi localApi, WukongClientAp
             if (tamer.Owner != ClientApi.LocalPlayerId)
                 continue;
 
-            if (tamer.HpMaxBase.Equals(0f, Constants.FloatComparisonTolerance) && tamer.Hp.Equals(0, Constants.FloatComparisonTolerance))
+            if (tamer.HpMaxBase.Equals(0f, CoopConfig.FloatComparisonTolerance) && tamer.Hp.Equals(0, CoopConfig.FloatComparisonTolerance))
                 continue; // no need to scale if monster is not active
 
-            if (Math.Abs(targetScaling - tamer.HpMultiplier) > Constants.FloatComparisonTolerance)
+            if (Math.Abs(targetScaling - tamer.HpMultiplier) > CoopConfig.FloatComparisonTolerance)
             {
                 if (!tamer.IsBossOrElite)
                     continue;

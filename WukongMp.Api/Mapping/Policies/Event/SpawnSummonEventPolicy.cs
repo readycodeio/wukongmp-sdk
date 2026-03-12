@@ -12,7 +12,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Mapping.Policies.Event;
 
-public class SpawnSummonEventPolicy<TEvent>(
+internal class SpawnSummonEventPolicy<TEvent>(
     ClientOwnershipManager ownership,
     WukongPlayerState playerState,
     WukongAreaState areaState,

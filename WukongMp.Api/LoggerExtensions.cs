@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api;
 
-public static class LoggerExtensions
+internal static class LoggerExtensions
 {
     public static void LogNullDebug(this ILogger logger, string propertyName)
         => logger.LogDebug("{Value} is null", propertyName);

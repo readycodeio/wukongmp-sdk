@@ -9,7 +9,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Mapping.Policies.Event;
 
-public class RunOnMasterClientOnlyEventPolicyFactory(
+internal class RunOnMasterClientOnlyEventPolicyFactory(
     ClientOwnershipManager ownership,
     WukongAreaState areaState, 
     DataSideChannel sideChannel) : IMappingEventPolicyFactory

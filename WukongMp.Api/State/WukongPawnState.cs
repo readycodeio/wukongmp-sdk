@@ -15,7 +15,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
-public class WukongPawnState(
+internal class WukongPawnState(
     Store world,
     MappedEntityManager<AActor> mappedEntity,
     ClientWukongArchetypeRegistration wukongArchetype,

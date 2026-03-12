@@ -7,8 +7,22 @@ using WukongMp.Api.Https;
 
 namespace WukongMp.Api;
 
-public class WukongSaveRelay(IBlobClient blobClient, ILogger logger)
+internal class WukongSaveRelay(IBlobClient blobClient, ILogger logger) : IWukongSaveRelay
 {
+    public Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
+        => UploadBlobAsync(Constants.CoopWorldArchiveName, content, ct);
+
+    public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default)
+        => DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
+
+    public Task<bool> UploadPlayerSaveAsync(byte[] content, CancellationToken ct = default)
+        => UploadBlobAsync(PlayerSaveName, content, ct);
+
+    public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default)
+        => DownloadBlobAsync(PlayerSaveName, ct);
+
+    private static string PlayerSaveName => $"player_{LaunchParameters.Instance.UserGuid:N}.sav";
+    
     private Task<bool> UploadBlobAsync(string name, byte[] content, CancellationToken ct = default)
     {
         try
@@ -34,18 +48,4 @@ public class WukongSaveRelay(IBlobClient blobClient, ILogger logger)
             throw new OperationCanceledException("Failed to download blob", ex);
         }
     }
-    
-    public Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
-        => UploadBlobAsync(Constants.CoopWorldArchiveName, content, ct);
-
-    public Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default)
-        => DownloadBlobAsync(Constants.CoopWorldArchiveName, ct);
-
-    public Task<bool> UploadPlayerSaveAsync(byte[] content, CancellationToken ct = default)
-        => UploadBlobAsync(PlayerSaveName, content, ct);
-
-    public Task<BlobInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default)
-        => DownloadBlobAsync(PlayerSaveName, ct);
-
-    private static string PlayerSaveName => $"player_{LaunchParameters.Instance.UserGuid:N}.sav";
 }

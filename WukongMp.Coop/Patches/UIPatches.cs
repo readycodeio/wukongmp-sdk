@@ -22,7 +22,7 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Coop.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public static class PatchStartGameUiCoop
 {
     [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
@@ -55,10 +55,13 @@ public static class PatchStartGameUiCoop
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
 
-                    Mod.Instance.ClientApi.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() =>
+                    Mod.Instance.ClientApi.GetDisconnectReasonAndInvoke(reason =>
                     {
-                        Mod.Instance.LocalApi.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
-                    }); });
+                        Utils.TryRunOnGameThread(() =>
+                        {
+                            Mod.Instance.LocalApi.ShowInfoMessage(reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                        });
+                    });
                     Logging.LogError("Disconnected. Could not continue game.");
                 }
                 else
@@ -89,7 +92,7 @@ public static class PatchStartGameUiCoop
 /// Hide challenges shrine options in coop mode.
 /// </summary>
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchShrineRegisterFunc
 {
     [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
@@ -111,7 +114,7 @@ public class PatchShrineRegisterFunc
 }
 
 [HarmonyPatch(typeof(BUI_BattleInfoCS), "InitBloodBarUI")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchInitBloodBarUI
 {
     public static bool Prefix(BUI_BattleInfoCS __instance, Dictionary<Entity, BUI_ProjWidget> ___EntityDic, Dictionary<AActor, DSBarInfoBind> ___BloodBarActorBindDict, Entity Entity)
@@ -160,7 +163,7 @@ public class PatchInitBloodBarUI
 }
 
 [HarmonyPatch(typeof(BUS_UnitBarInfoComp), "ShowEnemyBar")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchShowEnemyBar
 {
     public static bool Prefix(BUS_UnitBarInfoComp __instance, ref bool __result)

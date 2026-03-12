@@ -18,7 +18,7 @@ using Org.BouncyCastle.Tls.Crypto.Impl.BC;
 
 namespace WukongMp.Api.Https;
 
-public class BouncyCastleHttpsClient(ILogger logger)
+internal class BouncyCastleHttpsClient(ILogger logger)
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 

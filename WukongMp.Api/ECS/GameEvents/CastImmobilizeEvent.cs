@@ -4,7 +4,7 @@ using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct CastImmobilizeEvent(Entity caster) : IEquatable<CastImmobilizeEvent>, IRunOnMasterClientOnly
+internal readonly struct CastImmobilizeEvent(Entity caster) : IEquatable<CastImmobilizeEvent>, IRunOnMasterClientOnly
 {
     public readonly Entity Caster = caster;
 

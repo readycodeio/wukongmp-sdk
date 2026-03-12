@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.Monitors
 {
-    public class ComponentMonitorManager
+    internal class ComponentMonitorManager
     {
         public static ComponentMonitorManager Instance { get; } = new ComponentMonitorManager();
 

@@ -7,7 +7,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct ProjectileSwitchData(
+internal partial struct ProjectileSwitchData(
     NetworkId netId,
     string projectileClassName, 
     int bulletSwitchID, 

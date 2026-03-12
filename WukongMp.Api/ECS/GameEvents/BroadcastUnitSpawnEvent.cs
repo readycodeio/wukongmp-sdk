@@ -5,7 +5,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct BroadcastUnitSpawnEvent(
+internal readonly struct BroadcastUnitSpawnEvent(
     Entity entity,
     string? unitName,
     string guid,

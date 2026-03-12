@@ -10,8 +10,8 @@ namespace WukongMp.Api.Patches;
 
 // NOTE: This type occurs in the original code, it is "Exc-PE-tion" not "Exception"
 [HarmonyPatch(typeof(BGW_ExceptionUIMgr), "HandleUSharpInvokeFunctionExcpetion")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class ExceptionPatches
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class ExceptionPatches
 {
     public static void Postfix(Exception e)
     {
@@ -23,8 +23,8 @@ public class ExceptionPatches
 }
 
 [HarmonyPatch(typeof(BGW_DebugMgr), nameof(BGW_DebugMgr.UpdateUserConfigToSentry))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class SentryPatches
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class SentryPatches
 {
     public static bool Prefix()
     {
@@ -33,8 +33,8 @@ public class SentryPatches
 }
 
 [HarmonyPatch(typeof(NativeReflectionCached), "FindFieldInfo")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class NativeReflectionCachedPatches
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class NativeReflectionCachedPatches
 {
     private static readonly SemaphoreSlim Semaphore = new(1, 1);
 

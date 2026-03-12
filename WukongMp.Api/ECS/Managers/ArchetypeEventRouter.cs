@@ -7,9 +7,9 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 
 namespace WukongMp.Api.ECS.Managers;
 
-public sealed class ArchetypeEventRouter : IDisposable
+internal sealed class ArchetypeEventRouter : IDisposable
 {
-    public readonly struct ArchetypeEntry(ArchetypeEventRouter owner, ArchetypeId archetypeId)
+    internal readonly struct ArchetypeEntry(ArchetypeEventRouter owner, ArchetypeId archetypeId)
     {
         public event Action<EntityCreate>? OnEntityCreate
         {

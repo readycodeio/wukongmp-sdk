@@ -13,8 +13,8 @@ using WukongMp.Api.ECS.GameEvents;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchComplexSkillDoInteractAction
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchComplexSkillDoInteractAction
 {
     [HarmonyTargetMethodHint("b1.BUIAComplexSkill", "DoInteractAction")]
     private static MethodBase TargetMethod()
@@ -42,8 +42,8 @@ public static class PatchComplexSkillDoInteractAction
 }
 
 [HarmonyPatch(typeof(BGW_EffectTemplateList), nameof(BGW_EffectTemplateList.GetInteractTypeTemplate))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchGetInteractTypeTemplate
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchGetInteractTypeTemplate
 {
     public static bool Prefix(EInteractType InteractType, ref BUInteractTypeTemplate? __result)
     {
@@ -64,8 +64,8 @@ public class PatchGetInteractTypeTemplate
 }
 
 [HarmonyPatch(typeof(BUS_InteractCompImpl), "TickPlayerInteractive")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchInterActivePreCheckFocus
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchInterActivePreCheckFocus
 {
     public static void Postfix(BUC_InteractData ___InteractData)
     {

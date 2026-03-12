@@ -15,7 +15,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera
 {
-    public class FreeCameraController : IDisposable
+    internal class FreeCameraController : IDisposable
     {
         private float _rotateDirLR;
         private float _rotateDirUD;

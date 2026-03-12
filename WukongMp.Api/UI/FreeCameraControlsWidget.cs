@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.UI
 {
-    public class FreeCameraControlsWidget : GameWidgetBase
+    internal class FreeCameraControlsWidget : GameWidgetBase
     {
         private const string FreeCameraWidgetPath = "/Game/Mods/WukongMod/WBP_FreeCameraControls.WBP_FreeCameraControls_C";
 

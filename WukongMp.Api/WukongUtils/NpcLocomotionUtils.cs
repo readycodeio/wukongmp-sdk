@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class NpcLocomotionUtils
+internal static class NpcLocomotionUtils
 {
     public static void SetStateTrigger(BGUCharacterCS? character, EBUStateTrigger trigger, float time, bool needForceUpdate)
     {

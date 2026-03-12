@@ -25,7 +25,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public class WukongSynchronizer : ClientNetworkedStateSynchronizer
+internal class WukongSynchronizer : ClientNetworkedStateSynchronizer
 {
     protected readonly WukongAreaState AreaState;
     protected readonly WukongPlayerPawnState PlayerPawnState;

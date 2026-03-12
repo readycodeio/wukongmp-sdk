@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 namespace WukongMp.Api.ECS.GameEvents;
 
 // NOTE(api): Despite being related to movies, this is a client-RPC related event
-public readonly struct PlayMovieRequestEvent(
+internal readonly struct PlayMovieRequestEvent(
     int sequenceId,
     bool disablePlayerControl,
     bool disableMovementInput,

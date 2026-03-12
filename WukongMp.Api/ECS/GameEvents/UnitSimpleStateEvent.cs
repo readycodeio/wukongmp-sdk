@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct UnitSimpleStateEvent(
+internal readonly struct UnitSimpleStateEvent(
     Entity entity,
     EBGUSimpleState simpleState,
     bool isRemove) : IEquatable<UnitSimpleStateEvent>, IOwnershipManaged

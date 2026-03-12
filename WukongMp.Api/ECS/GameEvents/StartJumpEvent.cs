@@ -6,7 +6,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct StartJumpEvent(
+internal readonly struct StartJumpEvent(
     Entity entity,
     ESkillDirection startJumpDir,
     FVector2D inputVector) : IEquatable<StartJumpEvent>, IOwnershipManaged

@@ -26,7 +26,7 @@ internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localAp
 
         BGW_EventCollection.Get(worldContext).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
         {
-            ArchiveId = Constants.NewCharacterArchiveId
+            ArchiveId = CoopConfig.NewCharacterArchiveId
         });
     }
 
@@ -94,22 +94,22 @@ internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localAp
         else
         {
             // we need to write the data as file to read it
-            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConstants.CoopWorldArchiveId);
+            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConfig.CoopWorldArchiveId);
             var worldSavePath = GSWindowsPlatformSaveGame.GetFileFullName(worldSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(worldSavePath, worldData);
 
-            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConstants.CoopPlayerArchiveId);
+            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConfig.CoopPlayerArchiveId);
             var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(playerSavePath, playerData);
 
-            var readWorldResult = __instance.ReadArchiveData(CoopConstants.CoopWorldArchiveId, out worldArchiveData, out _);
+            var readWorldResult = __instance.ReadArchiveData(CoopConfig.CoopWorldArchiveId, out worldArchiveData, out _);
             if (readWorldResult != ReadArchiveResult.Success)
             {
                 logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
                 return;
             }
 
-            var readPlayerResult = __instance.ReadArchiveData(CoopConstants.CoopPlayerArchiveId, out playerArchiveData, out _);
+            var readPlayerResult = __instance.ReadArchiveData(CoopConfig.CoopPlayerArchiveId, out playerArchiveData, out _);
             if (readPlayerResult != ReadArchiveResult.Success)
             {
                 logger.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);

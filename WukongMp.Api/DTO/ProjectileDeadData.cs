@@ -8,7 +8,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct ProjectileDeadData(
+internal partial struct ProjectileDeadData(
     NetworkId netId,
     string projectileClassName,
     EBGUBulletDestroyReason reason) : INetSerializable

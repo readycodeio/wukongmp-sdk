@@ -7,7 +7,7 @@ using WukongMp.Api.Serialization;
 namespace WukongMp.Api.DTO;
 
 [DeriveJsonSerializable]
-public partial struct BroadcastUnitSpawnData(
+internal partial struct BroadcastUnitSpawnData(
     NetworkId netId,
     string? unitName, 
     string guid,

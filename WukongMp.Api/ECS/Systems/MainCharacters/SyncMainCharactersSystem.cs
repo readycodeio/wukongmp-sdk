@@ -11,7 +11,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class SyncMainCharactersSystem(
+internal class SyncMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerModeManager modeManager,
     WukongEventBus eventBus,

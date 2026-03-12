@@ -3,7 +3,7 @@ using ReadyM.Wukong.Common.ECS.Values;
 
 namespace WukongMp.Api.Serialization;
 
-public class WukongTextSerializerRegistration : ITextRelaySerializerRegistration
+internal class WukongTextSerializerRegistration : ITextRelaySerializerRegistration
 {
     public void Register(TextRelaySerializer serializer)
     {

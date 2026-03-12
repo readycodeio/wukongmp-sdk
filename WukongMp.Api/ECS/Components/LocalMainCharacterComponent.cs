@@ -7,7 +7,7 @@ using WukongMp.Api.ECS.Values;
 
 namespace WukongMp.Api.ECS.Components;
 
-public struct LocalMainCharacterComponent : IComponent
+internal struct LocalMainCharacterComponent : IComponent
 {
     public bool IsPlayerSynced;
 

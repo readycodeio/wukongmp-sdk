@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct PlayerTransBeginEvent(
+internal readonly struct PlayerTransBeginEvent(
     Entity entity,
     int unitResId,
     int unitBornSkillId,

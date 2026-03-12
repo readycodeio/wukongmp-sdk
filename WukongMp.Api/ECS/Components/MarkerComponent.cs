@@ -6,7 +6,7 @@ using UnrealEngine.Engine;
 namespace WukongMp.Api.ECS.Components;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct MarkerComponent : IComponent
+internal struct MarkerComponent : IComponent
 {
     public bool DestroyQueued;
 

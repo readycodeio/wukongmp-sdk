@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct ExitPhantomRushEvent(Entity entity) : IEquatable<ExitPhantomRushEvent>, IOwnershipManaged
+internal readonly struct ExitPhantomRushEvent(Entity entity) : IEquatable<ExitPhantomRushEvent>, IOwnershipManaged
 {
     public readonly Entity Entity = entity;
 

@@ -15,8 +15,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorLocation), typeof(AActor), typeof(FVector), typeof(bool), typeof(bool), typeof(FHitResult), typeof(bool), typeof(bool))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBGUSetActorLocationForPhysicsBasedMovement
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBGUSetActorLocationForPhysicsBasedMovement
 {
     public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleport)
     {
@@ -31,8 +31,8 @@ public class PatchBGUSetActorLocationForPhysicsBasedMovement
 }
 
 [HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorRotation))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBGUSetActorRotationForPhysicsBasedMovement
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBGUSetActorRotationForPhysicsBasedMovement
 {
     public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleportPhysics, ref bool bForceUpdate)
     {
@@ -48,8 +48,8 @@ public class PatchBGUSetActorRotationForPhysicsBasedMovement
 }
 
 [HarmonyPatch(typeof(BGU_PhysicsSimulationMoveMode), "OnUpdate")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchPhysicsSimulationMoveMode
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchPhysicsSimulationMoveMode
 {
     public static void Postfix(ACharacter ___OwnerCharacter)
     {
@@ -69,8 +69,8 @@ public class PatchPhysicsSimulationMoveMode
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnRegisterTamer
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnRegisterTamer
 {
     [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnRegisterTamer")]
     private static MethodBase TargetMethod()
@@ -88,8 +88,8 @@ public class PatchOnRegisterTamer
 }
 
 [HarmonyPatch(typeof(BUTamerActor), "BeginPlayCS_Implementation")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerBeginPlayCS_Implementation
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerBeginPlayCS_Implementation
 {
     public static void Postfix(BUTamerActor __instance)
     {
@@ -116,8 +116,8 @@ public class PatchTamerBeginPlayCS_Implementation
 }
 
 [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerLoad
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerLoad
 {
     public static void Postfix(FTamerRef __instance)
     {
@@ -144,8 +144,8 @@ public class PatchTamerLoad
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchCanTurnBack2Loaded
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchCanTurnBack2Loaded
 {
     static bool Prefix(ref bool __result)
     {
@@ -155,8 +155,8 @@ public class PatchCanTurnBack2Loaded
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.TurnBack2Loaded))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTurnBack2Loaded
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTurnBack2Loaded
 {
     static bool Prefix(FTamerRef __instance)
     {
@@ -198,8 +198,8 @@ public class PatchTurnBack2Loaded
 }
 
 [HarmonyPatch(typeof(FTamerRef), "DestroyTamer")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerUnload
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerUnload
 {
     public static void Prefix(FTamerRef __instance)
     {
@@ -220,8 +220,8 @@ public class PatchTamerUnload
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnAIPerceptionSetting
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnAIPerceptionSetting
 {
     public static bool Prefix(BUS_AIComp __instance, bool bEnable)
     {
@@ -242,8 +242,8 @@ public class PatchOnAIPerceptionSetting
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "OnAIPauseBT")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnAIPauseBT
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnAIPauseBT
 {
     public static bool Prefix(BUS_AIComp __instance, bool IsPause)
     {
@@ -264,8 +264,8 @@ public class PatchOnAIPauseBT
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "OnEnableCanSetBT")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnEnableCanSetBT
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnEnableCanSetBT
 {
     public static bool Prefix(BUS_AIComp __instance, bool bEnable)
     {
@@ -286,8 +286,8 @@ public class PatchOnEnableCanSetBT
 }
 
 [HarmonyPatch(typeof(BUS_FsmComp), "OnAIPauseFsm")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnAIPauseFsm
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnAIPauseFsm
 {
     public static bool Prefix(BUS_FsmComp __instance, bool IsPause)
     {
@@ -312,8 +312,8 @@ public class PatchOnAIPauseFsm
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnEnableCanUpdateHatred
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnEnableCanUpdateHatred
 {
     [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "OnEnableCanUpdateHatred")]
     private static MethodBase TargetMethod()
@@ -343,8 +343,8 @@ public class PatchOnEnableCanUpdateHatred
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.OnReset))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerOnReset
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerOnReset
 {
     static bool Prefix(EResetActorReason ResetReason, FTamerRef __instance)
     {
@@ -357,8 +357,8 @@ public class PatchTamerOnReset
 }
 
 [HarmonyPatch(typeof(BUS_FsmComp), "OnTriggerFsmEvent")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnTriggerFsmEvent
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnTriggerFsmEvent
 {
     public static bool Prefix(FGameplayTag EventTag, BUS_FsmComp __instance)
     {
@@ -406,8 +406,8 @@ public class PatchOnTriggerFsmEvent
 }
 
 [HarmonyPatch(typeof(BUS_MovementSystem), "TickForMonster")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchMovementTickForMonster
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchMovementTickForMonster
 {
     public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem? __instance, BUC_MovementData ___MovementData)
     {
@@ -451,8 +451,8 @@ public class PatchMovementTickForMonster
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.AfterMonsterDead))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchAfterMonsterDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchAfterMonsterDead
 {
     public static void Prefix(FTamerRef? __instance)
     {
@@ -483,8 +483,8 @@ public class PatchAfterMonsterDead
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "TriggerWakeupActivated")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTriggerWakeupActivated
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTriggerWakeupActivated
 {
     public static void Postfix(BUS_AIComp? __instance)
     {
@@ -507,8 +507,8 @@ public class PatchTriggerWakeupActivated
 }
 
 [HarmonyPatch(typeof(BUS_DumperTruckTriggerComp), "PatrolTick")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchPatrolTick
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchPatrolTick
 {
     private static MethodInfo? _dumperTruckTriggerDataGetter;
     private static MethodInfo? _BeGetter;

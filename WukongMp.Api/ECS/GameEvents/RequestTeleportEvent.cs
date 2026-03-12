@@ -5,7 +5,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct RequestTeleportEvent(
+internal readonly struct RequestTeleportEvent(
     Entity entity,
     FVector location,
     FRotator rotation

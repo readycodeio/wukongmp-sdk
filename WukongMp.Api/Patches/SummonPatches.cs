@@ -11,8 +11,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGU_UnrealWorldUtil), nameof(BGU_UnrealWorldUtil.RequestSpawnServant))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRequestSpawnServant
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRequestSpawnServant
 {
     public static bool Prefix(ref string? __result, UWorld World, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
     {
@@ -61,8 +61,8 @@ public static class PatchRequestSpawnServant
 }
 
 [HarmonyPatch(typeof(BGS_SummonManagerSystem), "RequestSummon")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchRequestSummon
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchRequestSummon
 {
     public static bool Prefix(FSummonReq InSummonReq)
     {

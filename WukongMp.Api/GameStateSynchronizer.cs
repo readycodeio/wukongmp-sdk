@@ -7,7 +7,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class GameStateSynchronizer : IDisposable
+internal class GameStateSynchronizer : IDisposable
 {
     private readonly ClientState _state;
     private readonly WukongPlayerState _playerState;

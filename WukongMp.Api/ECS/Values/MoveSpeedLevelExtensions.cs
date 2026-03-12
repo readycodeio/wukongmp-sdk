@@ -3,7 +3,7 @@ using ReadyM.Wukong.Common.ECS.Values;
 
 namespace WukongMp.Api.ECS.Values;
 
-public static class MoveSpeedLevelExtensions
+internal static class MoveSpeedLevelExtensions
 {
     public static EMoveSpeedLevel ToGame(this MoveSpeedLevel value)
         => (EMoveSpeedLevel)(byte)value;

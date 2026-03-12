@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct PlayBaneEffectEvent(
+internal readonly struct PlayBaneEffectEvent(
     Entity entity,
     EAbnormalStateType stateType,
     EAbnromalDispActionType actionType) : IEquatable<PlayBaneEffectEvent>, IOwnershipManaged

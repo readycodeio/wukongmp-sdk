@@ -4,7 +4,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.Input;
 
-public class WukongInputManager
+internal class WukongInputManager
 {
     private readonly WukongCommandConsole _commandConsole;
     private readonly WukongChatter _chatter;

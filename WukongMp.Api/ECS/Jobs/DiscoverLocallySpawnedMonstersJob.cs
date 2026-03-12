@@ -10,7 +10,7 @@ namespace WukongMp.Api.ECS.Jobs;
 /// <summary>
 /// This job is used to discover already spawned monsters.
 /// </summary>
-public readonly struct DiscoverLocallySpawnedMonstersJob(IMappedEventManager mappedEvent, ILogger logger)
+internal readonly struct DiscoverLocallySpawnedMonstersJob(IMappedEventManager mappedEvent, ILogger logger)
 {
     public void OnUpdate(Entity entity)
     {

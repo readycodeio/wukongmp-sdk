@@ -11,7 +11,7 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Entities;
 
-public readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
+internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
 {
     public static bool IsTamer(Entity entity)
         => !entity.IsNull && entity.HasComponent<TamerComponent>();

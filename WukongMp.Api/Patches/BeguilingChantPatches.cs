@@ -5,8 +5,8 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_IntervalTriggerImpl.IntervalTriggerEnableState), "OnTickAction")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchEventActiveTick
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchEventActiveTick
 {
     public static bool Prefix()
     {
@@ -15,8 +15,8 @@ public static class PatchEventActiveTick
 }
 
 [HarmonyPatch(typeof(BUS_StateMachineCompBase), "JumpToState")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchJumpToState
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchJumpToState
 {
     public static void Postfix(BUS_StateMachineCompBase.GSStateBase TargetState)
     {
@@ -35,8 +35,8 @@ public static class PatchJumpToState
 }
 
 [HarmonyPatch(typeof(BUS_IntervalTriggerImpl.IntervalTriggerEnableState), "OnEnterAction")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchIntervalTriggerEnableStateOnEnterAction
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchIntervalTriggerEnableStateOnEnterAction
 {
     public static bool Prefix(BUS_StateMachineCompBase InOwner)
     {

@@ -8,7 +8,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class UpdateMainCharacterMarkerSystem() : QuerySystem<LocalMainCharacterComponent>
+internal class UpdateMainCharacterMarkerSystem() : QuerySystem<LocalMainCharacterComponent>
 {
     protected override void OnUpdate()
     {

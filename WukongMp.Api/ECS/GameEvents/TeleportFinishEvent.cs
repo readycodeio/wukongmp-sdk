@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct TeleportFinishEvent(Entity entity) 
+internal readonly struct TeleportFinishEvent(Entity entity) 
     : IEquatable<TeleportFinishEvent>, IAlwaysPropagates
 {
     public readonly Entity Entity = entity;

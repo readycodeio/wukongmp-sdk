@@ -8,7 +8,7 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Archetypes;
 
-public class ClientWukongArchetypeRegistration : IArchetypeRegistration
+internal class ClientWukongArchetypeRegistration : IArchetypeRegistration
 {
     public ArchetypeId TamerArchetype { get; private set; }
     public ArchetypeId MainCharacterArchetype { get; private set; }

@@ -5,7 +5,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.Serialization;
 
-public class WukongSerializerRegistration : IRelaySerializerRegistration
+internal class WukongSerializerRegistration : IRelaySerializerRegistration
 {
     public void Register(RelaySerializer serializer)
     {

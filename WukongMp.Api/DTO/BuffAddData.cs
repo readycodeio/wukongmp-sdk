@@ -7,7 +7,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct BuffAddData(NetworkId netId, int buffId, float duration) : INetSerializable
+internal partial struct BuffAddData(NetworkId netId, int buffId, float duration) : INetSerializable
 {
     public NetworkId NetId = netId;
     public int BuffId = buffId;

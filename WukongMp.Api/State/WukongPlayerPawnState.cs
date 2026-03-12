@@ -15,7 +15,7 @@ namespace WukongMp.Api.State;
 
 // FIXME: This should be merged with `WukongPawnState`. In addition, this class does to many things. It should exclusively
 // deal with placing and removing pawns.
-public class WukongPlayerPawnState(FreeCameraManager freeCameraManager, Store world, WukongPlayerState playerState, ILogger logger)
+internal class WukongPlayerPawnState(FreeCameraManager freeCameraManager, Store world, WukongPlayerState playerState, ILogger logger)
 {
     public event Action<MainCharacterEntity, BGUCharacterCS>? OnPlayerPawnSpawned;
     

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace WukongMp.Api.Configuration;
 
-public class GameplayConfiguration(ILogger logger)
+internal class GameplayConfiguration(ILogger logger)
 {
     public bool IsSupportMultiLockEnabled { get; set; } = false;
     public bool IsStrongDamageImmueEnabled { get; set; } = false;

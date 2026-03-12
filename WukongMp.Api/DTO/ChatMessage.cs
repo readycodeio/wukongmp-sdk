@@ -7,10 +7,10 @@ using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.DTO;
 
-public struct ChatMessage : INetSerializable
+internal struct ChatMessage : INetSerializable
 {
     [RegisterJsonConverter]
-    public class Converter : JsonConverter<ChatMessage>
+    internal class Converter : JsonConverter<ChatMessage>
     {
         public override ChatMessage Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             => TextDeserialize(ref reader, options);

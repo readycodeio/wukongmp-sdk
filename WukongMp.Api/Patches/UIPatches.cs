@@ -21,8 +21,8 @@ using CultureInfo = System.Globalization.CultureInfo;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_BeAttackedComp), "CanShowDmgNumUI")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchCanShowDamage
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchCanShowDamage
 {
     public static bool Prefix(ref bool __result)
     {
@@ -35,8 +35,8 @@ public static class PatchCanShowDamage
 }
 
 [HarmonyPatch(typeof(BUS_BeAttackedComp), "CanShowDmgNumUI")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchDamageNumberDisplayCheck
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchDamageNumberDisplayCheck
 {
     public static void Postfix(BUS_BeAttackedComp __instance, ref bool __result)
     {
@@ -61,8 +61,8 @@ public static class PatchDamageNumberDisplayCheck
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchSendDamageNumbers
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchSendDamageNumbers
 {
     [HarmonyTargetMethodHint("b1.BUS_UIControlSystemV2", "OnDisplayDamageNumUI")]
     private static MethodBase TargetMethod()
@@ -82,8 +82,8 @@ public static class PatchSendDamageNumbers
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBossRushTimerCountdown
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBossRushTimerCountdown
 {
     [HarmonyTargetMethodHint("B1UI.GSUI.UIBossRushTime", "GetRemainTimeStr")]
     private static MethodBase TargetMethod()
@@ -102,8 +102,8 @@ public class PatchBossRushTimerCountdown
 }
 
 [HarmonyPatch(typeof(GenAGPage), nameof(GenAGPage.ShowPage))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchShowPage
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchShowPage
 {
     public static void Prefix(int NewPageID, string Source, ChangeReason Reason, object exParam)
     {
@@ -112,8 +112,8 @@ public class PatchShowPage
 }
 
 [HarmonyPatch(typeof(B1BattleLogicSvc), "UISetGamePaused")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchUISetGamePaused
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchUISetGamePaused
 {
     public static bool Prefix()
     {
@@ -125,8 +125,8 @@ public class PatchUISetGamePaused
 }
 
 [HarmonyPatch(typeof(BGW_PauseGameMgr), "SetGamePause")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchSetGamePause
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchSetGamePause
 {
     public static bool Prefix(EPauseEvent PauseEvent, bool bPause)
     {
@@ -146,8 +146,8 @@ public class PatchSetGamePause
 }
 
 [HarmonyPatch(typeof(GSLocalization), "SetCurrentCulture")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchSetCurrentCulture
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchSetCurrentCulture
 {
     public static void Postfix(string Culture)
     {
@@ -163,8 +163,8 @@ public class PatchSetCurrentCulture
 }
 
 [HarmonyPatch(typeof(GSProcBar), "SetParamValue")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class ThreadSafeHealthBarPatch
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class ThreadSafeHealthBarPatch
 {
     // add a semaphore to make SetParamValue thread safe
     // this is a writing method
@@ -182,8 +182,8 @@ public class ThreadSafeHealthBarPatch
 }
 
 [HarmonyPatch(typeof(GSProcBar), "GetParamValue")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class ThreadSafeHealthBarPatch2
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class ThreadSafeHealthBarPatch2
 {
     public static void Prefix()
     {
@@ -197,8 +197,8 @@ public class ThreadSafeHealthBarPatch2
 }
 
 [HarmonyPatch(typeof(GSProcBar), "SetParamPercent")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class ThreadSafeHealthBarPatch3
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class ThreadSafeHealthBarPatch3
 {
     public static void Prefix()
     {
@@ -212,8 +212,8 @@ public class ThreadSafeHealthBarPatch3
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnInfoChange
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnInfoChange
 {
     [HarmonyTargetMethodHint("B1UI.GSUI.UILoadingAdaptor", "OnInfoChange")]
     public static MethodBase TargetMethod()
@@ -241,8 +241,8 @@ public static class PatchOnInfoChange
 }
 
 [HarmonyPatch(typeof(GSMUITickMgr), nameof(GSMUITickMgr.DoGSTicking))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchDoGSTicking
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchDoGSTicking
 {
     public static void Prefix(List<IGSMUITickable> ___TickingQueue)
     {
@@ -257,8 +257,8 @@ public static class PatchDoGSTicking
 }
 
 [HarmonyPatch(typeof(BGW_GameDB), nameof(BGW_GameDB.GetUnitBattleInfoExtendDesc))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchIsStandAlone
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchIsStandAlone
 {
     public static void Postfix(ref FUStUnitBattleInfoExtendDesc? __result)
     {
@@ -270,8 +270,8 @@ public static class PatchIsStandAlone
 }
 
 [HarmonyPatch(typeof(GSPlayerDataMgr), nameof(GSPlayerDataMgr.OnTick))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchGSPlayerDataMgrOnTick
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchGSPlayerDataMgrOnTick
 {
     public static bool Prefix(float DeltaTime)
     {
@@ -281,8 +281,8 @@ public static class PatchGSPlayerDataMgrOnTick
 }
 
 [HarmonyPatch(typeof(VISimTips), "OnTick")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchVISimTipsOnTick
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchVISimTipsOnTick
 {
     public static float OriginalDeltaTime;
 

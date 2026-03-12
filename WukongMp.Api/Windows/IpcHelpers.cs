@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace WukongMp.Api.Windows;
 
 // TODO: Move to common API
-public static class IpcHelpers
+internal static class IpcHelpers
 {
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern uint GetEnvironmentVariable(string lpName, StringBuilder lpBuffer, uint nSize);

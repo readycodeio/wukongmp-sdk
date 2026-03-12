@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public struct ShowAntiStallWarningEvent(int warningTime) : IAlwaysPropagatesToEcsOnly
+internal readonly struct ShowAntiStallWarningEvent(int warningTime) : IAlwaysPropagatesToEcsOnly
 {
     public int WarningTime { get; } = warningTime;
 }

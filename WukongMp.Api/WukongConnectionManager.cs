@@ -14,7 +14,7 @@ using WukongMp.Api.State;
 namespace WukongMp.Api;
 
 [Obsolete]
-public class WukongConnectionManager : IDisposable
+internal class WukongConnectionManager : IDisposable
 {
     public RelayClientService RelayClientService { get; }
     public IRelayClient RelayClient { get; }

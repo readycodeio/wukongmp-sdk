@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct MagicFieldDeadEvent(
+internal readonly struct MagicFieldDeadEvent(
     string className,
     EBGUBulletDestroyReason reason
 )

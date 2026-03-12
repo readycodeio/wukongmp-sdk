@@ -6,7 +6,7 @@ using ReadyM.Api.Multiplayer.Generators;
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
-public partial struct MagicallyChangeData(NetworkId netId, string configAssetName, bool compressed, int skillID, int recoverSkillID, int curVigorSkillID, ECastReason_MagicallyChange castReason) : INetSerializable
+internal partial struct MagicallyChangeData(NetworkId netId, string configAssetName, bool compressed, int skillID, int recoverSkillID, int curVigorSkillID, ECastReason_MagicallyChange castReason) : INetSerializable
 {
     public NetworkId NetId = netId;
     public string ConfigAssetName = configAssetName;

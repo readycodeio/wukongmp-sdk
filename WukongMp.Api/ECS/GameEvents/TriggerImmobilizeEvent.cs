@@ -4,7 +4,7 @@ using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct TriggerImmobilizeEvent(
+internal readonly struct TriggerImmobilizeEvent(
     Entity target,
     Entity caster,
     bool greatSageTalentActiveBuff) : IEquatable<TriggerImmobilizeEvent>, IMasterClientManaged

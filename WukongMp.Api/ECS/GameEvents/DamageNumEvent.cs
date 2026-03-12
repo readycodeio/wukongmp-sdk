@@ -6,7 +6,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct DamageNumEvent(
+internal readonly struct DamageNumEvent(
     Entity entity,
     EDamageNumberType damageType,
     int damageNum,

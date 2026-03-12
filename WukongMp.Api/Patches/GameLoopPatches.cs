@@ -14,8 +14,8 @@ using WukongMp.Api.Monitors;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class ReceiveTickPatch
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class ReceiveTickPatch
 {
     public static void Prefix(ref int TickGroup)
     {

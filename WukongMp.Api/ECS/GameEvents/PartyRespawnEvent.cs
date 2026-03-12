@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct PartyRespawnEvent(
+internal readonly struct PartyRespawnEvent(
     Entity entity,
     int birthShrineId) : IEquatable<PartyRespawnEvent>, IAlwaysPropagates
 {

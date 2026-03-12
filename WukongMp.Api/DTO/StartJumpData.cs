@@ -8,7 +8,7 @@ using WukongMp.Api.Serialization;
 namespace WukongMp.Api.DTO;
 
 [DeriveJsonSerializable]
-public partial struct StartJumpData(NetworkId netId, ESkillDirection startJumpDir, FVector2D inputVector) : INetSerializable
+internal partial struct StartJumpData(NetworkId netId, ESkillDirection startJumpDir, FVector2D inputVector) : INetSerializable
 {
     public NetworkId NetId = netId;
     public ESkillDirection StartJumpDir = startJumpDir;

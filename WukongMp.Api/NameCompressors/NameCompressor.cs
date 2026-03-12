@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.NameCompressors;
 
-public class NameCompressor
+internal class NameCompressor
 {
     private readonly string _commonFolder;
     private readonly Regex _longNameRegex;

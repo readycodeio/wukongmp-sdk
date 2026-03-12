@@ -21,8 +21,8 @@ namespace WukongMp.Api.Patches;
 
 // runs multithreaded
 [HarmonyPatch(typeof(BUC_ABPBGUCharacterData), nameof(BUC_ABPBGUCharacterData.Update_GameThread))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBGUPlayerAnimation
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBGUPlayerAnimation
 {
     public static void Postfix(
         BUC_ABPBGUCharacterData? __instance,
@@ -102,8 +102,8 @@ public class PatchBGUPlayerAnimation
 
 // runs multithreaded
 [HarmonyPatch(typeof(BUC_ABPPlayerLocomotionData), nameof(BUC_ABPPlayerLocomotionData.Update))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchPlayerLocomotion
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchPlayerLocomotion
 {
     public static void Postfix(
         BUC_ABPPlayerLocomotionData __instance,
@@ -178,8 +178,8 @@ public class PatchPlayerLocomotion
 
 // NOTE: Runs multithreaded
 [HarmonyPatch(typeof(BUC_ABPBasicData), nameof(BUC_ABPBasicData.Update_WorkThread))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBasicData
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBasicData
 {
     public static void Postfix(
         BUC_ABPBasicData __instance,
@@ -250,8 +250,8 @@ public class PatchBasicData
 }
 
 [HarmonyPatch(typeof(BUS_EquipComp), "OnChangeEquip")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchEqCompUpdate
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchEqCompUpdate
 {
     public static bool Prefix(BUS_EquipComp __instance)
     {
@@ -303,8 +303,8 @@ public class PatchEqCompUpdate
 }
 
 [HarmonyPatch(typeof(BUS_DeadComp), "OnUnitDead")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnUnitDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnUnitDead
 {
     public static void Prefix(BUS_DeadComp __instance, EDeadReason DeadReason, IBUC_SimpleStateData ___SimpleStateData, IBUC_UnitStateData ___UnitStateData, out bool __state)
     {
@@ -405,8 +405,8 @@ public class PatchOnUnitDead
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnUnitTriggerDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnUnitTriggerDead
 {
     [HarmonyTargetMethodHint("b1.BUS_UIControlSystemV2", "OnUnitTriggerDead")]
     private static MethodBase TargetMethod()
@@ -424,8 +424,8 @@ public class PatchOnUnitTriggerDead
 }
 
 [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "OnTickWithGroup")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchCameraCompTick
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchCameraCompTick
 {
     public static bool Prefix(BUS_PlayerCameraCompImpl __instance)
     {
@@ -457,8 +457,8 @@ public static class PatchCameraCompTick
 }
 
 [HarmonyPatch(typeof(BUS_FallingCompl), "SafeFallingTimerTick")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchFallDamage
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchFallDamage
 {
     public static bool Prefix()
     {
@@ -470,8 +470,8 @@ public static class PatchFallDamage
 }
 
 [HarmonyPatch(typeof(BUC_TargetInfoData), "IsSupportMultiLockTarget")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchIsSupportMultiLockTarget
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchIsSupportMultiLockTarget
 {
     public static bool Prefix(ref bool __result)
     {
@@ -488,8 +488,8 @@ public static class PatchIsSupportMultiLockTarget
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchSetTargetToData
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchSetTargetToData
 {
     [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "SetTargetToData")]
     private static MethodBase TargetMethod()
@@ -550,8 +550,8 @@ public static class PatchSetTargetToData
 }
 
 [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "ApplyCameraControlData")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchApplyCameraControlData
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchApplyCameraControlData
 {
     public static bool Prefix(GSCameraControlData InControlData)
     {
@@ -571,8 +571,8 @@ public static class PatchApplyCameraControlData
 }
 
 [HarmonyPatch(typeof(BUS_BeAttackedComp), "IsDamageValid")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchIsDamageValid
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchIsDamageValid
 {
     public static bool Prefix(IBUC_SimpleStateData ___VictimSimpleStateData, ref bool __result)
     {
@@ -587,8 +587,8 @@ public static class PatchIsDamageValid
 }
 
 [HarmonyPatch(typeof(BUS_ParkourMoveCompImpl), "CheckStrideDown")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchCheckStrideDown
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchCheckStrideDown
 {
     public static bool Prefix()
     {
@@ -600,8 +600,8 @@ public static class PatchCheckStrideDown
 }
 
 [HarmonyPatch(typeof(BGW_GameDB), "GetUnitBattleInfoExtendDesc")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchGetUnitBattleInfoExtendDesc
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchGetUnitBattleInfoExtendDesc
 {
     public static void Postfix(ref FUStUnitBattleInfoExtendDesc? __result)
     {
@@ -614,8 +614,8 @@ public static class PatchGetUnitBattleInfoExtendDesc
 }
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnTriggerInputActionImpl")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnTriggerInputActionImpl
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnTriggerInputActionImpl
 {
     public static bool Prefix(BUS_PlayerInputActionComp __instance)
     {
@@ -634,8 +634,8 @@ public static class PatchOnTriggerInputActionImpl
 
 // Disable slowing down time
 [HarmonyPatch(typeof(BUS_TimeScaleComp), "OnTriggerScaleTime")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnTriggerScaleTime
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnTriggerScaleTime
 {
     public static bool Prefix()
     {
@@ -647,8 +647,8 @@ public static class PatchOnTriggerScaleTime
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchSetAllUnitCannotDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchSetAllUnitCannotDead
 {
     [HarmonyTargetMethodHint("b1.BIS_DeathManager", "SetAllUnitCannotDead")]
     private static MethodBase TargetMethod()
@@ -666,8 +666,8 @@ public class PatchSetAllUnitCannotDead
 }
 
 [HarmonyPatch(typeof(InteractStepMatchPos), "StepBegin")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnInteractStepBegin
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnInteractStepBegin
 {
     public static void Prefix(InteractStepMatchPos __instance, InteractContext ___Context)
     {
@@ -688,8 +688,8 @@ public class PatchOnInteractStepBegin
 }
 
 [HarmonyPatch(typeof(InteractStepBase), "TriggerFinish")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTriggerFinish
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTriggerFinish
 {
     public static void Prefix(InteractStepBase __instance, InteractContext ___Context)
     {
@@ -713,8 +713,8 @@ public class PatchTriggerFinish
 }
 
 [HarmonyPatch(typeof(BGS_GameBgmMgr), "OnUIShrineMainActive")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnUIShrineMainActive
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnUIShrineMainActive
 {
     public static void Postfix(bool IsActive)
     {
@@ -732,8 +732,8 @@ public class PatchOnUIShrineMainActive
 }
 
 [HarmonyPatch(typeof(InteractStepMatchPos), "OnTick")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchInteractStepMatchPosOnTick
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchInteractStepMatchPosOnTick
 {
     public static Exception? Finalizer(Exception? __exception)
     {
@@ -747,8 +747,8 @@ public class PatchInteractStepMatchPosOnTick
 }
 
 [HarmonyPatch(typeof(B1BattleLogicSvc), "RebirthPointRest")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnRebirthPointRest
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnRebirthPointRest
 {
     public static bool Prefix()
     {
@@ -769,8 +769,8 @@ public class PatchOnRebirthPointRest
 }
 
 [HarmonyPatch(typeof(BUC_ABPMotionMatchingData), "UpdatePlayerMotionMatchingState")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchUpdatePlayerMotionMatchingState
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchUpdatePlayerMotionMatchingState
 {
     public static bool Prefix(
         BUC_ABPMotionMatchingData __instance,
@@ -835,8 +835,8 @@ public class PatchUpdatePlayerMotionMatchingState
 }
 
 [HarmonyPatch(typeof(BUS_JumpComp), "TriggerJumpSkill", typeof(ESkillDirection), typeof(FVector2D))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTriggerJumpSkill
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTriggerJumpSkill
 {
     public static void Prefix(BUS_JumpComp __instance, ESkillDirection StartJumpDir, FVector2D CurrentInputVector)
     {
@@ -853,8 +853,8 @@ public class PatchTriggerJumpSkill
 }
 
 [HarmonyPatch(typeof(BUS_JumpComp), "OnReleased")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchJumpOnReleased
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchJumpOnReleased
 {
     public static void Prefix(BUS_JumpComp __instance)
     {
@@ -871,8 +871,8 @@ public class PatchJumpOnReleased
 }
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "CheckCanSelectTarget")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchCheckCanSelectTarget
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchCheckCanSelectTarget
 {
     public static bool Prefix(AActor Player, string Socket, ref bool __result)
     {
@@ -902,8 +902,8 @@ public class PatchCheckCanSelectTarget
 }
 
 [HarmonyPatch(typeof(PlayerWukongAttrDataInit), nameof(PlayerWukongAttrDataInit.SetAttrTransAfterActiveTalent))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchSetAttrTransAfterActiveTalent
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchSetAttrTransAfterActiveTalent
 {
     public static Exception? Finalizer(Exception? __exception)
     {
@@ -917,8 +917,8 @@ public class PatchSetAttrTransAfterActiveTalent
 }
 
 [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnSetRebirthPointAsCurrentBirthPoint")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnSetRebirthPointAsCurrentBirthPoint
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnSetRebirthPointAsCurrentBirthPoint
 {
     public static void Postfix(UActorCompBaseCS __instance, int RebirthPointID)
     {
@@ -932,8 +932,8 @@ public class PatchOnSetRebirthPointAsCurrentBirthPoint
 }
 
 [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnSetCurrentBirthPoint")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnSetCurrentBirthPoint
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnSetCurrentBirthPoint
 {
     public static void Postfix(UActorCompBaseCS __instance, int BirthPointID)
     {
@@ -947,8 +947,8 @@ public class PatchOnSetCurrentBirthPoint
 }
 
 [HarmonyPatch(typeof(BPS_RebirthPointSystem), "OnForceSetRebirthPoint")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnForceSetRebirthPoint
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnForceSetRebirthPoint
 {
     public static void Postfix(UActorCompBaseCS __instance, int RebirthPointId)
     {
@@ -962,8 +962,8 @@ public class PatchOnForceSetRebirthPoint
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnRebirthFinished
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnRebirthFinished
 {
     [HarmonyTargetMethodHint("b1.BUS_RebirthComp", "CommonRebirthLogic")]
     private static MethodBase TargetMethod()
@@ -984,8 +984,8 @@ public class PatchOnRebirthFinished
 }
 
 [HarmonyPatch(typeof(UBGUFunctionLibCollisionChannel), nameof(UBGUFunctionLibCollisionChannel.BGUSetCollisionResponseToChannels))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBGUSetCollisionResponseToChannels
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBGUSetCollisionResponseToChannels
 {
     public static bool Prefix(UPrimitiveComponent Comp, Dictionary<ECollisionChannel, ECollisionResponseType> ResponseToChannels)
     {
@@ -1009,8 +1009,8 @@ public class PatchBGUSetCollisionResponseToChannels
 }
 
 [HarmonyPatch(typeof(FUStSkillSDesc), "get_CooldownTime")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchSkillCooldownTime
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchSkillCooldownTime
 {
     public static void Postfix(ref float __result)
     {

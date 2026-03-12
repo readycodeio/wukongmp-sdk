@@ -4,7 +4,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Command;
 
-public class ConnectionCommandRegistration(
+internal class ConnectionCommandRegistration(
     WukongPlayerState playerState,
     WukongConnectionManager connection,
     WukongChatter chatter) : IConsoleCommandRegistration

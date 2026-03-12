@@ -3,7 +3,7 @@ using UnrealEngine.Engine;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class MagicFieldUtils
+internal static class MagicFieldUtils
 {
     public static void DestroyMagicField(string magicFieldClassName, EBGUBulletDestroyReason reason)
     {

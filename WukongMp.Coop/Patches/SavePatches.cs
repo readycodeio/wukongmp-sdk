@@ -12,7 +12,7 @@ namespace WukongMp.Coop.Patches;
 
 /// Replace Steam save folder with ours.
 [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.GetFileFullName))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchWindowsSaveGame
 {
     public static bool Prefix(ref string __result, string SlotName)
@@ -30,7 +30,7 @@ public class PatchWindowsSaveGame
 
 /// Load our custom save on new game.
 [HarmonyPatch(typeof(GSB1UIUtil), nameof(GSB1UIUtil.StartNewGame))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchStartNewGame
 {
     public static bool Prefix(UObject WorldContext)
@@ -42,7 +42,7 @@ public class PatchStartNewGame
 
 /// Read the world save and character save data, clear spells and set the birth point.
 [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LoadArchive))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchGameArchive
 {
     public static void Postfix(BGW_GameArchiveMgr __instance, ref ReadArchiveResult __result, int ArchiveId, ref FUStBEDArchivesData? OutArchiveData)
@@ -64,7 +64,7 @@ public class PatchGameArchive
 }
 
 [HarmonyPatch(typeof(GSWindowsPlatformSaveGame), nameof(GSWindowsPlatformSaveGame.SaveDataToSlot))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchGSWindowsPlatformSaveGame
 {
     private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
@@ -83,7 +83,7 @@ public class PatchGSWindowsPlatformSaveGame
 }
 
 [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.GetLatestArchive))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchGetLatestArchive
 {
     public static bool Prefix(BGW_GameArchiveMgr __instance, ref ArchiveSummaryData? __result)

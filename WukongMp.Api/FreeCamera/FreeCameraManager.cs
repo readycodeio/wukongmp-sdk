@@ -9,17 +9,23 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera;
 
-public class FreeCameraManager(WukongPlayerState playerState)
+public sealed class FreeCameraManager
 {
-    private bool _isInFreeCameraMode;
+    private const string FreeCameraActorPath = "/Game/Mods/WukongMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
+
     private BGUCharacterCS? _cachePlayerPawn;
     private AActor? _freeCameraActor;
     private USpringArmComponent? _springArmComponent;
     private float _gameFov;
     private AActor? _cacheCameraViewTarget;
-    private const string FreeCameraActorPath = "/Game/Mods/WukongMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
-
-    public bool IsInFreeCameraMode => _isInFreeCameraMode;
+    private readonly WukongPlayerState playerState;
+    
+    internal FreeCameraManager(WukongPlayerState playerState)
+    {
+        this.playerState = playerState;
+    }
+    
+    public bool IsInFreeCameraMode { get; private set; }
 
     public event Action<bool>? OnFreeCameraModeChanged;
 
@@ -31,7 +37,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
             return;
         }
 
-        if (_isInFreeCameraMode)
+        if (IsInFreeCameraMode)
         {
             return;
         }
@@ -100,7 +106,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         _freeCameraActor.CallFunctionByNameWithArguments($"SetCameraFOV {_gameFov}", true);
         aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
         BGW_EventCollection.Get(world).Evt_SetInputMode(EGSInputMode.UIAndGame, EGSInputModeChangeReason.Replay);
-        _isInFreeCameraMode = true;
+        IsInFreeCameraMode = true;
         OnFreeCameraModeChanged?.Invoke(true);
     }
 
@@ -112,7 +118,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
             return;
         }
 
-        if (!_isInFreeCameraMode)
+        if (!IsInFreeCameraMode)
         {
             return;
         }
@@ -155,13 +161,13 @@ public class FreeCameraManager(WukongPlayerState playerState)
         _freeCameraActor = null;
         _springArmComponent = null;
         _cachePlayerPawn = null;
-        _isInFreeCameraMode = false;
+        IsInFreeCameraMode = false;
         OnFreeCameraModeChanged?.Invoke(false);
     }
 
     internal void ReEnableFreeCamera()
     {
-        if (_isInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed() && _cachePlayerPawn != null)
+        if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed() && _cachePlayerPawn != null)
         {
             var aBGPPlayerController = _cachePlayerPawn.GetController() as ABGPPlayerController;
             if (aBGPPlayerController.IsNullOrDestroyed())
@@ -286,14 +292,14 @@ public class FreeCameraManager(WukongPlayerState playerState)
         }
     }
     
-    public FVector GetCurrentCameraPosition()
+    internal FVector GetCurrentCameraPosition()
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
             return GetSpringArmEndTransform().GetLocation();
         return FVector.ZeroVector;
     }
 
-    public FVector GetForwardVector()
+    internal FVector GetForwardVector()
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
         {
@@ -302,7 +308,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return FVector.ForwardVector;
     }
 
-    public FVector GetRightVector()
+    internal FVector GetRightVector()
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
         {
@@ -311,7 +317,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return FVector.RightVector;
     }
 
-    public float GetFreeCameraActorPitch()
+    internal float GetFreeCameraActorPitch()
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
         {
@@ -320,7 +326,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         return 0f;
     }
 
-    public void SetFreeCameraActorTransform(FVector location, FRotator rotation)
+    internal void SetFreeCameraActorTransform(FVector location, FRotator rotation)
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
         {
@@ -329,12 +335,12 @@ public class FreeCameraManager(WukongPlayerState playerState)
         }
     }
 
-    public void SetFreeCameraActorTransform(FTransform transform)
+    internal void SetFreeCameraActorTransform(FTransform transform)
     {
         SetFreeCameraActorTransform(transform.GetLocation(), transform.GetRotation().Rotator());
     }
 
-    public void SetSpringArmLength(float length)
+    internal void SetSpringArmLength(float length)
     {
         if (IsInFreeCameraMode && !_springArmComponent.IsNullOrDestroyed())
         {
@@ -343,7 +349,7 @@ public class FreeCameraManager(WukongPlayerState playerState)
         }
     }
 
-    public FTransform GetSpringArmEndTransform()
+    internal FTransform GetSpringArmEndTransform()
     {
         if (IsInFreeCameraMode && !_springArmComponent.IsNullOrDestroyed())
         {

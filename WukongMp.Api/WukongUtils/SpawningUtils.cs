@@ -17,7 +17,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class SpawningUtils
+internal static class SpawningUtils
 {
     public static BGUCharacterCS? SpawnCloneForPlayer(FreeCameraManager freeCameraManager, WukongPlayerState playerState, in MainCharacterEntity mainEntity)
     {

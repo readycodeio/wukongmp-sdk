@@ -7,7 +7,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct SetTargetData(
+internal partial struct SetTargetData(
     NetworkId characterNetId,
     NetworkId targetNetId,
     bool clearTarget) : INetSerializable

@@ -7,7 +7,7 @@ using UnrealEngine.UMG;
 
 namespace WukongMp.Api.WukongUtils
 {
-    public static class ModWidgetsUtils
+    internal static class ModWidgetsUtils
     {
         public static UUserWidget? SpawnWidget(string widgetPath)
         {

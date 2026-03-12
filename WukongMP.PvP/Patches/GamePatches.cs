@@ -16,7 +16,7 @@ using WukongMp.PvP.WukongUtils;
 namespace WukongMp.PvP.Patches;
 
 [HarmonyPatch(typeof(BPC_PlayerRoleData), "GetNewGamePlusCount")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public static class PatchGetNewGamePlusCount
 {
     public static bool Prefix(ref int __result)
@@ -36,7 +36,7 @@ public static class PatchGetNewGamePlusCount
 /// This prevents the game from resetting the team ID of monsters assigned to player teams in PvP.
 /// </summary>
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class TamerResetPatch
 {
     [HarmonyTargetMethodHint("b1.BUS_TeamIDManageComp", "OnResetTeamID")]
@@ -56,7 +56,7 @@ public class TamerResetPatch
 }
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnCameraLockTarget")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PlayerCameraLockPatch
 {
     public static bool Prefix(UnitLockTargetInfo TargetInfo)
@@ -72,7 +72,7 @@ public class PlayerCameraLockPatch
 }
 
 [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "UpdateCameraState_AnyThread")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class FixTransformCameraLockToOriginPatch
 {
     private static MethodInfo? TargetGetter;
@@ -116,7 +116,7 @@ public class FixTransformCameraLockToOriginPatch
 }
 
 [HarmonyPatch(typeof(BGUFuncLibSelectTargetsCS), nameof(BGUFuncLibSelectTargetsCS.BGUSelectLockTargetInRange))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PatchBGUSelectLockTargetInRange
 {
     public static bool Prefix(

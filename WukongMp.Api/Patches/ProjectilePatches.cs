@@ -10,8 +10,8 @@ using WukongMp.Api.ECS.GameEvents;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnSwitchBulletTarget
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnSwitchBulletTarget
 {
     [HarmonyTargetMethodHint("b1.BUS_ProjectileCtrComp", "OnSwitchBulletTarget")]
     private static MethodBase TargetMethod()
@@ -62,8 +62,8 @@ public class PatchOnSwitchBulletTarget
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnSwitchBulletInfoIfNeed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnSwitchBulletInfoIfNeed
 {
     [HarmonyTargetMethodHint("b1.BUS_ProjectileCtrComp", "SwitchBulletInfoIfNeed")]
     private static MethodBase TargetMethod()
@@ -107,8 +107,8 @@ public class PatchOnSwitchBulletInfoIfNeed
 }
 
 [HarmonyPatch(typeof(BUS_ProjectileLifeComp), "OnProjectileDead")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnProjectileDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnProjectileDead
 {
     public static void Postfix(BUS_ProjectileLifeComp __instance, IBUC_MasterData ___MasterData, EBGUBulletDestroyReason Reason)
     {
@@ -135,8 +135,8 @@ public static class PatchOnProjectileDead
 }
 
 [HarmonyPatch(typeof(BUS_ObjActorMovementComp), "OnSetMoveMode")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnSetMoveMode
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnSetMoveMode
 {
     public static void Postfix(BUS_ObjActorMovementComp __instance, EBulletOrMagicFieldMoveModeType MoveMode)
     {
@@ -171,8 +171,8 @@ public static class PatchOnSetMoveMode
 }
 
 [HarmonyPatch(typeof(BUEffectBulletSwitchSelf), "ApplyBySkill_Implement")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchApplyBySkill_Implement
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchApplyBySkill_Implement
 {
     public static bool Prefix(int EffectID, AActor? Caster, AActor? Target)
     {
@@ -207,8 +207,8 @@ public static class PatchApplyBySkill_Implement
 }
 
 [HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "CheckTargetValid")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchCheckTargetValid
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchCheckTargetValid
 {
     public static bool Prefix(AActor Target, ref bool __result)
     {
@@ -226,8 +226,8 @@ public static class PatchCheckTargetValid
 }
 
 [HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "SearchTargetTick")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchSearchTargetTick
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchSearchTargetTick
 {
     private static MethodInfo? _changeToFollowMasterMethod;
 

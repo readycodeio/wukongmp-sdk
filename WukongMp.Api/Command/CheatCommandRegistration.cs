@@ -4,7 +4,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Command;
 
-public class CheatCommandRegistration(
+internal class CheatCommandRegistration(
     WukongPlayerState playerState,
     WukongAreaState areaState,
     WukongChatter chatter,

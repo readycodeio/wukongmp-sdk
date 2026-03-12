@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Generators;
 namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
-public partial struct TamerSkillInteractData(
+internal partial struct TamerSkillInteractData(
     NetworkId netId,
     int skillId) : INetSerializable
 {

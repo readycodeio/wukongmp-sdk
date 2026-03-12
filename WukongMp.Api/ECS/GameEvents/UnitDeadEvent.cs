@@ -6,7 +6,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct UnitDeadEvent(
+internal readonly struct UnitDeadEvent(
     Entity entity,
     EDeadReason deadReason,
     int dmgId,

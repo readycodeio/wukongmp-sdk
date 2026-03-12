@@ -4,7 +4,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Command;
 
-public class ExecuteWukongCommandRegistration : IConsoleCommandRegistration
+internal class ExecuteWukongCommandRegistration : IConsoleCommandRegistration
 {
     public void RegisterCommands(ConsoleCommandRegistry registry)
     {

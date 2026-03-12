@@ -7,7 +7,7 @@ using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
 {
-    public class ChatWidget : GameWidgetBase
+    internal class ChatWidget : GameWidgetBase
     {
         private struct MessageEntry
         {

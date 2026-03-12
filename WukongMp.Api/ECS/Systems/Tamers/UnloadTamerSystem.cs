@@ -6,7 +6,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
+internal sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {

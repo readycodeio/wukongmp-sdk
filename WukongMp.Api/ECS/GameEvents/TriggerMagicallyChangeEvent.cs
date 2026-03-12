@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct TriggerMagicallyChangeEvent(
+internal readonly struct TriggerMagicallyChangeEvent(
     Entity entity,
     string configPathName,
     int skillId,

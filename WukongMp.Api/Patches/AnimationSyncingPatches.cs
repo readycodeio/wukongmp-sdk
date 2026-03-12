@@ -7,8 +7,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGS_AnimationSyncSystem), "OnBeginAnimationSyncPreCheck")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnBeginAnimationSyncPreCheck
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnBeginAnimationSyncPreCheck
 {
     // Disable animation syncing attacks for monsters not owned by the local player
     public static bool Prefix(AActor Host)

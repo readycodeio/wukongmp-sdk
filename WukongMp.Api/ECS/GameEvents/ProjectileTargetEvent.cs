@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct ProjectileTargetEvent(
+internal readonly struct ProjectileTargetEvent(
     Entity character,
     string projectileName,
     Entity target,

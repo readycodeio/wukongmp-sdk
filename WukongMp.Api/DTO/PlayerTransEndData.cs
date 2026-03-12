@@ -9,7 +9,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct PlayerTransEndData(
+internal partial struct PlayerTransEndData(
     NetworkId netId,
     int unitResId, 
     int unitBornSkillId,

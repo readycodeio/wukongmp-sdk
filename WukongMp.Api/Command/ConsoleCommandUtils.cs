@@ -2,7 +2,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Command;
 
-public static class ConsoleCommandUtils
+internal static class ConsoleCommandUtils
 {
     extension(WukongPlayerState playerState)
     {

@@ -8,7 +8,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Command;
 
-public class GiveUpCommandRegistration(
+internal class GiveUpCommandRegistration(
     IClientEcsUpdateLoop ecsLoop,
     WukongPlayerState playerState,
     WukongChatter chatter) : IConsoleCommandRegistration

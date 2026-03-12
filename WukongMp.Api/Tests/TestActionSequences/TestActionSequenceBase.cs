@@ -5,7 +5,7 @@ using WukongMp.Api.Tests.TestActions;
 
 namespace WukongMp.Api.Tests.TestActionSequences
 {
-    public class TestActionSequenceBase(ILogger logger)
+    internal class TestActionSequenceBase(ILogger logger)
     {
         private readonly Queue<TestActionBase> _testsToRun = [];
         private readonly ILogger _logger = logger;

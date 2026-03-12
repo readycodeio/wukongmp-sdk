@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.UI
 {
-    public class FreeCameraMessageWidget : GameWidgetBase
+    internal class FreeCameraMessageWidget : GameWidgetBase
     {
         private const string FreeCameraMessageWidgetPath = "/Game/Mods/WukongMod/WBP_FreeCameraMessage.WBP_FreeCameraMessage_C";
 

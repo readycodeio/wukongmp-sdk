@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct PhantomRushEvent(Entity entity, ESkillDirection direction)
+internal readonly struct PhantomRushEvent(Entity entity, ESkillDirection direction)
     : IEquatable<PhantomRushEvent>, IOwnershipManaged
 {
     public readonly Entity Entity = entity;

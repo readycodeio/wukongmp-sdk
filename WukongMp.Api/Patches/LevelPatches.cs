@@ -12,8 +12,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(UGameplayStatics), "OpenLevel")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchOpenLevel
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchOpenLevel
 {
     public static void Postfix(UObject WorldContextObject, FName LevelName, bool bAbsolute = true)
     {
@@ -22,8 +22,8 @@ public static class PatchOpenLevel
 }
 
 [HarmonyPatch(typeof(BPS_PlayerTeleportSystem), "OnPlayerTeleportTo")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchOnPlayerTeleportTo
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchOnPlayerTeleportTo
 {
     public static void Postfix(ETeleportTypeV2 TeleportType, ValueType? UserData, EPlayerTeleportReason Reason)
     {
@@ -38,8 +38,8 @@ public static class PatchOnPlayerTeleportTo
 }
 
 [HarmonyPatch(typeof(TaskNodeInstance_ChapterClear), "PlayChapterMovie")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchPlayChapterMovie
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchPlayChapterMovie
 {
     public static bool Prefix(TaskNodeInstance_ChapterClear __instance)
     {

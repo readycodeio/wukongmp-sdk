@@ -1,7 +1,7 @@
 using Friflo.Engine.ECS;
 using WukongMp.Sdk.Api;
 
-namespace WukongMp.Sdk;
+namespace WukongMp.Sdk.Entities;
 
 public readonly struct ReadyCharacter : IReadyEntity<ReadyCharacter>, 
     IReadyConvertable<ReadyCharacter, ReadyActor>,
@@ -31,9 +31,9 @@ public readonly struct ReadyCharacter : IReadyEntity<ReadyCharacter>,
     ReadyCharacter IReadyEntity<ReadyCharacter>.Construct(WukongClientApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyCharacter>.Deconstruct(ReadyCharacter self, out WukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyCharacter>.Deconstruct(out WukongClientApi api, out Entity entity)
     {
-        api = self.Api;
-        entity = self.Entity;
+        api = Api;
+        entity = Entity;
     }
 }

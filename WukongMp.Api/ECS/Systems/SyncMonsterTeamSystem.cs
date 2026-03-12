@@ -6,7 +6,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class SyncMonsterTeamSystem : QuerySystem<TeamComponent, LocalTamerComponent>
+internal class SyncMonsterTeamSystem : QuerySystem<TeamComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {

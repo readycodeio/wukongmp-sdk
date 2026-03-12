@@ -6,7 +6,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Command;
 
-public class ObstacleCommandRegistration : IConsoleCommandRegistration
+internal class ObstacleCommandRegistration : IConsoleCommandRegistration
 {
     public void RegisterCommands(ConsoleCommandRegistry registry)
     {

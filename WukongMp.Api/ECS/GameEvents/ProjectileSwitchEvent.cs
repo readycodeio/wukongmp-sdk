@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct ProjectileSwitchEvent(
+internal readonly struct ProjectileSwitchEvent(
     Entity entity,
     string projectileClassName,
     int bulletSwitchId,

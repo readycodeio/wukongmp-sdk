@@ -9,7 +9,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct UnitDeadData(
+internal partial struct UnitDeadData(
     NetworkId netId, 
     EDeadReason deadReason, 
     int dmgId, 

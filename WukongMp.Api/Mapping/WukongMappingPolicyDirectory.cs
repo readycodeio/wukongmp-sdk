@@ -8,13 +8,14 @@ using ReadyM.Api.Multiplayer.Mapping;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.Mapping;
 
-public class WukongMappingPolicyDirectory(
+internal class WukongMappingPolicyDirectory(
     IMappingPolicyDirectory policyDir,
     IMappedEntityManager<AActor> mappedEntity,
     MappedEventManager mappedEvent,

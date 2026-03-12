@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace WukongMp.Api.Windows;
 
-public static class MarshalHelper
+internal static class MarshalHelper
 {
     [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern IntPtr GetModuleHandle(string lpModuleName);

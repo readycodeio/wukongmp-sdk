@@ -7,7 +7,7 @@ using WukongMp.Api.Serialization;
 namespace WukongMp.Api.DTO;
 
 [DeriveJsonSerializable]
-public partial struct RequestSpawnUnitsData(
+internal partial struct RequestSpawnUnitsData(
     NetworkId requesterId,
     string unitName, 
     int count,

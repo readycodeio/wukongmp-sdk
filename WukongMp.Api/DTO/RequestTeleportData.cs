@@ -7,7 +7,7 @@ using WukongMp.Api.Serialization;
 namespace WukongMp.Api.DTO;
 
 [DeriveJsonSerializable]
-public partial struct RequestTeleportData(
+internal partial struct RequestTeleportData(
     NetworkId netId,
     FVector location,
     FRotator rotation) : INetSerializable

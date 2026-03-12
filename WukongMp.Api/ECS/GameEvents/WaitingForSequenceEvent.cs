@@ -4,7 +4,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct WaitingForSequenceEvent(
+internal readonly struct WaitingForSequenceEvent(
     int sequenceId,
     FVector sequenceLocation) : IEquatable<WaitingForSequenceEvent>, IAlwaysPropagates
 {

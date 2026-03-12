@@ -7,7 +7,7 @@ using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;
 using AreaScopeComponent = ReadyM.Api.Multiplayer.ECS.Components.AreaScopeComponent;
 
-namespace WukongMp.Sdk;
+namespace WukongMp.Sdk.Entities;
 
 public static class ReadyObjectExtensions
 {
@@ -18,7 +18,7 @@ public static class ReadyObjectExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 if (!entity.TryGetComponent<MetadataComponent>(out var metaComp))
                     throw new InvalidOperationException($"Entity does not have MetadataComponent: {entity.GetNetId()}");
                 return metaComp.Owner;
@@ -29,7 +29,7 @@ public static class ReadyObjectExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 if (!entity.TryGetComponent<InScopeComponent>(out var inScopeComp))
                     return null;
                 if (!inScopeComp.ScopeEntity.TryGetComponent<AreaScopeComponent>(out var areaScopeEntity))
@@ -42,12 +42,12 @@ public static class ReadyObjectExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 return entity.TryGetComponent(out TransformComponent transComp) ? transComp.Position : throw new InvalidOperationException();
             }
             set
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 if (DI.Instance.MappedField.CanSetFromApi<TransformComponent>(entity, out var sync))
                 {
                     sync.SetFromApi(TransformComponent.Fields.Position, value);
@@ -63,12 +63,12 @@ public static class ReadyObjectExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 return entity.TryGetComponent(out TransformComponent transComp) ? transComp.Rotation : throw new InvalidOperationException();
             }
             set
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 if (DI.Instance.MappedField.CanSetFromApi<TransformComponent>(entity, out var sync))
                 {
                     sync.SetFromApi(TransformComponent.Fields.Rotation, value);
@@ -82,7 +82,7 @@ public static class ReadyObjectExtensions
 
         public void SetLocationRotation(Vector3 location, Vector3 rotation)
         {
-            default(TSelf).Deconstruct(obj, out _, out var entity);
+            obj.Deconstruct(out _, out var entity);
             if (DI.Instance.MappedField.CanSetFromApi<TransformComponent>(entity, out var sync))
             {
                 sync.SetFromApi(TransformComponent.Fields.Position, location);

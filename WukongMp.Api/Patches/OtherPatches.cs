@@ -10,8 +10,8 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_DispLibUnitMaterialsManageComp), "Internal_AddMaterialInfoForNewPrimComp")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRandomCrashOnMeshAssignedOnTamerReset
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRandomCrashOnMeshAssignedOnTamerReset
 {
     public static Exception? Finalizer()
     {
@@ -21,8 +21,8 @@ public static class PatchRandomCrashOnMeshAssignedOnTamerReset
 }
 
 [HarmonyPatch(typeof(BUS_OSSCollectComp), "OnOSSCollectBattleData_AiUnit")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRandomCrashOnOSSCollectBattleData_AiUnit
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRandomCrashOnOSSCollectBattleData_AiUnit
 {
     public static Exception? Finalizer(Exception? __exception)
     {
@@ -37,8 +37,8 @@ public static class PatchRandomCrashOnOSSCollectBattleData_AiUnit
 }
 
 [HarmonyPatch(typeof(BUS_DeadZoneLogicComp), "PlayerCliffFallRollBack")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRandomCrashOnPlayerCliffFallRollBack
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRandomCrashOnPlayerCliffFallRollBack
 {
     public static Exception? Finalizer(Exception? __exception)
     {
@@ -53,8 +53,8 @@ public static class PatchRandomCrashOnPlayerCliffFallRollBack
 }
 
 [HarmonyPatch(typeof(GSG), "OnTopPageChange")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchGSGOnTopPageChange
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchGSGOnTopPageChange
 {
     public static bool Prefix(GSUIPage? NewValue)
     {

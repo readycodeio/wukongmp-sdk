@@ -8,7 +8,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.Command;
 
-public class WukongCommandConsole : IDisposable
+internal class WukongCommandConsole : IDisposable
 {
     private readonly ConsoleCommandMatcher _matcher;
     private readonly WukongAreaState _areaState;

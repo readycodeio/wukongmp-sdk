@@ -12,7 +12,7 @@ using WukongMp.Api.ECS.Values;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class EquipmentUtils
+internal static class EquipmentUtils
 {
     private delegate void OnChangeEquipRealDelegate(BUS_EquipComp equipComp, BtlB1.EquipPosition position, int item);
 

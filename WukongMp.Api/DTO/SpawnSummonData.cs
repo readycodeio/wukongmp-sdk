@@ -11,7 +11,7 @@ using WukongMp.Api.Serialization;
 namespace WukongMp.Api.DTO;
 
 [DeriveJsonSerializable]
-public partial struct SpawnSummonData(NetworkId summonerNetId, string summonGuid, string summonClassPath) 
+internal partial struct SpawnSummonData(NetworkId summonerNetId, string summonGuid, string summonClassPath) 
     : INetSerializable, IEquatable<SpawnSummonData>
 {
     public NetworkId SummonerNetId = summonerNetId;

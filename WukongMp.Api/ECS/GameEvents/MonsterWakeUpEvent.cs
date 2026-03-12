@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct MonsterWakeUpEvent(Entity entity)
+internal readonly struct MonsterWakeUpEvent(Entity entity)
     : IEquatable<MonsterWakeUpEvent>, IOwnershipManaged
 {
     public readonly Entity Entity = entity;

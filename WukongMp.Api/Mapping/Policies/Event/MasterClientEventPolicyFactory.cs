@@ -8,7 +8,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Mapping.Policies.Event;
 
-public class MasterClientEventPolicyFactory(
+internal class MasterClientEventPolicyFactory(
     WukongAreaState areaState,
     DataSideChannel sideChannel) : IMappingEventPolicyFactory
 {

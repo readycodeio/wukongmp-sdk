@@ -8,13 +8,13 @@ using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Patches;
 
-public class HttpPatches
+internal class HttpPatches
 {
     // TODO: When enabled, this throws a patching exception.
     // It seems that the assembly containing System.Net.ServicePointManager is not patched at all
     [HarmonyPatch(typeof(ServicePointManager))]
-    [HarmonyPatchCategory(Constants.DisabledPatches)]
-    public static class ServicePointManagerPatch
+    [HarmonyPatchCategory(PatchCategory.Disabled)]
+    internal static class ServicePointManagerPatch
     {
         private static bool _connectionInit;
 

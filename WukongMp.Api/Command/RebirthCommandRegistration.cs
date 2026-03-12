@@ -8,7 +8,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Command;
 
-public class RebirthCommandRegistration(
+internal class RebirthCommandRegistration(
     WukongPlayerState playerState,
     IMappedEventManager mappedEvent,
     WukongChatter chatter

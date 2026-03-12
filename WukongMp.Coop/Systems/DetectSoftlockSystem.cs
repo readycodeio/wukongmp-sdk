@@ -3,11 +3,11 @@ using Microsoft.Extensions.Logging;
 using WukongMp.Api.Resources;
 using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.Systems;
 
-public sealed class DetectSoftlockSystem(WukongLocalApi localApi, WukongClientApi clientApi, ILogger logger)
-    : ModSystemBase(localApi, clientApi, logger)
+public sealed class DetectSoftlockSystem : ModSystemBase
 {
     private readonly HashSet<int> _waitingSequencesIds = [];
     

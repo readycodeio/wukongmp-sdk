@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Multiplayer.Mapping;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Mapping.Policies.Event;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct SpawnSummonEvent(Entity? summoner, string summonGuid, string summonClassPath)
+internal readonly struct SpawnSummonEvent(Entity? summoner, string summonGuid, string summonClassPath)
     : IEquatable<SpawnSummonEvent>, IMappingContext<SpawnSummonContext>
 {
     public readonly Entity? Summoner = summoner;

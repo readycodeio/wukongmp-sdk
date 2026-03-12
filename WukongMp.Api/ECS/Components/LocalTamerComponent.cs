@@ -5,7 +5,7 @@ using WukongMp.Api.ECS.Values;
 namespace WukongMp.Api.ECS.Components;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LocalTamerComponent : IComponent
+internal struct LocalTamerComponent : IComponent
 {
     public bool IsTamerSynced;
     public bool IsMonsterActive;

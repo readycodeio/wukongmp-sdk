@@ -12,7 +12,7 @@ using WukongMp.Api.Https;
 
 namespace WukongMp.Api.Shim;
 
-public class ShimAutoStarter : IDisposable
+internal class ShimAutoStarter : IDisposable
 {
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly IClientEcsUpdateLoop _shimEcsLoop;

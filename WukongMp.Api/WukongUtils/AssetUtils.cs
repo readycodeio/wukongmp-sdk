@@ -5,7 +5,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class AssetUtils
+internal static class AssetUtils
 {
     public static void ListAssetsInFolder(string path)
     {

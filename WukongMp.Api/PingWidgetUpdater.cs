@@ -3,7 +3,7 @@ using ReadyM.Api.Multiplayer.Client;
 
 namespace WukongMp.Api;
 
-public class PingWidgetUpdater : IDisposable
+internal class PingWidgetUpdater : IDisposable
 {
     private readonly NetworkPingMonitor _pingMonitor;
     private readonly WukongServerRpcCallbacks _rpc;

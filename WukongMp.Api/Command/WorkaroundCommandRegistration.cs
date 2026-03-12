@@ -6,7 +6,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Command;
 
-public class WorkaroundCommandRegistration(
+internal class WorkaroundCommandRegistration(
     Store world,
     IMappedEventManager mappedEvent,
     WukongPlayerState playerState) : IConsoleCommandRegistration

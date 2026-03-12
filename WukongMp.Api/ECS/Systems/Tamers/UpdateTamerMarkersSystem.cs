@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
 // FIXME: In the future this should support both TamerEntities and MainCharacterEntities
-public sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, MarkerComponent>
+internal sealed class UpdateTamerMarkersSystem : QuerySystem<LocalTamerComponent, MarkerComponent>
 {
     protected override void OnUpdate()
     {

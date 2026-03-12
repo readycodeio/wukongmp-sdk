@@ -11,7 +11,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
-public class WukongPlayerState
+internal class WukongPlayerState
 {
     private readonly ComponentIndex<MainCharacterComponent, PlayerId> _ix;
 

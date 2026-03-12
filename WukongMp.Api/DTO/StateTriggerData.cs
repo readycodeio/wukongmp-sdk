@@ -8,7 +8,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct StateTriggerData(NetworkId netId, EBUStateTrigger trigger, float time, bool needForceUpdate) : INetSerializable
+internal partial struct StateTriggerData(NetworkId netId, EBUStateTrigger trigger, float time, bool needForceUpdate) : INetSerializable
 {
     public NetworkId NetId = netId;
     public EBUStateTrigger Trigger = trigger;

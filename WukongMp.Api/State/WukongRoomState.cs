@@ -10,7 +10,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
-public class WukongAreaState(ClientState state, Store world, ClientOwnershipManager clientOwnershipManager)
+internal class WukongAreaState(ClientState state, Store world, ClientOwnershipManager clientOwnershipManager)
 {
     public bool InRoom
         => state.CurrentAreaId != null;

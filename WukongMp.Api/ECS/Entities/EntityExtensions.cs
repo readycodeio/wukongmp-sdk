@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.ECS.Values;
 
 namespace WukongMp.Api.ECS.Entities;
 
-public static class EntityExtensions
+internal static class EntityExtensions
 {
     extension(Entity entity)
     {

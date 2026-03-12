@@ -10,7 +10,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob(Store world, PlayerId ownerPlayerId) : IEachEntity<MappingComponent<AActor>, LocalTamerComponent, MetadataComponent>
+internal readonly struct SyncMontageJob(Store world, PlayerId ownerPlayerId) : IEachEntity<MappingComponent<AActor>, LocalTamerComponent, MetadataComponent>
 {
     public void Execute(ref MappingComponent<AActor> mappingComp, ref LocalTamerComponent tamerComponent, ref MetadataComponent meta, int entityId)
     {

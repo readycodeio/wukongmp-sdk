@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CSharpModBase.Input;
+using Friflo.Json.Burst;
+using Microsoft.Extensions.Logging;
 using WukongMp.Api;
-using WukongMp.Coop.Command;
+using WukongMp.Coop.Commands;
+using WukongMp.Coop.Configuration;
 using WukongMp.Coop.Gamemode;
 using WukongMp.Coop.Patches;
 using WukongMp.Coop.Systems;
@@ -93,12 +96,23 @@ public sealed class Mod : ModBase
         Logger.LogInformation("Initialized {PluginName}", Name);
     }
 
+    public override void LateInit()
+    {
+        base.LateInit();
+        
+        DI.Instance.InputManager.RegisterKeyBind(Key.F6, () =>
+        {
+            Logging.LogDebug("F6: Toggle HP scaling");
+            CoopConfig.ScaleMonsterHpToHalf = !CoopConfig.ScaleMonsterHpToHalf;
+        });
+    }
+
     protected override IEnumerable<ModSystemBase> DefineSystems()
     {
-        yield return new DetectSoftlockSystem(LocalApi, ClientApi, Logger);
-        yield return new FixYellowbrowSystem(LocalApi, ClientApi, Logger);
-        yield return new ReEnableCollidersSystem(LocalApi, ClientApi, Logger);
-        yield return new RespawnMainCharacterSystem(LocalApi, ClientApi, Logger);
-        yield return new ScaleMonsterHpSystem(LocalApi, ClientApi, Logger);
+        yield return new DetectSoftlockSystem();
+        yield return new FixYellowbrowSystem();
+        yield return new ReEnableCollidersSystem();
+        yield return new RespawnMainCharacterSystem();
+        yield return new ScaleMonsterHpSystem();
     }
 }

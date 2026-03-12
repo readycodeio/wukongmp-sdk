@@ -5,7 +5,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.Serialization;
 
-public static class TextSerializationHelpers
+internal static class TextSerializationHelpers
 {
     public static void TextSerializeFVector(Utf8JsonWriter writer, FVector vec, JsonSerializerOptions options)
     {

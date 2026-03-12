@@ -14,7 +14,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, IComponentFieldMappingRegistry mappedField, ILogger logger) : BaseSystem
+internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, IComponentFieldMappingRegistry mappedField, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {

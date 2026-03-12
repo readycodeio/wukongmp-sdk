@@ -3,7 +3,7 @@ using BtlShare;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class BuffUtils
+internal static class BuffUtils
 {
     public static void AddBuff(BGUCharacterCS? character, int buffId, float duration)
     {

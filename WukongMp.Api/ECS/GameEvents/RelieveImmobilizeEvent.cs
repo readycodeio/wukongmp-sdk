@@ -4,7 +4,7 @@ using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct RelieveImmobilizeEvent(Entity affected)
+internal readonly struct RelieveImmobilizeEvent(Entity affected)
     : IEquatable<RelieveImmobilizeEvent>, IMasterClientManaged
 {
     public readonly Entity Affected = affected;

@@ -11,7 +11,7 @@ using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Https;
 
-public class HttpBlobClient(ILogger logger) : IBlobClient
+internal class HttpBlobClient(ILogger logger) : IBlobClient
 {
     private enum FileType
     {

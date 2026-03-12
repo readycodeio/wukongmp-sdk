@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.Https;
 
-public class DownloadServerFileResponse
+internal class DownloadServerFileResponse
 {
     public string DownloadUrl { get; set; } = null!;
 }

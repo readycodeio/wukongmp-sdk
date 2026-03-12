@@ -6,7 +6,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<MainCharacterComponent, TransformComponent>
+internal class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<MainCharacterComponent, TransformComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;

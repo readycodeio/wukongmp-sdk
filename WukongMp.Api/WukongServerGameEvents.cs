@@ -12,7 +12,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongServerGameEvents : IDisposable
+internal class WukongServerGameEvents : IDisposable
 {
     private readonly MappedEventManager _mappedEvent;
     private readonly WukongWidgetManager _widgetManager;

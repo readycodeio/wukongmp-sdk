@@ -12,7 +12,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.UI;
 
-public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerState playerState, IRelayClient relayClient) : IDisposable
+internal sealed class WukongWidgetManager(ClientState clientState, WukongPlayerState playerState, IRelayClient relayClient) : IDisposable
 {
     private string _lastDisconnectText = Texts.Disconnected;
 

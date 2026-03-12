@@ -5,7 +5,7 @@ using BtlShare;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class ProjectileUtils
+internal static class ProjectileUtils
 {
     private static Type? _projectileCtrlDataType;
 

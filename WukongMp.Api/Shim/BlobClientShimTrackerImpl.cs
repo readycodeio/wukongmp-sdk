@@ -6,7 +6,7 @@ using ReadyM.Relay.Client.Shim;
 
 namespace WukongMp.Api.Shim;
 
-public class BlobClientShimTrackerImpl : IShimDependencyTrackerImpl
+internal class BlobClientShimTrackerImpl : IShimDependencyTrackerImpl
 {
     public bool Supports(ShimRequestItem requestItem)
     {

@@ -3,7 +3,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public struct StallDamageEvent(NetworkId target, float damage) : IAlwaysPropagatesToEcsOnly
+internal readonly struct StallDamageEvent(NetworkId target, float damage) : IAlwaysPropagatesToEcsOnly
 {
     public NetworkId Target { get; } = target;
     public float Damage { get; } = damage;

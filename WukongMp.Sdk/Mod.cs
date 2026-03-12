@@ -162,12 +162,6 @@ internal class Mod : ModBase
                 DI.Instance.WidgetManager.ToggleDebugVisibility();
         });
 #if DEBUG
-        di.InputManager.RegisterKeyBind(Key.F6, () =>
-        {
-            Logging.LogDebug("F6: Toggle HP scaling");
-            DebugUtils.ScaleMonsterHpToHalf = !DebugUtils.ScaleMonsterHpToHalf;
-        });
-
         di.InputManager.RegisterKeyBind(Key.F7, () =>
         {
             Logging.LogDebug("F7: Force be hit animation");

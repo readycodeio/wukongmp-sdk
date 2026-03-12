@@ -3,7 +3,7 @@ using UnrealEngine.Engine;
 
 namespace WukongMp.Api.ECS.Values;
 
-public struct MontageStateData
+internal struct MontageStateData
 {
     [Ignore]
     public UAnimMontage? LocalMontage { get; set; }

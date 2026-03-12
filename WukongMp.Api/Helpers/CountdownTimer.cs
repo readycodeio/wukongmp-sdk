@@ -3,7 +3,7 @@ using System.Timers;
 
 namespace WukongMp.Api.Helpers;
 
-public class CountdownTimer
+internal class CountdownTimer
 {
     private int _remainingSeconds;
     private int _totalSeconds;

@@ -16,7 +16,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils
 {
-    public static class PlayerUtils
+    internal static class PlayerUtils
     {
         public static void TeleportLocalPlayer(MainCharacterEntity mainEntity, FVector location, FRotator rotation, bool setLookAt = true)
         {

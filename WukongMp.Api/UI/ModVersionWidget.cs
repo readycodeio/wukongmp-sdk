@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.UI
 {
-    public class ModVersionWidget : GameWidgetBase
+    internal class ModVersionWidget : GameWidgetBase
     {
         private const string ModVersionWidgetPath = "/Game/Mods/WukongMod/WBP_ModVersion.WBP_ModVersion_C";
 

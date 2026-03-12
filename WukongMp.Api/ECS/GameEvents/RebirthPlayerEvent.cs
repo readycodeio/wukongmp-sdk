@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct RebirthPlayerEvent(Entity entity, bool teleport) 
+internal readonly struct RebirthPlayerEvent(Entity entity, bool teleport) 
     : IEquatable<RebirthPlayerEvent>, IAlwaysPropagates
 {
     public readonly Entity Entity = entity;

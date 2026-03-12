@@ -3,4 +3,4 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.Mapping.Tags;
 
-public interface IMasterClientManaged : IMappingContext<EmptyContext>;
+internal interface IMasterClientManaged : IMappingContext<EmptyContext>;

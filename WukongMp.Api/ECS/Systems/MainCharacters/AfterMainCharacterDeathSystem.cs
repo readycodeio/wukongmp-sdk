@@ -5,7 +5,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class AfterMainCharacterDeathSystem(WukongEventBus eventBus, WukongPlayerState playerState) : BaseSystem
+internal class AfterMainCharacterDeathSystem(WukongEventBus eventBus, WukongPlayerState playerState) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {

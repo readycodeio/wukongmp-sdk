@@ -10,7 +10,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class KillAlreadyDeadMonstersSystem(ClientOwnershipManager clientOwnership, WukongPlayerState playerState) : QuerySystem<TamerComponent, LocalTamerComponent, MetadataComponent, HpComponent>
+internal sealed class KillAlreadyDeadMonstersSystem(ClientOwnershipManager clientOwnership, WukongPlayerState playerState) : QuerySystem<TamerComponent, LocalTamerComponent, MetadataComponent, HpComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;

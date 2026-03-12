@@ -4,7 +4,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.Serialization;
 
-public static class SerializationHelpers
+internal static class SerializationHelpers
 {
     public static void SerializeFVector(NetDataWriter outStream, object obj)
     {

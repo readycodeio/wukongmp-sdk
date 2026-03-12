@@ -6,7 +6,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Mapping.Policies.Event;
 
-public class RunOnMasterClientOnlyEventPolicy<TEvent>(
+internal class RunOnMasterClientOnlyEventPolicy<TEvent>(
     ClientOwnershipManager ownership,
     WukongAreaState areaState,
     DataSideChannel sideChannel

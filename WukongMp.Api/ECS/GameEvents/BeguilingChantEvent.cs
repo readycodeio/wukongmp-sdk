@@ -5,7 +5,7 @@ using ReadyM.Wukong.Common.ECS.Values;
 namespace WukongMp.Api.ECS.GameEvents;
 
 // NOTE(api): This is a server-side sent event
-public readonly struct BeguilingChantEvent(BeguilingChantState state)
+internal readonly struct BeguilingChantEvent(BeguilingChantState state)
     : IEquatable<BeguilingChantEvent>, IAlwaysPropagatesToGameOnly
 {
     public readonly BeguilingChantState State = state;

@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct RemoveAllBuffsEvent(
+internal readonly struct RemoveAllBuffsEvent(
     Entity entity,
     EBuffEffectTriggerType triggerType,
     bool withTriggerRemoveEffect) : IEquatable<RemoveAllBuffsEvent>, IOwnershipManaged

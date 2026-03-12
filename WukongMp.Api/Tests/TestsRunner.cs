@@ -4,7 +4,7 @@ using WukongMp.Api.Tests.TestActionSequences;
 
 namespace WukongMp.Api.Tests
 {
-    public class TestsRunner(ILogger logger)
+    internal class TestsRunner(ILogger logger)
     {
         public bool IsRunning { get; private set; }
 

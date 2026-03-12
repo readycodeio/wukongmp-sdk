@@ -5,7 +5,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.Mapping.Policies.Event;
 
-public class MasterClientEventPolicy<TEvent>(
+internal class MasterClientEventPolicy<TEvent>(
     WukongAreaState areaState,
     DataSideChannel sideChannel
 ) : MappingEventPolicyBase<TEvent, EmptyContext>(sideChannel)

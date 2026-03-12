@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 namespace WukongMp.Api.ECS.GameEvents;
 
 // NOTE(api): This is propagated to the server-side only
-public readonly struct MovieFinishedEvent(
+internal readonly struct MovieFinishedEvent(
     int sequenceId,
     AreaId areaId) : IEquatable<MovieFinishedEvent>, IAlwaysPropagatesToEcsOnly
 {

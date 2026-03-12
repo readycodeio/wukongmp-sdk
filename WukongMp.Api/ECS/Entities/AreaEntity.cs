@@ -5,7 +5,7 @@ using AreaScopeComponent = ReadyM.Api.Multiplayer.ECS.Components.AreaScopeCompon
 
 namespace WukongMp.Api.ECS.Entities;
 
-public readonly struct AreaEntity(Entity entity) : IComponent
+internal readonly struct AreaEntity(Entity entity) : IComponent
 {
     public readonly Entity Entity = entity;
     

@@ -16,7 +16,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Despawns the pawns corresponding to MainCharacterEntities for other players. Doesn't affect the main players' MainCharacterEntity.
 /// </summary>
-public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
+internal sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
 {
     private struct PendingDeleteEvent
     {

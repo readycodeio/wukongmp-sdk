@@ -8,7 +8,7 @@ using ReadyM.Relay.Client;
 
 namespace WukongMp.Api.Shim;
 
-public static class ShimUtils
+internal static class ShimUtils
 {
     private static RelayClient CreateRelayNetworked(DI container, string host, int port, Guid userGuid, bool noDisconnect, string? shimDbPath = null)
     {

@@ -32,10 +32,10 @@ public abstract class ModBase : ICSharpModExV2
     {
         Initialize();
 
-        _systems = DefineSystems()
-            .Select(x => x.ToBaseSystem())
-            .Concat(DefineFrifloSystems())
-            .ToList();
+        var modSystems = DefineSystems().ToList();
+        modSystems.ForEach(x => x.Initialize(Api.ReadyM.Local, Api.ReadyM.Client, Logger));
+        
+        _systems = [.. modSystems.Select(x => x.ToBaseSystem())];
         _systemGroup = new SystemGroup(Name);
 
         foreach (var system in _systems)
@@ -51,12 +51,6 @@ public abstract class ModBase : ICSharpModExV2
 
     [Obsolete("Use attributes and declarative systems instead")]
     protected virtual IEnumerable<ModSystemBase> DefineSystems()
-    {
-        yield break;
-    }
-
-    [Obsolete("Use attributes and declarative systems instead")]
-    protected virtual IEnumerable<BaseSystem> DefineFrifloSystems()
     {
         yield break;
     }

@@ -11,7 +11,7 @@ using WukongMp.Api.ECS.Components;
 
 namespace WukongMp.Api.ECS.Entities;
 
-public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainCharacterEntity>
+internal readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainCharacterEntity>
 {
     public static bool IsMainCharacter(Entity entity)
         => !entity.IsNull && entity.HasComponent<MainCharacterComponent>();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using LiteNetLib;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
@@ -14,29 +15,60 @@ using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.State;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Sdk.Api;
 
-public class WukongClientApi(
-    ClientWukongArchetypeRegistration wukongArchetype,
-    Store world,
-    ClientState state,
-    WukongAreaState areaState,
-    WukongPlayerState playerState,
-    WukongPawnState pawnState,
-    IEntityManager entityManager,
-    IRelayClient relayClient,
-    WukongSaveRelay saveRelay,
-    MappedEventManager mappedEvent
-)
+public class WukongClientApi
 {
+    private readonly ClientWukongArchetypeRegistration wukongArchetype;
+    private readonly Store world;
+    private readonly ClientState state;
+    private readonly WukongAreaState areaState;
+    private readonly WukongPlayerState playerState;
+    private readonly WukongPawnState pawnState;
+    private readonly IEntityManager entityManager;
+    private readonly IRelayClient relayClient;
+    private readonly WukongSaveRelay saveRelay;
+    private readonly MappedEventManager mappedEvent;
+
+    internal WukongClientApi(ClientWukongArchetypeRegistration wukongArchetype,
+        Store world,
+        ClientState state,
+        WukongAreaState areaState,
+        WukongPlayerState playerState,
+        WukongPawnState pawnState,
+        IEntityManager entityManager,
+        IRelayClient relayClient,
+        WukongSaveRelay saveRelay,
+        MappedEventManager mappedEvent)
+    {
+        this.wukongArchetype = wukongArchetype;
+        this.world = world;
+        this.state = state;
+        this.areaState = areaState;
+        this.playerState = playerState;
+        this.pawnState = pawnState;
+        this.entityManager = entityManager;
+        this.relayClient = relayClient;
+        this.saveRelay = saveRelay;
+        this.mappedEvent = mappedEvent;
+    }
+
     internal MappedEventManager MappedEvent
         => mappedEvent;
 
     // ---
-
-    public PendingActionScheduler<IRelayClientNetworkThreadContext> Scheduler => relayClient.Scheduler;
-    public WukongSaveRelay Saves => saveRelay;
+    
+    public void GetDisconnectReasonAndInvoke(Action<DisconnectReason> callback)
+    {
+        relayClient.Scheduler.Schedule((ctx, call) =>
+        {
+            call(ctx.LastDisconnectReason);
+        }, callback);
+    }
+    
+    public IWukongSaveRelay Saves => saveRelay;
 
     public bool InRoom
         => areaState.InRoom;

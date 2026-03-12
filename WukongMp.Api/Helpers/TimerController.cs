@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.Helpers
 {
-    public class TimerController
+    internal class TimerController
     {
         private readonly WukongWidgetManager _widgetManager;
         private CountdownTimer? _timer;

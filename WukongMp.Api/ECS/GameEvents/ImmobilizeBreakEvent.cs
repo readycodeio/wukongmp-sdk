@@ -4,7 +4,7 @@ using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct ImmobilizeBreakEvent(Entity entity) 
+internal readonly struct ImmobilizeBreakEvent(Entity entity) 
     : IEquatable<ImmobilizeBreakEvent>, IMasterClientManaged
 {
     public readonly Entity Entity = entity;

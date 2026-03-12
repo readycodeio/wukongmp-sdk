@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct CastSkillEvent(
+internal readonly struct CastSkillEvent(
     Entity entity,
     int skillId,
     ECastSkillSourceType skillType) : IEquatable<CastSkillEvent>, IOwnershipManaged

@@ -10,8 +10,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGW_GameLifeTimeMgr), "OnPostLoadMapWithWorld")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnPostLoadMapWithWorld
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnPostLoadMapWithWorld
 {
     public static void Postfix()
     {
@@ -23,8 +23,8 @@ public class PatchOnPostLoadMapWithWorld
 }
 
 [HarmonyPatch(typeof(GSG), nameof(GSG.OnEnterLevel))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnEnterLevel
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnEnterLevel
 {
     public static void Postfix()
     {
@@ -37,8 +37,8 @@ public class PatchOnEnterLevel
 }
 
 [HarmonyPatch(typeof(GSG), nameof(GSG.OnLevelExit))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnLevelExit
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnLevelExit
 {
     public static void Postfix()
     {
@@ -51,8 +51,8 @@ public class PatchOnLevelExit
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnLateBeginPlay
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnLateBeginPlay
 {
     [HarmonyTargetMethodHint("b1.BUS_MiscInitComp", "LateBeginPlay")]
     private static MethodBase TargetMethod()
@@ -71,8 +71,8 @@ public class PatchOnLateBeginPlay
 }
 
 [HarmonyPatch(typeof(BUS_DeadComp), nameof(BUS_DeadComp.OnEndPlay))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnPlayerEndPlay
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnPlayerEndPlay
 {
     public static void Postfix(BUS_DeadComp __instance) // This is called multiple times since each BGUCharacterCS has BUS_DeadComp
     {
@@ -85,8 +85,8 @@ public class PatchOnPlayerEndPlay
 }
 
 [HarmonyPatch(typeof(BPS_LiftTimeSystem), nameof(BPS_LiftTimeSystem.OnBeginPlay))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnPlayerControllerBeginPlay
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnPlayerControllerBeginPlay
 {
     public static void Postfix(BPS_LiftTimeSystem __instance) // This is called only for player controller where BPS_LiftTimeSystem is registered
     {
@@ -96,8 +96,8 @@ public class PatchOnPlayerControllerBeginPlay
 }
 
 [HarmonyPatch(typeof(BPS_LiftTimeSystem), nameof(BPS_LiftTimeSystem.OnEndPlay))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnPlayerControllerEndPlay
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnPlayerControllerEndPlay
 {
     public static void Postfix(BPS_LiftTimeSystem __instance) // This is called only for player controller where BPS_LiftTimeSystem is registered
     {
@@ -107,8 +107,8 @@ public class PatchOnPlayerControllerEndPlay
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchOnLoadingScreenClose
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnLoadingScreenClose
 {
     [HarmonyTargetMethodHint("b1.BGW_LoadingTipsMgr.FLoadingScreenTimeTracker", "OnLoadingScreenClose")]
     private static MethodBase TargetMethod()

@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct ProjectileDeadEvent(
+internal readonly struct ProjectileDeadEvent(
     Entity entity,
     string projectileClassName,
     EBGUBulletDestroyReason reason) : IEquatable<ProjectileDeadEvent>, IOwnershipManaged

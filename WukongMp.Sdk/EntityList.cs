@@ -12,9 +12,9 @@ public readonly struct EntityList<T> : IEnumerable<T>
     {
         private readonly WukongClientApi _api;
         private readonly EntityList _entityList;
-        
+
         private int _index;
-        private T _current; 
+        private T _current;
 
         internal Enumerator(WukongClientApi api, EntityList entityList)
         {
@@ -24,9 +24,9 @@ public readonly struct EntityList<T> : IEnumerable<T>
             _current = default!;
         }
 
-        public T Current => _current;
+        public readonly T Current => _current;
 
-        object? IEnumerator.Current => Current;
+        readonly object IEnumerator.Current => Current;
 
         public bool MoveNext()
         {
@@ -44,14 +44,12 @@ public readonly struct EntityList<T> : IEnumerable<T>
             _current = default!;
         }
 
-        public void Dispose()
-        {
-        }
+        public readonly void Dispose() { }
     }
-    
+
     private readonly WukongClientApi _api;
     private readonly EntityList _entityList;
-    
+
     internal EntityList(WukongClientApi api, EntityList entityList)
     {
         _api = api;
@@ -60,7 +58,7 @@ public readonly struct EntityList<T> : IEnumerable<T>
 
     public Enumerator GetEnumerator()
         => new(_api, _entityList);
-    
+
     IEnumerator<T> IEnumerable<T>.GetEnumerator()
         => new Enumerator(_api, _entityList);
 

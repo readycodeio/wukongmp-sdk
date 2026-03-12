@@ -14,7 +14,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// or pawn of the local player.
 /// </summary>
 /// <param name="playerPawn"></param>
-public class SpawnOtherMainCharactersSystem(
+internal class SpawnOtherMainCharactersSystem(
     ClientState clientState,
     WukongPlayerState playerState,
     WukongPlayerPawnState playerPawn,

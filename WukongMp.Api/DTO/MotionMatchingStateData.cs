@@ -8,7 +8,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct MotionMatchingStateData(NetworkId netId, EState_MM state) : INetSerializable
+internal partial struct MotionMatchingStateData(NetworkId netId, EState_MM state) : INetSerializable
 {
     public NetworkId NetId = netId;
     public EState_MM State = state;

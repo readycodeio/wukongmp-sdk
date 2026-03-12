@@ -29,7 +29,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public partial class WukongClientRpcCallbacks : IDisposable
+internal partial class WukongClientRpcCallbacks : IDisposable
 {
     protected readonly RelaySerializer Serializer;
     protected readonly IRelayClient RelayClient;

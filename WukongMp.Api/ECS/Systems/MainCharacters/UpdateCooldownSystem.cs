@@ -7,7 +7,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus eventBus, WukongAreaState areaState) : BaseSystem
+internal class UpdateCooldownSystem(WukongPlayerState playerState, WukongEventBus eventBus, WukongAreaState areaState) : BaseSystem
 {
     private float _vigorRegenAccumulator;
 

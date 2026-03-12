@@ -7,7 +7,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct PlayMovieRequestData(
+internal partial struct PlayMovieRequestData(
     int sequenceID,
     bool disablePlayerControl,
     bool disableMovementInput,

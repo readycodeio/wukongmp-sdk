@@ -16,7 +16,7 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// <summary>
 /// Despawns the pawns corresponding to MainCharacterEntities for other players. Doesn't affect the main players' MainCharacterEntity.
 /// </summary>
-public sealed class DespawnTamerSystem : BaseSystem, IDisposable
+internal sealed class DespawnTamerSystem : BaseSystem, IDisposable
 {
     private struct PendingDeleteEvent
     {

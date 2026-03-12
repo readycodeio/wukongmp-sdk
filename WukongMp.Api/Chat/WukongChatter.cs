@@ -10,7 +10,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.Chat;
 
-public class WukongChatter : IDisposable
+internal class WukongChatter : IDisposable
 {
     private readonly WukongPlayerState _playerState;
     private readonly WukongClientRpcCallbacks _clientRpc;

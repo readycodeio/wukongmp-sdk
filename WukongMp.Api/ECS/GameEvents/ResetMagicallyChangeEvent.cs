@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct ResetMagicallyChangeEvent(
+internal readonly struct ResetMagicallyChangeEvent(
     Entity entity,
     EResetReason_MagicallyChange reason) : IEquatable<ResetMagicallyChangeEvent>, IOwnershipManaged
 {

@@ -6,7 +6,7 @@ using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct RequestSpawnUnitsEvent(
+internal readonly struct RequestSpawnUnitsEvent(
     Entity requester,
     string unitName, 
     int count, 

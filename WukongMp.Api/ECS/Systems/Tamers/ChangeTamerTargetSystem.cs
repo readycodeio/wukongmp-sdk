@@ -7,7 +7,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class ChangeTamerTargetSystem(ClientOwnershipManager clientOwnership) : QuerySystem<LocalTamerComponent>
+internal sealed class ChangeTamerTargetSystem(ClientOwnershipManager clientOwnership) : QuerySystem<LocalTamerComponent>
 {
     private float _elapsedTime;
 

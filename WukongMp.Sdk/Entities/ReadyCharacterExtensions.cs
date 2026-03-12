@@ -3,7 +3,7 @@ using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
 
-namespace WukongMp.Sdk;
+namespace WukongMp.Sdk.Entities;
 
 public static class ReadyCharacterExtensions
 {
@@ -14,12 +14,12 @@ public static class ReadyCharacterExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.Hp : throw new InvalidOperationException();
             }
             set
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
 
                 if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(entity, out var sync))
                 {
@@ -36,12 +36,12 @@ public static class ReadyCharacterExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.HpMaxBase : throw new InvalidOperationException();
             }
             set
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
 
                 if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(entity, out var sync))
                 {
@@ -58,7 +58,7 @@ public static class ReadyCharacterExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 if (!entity.TryGetComponent<TeamComponent>(out var teamComp))
                     throw new InvalidOperationException($"Entity does not have TeamComponent: {entity.GetNetId()}");
                 return teamComp.TeamId;
@@ -69,7 +69,7 @@ public static class ReadyCharacterExtensions
         {
             get
             {
-                default(TSelf).Deconstruct(obj, out _, out var entity);
+                obj.Deconstruct(out _, out var entity);
                 return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.IsDead : throw new InvalidOperationException();
             }
         }

@@ -9,7 +9,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class CutsceneUtils
+internal static class CutsceneUtils
 {
     public static void PlayCutscene(PlayMovieRequestEvent ev)
     {

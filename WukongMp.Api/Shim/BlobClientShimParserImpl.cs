@@ -5,7 +5,7 @@ using ReadyM.Relay.Client.Shim;
 
 namespace WukongMp.Api.Shim;
 
-public class BlobClientShimParserImpl : IShimRelayMessageParserImpl
+internal class BlobClientShimParserImpl : IShimRelayMessageParserImpl
 {
     public bool SupportsRequest(ServerEventHeader header)
     {

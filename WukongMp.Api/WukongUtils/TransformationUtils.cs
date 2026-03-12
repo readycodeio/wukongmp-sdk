@@ -3,7 +3,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class TransformationUtils
+internal static class TransformationUtils
 {
     public static void TransformPlayer(in MainCharacterEntity mainEntity, int toReplaceUnitResID, int toReplaceUnitBornSkillID, bool enableBlendViewTarget, EPlayerTransBeginType transBeginType)
     {

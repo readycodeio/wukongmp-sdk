@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct SetTargetEvent(
+internal readonly struct SetTargetEvent(
     Entity character,
     Entity target,
     bool clearTarget) : IEquatable<SetTargetEvent>, IOwnershipManaged

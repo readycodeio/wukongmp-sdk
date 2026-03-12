@@ -16,8 +16,8 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUC_AttrContainer), nameof(BUC_AttrContainer.OnTick))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchAttrs
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchAttrs
 {
     public static void Postfix(BUC_AttrContainer __instance)
     {
@@ -64,8 +64,8 @@ public static class PatchAttrs
 }
 
 [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchHp
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchHp
 {
     public static bool Prefix(BUS_AttrComp __instance, EBGUAttrFloat AttrID, float NewValue, BUC_AttrContainer ___AttrContainer)
     {
@@ -184,8 +184,8 @@ public static class PatchHp
 
 // NOTE: Runs multithreaded
 [HarmonyPatch(typeof(BUC_ABPCharacterData), nameof(BUC_ABPCharacterData.Update_GameThread))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchCharacterAnimation
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchCharacterAnimation
 {
     public static void Postfix(BUC_ABPCharacterData? __instance, AActor Owner)
     {
@@ -331,8 +331,8 @@ public class PatchCharacterAnimation
 }
 
 [HarmonyPatch(typeof(BUS_MovementSystem), "TickForInterpolationMove")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTickForInterpolationMove
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTickForInterpolationMove
 {
     public static void Postfix(BUS_MovementSystem __instance, BUC_MovementData ___MovementData, float DeltaTime, bool bForceUpdate = false)
     {
@@ -367,8 +367,8 @@ public class PatchTickForInterpolationMove
 }
 
 [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitSimpleStateSet")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnUnitSimpleStateSet
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnUnitSimpleStateSet
 {
     public static void Postfix(EBGUSimpleState SimpleState, bool IsRemove, BUS_UnitStateSystem __instance)
     {
@@ -388,8 +388,8 @@ public class PatchOnUnitSimpleStateSet
 }
 
 [HarmonyPatch(typeof(BUS_UnitStateSystem), "OnUnitStateTrigger")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnUnitStateTrigger
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnUnitStateTrigger
 {
     public static void Postfix(EBUStateTrigger Trigger, float Time, bool NeedForceUpdate, BUS_UnitStateSystem __instance)
     {
@@ -409,8 +409,8 @@ public class PatchOnUnitStateTrigger
 }
 
 [HarmonyPatch(typeof(BUS_ABPHelperComp), "OnChangeMotionMatchingState")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnChangeMotionMatchingState
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnChangeMotionMatchingState
 {
     public static void Postfix(EState_MM MMState, BUS_ABPHelperComp __instance)
     {
@@ -427,8 +427,8 @@ public class PatchOnChangeMotionMatchingState
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBuffBegin
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBuffBegin
 {
     [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffBegin")]
     private static MethodBase TargetMethod()
@@ -454,8 +454,8 @@ public class PatchBuffBegin
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBuffRemove
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBuffRemove
 {
     [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffRemove")]
     private static MethodBase TargetMethod()
@@ -481,8 +481,8 @@ public class PatchBuffRemove
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBuffRemoveImmediately
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBuffRemoveImmediately
 {
     [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffRemoveImmediately")]
     private static MethodBase TargetMethod()
@@ -508,8 +508,8 @@ public class PatchBuffRemoveImmediately
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBuffAllRemove
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBuffAllRemove
 {
     [HarmonyTargetMethodHint("b1.BUS_BuffComp", "BuffAllRemove")]
     private static MethodBase TargetMethod()
@@ -532,8 +532,8 @@ public class PatchBuffAllRemove
 }
 
 [HarmonyPatch(typeof(BGUCharacterCS), "SetTeamIDInCS")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchSetTeamIDInCS
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchSetTeamIDInCS
 {
     public static void Postfix(BGUCharacterCS __instance, int NewTeamID)
     {
@@ -549,8 +549,8 @@ public class PatchSetTeamIDInCS
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBeAttackedDeadEventSettlementProcess
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBeAttackedDeadEventSettlementProcess
 {
     [HarmonyTargetMethodHint("b1.BUS_BeAttackedComp.BeAttackedEvent_Dead", "EventSettlementProcess")]
     private static MethodBase TargetMethod()
@@ -577,8 +577,8 @@ public class PatchBeAttackedDeadEventSettlementProcess
 }
 
 [HarmonyPatch(typeof(CharacterAttrDataInitTemplate), nameof(CharacterAttrDataInitTemplate.InitDataPreBeginPlay))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTamerStatResetOnBeginPlay
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchTamerStatResetOnBeginPlay
 {
     public static void Postfix(AActor ___Owner)
     {
@@ -610,8 +610,8 @@ public static class PatchTamerStatResetOnBeginPlay
 }
 
 [HarmonyPatch(typeof(BUC_BattleStateData), "IsUnitInBattle")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchIsUnitInBattle
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchIsUnitInBattle
 {
     public static bool Prefix(BUC_BattleStateData __instance, ref bool __result)
     {
@@ -633,8 +633,8 @@ public class PatchIsUnitInBattle
 }
 
 [HarmonyPatch(typeof(BIC_GlobalActorData), nameof(BIC_GlobalActorData.GetActorEntity))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchGetActorEntity
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchGetActorEntity
 {
     public static bool Prefix(BIC_GlobalActorData __instance, ref bool __result, string UnitGuid, out Entity Entity)
     {
@@ -679,8 +679,8 @@ public class PatchGetActorEntity
 }
 
 [HarmonyPatch(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchPlayDBC_ByType
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchPlayDBC_ByType
 {
     public static void Postfix(BGUCharacterCS ___OwnerChr, EAbnormalStateType ___AbnormalType, EAbnromalDispActionType ActionType)
     {
@@ -695,8 +695,8 @@ public class PatchPlayDBC_ByType
 }
 
 [HarmonyPatch(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchEndAllDBC
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchEndAllDBC
 {
     public static void Postfix(BGUCharacterCS ___OwnerChr, EAbnormalStateType ___AbnormalType)
     {

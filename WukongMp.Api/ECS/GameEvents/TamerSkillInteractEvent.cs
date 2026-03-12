@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct TamerSkillInteractEvent(
+internal readonly struct TamerSkillInteractEvent(
     Entity entity,
     int skillId
 ) : IEquatable<TamerSkillInteractEvent>, IAlwaysPropagates

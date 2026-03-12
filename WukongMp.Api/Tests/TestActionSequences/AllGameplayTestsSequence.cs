@@ -6,7 +6,7 @@ using WukongMp.Api.Tests.TestActions;
 
 namespace WukongMp.Api.Tests.TestActionSequences
 {
-    public class AllGameplayTestsSequence : TestActionSequenceBase
+    internal class AllGameplayTestsSequence : TestActionSequenceBase
     {
         private List<Type> _allAvailableTestTypes = [];
 

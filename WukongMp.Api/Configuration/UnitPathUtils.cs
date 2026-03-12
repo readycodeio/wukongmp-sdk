@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace WukongMp.Api.Configuration;
 
-public static class UnitPathUtils
+internal static class UnitPathUtils
 {
     private static readonly Dictionary<TamerKind, string> CharacterPathNames = new()
     {

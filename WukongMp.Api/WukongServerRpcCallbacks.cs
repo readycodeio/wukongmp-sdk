@@ -17,7 +17,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-public partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
+internal partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 {
     protected readonly IRelayClient RelayClient;
     private readonly IClientEcsUpdateLoop _ecsLoop;

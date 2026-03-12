@@ -7,7 +7,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class MarkerUtils
+internal static class MarkerUtils
 {
     public static void CreateMarkerForCharacter(TamerEntity tamerEntity, string color)
     {

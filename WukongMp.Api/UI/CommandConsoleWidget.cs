@@ -7,7 +7,7 @@ using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI;
 
-public class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBase(CommandConsoleWidgetPath)
+internal class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetBase(CommandConsoleWidgetPath)
 {
     private const string CommandConsoleWidgetPath = "/Game/Mods/CoreMod/WBP_CommandConsole.WBP_CommandConsole_C";
 

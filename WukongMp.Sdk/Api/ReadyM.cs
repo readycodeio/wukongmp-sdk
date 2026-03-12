@@ -18,12 +18,12 @@ public static class ReadyM
         DI.Instance.CommandRegistry,
         DI.Instance.EcsLoop);
     
-    public static PatcherBase GetPatcher(ModBase mod)
+    internal static PatcherBase GetPatcher(ModBase mod)
     {
         return new WukongPatcher(mod.GetType().Assembly, mod.Name, DI.Instance.Prelude);
     }
     
-    public static PatcherBase GetPatcher(Assembly assembly, string name)
+    internal static PatcherBase GetPatcher(Assembly assembly, string name)
     {
         return new WukongPatcher(assembly, name, DI.Instance.Prelude);
     }

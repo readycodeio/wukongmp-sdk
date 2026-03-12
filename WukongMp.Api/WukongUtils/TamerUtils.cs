@@ -14,7 +14,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils
 {
-    public static class TamerUtils
+    internal static class TamerUtils
     {
         public static IEnumerable<BGUCharacterCS> GetMonsters()
         {

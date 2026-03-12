@@ -4,7 +4,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 namespace WukongMp.Api.ECS.GameEvents;
 
 // NOTE(api): This is propagated to the server-side only
-public readonly struct SkipMovieEvent(
+internal readonly struct SkipMovieEvent(
     int sequenceId,
     int waitingPlayers = 0,
     int allPlayers = 0) : IEquatable<SkipMovieEvent>, IAlwaysPropagates

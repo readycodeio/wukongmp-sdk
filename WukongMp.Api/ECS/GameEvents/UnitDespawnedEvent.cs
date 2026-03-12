@@ -5,7 +5,7 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-public readonly struct UnitDespawnedEvent(
+internal readonly struct UnitDespawnedEvent(
     Entity entity,
     PlayerId playerId) : IEquatable<UnitDespawnedEvent>, IAlwaysPropagates
 {

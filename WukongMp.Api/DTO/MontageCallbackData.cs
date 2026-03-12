@@ -7,7 +7,7 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct MontageCallbackData(
+internal partial struct MontageCallbackData(
     NetworkId netId, 
     bool compressed,
     string montagePath,

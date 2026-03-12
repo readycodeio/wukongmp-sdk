@@ -26,7 +26,7 @@ using WukongMp.PvP.Resources;
 namespace WukongMp.PvP.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public static class PatchStartGameUiPvp
 {
     [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
@@ -125,7 +125,7 @@ public static class PatchStartGameUiPvp
 }
 
 [HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenMapUI")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchOnClickOpenMapUI
 {
     public static bool Prefix()
@@ -138,7 +138,7 @@ public class PatchOnClickOpenMapUI
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchShrineRegisterFunc
 {
     [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
@@ -161,7 +161,7 @@ public class PatchShrineRegisterFunc
 }
 
 [HarmonyPatch(typeof(GSEUtil), "GetCanTeleportGroupMapList")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchGetCanTeleportGroupMapList
 {
     public static bool Prefix(ref List<int> __result)
@@ -175,7 +175,7 @@ public class PatchGetCanTeleportGroupMapList
 }
 
 [HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchOnChangeSaveTipsStat
 {
     public static bool Prefix(UWidget ___RootCon)
@@ -186,7 +186,7 @@ public class PatchOnChangeSaveTipsStat
 }
 
 [HarmonyPatch(typeof(BUI_BattleInfoCS), "SetDamageNumCanEnabled")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchSetDamageNumCanEnabled
 {
     public static void Prefix(ref bool InIsDamageNumCanEnabled)
@@ -196,7 +196,7 @@ public class PatchSetDamageNumCanEnabled
 }
 
 [HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PatchIsShowSettingUiOnly
 {
     public static bool Prefix(ref bool __result)
@@ -217,7 +217,7 @@ public class PatchIsShowSettingUiOnly
 
 // TODO: Maybe there's a way to fix free floating camera after exiting menu without prohibiting it altogether
 [HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenEquipUI")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PatchOnClickOpenEquipUI
 {
     public static bool Prefix()

@@ -5,7 +5,7 @@ using WukongMp.Api.ECS.GameEvents;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class TeleportUtils
+internal static class TeleportUtils
 {
     public static void CheckForTeleportFinish(IMappedEventManager mappedEvent, MainCharacterEntity mainEntity)
     {

@@ -4,7 +4,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.UI
 {
-    public class DebugViewWidget : GameWidgetBase
+    internal class DebugViewWidget : GameWidgetBase
     {
         private const string DebugViewWidgetPath = "/Game/Mods/WukongMod/Debug/WBP_DebugView.WBP_DebugView_C";
 
