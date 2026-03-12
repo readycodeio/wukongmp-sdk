@@ -169,7 +169,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
         _mappedEvent.RegisterEcsEventHandler<RequestSpawnUnitsEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
             self.SendRequestSpawnUnits(new RequestSpawnUnitsData(
-                requesterId:ev.Requester.GetNetId(),
+                requesterId: ev.Requester.GetNetId(),
                 unitName: ev.UnitName,
                 count: ev.Count,
                 teamId: ev.TeamId,
@@ -264,9 +264,9 @@ public partial class WukongClientRpcCallbacks : IDisposable
             );
         }, this);
 
-        _mappedEvent.RegisterEcsEventHandler<BroadcastPlayerTransformEvent, WukongClientRpcCallbacks>(static (ev, self) =>
+        _mappedEvent.RegisterEcsEventHandler<RequestTeleportEvent, WukongClientRpcCallbacks>(static (ev, self) =>
         {
-            self.SendBroadcastPlayerTransform(new BroadcastPlayerTransformData(
+            self.SendRequestTeleport(new RequestTeleportData(
                 netId: ev.Entity.GetNetId(),
                 location: ev.Location,
                 rotation: ev.Rotation
@@ -710,7 +710,7 @@ public partial class WukongClientRpcCallbacks : IDisposable
                 self._logger.LogError("Entity not found: {NetId}", data0.RequesterId);
                 return;
             }
-            
+
             self._mappedEvent.InvokeInGameIfApplicable(new RequestSpawnUnitsEvent(
                 requester: entity.Value,
                 unitName: data0.UnitName,
@@ -903,17 +903,20 @@ public partial class WukongClientRpcCallbacks : IDisposable
 
     // NOTE(api): Changed from AreaOfInterestAll
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
-    private void OnBroadcastPlayerTransform(BroadcastPlayerTransformData data)
+    private void OnRequestTeleport(RequestTeleportData data)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        _ecsLoop.Scheduler.Schedule(static (_, self, data) =>
         {
-            if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
+            if (!self._netEntity.TryGetEntityByNetworkId(data.NetId, out var entity))
+            {
+                self._logger.LogNullDebug(nameof(entity));
                 return;
+            }
 
-            self._mappedEvent.InvokeInGameIfApplicable(new BroadcastPlayerTransformEvent(
-                entity: mainEntity.Entity,
-                location: data0.Location,
-                rotation: data0.Rotation
+            self._mappedEvent.InvokeInGameIfApplicable(new RequestTeleportEvent(
+                entity: entity.Value,
+                location: data.Location,
+                rotation: data.Rotation
             ), default(EmptyContext));
         }, this, data);
     }

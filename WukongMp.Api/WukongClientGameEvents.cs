@@ -6,6 +6,7 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client.State;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
@@ -232,11 +233,22 @@ public class WukongClientGameEvents : IDisposable
             }
         }, this);
 
-        mappedEvent.RegisterGameEventHandler<BroadcastPlayerTransformEvent, WukongClientGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<RequestTeleportEvent, WukongClientGameEvents>(static (ev, self) =>
         {
-            var mainEntity = new MainCharacterEntity(ev.Entity);
-
-            PlayerUtils.TeleportLocalPlayer(mainEntity, ev.Location, ev.Rotation, true);
+            if (ev.Entity.HasComponent<MainCharacterComponent>())
+            {
+                var mainEntity = new MainCharacterEntity(ev.Entity);
+                PlayerUtils.TeleportLocalPlayer(mainEntity, ev.Location, ev.Rotation, true);
+            }
+            else if (ev.Entity.HasComponent<TamerComponent>())
+            {
+                var tamerEntity = new TamerEntity(ev.Entity);
+                TamerUtils.TeleportTamer(tamerEntity, ev.Location, ev.Rotation);
+            }
+            else
+            {
+                self._logger.LogError("Received RequestTeleportEvent for unsupported entity {Entity}", ev.Entity);
+            }
         }, this);
 
         mappedEvent.RegisterGameEventHandler<RebirthPlayerEvent, WukongClientGameEvents>(static (ev, self) =>

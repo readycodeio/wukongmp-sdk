@@ -5,23 +5,23 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-// NOTE(api): Only manually called
-// FIXME(api): Rename to RequestTeleport or something similar
-// FIXME(api): Make it work with tamers as well, not just main character
-public readonly struct BroadcastPlayerTransformEvent(
-    Entity entity, 
-    FVector location, 
-    FRotator rotation) : IEquatable<BroadcastPlayerTransformEvent>, IAlwaysPropagates
+public readonly struct RequestTeleportEvent(
+    Entity entity,
+    FVector location,
+    FRotator rotation
+) : IEquatable<RequestTeleportEvent>, IAlwaysPropagates
 {
     public readonly Entity Entity = entity;
     public readonly FVector Location = location;
     public readonly FRotator Rotation = rotation;
 
-    public bool Equals(BroadcastPlayerTransformEvent other)
+    public bool Equals(RequestTeleportEvent other)
         => Entity == other.Entity && Location == other.Location && Rotation == other.Rotation;
 
     public override bool Equals(object? obj)
-        => obj is BroadcastPlayerTransformEvent other && Equals(other);
+    {
+        return obj is RequestTeleportEvent @event && Equals(@event);
+    }
 
     public override int GetHashCode()
     {
@@ -32,5 +32,15 @@ public readonly struct BroadcastPlayerTransformEvent(
             hashCode = (hashCode * 397) ^ Rotation.GetHashCode();
             return hashCode;
         }
+    }
+
+    public static bool operator ==(RequestTeleportEvent left, RequestTeleportEvent right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(RequestTeleportEvent left, RequestTeleportEvent right)
+    {
+        return !left.Equals(right);
     }
 }

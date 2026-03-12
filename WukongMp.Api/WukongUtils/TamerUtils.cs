@@ -6,6 +6,7 @@ using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
+using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
@@ -39,7 +40,7 @@ namespace WukongMp.Api.WukongUtils
         {
             return unitName.ToLower().Replace("-", "").Replace("_", "");
         }
-        
+
         public static void SpawnMonsterLocally(TamerEntity tamerEntity)
         {
             ref var tamerComp = ref tamerEntity.GetTamer();
@@ -73,7 +74,7 @@ namespace WukongMp.Api.WukongUtils
         public static void MarkMonsterLocallySpawned(IMappedEventManager mappedEvent, TamerEntity tamerEntity)
         {
             ref var localTamerComp = ref tamerEntity.GetLocalTamer();
-            
+
             if (!localTamerComp.IsLocallySpawned)
             {
                 Logging.LogDebug("Sending UnitSpawn for tamer with guid: {Guid} (Entity {Entity})", BGU_DataUtil.GetActorGuid(tamerEntity.Tamer), tamerEntity.Entity);
@@ -87,7 +88,7 @@ namespace WukongMp.Api.WukongUtils
         public static void MarkMonsterLocallyDespawned(IMappedEventManager mappedEvent, TamerEntity tamerEntity)
         {
             ref var localTamerComp = ref tamerEntity.GetLocalTamer();
-            
+
             if (localTamerComp.IsLocallySpawned)
             {
                 Logging.LogDebug("Sending UnitDespawn for tamer with guid: {Guid} (Entity {Entity})", BGU_DataUtil.GetActorGuid(tamerEntity.Tamer), tamerEntity.Entity);
@@ -150,6 +151,20 @@ namespace WukongMp.Api.WukongUtils
         {
             var events = BUS_EventCollectionCS.Get(character);
             events?.Evt_OnWakeUp.Invoke();
+        }
+
+        public static void TeleportTamer(TamerEntity tamerEntity, FVector location, FRotator rotation)
+        {
+            var pawn = tamerEntity.Pawn;
+            if (pawn == null)
+            {
+                Logging.LogError("Failed to teleport tamer: Pawn is null");
+                return;
+            }
+
+            BUS_EventCollectionCS.Get(pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
+            var correctedLocation = SpawningUtils.GetCorrectedSpawnLocation(pawn, location);
+            pawn.SetActorTransform(new FTransform(rotation, correctedLocation), false, out _, true);
         }
     }
 }

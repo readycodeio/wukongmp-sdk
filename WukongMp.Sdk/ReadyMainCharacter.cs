@@ -109,7 +109,7 @@ public readonly struct ReadyMainCharacter : IReadyEntity<ReadyMainCharacter>,
     
     public void Teleport(Vector3 location, Vector3 rotation)
     {
-        Api.MappedEvent.InvokeInGameAndNotifyEcs(new BroadcastPlayerTransformEvent(
+        Api.MappedEvent.InvokeInGameAndNotifyEcs(new RequestTeleportEvent(
             entity: Entity,
             location: location.ToFVector(),
             rotation: rotation.ToFRotator()

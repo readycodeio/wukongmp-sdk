@@ -327,7 +327,7 @@ internal class PvpMode : IDisposable
 
             teamMemberIndex[team]++;
             var newPlayerLocation = PvpUtils.AdjustSpawnLocation(mainEntity.Pawn, spawnLocation);
-            _mappedEvent.InvokeInGameAndNotifyEcs(new BroadcastPlayerTransformEvent(
+            _mappedEvent.InvokeInGameAndNotifyEcs(new RequestTeleportEvent(
                 entity: mainEntity.Entity,
                 location: newPlayerLocation,
                 rotation: UMathLibrary.FindLookAtRotation(newPlayerLocation, center - new FVector(0, 0, 500))
