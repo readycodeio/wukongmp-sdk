@@ -357,7 +357,7 @@ internal class PvpMode : IDisposable
         }
 
         // disable pvp until next round
-        SendPvPEvent(new PvpEvent(PvpEventKind.RoundEnd, winner)); // TODO: policy for owning the PvP state
+        SendPvPEvent(new PvpEvent(PvpEventKind.RoundEnd, winner));
 
         // increment round number
         pvpState.SetLastRoundWinnerTeam(winner);

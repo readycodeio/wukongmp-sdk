@@ -40,9 +40,13 @@ public static class EquipmentUtils
         if (equipComp is null)
             return;
 
+        var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
         foreach (var (position, item) in equipment.GetItems())
         {
-            OnChangeEquipReal(equipComp, position.ToGame(), item);
+            if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item)
+            {
+                OnChangeEquipReal(equipComp, position.ToGame(), item);
+            }
         }
     }
 
@@ -55,7 +59,11 @@ public static class EquipmentUtils
         if (equipComp is null)
             return;
 
-        OnChangeEquipReal(equipComp, position.ToGame(), item);
+        var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
+        if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item)
+        {
+            OnChangeEquipReal(equipComp, position.ToGame(), item);
+        }
     }
 
     private static bool ShouldSkip(BGUCharacterCS actor)

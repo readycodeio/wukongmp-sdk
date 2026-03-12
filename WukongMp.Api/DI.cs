@@ -389,26 +389,50 @@ internal sealed class DI
             (ctx, vec) =>
             {
                 ctx.Velocity = vec.ToFVector();
-                
+
                 if (ctx.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                 {
                     ctx.Velocity = FVector.ZeroVector;
                     // vec = FVector.ZeroVector.ToVector3(); // TODO: is this needed?
                 }
             }, ctx => ctx.Velocity.ToVector3());
-        
+
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(),
             (ctx, vec) =>
             {
                 ctx.MoveAcceleration = vec.ToFVector();
-                
+
                 if (ctx.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                 {
                     ctx.MoveAcceleration = FVector.ZeroVector;
                     // vec = FVector.ZeroVector.ToVector3(); // TODO: is this needed?
                 }
             }, ctx => ctx.MoveAcceleration.ToVector3());
-        
+
+        fieldMappingRegistry.Register(AnimationComponent.Fields.Velocity.In<BUC_ABPCharacterData>(),
+            (ctx, vec) =>
+            {
+                ctx.Velocity = vec.ToFVector();
+
+                if (ctx.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                {
+                    ctx.Velocity = FVector.ZeroVector;
+                    // vec = FVector.ZeroVector.ToVector3(); // TODO: is this needed?
+                }
+            }, ctx => ctx.Velocity.ToVector3());
+
+        fieldMappingRegistry.Register(AnimationComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(),
+            (ctx, vec) =>
+            {
+                ctx.MoveAcceleration = vec.ToFVector();
+
+                if (ctx.MoveAcceleration.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                {
+                    ctx.MoveAcceleration = FVector.ZeroVector;
+                    // vec = FVector.ZeroVector.ToVector3(); // TODO: is this needed?
+                }
+            }, ctx => ctx.MoveAcceleration.ToVector3());
+
 
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(),
             (ctx, attrs) =>
