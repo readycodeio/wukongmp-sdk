@@ -574,8 +574,6 @@ public static class TransformationPatch
     }
 }
 
-// TODO: This fixes follower transform (UI for skills no longer crashes) but also causes me and them to be unable to transform back
-// Also, skill UI for myself when I transform does not appear
 [HarmonyPatch(typeof(BPC_BattleMainInfoData), "GetCommonDisabledState")]
 [HarmonyPatchCategory(Constants.ConnectedPatches)]
 public class PatchLogs4
@@ -627,11 +625,13 @@ public class PatchOnTransBeginSpawnNewOne
             var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransBeginEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType), mainEntity.Value.Entity);
             if (sent)
             {
-                Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
+                Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter?.GetState().CharacterNickName, ToReplaceUnitResID);
             }
-
-            ref var mainComp = ref mainEntity.Value.GetState();
-            mainComp.IsTransformed = true;
+            
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var loadState))
+            {
+                loadState.SetFromGame(MainCharacterComponent.Fields.IsTransformed, true);
+            }
         }
     }
 }

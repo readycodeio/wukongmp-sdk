@@ -24,36 +24,36 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
         mainEntity = new MainCharacterEntity(entity);
         return true;
     }
-    
+
     public readonly Entity Entity = entity;
-    
+
     public static implicit operator Entity(MainCharacterEntity mainCharacterEntity)
         => mainCharacterEntity.Entity;
-    
+
     public bool IsNull
         => Entity.IsNull;
 
     public ref MetadataComponent GetMeta()
         => ref Entity.GetComponent<MetadataComponent>();
-    
+
     public ref MainCharacterComponent GetState()
         => ref Entity.GetComponent<MainCharacterComponent>();
-    
+
     public ref HpComponent GetHp()
         => ref Entity.GetComponent<HpComponent>();
-    
+
     public ref readonly TransformComponent GetTransform()
         => ref Entity.GetComponent<TransformComponent>();
-    
+
     public ref LocalMainCharacterComponent GetLocalState()
         => ref Entity.GetComponent<LocalMainCharacterComponent>();
 
     public ref readonly TeamComponent GetTeam()
         => ref Entity.GetComponent<TeamComponent>();
-    
+
     public ref PvPComponent GetPvP()
         => ref Entity.GetComponent<PvPComponent>();
-    
+
     public void SetTeam(TeamComponent team)
         => Entity.Set(team);
 
@@ -65,9 +65,9 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
         get
         {
             ref readonly var mappingComp = ref GetMappingComponent();
-            
+
             var pawn = mappingComp.GameObject as BGUCharacterCS;
-            
+
             if (pawn.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Player pawn is null or destroyed");
@@ -77,21 +77,21 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
             return pawn;
         }
     }
-    
+
     public BGUCharacterCS? Pawn
     {
         get
         {
             ref readonly var mappingComp = ref GetMappingComponent();
             ref readonly var localMainComp = ref GetLocalState();
-            
+
             if (!localMainComp.IsPlayerSynced)
             {
                 return null;
             }
 
             var pawn = mappingComp.GameObject as BGUCharacterCS;
-            
+
             if (pawn.IsNullOrDestroyed())
             {
                 Logging.LogWarning("Player pawn is null or destroyed");
@@ -101,7 +101,7 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
             return pawn;
         }
     }
-    
+
     public bool HasPawn
         => Pawn != null;
 
@@ -112,18 +112,19 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
     {
         if (pawn.IsNullOrDestroyed())
             throw new ArgumentNullException(nameof(pawn));
-        
+
         ref readonly var mappingComp = ref GetMappingComponent();
         var lastPawn = mappingComp.GameObject as BGUCharacterCS;
 
         Entity.Set(new MappingComponent<AActor>(pawn));
-        
+
         // NOTE(api): This line has to come after component manipulation as this causes structural changes that invalidate the ref
         ref var localMainComp = ref GetLocalState();
 
         if (isSynced)
             localMainComp.IsPlayerSynced = true;
-        localMainComp.LastPawn = lastPawn;
+
+        localMainComp.LastPawn = lastPawn.IsNullOrDestroyed() ? null : lastPawn;
     }
 
     public bool Equals(MainCharacterEntity other)
@@ -140,7 +141,7 @@ public readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainChara
 
     public static bool operator ==(MainCharacterEntity left, MainCharacterEntity right)
         => left.Entity == right.Entity;
-    
+
     public static bool operator !=(MainCharacterEntity left, MainCharacterEntity right)
         => left.Entity != right.Entity;
 }

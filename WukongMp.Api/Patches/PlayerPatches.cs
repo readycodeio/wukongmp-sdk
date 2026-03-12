@@ -284,16 +284,19 @@ public class PatchEqCompUpdate
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var owner = __instance.GetOwner() as BGUCharacterCS;
+        var owner = __instance.GetOwner();
 
         if (owner.IsNullOrDestroyed())
+        {
+            Logging.LogError("Owner is destroyed");
             return;
+        }
 
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(entity.Value, out var loader))
             {
-                loader.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<(BGUCharacterCS, ReadyM.Wukong.Common.ECS.Values.EquipPosition)>(), (owner, EquipPosition.FromGame()));
+                loader.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<(BGUCharacterCS, ReadyM.Wukong.Common.ECS.Values.EquipPosition)>(), ((BGUCharacterCS)owner, EquipPosition.FromGame()));
             }
         }
     }
