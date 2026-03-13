@@ -7,8 +7,6 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api;
 
-internal delegate void InternalObstacleCollisionDelegate(MainCharacterEntity mainEntity, AActor obstacle, out bool shouldBlock);
-    
 internal sealed class GameplayEventRouter // TODO: Export these in public API with object-like wrappers
 {
     public event Action<CultureInfo>? OnLanguageChanged;
@@ -17,17 +15,7 @@ internal sealed class GameplayEventRouter // TODO: Export these in public API wi
     public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
     public event Action<bool>? OnLocalPlayerChangedSpectator;
     public event Action? OnLocalPlayerBeforeRebirth;
-        
-    private readonly List<InternalObstacleCollisionDelegate> _obstacleCollisionHandlers = new();
-        
-    public event InternalObstacleCollisionDelegate OnObstacleCollision
-    {
-        add => _obstacleCollisionHandlers.Add(value);
-        remove => _obstacleCollisionHandlers.Remove(value);
-    }
-        
-    public event Action<AActor>? OnDisableObstacle;
-        
+    
     public void RaiseOnLanguageChanged(CultureInfo culture)
     {
         OnLanguageChanged?.Invoke(culture);
@@ -37,7 +25,7 @@ internal sealed class GameplayEventRouter // TODO: Export these in public API wi
     {
         OnUnitDead?.Invoke(victimEntity, attackerEntity);
     }
-        
+
     public void RaiseOnMonsterSpawned(Entity monsterEntity)
     {
         OnMonsterSpawned?.Invoke(monsterEntity);
@@ -56,25 +44,5 @@ internal sealed class GameplayEventRouter // TODO: Export these in public API wi
     public void RaiseOnLocalPlayerBeforeRebirth()
     {
         OnLocalPlayerBeforeRebirth?.Invoke();
-    }
-
-    public void NotifyObstacleCollision(MainCharacterEntity mainEntity, AActor obstacle, out bool shouldBlock)
-    {
-        shouldBlock = false;
-            
-        foreach (var handler in _obstacleCollisionHandlers)
-        {
-            handler.Invoke(mainEntity, obstacle, out var b);
-                
-            if (b)
-            {
-                shouldBlock = true;
-            }
-        }
-    }
-
-    public void NotifyDisableObstacle(AActor obstacle)
-    {
-        OnDisableObstacle?.Invoke(obstacle);
     }
 }

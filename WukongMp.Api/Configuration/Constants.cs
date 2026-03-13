@@ -16,7 +16,6 @@ internal static class Constants
     public const float CameraArmLength = 720;
     public const float TransformedCameraArmLength = 1100;
     public const int NewCharacterArchiveId = 1;
-    public const int MaxPlayers = 10;
     public const int DefaultMonsterTeamId = 2;
     public const int ReconnectDelayMs = 1000;
     public const float RestrictedMovementRadius = 500f;
@@ -61,7 +60,6 @@ internal static class Constants
 
     public const string WukongClassPath = "/Game/00Main/Design/Units/Player/Unit_Player_Wukong.Unit_Player_Wukong_C";
     public const string WukongDashengClassPath = "/Game/00Main/Design/Units/Player/Unit_player_dasheng.Unit_player_dasheng_C";
-
     public const string PlayerMarkerPath = "/Game/Mods/WukongMod/BP_PlayerMarker.BP_PlayerMarker_C";
 
     public const string DebugCubeActorPath = "/Game/Mods/DebugMod/BP_DebugCube.BP_DebugCube_C";

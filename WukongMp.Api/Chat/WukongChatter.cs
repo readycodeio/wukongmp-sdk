@@ -93,7 +93,7 @@ internal class WukongChatter : IDisposable
         var translatedMessage = message.Message;
         if (isServer)
         {
-            translatedMessage = string.Format(Texts.ResourceManager.GetString(message.Message, Texts.Culture)!, [.. message.Placeholders]);
+            translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message.Message, BuiltinTexts.Culture)!, [.. message.Placeholders]);
         }
 
         _logger.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message.Message, senderNickname);
@@ -102,7 +102,7 @@ internal class WukongChatter : IDisposable
 
     public void AddLocalServerMessage(string message, params string[] placeholders)
     {
-        var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
+        var translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message, BuiltinTexts.Culture)!, [.. placeholders]);
         _widgetManager.AddChatMessage(true, "Server", translatedMessage, Constants.ServerMessageColor);
     }
 }

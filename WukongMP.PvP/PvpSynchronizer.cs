@@ -87,7 +87,7 @@ internal class PvpSynchronizer : WukongSynchronizer
         
         State.OnJoinedArea += OnJoinedAreaHandler;
 
-        _modeGroup = new SystemGroup("Pvp");
+        _modeGroup = new SystemGroup("PvP");
 
         _modeGroup.Add(new DespawnTamerSystem(archetypeEvent, playerState, wukongArchetype, eventBus, Logger));
         _modeGroup.Add(new ReadinessSystem(world, areaState, widgetManager, playerState, pvpMode));

@@ -8,6 +8,7 @@ using WukongMp.Api;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk.Entities;
@@ -18,13 +19,13 @@ public readonly struct ReadyMainCharacter
         IReadyConvertable<ReadyMainCharacter, ReadyActor>,
         IReadyConvertable<ReadyMainCharacter, ReadyObject>
 {
-    internal WukongClientApi Api { get; }
-    internal Entity Entity { get; }
+    private WukongClientApi Api { get; }
+    private MainCharacterEntity Entity { get; }
 
     internal ReadyMainCharacter(WukongClientApi api, Entity entity)
     {
         Api = api;
-        Entity = entity;
+        Entity = new MainCharacterEntity(entity);
     }
 
     public static implicit operator ReadyObject(ReadyMainCharacter mainCharacter)
@@ -44,7 +45,7 @@ public readonly struct ReadyMainCharacter
     {
         if (!MainCharacterEntity.IsMainCharacter(character.Entity))
             throw new InvalidCastException($"The provided {nameof(ReadyCharacter)} is not {nameof(MainCharacterEntity)}.");
-        return new(character.Api, character.Entity);
+        return new ReadyMainCharacter(character.Api, character.Entity);
     }
 
     ReadyMainCharacter IReadyEntity<ReadyMainCharacter>.Construct(WukongClientApi api, Entity entity)
@@ -58,66 +59,44 @@ public readonly struct ReadyMainCharacter
 
     // ---
 
-    public PlayerId PlayerId
+    public PlayerId PlayerId => Entity.GetState().PlayerId;
+    public bool IsWaitingForCutscene => Entity.GetLocalState().IsWaitingForSequence;
+    public int WaitingCutsceneId => Entity.GetState().WaitingSequenceId;
+    public bool IsRespawning => Entity.GetLocalState().IsRespawning;
+    public bool IsTransformed => Entity.GetState().IsTransformed;
+    public int RebirthPointId => Entity.GetState().RebirthPointId;
+
+    public string Nickname
     {
-        get
+        get => Entity.GetState().CharacterNickName;
+        set
         {
-            var mainEntity = new MainCharacterEntity(Entity);
-            return mainEntity.GetState().PlayerId;
+            if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(Entity, out var set))
+                set.SetFromApi(MainCharacterComponent.Fields.CharacterNickName, value);
         }
     }
 
-    public bool IsWaitingForSequence
+    public bool BeguilingChantEligible
     {
-        get
+        get => Entity.GetState().BeguilingChantEligible;
+        set
         {
-            var mainEntity = new MainCharacterEntity(Entity);
-            return mainEntity.GetLocalState().IsWaitingForSequence;
+            if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(Entity, out var set))
+                set.SetFromApi(MainCharacterComponent.Fields.BeguilingChantEligible, value);
         }
     }
 
-    public int WaitingSequenceId
-    {
-        get
-        {
-            var mainEntity = new MainCharacterEntity(Entity);
-            return mainEntity.GetState().WaitingSequenceId;
-        }
-    }
+    public void SetMarkerMessage(string message, string color)
+        => MarkerUtils.CreateMarkerForPlayer(Entity, message, color);
 
-    public bool IsRespawning
-    {
-        get
-        {
-            var mainEntity = new MainCharacterEntity(Entity);
-            return mainEntity.GetLocalState().IsRespawning;
-        }
-    }
-
-
-    public bool IsTransformed
-    {
-        get
-        {
-            var mainEntity = new MainCharacterEntity(Entity);
-            return mainEntity.GetState().IsTransformed;
-        }
-    }
-
-    public int RebirthPointId
-    {
-        get
-        {
-            var mainEntity = new MainCharacterEntity(Entity);
-            return mainEntity.GetState().RebirthPointId;
-        }
-    }
+    public void HideMarker()
+        => MarkerUtils.DestroyMarkerForCharacter(Entity);
 
     // ---
 
     public void Teleport(Vector3 location, Vector3 rotation)
     {
-        Api.MappedEvent.InvokeInGameAndNotifyEcs(new RequestTeleportEvent(
+        DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RequestTeleportEvent(
             entity: Entity,
             location: location.ToFVector(),
             rotation: rotation.ToFRotator()
@@ -126,20 +105,17 @@ public readonly struct ReadyMainCharacter
 
     public void RebirthInPlace()
     {
-        var mainEntity = new MainCharacterEntity(Entity);
-
-        Api.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(mainEntity.Entity, false), default(EmptyContext));
+        DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(Entity, false), default(EmptyContext));
     }
 
-    public void Respawn(int maxComp)
+    public void RebirthAtShrine(int shrineId)
     {
-        var mainEntity = new MainCharacterEntity(Entity);
-        var localMainComp = mainEntity.GetLocalState();
-
+        ref var localMainComp = ref Entity.GetLocalState();
         localMainComp.IsRespawning = true;
-        Api.MappedEvent.InvokeInGameAndNotifyEcs(new PartyRespawnEvent(
-            entity: mainEntity.Entity,
-            birthShrineId: maxComp
+
+        DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new PartyRespawnEvent(
+            entity: Entity,
+            birthShrineId: shrineId
         ), default(EmptyContext));
     }
 }

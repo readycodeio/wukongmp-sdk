@@ -32,10 +32,7 @@ public abstract class ModBase : ICSharpModExV2
     {
         Initialize();
 
-        var modSystems = DefineSystems().ToList();
-        modSystems.ForEach(x => x.Initialize(Api.ReadyM.Local, Api.ReadyM.Client, Logger));
-        
-        _systems = [.. modSystems.Select(x => x.ToBaseSystem())];
+        _systems = [.. ScanForAndInitializeSystems().Select(x => x.ToBaseSystem())];
         _systemGroup = new SystemGroup(Name);
 
         foreach (var system in _systems)
@@ -47,13 +44,21 @@ public abstract class ModBase : ICSharpModExV2
         DI.Instance.World.SystemRoot.Add(_systemGroup);
     }
 
-    protected virtual void Initialize() { }
-
-    [Obsolete("Use attributes and declarative systems instead")]
-    protected virtual IEnumerable<ModSystemBase> DefineSystems()
+    private IEnumerable<ModSystemBase> ScanForAndInitializeSystems()
     {
-        yield break;
+        var eligible = GetType().Assembly.GetTypes()
+            .Where(t => typeof(ModSystemBase).IsAssignableFrom(t) && !t.IsAbstract);
+
+        foreach (var type in eligible)
+        {
+            Logger.LogDebug("Found mod system: {SystemType}", type.FullName);
+            var instance = (ModSystemBase)Activator.CreateInstance(type)!;
+            instance.Initialize(Logger);
+            yield return instance;
+        }
     }
+
+    protected virtual void Initialize() { }
 
     public virtual void DeInit()
     {
@@ -72,7 +77,7 @@ public abstract class ModBase : ICSharpModExV2
 
     public virtual void LateInit()
     {
-        _patcher = Api.ReadyM.GetPatcher(this);
+        _patcher = new WukongPatcher(this.GetType().Assembly, this.Name, DI.Instance.Prelude);
         if (!_patcher.IsPatched)
         {
             _patcher.Patch();

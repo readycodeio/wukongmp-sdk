@@ -155,7 +155,7 @@ namespace WukongMp.PvP.UI
 
         protected override void PostInitialize()
         {
-            SetStaticTexts(Texts.RedTeam, Texts.BlueTeam, Texts.Spectators, Texts.Ready, Texts.Connected, Texts.More);
+            SetStaticTexts(BuiltinTexts.RedTeam, BuiltinTexts.BlueTeam, BuiltinTexts.Spectators, BuiltinTexts.Ready, BuiltinTexts.Connected, BuiltinTexts.More);
             InitNativeFunctions();
         }
 

@@ -29,6 +29,7 @@ internal class ClientWukongArchetypeRegistration : IArchetypeRegistration
             WukongComponentUtils.SetupServerMainCharacterArchetype(b);
             b.Add(new MappingComponent<AActor>(new AActor()));
             b.Add<LocalMainCharacterComponent>();
+            b.Add<MarkerComponent>();
         });
 
         PvPStateSingletonArchetype = world.RegisterArchetype(WukongComponentUtils.SetupServerPvpStateArchetype);

@@ -67,7 +67,7 @@ internal class WukongCommandConsole : IDisposable
 
     public void AddLocalizedMessage(string message, params string[] placeholders)
     {
-        var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
+        var translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message, BuiltinTexts.Culture)!, [.. placeholders]);
         _widgetManager.AddMessageToConsole(translatedMessage);
     }
 
@@ -97,8 +97,8 @@ internal class WukongCommandConsole : IDisposable
                 break;
             case CommandError.InvalidArgumentType(var argIndex, var expectedType, var actualType):
             {
-                var expectedTypeName = Texts.ResourceManager.GetString($"CommandArgumentType.{expectedType.Name}", Texts.Culture)!;
-                var actualTypeName = Texts.ResourceManager.GetString($"CommandArgumentType.{actualType.Name}", Texts.Culture)!;
+                var expectedTypeName = BuiltinTexts.ResourceManager.GetString($"CommandArgumentType.{expectedType.Name}", BuiltinTexts.Culture)!;
+                var actualTypeName = BuiltinTexts.ResourceManager.GetString($"CommandArgumentType.{actualType.Name}", BuiltinTexts.Culture)!;
                 AddLocalizedMessage(nameof(CommandError.InvalidArgumentType), argIndex.ToString(), expectedTypeName, actualTypeName);
                 break;
             }

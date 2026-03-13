@@ -49,7 +49,7 @@ namespace WukongMp.Api.WukongUtils
             bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
         }
 
-        public static void DiscoverTamers(WukongPawnState pawnState)
+        public static void DiscoverTamers()
         {
             Logging.LogDebug("Discovering tamers...");
 
@@ -59,10 +59,10 @@ namespace WukongMp.Api.WukongUtils
                 var tamerRef = actor.CurrentRef;
                 var guid = BGU_DataUtil.GetActorGuid(actor);
                 Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
-                var entity = pawnState.GetEntityByTamerGuid(guid);
+                var entity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
                 if (entity == null)
                 {
-                    SpawningUtils.CreateMonsterInEcs(pawnState, guid, actor, Constants.DefaultMonsterTeamId, actor.PathName);
+                    SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, guid, actor, Constants.DefaultMonsterTeamId, actor.PathName);
                 }
                 else
                 {

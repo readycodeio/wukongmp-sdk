@@ -49,8 +49,11 @@ internal readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainCha
     public ref LocalMainCharacterComponent GetLocalState()
         => ref Entity.GetComponent<LocalMainCharacterComponent>();
 
-    public ref readonly TeamComponent GetTeam()
+    public ref TeamComponent GetTeam()
         => ref Entity.GetComponent<TeamComponent>();
+
+    public ref MarkerComponent GetMarker()
+        => ref Entity.GetComponent<MarkerComponent>();
 
     public ref PvPComponent GetPvP()
         => ref Entity.GetComponent<PvPComponent>();

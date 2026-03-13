@@ -43,7 +43,7 @@ internal static class CutsceneUtils
         {
             localMain.JoiningSequenceLocation = ev.SequenceLocation;
             localMain.IsJoiningSequence = true;
-            widgetManager.ShowInfoMessage(Texts.JoinOtherPlayersToProceed);
+            widgetManager.ShowInfoMessage(BuiltinTexts.JoinOtherPlayersToProceed);
         }
     }
 

@@ -6,7 +6,7 @@ namespace WukongMp.Api;
 /// Exposes events related to level transitions, such as loading, playing, and exiting levels.
 /// This allows mods to hook into these events and perform actions at the appropriate times during the level lifecycle.
 /// </summary>
-public sealed class WukongEventBus
+internal sealed class WukongEventBus
 {
     private enum LevelTransitionPhase
     {

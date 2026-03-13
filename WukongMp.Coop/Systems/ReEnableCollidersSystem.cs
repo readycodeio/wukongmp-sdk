@@ -1,16 +1,24 @@
 ﻿using Friflo.Engine.ECS;
 using WukongMp.Sdk;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Systems;
 
-public sealed class ReEnableCollidersSystem(ColliderDisableData colliderDisableData) : ModSystemBase
+// ReSharper disable once UnusedType.Global
+public sealed class ReEnableCollidersSystem : ModSystemBase
 {
     private const float TickIntervalSeconds = 1; // Check every second
     private float _elapsedTime;
+    private readonly ColliderDisableData _colliderDisableData;
+
+    public ReEnableCollidersSystem()
+    {
+        _colliderDisableData = new ColliderDisableData(Logger);
+    }
 
     protected override void OnUpdate(UpdateTick tick)
     {
-        if (!LocalApi.IsGameplayLevel)
+        if (!WukongApi.Local.IsGameplayLevel)
             return;
 
         _elapsedTime += tick.deltaTime;
@@ -18,7 +26,7 @@ public sealed class ReEnableCollidersSystem(ColliderDisableData colliderDisableD
         if (_elapsedTime < TickIntervalSeconds)
             return;
 
-        colliderDisableData.TryReEnableColliders(_elapsedTime);
+        _colliderDisableData.TryReEnableColliders(_elapsedTime);
         _elapsedTime = 0f;
     }
 }

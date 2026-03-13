@@ -35,13 +35,13 @@ namespace WukongMp.Api.UI
             InitNativeFunctions();
             ClearMessages();
             ClearToolTipText();
-            SetHelperText(Texts.ChatHelperNoSendDescription);
+            SetHelperText(BuiltinTexts.ChatHelperNoSendDescription);
             SetWritable(false);
         }
 
         public void SetWritingEnabled(bool enabled)
         {
-            SetHelperText(enabled ? Texts.ChatHelperDescription : Texts.ChatHelperNoSendDescription);
+            SetHelperText(enabled ? BuiltinTexts.ChatHelperDescription : BuiltinTexts.ChatHelperNoSendDescription);
             SetWritable(enabled);
         }
 

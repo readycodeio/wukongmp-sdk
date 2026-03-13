@@ -34,6 +34,6 @@ public sealed class CoopStatusWidget() : GameWidgetBase(CoopStatusWidgetPath)
 
     protected override void PostInitialize()
     {
-        SetConnectedText(Texts.Connected);
+        SetConnectedText(BuiltinTexts.Connected);
     }
 }

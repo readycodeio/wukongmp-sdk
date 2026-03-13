@@ -8,7 +8,7 @@ using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop;
 
-public class ColliderDisableData(WukongClientApi clientApi, ILogger logger)
+public sealed class ColliderDisableData(ILogger logger)
 {
     private readonly Dictionary<AActor, float> _colliderDisableTimes = []; 
 
@@ -45,9 +45,9 @@ public class ColliderDisableData(WukongClientApi clientApi, ILogger logger)
         {
             collider.SetActorEnableCollision(true);
 
-            if (clientApi.LocalMainCharacter != null)
+            if (WukongApi.Client.LocalMainCharacter != null)
             {
-                var player = clientApi.LocalMainCharacter.Value.Pawn;
+                var player = WukongApi.Client.LocalMainCharacter.Value.Pawn;
                 var traceLength = player.CapsuleComponent.GetScaledCapsuleRadius() + 20f;
                 var lineTraceDir = GetLineTraceDir_SafeNormal2D(player);
                 var playerLocation = player.BGUGetActorLocation();
@@ -58,7 +58,7 @@ public class ColliderDisableData(WukongClientApi clientApi, ILogger logger)
                     if (HitResult.Any(x => x.HitActor == collider))
                     {
                         logger.LogDebug("Re-disabled collider for actor: {Actor} due to player proximity", BGU_DataUtil.GetActorGuid(collider));
-                        DisableCollider(collider, CoopConfig.ColliderDisableTime);
+                        DisableCollider(collider, Config.ColliderDisableTime);
                         continue;
                     }
                 }

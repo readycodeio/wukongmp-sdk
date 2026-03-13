@@ -666,7 +666,7 @@ internal class PvpMode : IDisposable
 
     public void StartLobbyCountdown(int seconds)
     {
-        _pvpWidgetManager.SetMainMessage(Texts.StartingGame);
+        _pvpWidgetManager.SetMainMessage(BuiltinTexts.StartingGame);
         _pvpWidgetManager.UpdateRoundCountdown(0, seconds);
         _pvpWidgetManager.ShowCountdown();
 
@@ -684,7 +684,7 @@ internal class PvpMode : IDisposable
         ref var player = ref playerEntity!.Value.GetPvP();
 
         ClearLoobyCountdown();
-        _pvpWidgetManager.SetMainMessage(Texts.InMultiplayer);
+        _pvpWidgetManager.SetMainMessage(BuiltinTexts.InMultiplayer);
         _pvpWidgetManager.SwitchReadyState(player.IsReadyForPvP);
     }
 
@@ -841,11 +841,11 @@ internal class PvpMode : IDisposable
 
                 if (winnerTeamId == PvpConstants.DrawTeamId)
                 {
-                    UiUtils.ShowTip(Texts.RoundDraw, true);
+                    UiUtils.ShowTip(BuiltinTexts.RoundDraw, true);
                 }
                 else
                 {
-                    UiUtils.ShowTip(string.Format(Texts.RoundEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                    UiUtils.ShowTip(string.Format(BuiltinTexts.RoundEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
                 }
 
                 if (winnerTeamId == PvpConstants.DrawTeamId)
@@ -866,11 +866,11 @@ internal class PvpMode : IDisposable
             {
                 if (winnerTeamId == PvpConstants.DrawTeamId)
                 {
-                    UiUtils.ShowTip(Texts.TournamentDraw, true);
+                    UiUtils.ShowTip(BuiltinTexts.TournamentDraw, true);
                 }
                 else
                 {
-                    UiUtils.ShowTip(string.Format(Texts.TournamentEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
+                    UiUtils.ShowTip(string.Format(BuiltinTexts.TournamentEndedWinner, PvpUtils.GetLocalizedTeamName(winnerTeamId)), true);
                 }
 
                 // ReSharper disable once AsyncVoidMethod

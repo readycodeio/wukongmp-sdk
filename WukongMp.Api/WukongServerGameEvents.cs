@@ -38,7 +38,7 @@ internal class WukongServerGameEvents : IDisposable
             }
             else
             {
-                self._widgetManager.ShowInfoMessage(string.Format(Texts.WaitForOtherPlayersCount, ev.WaitingPlayers, ev.AllPlayers));
+                self._widgetManager.ShowInfoMessage(string.Format(BuiltinTexts.WaitForOtherPlayersCount, ev.WaitingPlayers, ev.AllPlayers));
             }
         }, this);
 

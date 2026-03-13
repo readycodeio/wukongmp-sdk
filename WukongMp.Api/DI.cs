@@ -111,6 +111,8 @@ internal sealed class DI
     internal WukongEventBus EventBus { get; private set; } = null!;
     internal GameplayConfiguration GameplayConfiguration { get; private set; } = null!;
     internal GameplayEventRouter GameplayEventRouter { get; private set; } = null!;
+    internal WukongSynchronizer Synchronizer { get; private set; } = null!;
+    internal WukongSystemRegistration SystemRegistration { get; private set; } = null!;
 
     internal WukongNetworkLogger NetLogger { get; private set; } = null!;
     internal INetworkedComponentRegistry NetComponentRegistry { get; private set; } = null!;
@@ -216,9 +218,10 @@ internal sealed class DI
 
         var ecsLoop = EcsLoop = new ClientEcsUpdateLoop(world, logger);
 
+
         var jobRegistry = JobRegistry = new JobRegistry(netComponentRegistry, netEntity, relayClient, logger);
 
-        var state = State = new ClientState(world, netEntity, relayClient, ecsLoop, jobRegistry, areaArchetype, playerArchetype, logger);
+        var state = State = new ClientState(world, netEntity, relayClient, ecsLoop, jobRegistry, logger);
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityManager(state, netEntity);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
@@ -234,6 +237,8 @@ internal sealed class DI
 
         var ownershipManager = OwnershipManager_ = new NetworkedOwnershipManager(world, logger);
         var clientOwnership = ClientOwnership_ = new ClientOwnershipManager(state, ownershipManager);
+
+        var synchronizer = Synchronizer = new WukongSynchronizer(state, wukongArchetype, netEntity, clientOwnership, jobRegistry, netComponentRegistry, relayClient, ecsLoop, logger);
 
         var gameStateSynchronizer = GameStateSynchronizer = new GameStateSynchronizer(state, playerState);
 
@@ -260,9 +265,9 @@ internal sealed class DI
         var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, policyDir, logger);
         var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);
 
-        var fieldMappingRegistry = new ComponentFieldMappingRegistry(policyDir, sideChannel, logger);
-        MappedField = fieldMappingRegistry;
-        RegisterDataMappings(fieldMappingRegistry);
+        var mappedField = new ComponentFieldMappingRegistry(policyDir, sideChannel, logger);
+        MappedField = mappedField;
+        RegisterDataMappings(mappedField);
 
         var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
         var clientGameEvents = ClientGameEvents = new WukongClientGameEvents(mappedEvent, mappingPolicyDir, state, pawnState, playerState, widgetManager, gameplayEventRouter, logger);
@@ -303,6 +308,26 @@ internal sealed class DI
         var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
         var prelude = Prelude = new RuntimePrelude(preludeBackend, runtimeLogger);
 
+        var systemRegistration = SystemRegistration = new WukongSystemRegistration(
+            worldEvent,
+            state,
+            wukongArchetype,
+            mappedField,
+            areaState,
+            playerState,
+            playerPawnState,
+            modeManager,
+            clientOwnership,
+            ecsLoop,
+            mappedEvent,
+            eventBus,
+            widgetManager,
+            gameplayEventRouter,
+            gameplayConfig,
+            freeCameraManager,
+            freeCameraController,
+            logger
+        );
         // ---
 
         var shimLogger = LoggerFactory.CreateLogger("Shim");

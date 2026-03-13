@@ -1446,7 +1446,7 @@ internal partial class WukongClientRpcCallbacks : IDisposable
             if (mainEntity.GetHp().IsDead)
                 return;
 
-            self._widgetManager.ShowInfoMessage(Texts.AntiStallWarning);
+            self._widgetManager.ShowInfoMessage(BuiltinTexts.AntiStallWarning);
             self._timerController.SetTimer(0, warningTime0);
             self._timerController.StartTimer();
             Logging.LogDebug("OnShowAntiStallWarning received");
@@ -1464,7 +1464,7 @@ internal partial class WukongClientRpcCallbacks : IDisposable
             if (mainEntity.GetHp().IsDead)
                 return;
 
-            self._widgetManager.ShowInfoMessage(Texts.StallingMessage);
+            self._widgetManager.ShowInfoMessage(BuiltinTexts.StallingMessage);
             Logging.LogDebug("OnShowAntiStallAction received");
         }, this);
     }

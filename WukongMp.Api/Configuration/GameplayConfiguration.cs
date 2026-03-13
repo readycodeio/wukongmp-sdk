@@ -9,7 +9,7 @@ internal class GameplayConfiguration(ILogger logger)
     public bool IsSupportMultiLockEnabled { get; set; } = false;
     public bool IsStrongDamageImmueEnabled { get; set; } = false;
     public bool EnableCustomCameraArmLength { get; set; } = false;
-    public bool EnableSpawnedTamers { get; set; } = false;
+    public bool DeleteDestroyedTamersFromEcs { get; set; } = false;
     public bool DisableCutscenes { get; set; } = false;
 
     [Obsolete("To be replaced by data sync direction after refactoring")]

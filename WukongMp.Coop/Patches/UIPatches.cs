@@ -18,6 +18,8 @@ using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
+using WukongMp.Coop.Configuration;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Patches;
 
@@ -47,19 +49,19 @@ public static class PatchStartGameUiCoop
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
-                    UiUtils.ShowTip(Texts.MissingPak, false);
+                    UiUtils.ShowTip(BuiltinTexts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
-                else if (!Mod.Instance.ClientApi.IsConnected)
+                else if (!WukongApi.Client.IsConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
 
-                    Mod.Instance.ClientApi.GetDisconnectReasonAndInvoke(reason =>
+                    WukongApi.Client.GetDisconnectReasonAndInvoke(reason =>
                     {
                         Utils.TryRunOnGameThread(() =>
                         {
-                            Mod.Instance.LocalApi.ShowInfoMessage(reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected);
+                            WukongApi.Local.ShowInfoMessage(reason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected);
                         });
                     });
                     Logging.LogError("Disconnected. Could not continue game.");

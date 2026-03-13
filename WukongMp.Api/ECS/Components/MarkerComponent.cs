@@ -10,20 +10,22 @@ internal struct MarkerComponent : IComponent
 {
     public bool DestroyQueued;
 
-    private AActor? _markerActor;
-    
     [Ignore]
     public AActor? MarkerActor
     {
-        get
+        readonly get
         {
-            if (_markerActor != null && _markerActor.IsNullOrDestroyed())
+            if (field != null && field.IsNullOrDestroyed() || DestroyQueued)
             {
                 return null;
             }
 
-            return _markerActor;
+            return field;
         }
-        set => _markerActor = value;
+        set
+        {
+            field = value;
+            DestroyQueued = false;
+        }
     }
 }

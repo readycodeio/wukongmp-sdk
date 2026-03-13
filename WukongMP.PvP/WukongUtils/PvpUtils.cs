@@ -28,7 +28,7 @@ public static class PvpUtils
         ref var room = ref areaEntity.Value.GetRoom();
         var current = areaState.PvpState.Value.CurrentRound;
         var total = room.TournamentRounds;
-        UiUtils.ShowTip(string.Format(Texts.RoundCount, current, total), true);
+        UiUtils.ShowTip(string.Format(BuiltinTexts.RoundCount, current, total), true);
     }
 
     public static string GetTeamColorString(int teamId)
@@ -43,9 +43,9 @@ public static class PvpUtils
     public static string GetLocalizedTeamName(int teamId)
     {
         if (teamId == PvpConstants.RedTeamId)
-            return Texts.RedTeam;
+            return BuiltinTexts.RedTeam;
         if (teamId == PvpConstants.BlueTeamId)
-            return Texts.BlueTeam;
+            return BuiltinTexts.BlueTeam;
         return "";
     }
 

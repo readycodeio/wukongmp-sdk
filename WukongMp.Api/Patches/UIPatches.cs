@@ -157,8 +157,8 @@ internal class PatchSetCurrentCulture
             _ => Culture
         };
         Logging.LogInformation("Culture changed to: {Culture}", normalizedCulture);
-        Texts.Culture = new CultureInfo(normalizedCulture);
-        DI.Instance.GameplayEventRouter.RaiseOnLanguageChanged(Texts.Culture);
+        BuiltinTexts.Culture = new CultureInfo(normalizedCulture);
+        DI.Instance.GameplayEventRouter.RaiseOnLanguageChanged(BuiltinTexts.Culture);
     }
 }
 

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.State;
@@ -72,13 +73,11 @@ internal sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         if (playerId == _playerState.LocalPlayerId)
             return;
 
-        var localComp = mainEntity.GetLocalState();
-
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
             PlayerId = playerId,
             PlayerCharacter = mainEntity.Pawn,
-            PlayerMarker = localComp.MarkerActor
+            PlayerMarker = mainEntity.GetMarker().MarkerActor
         });
     }
 

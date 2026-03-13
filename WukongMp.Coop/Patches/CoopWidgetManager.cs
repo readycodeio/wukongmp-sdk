@@ -9,6 +9,7 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
+using WukongMp.Coop.Configuration;
 using WukongMp.Coop.UI;
 
 namespace WukongMp.Coop.Patches;

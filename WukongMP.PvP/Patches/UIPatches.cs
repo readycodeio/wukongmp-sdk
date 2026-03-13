@@ -42,12 +42,12 @@ public static class PatchStartGameUiPvp
         var isConnected = DI.Instance.State.IsConnected;
         if (!hasPak)
         {
-            UiUtils.ShowTip(Texts.MissingPak, false);
+            UiUtils.ShowTip(BuiltinTexts.MissingPak, false);
             Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
         }
         else if (!isConnected)
         {
-            DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected); }); });
+            DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected); }); });
             Logging.LogError(" PvP Disconnected. Could not continue game.");
         }
 

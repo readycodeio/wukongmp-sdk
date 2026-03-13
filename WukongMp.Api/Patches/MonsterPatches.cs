@@ -206,7 +206,7 @@ internal class PatchTamerUnload
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.EnableSpawnedTamers))
+        if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.DeleteDestroyedTamersFromEcs))
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))

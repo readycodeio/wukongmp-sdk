@@ -46,7 +46,7 @@ namespace WukongMp.Api.UI
 
         protected override void PostInitialize() 
         {
-            SetStaticTexts(Texts.Ping, Texts.PingUnits);
+            SetStaticTexts(BuiltinTexts.Ping, BuiltinTexts.PingUnits);
         }
     }
 }

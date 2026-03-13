@@ -5,18 +5,19 @@ using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using UnrealEngine.Engine;
+using WukongMp.Api;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
-namespace WukongMp.Api.ECS.Systems.Tamers;
+namespace WukongMp.PvP.ECS.Systems;
 
 /// <summary>
 /// Despawns the pawns corresponding to MainCharacterEntities for other players. Doesn't affect the main players' MainCharacterEntity.
 /// </summary>
-internal sealed class DespawnTamerSystem : BaseSystem, IDisposable
+public sealed class DespawnTamerSystem : BaseSystem, IDisposable
 {
     private struct PendingDeleteEvent
     {

@@ -134,7 +134,7 @@ internal static class PatchRequestPlayMovie
                     continue;
                 ref var localMain = ref mainEntity.Value.GetLocalState();
                 mainEntity.Value.Pawn?.SetActorHiddenInGame(true);
-                localMain.MarkerActor?.SetActorHiddenInGame(true);
+                mainEntity.Value.GetMarker().MarkerActor?.SetActorHiddenInGame(true);
                 localMain.ShouldDisableCollision = true;
                 PlayerUtils.SetCollisionEnabled(mainEntity.Value.Pawn, false);
             }
@@ -162,7 +162,7 @@ internal static class PatchRequestPlayMovie
                         continue;
                     ref var localMain = ref mainEntity.Value.GetLocalState();
                     mainEntity.Value.Pawn?.SetActorHiddenInGame(false);
-                    localMain.MarkerActor?.SetActorHiddenInGame(false);
+                    mainEntity.Value.GetMarker().MarkerActor?.SetActorHiddenInGame(false);
                     localMain.ShouldDisableCollision = false;
                     DI.Instance.WidgetManager.HideInfoMessage();
                 }
@@ -262,7 +262,7 @@ internal static class PatchTickForMovieSystem
                 ref var main = ref mainEntity.Value.GetState();
                 var trans = mainEntity.Value.GetTransform();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                DI.Instance.WidgetManager.ShowInfoMessage(Texts.WaitForOtherPlayers);
+                DI.Instance.WidgetManager.ShowInfoMessage(BuiltinTexts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
                 localMain.JoiningSequenceLocation = trans.Position.ToFVector();

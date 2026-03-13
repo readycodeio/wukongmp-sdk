@@ -46,7 +46,6 @@ internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wuk
         ref var player = ref playerEntity.GetState();
 
         var mainEntity = playerState.CreateLocalMainCharacter();
-        ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
 
         logger.LogDebug("Local main character pawn: {Pawn}", pawn.PathName);

@@ -226,7 +226,7 @@ public class PvpCommandRegistration(
 
         if (pvpLevelId < 0)
         {
-            console.AddMessage(Texts.InvalidCommand);
+            console.AddMessage(BuiltinTexts.InvalidCommand);
             return;
         }
 

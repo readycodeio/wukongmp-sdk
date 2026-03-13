@@ -14,7 +14,7 @@ namespace WukongMp.Api.UI;
 
 internal sealed class WukongWidgetManager(ClientState clientState, WukongPlayerState playerState, IRelayClient relayClient) : IDisposable
 {
-    private string _lastDisconnectText = Texts.Disconnected;
+    private string _lastDisconnectText = BuiltinTexts.Disconnected;
 
     private bool _isInitialized;
 
@@ -70,7 +70,7 @@ internal sealed class WukongWidgetManager(ClientState clientState, WukongPlayerS
             relayClient.Scheduler.Schedule(static (ctx, self) =>
             {
                 self._infoMessageWidget.Value.SetVisibility(true);
-                self._lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
+                self._lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected;
                 self._infoMessageWidget.Value.SetText(self._lastDisconnectText);
             }, this);
         }
@@ -103,7 +103,7 @@ internal sealed class WukongWidgetManager(ClientState clientState, WukongPlayerS
     public void SetPacketLossWarning()
     {
         _pingIndicatorWidget.Value.SetPingValue(999);
-        _pingIndicatorWidget.Value.SetInfoText(Texts.SeverePacketLossDetected);
+        _pingIndicatorWidget.Value.SetInfoText(BuiltinTexts.SeverePacketLossDetected);
     }
 
     public void HideInfoMessage()
@@ -126,7 +126,7 @@ internal sealed class WukongWidgetManager(ClientState clientState, WukongPlayerS
     public void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
         _infoMessageWidget.Value.SetVisibility(true);
-        _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
+        _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected;
         _infoMessageWidget.Value.SetText(_lastDisconnectText);
     }
 

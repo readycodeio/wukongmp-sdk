@@ -37,8 +37,8 @@ public sealed class Mod : ModBase
         Instance = this;
         PvpDI.Instance.Init(DI.Instance);
 
-        LocalApi = Sdk.Api.ReadyM.Local;
-        ClientApi = Sdk.Api.ReadyM.Client;
+        LocalApi = Sdk.Api.WukongApi.Local;
+        ClientApi = Sdk.Api.WukongApi.Client;
 
         // TODO: We don't want to expose DI here
         LocalApi.AddCommands([

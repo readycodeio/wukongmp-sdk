@@ -80,11 +80,11 @@ namespace WukongMp.Api.UI
         protected override void PostInitialize()
         {
             SetStaticTexts(
-                Texts.CameraDownControls, Texts.CameraDownDescription,
-                Texts.CameraMoveControls, Texts.CameraMoveDescription,
-                Texts.CameraRotateControls, Texts.CameraRotateDescription,
-                Texts.CameraUpControls, Texts.CameraUpDescription,
-                Texts.CameraSwitchControls, Texts.CameraSwitchDescription);
+                BuiltinTexts.CameraDownControls, BuiltinTexts.CameraDownDescription,
+                BuiltinTexts.CameraMoveControls, BuiltinTexts.CameraMoveDescription,
+                BuiltinTexts.CameraRotateControls, BuiltinTexts.CameraRotateDescription,
+                BuiltinTexts.CameraUpControls, BuiltinTexts.CameraUpDescription,
+                BuiltinTexts.CameraSwitchControls, BuiltinTexts.CameraSwitchDescription);
         }
     }
 }

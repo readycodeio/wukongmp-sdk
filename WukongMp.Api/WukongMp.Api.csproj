@@ -176,32 +176,32 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Update="Resources\Texts.Designer.cs">
+        <Compile Update="Resources\BuiltinTexts.Designer.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>
-            <DependentUpon>Texts.resx</DependentUpon>
+            <DependentUpon>BuiltinTexts.resx</DependentUpon>
         </Compile>
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Update="Resources\Texts.resx">
+        <EmbeddedResource Update="Resources\BuiltinTexts.resx">
             <Generator>ResXFileCodeGenerator</Generator>
-            <LastGenOutput>Texts.Designer.cs</LastGenOutput>
+            <LastGenOutput>BuiltinTexts.Designer.cs</LastGenOutput>
         </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Update="Resources\Texts.Designer.cs">
+        <Compile Update="Resources\BuiltinTexts.Designer.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>
-            <DependentUpon>Texts.resx</DependentUpon>
+            <DependentUpon>BuiltinTexts.resx</DependentUpon>
         </Compile>
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Update="Resources\Texts.resx">
+        <EmbeddedResource Update="Resources\BuiltinTexts.resx">
             <Generator>PublicResXFileCodeGenerator</Generator>
-            <LastGenOutput>Texts.Designer.cs</LastGenOutput>
+            <LastGenOutput>BuiltinTexts.Designer.cs</LastGenOutput>
         </EmbeddedResource>
     </ItemGroup>
 

@@ -17,7 +17,7 @@ internal class CommandConsoleWidget(WukongCommandConsole registry) : GameWidgetB
     {
         GameWidget?.AddToViewport(1001);
         InitNativeFunctions();
-        SetHelperText(Texts.CommandHelperDescription);
+        SetHelperText(BuiltinTexts.CommandHelperDescription);
 
         var commands = registry.GetAvailableCommands();
 

@@ -1,7 +1,6 @@
 ﻿using b1;
 using Friflo.Engine.ECS;
 using Friflo.Json.Fliox;
-using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Values;
 
@@ -19,7 +18,6 @@ internal struct LocalMainCharacterComponent : IComponent
 
     public bool IsRespawning { get; set; }
     public MontageStateData MontageState { get; set; }
-
     public int TeleportFinishFrames { get; set; }
 
     // FIXME: Move to PlayerComponent?
@@ -40,19 +38,4 @@ internal struct LocalMainCharacterComponent : IComponent
     // Dead animation timer
     public bool IsDuringDeathAnim { get; set; }
     public float DeadAnimationTime { get; set; }
-
-    [Ignore]
-    public AActor? MarkerActor
-    {
-        get
-        {
-            if (field != null && field.IsNullOrDestroyed())
-            {
-                return null;
-            }
-
-            return field;
-        }
-        set;
-    }
 }

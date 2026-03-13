@@ -17,16 +17,10 @@ public sealed class Mod : ModBase
 {
     public override string Name => "WukongMp.Coop";
     public override string Version => "1.0.0";
-
     public static Mod Instance { get; private set; } = null!;
-
-    internal WukongClientApi ClientApi { get; private set; } = null!;
-    internal WukongLocalApi LocalApi { get; private set; } = null!;
     internal CoopSaveManager SaveManager { get; private set; } = null!;
-
     internal static CoopWidgetManager CoopWidgetManager { get; private set; } = null!;
-
-    internal static CoopSynchronizer CoopSynchronizer { get; private set; } = null!;
+    internal static CoopEventCallbacks CoopEventCallbacks { get; private set; } = null!;
 
     protected override void Initialize()
     {
@@ -37,22 +31,20 @@ public sealed class Mod : ModBase
         }
 
         Instance = this;
-        LocalApi = Sdk.Api.ReadyM.Local;
-        ClientApi = Sdk.Api.ReadyM.Client;
-        SaveManager = new CoopSaveManager(ClientApi, LocalApi, Logger);
+        SaveManager = new CoopSaveManager(Logger);
 
         Logger.LogInformation("Initializing {PluginName} v{PluginVersion}", Name, Version);
 
-        LocalApi.AddCommands([
+        WukongApi.Console.AddCommands([
             new CoopCommandRegistration(),
         ]);
 
         // TODO: These settings are internal to the API, this mod is priviledged to use them via InternalsVisibleTo
-        Sdk.Api.ReadyM.Configuration.IsSupportMultiLockEnabled = true;
-        Sdk.Api.ReadyM.Configuration.IsStrongDamageImmueEnabled = false;
-        Sdk.Api.ReadyM.Configuration.EnableCustomCameraArmLength = false;
-        Sdk.Api.ReadyM.Configuration.EnableSpawnedTamers = false;
-        Sdk.Api.ReadyM.Configuration.SyncTamerTeamFromGameToEcs = true;
+        WukongApi.Configuration.IsSupportMultiLockEnabled = true;
+        WukongApi.Configuration.IsStrongDamageImmueEnabled = false;
+        WukongApi.Configuration.EnableCustomCameraArmLength = false;
+        WukongApi.Configuration.DeleteDestroyedTamersFromEcs = false;
+        WukongApi.Configuration.SyncTamerTeamFromGameToEcs = true;
 
         CoopWidgetManager = new CoopWidgetManager(
             DI.Instance.WidgetManager,
@@ -64,34 +56,7 @@ public sealed class Mod : ModBase
             DI.Instance.GameplayEventRouter);
 
         CoopWidgetManager.Initialize();
-
-        CoopSynchronizer = new CoopSynchronizer(
-            DI.Instance.ArchetypeEvent,
-            DI.Instance.State,
-            DI.Instance.WukongArchetype,
-            DI.Instance.World,
-            DI.Instance.MappedField,
-            DI.Instance.AreaState,
-            DI.Instance.PawnState,
-            DI.Instance.PlayerState,
-            DI.Instance.PlayerPawnState,
-            DI.Instance.ModeManager,
-            DI.Instance.NetEntity,
-            DI.Instance.ClientOwnership_,
-            DI.Instance.MappedEvent,
-            DI.Instance.JobRegistry,
-            DI.Instance.NetComponentRegistry,
-            DI.Instance.RelayClient,
-            DI.Instance.EcsLoop,
-            DI.Instance.EventBus,
-            DI.Instance.WidgetManager,
-            DI.Instance.GameplayEventRouter,
-            DI.Instance.GameplayConfiguration,
-            DI.Instance.FreeCameraManager,
-            DI.Instance.FreeCameraController,
-            DI.Instance.Logger);
-
-        CoopSynchronizer.Initialize();
+        CoopEventCallbacks = new CoopEventCallbacks(Logger);
 
         Logger.LogInformation("Initialized {PluginName}", Name);
     }
@@ -99,20 +64,11 @@ public sealed class Mod : ModBase
     public override void LateInit()
     {
         base.LateInit();
-        
-        DI.Instance.InputManager.RegisterKeyBind(Key.F6, () =>
+
+        WukongApi.Input.RegisterKeyBind(Key.F6, () =>
         {
             Logging.LogDebug("F6: Toggle HP scaling");
-            CoopConfig.ScaleMonsterHpToHalf = !CoopConfig.ScaleMonsterHpToHalf;
+            Config.ScaleMonsterHpToHalf = !Config.ScaleMonsterHpToHalf;
         });
-    }
-
-    protected override IEnumerable<ModSystemBase> DefineSystems()
-    {
-        yield return new DetectSoftlockSystem();
-        yield return new FixYellowbrowSystem();
-        yield return new ReEnableCollidersSystem();
-        yield return new RespawnMainCharacterSystem();
-        yield return new ScaleMonsterHpSystem();
     }
 }

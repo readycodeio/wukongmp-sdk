@@ -6,6 +6,7 @@ using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.Systems;
 
+// ReSharper disable once UnusedType.Global
 public sealed class RespawnMainCharacterSystem : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
@@ -13,9 +14,9 @@ public sealed class RespawnMainCharacterSystem : ModSystemBase
         var allDead = true;
         var players = 0;
 
-        foreach (var mainCharacter in ClientApi.AllMainCharacters)
+        foreach (var mainCharacter in WukongApi.Client.AllMainCharacters)
         {
-            if (mainCharacter.AreaId != ClientApi.CurrentAreaId)
+            if (mainCharacter.AreaId != WukongApi.Client.CurrentAreaId)
                 continue;
 
             players++;
@@ -27,7 +28,7 @@ public sealed class RespawnMainCharacterSystem : ModSystemBase
         if (players == 0)
             return;
 
-        var localMainCharacter = ClientApi.LocalMainCharacter;
+        var localMainCharacter = WukongApi.Client.LocalMainCharacter;
         if (!localMainCharacter.HasValue)
         {
             Logger.LogWarning("Skipping respawn, no local main character entity");
@@ -37,15 +38,14 @@ public sealed class RespawnMainCharacterSystem : ModSystemBase
         // if all players are dead, respawn the local player
         if (players > 0 && allDead && !localMainCharacter.Value.IsRespawning)
         {
-            Logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, ClientApi.LocalPlayerId);
-            
-            var maxComp = 0;
-            foreach (var mainCharacter in ClientApi.AllMainCharacters)
-            {
-                maxComp = Math.Max(maxComp, mainCharacter.RebirthPointId);
-            }
+            Logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, WukongApi.Client.LocalPlayerId);
 
-            localMainCharacter.Value.Respawn(maxComp);
+            var furthestRebirthPoint = WukongApi.Client.AllMainCharacters
+                .Select(mainCharacter => mainCharacter.RebirthPointId)
+                .Prepend(0)
+                .Max();
+
+            localMainCharacter.Value.RebirthAtShrine(furthestRebirthPoint);
         }
     }
 }

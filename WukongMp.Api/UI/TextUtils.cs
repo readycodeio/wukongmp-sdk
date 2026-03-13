@@ -8,9 +8,9 @@ namespace WukongMp.Api.UI
         {
             if (playersCount == 0)
             {
-                return isReady ? Texts.PressToCancelMatch : Texts.PressToPlayWithBots;
+                return isReady ? BuiltinTexts.PressToCancelMatch : BuiltinTexts.PressToPlayWithBots;
             }
-            return isReady ? Texts.PressToBeNotReady : Texts.PressToBeReady;
+            return isReady ? BuiltinTexts.PressToBeNotReady : BuiltinTexts.PressToBeReady;
         }
     }
 }

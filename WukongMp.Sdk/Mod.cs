@@ -88,7 +88,7 @@ internal class Mod : ModBase
 #endif
             );
 
-        _apiPatcher = Api.ReadyM.GetPatcher(typeof(ExceptionPatches).Assembly, "WukongMp.Api");
+        _apiPatcher = new WukongPatcher(typeof(ExceptionPatches).Assembly, "WukongMp.Api", DI.Instance.Prelude);
 
         DI.Instance.Logger.LogInformation("Initialized {PluginName}", Name);
     }

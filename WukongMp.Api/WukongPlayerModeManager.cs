@@ -83,7 +83,6 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
     public bool SetPlayerVisibility(MainCharacterEntity mainEntity, bool visible)
     {
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
 
         var isVisible = mainEntity.Pawn?.Hidden == false;
         if (isVisible == visible)
@@ -98,7 +97,7 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
         }
 
         mainEntity.Pawn.SetActorHiddenInGame(!visible);
-        localMainComp.MarkerActor?.SetActorHiddenInGame(!visible);
+        mainEntity.GetMarker().MarkerActor?.SetActorHiddenInGame(!visible);
 
         var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantShowBlood, visible);

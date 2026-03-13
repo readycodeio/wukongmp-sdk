@@ -6,16 +6,13 @@ using BtlB1;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Configuration;
 using WukongMp.Coop.Configuration;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Gamemode;
 
-internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localApi, ILogger logger)
+internal class CoopSaveManager(ILogger logger)
 {
-    public bool ShouldRedirectSaveFiles => true;
-
     public void OnNewGameLoad(UObject worldContext)
     {
         GSGMSvc.ClearAllAutoRunTag();
@@ -26,7 +23,7 @@ internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localAp
 
         BGW_EventCollection.Get(worldContext).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
         {
-            ArchiveId = CoopConfig.NewCharacterArchiveId
+            ArchiveId = Constants.NewCharacterArchiveId
         });
     }
 
@@ -40,11 +37,11 @@ internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localAp
         try
         {
             var timer = Stopwatch.StartNew();
-            var worldDownloadTask = clientApi.Saves.DownloadWorldSaveAsync();
-            var playerDownloadTask = clientApi.Saves.DownloadPlayerSaveAsync();
+            var worldDownloadTask = WukongApi.Saves.DownloadWorldSaveAsync();
+            var playerDownloadTask = WukongApi.Saves.DownloadPlayerSaveAsync();
 
             var task = Task.WhenAll(worldDownloadTask, playerDownloadTask);
-            localApi.Wait(task);
+            WukongApi.Local.Wait(task);
 
             timer.Stop();
             logger.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
@@ -94,22 +91,22 @@ internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localAp
         else
         {
             // we need to write the data as file to read it
-            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConfig.CoopWorldArchiveId);
+            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
             var worldSavePath = GSWindowsPlatformSaveGame.GetFileFullName(worldSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(worldSavePath, worldData);
 
-            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, CoopConfig.CoopPlayerArchiveId);
+            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopPlayerArchiveId);
             var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(playerSavePath, playerData);
 
-            var readWorldResult = __instance.ReadArchiveData(CoopConfig.CoopWorldArchiveId, out worldArchiveData, out _);
+            var readWorldResult = __instance.ReadArchiveData(Constants.CoopWorldArchiveId, out worldArchiveData, out _);
             if (readWorldResult != ReadArchiveResult.Success)
             {
                 logger.LogError("ReadArchiveData Failed, Result: {Result}", readWorldResult);
                 return;
             }
 
-            var readPlayerResult = __instance.ReadArchiveData(CoopConfig.CoopPlayerArchiveId, out playerArchiveData, out _);
+            var readPlayerResult = __instance.ReadArchiveData(Constants.CoopPlayerArchiveId, out playerArchiveData, out _);
             if (readPlayerResult != ReadArchiveResult.Success)
             {
                 logger.LogError("ReadArchiveData Failed, Result: {Result}", readPlayerResult);
@@ -177,15 +174,15 @@ internal class CoopSaveManager(WukongClientApi clientApi, WukongLocalApi localAp
 
         Task.Run(async () =>
         {
-            if (clientApi.IsMasterClient)
+            if (WukongApi.Client.IsMasterClient)
             {
                 var worldTimer = Stopwatch.StartNew();
-                var uploadedWorld = await clientApi.Saves.UploadWorldSaveAsync(data);
+                var uploadedWorld = await WukongApi.Saves.UploadWorldSaveAsync(data);
                 LogSuccess(worldTimer, uploadedWorld, "world save");
             }
 
             var playerTimer = Stopwatch.StartNew();
-            var uploadedPlayer = await clientApi.Saves.UploadPlayerSaveAsync(data);
+            var uploadedPlayer = await WukongApi.Saves.UploadPlayerSaveAsync(data);
             LogSuccess(playerTimer, uploadedPlayer, "player save");
         });
     }

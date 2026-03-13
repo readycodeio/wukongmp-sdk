@@ -6,6 +6,7 @@ using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
+using WukongMp.Coop.Gamemode;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Patches;
@@ -17,13 +18,10 @@ public class PatchWindowsSaveGame
 {
     public static bool Prefix(ref string __result, string SlotName)
     {
-        if (!Mod.Instance.SaveManager.ShouldRedirectSaveFiles)
-            return true;
-
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true;
 
-        __result = WukongFileApi.GetSaveFileFullName(Mod.Instance, SlotName);
+        __result = WukongApi.Files.GetSaveFileFullName(Mod.Instance, SlotName);
         return false;
     }
 }

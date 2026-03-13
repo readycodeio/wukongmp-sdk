@@ -7,35 +7,36 @@ using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.Systems;
 
+// ReSharper disable once UnusedType.Global
 public sealed class DetectSoftlockSystem : ModSystemBase
 {
     private readonly HashSet<int> _waitingSequencesIds = [];
     
     protected override void OnUpdate(UpdateTick tick)
     {
-        if (!ClientApi.IsMasterClient)
+        if (!WukongApi.Client.IsMasterClient)
             return;
 
         var players = 0;
         _waitingSequencesIds.Clear();
 
-        foreach (var mainCharacter in ClientApi.AllMainCharacters)
+        foreach (var mainCharacter in WukongApi.Client.AllMainCharacters)
         {
-            if (mainCharacter.AreaId != ClientApi.CurrentAreaId)
+            if (mainCharacter.AreaId != WukongApi.Client.CurrentAreaId)
                 continue;
 
             players++;
 
-            if (mainCharacter.IsWaitingForSequence)
+            if (mainCharacter.IsWaitingForCutscene)
             {
-                _waitingSequencesIds.Add(mainCharacter.WaitingSequenceId);
+                _waitingSequencesIds.Add(mainCharacter.WaitingCutsceneId);
             }
         }
 
         if (players == 0)
             return;
 
-        var localMainCharacter = ClientApi.LocalMainCharacter;
+        var localMainCharacter = WukongApi.Client.LocalMainCharacter;
         if (!localMainCharacter.HasValue)
         {
             Logger.LogWarning("Skipping respawn, no local main character entity");
@@ -45,7 +46,7 @@ public sealed class DetectSoftlockSystem : ModSystemBase
         if (players > 0 && _waitingSequencesIds.Count > 1 && !localMainCharacter.Value.IsRespawning)
         {
             Logger.LogDebug("Softlock detected");
-            LocalApi.ShowInfoMessage(Texts.SoftlockDetected);
+            WukongApi.Local.ShowInfoMessage(BuiltinTexts.SoftlockDetected);
         }
     }
 }
