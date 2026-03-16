@@ -25,7 +25,7 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IR
     private bool _isTransformed;
 
     // NOTE: This describes the nick displayed over the Wukong character
-    private string _characterNickName = "";
+    private string _characterNickname = "";
 
     private bool _beguilingChantEligible;
 
