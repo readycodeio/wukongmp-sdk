@@ -46,24 +46,24 @@ internal class CoopSaveManager(ILogger logger)
             timer.Stop();
             logger.LogInformation("Downloaded world and player save files in {Time} ms", timer.ElapsedMilliseconds);
 
-            if (worldDownloadTask.Result is null)
+            if (!worldDownloadTask.Result.HasValue)
             {
                 logger.LogInformation("Failed to download world save file from the cloud, will start new game");
                 startNewGame = true;
             }
             else
             {
-                worldData = worldDownloadTask.Result.Content;
+                worldData = worldDownloadTask.Result.Value.Content;
             }
 
-            if (playerDownloadTask.Result is null)
+            if (!playerDownloadTask.Result.HasValue)
             {
                 logger.LogInformation("Player has no save file in the cloud, using default world save");
                 playerData = worldData;
             }
             else
             {
-                playerData = playerDownloadTask.Result.Content;
+                playerData = playerDownloadTask.Result.Value.Content;
             }
         }
         // NOTE: This is typically going to be AggregateException because we download two blobs in parallel

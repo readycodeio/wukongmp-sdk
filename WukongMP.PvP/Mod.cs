@@ -25,20 +25,14 @@ public sealed class Mod : ModBase
     protected override void Initialize()
     {
         base.Initialize();
-        
-        if (!LaunchParameters.Instance.ValidForPvP)
-        {
-            Logger.LogDebug("Pvp not launching.");
-            return;
-        }
 
         Logger.LogInformation("Initializing {PluginName} v{PluginVersion}", Name, Version);
         
         Instance = this;
         PvpDI.Instance.Init(DI.Instance);
 
-        LocalApi = Sdk.Api.WukongApi.Local;
-        ClientApi = Sdk.Api.WukongApi.Client;
+        LocalApi = WukongApi.Local;
+        ClientApi = WukongApi.Client;
 
         // TODO: We don't want to expose DI here
         LocalApi.AddCommands([

@@ -24,11 +24,11 @@ public sealed class Mod : ModBase
 
     protected override void Initialize()
     {
-        if (!LaunchParameters.Instance.ValidForCoOp)
-        {
-            Logger.LogDebug("Co-op not launching.");
-            return;
-        }
+        // if (!LaunchParameters.Instance.ValidForCoOp)
+        // {
+        //     Logger.LogDebug("Co-op not launching.");
+        //     return;
+        // }
 
         Instance = this;
         SaveManager = new CoopSaveManager(Logger);
@@ -39,21 +39,13 @@ public sealed class Mod : ModBase
             new CoopCommandRegistration(),
         ]);
 
-        // TODO: These settings are internal to the API, this mod is priviledged to use them via InternalsVisibleTo
         WukongApi.Configuration.IsSupportMultiLockEnabled = true;
         WukongApi.Configuration.IsStrongDamageImmueEnabled = false;
         WukongApi.Configuration.EnableCustomCameraArmLength = false;
         WukongApi.Configuration.DeleteDestroyedTamersFromEcs = false;
         WukongApi.Configuration.SyncTamerTeamFromGameToEcs = true;
 
-        CoopWidgetManager = new CoopWidgetManager(
-            DI.Instance.WidgetManager,
-            DI.Instance.State,
-            DI.Instance.PlayerState,
-            DI.Instance.EventBus,
-            DI.Instance.FreeCameraManager,
-            DI.Instance.AreaState,
-            DI.Instance.GameplayEventRouter);
+        CoopWidgetManager = new CoopWidgetManager();
 
         CoopWidgetManager.Initialize();
         CoopEventCallbacks = new CoopEventCallbacks(Logger);

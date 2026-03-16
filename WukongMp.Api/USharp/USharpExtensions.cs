@@ -9,7 +9,7 @@ using UnrealEngine.Runtime;
 // ReSharper disable once CheckNamespace
 namespace WukongMp.Api;
 
-internal static class USharpExtensions
+public static class USharpExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Equals(this float a, float b, float tolerance)

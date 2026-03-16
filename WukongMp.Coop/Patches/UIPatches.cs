@@ -106,7 +106,7 @@ public class PatchShrineRegisterFunc
 
     public static bool Prefix(int FuncId)
     {
-        if (!Mod.Instance.ClientApi.InRoom)
+        if (!WukongApi.Client.InRoom)
             return true;
 
         var interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
@@ -134,7 +134,7 @@ public class PatchInitBloodBarUI
         if (battleInfoExtendDesc == null)
             return false;
 
-        var maybePlayer = Mod.Instance.ClientApi.GetEntityByPlayerActor(actor);
+        var maybePlayer = WukongApi.Client.GetPlayerEntityByActor(actor);
         var isPlayer = maybePlayer.HasValue;
         var bloodBarShowType = isPlayer ? EBGUBloodBarShowType.Always : EBGUBloodBarShowType.Change;
 
@@ -156,7 +156,7 @@ public class PatchInitBloodBarUI
             ___EntityDic.Add(Entity, bloodBarPoolWidget);
         }
 
-        if (!___EntityDic.ContainsKey(Entity) || !___BloodBarActorBindDict.TryGetValue(actor, out DSBarInfoBind dsBarInfoBind))
+        if (!___EntityDic.ContainsKey(Entity) || !___BloodBarActorBindDict.TryGetValue(actor, out var dsBarInfoBind))
             return false;
 
         dsBarInfoBind.ReInit();

@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace WukongMp.Api;
 
-internal static class EcsExtensions
+public static class EcsExtensions
 {
     public static T? GetComponent<T>(this BGUActorBaseCS actor) where T: UActorCompBaseCS
     {

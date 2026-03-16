@@ -5,8 +5,11 @@ using LiteNetLib;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Mapping;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
+using UnrealEngine.Engine;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Entities;
@@ -20,18 +23,21 @@ public sealed class WukongClientApi
     private readonly ClientState state;
     private readonly WukongAreaState areaState;
     private readonly WukongPlayerState playerState;
+    private readonly WukongMappingPolicyDirectory mappingDir;
     private readonly IRelayClient relayClient;
 
     internal WukongClientApi(Store world,
         ClientState state,
         WukongAreaState areaState,
         WukongPlayerState playerState,
+        WukongMappingPolicyDirectory mappingDir,
         IRelayClient relayClient)
     {
         this.world = world;
         this.state = state;
         this.areaState = areaState;
         this.playerState = playerState;
+        this.mappingDir = mappingDir;
         this.relayClient = relayClient;
     }
 
@@ -79,6 +85,16 @@ public sealed class WukongClientApi
             var entityList = world.Query<MainCharacterComponent>().ToEntityList();
             return new EntityList<ReadyMainCharacter>(this, entityList);
         }
+    }
+
+    public ReadyMainCharacter? GetPlayerEntityByActor(AActor actor)
+    {
+        if (mappingDir.IsMainCharacterMapped(actor, out var entity))
+        {
+            return new ReadyMainCharacter(this, entity.Value.Entity);
+        }
+
+        return null;
     }
 
     public bool TryGetPlayerById(PlayerId player, [NotNullWhen(true)] out ReadyMainCharacter? mainCharacter)
@@ -138,6 +154,7 @@ public sealed class WukongClientApi
     //         });
     //     });
     //     return new ReadyTamer(this, entity);
+
 
     // }
 }
