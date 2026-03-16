@@ -50,7 +50,6 @@ internal class PatchGetInteractTypeTemplate
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        Logging.LogDebug("GetInteractTypeTemplate called for {Type}", InteractType);
         if (DI.Instance.GameplayConfiguration.IsInteractionAllowed(InteractType))
         {
             return true;
