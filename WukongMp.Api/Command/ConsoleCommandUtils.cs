@@ -6,7 +6,7 @@ internal static class ConsoleCommandUtils
 {
     extension(WukongPlayerState playerState)
     {
-        public string NickName
-            => playerState.LocalPlayerEntity?.GetState().NickName ?? "";
+        public string Nickname
+            => playerState.LocalPlayerEntity?.GetState().Nickname ?? "";
     }
 }

@@ -225,10 +225,11 @@ internal sealed class DI
         var clientNetEntity = ClientNetEntity = new ClientNetworkedEntityManager(state, netEntity);
         var playerState = PlayerState = new WukongPlayerState(world, wukongArchetype, clientNetEntity, state, logger);
 
-        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, relayClient);
+        var freeCameraManager = FreeCameraManager = new FreeCameraManager(playerState);
+        
+        var widgetManager = WidgetManager = new WukongWidgetManager(state, playerState, relayClient, eventBus, freeCameraManager);
         var timerController = TimerController = new TimerController(widgetManager);
 
-        var freeCameraManager = FreeCameraManager = new FreeCameraManager(playerState);
         var freeCameraController = FreeCameraController = new FreeCameraController(state, playerState, inputManager, freeCameraManager, widgetManager);
 
         var mappedEntity = MappedEntity = new MappedEntityManager<AActor>(world);

@@ -70,7 +70,7 @@ internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wuk
         {
             loadMain.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
             loadMain.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), pawn);
-            loadMain.SetFromGame(MainCharacterComponent.Fields.CharacterNickName, player.NickName);
+            loadMain.SetFromGame(MainCharacterComponent.Fields.CharacterNickname, player.Nickname);
         }
 
         var pawnTeamId = pawn.GetTeamIDInCS();

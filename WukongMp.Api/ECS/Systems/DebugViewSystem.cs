@@ -26,7 +26,7 @@ internal class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widg
         {
             var mainEntity = new MainCharacterEntity(entity);
 
-            var nickname = mainCharacter.CharacterNickName;
+            var nickname = mainCharacter.CharacterNickname;
             var position = mainEntity.Pawn?.GetActorLocation() ?? FVector.ZeroVector;
             var ecsPosition = transform.Position.ToFVector();
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using LiteNetLib;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
@@ -80,6 +81,19 @@ public sealed class WukongClientApi
         }
     }
 
+    public bool TryGetPlayerById(PlayerId player, [NotNullWhen(true)] out ReadyMainCharacter? mainCharacter)
+    {
+        var entity = playerState.GetMainCharacterByPlayerId(player);
+        if (entity.HasValue)
+        {
+            mainCharacter = new ReadyMainCharacter(this, entity.Value);
+            return true;
+        }
+
+        mainCharacter = null;
+        return false;
+    }
+
     public void SyncMonstersInArea()
     {
         TamerUtils.DiscoverTamers();
@@ -124,5 +138,6 @@ public sealed class WukongClientApi
     //         });
     //     });
     //     return new ReadyTamer(this, entity);
+
     // }
 }

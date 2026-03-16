@@ -232,7 +232,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void EnableSpectator(MainCharacterEntity mainEntity, SpectatorReason reason)
         {
-            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickName, reason);
+            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickname, reason);
             ref var pvp = ref mainEntity.GetPvP();
             pvp.IsSpectator = true;
             pvp.SpectatorReason = reason;
@@ -240,7 +240,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void DisableSpectator(MainCharacterEntity mainEntity)
         {
-            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickName);
+            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickname);
             mainEntity.GetPvP().IsSpectator = false;
             mainEntity.GetLocalState().IsDuringDeathAnim = false;
         }

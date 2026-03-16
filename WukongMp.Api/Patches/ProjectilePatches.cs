@@ -48,7 +48,7 @@ internal class PatchOnSwitchBulletTarget
                 {
                     var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ProjectileTargetEvent(entity.Value, projectileClass.GetName(), targetEntity.Value, SocketName), entity.Value.Entity);
                     if (sent)
-                        Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectileClass.GetName(), entity.Value.GetState().CharacterNickName, InnerTarget.GetName());
+                        Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectileClass.GetName(), entity.Value.GetState().CharacterNickname, InnerTarget.GetName());
                 }
             }
             else
@@ -98,7 +98,7 @@ internal class PatchOnSwitchBulletInfoIfNeed
             {
                 var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ProjectileSwitchEvent(entity.Value, projectileClass.GetName(), BulletSwitchID, SwitchIdx), entity.Value.Entity);
                 if (sent)
-                    Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", projectileClass.GetName(), entity.Value.GetState().CharacterNickName, BulletSwitchID);
+                    Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", projectileClass.GetName(), entity.Value.GetState().CharacterNickname, BulletSwitchID);
             }
         }
 
@@ -164,7 +164,7 @@ internal static class PatchOnSetMoveMode
             {
                 var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ProjectileMoveModeEvent(entity.Value, projectileClass.GetName(), MoveMode), entity.Value.Entity);
                 if (sent)
-                    Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectileClass.GetName(), entity.Value.GetState().CharacterNickName, MoveMode);
+                    Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectileClass.GetName(), entity.Value.GetState().CharacterNickname, MoveMode);
             }
         }
     }

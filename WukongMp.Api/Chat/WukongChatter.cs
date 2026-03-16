@@ -17,7 +17,7 @@ internal class WukongChatter : IDisposable
     private readonly WukongWidgetManager _widgetManager;
     private readonly ILogger _logger;
 
-    private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
+    private string NickName => _playerState.LocalPlayerEntity?.GetState().Nickname ?? "";
 
     public WukongChatter(
         WukongPlayerState playerState,

@@ -70,7 +70,7 @@ internal class SyncMainCharactersSystem(
         var pawnTeamId = mainEntity.Pawn!.GetTeamIDInCS();
         if (pawnTeamId != teamComp.TeamId)
         {
-            logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.NickName);
+            logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.Nickname);
             ClientUtils.RegisterAndSetPlayerTeam(mainEntity.Pawn, teamComp.TeamId);
             eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
@@ -86,7 +86,7 @@ internal class SyncMainCharactersSystem(
             var playerTeamId = playerComp.TeamId;
             if (playerTeamId != mainEntity.GetTeam().TeamId)
             {
-                logger.LogDebug("Assigning team ID {TeamId} to player {Name} from player to character", playerTeamId, playerComp.NickName);
+                logger.LogDebug("Assigning team ID {TeamId} to player {Name} from player to character", playerTeamId, playerComp.Nickname);
                 mainEntity.SetTeam(new TeamComponent
                 {
                     TeamId = playerTeamId,

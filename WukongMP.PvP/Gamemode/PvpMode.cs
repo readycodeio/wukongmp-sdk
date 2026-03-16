@@ -183,11 +183,11 @@ internal class PvpMode : IDisposable
         ref var localMainComp = ref character.GetLocalState();
         var teamComp = character.GetTeam();
 
-        Logging.LogDebug("Updating player {Nickname} marker to team {Team}", mainComp.CharacterNickName, teamComp.TeamId);
+        Logging.LogDebug("Updating player {Nickname} marker to team {Team}", mainComp.CharacterNickname, teamComp.TeamId);
         if (localMainComp.MarkerActor != null)
         {
             var teamColor = PvpUtils.GetTeamColorString(teamComp.TeamId);
-            localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {teamColor}", true);
+            localMainComp.MarkerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickname} {teamColor}", true);
         }
     }
 
@@ -225,7 +225,7 @@ internal class PvpMode : IDisposable
         var marker = MarkerUtils.CreateMarkerForCharacter(mainCharacterEntity, teamColor); // 3D marker above player
         if (marker == null)
         {
-            _logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickName);
+            _logger.LogError("Failed to create marker for player {PlayerId}.", mainCharacterEntity.GetState().CharacterNickname);
         }
     }
 
@@ -510,7 +510,7 @@ internal class PvpMode : IDisposable
         if (_playerState.LocalMainCharacter == null)
             return;
         var newIsReady = !_playerState.LocalMainCharacter.Value.GetPvP().IsReadyForPvP;
-        var nickname = _playerState.LocalMainCharacter.Value.GetState().CharacterNickName;
+        var nickname = _playerState.LocalMainCharacter.Value.GetState().CharacterNickname;
         SetReadyState(newIsReady);
         _pvpWidgetManager.SwitchReadyState(newIsReady);
         _chatter.SendServerMessage(newIsReady ? "PlayerIsReady" : "PlayerIsNotReady", nickname);

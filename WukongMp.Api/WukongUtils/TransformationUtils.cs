@@ -13,11 +13,11 @@ internal static class TransformationUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for player {Nickname}", mainComp.CharacterNickName);
+            Logging.LogError("Failed to get event collection for player {Nickname}", mainComp.CharacterNickname);
             return;
         }
 
-        Logging.LogDebug("Transforming player {Nickname} to unitId {UnitId} with trans type {Type}", mainComp.CharacterNickName, toReplaceUnitResID, transBeginType);
+        Logging.LogDebug("Transforming player {Nickname} to unitId {UnitId} with trans type {Type}", mainComp.CharacterNickname, toReplaceUnitResID, transBeginType);
         events.Evt_TransBeginSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transBeginType);
     }
 
@@ -28,11 +28,11 @@ internal static class TransformationUtils
 
         if (events == null)
         {
-            Logging.LogError("Failed to get event collection for player {Nickname}", mainComp.CharacterNickName);
+            Logging.LogError("Failed to get event collection for player {Nickname}", mainComp.CharacterNickname);
             return;
         }
 
-        Logging.LogDebug("Transforming player {Nickname} from unitId {UnitId} with trans type {Type}", mainComp.CharacterNickName, toReplaceUnitResID, transEndType);
+        Logging.LogDebug("Transforming player {Nickname} from unitId {UnitId} with trans type {Type}", mainComp.CharacterNickname, toReplaceUnitResID, transEndType);
         events.Evt_TransBackSpawnNewOne.Invoke(toReplaceUnitResID, toReplaceUnitBornSkillID, enableBlendViewTarget, transEndType);
     }
 }

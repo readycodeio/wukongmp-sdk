@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera;
 
-public sealed class FreeCameraManager
+internal sealed class FreeCameraManager
 {
     private const string FreeCameraActorPath = "/Game/Mods/WukongMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
 

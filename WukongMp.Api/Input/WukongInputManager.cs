@@ -37,7 +37,7 @@ internal class WukongInputManager
         }
         else
         {
-            if (!_widgetManager.ChatHasFocus())
+            if (!_widgetManager.ChatHasFocus)
             {
                 _widgetManager.SetChatInputFocus();
             }
@@ -51,6 +51,6 @@ internal class WukongInputManager
 
     public bool CanApplyInput()
     {
-        return !_widgetManager.ChatHasFocus() && !_widgetManager.CommandHasFocus();
+        return !_widgetManager.ChatHasFocus && !_widgetManager.CommandHasFocus();
     }
 }

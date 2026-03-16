@@ -54,7 +54,7 @@ internal class PvpChatter : IDisposable
                     ref var attackerMain = ref attackerMainEntity.Value.GetState();
                     ref var killedMain = ref victimMainEntity.Value.GetState();
 
-                    _wukongChatter.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickName, killedMain.CharacterNickName);
+                    _wukongChatter.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickname, killedMain.CharacterNickname);
                 }
             }
         }

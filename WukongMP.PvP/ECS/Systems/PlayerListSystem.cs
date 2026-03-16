@@ -45,13 +45,13 @@ internal sealed class PlayerListSystem(
                     switch (team)
                     {
                         case PvpConstants.RedTeamId:
-                            redTeamList.Add(mainComp.CharacterNickName);
+                            redTeamList.Add(mainComp.CharacterNickname);
                             return;
                         case PvpConstants.BlueTeamId:
-                            blueTeamList.Add(mainComp.CharacterNickName);
+                            blueTeamList.Add(mainComp.CharacterNickname);
                             return;
                         case PvpConstants.SpectatorTeamId:
-                            spectatorsList.Add(mainComp.CharacterNickName);
+                            spectatorsList.Add(mainComp.CharacterNickname);
                             return;
                     }
                 }

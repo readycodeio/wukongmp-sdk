@@ -88,7 +88,7 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
         if (isVisible == visible)
             return false;
 
-        Logging.LogDebug("Setting character {CharacterNickName} visibility to: {Visibility}", mainComp.CharacterNickName, visible);
+        Logging.LogDebug("Setting character {CharacterNickName} visibility to: {Visibility}", mainComp.CharacterNickname, visible);
 
         if (mainEntity.Pawn == null)
         {
@@ -110,7 +110,7 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
     {
         ref var mainComp = ref mainEntity.GetState();
 
-        Logging.LogDebug("Setting player {PlayerName} collision to: {Enabled}", mainComp.CharacterNickName, enable);
+        Logging.LogDebug("Setting player {PlayerName} collision to: {Enabled}", mainComp.CharacterNickname, enable);
 
         if (mainEntity.Pawn == null)
         {

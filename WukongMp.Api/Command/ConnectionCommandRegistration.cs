@@ -19,7 +19,7 @@ internal class ConnectionCommandRegistration(
     {
         if (connection.AreaState.InRoom)
         {
-            chatter.SendServerMessage("PlayerLeft", playerState.NickName);
+            chatter.SendServerMessage("PlayerLeft", playerState.Nickname);
             connection.Disconnect();
         }
     }

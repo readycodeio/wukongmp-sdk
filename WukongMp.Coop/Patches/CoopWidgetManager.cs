@@ -1,200 +1,125 @@
-﻿using Friflo.Engine.ECS;
-using LiteNetLib;
-using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.Common;
-using ReadyM.Relay.Client.State;
+﻿using ReadyM.Api.Idents;
 using WukongMp.Api;
-using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.FreeCamera;
-using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using WukongMp.Coop.Configuration;
 using WukongMp.Coop.UI;
+using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.Patches;
 
 public class CoopWidgetManager : IDisposable
 {
-    private readonly ClientState _clientState;
-    private readonly WukongPlayerState _playerState;
-    private readonly WukongEventBus _eventBus;
-    private readonly FreeCameraManager _freeCameraManager;
-    private readonly WukongWidgetManager _widgetManager;
-    private readonly WukongAreaState _areaState;
-    private readonly GameplayEventRouter _eventRouter;
-
     private readonly Lazy<CoopStatusWidget> _coopStatusWidget = new();
-
-    internal CoopWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState, GameplayEventRouter eventRouter)
-    {
-        _widgetManager = widgetManager;
-        _clientState = clientState;
-        _playerState = playerState;
-        _eventBus = eventBus;
-        _freeCameraManager = freeCameraManager;
-        _areaState = areaState;
-        _eventRouter = eventRouter;
-    }
 
     internal void Initialize()
     {
-        _clientState.OnJoinedArea += OnJoinedArea;
-        _clientState.OnLeftArea += OnLeftArea;
-        _clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
-        _clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
+        WukongApi.Events.OnJoinedArea += OnJoinedArea;
+        WukongApi.Events.OnLeftArea += OnLeftArea;
+        WukongApi.Events.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
+        WukongApi.Events.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
 
-        _clientState.OnConnected += OnConnected;
-        _clientState.OnDisconnected += OnDisconnected;
-        _eventBus.OnLevelLoaded += OnLevelLoaded;
-        _eventBus.OnExitLevel += OnExitLevel;
-        _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
+        WukongApi.Events.OnLevelLoaded += OnLevelLoaded;
+        WukongApi.Events.OnExitLevel += OnExitLevel;
+        WukongApi.Events.OnLoadingScreenClose += OnLoadingScreenClose;
 
-        _freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
-
-        _eventRouter.OnPlayerChangedTeam += UpdatePlayerTeam;
-        _eventRouter.OnLocalPlayerBeforeRebirth += OnLocalPlayerBeforeRebirth;
+        WukongApi.Events.OnPlayerChangedTeam += UpdatePlayerTeam;
+        WukongApi.Events.OnLocalPlayerBeforeRebirth += OnLocalPlayerBeforeRebirth;
     }
 
     public void Dispose()
     {
-        _clientState.OnJoinedArea -= OnJoinedArea;
-        _clientState.OnLeftArea -= OnLeftArea;
-        _clientState.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
-        _clientState.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
+        WukongApi.Events.OnJoinedArea -= OnJoinedArea;
+        WukongApi.Events.OnLeftArea -= OnLeftArea;
+        WukongApi.Events.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
+        WukongApi.Events.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
 
-        _clientState.OnConnected -= OnConnected;
-        _clientState.OnDisconnected -= OnDisconnected;
-        _eventBus.OnLevelLoaded -= OnLevelLoaded;
-        _eventBus.OnExitLevel -= OnExitLevel;
-        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
+        WukongApi.Events.OnLevelLoaded -= OnLevelLoaded;
+        WukongApi.Events.OnExitLevel -= OnExitLevel;
+        WukongApi.Events.OnLoadingScreenClose -= OnLoadingScreenClose;
 
-        _freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
 
-        _eventRouter.OnPlayerChangedTeam -= UpdatePlayerTeam;
-        _eventRouter.OnLocalPlayerBeforeRebirth -= OnLocalPlayerBeforeRebirth; ;
+        WukongApi.Events.OnPlayerChangedTeam -= UpdatePlayerTeam;
+        WukongApi.Events.OnLocalPlayerBeforeRebirth -= OnLocalPlayerBeforeRebirth;
     }
 
-    private void UpdatePlayerTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
+    private void UpdatePlayerTeam(ReadyMainCharacter mainCharacter)
     {
-        ref var playerComp = ref playerEntity.GetState();
-
-        _coopStatusWidget.Value.RemovePlayer(playerComp.NickName);
-        _coopStatusWidget.Value.AddPlayer(playerComp.NickName);
+        _coopStatusWidget.Value.RemovePlayer(mainCharacter.Nickname);
+        _coopStatusWidget.Value.AddPlayer(mainCharacter.Nickname);
 
         RefreshWidgets();
     }
 
-    private void ShowInGameWidgets()
-    {
-        _coopStatusWidget.Value.SetVisibility(true);
-        _coopStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
-    }
-
     private void OnLevelLoaded()
     {
-        _widgetManager.OnLevelLoaded();
-
         Logging.LogDebug("Initializing co-op widgets");
-        InitializeWidgets();
+        _coopStatusWidget.Value.Initialize();
     }
 
     private void OnExitLevel()
     {
         Logging.LogDebug("Deinitializing co-op widgets");
-        DeinitializeWidgets();
-
-        _widgetManager.OnExitLevel();
+        _coopStatusWidget.Value.Deinitialize();
     }
 
     private void OnLoadingScreenClose()
     {
-        bool isOnGameplayLevel = _areaState.CurrentArea != null;
-        _widgetManager.ShowInGameWidgets(isOnGameplayLevel);
+        var isOnGameplayLevel = WukongApi.Client.CurrentAreaId != null;
+        WukongApi.Widgets.ShowInGameWidgets(isOnGameplayLevel);
         if (isOnGameplayLevel)
         {
-            ShowInGameWidgets();
+            _coopStatusWidget.Value.SetVisibility(true);
+            _coopStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
         }
     }
 
-    private void OnConnected(PlayerId playerId, Entity entity)
+    private void RefreshWidgets()
     {
-        _widgetManager.OnConnected(playerId, entity);
-    }
-
-    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
-    {
-        _widgetManager.OnDisconnected(playerId, entity, reason);
-    }
-
-    private void OnFreeCameraModeChanged(bool enabled)
-    {
-        _widgetManager.OnFreeCameraModeChanged(enabled);
-    }
-
-    private void InitializeWidgets()
-    {
-        _coopStatusWidget.Value.Initialize();
-    }
-
-    private void DeinitializeWidgets()
-    {
-        _coopStatusWidget.Value.Deinitialize();
-    }
-
-    internal void RefreshWidgets()
-    {
-        _coopStatusWidget.Value.SetConnectedCount(_clientState.AreaPlayers.Count);
+        _coopStatusWidget.Value.SetConnectedCount(WukongApi.Client.AreaPlayers.Count);
         _coopStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
     }
 
     private void OnLocalPlayerBeforeRebirth()
     {
-        _widgetManager.HideInfoMessage();
+        WukongApi.Widgets.HideInfoMessage();
     }
 
-    private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
+    private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area)
     {
-        _widgetManager.OnOtherPlayerInsideArea(playerId, area, reason);
-        var player = _playerState.GetPlayerById(playerId);
-        if (player.HasValue)
+        if (WukongApi.Client.TryGetPlayerById(playerId, out var playerEntity))
         {
-            var nickname = player.Value.GetState().NickName;
+            var nickname = playerEntity.Value.Nickname;
             _coopStatusWidget.Value.AddPlayer(nickname);
             RefreshWidgets();
         }
     }
 
-    private void OnOtherPlayerOutsideArea(PlayerId arg1, AreaId arg2, OtherPlayerOutsideAreaReason arg3)
+    private void OnOtherPlayerOutsideArea(PlayerId playerId, AreaId area)
     {
-        _widgetManager.OnOtherPlayerOutsideArea(arg1, arg2, arg3);
-        var player = _playerState.GetPlayerById(arg1);
-        if (player.HasValue)
+        if (WukongApi.Client.TryGetPlayerById(playerId, out var playerEntity))
         {
-            var nickname = player.Value.GetState().NickName;
+            var nickname = playerEntity.Value.Nickname;
             _coopStatusWidget.Value.RemovePlayer(nickname);
             RefreshWidgets();
         }
     }
 
-    private void OnJoinedArea(AreaId area, Entity areaEntity)
+    private void OnJoinedArea(AreaId area)
     {
-        _widgetManager.OnJoinedArea(area, areaEntity);
-        var playerEntity = _playerState.LocalPlayerEntity;
+        var playerEntity = WukongApi.Client.LocalMainCharacter;
         if (playerEntity.HasValue)
         {
-            _coopStatusWidget.Value.AddPlayer(playerEntity.Value.GetState().NickName);
+            _coopStatusWidget.Value.AddPlayer(playerEntity.Value.Nickname);
             RefreshWidgets();
         }
     }
 
-    private void OnLeftArea(AreaId arg1, Entity arg2)
+    private void OnLeftArea(AreaId area)
     {
-        _widgetManager.OnLeftArea(arg1, arg2);
-        var playerEntity = _playerState.LocalPlayerEntity;
+        var playerEntity = WukongApi.Client.LocalMainCharacter;
         if (playerEntity.HasValue)
         {
-            _coopStatusWidget.Value.RemovePlayer(playerEntity.Value.GetState().NickName);
+            _coopStatusWidget.Value.RemovePlayer(playerEntity.Value.Nickname);
             RefreshWidgets();
         }
     }

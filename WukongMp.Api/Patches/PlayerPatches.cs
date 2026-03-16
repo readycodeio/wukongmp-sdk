@@ -528,7 +528,7 @@ internal static class PatchSetTargetToData
         if (newTargetPlayerEntity.HasValue)
         {
             newTarget = newTargetPlayerEntity.Value;
-            name = newTargetPlayerEntity.Value.GetState().CharacterNickName;
+            name = newTargetPlayerEntity.Value.GetState().CharacterNickname;
             clearTarget = false;
         }
         else if (newTargetMonsterEntity.HasValue)

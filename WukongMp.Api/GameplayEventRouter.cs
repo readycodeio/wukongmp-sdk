@@ -12,8 +12,8 @@ internal sealed class GameplayEventRouter // TODO: Export these in public API wi
     public event Action<CultureInfo>? OnLanguageChanged;
     public event Action<Entity, Entity>? OnUnitDead;
     public event Action<Entity>? OnMonsterSpawned;
-    public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
     public event Action<bool>? OnLocalPlayerChangedSpectator;
+    public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
     public event Action? OnLocalPlayerBeforeRebirth;
     
     public void RaiseOnLanguageChanged(CultureInfo culture)

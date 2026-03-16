@@ -59,7 +59,7 @@ public class PvpCommandRegistration(
         var location = SpawningUtils.CalculateSpawnLocation(playerPawn.GetActorLocation(), playerPawn.GetActorForwardVector());
 
         mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(characterEntity.Value, unitName, count, teamId, location), characterEntity.Value.Entity);
-        chatter.SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickName, count.ToString(), unitName);
+        chatter.SendServerMessage("PlayerSpawned", characterEntity.Value.GetState().CharacterNickname, count.ToString(), unitName);
     }
 
     private void SetSpectatorStatus()
@@ -100,7 +100,7 @@ public class PvpCommandRegistration(
         }
 
         localStateComp.HasInfiniteMana = !localStateComp.HasInfiniteMana;
-        chatter.SendServerMessage(localStateComp.HasInfiniteMana ? "InfManaEnabled" : "InfManaDisabled", playerState.NickName);
+        chatter.SendServerMessage(localStateComp.HasInfiniteMana ? "InfManaEnabled" : "InfManaDisabled", playerState.Nickname);
     }
 
     private void SetSpiritCooldown(float spiritCooldownTime)
@@ -131,7 +131,7 @@ public class PvpCommandRegistration(
 
         localStateComp.SpiritCooldownEnabled = true;
         localStateComp.SpiritCooldownTime = spiritCooldownTime;
-        chatter.SendServerMessage("CustomSpiritCooldown", playerState.NickName, spiritCooldownTime.ToString(CultureInfo.InvariantCulture));
+        chatter.SendServerMessage("CustomSpiritCooldown", playerState.Nickname, spiritCooldownTime.ToString(CultureInfo.InvariantCulture));
     }
 
     private void ToggleInfiniteVessel()
@@ -152,7 +152,7 @@ public class PvpCommandRegistration(
         }
 
         mainEntity.GetLocalState().HasInfiniteVessel = !mainEntity.GetLocalState().HasInfiniteVessel;
-        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", playerState.NickName);
+        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", playerState.Nickname);
     }
 
     private void ToggleInfiniteTransform()
@@ -174,7 +174,7 @@ public class PvpCommandRegistration(
 
         mainEntity.GetLocalState().HasInfiniteTransform = !mainEntity.GetLocalState().HasInfiniteTransform;
         var playerComp = mainEntity.GetState();
-        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteTransform ? "InfTransformEnabled" : "InfTransformDisabled", playerComp.CharacterNickName);
+        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteTransform ? "InfTransformEnabled" : "InfTransformDisabled", playerComp.CharacterNickname);
     }
 
     private void ToggleSkillsCooldown()
@@ -192,7 +192,7 @@ public class PvpCommandRegistration(
         var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
         events?.Evt_ResetSkillCD.Invoke();
         localStateComp.InstantSkillCooldown = !localStateComp.InstantSkillCooldown;
-        chatter.SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", playerState.NickName);
+        chatter.SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", playerState.Nickname);
     }
 
     private void TeleportToArena()
