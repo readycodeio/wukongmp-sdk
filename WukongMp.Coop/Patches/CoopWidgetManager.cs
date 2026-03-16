@@ -46,7 +46,6 @@ public class CoopWidgetManager : IDisposable
     {
         _coopStatusWidget.Value.RemovePlayer(mainCharacter.Nickname);
         _coopStatusWidget.Value.AddPlayer(mainCharacter.Nickname);
-
         RefreshWidgets();
     }
 
@@ -66,6 +65,7 @@ public class CoopWidgetManager : IDisposable
     {
         var isOnGameplayLevel = WukongApi.Client.CurrentAreaId != null;
         WukongApi.Widgets.ShowInGameWidgets(isOnGameplayLevel);
+
         if (isOnGameplayLevel)
         {
             _coopStatusWidget.Value.SetVisibility(true);
@@ -86,19 +86,21 @@ public class CoopWidgetManager : IDisposable
 
     private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area)
     {
-        if (WukongApi.Client.TryGetPlayerById(playerId, out var playerEntity))
+        if (WukongApi.Client.TryGetPlayerInfoById(playerId, out var nickname, out _))
         {
-            var nickname = playerEntity.Value.Nickname;
             _coopStatusWidget.Value.AddPlayer(nickname);
             RefreshWidgets();
+        }
+        else
+        {
+            Logging.LogWarning("Player entity for player {PlayerId} not found when they entered area {AreaId}, cannot add to co-op widget", playerId, area);
         }
     }
 
     private void OnOtherPlayerOutsideArea(PlayerId playerId, AreaId area)
     {
-        if (WukongApi.Client.TryGetPlayerById(playerId, out var playerEntity))
+        if (WukongApi.Client.TryGetPlayerInfoById(playerId, out var nickname, out _))
         {
-            var nickname = playerEntity.Value.Nickname;
             _coopStatusWidget.Value.RemovePlayer(nickname);
             RefreshWidgets();
         }
@@ -106,20 +108,24 @@ public class CoopWidgetManager : IDisposable
 
     private void OnJoinedArea(AreaId area)
     {
-        var playerEntity = WukongApi.Client.LocalMainCharacter;
-        if (playerEntity.HasValue)
+        if (WukongApi.Client.LocalPlayerId.HasValue &&
+            WukongApi.Client.TryGetPlayerInfoById(WukongApi.Client.LocalPlayerId.Value, out var nickname, out _))
         {
-            _coopStatusWidget.Value.AddPlayer(playerEntity.Value.Nickname);
+            _coopStatusWidget.Value.AddPlayer(nickname);
             RefreshWidgets();
+        }
+        else
+        {
+            Logging.LogWarning("Local player entity not found when joining area {AreaId}, cannot add to co-op widget", area);
         }
     }
 
     private void OnLeftArea(AreaId area)
     {
-        var playerEntity = WukongApi.Client.LocalMainCharacter;
-        if (playerEntity.HasValue)
+        if (WukongApi.Client.LocalPlayerId.HasValue &&
+            WukongApi.Client.TryGetPlayerInfoById(WukongApi.Client.LocalPlayerId.Value, out var nickname, out _))
         {
-            _coopStatusWidget.Value.RemovePlayer(playerEntity.Value.Nickname);
+            _coopStatusWidget.Value.RemovePlayer(nickname);
             RefreshWidgets();
         }
     }

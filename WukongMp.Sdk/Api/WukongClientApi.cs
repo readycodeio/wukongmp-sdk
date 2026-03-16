@@ -97,16 +97,19 @@ public sealed class WukongClientApi
         return null;
     }
 
-    public bool TryGetPlayerById(PlayerId player, [NotNullWhen(true)] out ReadyMainCharacter? mainCharacter)
+    public bool TryGetPlayerInfoById(PlayerId player, [NotNullWhen(true)] out string? nickname, [NotNullWhen(true)] out int? team)
     {
-        var entity = playerState.GetMainCharacterByPlayerId(player);
+        var entity = playerState.GetPlayerById(player);
         if (entity.HasValue)
         {
-            mainCharacter = new ReadyMainCharacter(this, entity.Value);
+            var comp = entity.Value.GetState();
+            nickname = comp.Nickname;
+            team = comp.TeamId;
             return true;
         }
 
-        mainCharacter = null;
+        nickname = null;
+        team = null;
         return false;
     }
 
