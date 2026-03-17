@@ -1,12 +1,10 @@
 ﻿using CSharpModBase.Input;
-using Friflo.Json.Burst;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Coop.Commands;
 using WukongMp.Coop.Configuration;
 using WukongMp.Coop.Gamemode;
-using WukongMp.Coop.Patches;
-using WukongMp.Coop.Systems;
+using WukongMp.Coop.UI;
 using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
 
@@ -18,11 +16,8 @@ public sealed class Mod : ModBase
     public override string Name => "WukongMp.Coop";
     public override string Version => "1.0.0";
     public static Mod Instance { get; private set; } = null!;
-    internal CoopSaveManager SaveManager { get; private set; } = null!;
-    internal static CoopWidgetManager CoopWidgetManager { get; private set; } = null!;
-    internal static CoopEventCallbacks CoopEventCallbacks { get; private set; } = null!;
 
-    protected override void Initialize()
+    protected override void Initialize(IDependencyContainer services)
     {
         // if (!LaunchParameters.Instance.ValidForCoOp)
         // {
@@ -31,10 +26,15 @@ public sealed class Mod : ModBase
         // }
 
         Instance = this;
-        SaveManager = new CoopSaveManager(Logger);
+
+        services.RegisterSingleton<ColliderDisableData>();
+        services.RegisterSingleton<CoopSaveManager>();
+        services.RegisterSingleton<CoopWidgetManager>();
+        services.RegisterSingleton<CoopEventCallbacks>();
 
         Logger.LogInformation("Initializing {PluginName} v{PluginVersion}", Name, Version);
 
+        // TODO: Should this be done by registering IConsoleCommandRegistration in DI? 
         WukongApi.Console.AddCommands([
             new CoopCommandRegistration(),
         ]);
@@ -44,11 +44,6 @@ public sealed class Mod : ModBase
         WukongApi.Configuration.EnableCustomCameraArmLength = false;
         WukongApi.Configuration.DeleteDestroyedTamersFromEcs = false;
         WukongApi.Configuration.SyncTamerTeamFromGameToEcs = true;
-
-        CoopWidgetManager = new CoopWidgetManager();
-
-        CoopWidgetManager.Initialize();
-        CoopEventCallbacks = new CoopEventCallbacks(Logger);
 
         Logger.LogInformation("Initialized {PluginName}", Name);
     }

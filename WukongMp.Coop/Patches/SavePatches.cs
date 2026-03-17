@@ -33,7 +33,7 @@ public class PatchStartNewGame
 {
     public static bool Prefix(UObject WorldContext)
     {
-        Mod.Instance.SaveManager.OnNewGameLoad(WorldContext);
+        WukongApi.Services.Resolve<CoopSaveManager>().OnNewGameLoad(WorldContext);
         return false;
     }
 }
@@ -57,7 +57,7 @@ public class PatchGameArchive
             return;
         }
 
-        Mod.Instance.SaveManager.OnLoadArchive(__instance, ref __result, ArchiveId, ref OutArchiveData);
+        WukongApi.Services.Resolve<CoopSaveManager>().OnLoadArchive(__instance, ref __result, ArchiveId, ref OutArchiveData);
     }
 }
 
@@ -73,7 +73,7 @@ public class PatchGSWindowsPlatformSaveGame
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true; // only handle game save, not settings etc.
 
-        Mod.Instance.SaveManager.OnSaveData(InSaveData, SlotName);
+        WukongApi.Services.Resolve<CoopSaveManager>().OnSaveData(InSaveData, SlotName);
 
         __result = true;
         return false;

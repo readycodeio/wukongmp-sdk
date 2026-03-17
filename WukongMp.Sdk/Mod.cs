@@ -5,6 +5,7 @@ using b1;
 using b1.BGW;
 using CSharpModBase;
 using CSharpModBase.Input;
+using DryIoc;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api;
 using UnrealEngine.Engine;
@@ -41,7 +42,7 @@ internal class Mod : ModBase
     }
 #endif
 
-    protected override void Initialize()
+    protected override void Initialize(IDependencyContainer services)
     {
 #if DEBUG
         Trace.Listeners.Clear();
@@ -57,25 +58,25 @@ internal class Mod : ModBase
         DI.Instance.Init();
 
         // Start the relay client
-        if (LaunchParameters.Instance.PlayShimOnStart)
-            ShimUtils.InitRelayPlayShim(
-                DI.Instance,
-                LaunchParameters.Instance.PlayShimFile!
-            );
-        else if (LaunchParameters.Instance.RecordShimOnStart)
-            ShimUtils.InitRelayRecordShim(
-                DI.Instance,
-                LaunchParameters.Instance.ServerIp!,
-                LaunchParameters.Instance.ServerPort!.Value,
-                LaunchParameters.Instance.UserGuid,
-#if NO_DISCONNECT
-                true,
-#else
-                false,
-#endif
-                LaunchParameters.Instance.RecordShimFile!
-            );
-        else
+//         if (LaunchParameters.Instance.PlayShimOnStart)
+//             ShimUtils.InitRelayPlayShim(
+//                 DI.Instance,
+//                 LaunchParameters.Instance.PlayShimFile!
+//             );
+//         else if (LaunchParameters.Instance.RecordShimOnStart)
+//             ShimUtils.InitRelayRecordShim(
+//                 DI.Instance,
+//                 LaunchParameters.Instance.ServerIp!,
+//                 LaunchParameters.Instance.ServerPort!.Value,
+//                 LaunchParameters.Instance.UserGuid,
+// #if NO_DISCONNECT
+//                 true,
+// #else
+//                 false,
+// #endif
+//                 LaunchParameters.Instance.RecordShimFile!
+//             );
+//         else
             ShimUtils.InitRelay(
                 DI.Instance,
                 LaunchParameters.Instance.ServerIp!,
@@ -217,12 +218,12 @@ internal class Mod : ModBase
             CutsceneUtils.RequestSkipCurrentCutscene();
         });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
-        {
-            Logging.LogDebug("Alt + 0");
-            if (LaunchParameters.Instance.RecordShimFile != null)
-                di.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
-        });
+        // di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+        // {
+        //     Logging.LogDebug("Alt + 0");
+        //     if (LaunchParameters.Instance.RecordShimFile != null)
+        //         di.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
+        // });
 
         di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
         {

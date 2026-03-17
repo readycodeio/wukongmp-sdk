@@ -1,17 +1,16 @@
 ﻿using ReadyM.Api.Idents;
 using WukongMp.Api;
 using WukongMp.Coop.Configuration;
-using WukongMp.Coop.UI;
 using WukongMp.Sdk.Api;
 using WukongMp.Sdk.Entities;
 
-namespace WukongMp.Coop.Patches;
+namespace WukongMp.Coop.UI;
 
-public class CoopWidgetManager : IDisposable
+public sealed class CoopWidgetManager : IDisposable
 {
     private readonly Lazy<CoopStatusWidget> _coopStatusWidget = new();
 
-    internal void Initialize()
+    public CoopWidgetManager()
     {
         WukongApi.Events.OnJoinedArea += OnJoinedArea;
         WukongApi.Events.OnLeftArea += OnLeftArea;

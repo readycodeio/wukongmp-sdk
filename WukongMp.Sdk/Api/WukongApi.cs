@@ -8,19 +8,27 @@ namespace WukongMp.Sdk.Api;
 
 public static class WukongApi // TODO: Interfaces
 {
-    [Obsolete("TODO: Make a more centralized configuration system.")]
-    public static GameplayConfiguration Configuration => DI.Instance.GameplayConfiguration;
-    public static IInputManager Input => DI.Instance.InputManager;
-    public static WukongConsoleApi Console { get; } = new(DI.Instance.CommandConsole, DI.Instance.CommandRegistry);
-    public static WukongFileApi Files { get; } = new(DI.Instance.Logger);
-    public static IWukongSaveRelay Saves => DI.Instance.SaveRelay;
-    public static WukongEventApi Events { get; } = new(DI.Instance.State, DI.Instance.PlayerPawnState, DI.Instance.PlayerState, DI.Instance.EventBus, DI.Instance.GameplayEventRouter);
-    public static WukongClientApi Client { get; } = new(DI.Instance.World, DI.Instance.State, DI.Instance.AreaState, DI.Instance.PlayerState, DI.Instance.MappingPolicyDir, DI.Instance.RelayClient);
-    public static WukongWidgetManager Widgets  => DI.Instance.WidgetManager;
+    static WukongApi()
+    {
+        Services.RegisterSingleton<WukongFileApi>();
+        Services.RegisterSingleton<WukongConsoleApi>();
+        Services.RegisterSingleton<WukongEventApi>();
+        Services.RegisterSingleton<WukongClientApi>();
+        Services.RegisterSingleton<WukongLocalApi>();
+        Services.RegisterSingleton<WukongInputApi>();
+    }
 
-    public static WukongLocalApi Local { get; } = new(
-        DI.Instance.EventBus,
-        DI.Instance.WidgetManager,
-        DI.Instance.EcsLoop
-    );
+    public static IDependencyContainer Services => DI.Instance;
+
+    [Obsolete("TODO: Make a more centralized configuration system.")]
+    public static GameplayConfiguration Configuration => Services.Resolve<GameplayConfiguration>();
+
+    public static WukongInputApi Input => Services.Resolve<WukongInputApi>();
+    public static WukongConsoleApi Console => Services.Resolve<WukongConsoleApi>();
+    public static WukongFileApi Files => Services.Resolve<WukongFileApi>();
+    public static IWukongSaveRelay Saves => Services.Resolve<IWukongSaveRelay>();
+    public static WukongEventApi Events => Services.Resolve<WukongEventApi>();
+    public static WukongClientApi Client => Services.Resolve<WukongClientApi>();
+    public static WukongWidgetManager Widgets => Services.Resolve<WukongWidgetManager>();
+    public static WukongLocalApi Local => Services.Resolve<WukongLocalApi>();
 }

@@ -7,15 +7,15 @@ using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
 using WukongMp.Sdk.Entities;
 
-namespace WukongMp.Coop.Patches;
+namespace WukongMp.Coop;
 
 public sealed class CoopEventCallbacks : IDisposable
 {
-    private readonly ILogger logger;
+    private readonly ILogger _logger;
 
     public CoopEventCallbacks(ILogger logger)
     {
-        this.logger = logger;
+        _logger = logger;
 
         WukongApi.Events.OnJoinedArea += OnJoinedAreaHandler;
         WukongApi.Events.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
@@ -54,7 +54,7 @@ public sealed class CoopEventCallbacks : IDisposable
     private void OnJoinedAreaHandler(AreaId areaId)
     {
         var isFirst = WukongApi.Client.IsMasterClient;
-        logger.LogInformation("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
+        _logger.LogInformation("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
 
         if (isFirst)
         {

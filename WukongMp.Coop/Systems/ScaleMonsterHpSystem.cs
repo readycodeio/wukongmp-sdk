@@ -9,7 +9,7 @@ using WukongMp.Sdk.Entities;
 namespace WukongMp.Coop.Systems;
 
 // ReSharper disable once UnusedType.Global
-public sealed class ScaleMonsterHpSystem : ModSystemBase
+public sealed class ScaleMonsterHpSystem(ILogger logger) : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {
@@ -47,7 +47,7 @@ public sealed class ScaleMonsterHpSystem : ModSystemBase
                 ReadyCharacterExtensions.set_Hp(tamer, currentHp / tamer.HpMultiplier * targetScaling);
 
                 tamer.HpMultiplier = targetScaling;
-                Logger.LogDebug("Scaled boss HP to {Hp}/{HpMaxBase} (x{Multiplier}) for {Players} players", tamer.Hp, tamer.HpMaxBase, targetScaling, areaPlayers);
+                logger.LogDebug("Scaled boss HP to {Hp}/{HpMaxBase} (x{Multiplier}) for {Players} players", tamer.Hp, tamer.HpMaxBase, targetScaling, areaPlayers);
             }
         }
     }

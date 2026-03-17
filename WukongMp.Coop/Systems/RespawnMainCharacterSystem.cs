@@ -7,7 +7,7 @@ using WukongMp.Sdk.Entities;
 namespace WukongMp.Coop.Systems;
 
 // ReSharper disable once UnusedType.Global
-public sealed class RespawnMainCharacterSystem : ModSystemBase
+public sealed class RespawnMainCharacterSystem(ILogger logger) : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {
@@ -31,14 +31,14 @@ public sealed class RespawnMainCharacterSystem : ModSystemBase
         var localMainCharacter = WukongApi.Client.LocalMainCharacter;
         if (!localMainCharacter.HasValue)
         {
-            Logger.LogWarning("Skipping respawn, no local main character entity");
+            logger.LogWarning("Skipping respawn, no local main character entity");
             return;
         }
 
         // if all players are dead, respawn the local player
         if (players > 0 && allDead && !localMainCharacter.Value.IsRespawning)
         {
-            Logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, WukongApi.Client.LocalPlayerId);
+            logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, WukongApi.Client.LocalPlayerId);
 
             var furthestRebirthPoint = WukongApi.Client.AllMainCharacters
                 .Select(mainCharacter => mainCharacter.RebirthPointId)

@@ -8,7 +8,7 @@ using WukongMp.Sdk.Entities;
 namespace WukongMp.Coop.Systems;
 
 // ReSharper disable once UnusedType.Global
-public sealed class DetectSoftlockSystem : ModSystemBase
+public sealed class DetectSoftlockSystem(ILogger logger) : ModSystemBase
 {
     private readonly HashSet<int> _waitingSequencesIds = [];
     
@@ -39,13 +39,13 @@ public sealed class DetectSoftlockSystem : ModSystemBase
         var localMainCharacter = WukongApi.Client.LocalMainCharacter;
         if (!localMainCharacter.HasValue)
         {
-            Logger.LogWarning("Skipping respawn, no local main character entity");
+            logger.LogWarning("Skipping respawn, no local main character entity");
             return;
         }
 
         if (players > 0 && _waitingSequencesIds.Count > 1 && !localMainCharacter.Value.IsRespawning)
         {
-            Logger.LogDebug("Softlock detected");
+            logger.LogDebug("Softlock detected");
             WukongApi.Local.ShowInfoMessage(BuiltinTexts.SoftlockDetected);
         }
     }

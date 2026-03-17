@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using CSharpModBase;
+using DryIoc;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api;
 using WukongMp.Api;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk;
 
@@ -30,9 +32,26 @@ public abstract class ModBase : ICSharpModExV2
 
     public void Init()
     {
-        Initialize();
+        Initialize(WukongApi.Services);
+        ScanForAndRegisterSystems();
+    }
 
-        _systems = [.. ScanForAndInitializeSystems().Select(x => x.ToBaseSystem())];
+    private void ScanForAndRegisterSystems()
+    {
+        var eligible = GetType().Assembly.GetTypes()
+            .Where(t => typeof(ModSystemBase).IsAssignableFrom(t) && !t.IsAbstract);
+
+        foreach (var type in eligible)
+        {
+            Logger.LogDebug("Found mod system: {SystemType}", type.FullName);
+            DI.Instance.Container.Register(typeof(ModSystemBase), type, serviceKey: Name);
+        }
+
+        _systems = DI.Instance.Container
+            .ResolveMany<ModSystemBase>(serviceKey: Name)
+            .Select(x => x.ToBaseSystem())
+            .ToList();
+
         _systemGroup = new SystemGroup(Name);
 
         foreach (var system in _systems)
@@ -44,21 +63,7 @@ public abstract class ModBase : ICSharpModExV2
         DI.Instance.World.SystemRoot.Add(_systemGroup);
     }
 
-    private IEnumerable<ModSystemBase> ScanForAndInitializeSystems()
-    {
-        var eligible = GetType().Assembly.GetTypes()
-            .Where(t => typeof(ModSystemBase).IsAssignableFrom(t) && !t.IsAbstract);
-
-        foreach (var type in eligible)
-        {
-            Logger.LogDebug("Found mod system: {SystemType}", type.FullName);
-            var instance = (ModSystemBase)Activator.CreateInstance(type)!;
-            instance.Initialize(Logger);
-            yield return instance;
-        }
-    }
-
-    protected virtual void Initialize() { }
+    protected virtual void Initialize(IDependencyContainer services) { }
 
     public virtual void DeInit()
     {
