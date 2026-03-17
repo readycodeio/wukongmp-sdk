@@ -269,8 +269,8 @@ internal static class PatchOnTriggerImmobilizedBreak
         {
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value), default(EmptyContext));
         }
-
-        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanEcsInvokeGameEvent(default);
+        
+        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanGameEventRunLocally(default);
     }
 }
 
