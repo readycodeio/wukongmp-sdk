@@ -7,6 +7,7 @@ using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Client.Utilities;
 using ReadyM.Wukong.Common.DTO;
 using ReadyM.Wukong.Common.ECS.Values;
 using WukongMp.Api.ECS.GameEvents;
@@ -17,28 +18,28 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
-internal partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
+internal partial sealed class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
 {
-    protected readonly IRelayClient RelayClient;
+    private readonly IRelayClient RelayClient;
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly MappedEventManager _mappedEvent;
-    private readonly WukongMappingPolicyDirectory _policyDir;
     private readonly WukongWidgetManager _widgetManager;
+    private readonly NetworkSessionStats _sessionStats;
     private readonly ILogger _logger;
 
     public WukongServerRpcCallbacks(
         IClientEcsUpdateLoop ecsLoop,
         MappedEventManager mappedEvent,
-        WukongMappingPolicyDirectory policyDir,
         IRelayClient relayClient,
+        NetworkSessionStats sessionStats,
         WukongWidgetManager widgetManager,
         ILogger logger)
     {
         RelayClient = relayClient;
         _ecsLoop = ecsLoop;
         _mappedEvent = mappedEvent;
-        _policyDir = policyDir;
         _widgetManager = widgetManager;
+        _sessionStats = sessionStats;
         _logger = logger;
 
         InitRpc();
@@ -126,8 +127,7 @@ internal partial class WukongServerRpcCallbacks : IDisposable // TODO: Base clas
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
         _widgetManager.UpdatePingIndicator(rtt);
-
-        DI.Instance.NetworkSessionStats.AddPing(rtt);
+        _sessionStats.AddPing(rtt);
     }
 
     public void SendPing()

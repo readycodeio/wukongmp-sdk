@@ -1,14 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using b1;
-using BtlB1;
+﻿using b1;
 using BtlShare;
 using CSharpModBase;
 using DryIoc;
 using Friflo.Engine.ECS;
-using GurCalliopeState;
 using Microsoft.Extensions.Logging;
-using PreludeLib.Compat;
 using PreludeLib.Runtime.Backend.WeaverCallback;
 using PreludeLib.Runtime.Public;
 using ReadyM.Api.Command;
@@ -34,7 +29,6 @@ using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Mapping.Policies;
 using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.Shim;
-using ReadyM.Relay.Client.Shim.ECS;
 using ReadyM.Relay.Client.State;
 using ReadyM.Relay.Client.Utilities;
 using ReadyM.Wukong.Common.ECS.Components;
@@ -65,108 +59,79 @@ namespace WukongMp.Api;
 
 internal sealed class DI
 {
-    private readonly Container _container = new(rules => rules.With(FactoryMethod.ConstructorWithResolvableArguments));
+    public static DI Instance { get; } = new();
 
-    internal static DI Instance { get; } = new();
+    private readonly Container _container = new(rules =>
+        rules.With(FactoryMethod.ConstructorWithResolvableArguments)
+            .WithDefaultReuse(Reuse.Singleton)); // TODO: Dispose it on game lifetime end.
 
-    internal InputManager InputManager => _container.Resolve<InputManager>();
-    internal ILoggerFactory LoggerFactory => _container.Resolve<ILoggerFactory>();
-    internal ILogger Logger => _container.Resolve<ILogger>();
-    internal NetworkSessionStats NetworkSessionStats => _container.Resolve<NetworkSessionStats>();
+    public T Get<T>() => _container.Resolve<T>();
 
-    internal Store World => _container.Resolve<Store>();
-    internal ClientWukongArchetypeRegistration WukongArchetype => _container.Resolve<ClientWukongArchetypeRegistration>();
-    internal ArchetypeEventRouter ArchetypeEvent => _container.Resolve<ArchetypeEventRouter>();
-    internal IClientEcsUpdateLoop EcsLoop => _container.Resolve<IClientEcsUpdateLoop>();
+    public InputManager InputManager => _container.Resolve<InputManager>();
+    public ILoggerFactory LoggerFactory => _container.Resolve<ILoggerFactory>();
+    public ILogger Logger => _container.Resolve<ILogger>();
+    public NetworkSessionStats NetworkSessionStats => _container.Resolve<NetworkSessionStats>();
 
-    internal DataSideChannel DataSideChannel => _container.Resolve<DataSideChannel>();
-    internal IMappingPolicyDirectoryRegistration MappingPolicyRegistration => _container.Resolve<IMappingPolicyDirectoryRegistration>();
-    internal WukongMappingPolicyDirectory MappingPolicyDir => _container.Resolve<WukongMappingPolicyDirectory>();
-    internal MappedEntityManager<AActor> MappedEntity => _container.Resolve<MappedEntityManager<AActor>>();
-    internal MappedEventManager MappedEvent => _container.Resolve<MappedEventManager>();
-    internal WukongClientGameEvents ClientGameEvents => _container.Resolve<WukongClientGameEvents>();
-    internal WukongServerGameEvents ServerGameEvents => _container.Resolve<WukongServerGameEvents>();
-    internal IComponentFieldMappingRegistry MappedField => _container.Resolve<IComponentFieldMappingRegistry>();
+    public Store World => _container.Resolve<Store>();
+    public ClientWukongArchetypeRegistration WukongArchetype => _container.Resolve<ClientWukongArchetypeRegistration>();
+    public ArchetypeEventRouter ArchetypeEvent => _container.Resolve<ArchetypeEventRouter>();
+    public IClientEcsUpdateLoop EcsLoop => _container.Resolve<IClientEcsUpdateLoop>();
 
-    internal RelaySerializer Serializer => _container.Resolve<RelaySerializer>();
-    internal HotSwappableRelayClient RelayClient => _container.Resolve<HotSwappableRelayClient>();
-    internal IBlobClient BlobClient => _container.Resolve<IBlobClient>();
-    internal NetworkedEntityManager NetEntity => _container.Resolve<NetworkedEntityManager>();
-    internal RelayClientService RelayClientService => _container.Resolve<RelayClientService>();
+    public WukongMappingPolicyDirectory MappingPolicyDir => _container.Resolve<WukongMappingPolicyDirectory>();
+    public MappedEntityManager<AActor> MappedEntity => _container.Resolve<MappedEntityManager<AActor>>();
+    public MappedEventManager MappedEvent => _container.Resolve<MappedEventManager>();
+    public IComponentFieldMappingRegistry MappedField => _container.Resolve<IComponentFieldMappingRegistry>();
 
-    internal ClientState State => _container.Resolve<ClientState>();
-    internal ClientNetworkedEntityManager ClientNetEntity => _container.Resolve<ClientNetworkedEntityManager>();
+    public RelaySerializer Serializer => _container.Resolve<RelaySerializer>();
+    public HotSwappableRelayClient RelayClient => _container.Resolve<HotSwappableRelayClient>();
+    public NetworkedEntityManager NetEntity => _container.Resolve<NetworkedEntityManager>();
 
-    internal TextRelaySerializer TextSerializer => _container.Resolve<TextRelaySerializer>();
+    public ClientState State => _container.Resolve<ClientState>();
+    public ClientNetworkedEntityManager ClientNetEntity => _container.Resolve<ClientNetworkedEntityManager>();
 
-    internal AreaComponentRegistry AreaComponentRegistry => _container.Resolve<AreaComponentRegistry>();
-    internal PlayerComponentRegistry PlayerComponentRegistry => _container.Resolve<PlayerComponentRegistry>();
-    internal NetworkedOwnershipManager OwnershipManager_ => _container.Resolve<NetworkedOwnershipManager>();
-    internal ClientOwnershipManager ClientOwnership_ => _container.Resolve<ClientOwnershipManager>();
+    public TextRelaySerializer TextSerializer => _container.Resolve<TextRelaySerializer>();
 
-    internal WukongAreaState AreaState => _container.Resolve<WukongAreaState>();
-    internal WukongPlayerState PlayerState => _container.Resolve<WukongPlayerState>();
-    internal WukongPawnState PawnState => _container.Resolve<WukongPawnState>();
-    internal WukongPlayerModeManager ModeManager => _container.Resolve<WukongPlayerModeManager>();
-    internal WukongPlayerPawnState PlayerPawnState => _container.Resolve<WukongPlayerPawnState>();
+    public ClientOwnershipManager ClientOwnership_ => _container.Resolve<ClientOwnershipManager>();
 
-    internal WukongClientRpcCallbacks ClientRpc => _container.Resolve<WukongClientRpcCallbacks>();
-    internal WukongServerRpcCallbacks ServerRpc => _container.Resolve<WukongServerRpcCallbacks>();
-    internal WukongSaveRelay SaveRelay => _container.Resolve<WukongSaveRelay>();
-    internal WukongEventBus EventBus => _container.Resolve<WukongEventBus>();
-    internal GameplayConfiguration GameplayConfiguration => _container.Resolve<GameplayConfiguration>();
-    internal GameplayEventRouter GameplayEventRouter => _container.Resolve<GameplayEventRouter>();
-    internal WukongSynchronizer Synchronizer => _container.Resolve<WukongSynchronizer>();
-    internal WukongSystemRegistration SystemRegistration => _container.Resolve<WukongSystemRegistration>();
+    public WukongAreaState AreaState => _container.Resolve<WukongAreaState>();
+    public WukongPlayerState PlayerState => _container.Resolve<WukongPlayerState>();
+    public WukongPawnState PawnState => _container.Resolve<WukongPawnState>();
+    public WukongPlayerModeManager ModeManager => _container.Resolve<WukongPlayerModeManager>();
+    public WukongPlayerPawnState PlayerPawnState => _container.Resolve<WukongPlayerPawnState>();
 
-    internal WukongNetworkLogger NetLogger => _container.Resolve<WukongNetworkLogger>();
-    internal INetworkedComponentRegistry NetComponentRegistry => _container.Resolve<INetworkedComponentRegistry>();
-    internal JobRegistry JobRegistry => _container.Resolve<JobRegistry>();
-    internal WukongConnectionManager Connection => _container.Resolve<WukongConnectionManager>();
-    internal WukongLevelTransitionConnectionController ConnectionController => _container.Resolve<WukongLevelTransitionConnectionController>();
-    internal NetworkPingMonitor PingMonitor => _container.Resolve<NetworkPingMonitor>();
-    internal PingWidgetUpdater PingWidgetUpdater => _container.Resolve<PingWidgetUpdater>();
-    internal FreeCameraManager FreeCameraManager => _container.Resolve<FreeCameraManager>();
-    internal FreeCameraController FreeCameraController => _container.Resolve<FreeCameraController>();
-    internal GameStateSynchronizer GameStateSynchronizer => _container.Resolve<GameStateSynchronizer>();
+    public WukongClientRpcCallbacks ClientRpc => _container.Resolve<WukongClientRpcCallbacks>();
+    public WukongServerRpcCallbacks ServerRpc => _container.Resolve<WukongServerRpcCallbacks>();
+    public WukongSaveRelay SaveRelay => _container.Resolve<WukongSaveRelay>();
+    public WukongEventBus EventBus => _container.Resolve<WukongEventBus>();
+    public GameplayConfiguration GameplayConfiguration => _container.Resolve<GameplayConfiguration>();
+    public GameplayEventRouter GameplayEventRouter => _container.Resolve<GameplayEventRouter>();
 
-    internal ConsoleCommandRegistry CommandRegistry => _container.Resolve<ConsoleCommandRegistry>();
-    internal ConsoleCommandParser CommandParser => _container.Resolve<ConsoleCommandParser>();
-    internal ConsoleArgumentTypeConverter ArgConverter => _container.Resolve<ConsoleArgumentTypeConverter>();
-    internal ConsoleCommandMatcher CommandMatcher => _container.Resolve<ConsoleCommandMatcher>();
-    internal WukongCommandConsole CommandConsole => _container.Resolve<WukongCommandConsole>();
-    internal WukongChatter Chatter => _container.Resolve<WukongChatter>();
-    internal WukongInputManager WukongInputManager => _container.Resolve<WukongInputManager>();
+    public WukongNetworkLogger NetLogger => _container.Resolve<WukongNetworkLogger>();
+    public INetworkedComponentRegistry NetComponentRegistry => _container.Resolve<INetworkedComponentRegistry>();
+    public JobRegistry JobRegistry => _container.Resolve<JobRegistry>();
+    public WukongConnectionManager Connection => _container.Resolve<WukongConnectionManager>();
+    public FreeCameraManager FreeCameraManager => _container.Resolve<FreeCameraManager>();
+    public FreeCameraController FreeCameraController => _container.Resolve<FreeCameraController>();
 
-    internal RuntimePrelude Prelude => _container.Resolve<RuntimePrelude>();
-    internal RuntimeWeaverBackend PreludeBackend => _container.Resolve<RuntimeWeaverBackend>();
+    public ConsoleCommandRegistry CommandRegistry => _container.Resolve<ConsoleCommandRegistry>();
+    public WukongCommandConsole CommandConsole => _container.Resolve<WukongCommandConsole>();
+    public WukongChatter Chatter => _container.Resolve<WukongChatter>();
+    public WukongInputManager WukongInputManager => _container.Resolve<WukongInputManager>();
+    public RuntimePrelude Prelude => _container.Resolve<RuntimePrelude>();
+    public WukongWidgetManager WidgetManager => _container.Resolve<WukongWidgetManager>();
+    public HotSwappableRelayClient ShimRecorderRelayClient => _container.Resolve<HotSwappableRelayClient>();
+    public ShimController ShimController => _container.Resolve<ShimController>();
+    public ShimPlaybackRelayClient ShimPlaybackRelayClient => _container.Resolve<ShimPlaybackRelayClient>();
+    public ShimAutoStarter ShimAuto => _container.Resolve<ShimAutoStarter>();
+    public TestsRunner TestsRunner => _container.Resolve<TestsRunner>();
 
-    internal WukongWidgetManager WidgetManager => _container.Resolve<WukongWidgetManager>();
-    internal TimerController TimerController => _container.Resolve<TimerController>();
-
-    internal ShimRelayMessageParser ShimParser => _container.Resolve<ShimRelayMessageParser>();
-    internal ShimReplayDependencyTracker ShimDepTracker => _container.Resolve<ShimReplayDependencyTracker>();
-    internal ShimReplayDependencyTracker ShimReplayDependencyTracker => _container.Resolve<ShimReplayDependencyTracker>();
-    internal HotSwappableRelayClient ShimRecorderRelayClient => _container.Resolve<HotSwappableRelayClient>();
-    internal ShimRelayRecorder ShimRecorder => _container.Resolve<ShimRelayRecorder>();
-    internal ShimController ShimController => _container.Resolve<ShimController>();
-    internal ShimPlaybackRelayClient ShimPlaybackRelayClient => _container.Resolve<ShimPlaybackRelayClient>();
-    internal ClientEcsUpdateLoop ShimEcsLoop => _container.Resolve<ClientEcsUpdateLoop>();
-    internal RelayClientService ShimRelayClientService => _container.Resolve<RelayClientService>();
-    internal NetworkedEntityManager ShimNetEntity => _container.Resolve<NetworkedEntityManager>();
-    internal HttpBlobClient ShimRelayBlobClient => _container.Resolve<HttpBlobClient>();
-
-    internal ShimAutoStarter ShimAuto => _container.Resolve<ShimAutoStarter>();
-
-    internal TestsRunner TestsRunner => _container.Resolve<TestsRunner>();
-
-    internal void InitLogging(ILoggerFactory loggerFactory)
+    public void InitLogging(ILoggerFactory loggerFactory)
     {
         _container.RegisterInstance(loggerFactory);
         _container.RegisterInstance(LoggerFactory.CreateLogger(""));
     }
 
-    internal void Init()
+    public void Init()
     {
         Logger.LogDebug("Initializing DI...");
 
@@ -235,7 +200,7 @@ internal sealed class DI
         _container.Register<WukongConnectionManager>();
         _container.Register<WukongNetworkLogger>();
         _container.Register<DataSideChannel>();
-        
+
         _container.Register<IMappingDataPolicyFactory, OwnershipDataPolicyFactory>();
         _container.Register<IMappingEventPolicyFactory, OwnershipEventPolicyFactory>();
         _container.Register<IMappingEventPolicyFactory, MasterClientEventPolicyFactory>();
@@ -244,9 +209,10 @@ internal sealed class DI
         _container.Register<IMappingEventPolicyFactory, AlwaysPropagatesEventPolicyFactory>();
 
         _container.RegisterMany<MappingPolicyDirectory>(serviceTypeCondition: type => type.IsInterface);
-        
-        _container.RegisterInitializer<MappingPolicyDirectory>((mapping, s) =>
+        _container.RegisterInitializer<IMappingPolicyDirectory>((iface, s) =>
         {
+            var mapping = (MappingPolicyDirectory) iface;
+
             var ownership = s.Resolve<ClientOwnershipManager>();
             var area = s.Resolve<WukongAreaState>();
 
@@ -264,96 +230,63 @@ internal sealed class DI
                 mapping.RegisterDefaultEvent(factory);
             }
         });
-        
-        var policyDir = new MappingPolicyDirectory(sideChannel);
-        policyDir.RegisterDefaultCreateDelete<AActor>(
-            actor => areaState.IsMasterClient,
-            entity => clientOwnership.OwnsEntity(entity));
-        policyDir.RegisterDefaultData(new OwnershipDataPolicyFactory(clientOwnership, sideChannel));
-        policyDir.RegisterDefaultEvent(new OwnershipEventPolicyFactory(clientOwnership, sideChannel));
-        policyDir.RegisterDefaultEvent(new MasterClientEventPolicyFactory(areaState, sideChannel));
-        policyDir.RegisterDefaultEvent(new RunOnMasterClientOnlyEventPolicyFactory(clientOwnership, areaState, sideChannel));
-        policyDir.RegisterDefaultEvent(new SpawnSummonEventEventPolicyFactory(clientOwnership, playerState, areaState, world, sideChannel));
-        policyDir.RegisterDefaultEvent(new AlwaysPropagatesEventPolicyFactory(sideChannel));
-        MappingPolicyRegistration = policyDir;
 
-        var mappedEvent = MappedEvent = new MappedEventManager(sideChannel, policyDir, logger);
-        var mappingPolicyDir = MappingPolicyDir = new WukongMappingPolicyDirectory(policyDir, mappedEntity, mappedEvent, wukongArchetype);
+        _container.Register<IMappedEventManager, MappedEventManager>();
+        _container.Register<WukongMappingPolicyDirectory>();
+        _container.RegisterMany<ComponentFieldMappingRegistry>(serviceTypeCondition: type => type.IsInterface);
+        _container.RegisterInitializer<IComponentFieldMappingRegistry>((iface, _) => { RegisterDataMappings((ComponentFieldMappingRegistry) iface); });
 
-        var mappedField = new ComponentFieldMappingRegistry(policyDir, sideChannel, logger);
-        MappedField = mappedField;
-        RegisterDataMappings(mappedField);
+        _container.Register<IWukongSaveRelay, WukongSaveRelay>();
 
-        var saveRelay = SaveRelay = new WukongSaveRelay(blobClient, logger);
-        var clientGameEvents = ClientGameEvents = new WukongClientGameEvents(mappedEvent, mappingPolicyDir, state, pawnState, playerState, widgetManager, gameplayEventRouter, logger);
-        var serverGameEvents = ServerGameEvents = new WukongServerGameEvents(mappedEvent, widgetManager, logger);
+        _container.Register<WukongClientGameEvents>();
+        _container.Register<WukongClientRpcCallbacks>();
 
-        var clientRpc = ClientRpc = new WukongClientRpcCallbacks(ecsLoop, playerState, areaState, mappedEvent, mappingPolicyDir, serializer, relayClient, clientNetEntity, widgetManager, timerController, logger);
-        var serverRpc = ServerRpc = new WukongServerRpcCallbacks(ecsLoop, mappedEvent, mappingPolicyDir, relayClient, widgetManager, logger);
-        var chatter = Chatter = new WukongChatter(playerState, clientRpc, widgetManager, logger);
+        _container.Register<WukongServerGameEvents>();
+        _container.Register<WukongServerRpcCallbacks>();
 
-        var commandRegistry = CommandRegistry = new ConsoleCommandRegistry([
-            new CheatCommandRegistration(playerState, areaState, chatter, serverRpc),
-            new ConnectionCommandRegistration(playerState, connection, chatter),
-            new ExecuteWukongCommandRegistration(),
-            new GiveUpCommandRegistration(ecsLoop, playerState, chatter),
-            new ObstacleCommandRegistration(),
-            new RebirthCommandRegistration(playerState, mappedEvent, chatter),
-            new WorkaroundCommandRegistration(world, mappedEvent, playerState),
-        ]);
-        var commandParser = CommandParser = new ConsoleCommandParser([
-            new StandardArgumentParserRegistration(),
-        ]);
-        var commandTypeConverter = ArgConverter = new ConsoleArgumentTypeConverter([
-            new IdentToStringTypeConversion(),
-            new DecimalToIntTypeConversion(),
-            new DecimalToFloatTypeConversion(),
-            new DecimalToDoubleTypeConversion(),
-        ]);
-        var commandMatcher = CommandMatcher = new ConsoleCommandMatcher(commandParser, commandRegistry, commandTypeConverter);
-        var commandConsole = CommandConsole = new WukongCommandConsole(commandMatcher, areaState, playerState, eventBus, chatter, widgetManager);
-        var wukongInputManager = WukongInputManager = new WukongInputManager(commandConsole, chatter, widgetManager);
+        _container.Register<WukongChatter>();
 
-        var connectionController = ConnectionController = new WukongLevelTransitionConnectionController(eventBus, connection);
+        _container.Register<IConsoleCommandRegistration, CheatCommandRegistration>();
+        _container.Register<IConsoleCommandRegistration, ConnectionCommandRegistration>();
+        _container.Register<IConsoleCommandRegistration, ExecuteWukongCommandRegistration>();
+        _container.Register<IConsoleCommandRegistration, GiveUpCommandRegistration>();
+        _container.Register<IConsoleCommandRegistration, ObstacleCommandRegistration>();
+        _container.Register<IConsoleCommandRegistration, RebirthCommandRegistration>();
+        _container.Register<IConsoleCommandRegistration, WorkaroundCommandRegistration>();
+        _container.Register<ConsoleCommandRegistry>();
 
-        var pingMonitor = PingMonitor = new NetworkPingMonitor(relayClient);
-        var pingWidgetUpdater = PingWidgetUpdater = new PingWidgetUpdater(pingMonitor, serverRpc);
+        _container.Register<IConsoleArgumentParserRegistration, StandardArgumentParserRegistration>();
+        _container.Register<ConsoleCommandParser>();
 
-        var runtimeLogger = LoggerFactory.CreateLogger("Runtime");
-        var preludeBackend = PreludeBackend = new RuntimeWeaverBackend(runtimeLogger);
-        var prelude = Prelude = new RuntimePrelude(preludeBackend, runtimeLogger);
+        _container.Register<IConsoleArgumentTypeConversion, IdentToStringTypeConversion>();
+        _container.Register<IConsoleArgumentTypeConversion, DecimalToIntTypeConversion>();
+        _container.Register<IConsoleArgumentTypeConversion, DecimalToFloatTypeConversion>();
+        _container.Register<IConsoleArgumentTypeConversion, DecimalToDoubleTypeConversion>();
+        _container.Register<ConsoleArgumentTypeConverter>();
 
-        var systemRegistration = SystemRegistration = new WukongSystemRegistration(
-            worldEvent,
-            state,
-            wukongArchetype,
-            mappedField,
-            areaState,
-            playerState,
-            playerPawnState,
-            modeManager,
-            clientOwnership,
-            ecsLoop,
-            mappedEvent,
-            eventBus,
-            widgetManager,
-            gameplayEventRouter,
-            gameplayConfig,
-            freeCameraManager,
-            freeCameraController,
-            logger
-        );
+        _container.Register<ConsoleCommandMatcher>();
+        _container.Register<WukongCommandConsole>();
+
+        _container.Register<WukongInputManager>();
+        _container.Register<WukongLevelTransitionConnectionController>();
+
+        _container.Register<NetworkPingMonitor>();
+        _container.Register<PingWidgetUpdater>();
+        _container.Register<RuntimeWeaverBackend>();
+        _container.Register<RuntimePrelude>();
+
+        _container.Register<WukongSystemRegistration>();
+        _container.Register<TestsRunner>();
+
+        Logger.LogDebug("DI Initialized");
+#if SHIMMING
         // ---
 
         var shimLogger = LoggerFactory.CreateLogger("Shim");
         var shimRecorderLogger = LoggerFactory.CreateLogger("Shim Recorder");
         var shimPlaybackLogger = LoggerFactory.CreateLogger("Shim Playback");
 
-        var shimWorld = new Store(new EntityStore(), [
-            areaArchetype,
-            playerArchetype,
-            wukongArchetype,
-        ]);
+        var shimWorld = new Store(new EntityStore(), _container.ResolveMany<IArchetypeRegistration>());
         var shimRecorderRelayClient = ShimRecorderRelayClient = new HotSwappableRelayClient();
         var shimRecorderRelayService = ShimRelayClientService = new RelayClientService(shimRecorderRelayClient, shimRecorderLogger);
         var shimNetEntity = ShimNetEntity = new NetworkedEntityManager(shimWorld, shimRecorderRelayClient, shimRecorderLogger);
@@ -414,13 +347,7 @@ internal sealed class DI
             shimLogger
         );
 
-        // ---
-
-        TestsRunner = new TestsRunner(logger);
-
-        // ---
-
-        Logger.LogDebug("DI Initialized");
+#endif
     }
 
     private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
@@ -479,7 +406,7 @@ internal sealed class DI
             {
                 foreach (var (attr, value) in attrs)
                 {
-                    ctx.SetFloatValue((EBGUAttrFloat)attr, value);
+                    ctx.SetFloatValue((EBGUAttrFloat) attr, value);
                 }
             }, (ref main, ctx) =>
             {
@@ -488,7 +415,7 @@ internal sealed class DI
                 foreach (var attr in Constants.SyncedAttributes)
                 {
                     var value = ctx.GetFloatValue(attr);
-                    attrs[(byte)attr] = value;
+                    attrs[(byte) attr] = value;
                 }
 
                 main.Attributes = new AttributesState(attrs);
@@ -500,21 +427,21 @@ internal sealed class DI
                 if (!Constants.SyncedAttributes.Contains(ctx.Attr))
                     return;
 
-                ctx.Container.SetFloatValue(ctx.Attr, attrs.GetAttribute((byte)ctx.Attr));
+                ctx.Container.SetFloatValue(ctx.Attr, attrs.GetAttribute((byte) ctx.Attr));
             }, (ref main, ctx) =>
             {
                 if (!Constants.SyncedAttributes.Contains(ctx.Attr))
                     return;
 
                 var value = ctx.Container.GetFloatValue(ctx.Attr);
-                main.Attributes = main.Attributes.WithSetAttribute((byte)ctx.Attr, value);
+                main.Attributes = main.Attributes.WithSetAttribute((byte) ctx.Attr, value);
 
                 // Some attributes have derivatives (computed properties, if you will)
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(ctx.Attr, out var valid);
                 if (valid)
                 {
                     var finalVal = ctx.Container.GetFloatValue(calc.finalVal);
-                    main.Attributes = main.Attributes.WithSetAttribute((byte)calc.finalVal, finalVal);
+                    main.Attributes = main.Attributes.WithSetAttribute((byte) calc.finalVal, finalVal);
                 }
             });
 
