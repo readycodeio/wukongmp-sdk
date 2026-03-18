@@ -56,7 +56,7 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
         for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
         {
             var id = _equipments[i];
-            if (id != 0)
+            if (id != 0 || i == (int)EquipPosition.Head) // invisible head bug workaround: always include head even if it's 0
             {
                 yield return ((EquipPosition)i, id);
             }
@@ -76,7 +76,7 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
     {
         if (_equipments == null)
             _equipments = new int[(int)EquipPosition.EnumMax];
-        
+
         for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
         {
             var item = reader.GetInt();
