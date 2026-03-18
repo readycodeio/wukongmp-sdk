@@ -6,6 +6,7 @@ using ReadyM.Api.ECS.Components;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Mapping;
+using ReadyM.Api.State;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
@@ -17,9 +18,9 @@ namespace WukongMp.Api.State;
 
 internal class WukongPawnState(
     Store world,
-    MappedEntityManager<AActor> mappedEntity,
+    IMappedEntityManager<AActor> mappedEntity,
     ClientWukongArchetypeRegistration wukongArchetype,
-    ClientNetworkedEntityManager netEntity)
+    IClientEntityManager netClientEntity)
 {
     public Entity CreateNetworkedTamer(
         LocalTamerComponent localTamerComp, 
@@ -27,7 +28,7 @@ internal class WukongPawnState(
         TeamComponent teamComp, 
         BUTamerActor tamer)
     {
-        var entity = netEntity.CreateAreaEntity(wukongArchetype.TamerArchetype, b =>
+        var entity = netClientEntity.CreateAreaEntity(wukongArchetype.TamerArchetype, b =>
         {
             b.Add(localTamerComp);
             b.Add(tamerComp);

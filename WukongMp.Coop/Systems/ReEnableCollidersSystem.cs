@@ -1,6 +1,4 @@
-﻿using Friflo.Engine.ECS;
-using Microsoft.Extensions.Logging;
-using WukongMp.Sdk;
+﻿using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Systems;

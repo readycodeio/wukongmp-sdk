@@ -7,12 +7,12 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-internal class GameStateSynchronizer : IDisposable
+internal class CutsceneStatusSynchronizer : IDisposable
 {
     private readonly ClientState _state;
     private readonly WukongPlayerState _playerState;
 
-    public GameStateSynchronizer(ClientState state, WukongPlayerState playerState)
+    public CutsceneStatusSynchronizer(ClientState state, WukongPlayerState playerState)
     {
         _state = state;
         _playerState = playerState;

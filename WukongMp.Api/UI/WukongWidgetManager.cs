@@ -13,7 +13,7 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.UI;
 
-public sealed class WukongWidgetManager : IDisposable
+internal sealed class WukongWidgetManager : IDisposable
 {
     private string _lastDisconnectText = BuiltinTexts.Disconnected;
 
@@ -39,9 +39,9 @@ public sealed class WukongWidgetManager : IDisposable
     private readonly WukongEventBus eventBus;
     private readonly FreeCameraManager freeCameraManager;
 
-    internal bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
+    public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
 
-    internal WukongWidgetManager(ClientState clientState, WukongPlayerState playerState, IRelayClient relayClient, WukongEventBus eventBus, FreeCameraManager freeCameraManager)
+    public WukongWidgetManager(ClientState clientState, WukongPlayerState playerState, IRelayClient relayClient, WukongEventBus eventBus, FreeCameraManager freeCameraManager)
     {
         this.clientState = clientState;
         this.playerState = playerState;
@@ -107,7 +107,7 @@ public sealed class WukongWidgetManager : IDisposable
 
     #endregion
 
-    internal void SetModVersion(string version)
+    public void SetSdkVersion(string version)
     {
         _fullModVersion = version;
         var subVersions = version.Split('+');
@@ -115,23 +115,23 @@ public sealed class WukongWidgetManager : IDisposable
             _shortModVersion = subVersions[0];
     }
 
-    internal void AddCharacterToDebugView(string name)
+    public void AddCharacterToDebugView(string name)
     {
         _debugViewWidget.Value.AddPlayer(name);
     }
 
-    internal void UpdatePlayerPosition(string playerName, FVector gameLocation, FVector ecsLocation)
+    public void UpdatePlayerPosition(string playerName, FVector gameLocation, FVector ecsLocation)
     {
         _debugViewWidget.Value.SetPlayerPosition(playerName, gameLocation, ecsLocation);
     }
 
-    internal void UpdatePingIndicator(long pingMs)
+    public void UpdatePingIndicator(long pingMs)
     {
         _pingIndicatorWidget.Value.SetPingValue(pingMs);
         _pingIndicatorWidget.Value.HideInfoText();
     }
 
-    internal void SetPacketLossWarning()
+    public void SetPacketLossWarning()
     {
         _pingIndicatorWidget.Value.SetPingValue(999);
         _pingIndicatorWidget.Value.SetInfoText(BuiltinTexts.SeverePacketLossDetected);
@@ -262,45 +262,45 @@ public sealed class WukongWidgetManager : IDisposable
         _timerWidget.Value.SetText(minutes, seconds);
     }
 
-    internal void SetTimerVisibility(bool visible)
+    public void SetTimerVisibility(bool visible)
     {
         _timerWidget.Value.SetVisibility(visible);
     }
 
-    internal void ToggleDebugVisibility() => _debugViewWidget.Value.ToggleVisibility();
+    public void ToggleDebugVisibility() => _debugViewWidget.Value.ToggleVisibility();
 
-    internal void ToggleChatVisibility() => _chatWidget.Value.ToggleVisibility();
+    public void ToggleChatVisibility() => _chatWidget.Value.ToggleVisibility();
 
-    internal bool ChatHasFocus => _chatWidget.Value.HasFocus();
+    public bool ChatHasFocus => _chatWidget.Value.HasFocus();
 
-    internal void SetChatInputFocus() => _chatWidget.Value.SetInputFocus();
+    public void SetChatInputFocus() => _chatWidget.Value.SetInputFocus();
 
-    internal string CommitChatMessage() => _chatWidget.Value.CommitMessage();
+    public string CommitChatMessage() => _chatWidget.Value.CommitMessage();
 
-    internal bool CommandHasFocus() => _commandConsoleWidget.Value.HasFocus();
+    public bool CommandHasFocus() => _commandConsoleWidget.Value.HasFocus();
 
-    internal bool IsCommandVisible() => _commandConsoleWidget.Value.IsVisible();
+    public bool IsCommandVisible() => _commandConsoleWidget.Value.IsVisible();
 
-    internal void CommandSelectUp() => _commandConsoleWidget.Value.SelectUp();
+    public void CommandSelectUp() => _commandConsoleWidget.Value.SelectUp();
 
-    internal void CommandSelectDown() => _commandConsoleWidget.Value.SelectDown();
+    public void CommandSelectDown() => _commandConsoleWidget.Value.SelectDown();
 
-    internal void CommandHistoryUp() => _commandConsoleWidget.Value.SetHistoryNext();
+    public void CommandHistoryUp() => _commandConsoleWidget.Value.SetHistoryNext();
 
-    internal void CommandHistoryDown() => _commandConsoleWidget.Value.SetHistoryPrev();
+    public void CommandHistoryDown() => _commandConsoleWidget.Value.SetHistoryPrev();
 
-    internal void CommandSelectSuggestion() => _commandConsoleWidget.Value.SelectSuggestion();
+    public void CommandSelectSuggestion() => _commandConsoleWidget.Value.SelectSuggestion();
 
-    internal void SetCommandInputFocus() => _commandConsoleWidget.Value.SetInputFocus();
+    public void SetCommandInputFocus() => _commandConsoleWidget.Value.SetInputFocus();
 
-    internal string CommitCommand() => _commandConsoleWidget.Value.CommitCommand();
+    public string CommitCommand() => _commandConsoleWidget.Value.CommitCommand();
 
 
-    internal void SetSpectatingMessage(string message)
+    public void SetSpectatingMessage(string message)
     {
         _freeCameraMessageWidget.Value.SetVisibility(true);
         _freeCameraMessageWidget.Value.SetMessageText(message);
     }
 
-    internal void HideSpectatingMessage() => _freeCameraMessageWidget.Value.SetVisibility(false);
+    public void HideSpectatingMessage() => _freeCameraMessageWidget.Value.SetVisibility(false);
 }

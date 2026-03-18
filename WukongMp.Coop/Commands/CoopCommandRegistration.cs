@@ -7,7 +7,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Coop.Commands;
 
-public class CoopCommandRegistration : IConsoleCommandRegistration
+public sealed class CoopCommandRegistration : IConsoleCommandRegistration
 {
     public void RegisterCommands(ConsoleCommandRegistry registry)
     {

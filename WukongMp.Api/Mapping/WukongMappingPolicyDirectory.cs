@@ -18,11 +18,11 @@ namespace WukongMp.Api.Mapping;
 internal class WukongMappingPolicyDirectory(
     IMappingPolicyDirectory policyDir,
     IMappedEntityManager<AActor> mappedEntity,
-    MappedEventManager mappedEvent,
+    IMappedEventManager mappedEvent,
     ClientWukongArchetypeRegistration wukongArchetype
 )
 {
-    public MappedEventManager MappedEvent => mappedEvent;
+    public IMappedEventManager MappedEvent => mappedEvent;
 
     public bool IsCharacterMapped([NotNullWhen(true)] AActor? character, [NotNullWhen(true)] out Entity? entity)
     {

@@ -1,5 +1,4 @@
-﻿using Friflo.Engine.ECS;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using WukongMp.Api.Resources;
 using WukongMp.Sdk;
 using WukongMp.Sdk.Api;

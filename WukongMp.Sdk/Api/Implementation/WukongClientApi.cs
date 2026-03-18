@@ -5,7 +5,6 @@ using LiteNetLib;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Api.Multiplayer.Mapping;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
@@ -14,33 +13,18 @@ using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Entities;
 
-namespace WukongMp.Sdk.Api;
+namespace WukongMp.Sdk.Api.Implementation;
 
 /// API for networked gameplay features.
-public sealed class WukongClientApi
+internal sealed class WukongClientApi(
+    Store world,
+    ClientState state,
+    WukongAreaState areaState,
+    WukongPlayerState playerState,
+    WukongMappingPolicyDirectory mappingDir,
+    IRelayClient relayClient
+) : IWukongClientApi
 {
-    private readonly Store world;
-    private readonly ClientState state;
-    private readonly WukongAreaState areaState;
-    private readonly WukongPlayerState playerState;
-    private readonly WukongMappingPolicyDirectory mappingDir;
-    private readonly IRelayClient relayClient;
-
-    internal WukongClientApi(Store world,
-        ClientState state,
-        WukongAreaState areaState,
-        WukongPlayerState playerState,
-        WukongMappingPolicyDirectory mappingDir,
-        IRelayClient relayClient)
-    {
-        this.world = world;
-        this.state = state;
-        this.areaState = areaState;
-        this.playerState = playerState;
-        this.mappingDir = mappingDir;
-        this.relayClient = relayClient;
-    }
-
     // ---
 
     public void GetDisconnectReasonAndInvoke(Action<DisconnectReason> callback)

@@ -76,7 +76,7 @@ internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter r
 
             if (attrs != null)
             {
-                if (DI.Instance.ClientOwnership_.OwnsEntity(entity))
+                if (DI.Instance.ClientOwnership.OwnsEntity(entity))
                 {
                     hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
                     hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);

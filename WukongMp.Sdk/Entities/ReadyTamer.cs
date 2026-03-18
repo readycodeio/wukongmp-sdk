@@ -4,6 +4,7 @@ using BtlShare;
 using Friflo.Engine.ECS;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -13,10 +14,10 @@ public readonly struct ReadyTamer
         IReadyConvertable<ReadyTamer, ReadyActor>,
         IReadyConvertable<ReadyTamer, ReadyObject>
 {
-    internal WukongClientApi Api { get; }
+    internal IWukongClientApi Api { get; }
     internal Entity Entity { get; }
 
-    internal ReadyTamer(WukongClientApi api, Entity entity)
+    internal ReadyTamer(IWukongClientApi api, Entity entity)
     {
         Api = api;
         Entity = entity;
@@ -52,10 +53,10 @@ public readonly struct ReadyTamer
         return new(actor.Api, actor.Entity);
     }
 
-    ReadyTamer IReadyEntity<ReadyTamer>.Construct(WukongClientApi api, Entity entity)
+    ReadyTamer IReadyEntity<ReadyTamer>.Construct(IWukongClientApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyTamer>.Deconstruct(out WukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyTamer>.Deconstruct(out IWukongClientApi api, out Entity entity)
     {
         api = Api;
         entity = Entity;

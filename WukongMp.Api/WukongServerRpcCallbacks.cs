@@ -11,40 +11,29 @@ using ReadyM.Relay.Client.Utilities;
 using ReadyM.Wukong.Common.DTO;
 using ReadyM.Wukong.Common.ECS.Values;
 using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.UI;
 
 // ReSharper disable InconsistentNaming
 
 namespace WukongMp.Api;
 
-internal partial class WukongServerRpcCallbacks : IDisposable // TODO: Base class?
+internal partial class WukongServerRpcCallbacks(
+    IClientEcsUpdateLoop ecsLoop,
+    IMappedEventManager mappedEvent,
+    IRelayClient relayClient,
+    NetworkSessionStats sessionStats,
+    WukongWidgetManager widgetManager,
+    ILogger logger
+) : IScopedLifetime
 {
-    private readonly IRelayClient RelayClient;
-    private readonly IClientEcsUpdateLoop _ecsLoop;
-    private readonly MappedEventManager _mappedEvent;
-    private readonly WukongWidgetManager _widgetManager;
-    private readonly NetworkSessionStats _sessionStats;
-    private readonly ILogger _logger;
+    private IRelayClient RelayClient => relayClient;
+    private IMappedEventManager MappedEvent => mappedEvent;
 
-    public WukongServerRpcCallbacks(
-        IClientEcsUpdateLoop ecsLoop,
-        MappedEventManager mappedEvent,
-        IRelayClient relayClient,
-        NetworkSessionStats sessionStats,
-        WukongWidgetManager widgetManager,
-        ILogger logger)
+    public void OnScopeStart()
     {
-        RelayClient = relayClient;
-        _ecsLoop = ecsLoop;
-        _mappedEvent = mappedEvent;
-        _widgetManager = widgetManager;
-        _sessionStats = sessionStats;
-        _logger = logger;
-
         InitRpc();
 
-        _mappedEvent.RegisterEcsEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
+        MappedEvent.RegisterEcsEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
         {
             self.SendSkipMovie(
                 new SkipMovieData(
@@ -64,9 +53,9 @@ internal partial class WukongServerRpcCallbacks : IDisposable // TODO: Base clas
     [ServerRpcEvent("SkipMovie")]
     private void OnSkipMovie(SkipMovieData data)
     {
-        _ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
         {
-            self._mappedEvent.InvokeInGameIfApplicable(
+            self.MappedEvent.InvokeInGameIfApplicable(
                 new SkipMovieEvent(
                     sequenceId: data0.SequenceId,
                     waitingPlayers: data0.WaitingPlayers,
@@ -94,9 +83,9 @@ internal partial class WukongServerRpcCallbacks : IDisposable // TODO: Base clas
     private void OnBeguilingChant(byte stateRaw)
     {
         var state = (BeguilingChantState)stateRaw;
-        _ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
+        ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
         {
-            self._mappedEvent.InvokeInGameIfApplicable(new BeguilingChantEvent(
+            self.MappedEvent.InvokeInGameIfApplicable(new BeguilingChantEvent(
                 state: state0
             ), default(EmptyContext));
         }, this, state);
@@ -118,16 +107,16 @@ internal partial class WukongServerRpcCallbacks : IDisposable // TODO: Base clas
         {
             // Outdated ping response, most likely due to packet loss
             var outdatedRtt = PingStopwatch.ElapsedMilliseconds - timestamp;
-            _logger.LogWarning("Received outdated ping response. Timestamp: {Timestamp}, now: {Now}, RTT: {Rtt}ms", timestamp, PingStopwatch.ElapsedMilliseconds, outdatedRtt);
+            logger.LogWarning("Received outdated ping response. Timestamp: {Timestamp}, now: {Now}, RTT: {Rtt}ms", timestamp, PingStopwatch.ElapsedMilliseconds, outdatedRtt);
 
-            _widgetManager.SetPacketLossWarning();
+            widgetManager.SetPacketLossWarning();
             return;
         }
 
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
-        _widgetManager.UpdatePingIndicator(rtt);
-        _sessionStats.AddPing(rtt);
+        widgetManager.UpdatePingIndicator(rtt);
+        sessionStats.AddPing(rtt);
     }
 
     public void SendPing()

@@ -46,6 +46,7 @@ internal sealed class ArchetypeEventRouter : IDisposable
     {
         _store = store;
         
+        // it's fine to subscribe to events here, since this class is only a proxy
         _store.OnEntityCreate += OnEntityCreate;
         _store.OnEntityDelete += OnEntityDelete;
     }

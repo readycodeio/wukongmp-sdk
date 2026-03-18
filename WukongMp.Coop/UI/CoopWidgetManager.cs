@@ -1,4 +1,5 @@
 ﻿using ReadyM.Api.Idents;
+using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Coop.Configuration;
 using WukongMp.Sdk.Api;
@@ -6,11 +7,11 @@ using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop.UI;
 
-public sealed class CoopWidgetManager : IDisposable
+public sealed class CoopWidgetManager : IScopedLifetime, IDisposable
 {
     private readonly Lazy<CoopStatusWidget> _coopStatusWidget = new();
 
-    public CoopWidgetManager()
+    public void OnScopeStart()
     {
         WukongApi.Events.OnJoinedArea += OnJoinedArea;
         WukongApi.Events.OnLeftArea += OnLeftArea;
@@ -35,7 +36,6 @@ public sealed class CoopWidgetManager : IDisposable
         WukongApi.Events.OnLevelLoaded -= OnLevelLoaded;
         WukongApi.Events.OnExitLevel -= OnExitLevel;
         WukongApi.Events.OnLoadingScreenClose -= OnLoadingScreenClose;
-
 
         WukongApi.Events.OnPlayerChangedTeam -= UpdatePlayerTeam;
         WukongApi.Events.OnLocalPlayerBeforeRebirth -= OnLocalPlayerBeforeRebirth;

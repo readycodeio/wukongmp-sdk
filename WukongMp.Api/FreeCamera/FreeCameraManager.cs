@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera;
 
-internal sealed class FreeCameraManager
+internal sealed class FreeCameraManager(WukongPlayerState playerState)
 {
     private const string FreeCameraActorPath = "/Game/Mods/WukongMod/BP_FreeCameraActor.BP_FreeCameraActor_C";
 
@@ -18,13 +18,7 @@ internal sealed class FreeCameraManager
     private USpringArmComponent? _springArmComponent;
     private float _gameFov;
     private AActor? _cacheCameraViewTarget;
-    private readonly WukongPlayerState playerState;
-    
-    internal FreeCameraManager(WukongPlayerState playerState)
-    {
-        this.playerState = playerState;
-    }
-    
+
     public bool IsInFreeCameraMode { get; private set; }
 
     public event Action<bool>? OnFreeCameraModeChanged;

@@ -1,6 +1,7 @@
 ﻿using b1;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
+using ReadyM.Relay.Client;
 using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.WukongUtils;
@@ -9,14 +10,10 @@ using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Coop;
 
-public sealed class CoopEventCallbacks : IDisposable
+public sealed class CoopEventCallbacks(ILogger logger) : IScopedLifetime, IDisposable
 {
-    private readonly ILogger _logger;
-
-    public CoopEventCallbacks(ILogger logger)
+    public void OnScopeStart()
     {
-        _logger = logger;
-
         WukongApi.Events.OnJoinedArea += OnJoinedAreaHandler;
         WukongApi.Events.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         WukongApi.Events.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
@@ -54,7 +51,7 @@ public sealed class CoopEventCallbacks : IDisposable
     private void OnJoinedAreaHandler(AreaId areaId)
     {
         var isFirst = WukongApi.Client.IsMasterClient;
-        _logger.LogInformation("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
+        logger.LogInformation("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
 
         if (isFirst)
         {

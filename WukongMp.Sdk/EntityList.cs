@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Friflo.Engine.ECS;
-using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk;
 

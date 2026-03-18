@@ -14,20 +14,18 @@ namespace WukongMp.Api;
 
 internal class WukongServerGameEvents : IDisposable
 {
-    private readonly MappedEventManager _mappedEvent;
     private readonly WukongWidgetManager _widgetManager;
     private readonly ILogger _logger;
 
     public WukongServerGameEvents(
-        MappedEventManager mappedEvent,
+        IMappedEventManager mappedEvent,
         WukongWidgetManager widgetManager,
         ILogger logger)
     {
-        _mappedEvent = mappedEvent;
         _widgetManager = widgetManager;
         _logger = logger;
 
-        _mappedEvent.RegisterGameEventHandler<SkipMovieEvent, WukongServerGameEvents>(static (ev, self) =>
+        mappedEvent.RegisterGameEventHandler<SkipMovieEvent, WukongServerGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("Received skip movie event from server, sequence id: {Id}, waiting: {Waiting}/{All}", ev.SequenceId, ev.WaitingPlayers, ev.AllPlayers);
 
@@ -42,7 +40,7 @@ internal class WukongServerGameEvents : IDisposable
             }
         }, this);
 
-        _mappedEvent.RegisterGameEventHandler<BeguilingChantEvent>(static ev =>
+        mappedEvent.RegisterGameEventHandler<BeguilingChantEvent>(static ev =>
         {
             var areaActors = UGameplayStatics.GetAllActorsOfClass<BGUIntervalArea>(GameUtils.GetWorld());
 

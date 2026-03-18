@@ -11,6 +11,7 @@ using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Api.Multiplayer.Serialization;
+using ReadyM.Api.State;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Engine;
@@ -24,6 +25,7 @@ using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
+using INetworkedEntityManager = ReadyM.Api.Multiplayer.ECS.Managers.INetworkedEntityManager;
 
 // ReSharper disable InconsistentNaming
 
@@ -31,14 +33,13 @@ namespace WukongMp.Api;
 
 internal partial class WukongClientRpcCallbacks : IDisposable
 {
-    protected readonly RelaySerializer Serializer;
-    protected readonly IRelayClient RelayClient;
+    private readonly RelaySerializer Serializer;
+    private readonly IRelayClient RelayClient;
     private readonly IClientEcsUpdateLoop _ecsLoop;
-    private readonly MappedEventManager _mappedEvent;
+    private readonly IMappedEventManager _mappedEvent;
     private readonly WukongPlayerState _playerState;
     private readonly WukongAreaState _areaState;
-    private readonly WukongMappingPolicyDirectory _policyDir;
-    private readonly ClientNetworkedEntityManager _netEntity;
+    private readonly INetworkedEntityManager _netEntity;
     private readonly WukongWidgetManager _widgetManager;
     private readonly TimerController _timerController;
     private readonly ILogger _logger;
@@ -47,11 +48,10 @@ internal partial class WukongClientRpcCallbacks : IDisposable
         IClientEcsUpdateLoop ecsLoop,
         WukongPlayerState playerState,
         WukongAreaState areaState,
-        MappedEventManager mappedEvent,
-        WukongMappingPolicyDirectory policyDir,
+        IMappedEventManager mappedEvent,
         RelaySerializer serializer,
         IRelayClient relayClient,
-        ClientNetworkedEntityManager netEntity,
+        INetworkedEntityManager netEntity,
         WukongWidgetManager widgetManager,
         TimerController timerController,
         ILogger logger)
@@ -62,7 +62,6 @@ internal partial class WukongClientRpcCallbacks : IDisposable
         _netEntity = netEntity;
         _playerState = playerState;
         _areaState = areaState;
-        _policyDir = policyDir;
         _ecsLoop = ecsLoop;
         _widgetManager = widgetManager;
         _timerController = timerController;

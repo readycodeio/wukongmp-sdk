@@ -84,7 +84,7 @@ internal static class PatchHp
 #endif
             var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
             if (netId.HasValue)
-                return DI.Instance.ClientOwnership_.OwnsEntity(netId.Value);
+                return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
         }
 
         var cheatsEnabled = DI.Instance.AreaState.CurrentArea.HasValue && DI.Instance.AreaState.CurrentArea.Value.Room.CheatsAllowed;
@@ -541,7 +541,7 @@ internal class PatchSetTeamIDInCS
             return;
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(__instance);
-        if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+        if (!tamerEntity.HasValue || !DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             return;
 
         tamerEntity.Value.SetTeam(new TeamComponent { TeamId = NewTeamID });
@@ -569,7 +569,7 @@ internal class PatchBeAttackedDeadEventSettlementProcess
             return true;
 
         // Owned entity - do not trigger unit dead
-        if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+        if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             return false;
 
         return true;
@@ -595,7 +595,7 @@ internal static class PatchTamerStatResetOnBeginPlay
         if (!tamerEntity.HasValue)
             return; // not found
 
-        if (!DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+        if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             return; // not owned
 
         ref var localTamer = ref tamerEntity.Value.GetLocalTamer();

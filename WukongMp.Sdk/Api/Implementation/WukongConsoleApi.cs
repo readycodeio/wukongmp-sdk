@@ -2,20 +2,14 @@
 using ReadyM.Api.Command;
 using WukongMp.Api.Command;
 
-namespace WukongMp.Sdk.Api;
+namespace WukongMp.Sdk.Api.Implementation;
 
 /// API for the in-game console (F1).
-public sealed class WukongConsoleApi
+internal sealed class WukongConsoleApi(
+    WukongCommandConsole console,
+    ConsoleCommandRegistry commandRegistry
+) : IWukongConsoleApi
 {
-    private readonly WukongCommandConsole console;
-    private readonly ConsoleCommandRegistry commandRegistry;
-    
-    internal WukongConsoleApi(WukongCommandConsole console, ConsoleCommandRegistry commandRegistry)
-    {
-        this.console = console;
-        this.commandRegistry = commandRegistry;
-    }
-    
     public void AddCommands(IEnumerable<IConsoleCommandRegistration> registrations)
     {
         commandRegistry.AddCommands(registrations);
@@ -25,5 +19,4 @@ public sealed class WukongConsoleApi
     {
         console.AddMessage(message);
     }
-
 }

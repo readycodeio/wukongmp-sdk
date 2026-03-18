@@ -209,7 +209,7 @@ internal class PatchTamerUnload
         if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.DeleteDestroyedTamersFromEcs))
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 tamerEntity.Value.SetTamer(null, false);
                 Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.GetMeta().NetId);
@@ -233,7 +233,7 @@ internal class PatchOnAIPerceptionSetting
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -255,7 +255,7 @@ internal class PatchOnAIPauseBT
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -277,7 +277,7 @@ internal class PatchOnEnableCanSetBT
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -299,7 +299,7 @@ internal class PatchOnAIPauseFsm
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 Logging.LogDebug("Setting FSM pause state to {IsPause} for tamer {Tamer}", IsPause, tamerEntity.Value.GetTamer().Guid);
                 tamerEntity.Value.GetTamer().HasFsmPaused = IsPause;
@@ -334,7 +334,7 @@ internal class PatchOnEnableCanUpdateHatred
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
 
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 return true;
         }
 
@@ -437,7 +437,7 @@ internal class PatchMovementTickForMonster
                 return;
 
             ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
-            if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 anim.MoveAiType = (byte)___MovementData.MoveAIType;
             }
@@ -545,7 +545,7 @@ internal class PatchPatrolTick
                 return true;
 
             ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
-            if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
                 anim.AnimationPlayRate = dumperTruckTriggerData.ControlledUnit.Mesh.GetPlayRate();
                 return true;

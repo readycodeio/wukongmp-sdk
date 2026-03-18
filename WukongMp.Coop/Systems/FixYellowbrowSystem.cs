@@ -1,5 +1,4 @@
-﻿using Friflo.Engine.ECS;
-using WukongMp.Sdk;
+﻿using WukongMp.Sdk;
 using WukongMp.Sdk.Api;
 using WukongMp.Sdk.Entities;
 

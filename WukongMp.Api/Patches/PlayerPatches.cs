@@ -160,7 +160,7 @@ internal class PatchPlayerLocomotion
                         return;
                     }
 
-                    if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+                    if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     {
                         ref var anim = ref tamerEntity.Value.GetAnimation();
                         anim.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
@@ -233,7 +233,7 @@ internal class PatchBasicData
 
                 ref var anim = ref tamerEntity.Value.GetAnimation();
 
-                if (DI.Instance.ClientOwnership_.OwnsEntity(tamerEntity.Value.Entity))
+                if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 {
                     anim.MoveSpeedLevel = (byte)__instance.MoveSpeedLevel;
                     anim.MoveSpeedState = (byte)__instance.MoveSpeedState;

@@ -10,9 +10,9 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Sdk.Entities;
 
-namespace WukongMp.Sdk.Api;
+namespace WukongMp.Sdk.Api.Implementation;
 
-public sealed class WukongEventApi : IDisposable
+internal sealed class WukongEventApi : IDisposable, IWukongEventApi
 {
     private readonly ClientState _clientState;
     private readonly WukongPlayerPawnState _pawnState;
@@ -20,7 +20,7 @@ public sealed class WukongEventApi : IDisposable
     private readonly WukongEventBus _eventBus;
     private readonly GameplayEventRouter _eventRouter;
 
-    internal WukongEventApi(ClientState clientState, WukongPlayerPawnState pawnState, WukongPlayerState playerState, WukongEventBus eventBus, GameplayEventRouter eventRouter)
+    public WukongEventApi(ClientState clientState, WukongPlayerPawnState pawnState, WukongPlayerState playerState, WukongEventBus eventBus, GameplayEventRouter eventRouter)
     {
         _clientState = clientState;
         _pawnState = pawnState;

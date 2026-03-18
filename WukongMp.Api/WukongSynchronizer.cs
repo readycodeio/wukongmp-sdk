@@ -16,7 +16,7 @@ namespace WukongMp.Api;
 internal sealed class WukongSynchronizer(
     ClientState state,
     ClientWukongArchetypeRegistration wukongArchetype,
-    NetworkedEntityManager netManager,
+    INetworkedEntityManager netManager,
     ClientOwnershipManager clientOwnership,
     JobRegistry jobRegistry,
     INetworkedComponentRegistry netComponentRegistry,

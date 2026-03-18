@@ -37,6 +37,7 @@ internal static class ShimUtils
 
     internal static void InitRelayPlayShim(IDependencyContainer container, string shimPath)
     {
+        // TODO: Refactor
         // var shimSerializer = new ShimSerializer(container.TextSerializer);
         //
         // container.Logger.LogInformation("Loading shim recording from: {Path}", shimPath);
@@ -51,15 +52,15 @@ internal static class ShimUtils
     internal static void InitRelayRecordShim(IDependencyContainer container, string host, int port, Guid userGuid, bool noDisconnect, string shimPath)
     {
         var shimDbPath = Path.GetDirectoryName(shimPath);
-        
+
         var relayClient = CreateRelayNetworked(container, host, port, userGuid, noDisconnect, shimDbPath);
 
         AttachRecording(container, host, port, noDisconnect);
-        
+
         container.Resolve<HotSwappableRelayClient>().Attach(relayClient);
         container.Resolve<ShimAutoStarter>().ShouldAutoRecord = true;
     }
-    
+
     private static void AttachRecording(IDependencyContainer container, string host, int port, bool noDisconnect)
     {
         var recordGuid = new Guid("deadbeef-3333-3333-3333-deadbeef0001");
@@ -84,7 +85,7 @@ internal static class ShimUtils
     internal static void InitRelay(DI container, string host, int port, Guid userGuid, bool noDisconnect)
     {
         var relayClient = CreateRelayNetworked(container, host, port, userGuid, noDisconnect);
-        
+
         container.RelayClient.Attach(relayClient);
     }
 }

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using CSharpModBase;
 using DryIoc;
-using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api;
 using WukongMp.Api;
@@ -26,10 +23,6 @@ public abstract class ModBase : ICSharpModExV2
             => false;
 #endif
 
-    private List<BaseSystem> _systems = [];
-
-    private SystemGroup _systemGroup = null!;
-
     public void Init()
     {
         Initialize(WukongApi.Services);
@@ -44,48 +37,26 @@ public abstract class ModBase : ICSharpModExV2
         foreach (var type in eligible)
         {
             Logger.LogDebug("Found mod system: {SystemType}", type.FullName);
-            DI.Instance.Container.Register(typeof(ModSystemBase), type, serviceKey: Name);
+            DI.Instance.Container.Register(typeof(ModSystemBase), type);
         }
-
-        _systems = DI.Instance.Container
-            .ResolveMany<ModSystemBase>(serviceKey: Name)
-            .Select(x => x.ToBaseSystem())
-            .ToList();
-
-        _systemGroup = new SystemGroup(Name);
-
-        foreach (var system in _systems)
-        {
-            _systemGroup.Add(system);
-        }
-
-        _systemGroup.SetMonitorPerf(true);
-        DI.Instance.World.SystemRoot.Add(_systemGroup);
     }
 
     protected virtual void Initialize(IDependencyContainer services) { }
 
-    public virtual void DeInit()
-    {
-        // TODO: Replace with proper DI container
-        _systems.ForEach(x =>
-        {
-            if (x is IDisposable disposable)
-                disposable.Dispose();
-        });
-
-        if (_patcher.IsPatched)
-        {
-            _patcher.Unpatch();
-        }
-    }
-
     public virtual void LateInit()
     {
-        _patcher = new WukongPatcher(this.GetType().Assembly, this.Name, DI.Instance.Prelude);
+        _patcher = new WukongPatcher(GetType().Assembly, Name, DI.Instance.Prelude);
         if (!_patcher.IsPatched)
         {
             _patcher.Patch();
+        }
+    }
+
+    public virtual void DeInit()
+    {
+        if (_patcher.IsPatched)
+        {
+            _patcher.Unpatch();
         }
     }
 

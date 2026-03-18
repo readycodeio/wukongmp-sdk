@@ -10,6 +10,7 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -19,10 +20,10 @@ public readonly struct ReadyMainCharacter
         IReadyConvertable<ReadyMainCharacter, ReadyActor>,
         IReadyConvertable<ReadyMainCharacter, ReadyObject>
 {
-    private WukongClientApi Api { get; }
+    private IWukongClientApi Api { get; }
     private MainCharacterEntity Entity { get; }
 
-    internal ReadyMainCharacter(WukongClientApi api, Entity entity)
+    internal ReadyMainCharacter(IWukongClientApi api, Entity entity)
     {
         Api = api;
         Entity = new MainCharacterEntity(entity);
@@ -48,10 +49,10 @@ public readonly struct ReadyMainCharacter
         return new ReadyMainCharacter(character.Api, character.Entity);
     }
 
-    ReadyMainCharacter IReadyEntity<ReadyMainCharacter>.Construct(WukongClientApi api, Entity entity)
+    ReadyMainCharacter IReadyEntity<ReadyMainCharacter>.Construct(IWukongClientApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyMainCharacter>.Deconstruct(out WukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyMainCharacter>.Deconstruct(out IWukongClientApi api, out Entity entity)
     {
         api = Api;
         entity = Entity;

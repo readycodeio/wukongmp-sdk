@@ -1,5 +1,6 @@
 using Friflo.Engine.ECS;
 using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -7,10 +8,10 @@ public readonly struct ReadyCharacter : IReadyEntity<ReadyCharacter>,
     IReadyConvertable<ReadyCharacter, ReadyActor>,
     IReadyConvertable<ReadyCharacter, ReadyObject>
 {
-    internal WukongClientApi Api { get; }
+    internal IWukongClientApi Api { get; }
     internal Entity Entity { get; }
 
-    internal ReadyCharacter(WukongClientApi api, Entity entity)
+    internal ReadyCharacter(IWukongClientApi api, Entity entity)
     {
         Api = api;
         Entity = entity;
@@ -28,10 +29,10 @@ public readonly struct ReadyCharacter : IReadyEntity<ReadyCharacter>,
     public static explicit operator ReadyCharacter(ReadyActor actor)
         => new(actor.Api, actor.Entity);
 
-    ReadyCharacter IReadyEntity<ReadyCharacter>.Construct(WukongClientApi api, Entity entity)
+    ReadyCharacter IReadyEntity<ReadyCharacter>.Construct(IWukongClientApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyCharacter>.Deconstruct(out WukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyCharacter>.Deconstruct(out IWukongClientApi api, out Entity entity)
     {
         api = Api;
         entity = Entity;

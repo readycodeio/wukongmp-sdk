@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using b1;
 using BtlShare;
 using CSharpModBase;
@@ -6,6 +7,7 @@ using DryIoc;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
+using PreludeLib.Runtime.Backend;
 using PreludeLib.Runtime.Backend.WeaverCallback;
 using PreludeLib.Runtime.Public;
 using ReadyM.Api.Command;
@@ -27,7 +29,6 @@ using ReadyM.Api.Multiplayer.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Api.State;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Mapping.Policies;
 using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.State;
@@ -61,9 +62,11 @@ internal sealed class DI : IDependencyContainer
 {
     public static DI Instance { get; } = new();
 
-    public Container Container { get; } = new(rules =>
+    // TODO: Dispose it on game lifetime end.
+    public IContainer Container { get; private set; } = new Container(rules =>
         rules.With(FactoryMethod.ConstructorWithResolvableArguments)
-            .WithDefaultReuse(Reuse.Singleton)); // TODO: Dispose it on game lifetime end.
+            .WithDefaultReuse(Reuse.Singleton)
+            .WithUseInterpretation());
 
     public void RegisterSingleton<TService, TImplementation>(TImplementation instance) where TImplementation : TService
         => Container.RegisterInstance<TService>(instance);
@@ -84,31 +87,23 @@ internal sealed class DI : IDependencyContainer
     public NetworkSessionStats NetworkSessionStats => Container.Resolve<NetworkSessionStats>();
 
     public Store World => Container.Resolve<Store>();
-    public ClientWukongArchetypeRegistration WukongArchetype => Container.Resolve<ClientWukongArchetypeRegistration>();
-    public ArchetypeEventRouter ArchetypeEvent => Container.Resolve<ArchetypeEventRouter>();
     public IClientEcsUpdateLoop EcsLoop => Container.Resolve<IClientEcsUpdateLoop>();
 
     public WukongMappingPolicyDirectory MappingPolicyDir => Container.Resolve<WukongMappingPolicyDirectory>();
-    public MappedEntityManager<AActor> MappedEntity => Container.Resolve<MappedEntityManager<AActor>>();
-    public MappedEventManager MappedEvent => Container.Resolve<MappedEventManager>();
+    public IMappedEntityManager<AActor> MappedEntity => Container.Resolve<IMappedEntityManager<AActor>>();
+    public IMappedEventManager MappedEvent => Container.Resolve<IMappedEventManager>();
     public IComponentFieldMappingRegistry MappedField => Container.Resolve<IComponentFieldMappingRegistry>();
 
-    public RelaySerializer Serializer => Container.Resolve<RelaySerializer>();
     public HotSwappableRelayClient RelayClient => Container.Resolve<HotSwappableRelayClient>();
-    public NetworkedEntityManager NetEntity => Container.Resolve<NetworkedEntityManager>();
 
     public ClientState State => Container.Resolve<ClientState>();
-    public ClientNetworkedEntityManager ClientNetEntity => Container.Resolve<ClientNetworkedEntityManager>();
 
-    public TextRelaySerializer TextSerializer => Container.Resolve<TextRelaySerializer>();
-
-    public ClientOwnershipManager ClientOwnership_ => Container.Resolve<ClientOwnershipManager>();
+    public ClientOwnershipManager ClientOwnership => Container.Resolve<ClientOwnershipManager>();
 
     public WukongAreaState AreaState => Container.Resolve<WukongAreaState>();
     public WukongPlayerState PlayerState => Container.Resolve<WukongPlayerState>();
     public WukongPawnState PawnState => Container.Resolve<WukongPawnState>();
     public WukongPlayerModeManager ModeManager => Container.Resolve<WukongPlayerModeManager>();
-    public WukongPlayerPawnState PlayerPawnState => Container.Resolve<WukongPlayerPawnState>();
 
     public WukongClientRpcCallbacks ClientRpc => Container.Resolve<WukongClientRpcCallbacks>();
     public WukongServerRpcCallbacks ServerRpc => Container.Resolve<WukongServerRpcCallbacks>();
@@ -116,20 +111,13 @@ internal sealed class DI : IDependencyContainer
     public GameplayConfiguration GameplayConfiguration => Container.Resolve<GameplayConfiguration>();
     public GameplayEventRouter GameplayEventRouter => Container.Resolve<GameplayEventRouter>();
 
-    public WukongNetworkLogger NetLogger => Container.Resolve<WukongNetworkLogger>();
-    public INetworkedComponentRegistry NetComponentRegistry => Container.Resolve<INetworkedComponentRegistry>();
-    public JobRegistry JobRegistry => Container.Resolve<JobRegistry>();
     public WukongConnectionManager Connection => Container.Resolve<WukongConnectionManager>();
     public FreeCameraManager FreeCameraManager => Container.Resolve<FreeCameraManager>();
-    public FreeCameraController FreeCameraController => Container.Resolve<FreeCameraController>();
 
     public WukongCommandConsole CommandConsole => Container.Resolve<WukongCommandConsole>();
-    public WukongChatter Chatter => Container.Resolve<WukongChatter>();
     public WukongInputManager WukongInputManager => Container.Resolve<WukongInputManager>();
     public RuntimePrelude Prelude => Container.Resolve<RuntimePrelude>();
     public WukongWidgetManager WidgetManager => Container.Resolve<WukongWidgetManager>();
-
-    public HotSwappableRelayClient ShimRecorderRelayClient => Container.Resolve<HotSwappableRelayClient>();
 
     // public ShimController ShimController => _container.Resolve<ShimController>();
     // public ShimPlaybackRelayClient ShimPlaybackRelayClient => _container.Resolve<ShimPlaybackRelayClient>();
@@ -138,8 +126,16 @@ internal sealed class DI : IDependencyContainer
 
     public void InitLogging(ILoggerFactory loggerFactory)
     {
+        if (Container.IsRegistered<ILoggerFactory>())
+            return;
+
         Container.RegisterInstance(loggerFactory);
-        Container.RegisterInstance(LoggerFactory.CreateLogger(""));
+        var loggerFactoryMethod = typeof(LoggerFactory).GetMethod("CreateLogger")!;
+
+        Container.Register(typeof(ILogger<>), made: Made.Of(
+            req => loggerFactoryMethod.MakeGenericMethod(req.Parent.ImplementationType),
+            ServiceInfo.Of<LoggerFactory>()));
+        Container.RegisterInstance(LoggerFactory.CreateLogger("Default"));
     }
 
     public void Init()
@@ -148,7 +144,7 @@ internal sealed class DI : IDependencyContainer
         Container.RegisterInstance<IDependencyContainer>(Instance);
 
         Container.RegisterInstance(new NetworkSessionStats(LaunchParameters.Instance.UserGuid.ToString(), LaunchParameters.Instance.Region));
-        Container.RegisterInstance(InputManager.Instance);
+        Container.RegisterInstanceMany(InputManager.Instance);
 
         Container.Register<IAreaComponentRegistration, WukongAreaRegistration>();
         Container.Register<IAreaComponentRegistry, AreaComponentRegistry>();
@@ -160,7 +156,7 @@ internal sealed class DI : IDependencyContainer
         // This is fragile and should be fixed
         Container.Register<IArchetypeRegistration, DefaultAreaArchetypeRegistration>();
         Container.Register<IArchetypeRegistration, DefaultPlayerArchetypeRegistration>();
-        Container.Register<IArchetypeRegistration, ClientWukongArchetypeRegistration>();
+        Container.RegisterMany<ClientWukongArchetypeRegistration>(nonPublicServiceTypes: true);
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistration, WukongNetworkedComponentRegistration>();
@@ -175,12 +171,14 @@ internal sealed class DI : IDependencyContainer
         Container.Register<IRelaySerializerRegistration, WukongSerializerRegistration>();
         Container.Register<RelaySerializer>();
 
-        Container.RegisterMany<HotSwappableRelayClient>();
-
+#if DEBUG
+        Container.RegisterMany<HotSwappableRelayClient>(nonPublicServiceTypes: true);
+#else
+        Container.Register<IRelayClient, RelayClient>();
+#endif
         Container.Register<IBlobClient, HttpBlobClient>();
 
-        Container.Register<NetworkedEntityManager>();
-        Container.Register<RelayClientService>();
+        Container.Register<INetworkedEntityManager, NetworkedEntityManager>();
         Container.Register<WukongEventBus>();
         Container.Register<GameplayConfiguration>();
         Container.Register<GameplayEventRouter>();
@@ -194,7 +192,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<JobRegistry>();
         Container.Register<ClientState>();
         Container.Register<WukongPlayerState>();
-        Container.Register<IEntityManager, ClientNetworkedEntityManager>();
+        Container.Register<IClientEntityManager, ClientNetworkedEntityManager>();
 
         Container.Register<FreeCameraManager>();
         Container.Register<WukongWidgetManager>();
@@ -206,10 +204,10 @@ internal sealed class DI : IDependencyContainer
         Container.Register<NetworkedOwnershipManager>();
         Container.Register<ClientOwnershipManager>();
         Container.Register<WukongSynchronizer>();
-        Container.Register<GameStateSynchronizer>();
+        Container.Register<CutsceneStatusSynchronizer>();
         Container.Register<WukongAreaState>();
         Container.Register<WukongPlayerModeManager>();
-        Container.Register<WukongConnectionManager>();
+        Container.Register<WukongConnectionManager>(); // TODO: Implicit lifetime and start/stop semantics
         Container.Register<WukongNetworkLogger>();
         Container.Register<DataSideChannel>();
 
@@ -220,10 +218,10 @@ internal sealed class DI : IDependencyContainer
         Container.Register<IMappingEventPolicyFactory, SpawnSummonEventEventPolicyFactory>();
         Container.Register<IMappingEventPolicyFactory, AlwaysPropagatesEventPolicyFactory>();
 
-        Container.RegisterMany<MappingPolicyDirectory>(serviceTypeCondition: type => type.IsInterface);
+        Container.RegisterMany<MappingPolicyDirectory>(serviceTypeCondition: type => type.IsInterface, nonPublicServiceTypes: true);
         Container.RegisterInitializer<IMappingPolicyDirectory>((iface, s) =>
         {
-            var mapping = (MappingPolicyDirectory) iface;
+            var mapping = (MappingPolicyDirectory)iface;
 
             var ownership = s.Resolve<ClientOwnershipManager>();
             var area = s.Resolve<WukongAreaState>();
@@ -245,8 +243,8 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<IMappedEventManager, MappedEventManager>();
         Container.Register<WukongMappingPolicyDirectory>();
-        Container.RegisterMany<ComponentFieldMappingRegistry>(serviceTypeCondition: type => type.IsInterface);
-        Container.RegisterInitializer<IComponentFieldMappingRegistry>((iface, _) => { RegisterDataMappings((ComponentFieldMappingRegistry) iface); });
+        Container.RegisterMany<ComponentFieldMappingRegistry>(serviceTypeCondition: type => type.IsInterface, nonPublicServiceTypes: true);
+        Container.RegisterInitializer<IComponentFieldMappingRegistry>((iface, _) => { RegisterDataMappings((ComponentFieldMappingRegistry)iface); });
 
         Container.Register<IWukongSaveRelay, WukongSaveRelay>();
 
@@ -284,14 +282,14 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<NetworkPingMonitor>();
         Container.Register<PingWidgetUpdater>();
-        Container.Register<RuntimeWeaverBackend>();
+        Container.Register<IRuntimeBackend, RuntimeWeaverBackend>();
         Container.Register<RuntimePrelude>();
 
         Container.Register<WukongSystemRegistration>();
         Container.Register<TestsRunner>();
 
         Logger.LogDebug("DI Initialized");
-#if SHIMMING
+#if SHIMMING // TODO: restore functionality
         // ---
 
         var shimLogger = LoggerFactory.CreateLogger("Shim");
@@ -362,6 +360,23 @@ internal sealed class DI : IDependencyContainer
 #endif
     }
 
+    public void StartHostedServices()
+    {
+        Container = Container.WithNoMoreRegistrationAllowed();
+
+        var hostedServices = Container.GetServiceRegistrations()
+            .Where(r => typeof(IScopedLifetime).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
+            .Where(r => r.Factory.Reuse is null or SingletonReuse)
+            .OrderBy(r => r.FactoryRegistrationOrder)
+            .GroupBy(r => r.FactoryRegistrationOrder, (_, r) => r.First());
+
+        foreach (var r in hostedServices)
+        {
+            var service = (IScopedLifetime)Container.Resolve(r.ServiceType, r.OptionalServiceKey);
+            service.OnScopeStart();
+        }
+    }
+
     private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
     {
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Velocity.In<BUC_ABPCharacterData>(),
@@ -418,7 +433,7 @@ internal sealed class DI : IDependencyContainer
             {
                 foreach (var (attr, value) in attrs)
                 {
-                    ctx.SetFloatValue((EBGUAttrFloat) attr, value);
+                    ctx.SetFloatValue((EBGUAttrFloat)attr, value);
                 }
             }, (ref main, ctx) =>
             {
@@ -427,7 +442,7 @@ internal sealed class DI : IDependencyContainer
                 foreach (var attr in Constants.SyncedAttributes)
                 {
                     var value = ctx.GetFloatValue(attr);
-                    attrs[(byte) attr] = value;
+                    attrs[(byte)attr] = value;
                 }
 
                 main.Attributes = new AttributesState(attrs);
@@ -439,21 +454,21 @@ internal sealed class DI : IDependencyContainer
                 if (!Constants.SyncedAttributes.Contains(ctx.Attr))
                     return;
 
-                ctx.Container.SetFloatValue(ctx.Attr, attrs.GetAttribute((byte) ctx.Attr));
+                ctx.Container.SetFloatValue(ctx.Attr, attrs.GetAttribute((byte)ctx.Attr));
             }, (ref main, ctx) =>
             {
                 if (!Constants.SyncedAttributes.Contains(ctx.Attr))
                     return;
 
                 var value = ctx.Container.GetFloatValue(ctx.Attr);
-                main.Attributes = main.Attributes.WithSetAttribute((byte) ctx.Attr, value);
+                main.Attributes = main.Attributes.WithSetAttribute((byte)ctx.Attr, value);
 
                 // Some attributes have derivatives (computed properties, if you will)
                 var calc = AttrMgr<EBGUAttrFloat, float>.getInstance().GetCalc(ctx.Attr, out var valid);
                 if (valid)
                 {
                     var finalVal = ctx.Container.GetFloatValue(calc.finalVal);
-                    main.Attributes = main.Attributes.WithSetAttribute((byte) calc.finalVal, finalVal);
+                    main.Attributes = main.Attributes.WithSetAttribute((byte)calc.finalVal, finalVal);
                 }
             });
 

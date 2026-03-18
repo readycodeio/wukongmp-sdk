@@ -11,7 +11,7 @@ using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Gamemode;
 
-internal class CoopSaveManager(ILogger logger)
+public sealed class CoopSaveManager(ILogger logger)
 {
     public void OnNewGameLoad(UObject worldContext)
     {

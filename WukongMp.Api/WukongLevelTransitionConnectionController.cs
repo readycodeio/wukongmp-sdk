@@ -2,33 +2,28 @@
 using System.Diagnostics;
 using b1;
 using ReadyM.Api.Idents;
+using ReadyM.Relay.Client;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-internal class WukongLevelTransitionConnectionController : IDisposable
+internal class WukongLevelTransitionConnectionController(
+    WukongEventBus eventBus,
+    WukongConnectionManager connection
+) : IScopedLifetime, IDisposable
 {
-    private readonly WukongEventBus _eventBus;
-    private readonly WukongConnectionManager _connection;
-
-    public WukongLevelTransitionConnectionController(
-        WukongEventBus eventBus,
-        WukongConnectionManager connection
-    )
+    public void OnScopeStart()
     {
-        _eventBus = eventBus;
-        _connection = connection;
-        
-        _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
-        _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
+        eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
+        eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
     }
-    
+
     public void Dispose()
     {
-        _eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevel;
-        _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
+        eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevel;
+        eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
     }
-    
+
     private void OnBeginPlayGameplayLevel()
     {
         var areaId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
@@ -36,11 +31,12 @@ internal class WukongLevelTransitionConnectionController : IDisposable
         {
             throw new InvalidCastException("AreaId is greater than ushort max value");
         }
-        _connection.JoinArea(new AreaId((ushort)areaId));
+
+        connection.JoinArea(new AreaId((ushort)areaId));
     }
-    
+
     private void OnEndPlayGameplayLevel()
     {
-        _connection.LeaveArea();
+        connection.LeaveArea();
     }
 }

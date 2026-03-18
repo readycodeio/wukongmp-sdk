@@ -1,10 +1,10 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using b1;
 using b1.BGW;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
@@ -19,7 +19,16 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-internal class WukongClientGameEvents : IDisposable
+internal class WukongClientGameEvents(
+    IMappedEventManager mappedEvent,
+    WukongMappingPolicyDirectory policyDir,
+    ClientState state,
+    WukongPawnState pawnState,
+    WukongPlayerState playerState,
+    WukongWidgetManager widgetManager,
+    GameplayEventRouter eventRouter,
+    ILogger logger
+) : IScopedLifetime
 {
     // ReSharper disable once InconsistentNaming
     private static readonly MethodInfo PlayDBC_ByType = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType");
@@ -27,32 +36,17 @@ internal class WukongClientGameEvents : IDisposable
     // ReSharper disable once InconsistentNaming
     private static readonly MethodInfo EndAllDBC = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "EndAllDBC");
 
-    private readonly WukongMappingPolicyDirectory _policyDir;
-    private readonly ClientState _state;
-    private readonly WukongPawnState _pawnState;
-    private readonly WukongPlayerState _playerState;
-    private readonly WukongWidgetManager _widgetManager;
-    private readonly GameplayEventRouter _eventRouter;
-    private readonly ILogger _logger;
+    private readonly WukongMappingPolicyDirectory _policyDir = policyDir;
+    private readonly ClientState _state = state;
+    private readonly WukongPawnState _pawnState = pawnState;
+    private readonly WukongPlayerState _playerState = playerState;
+    private readonly WukongWidgetManager _widgetManager = widgetManager;
+    private readonly GameplayEventRouter _eventRouter = eventRouter;
 
-    public WukongClientGameEvents(
-        IMappedEventManager mappedEvent,
-        WukongMappingPolicyDirectory policyDir,
-        ClientState state,
-        WukongPawnState pawnState,
-        WukongPlayerState playerState,
-        WukongWidgetManager widgetManager,
-        GameplayEventRouter eventRouter,
-        ILogger logger)
+    private readonly ILogger _logger = logger;
+
+    public void OnScopeStart()
     {
-        _policyDir = policyDir;
-        _state = state;
-        _pawnState = pawnState;
-        _playerState = playerState;
-        _widgetManager = widgetManager;
-        _eventRouter = eventRouter;
-        _logger = logger;
-
         mappedEvent.RegisterGameEventHandler<ExitPhantomRushEvent, WukongClientGameEvents>(static (ev, self) =>
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);

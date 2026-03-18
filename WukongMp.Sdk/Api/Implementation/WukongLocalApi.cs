@@ -3,21 +3,14 @@ using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Api.UI;
 
-namespace WukongMp.Sdk.Api;
+namespace WukongMp.Sdk.Api.Implementation;
 
-public sealed class WukongLocalApi
+internal sealed class WukongLocalApi(
+    WukongEventBus eventBus,
+    WukongWidgetManager widgetManager,
+    IClientEcsUpdateLoop ecsUpdateLoop
+) : IWukongLocalApi
 {
-    private readonly WukongEventBus eventBus;
-    private readonly WukongWidgetManager widgetManager;
-    private readonly IClientEcsUpdateLoop ecsUpdateLoop;
-
-    internal WukongLocalApi(WukongEventBus eventBus, WukongWidgetManager widgetManager, IClientEcsUpdateLoop ecsUpdateLoop)
-    {
-        this.eventBus = eventBus;
-        this.widgetManager = widgetManager;
-        this.ecsUpdateLoop = ecsUpdateLoop;
-    }
-
     /// Is the game currently in a gameplay level, as opposed to a menu or the like.
     public bool IsGameplayLevel
         => eventBus.IsGameplayLevel;

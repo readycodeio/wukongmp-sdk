@@ -14,16 +14,14 @@ internal sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTame
         {
             var tamerEntity = new TamerEntity(entity);
 
-            if (!localTamerComp.IsTamerSynced || tamerEntity.Tamer == null || tamerEntity.Tamer.CurrentRef == null || tamerEntity.Pawn == null)
+            if (localTamerComp is { IsTamerSynced: true, IsMonsterActive: true, IsLocallySpawned: false, HasPendingUnload: true }
+                && !tamerComp.ForceKeepSpawned)
             {
-                return;
-            }
-
-            if (localTamerComp is { IsMonsterActive: true, IsLocallySpawned: false, HasPendingUnload: true }
-                && !tamerComp.ForceKeepSpawned
-                && tamerEntity.Tamer.CurrentRef.Phase != ETamerPhase.Loaded)
-            {
-                tamerEntity.Tamer.CurrentRef.TurnBack2Loaded();
+                var tamer = tamerEntity.Tamer;
+                if (tamer != null && tamer.CurrentRef != null && tamer.CurrentRef.Phase != ETamerPhase.Loaded && tamerEntity.Pawn != null)
+                {
+                    tamer.CurrentRef.TurnBack2Loaded();
+                }
             }
         });
     }

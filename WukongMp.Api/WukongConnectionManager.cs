@@ -9,48 +9,38 @@ using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.State;
 
 namespace WukongMp.Api;
 
 [Obsolete]
 internal class WukongConnectionManager : IDisposable
 {
-    public RelayClientService RelayClientService { get; }
-    public IRelayClient RelayClient { get; }
-    public WukongAreaState AreaState { get; }
-    public WukongPlayerState PlayerState { get; }
-
-    private readonly ClientState _state;
     private readonly ILogger _logger;
+    private readonly RelayClientService _relayClientService;
+    private readonly IRelayClient _relayClient;
+    private readonly ClientState _state;
 
-    public PlayerId? PlayerId => PlayerState.LocalPlayerId;
-
-    public bool IsRunning
-        => RelayClientService.IsRunning;
-
-    public bool RequestedConnect
-        => RelayClient.RequestedConnect;
-
-    public AreaId? RequestedAreaId
-        => RelayClient.RequestedAreaId;
-
-    public WukongConnectionManager(RelayClientService relayClientService,
+    public WukongConnectionManager(IRelayClient relayClient,
         ClientState state,
-        WukongPlayerState playerState,
-        WukongAreaState areaState,
         ILogger logger)
     {
-        RelayClientService = relayClientService;
-        RelayClient = relayClientService.RelayClient;
-        AreaState = areaState;
-        PlayerState = playerState;
+        _relayClient = relayClient;
         _state = state;
         _logger = logger;
+        _relayClientService = new RelayClientService(relayClient, logger);
 
-        _state.OnConnected += OnConnectedHandler;
-        _state.OnDisconnected += OnDisconnectedHandler;
+        state.OnConnected += OnConnectedHandler;
+        state.OnDisconnected += OnDisconnectedHandler;
     }
+
+    public bool IsRunning
+        => _relayClientService.IsRunning;
+
+    public bool RequestedConnect
+        => _relayClient.RequestedConnect;
+
+    private AreaId? RequestedAreaId
+        => _relayClient.RequestedAreaId;
 
     private static void OnConnectedHandler(PlayerId player, Entity entity)
     {
@@ -65,17 +55,17 @@ internal class WukongConnectionManager : IDisposable
 
     public void Start()
     {
-        RelayClientService.Start();
+        _relayClientService.Start();
     }
 
     public void Stop()
     {
-        RelayClientService.Stop();
+        _relayClientService.Stop();
     }
 
     public void Connect()
     {
-        RelayClient.RequestConnect();
+        _relayClient.RequestConnect();
     }
 
     public void Disconnect()
@@ -83,24 +73,24 @@ internal class WukongConnectionManager : IDisposable
         if (RequestedAreaId != null)
             LeaveArea();
         if (RequestedConnect)
-            RelayClient.RequestDisconnect();
+            _relayClient.RequestDisconnect();
     }
 
     public void JoinArea(AreaId areaId)
     {
-        RelayClient.RequestJoinArea(areaId);
+        _relayClient.RequestJoinArea(areaId);
     }
 
     public void LeaveArea()
     {
-        RelayClient.RequestLeaveArea();
+        _relayClient.RequestLeaveArea();
     }
 
     public void Reconnect()
     {
         Logging.LogInformation("Attempting to reconnect...");
 
-        RelayClient.Scheduler.Schedule(async void (context, self) =>
+        _relayClient.Scheduler.Schedule(async void (_, self) =>
         {
             try
             {

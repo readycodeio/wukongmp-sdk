@@ -25,7 +25,10 @@ $modFilesCore = @(
     "Nito.AsyncEx.Context.dll",
     "Nito.AsyncEx.Tasks.dll",
     "Nito.Disposables.dll",
-    "Superpower.dll"
+    "Superpower.dll",
+    "DryIoc.dll",
+    "System.Reflection.Emit.dll",
+    "System.Reflection.Emit.ILGeneration.dll",
     "BouncyCastle.Cryptography.dll",
     "HttpMachine.dll",
     "IHttpMachine.dll"

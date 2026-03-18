@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using b1;
 using b1.BGW;
 using CSharpModBase;
 using CSharpModBase.Input;
 using DryIoc;
+using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using PreludeLib.Compat;
 using ReadyM.Api;
 using UnrealEngine.Engine;
 using WukongMp.Api;
@@ -77,17 +81,17 @@ internal class Mod : ModBase
 //                 LaunchParameters.Instance.RecordShimFile!
 //             );
 //         else
-            ShimUtils.InitRelay(
-                DI.Instance,
-                LaunchParameters.Instance.ServerIp!,
-                LaunchParameters.Instance.ServerPort!.Value,
-                LaunchParameters.Instance.UserGuid,
+        ShimUtils.InitRelay(
+            DI.Instance,
+            LaunchParameters.Instance.ServerIp!,
+            LaunchParameters.Instance.ServerPort!.Value,
+            LaunchParameters.Instance.UserGuid,
 #if NO_DISCONNECT
                 true
 #else
-                false
+            false
 #endif
-            );
+        );
 
         _apiPatcher = new WukongPatcher(typeof(ExceptionPatches).Assembly, "WukongMp.Api", DI.Instance.Prelude);
 
@@ -96,6 +100,7 @@ internal class Mod : ModBase
 
     public override void LateInit()
     {
+        Logger.LogInformation("LateInit WukongMP SDK");
         base.LateInit();
 
         if (!_apiPatcher.IsPatched)
@@ -107,17 +112,27 @@ internal class Mod : ModBase
             return;
         }
 
-        Logger.LogInformation("Init WukongMP mod");
+        AddModSystemsToEcs();
         DebugUtils.LogUe4SsPresence();
+        DetectSdkVersion();
+        RegisterKeybinds(DI.Instance);
+        DI.Instance.StartHostedServices();
+        StartRelayClient();
+    }
 
+    private void DetectSdkVersion()
+    {
         // InformationalVersion from assembly def
         var trueModVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
 
         Logger.LogInformation("Mod version: {Version}", trueModVersion);
         Logger.LogInformation("Process name: {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
-        DI.Instance.WidgetManager.SetModVersion(trueModVersion);
+        DI.Instance.WidgetManager.SetSdkVersion(trueModVersion);
+    }
 
+    private void StartRelayClient()
+    {
         // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
         Utils.TryRunOnGameThread(() =>
         {
@@ -137,8 +152,30 @@ internal class Mod : ModBase
                 DI.Instance.Connection.Connect();
             }
         });
+    }
 
-        RegisterKeybinds(DI.Instance);
+    private void AddModSystemsToEcs()
+    {
+        var assemblySystems = DI.Instance.Container
+            .ResolveMany<ModSystemBase>()
+            .GroupBy(x => x.GetType().Assembly)
+            .ToDictionary(x => x.Key, x => x.Select(s => s.ToBaseSystem()).ToList());
+
+        foreach (var (assembly, systems) in assemblySystems)
+        {
+            var groupName = assembly.GetName().Name;
+            var systemGroup = new SystemGroup(groupName);
+
+            foreach (var system in systems)
+            {
+                systemGroup.Add(system);
+            }
+
+#if DEBUG
+            systemGroup.SetMonitorPerf(true);
+#endif
+            DI.Instance.World.SystemRoot.Add(systemGroup);
+        }
     }
 
     private void RegisterKeybinds(DI di)
@@ -230,7 +267,7 @@ internal class Mod : ModBase
             Logger.LogDebug("Alt + C");
             try
             {
-                di.NetLogger.DumpDebugInfo();
+                di.Resolve<WukongNetworkLogger>().DumpDebugInfo();
                 di.RelayClient.LogEventStats();
             }
             catch (Exception ex)
@@ -238,7 +275,7 @@ internal class Mod : ModBase
                 Logger.LogError(ex, "Error while dumping debug info");
             }
         });
-        
+
         DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.N, () =>
         {
             Logger.LogDebug("Alt + N");
@@ -281,7 +318,6 @@ internal class Mod : ModBase
             }
         });
 #endif
-
         di.InputManager.RegisterKeyBind(Key.K, () =>
         {
             Logger.LogDebug("K");
