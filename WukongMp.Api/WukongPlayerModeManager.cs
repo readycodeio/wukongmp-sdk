@@ -40,6 +40,7 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
             freeCameraManager.EnterFreeCameraMode();
             eventRouter.RaiseOnLocalPlayerChangedSpectator(true);
         }
+
         SetSpectatorCollisionEnabled(mainEntity, false);
 
         var playerId = mainComp.PlayerId;
@@ -48,7 +49,7 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
             var playerEntity = new PlayerEntity(playerEntry.PlayerEntity);
             eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
-        
+
         return true;
     }
 
@@ -69,7 +70,7 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
             freeCameraManager.LeaveFreeCameraMode();
             eventRouter.RaiseOnLocalPlayerChangedSpectator(false);
         }
-        
+
         var playerId = mainComp.PlayerId;
         if (state.PlayerEntries.TryGetValue(playerId, out var playerEntry))
         {
@@ -130,6 +131,8 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
 
         if (enable)
         {
+            _lastValidLocation = mainEntity.Pawn.GetActorLocation(); // TODO: Only in co-op
+
             mainEntity.Pawn.CharacterMovement.GravityScale = _gravityScale;
             PlayerUtils.TeleportLocalPlayer(mainEntity, _lastValidLocation, new FRotator(), false);
         }
@@ -141,6 +144,7 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
             var offset = new FVector(0, 0, mainEntity.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * -3);
             mainEntity.Pawn.SetActorLocation(_lastValidLocation + offset, false, out _, true);
         }
+
         mainEntity.Pawn.CharacterMovement.StopMovementImmediately();
         PlayerUtils.SetCollisionEnabled(mainEntity.Pawn, enable);
         return true;

@@ -12,6 +12,7 @@ using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.UI;
@@ -253,7 +254,6 @@ internal class WukongClientGameEvents(
 
             if (ev.Teleport)
             {
-                // NOTE(api): Moved from WukongChatter
                 PlayerUtils.TeleportLocalPlayerToCurrentRebirthPoint(mainEntity);
             }
 

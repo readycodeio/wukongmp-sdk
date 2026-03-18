@@ -97,6 +97,11 @@ namespace WukongMp.Api.WukongUtils
         {
             var transform = GetCurrentRebirthPointTransform();
             TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), true);
+
+            if (DI.Instance.FreeCameraManager.IsInFreeCameraMode)
+            {
+                DI.Instance.FreeCameraManager.SetFreeCameraActorTransform(transform);
+            }
         }
 
         public static void TeleportLocalPlayerToRebirthPoint(MainCharacterEntity mainEntity, int rebirthPointId)

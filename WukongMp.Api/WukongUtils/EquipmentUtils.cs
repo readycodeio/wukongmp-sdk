@@ -43,10 +43,14 @@ internal static class EquipmentUtils
         var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
         foreach (var (position, item) in equipment.GetItems())
         {
-            // FIXME: Wukong can have no head if no headwear is equipped
-            if (item != 0 && (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item))
+            var toWear = item;
+
+            if (toWear == 0 && actual.MapDefaultEquip.TryGetValue(position.ToGame(), out var defaultItem))
+                toWear = defaultItem;
+
+            if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != toWear)
             {
-                OnChangeEquipReal(equipComp, position.ToGame(), item);
+                OnChangeEquipReal(equipComp, position.ToGame(), toWear);
             }
         }
     }
@@ -61,8 +65,11 @@ internal static class EquipmentUtils
             return;
 
         var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
-        // FIXME: Wukong can have no head if no headwear is equipped
-        if (item != 0 && (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item))
+
+        if (item == 0 && actual.MapDefaultEquip.TryGetValue(position.ToGame(), out var defaultItem))
+            item = defaultItem;
+
+        if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item)
         {
             OnChangeEquipReal(equipComp, position.ToGame(), item);
         }
