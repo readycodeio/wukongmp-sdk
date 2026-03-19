@@ -12,7 +12,7 @@ public sealed class ScaleMonsterHpSystem(ILogger logger) : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {
-        var areaPlayers = WukongApi.Client.AreaPlayers.Count;
+        var areaPlayers = WukongApi.Sync.AreaPlayers.Count;
 
         var targetScaling = 1 + 1.5f * (areaPlayers - 1);
 
@@ -23,12 +23,12 @@ public sealed class ScaleMonsterHpSystem(ILogger logger) : ModSystemBase
         }
 #endif
 
-        foreach (var tamer in WukongApi.Client.AllTamers)
+        foreach (var tamer in WukongApi.Sync.AllTamers)
         {
             if (!tamer.IsMonsterActive)
                 continue;
 
-            if (tamer.Owner != WukongApi.Client.LocalPlayerId)
+            if (tamer.Owner != WukongApi.Sync.LocalPlayerId)
                 continue;
 
             if (tamer.HpMaxBase.Equals(0f, Constants.FloatComparisonTolerance) && tamer.Hp.Equals(0, Constants.FloatComparisonTolerance))

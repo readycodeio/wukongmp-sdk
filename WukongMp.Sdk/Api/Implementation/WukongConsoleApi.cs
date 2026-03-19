@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ReadyM.Api.Command;
+﻿using ReadyM.Api.Command;
 using WukongMp.Api.Command;
 
 namespace WukongMp.Sdk.Api.Implementation;
@@ -10,7 +9,7 @@ internal sealed class WukongConsoleApi(
     ConsoleCommandRegistry commandRegistry
 ) : IWukongConsoleApi
 {
-    public void AddCommands(IEnumerable<IConsoleCommandRegistration> registrations)
+    public void AddCommands(params IConsoleCommandRegistration[] registrations)
     {
         commandRegistry.AddCommands(registrations);
     }

@@ -7,6 +7,6 @@ namespace WukongMp.Sdk;
 public interface IReadyEntity<out TSelf>
     where TSelf : struct, IReadyEntity<TSelf>
 {
-    internal TSelf Construct(IWukongClientApi api, Entity type);
-    internal void Deconstruct(out IWukongClientApi api, out Entity entity);
+    internal TSelf Construct(IWukongSynchronizationApi api, Entity type);
+    internal void Deconstruct(out IWukongSynchronizationApi api, out Entity entity);
 }

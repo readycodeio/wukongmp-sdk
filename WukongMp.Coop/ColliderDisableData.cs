@@ -45,9 +45,9 @@ public sealed class ColliderDisableData(ILogger logger)
         {
             collider.SetActorEnableCollision(true);
 
-            if (WukongApi.Client.LocalMainCharacter != null)
+            if (WukongApi.Sync.LocalMainCharacter != null)
             {
-                var player = WukongApi.Client.LocalMainCharacter.Value.Pawn;
+                var player = WukongApi.Sync.LocalMainCharacter.Value.Pawn;
                 var traceLength = player.CapsuleComponent.GetScaledCapsuleRadius() + 20f;
                 var lineTraceDir = GetLineTraceDir_SafeNormal2D(player);
                 var playerLocation = player.BGUGetActorLocation();

@@ -62,7 +62,7 @@ public sealed class CoopWidgetManager : IScopedLifetime, IDisposable
 
     private void OnLoadingScreenClose()
     {
-        var isOnGameplayLevel = WukongApi.Client.CurrentAreaId != null;
+        var isOnGameplayLevel = WukongApi.Sync.CurrentAreaId != null;
         WukongApi.Widgets.ShowInGameWidgets(isOnGameplayLevel);
 
         if (isOnGameplayLevel)
@@ -74,7 +74,7 @@ public sealed class CoopWidgetManager : IScopedLifetime, IDisposable
 
     private void RefreshWidgets()
     {
-        _coopStatusWidget.Value.SetConnectedCount(WukongApi.Client.AreaPlayers.Count);
+        _coopStatusWidget.Value.SetConnectedCount(WukongApi.Sync.AreaPlayers.Count);
         _coopStatusWidget.Value.SetMaxConnectedCount(Constants.MaxPlayers);
     }
 
@@ -85,7 +85,7 @@ public sealed class CoopWidgetManager : IScopedLifetime, IDisposable
 
     private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area)
     {
-        if (WukongApi.Client.TryGetPlayerInfoById(playerId, out var nickname, out _))
+        if (WukongApi.Sync.TryGetPlayerInfoById(playerId, out var nickname, out _))
         {
             _coopStatusWidget.Value.AddPlayer(nickname);
             RefreshWidgets();
@@ -98,7 +98,7 @@ public sealed class CoopWidgetManager : IScopedLifetime, IDisposable
 
     private void OnOtherPlayerOutsideArea(PlayerId playerId, AreaId area)
     {
-        if (WukongApi.Client.TryGetPlayerInfoById(playerId, out var nickname, out _))
+        if (WukongApi.Sync.TryGetPlayerInfoById(playerId, out var nickname, out _))
         {
             _coopStatusWidget.Value.RemovePlayer(nickname);
             RefreshWidgets();
@@ -107,8 +107,8 @@ public sealed class CoopWidgetManager : IScopedLifetime, IDisposable
 
     private void OnJoinedArea(AreaId area)
     {
-        if (WukongApi.Client.LocalPlayerId.HasValue &&
-            WukongApi.Client.TryGetPlayerInfoById(WukongApi.Client.LocalPlayerId.Value, out var nickname, out _))
+        if (WukongApi.Sync.LocalPlayerId.HasValue &&
+            WukongApi.Sync.TryGetPlayerInfoById(WukongApi.Sync.LocalPlayerId.Value, out var nickname, out _))
         {
             _coopStatusWidget.Value.AddPlayer(nickname);
             RefreshWidgets();
@@ -121,8 +121,8 @@ public sealed class CoopWidgetManager : IScopedLifetime, IDisposable
 
     private void OnLeftArea(AreaId area)
     {
-        if (WukongApi.Client.LocalPlayerId.HasValue &&
-            WukongApi.Client.TryGetPlayerInfoById(WukongApi.Client.LocalPlayerId.Value, out var nickname, out _))
+        if (WukongApi.Sync.LocalPlayerId.HasValue &&
+            WukongApi.Sync.TryGetPlayerInfoById(WukongApi.Sync.LocalPlayerId.Value, out var nickname, out _))
         {
             _coopStatusWidget.Value.RemovePlayer(nickname);
             RefreshWidgets();

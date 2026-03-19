@@ -20,10 +20,10 @@ public readonly struct ReadyMainCharacter
         IReadyConvertable<ReadyMainCharacter, ReadyActor>,
         IReadyConvertable<ReadyMainCharacter, ReadyObject>
 {
-    private IWukongClientApi Api { get; }
-    private MainCharacterEntity Entity { get; }
+    private IWukongSynchronizationApi Api { get; }
+    internal MainCharacterEntity Entity { get; }
 
-    internal ReadyMainCharacter(IWukongClientApi api, Entity entity)
+    internal ReadyMainCharacter(IWukongSynchronizationApi api, Entity entity)
     {
         Api = api;
         Entity = new MainCharacterEntity(entity);
@@ -49,10 +49,10 @@ public readonly struct ReadyMainCharacter
         return new ReadyMainCharacter(character.Api, character.Entity);
     }
 
-    ReadyMainCharacter IReadyEntity<ReadyMainCharacter>.Construct(IWukongClientApi api, Entity entity)
+    ReadyMainCharacter IReadyEntity<ReadyMainCharacter>.Construct(IWukongSynchronizationApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyMainCharacter>.Deconstruct(out IWukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyMainCharacter>.Deconstruct(out IWukongSynchronizationApi api, out Entity entity)
     {
         api = Api;
         entity = Entity;

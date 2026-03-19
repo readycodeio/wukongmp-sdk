@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>14</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WukongMp.Sdk\WukongMp.Sdk.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="UnrealEngine.Runtime">
+        <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

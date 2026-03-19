@@ -1,13 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
+using Friflo.Engine.ECS;
 using LiteNetLib;
+using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Api.State;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
+using WukongMp.Api;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
@@ -16,14 +25,15 @@ using WukongMp.Sdk.Entities;
 namespace WukongMp.Sdk.Api.Implementation;
 
 /// API for networked gameplay features.
-internal sealed class WukongClientApi(
+internal sealed class WukongSynchronizationApi(
     Store world,
     ClientState state,
     WukongAreaState areaState,
     WukongPlayerState playerState,
     WukongMappingPolicyDirectory mappingDir,
+    IMappedEventManager mappedEvent,
     IRelayClient relayClient
-) : IWukongClientApi
+) : IWukongSynchronizationApi
 {
     // ---
 
@@ -102,46 +112,11 @@ internal sealed class WukongClientApi(
         TamerUtils.DiscoverTamers();
     }
 
-    // public ReadyMainCharacter CreateMainCharacter(Vector3 location, Vector3 rotation, int teamId)
-    // {
-    //     var entity = entityManager.CreateAreaEntity(wukongArchetype.MainCharacterArchetype, b =>
-    //     {
-    //         b.Add(new TransformComponent
-    //         {
-    //             Position = location,
-    //             Rotation = rotation
-    //         });
-    //         b.Add(new TeamComponent
-    //         {
-    //             TeamId = teamId
-    //         });
-    //     });
-    //     return new ReadyMainCharacter(this, entity);
-    // }
-    //
-    // public ReadyTamer CreateTamer(Vector3 location, Vector3 rotation, TamerKind tamerKind, int teamId)
-    // {
-    //     var entity = entityManager.CreateAreaEntity(wukongArchetype.TamerArchetype, b =>
-    //     {
-    //         var guid = Guid.NewGuid();
-    //         var unitPath = UnitPathUtils.GetUnitPathName(tamerKind);
-    //         b.Add(new TamerComponent()
-    //         {
-    //             Guid = guid.ToString(),
-    //             UnitPath = unitPath,
-    //         });
-    //         b.Add(new TeamComponent
-    //         {
-    //             TeamId = teamId
-    //         });
-    //         b.Add(new TransformComponent
-    //         {
-    //             Position = location,
-    //             Rotation = rotation
-    //         });
-    //     });
-    //     return new ReadyTamer(this, entity);
-
-
-    // }
+    public void SpawnEnemy(TamerKind kind, Vector3 position)
+    {
+        if (LocalMainCharacter.HasValue && kind.Name != null)
+        {
+            mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(LocalMainCharacter.Value.Entity, kind.Name, 1, 2, position.ToFVector()), LocalMainCharacter.Value.Entity.Entity);
+        }
+    }
 }

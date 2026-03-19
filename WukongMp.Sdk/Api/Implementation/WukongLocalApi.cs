@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using ReadyM.Relay.Client;
+using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.UI;
 
@@ -15,15 +16,30 @@ internal sealed class WukongLocalApi(
     public bool IsGameplayLevel
         => eventBus.IsGameplayLevel;
 
-    /// Shows a message on the player's screen.
+    /// Shows a message on the player's screen, that persists until HideInfoMessage is called.
     public void ShowInfoMessage(string message)
     {
         widgetManager.ShowInfoMessage(message);
     }
+    
+    /// Shows a message on the player's screen.
+    /// The message will automatically disappear after the given timeout.
+    public void ShowInfoMessage(string message, float timeoutSeconds)
+    {
+        ShowInfoMessage(message);
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay((int)(timeoutSeconds * 1000));
+            ecsUpdateLoop.Scheduler.Schedule(_ => { widgetManager.HideInfoMessage(); });
+        });
+    }
+
+    public void HideInfoMessage() => widgetManager.HideInfoMessage();
+    public void AddChatMessage(string message, FLinearColor color)
+    {
+        widgetManager.AddSystemChatMessage(message, color);
+    }
 
     /// Waits for the given task to complete in a synchronous manner.
-    public void Wait(Task task)
-    {
-        ecsUpdateLoop.Wait(task);
-    }
+    public void Wait(Task task) => ecsUpdateLoop.Wait(task);
 }

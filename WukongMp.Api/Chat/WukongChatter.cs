@@ -89,20 +89,23 @@ internal class WukongChatter : IDisposable
             }
         }
 
-        var senderNickname = isServer ? "Server" : message.Nickname!;
         var translatedMessage = message.Message;
         if (isServer)
         {
             translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message.Message, BuiltinTexts.Culture)!, [.. message.Placeholders]);
+            _widgetManager.AddSystemChatMessage(translatedMessage, messageColor);
+        }
+        else
+        {
+            _widgetManager.AddChatMessage(message.Nickname!, translatedMessage, messageColor);
         }
 
-        _logger.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message.Message, senderNickname);
-        _widgetManager.AddChatMessage(isServer, senderNickname, translatedMessage, messageColor);
+        _logger.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message.Message, isServer ? "Server" : message.Nickname!);
     }
 
     public void AddLocalServerMessage(string message, params string[] placeholders)
     {
         var translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message, BuiltinTexts.Culture)!, [.. placeholders]);
-        _widgetManager.AddChatMessage(true, "Server", translatedMessage, Constants.ServerMessageColor);
+        _widgetManager.AddSystemChatMessage(translatedMessage, Constants.ServerMessageColor);
     }
 }

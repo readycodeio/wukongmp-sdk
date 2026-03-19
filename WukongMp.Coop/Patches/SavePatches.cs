@@ -67,7 +67,7 @@ public class PatchGSWindowsPlatformSaveGame
 {
     private static bool Prefix(List<byte> InSaveData, string SlotName, string UserId, ref bool __result)
     {
-        if (!WukongApi.Client.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
         if (!SlotName.StartsWith("ArchiveSaveFile"))

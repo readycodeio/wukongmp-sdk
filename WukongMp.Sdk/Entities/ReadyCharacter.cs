@@ -8,10 +8,10 @@ public readonly struct ReadyCharacter : IReadyEntity<ReadyCharacter>,
     IReadyConvertable<ReadyCharacter, ReadyActor>,
     IReadyConvertable<ReadyCharacter, ReadyObject>
 {
-    internal IWukongClientApi Api { get; }
+    internal IWukongSynchronizationApi Api { get; }
     internal Entity Entity { get; }
 
-    internal ReadyCharacter(IWukongClientApi api, Entity entity)
+    internal ReadyCharacter(IWukongSynchronizationApi api, Entity entity)
     {
         Api = api;
         Entity = entity;
@@ -29,10 +29,10 @@ public readonly struct ReadyCharacter : IReadyEntity<ReadyCharacter>,
     public static explicit operator ReadyCharacter(ReadyActor actor)
         => new(actor.Api, actor.Entity);
 
-    ReadyCharacter IReadyEntity<ReadyCharacter>.Construct(IWukongClientApi api, Entity entity)
+    ReadyCharacter IReadyEntity<ReadyCharacter>.Construct(IWukongSynchronizationApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyCharacter>.Deconstruct(out IWukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyCharacter>.Deconstruct(out IWukongSynchronizationApi api, out Entity entity)
     {
         api = Api;
         entity = Entity;

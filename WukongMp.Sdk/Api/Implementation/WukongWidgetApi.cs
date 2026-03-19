@@ -5,8 +5,8 @@ namespace WukongMp.Sdk.Api.Implementation;
 
 internal sealed class WukongWidgetApi(WukongWidgetManager widgetManager) : IWukongWidgetApi
 {
-    public void AddChatMessage(bool isSystemMessage, string sender, string message, FLinearColor color)
-        => widgetManager.AddChatMessage(isSystemMessage, sender, message, color);
+    public void AddChatMessage(string message, FLinearColor color)
+        => widgetManager.AddSystemChatMessage(message, color);
 
     public void ToggleCommandVisibility()
         => widgetManager.ToggleChatVisibility();

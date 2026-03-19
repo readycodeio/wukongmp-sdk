@@ -10,13 +10,13 @@ public readonly struct EntityList<T> : IEnumerable<T>
 {
     public struct Enumerator : IEnumerator<T>
     {
-        private readonly WukongClientApi _api;
+        private readonly WukongSynchronizationApi _api;
         private readonly EntityList _entityList;
 
         private int _index;
         private T _current;
 
-        internal Enumerator(WukongClientApi api, EntityList entityList)
+        internal Enumerator(WukongSynchronizationApi api, EntityList entityList)
         {
             _api = api;
             _entityList = entityList;
@@ -47,10 +47,10 @@ public readonly struct EntityList<T> : IEnumerable<T>
         public readonly void Dispose() { }
     }
 
-    private readonly WukongClientApi _api;
+    private readonly WukongSynchronizationApi _api;
     private readonly EntityList _entityList;
 
-    internal EntityList(WukongClientApi api, EntityList entityList)
+    internal EntityList(WukongSynchronizationApi api, EntityList entityList)
     {
         _api = api;
         _entityList = entityList;

@@ -7,10 +7,10 @@ namespace WukongMp.Sdk.Entities;
 /// A ReadyActor is an entity that has a mapped Pawn.
 public readonly struct ReadyActor : IReadyEntity<ReadyActor>, IReadyConvertable<ReadyActor, ReadyObject>
 {
-    internal IWukongClientApi Api { get; }
+    internal IWukongSynchronizationApi Api { get; }
     internal Entity Entity { get; }
 
-    internal ReadyActor(IWukongClientApi api, Entity entity)
+    internal ReadyActor(IWukongSynchronizationApi api, Entity entity)
     {
         Api = api;
         Entity = entity;
@@ -22,10 +22,10 @@ public readonly struct ReadyActor : IReadyEntity<ReadyActor>, IReadyConvertable<
     public static explicit operator ReadyActor(ReadyObject obj)
         => new(obj.Api, obj.Entity);
 
-    ReadyActor IReadyEntity<ReadyActor>.Construct(IWukongClientApi api, Entity entity)
+    ReadyActor IReadyEntity<ReadyActor>.Construct(IWukongSynchronizationApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyActor>.Deconstruct(out IWukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyActor>.Deconstruct(out IWukongSynchronizationApi api, out Entity entity)
     {
         api = Api;
         entity = Entity;

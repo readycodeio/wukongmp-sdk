@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using Friflo.Engine.ECS;
-using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api;
@@ -10,18 +8,18 @@ namespace WukongMp.Api;
 internal sealed class GameplayEventRouter // TODO: Export these in public API with object-like wrappers
 {
     public event Action<CultureInfo>? OnLanguageChanged;
-    public event Action<Entity, Entity>? OnUnitDead;
+    public event Action<Entity, Entity?>? OnUnitDead;
     public event Action<Entity>? OnMonsterSpawned;
     public event Action<bool>? OnLocalPlayerChangedSpectator;
     public event Action<PlayerEntity, MainCharacterEntity>? OnPlayerChangedTeam;
     public event Action? OnLocalPlayerBeforeRebirth;
-    
+
     public void RaiseOnLanguageChanged(CultureInfo culture)
     {
         OnLanguageChanged?.Invoke(culture);
     }
 
-    public void RaiseOnUnitDead(Entity victimEntity, Entity attackerEntity)
+    public void RaiseOnUnitDead(Entity victimEntity, Entity? attackerEntity)
     {
         OnUnitDead?.Invoke(victimEntity, attackerEntity);
     }

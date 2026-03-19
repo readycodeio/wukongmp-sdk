@@ -35,9 +35,7 @@ public sealed class Mod : ModBase
         Logger.LogInformation("Initializing {PluginName} v{PluginVersion}", Name, Version);
 
         // TODO: Should this be done by registering IConsoleCommandRegistration in DI? 
-        WukongApi.Console.AddCommands([
-            new CoopCommandRegistration(),
-        ]);
+        WukongApi.Console.AddCommands(new CoopCommandRegistration());
 
         WukongApi.Configuration.IsSupportMultiLockEnabled = true;
         WukongApi.Configuration.IsStrongDamageImmueEnabled = false;

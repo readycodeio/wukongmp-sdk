@@ -22,4 +22,5 @@ public interface IWukongEventApi
     event Action<PlayerId, AreaId>? OnOtherPlayerOutsideArea;
     event Action<PlayerId>? OnConnected;
     event Action<PlayerId, DisconnectReason>? OnDisconnected;
+    event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
 }

@@ -9,19 +9,19 @@ public class FixYellowbrowSystem : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {
-        if (!WukongApi.Client.InRoom || !WukongApi.Client.LocalMainCharacter.HasValue)
+        if (!WukongApi.Sync.InRoom || !WukongApi.Sync.LocalMainCharacter.HasValue)
             return;
 
-        foreach (var tamer in WukongApi.Client.AllTamers)
+        foreach (var tamer in WukongApi.Sync.AllTamers)
         {
             // FIXME(api): Define Guid constants somewhere
             // FIXME(api): Rename `Guid` to something less confusing
             if (tamer is { IsMonsterActive: true, Hp: < 1f, Guid: "UGuid.LYS.HuangMei.Big" })
             {
-                if (WukongApi.Client.LocalMainCharacter.Value.IsDead)
+                if (WukongApi.Sync.LocalMainCharacter.Value.IsDead)
                 {
                     // rebirth player
-                    WukongApi.Client.LocalMainCharacter.Value.RebirthInPlace();
+                    WukongApi.Sync.LocalMainCharacter.Value.RebirthInPlace();
                 }
             }
         }

@@ -13,15 +13,15 @@ public sealed class DetectSoftlockSystem(ILogger logger) : ModSystemBase
     
     protected override void OnUpdate(UpdateTick tick)
     {
-        if (!WukongApi.Client.IsMasterClient)
+        if (!WukongApi.Sync.IsMasterClient)
             return;
 
         var players = 0;
         _waitingSequencesIds.Clear();
 
-        foreach (var mainCharacter in WukongApi.Client.AllMainCharacters)
+        foreach (var mainCharacter in WukongApi.Sync.AllMainCharacters)
         {
-            if (mainCharacter.AreaId != WukongApi.Client.CurrentAreaId)
+            if (mainCharacter.AreaId != WukongApi.Sync.CurrentAreaId)
                 continue;
 
             players++;
@@ -35,7 +35,7 @@ public sealed class DetectSoftlockSystem(ILogger logger) : ModSystemBase
         if (players == 0)
             return;
 
-        var localMainCharacter = WukongApi.Client.LocalMainCharacter;
+        var localMainCharacter = WukongApi.Sync.LocalMainCharacter;
         if (!localMainCharacter.HasValue)
         {
             logger.LogWarning("Skipping respawn, no local main character entity");

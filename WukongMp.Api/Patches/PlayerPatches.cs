@@ -336,7 +336,7 @@ internal class PatchOnUnitDead
         BUS_DeadComp __instance,
         bool __state,
         EDeadReason DeadReason,
-        AActor Attacker,
+        AActor? Attacker,
         int DmgID = -1,
         int StiffLevel = -1,
         bool bIsDotDmg = false,
@@ -358,6 +358,12 @@ internal class PatchOnUnitDead
 
         if (owner is not BGUCharacterCS ownerCharacter)
             return;
+
+        Entity? attackerEntity = null;
+        if (Attacker is BGUCharacterCS attackerCharacter)
+        {
+            DI.Instance.PawnState.TryGetEntityByCharacter(attackerCharacter, out attackerEntity);
+        }
 
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(ownerCharacter, out var entity) &&
             DI.Instance.MappingPolicyDir.ForEvent<UnitDeadEvent>().CanGameEventNotifyEcs(entity.Value))
@@ -382,6 +388,7 @@ internal class PatchOnUnitDead
 
                 // TODO: Check required before call to this
                 DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType), entity.Value.Entity);
+                DI.Instance.GameplayEventRouter.RaiseOnUnitDead(entity.Value, attackerEntity);
                 Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", state.PlayerId);
             }
 
@@ -392,14 +399,8 @@ internal class PatchOnUnitDead
         {
             var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload, tamerEntity.Value.Entity);
+            DI.Instance.GameplayEventRouter.RaiseOnUnitDead(tamerEntity.Value, attackerEntity);
             Logging.LogDebug("Entity {Entity} died, sending UnitDead event", tamerEntity.Value.GetNetId());
-        }
-
-        if (Attacker is BGUCharacterCS attackerCharacter &&
-            DI.Instance.PawnState.TryGetEntityByCharacter(ownerCharacter, out var victimEntity) &&
-            DI.Instance.PawnState.TryGetEntityByCharacter(attackerCharacter, out var attackerEntity))
-        {
-            DI.Instance.GameplayEventRouter.RaiseOnUnitDead(victimEntity.Value, attackerEntity.Value);
         }
     }
 }

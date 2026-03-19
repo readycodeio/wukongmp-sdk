@@ -77,7 +77,8 @@ internal sealed class WukongWidgetManager : IDisposable
 
     #region Public API
 
-    public void AddChatMessage(bool isSystemMessage, string sender, string message, FLinearColor color) => _chatWidget.Value.AddMessageWithColor(!isSystemMessage, sender, message, color);
+    public void AddSystemChatMessage(string message, FLinearColor color) => _chatWidget.Value.AddMessageWithColor(false, "", message, color);
+    public void AddChatMessage(string sender, string message, FLinearColor color) => _chatWidget.Value.AddMessageWithColor(true, sender, message, color);
 
     public void ToggleCommandVisibility() => _commandConsoleWidget.Value.ToggleVisibility();
 

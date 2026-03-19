@@ -14,10 +14,10 @@ public readonly struct ReadyTamer
         IReadyConvertable<ReadyTamer, ReadyActor>,
         IReadyConvertable<ReadyTamer, ReadyObject>
 {
-    internal IWukongClientApi Api { get; }
+    internal IWukongSynchronizationApi Api { get; }
     internal Entity Entity { get; }
 
-    internal ReadyTamer(IWukongClientApi api, Entity entity)
+    internal ReadyTamer(IWukongSynchronizationApi api, Entity entity)
     {
         Api = api;
         Entity = entity;
@@ -53,10 +53,10 @@ public readonly struct ReadyTamer
         return new(actor.Api, actor.Entity);
     }
 
-    ReadyTamer IReadyEntity<ReadyTamer>.Construct(IWukongClientApi api, Entity entity)
+    ReadyTamer IReadyEntity<ReadyTamer>.Construct(IWukongSynchronizationApi api, Entity entity)
         => new(api, entity);
 
-    void IReadyEntity<ReadyTamer>.Deconstruct(out IWukongClientApi api, out Entity entity)
+    void IReadyEntity<ReadyTamer>.Deconstruct(out IWukongSynchronizationApi api, out Entity entity)
     {
         api = Api;
         entity = Entity;

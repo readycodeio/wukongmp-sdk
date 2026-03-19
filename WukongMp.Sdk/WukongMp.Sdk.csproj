@@ -48,4 +48,11 @@
         </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="order.txt" />
+      <Content Include="order.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>

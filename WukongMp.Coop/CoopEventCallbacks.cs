@@ -50,13 +50,13 @@ public sealed class CoopEventCallbacks(ILogger logger) : IScopedLifetime, IDispo
 
     private void OnJoinedAreaHandler(AreaId areaId)
     {
-        var isFirst = WukongApi.Client.IsMasterClient;
+        var isFirst = WukongApi.Sync.IsMasterClient;
         logger.LogInformation("Joined area {AreaId}, is master client: {IsMasterClient}", areaId, isFirst);
 
         if (isFirst)
         {
             // it's enough for 1 player to sync the monsters in the area
-            WukongApi.Client.SyncMonstersInArea();
+            WukongApi.Sync.SyncMonstersInArea();
         }
     }
 }

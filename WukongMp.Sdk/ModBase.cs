@@ -25,8 +25,8 @@ public abstract class ModBase : ICSharpModExV2
 
     public void Init()
     {
-        Initialize(WukongApi.Services);
         ScanForAndRegisterSystems();
+        Initialize(WukongApi.Services);
     }
 
     private void ScanForAndRegisterSystems()
@@ -37,7 +37,7 @@ public abstract class ModBase : ICSharpModExV2
         foreach (var type in eligible)
         {
             Logger.LogDebug("Found mod system: {SystemType}", type.FullName);
-            DI.Instance.Container.Register(typeof(ModSystemBase), type);
+            DI.Instance.Container.RegisterMany([typeof(ModSystemBase), type], type);
         }
     }
 

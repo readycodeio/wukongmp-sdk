@@ -13,9 +13,9 @@ public sealed class RespawnMainCharacterSystem(ILogger logger) : ModSystemBase
         var allDead = true;
         var players = 0;
 
-        foreach (var mainCharacter in WukongApi.Client.AllMainCharacters)
+        foreach (var mainCharacter in WukongApi.Sync.AllMainCharacters)
         {
-            if (mainCharacter.AreaId != WukongApi.Client.CurrentAreaId)
+            if (mainCharacter.AreaId != WukongApi.Sync.CurrentAreaId)
                 continue;
 
             players++;
@@ -27,7 +27,7 @@ public sealed class RespawnMainCharacterSystem(ILogger logger) : ModSystemBase
         if (players == 0)
             return;
 
-        var localMainCharacter = WukongApi.Client.LocalMainCharacter;
+        var localMainCharacter = WukongApi.Sync.LocalMainCharacter;
         if (!localMainCharacter.HasValue)
         {
             logger.LogWarning("Skipping respawn, no local main character entity");
@@ -37,9 +37,9 @@ public sealed class RespawnMainCharacterSystem(ILogger logger) : ModSystemBase
         // if all players are dead, respawn the local player
         if (players > 0 && allDead && !localMainCharacter.Value.IsRespawning)
         {
-            logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, WukongApi.Client.LocalPlayerId);
+            logger.LogDebug("All {Players} players are dead, respawning player {Player}", players, WukongApi.Sync.LocalPlayerId);
 
-            var furthestRebirthPoint = WukongApi.Client.AllMainCharacters
+            var furthestRebirthPoint = WukongApi.Sync.AllMainCharacters
                 .Select(mainCharacter => mainCharacter.RebirthPointId)
                 .Prepend(0)
                 .Max();

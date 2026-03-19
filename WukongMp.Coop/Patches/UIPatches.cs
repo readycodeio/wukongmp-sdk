@@ -52,12 +52,12 @@ public static class PatchStartGameUiCoop
                     UiUtils.ShowTip(BuiltinTexts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
-                else if (!WukongApi.Client.IsConnected)
+                else if (!WukongApi.Sync.IsConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
 
-                    WukongApi.Client.GetDisconnectReasonAndInvoke(reason =>
+                    WukongApi.Sync.GetDisconnectReasonAndInvoke(reason =>
                     {
                         Utils.TryRunOnGameThread(() =>
                         {
@@ -106,7 +106,7 @@ public class PatchShrineRegisterFunc
 
     public static bool Prefix(int FuncId)
     {
-        if (!WukongApi.Client.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
         var interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
@@ -134,7 +134,7 @@ public class PatchInitBloodBarUI
         if (battleInfoExtendDesc == null)
             return false;
 
-        var maybePlayer = WukongApi.Client.GetPlayerEntityByActor(actor);
+        var maybePlayer = WukongApi.Sync.GetPlayerEntityByActor(actor);
         var isPlayer = maybePlayer.HasValue;
         var bloodBarShowType = isPlayer ? EBGUBloodBarShowType.Always : EBGUBloodBarShowType.Change;
 

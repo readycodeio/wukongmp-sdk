@@ -15,7 +15,7 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
 {
     public static bool IsTamer(Entity entity)
         => !entity.IsNull && entity.HasComponent<TamerComponent>();
-    
+
     public static bool TryGetTamer(Entity entity, [NotNullWhen(true)] out TamerEntity? tamerEntity)
     {
         tamerEntity = null;
@@ -25,18 +25,18 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
         tamerEntity = new TamerEntity(entity);
         return true;
     }
-    
+
     public readonly Entity Entity = entity;
-    
+
     public static implicit operator Entity(TamerEntity tamerEntity)
         => tamerEntity.Entity;
-    
+
     public bool IsNull
         => Entity.IsNull;
 
     public ref MetadataComponent GetMeta()
         => ref Entity.GetComponent<MetadataComponent>();
-    
+
     public ref readonly TeamComponent GetTeam()
         => ref Entity.GetComponent<TeamComponent>();
 
@@ -45,16 +45,16 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
 
     public ref NicknameComponent GetNickname()
         => ref Entity.GetComponent<NicknameComponent>();
-    
+
     public bool HasMarker()
         => Entity.HasComponent<MarkerComponent>();
-    
+
     public void AddMarker()
         => Entity.AddComponent<MarkerComponent>();
-    
+
     public ref MarkerComponent GetMarker()
         => ref Entity.GetComponent<MarkerComponent>();
-    
+
     public ref TransformComponent GetTransform()
         => ref Entity.GetComponent<TransformComponent>();
 
@@ -63,19 +63,19 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
 
     public ref LocalTamerComponent GetLocalTamer()
         => ref Entity.GetComponent<LocalTamerComponent>();
-    
+
     public ref HpComponent GetHp()
         => ref Entity.GetComponent<HpComponent>();
 
     public ref AnimationComponent GetAnimation()
         => ref Entity.GetComponent<AnimationComponent>();
-    
+
     public ref MonsterAnimationComponent GetMonsterAnimation()
         => ref Entity.GetComponent<MonsterAnimationComponent>();
 
     public ref readonly MappingComponent<AActor> GetMappingComponent()
         => ref Entity.GetComponent<MappingComponent<AActor>>();
-    
+
     public BUTamerActor? Tamer
     {
         get
@@ -86,19 +86,19 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
             // NOTE(api): This test will always work the same
             // if (!localTamerComp.IsTamerSynced)
             //     return null;
-            
+
             var tamer = mappingComp.GameObject as BUTamerActor;
             if (tamer.IsNullOrDestroyed())
                 return null;
-            
+
             return tamer;
         }
     }
-    
+
     public void SetTamer(AActor? tamer, bool isSynced)
     {
         Entity.Set(new MappingComponent<AActor>(tamer));
-        
+
         ref var localTamerComp = ref GetLocalTamer();
         if (isSynced)
             localTamerComp.IsTamerSynced = true;
@@ -109,16 +109,16 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
         get
         {
             ref var localTamerComp = ref GetLocalTamer();
-            
+
             if (!localTamerComp.IsMonsterActive)
             {
                 return null;
             }
 
             var tamer = Tamer;
-            if (tamer == null)
+            if (tamer.IsNullOrDestroyed())
             {
-                Logging.LogDebug("Tamer is null or destroyed in getPawn");
+                // Logging.LogDebug("Tamer is null or destroyed in getPawn");
                 return null;
             }
 
@@ -126,7 +126,7 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
             return monster.IsNullOrDestroyed() ? null : monster;
         }
     }
-    
+
     public bool IsTamerValid => !Tamer.IsNullOrDestroyed();
 
     public bool Equals(TamerEntity other)
@@ -137,7 +137,7 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
 
     public override int GetHashCode()
         => Entity.GetHashCode();
-    
+
     public static bool operator ==(TamerEntity left, TamerEntity right)
         => left.Entity == right.Entity;
 

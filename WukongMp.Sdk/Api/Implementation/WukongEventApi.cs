@@ -43,6 +43,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         _eventBus.OnEndPlayGameplayLevel += InvokeOnEndPlayGameplayLevel;
         _eventRouter.OnPlayerChangedTeam += InvokeOnPlayerChangedTeam;
         _eventRouter.OnLocalPlayerBeforeRebirth += InvokeOnLocalPlayerBeforeRebirth;
+        _eventRouter.OnUnitDead += InvokeOnUnitDead;
     }
 
     public void Dispose()
@@ -62,6 +63,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         _eventBus.OnEndPlayGameplayLevel -= InvokeOnEndPlayGameplayLevel;
         _eventRouter.OnPlayerChangedTeam -= InvokeOnPlayerChangedTeam;
         _eventRouter.OnLocalPlayerBeforeRebirth -= InvokeOnLocalPlayerBeforeRebirth;
+        _eventRouter.OnUnitDead -= InvokeOnUnitDead;
     }
 
     public event Action? OnBeginPlayGameplayLevel;
@@ -86,6 +88,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
 
     public event Action<PlayerId>? OnConnected;
     public event Action<PlayerId, DisconnectReason>? OnDisconnected;
+    public event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
 
     private void InvokeJoinedArea(AreaId areaId, Entity _)
         => OnJoinedArea?.Invoke(areaId);
@@ -106,10 +109,10 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         => OnOtherPlayerOutsideArea?.Invoke(playerId, areaId);
 
     private void InvokePlayerPawnSpawned(MainCharacterEntity entity, BGUCharacterCS _)
-        => OnPlayerPawnSpawned?.Invoke(new ReadyMainCharacter(WukongApi.Client, entity));
+        => OnPlayerPawnSpawned?.Invoke(new ReadyMainCharacter(WukongApi.Sync, entity));
 
     private void InvokeMainCharacterEntityInitialized(MainCharacterEntity mainCharacterEntity)
-        => OnMainCharacterEntityInitialized?.Invoke(new ReadyMainCharacter(WukongApi.Client, mainCharacterEntity));
+        => OnMainCharacterEntityInitialized?.Invoke(new ReadyMainCharacter(WukongApi.Sync, mainCharacterEntity));
 
     private void InvokeOnBeginPlayGameplayLevel()
         => OnBeginPlayGameplayLevel?.Invoke();
@@ -128,9 +131,17 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
 
     private void InvokeOnPlayerChangedTeam(PlayerEntity playerEntity, MainCharacterEntity mainCharacterEntity)
     {
-        OnPlayerChangedTeam?.Invoke(new ReadyMainCharacter(WukongApi.Client, mainCharacterEntity));
+        OnPlayerChangedTeam?.Invoke(new ReadyMainCharacter(WukongApi.Sync, mainCharacterEntity));
     }
 
     private void InvokeOnLocalPlayerBeforeRebirth()
         => OnLocalPlayerBeforeRebirth?.Invoke();
+
+    private void InvokeOnUnitDead(Entity victim, Entity? attacker)
+    {
+        if (MainCharacterEntity.IsMainCharacter(victim))
+        {
+            OnPlayerDead?.Invoke(new ReadyMainCharacter(WukongApi.Sync, victim), attacker.HasValue ? new ReadyCharacter(WukongApi.Sync, attacker.Value) : null);
+        }
+    }
 }
