@@ -5,7 +5,7 @@ using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class UiUtils
+internal static class UiUtils
 {
     public static void ShowTip(string tip, bool autoHide)
     {
@@ -17,7 +17,7 @@ public static class UiUtils
         });
     }
 
-    private static void HideTip()
+    public static void HideTip()
     {
         Utils.TryRunOnGameThread(() => { GenAGPage.FadeOutPage(39, nameof(ShowTip)); });
     }

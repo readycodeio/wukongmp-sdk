@@ -23,4 +23,5 @@ public interface IWukongEventApi
     event Action<PlayerId>? OnConnected;
     event Action<PlayerId, DisconnectReason>? OnDisconnected;
     event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
+    event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
 }

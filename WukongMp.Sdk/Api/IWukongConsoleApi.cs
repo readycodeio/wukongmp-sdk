@@ -1,9 +1,11 @@
-﻿using ReadyM.Api.Command;
+﻿using System.Collections.Generic;
+using ReadyM.Api.Command;
 
 namespace WukongMp.Sdk.Api;
 
-public interface IWukongConsoleApi
+public interface IWukongConsoleApi : IConsoleCommandRegistry
 {
-    void AddCommands(params IConsoleCommandRegistration[] registrations);
+    void AddCommand(string commandName, ConsoleCommand command, IEnumerable<string>? availableFirstParams = null);
+    bool HasCommand(string commandName);
     void WriteConsoleMessage(string message);
 }

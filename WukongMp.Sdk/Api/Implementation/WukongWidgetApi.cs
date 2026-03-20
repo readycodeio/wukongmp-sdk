@@ -1,5 +1,6 @@
 ﻿using UnrealEngine.Runtime;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Sdk.Api.Implementation;
 
@@ -22,4 +23,10 @@ internal sealed class WukongWidgetApi(WukongWidgetManager widgetManager) : IWuko
 
     public void HideInfoMessage()
         => widgetManager.HideInfoMessage();
+
+    public void ShowTip(string tip, bool autoHide) 
+        => UiUtils.ShowTip(tip, autoHide);
+
+    public void HideTip()
+        => UiUtils.HideTip();
 }

@@ -10,4 +10,6 @@ public interface IWukongWidgetApi
     void ShowInGameWidgets(bool isOnGameplayLevel);
     void ShowInfoMessage(string message);
     void HideInfoMessage();
+    void ShowTip(string tip, bool autoHide);
+    void HideTip();
 }

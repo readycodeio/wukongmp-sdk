@@ -49,7 +49,7 @@ public static class PatchStartGameUiCoop
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
-                    UiUtils.ShowTip(BuiltinTexts.MissingPak, false);
+                    WukongApi.Widgets.ShowTip(BuiltinTexts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
                 else if (!WukongApi.Sync.IsConnected)

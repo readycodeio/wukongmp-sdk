@@ -89,6 +89,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
     public event Action<PlayerId>? OnConnected;
     public event Action<PlayerId, DisconnectReason>? OnDisconnected;
     public event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
+    public event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
 
     private void InvokeJoinedArea(AreaId areaId, Entity _)
         => OnJoinedArea?.Invoke(areaId);
@@ -142,6 +143,10 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         if (MainCharacterEntity.IsMainCharacter(victim))
         {
             OnPlayerDead?.Invoke(new ReadyMainCharacter(WukongApi.Sync, victim), attacker.HasValue ? new ReadyCharacter(WukongApi.Sync, attacker.Value) : null);
+        }
+        else if (TamerEntity.IsTamer(victim))
+        {
+            OnMonsterDead?.Invoke(new ReadyTamer(WukongApi.Sync, victim), attacker.HasValue ? new ReadyCharacter(WukongApi.Sync, attacker.Value) : null);
         }
     }
 }

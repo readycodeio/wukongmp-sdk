@@ -246,7 +246,7 @@ internal sealed class DI : IDependencyContainer
         Container.RegisterMany<ComponentFieldMappingRegistry>(serviceTypeCondition: type => type.IsInterface, nonPublicServiceTypes: true);
         Container.RegisterInitializer<IComponentFieldMappingRegistry>((iface, _) => { RegisterDataMappings((ComponentFieldMappingRegistry)iface); });
 
-        Container.Register<IWukongSaveRelay, WukongSaveRelay>();
+        Container.Register<IWukongSaveApi, WukongSaveApi>();
 
         Container.Register<WukongClientGameEvents>();
         Container.Register<WukongClientRpcCallbacks>();

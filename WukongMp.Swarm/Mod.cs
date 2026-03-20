@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using ReadyM.Api.Command;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Sdk;
@@ -18,7 +19,10 @@ public class Mod : ModBase
 
         var spawnSystem = services.Resolve<SpawnEnemySwarmSystem>();
 
-        WukongApi.Console.AddCommands(new SwarmModeConsoleCommandRegistration(spawnSystem));
+        WukongApi.Console.AddCommand("swarm_mode", ConsoleCommand.Create(() =>
+        {
+            spawnSystem.Enable();
+        }));
 
         // if all players are dead, reset the swarm mode
         WukongApi.Events.OnPlayerDead += (victim, attacker) =>

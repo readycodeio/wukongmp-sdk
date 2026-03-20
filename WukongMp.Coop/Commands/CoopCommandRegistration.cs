@@ -4,24 +4,25 @@ using ReadyM.Api.Command;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.WukongUtils;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Commands;
 
-public sealed class CoopCommandRegistration : IConsoleCommandRegistration
+public static class CoopCommandRegistrations
 {
-    public void RegisterCommands(ConsoleCommandRegistry registry)
+    public static void RegisterCommands(IWukongConsoleApi consoleApi)
     {
-        registry.AddCommand("cutscene", ConsoleCommand.Create(PlayCutscene, true));
-        registry.AddCommand("teleport", ConsoleCommand.Create(Teleport, true));
-        registry.AddCommand("openlevel", ConsoleCommand.Create(OpenLevel, true));
+        consoleApi.AddCommand("cutscene", ConsoleCommand.Create(PlayCutscene, true));
+        consoleApi.AddCommand("teleport", ConsoleCommand.Create(Teleport, true));
+        consoleApi.AddCommand("openlevel", ConsoleCommand.Create(OpenLevel, true));
     }
 
-    private void PlayCutscene(int seqId)
+    private static void PlayCutscene(int seqId)
     {
         GSG.GMSvc.GMTeleportToTargetSequence(seqId);
     }
 
-    private void Teleport(int birthPointId)
+    private static void Teleport(int birthPointId)
     {
         BPS_EventCollectionCS.Get(GameUtils.GetControlledPawn()?.PlayerState).Evt_BPS_TeleportTo.Invoke(
             ETeleportTypeV2.RebirthPointTeleportOnly,
@@ -29,7 +30,7 @@ public sealed class CoopCommandRegistration : IConsoleCommandRegistration
             EPlayerTeleportReason.RebirthPoint);
     }
 
-    private void OpenLevel(string name)
+    private static void OpenLevel(string name)
     {
         UGameplayStatics.OpenLevel(GameUtils.GetWorld(), new FName(name));
     }

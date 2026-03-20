@@ -5,6 +5,10 @@ using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Api;
 
+/// <summary>
+/// The main entry point for accessing Wukong's API.
+/// Provides access to all of the various APIs and services that WukongMP offers.
+/// </summary>
 public static class WukongApi
 {
     static WukongApi()
@@ -25,7 +29,7 @@ public static class WukongApi
     public static IWukongInputApi Input => Services.Resolve<IWukongInputApi>();
     public static IWukongConsoleApi Console => Services.Resolve<IWukongConsoleApi>();
     public static IWukongFileApi Files => Services.Resolve<IWukongFileApi>();
-    public static IWukongSaveRelay Saves => Services.Resolve<IWukongSaveRelay>();
+    public static IWukongSaveApi Saves => Services.Resolve<IWukongSaveApi>();
     public static IWukongEventApi Events => Services.Resolve<IWukongEventApi>();
     public static IWukongSynchronizationApi Sync => Services.Resolve<IWukongSynchronizationApi>();
     public static IWukongWidgetApi Widgets => Services.Resolve<IWukongWidgetApi>();

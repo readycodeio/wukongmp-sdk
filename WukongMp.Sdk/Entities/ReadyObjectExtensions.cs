@@ -14,6 +14,10 @@ public static class ReadyObjectExtensions
     extension<TSelf>(TSelf obj)
         where TSelf : struct, IReadyEntity<TSelf>, IReadyConvertable<TSelf, ReadyObject> 
     {
+        /// <summary>
+        /// Gets the owner of the entity. This is usually the player that spawned the entity, or a player that was handled the ownership after the original owner disconnected.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         public PlayerId Owner
         {
             get

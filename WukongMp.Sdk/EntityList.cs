@@ -8,7 +8,7 @@ namespace WukongMp.Sdk;
 public readonly struct EntityList<T> : IEnumerable<T>
     where T : struct, IReadyEntity<T>
 {
-    public struct Enumerator : IEnumerator<T>
+    private struct Enumerator : IEnumerator<T>
     {
         private readonly WukongSynchronizationApi _api;
         private readonly EntityList _entityList;
@@ -56,8 +56,8 @@ public readonly struct EntityList<T> : IEnumerable<T>
         _entityList = entityList;
     }
 
-    public Enumerator GetEnumerator()
-        => new(_api, _entityList);
+    public IEnumerator<T> GetEnumerator()
+        => new Enumerator(_api, _entityList);
 
     IEnumerator<T> IEnumerable<T>.GetEnumerator()
         => new Enumerator(_api, _entityList);

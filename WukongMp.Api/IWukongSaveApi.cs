@@ -4,7 +4,7 @@ using WukongMp.Api.Https;
 
 namespace WukongMp.Api;
 
-public interface IWukongSaveRelay
+public interface IWukongSaveApi
 {
     Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default);
     Task<BlobInfo?> DownloadWorldSaveAsync(CancellationToken ct = default);

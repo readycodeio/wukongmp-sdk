@@ -176,7 +176,7 @@ internal class ShimAutoStarter : IDisposable
         _recorderRelayClient.RequestJoinArea(areaId.Value);
 
         _logger.LogDebug("Requesting saves to record the results for shim");
-        var recordSaveRelay = new WukongSaveRelay(_recorderRelayBlobClient, _logger);
+        var recordSaveRelay = new WukongSaveApi(_recorderRelayBlobClient, _logger);
         var worldSave = await recordSaveRelay.DownloadWorldSaveAsync();
         _logger.LogDebug("World save downloaded: {WorldSave}, size {Size} bytes", worldSave?.Name, worldSave?.Content.Length);
         var playerSave = await recordSaveRelay.DownloadPlayerSaveAsync();
