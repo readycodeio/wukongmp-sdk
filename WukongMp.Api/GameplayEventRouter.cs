@@ -5,7 +5,7 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api;
 
-internal sealed class GameplayEventRouter // TODO: Export these in public API with object-like wrappers
+internal sealed class GameplayEventRouter
 {
     public event Action<CultureInfo>? OnLanguageChanged;
     public event Action<Entity, Entity?>? OnUnitDead;

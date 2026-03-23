@@ -51,21 +51,12 @@ public sealed class SpawnEnemySwarmSystem : ModSystemBase
         if (_timeSinceLastSpawn > SpawnInterval)
         {
             _timeSinceLastSpawn = 0;
-
             WukongApi.Local.ShowInfoMessage($"Spawning {_swarmSize} enemies!", 1);
 
             // spawn a few enemies around the player
             for (var i = 0; i < _swarmSize; i++)
             {
-                // get n-th position on a circle around the player
-                var angle = (float)i / _swarmSize * 2 * MathF.PI;
-                var playerPos = WukongApi.Sync.LocalMainCharacter.Value.Location;
-                var position = new Vector3(
-                    playerPos.X + MathF.Cos(angle) * SpawnRadius,
-                    playerPos.Y + MathF.Sin(angle) * SpawnRadius,
-                    playerPos.Z
-                );
-
+                var position = GetNthPointOnCircle(WukongApi.Sync.LocalMainCharacter.Value.Location, i, _swarmSize);
                 WukongApi.Sync.SpawnEnemy(TamerConstants.WolfSentinel, position);
             }
 
@@ -75,5 +66,15 @@ public sealed class SpawnEnemySwarmSystem : ModSystemBase
             // count total enemies spawned for end-of-mode summary
             _enemies += _swarmSize;
         }
+    }
+
+    private static Vector3 GetNthPointOnCircle(Vector3 center, int i, int n)
+    {
+        var angle = (float)i / n * 2 * MathF.PI;
+        return new Vector3(
+            center.X + MathF.Cos(angle) * SpawnRadius,
+            center.Y + MathF.Sin(angle) * SpawnRadius,
+            center.Z
+        );
     }
 }

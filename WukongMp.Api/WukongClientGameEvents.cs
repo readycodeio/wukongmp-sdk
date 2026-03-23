@@ -260,6 +260,7 @@ internal class WukongClientGameEvents(
             if (mainEntity == self._playerState.LocalMainCharacter)
             {
                 PlayerUtils.DisableSpectator(mainEntity);
+                self._eventRouter.RaiseOnLocalPlayerBeforeRebirth();
             }
 
             if (mainEntity.Pawn != null)

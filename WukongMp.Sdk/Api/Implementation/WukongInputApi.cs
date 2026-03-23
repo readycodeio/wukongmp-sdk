@@ -9,19 +9,19 @@ internal sealed class WukongInputApi(
     WukongInputManager wukongInput
 ) : IWukongInputApi
 {
-    public HotKeyItem RegisterKeyBind(Key key, Action action)
+    public void RegisterKeyBind(Key key, Action action)
     {
-        return manager.RegisterKeyBind(key, action);
+        manager.RegisterKeyBind(key, action);
     }
 
-    public HotKeyItem RegisterKeyBind(ModifierKeys modifiers, Key key, Action action)
+    public void RegisterKeyBind(ModifierKeys modifiers, Key key, Action action)
     {
-        return manager.RegisterKeyBind(modifiers, key, action);
+        manager.RegisterKeyBind(modifiers, key, action);
     }
 
-    public HotKeyItem RegisterGamePadBind(GamePadButton button, Action action)
+    public void RegisterGamePadBind(GamePadButton button, Action action)
     {
-        return manager.RegisterGamePadBind(button, action);
+        manager.RegisterGamePadBind(button, action);
     }
 
     /// <returns><c>true</c> if keyboard input is not blocked by active text fields and menus.</returns>

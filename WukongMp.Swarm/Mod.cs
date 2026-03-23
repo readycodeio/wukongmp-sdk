@@ -15,8 +15,6 @@ public class Mod : ModBase
 
     protected override void Initialize(IDependencyContainer services)
     {
-        base.Initialize(services);
-
         var spawnSystem = services.Resolve<SpawnEnemySwarmSystem>();
 
         WukongApi.Console.AddCommand("swarm_mode", ConsoleCommand.Create(() =>

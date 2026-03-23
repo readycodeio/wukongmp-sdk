@@ -18,6 +18,7 @@ using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Shim;
 using WukongMp.Api.WukongUtils;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk;
 
@@ -181,26 +182,26 @@ internal class Mod : ModBase
     private void RegisterKeybinds(DI di)
     {
 #if DEBUG
-        di.InputManager.RegisterKeyBind(Key.F3, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F3, () =>
         {
             Logging.LogDebug("F3: Toggle super speed");
             DebugUtils.ToggleSuperFastSpeed();
         });
 
-        di.InputManager.RegisterKeyBind(Key.F4, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F4, () =>
         {
             Logger.LogDebug("F4: Toggle invincibility");
             DebugUtils.InvincibilityEnabled = !DebugUtils.InvincibilityEnabled;
         });
 #endif
-        di.InputManager.RegisterKeyBind(Key.F5, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F5, () =>
         {
             Logger.LogDebug("F5: Toggle debug widget visibility");
             if (DI.Instance.WukongInputManager.CanApplyInput())
                 DI.Instance.WidgetManager.ToggleDebugVisibility();
         });
 #if DEBUG
-        di.InputManager.RegisterKeyBind(Key.F7, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F7, () =>
         {
             Logging.LogDebug("F7: Force be hit animation");
 
@@ -216,7 +217,7 @@ internal class Mod : ModBase
             events.Evt_PlayMontageCallback.Invoke(EMontageBindReason.Default, montage, EMontageCallbackState.OnStarted);
         });
 
-        di.InputManager.RegisterKeyBind(Key.F8, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F8, () =>
         {
             Logging.LogDebug("F8: Force hit animation");
 
@@ -237,32 +238,32 @@ internal class Mod : ModBase
             }
         });
 
-        di.InputManager.RegisterKeyBind(Key.F9, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F9, () =>
         {
             Logging.LogDebug("F9: Show actors markers");
             DebugUtils.ShowMarkersForActors(4000, "BP_DynamicObstcle");
         });
 
-        di.InputManager.RegisterKeyBind(Key.F10, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F10, () =>
         {
             Logging.LogDebug("F10: Remove colliders markers");
             DebugUtils.DestroyTmpMarkerActors();
         });
 
-        di.InputManager.RegisterKeyBind(Key.F12, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F12, () =>
         {
             Logger.LogDebug("F12: Skip cutscene");
             CutsceneUtils.RequestSkipCurrentCutscene();
         });
 
-        // di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
+        // WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.D0, () =>
         // {
         //     Logging.LogDebug("Alt + 0");
         //     if (LaunchParameters.Instance.RecordShimFile != null)
         //         di.ShimController.Save(LaunchParameters.Instance.RecordShimFile!);
         // });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.C, () =>
         {
             Logger.LogDebug("Alt + C");
             try
@@ -276,37 +277,37 @@ internal class Mod : ModBase
             }
         });
 
-        DI.Instance.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.N, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.N, () =>
         {
             Logger.LogDebug("Alt + N");
             DI.Instance.NetworkSessionStats.DumpToLog(Logger);
         });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.X, () =>
         {
             Logger.LogDebug("Alt + X");
             PlayerUtils.ResetLocalPlayerCooldown();
         });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.J, () =>
         {
             Logger.LogDebug("Alt + J");
             DebugUtils.DumpPlayersAnimationDebugInfo(di.State, di.PlayerState);
         });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Shift, Key.J, () =>
         {
             Logger.LogDebug("Shift + J");
             DebugUtils.DumpPlayersAnimationDebugInfo(di.State, di.PlayerState);
         });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.K, () =>
         {
             Logger.LogDebug("Alt + K");
             DebugUtils.ResetPlayersAnimation(di.State, di.PlayerState);
         });
 
-        di.InputManager.RegisterKeyBind(Key.J, () =>
+        WukongApi.Input.RegisterKeyBind(Key.J, () =>
         {
             Logger.LogDebug("J");
             if (di.WukongInputManager.CanApplyInput())
@@ -318,51 +319,49 @@ internal class Mod : ModBase
             }
         });
 #endif
-        di.InputManager.RegisterKeyBind(Key.K, () =>
+        WukongApi.Input.RegisterKeyBind(Key.K, () =>
         {
             Logger.LogDebug("K");
             if (di.WukongInputManager.CanApplyInput())
                 di.WidgetManager.ToggleChatVisibility();
         });
 
-        di.InputManager.RegisterKeyBind(Key.F1, () =>
+        WukongApi.Input.RegisterKeyBind(Key.F1, () =>
         {
-            Logger.LogDebug("F1");
-            if (di.WukongInputManager.CanApplyInput())
-                di.WidgetManager.ToggleCommandVisibility();
+            di.WidgetManager.ToggleCommandVisibility();
         });
 
-        di.InputManager.RegisterKeyBind(Key.UP, () =>
+        WukongApi.Input.RegisterKeyBind(Key.UP, () =>
         {
             Logger.LogDebug("UP");
             di.WidgetManager.CommandSelectUp();
         });
 
-        di.InputManager.RegisterKeyBind(Key.DOWN, () =>
+        WukongApi.Input.RegisterKeyBind(Key.DOWN, () =>
         {
             Logger.LogDebug("DOWN");
             di.WidgetManager.CommandSelectDown();
         });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.DOWN, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.DOWN, () =>
         {
             Logger.LogDebug("ALT + DOWN");
             di.WidgetManager.CommandHistoryDown();
         });
 
-        di.InputManager.RegisterKeyBind(ModifierKeys.Alt, Key.UP, () =>
+        WukongApi.Input.RegisterKeyBind(ModifierKeys.Alt, Key.UP, () =>
         {
             Logger.LogDebug("ALT + UP");
             di.WidgetManager.CommandHistoryUp();
         });
 
-        di.InputManager.RegisterKeyBind(Key.TAB, () =>
+        WukongApi.Input.RegisterKeyBind(Key.TAB, () =>
         {
             Logger.LogDebug("TAB");
             di.WidgetManager.CommandSelectSuggestion();
         });
 
-        di.InputManager.RegisterKeyBind(Key.ENTER, () =>
+        WukongApi.Input.RegisterKeyBind(Key.ENTER, () =>
         {
             Logger.LogDebug("ENTER");
             di.WukongInputManager.HandleEnterPressed();

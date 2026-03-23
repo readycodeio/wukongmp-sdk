@@ -41,7 +41,7 @@ public abstract class ModBase : ICSharpModExV2
         }
     }
 
-    protected virtual void Initialize(IDependencyContainer services) { }
+    protected abstract void Initialize(IDependencyContainer services);
 
     public virtual void LateInit()
     {
