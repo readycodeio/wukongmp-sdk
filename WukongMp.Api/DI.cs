@@ -42,7 +42,6 @@ using WukongMp.Api.Chat;
 using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
-using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Helpers;
 using WukongMp.Api.Https;
