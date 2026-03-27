@@ -13,34 +13,19 @@ using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
-internal class WukongPlayerState
+internal class WukongPlayerState(
+    Store world,
+    ClientWukongArchetypeRegistration wukongArchetype,
+    IClientEntityManager clientNetEntity,
+    INetworkedEntityManager netEntity,
+    ClientState state,
+    ILogger logger
+)
 {
-    private readonly ComponentIndex<MainCharacterComponent, PlayerId> _ix;
-
-    private readonly ClientWukongArchetypeRegistration _wukongArchetype;
-    private readonly IClientEntityManager _clientNetEntity;
-    private readonly INetworkedEntityManager _netEntity;
-    private readonly ClientState _state;
-    private readonly ILogger _logger;
+    private readonly ComponentIndex<MainCharacterComponent, PlayerId> _ix
+        = world.ComponentIndex<MainCharacterComponent, PlayerId>();
 
     public event Action<MainCharacterEntity>? OnMainCharacterEntityInitialized;
-
-    public WukongPlayerState(
-        Store world,
-        ClientWukongArchetypeRegistration wukongArchetype,
-        IClientEntityManager clientNetEntity,
-        INetworkedEntityManager netEntity,
-        ClientState state,
-        ILogger logger)
-    {
-        _wukongArchetype = wukongArchetype;
-        _netEntity = netEntity;
-        _clientNetEntity = clientNetEntity;
-        _state = state;
-        _logger = logger;
-
-        _ix = world.ComponentIndex<MainCharacterComponent, PlayerId>();
-    }
 
     internal void InvokeMainCharacterEntityInitialized(MainCharacterEntity mainCharacterEntity)
     {
@@ -48,13 +33,13 @@ internal class WukongPlayerState
     }
 
     public PlayerId? LocalPlayerId
-        => _state.LocalPlayerId;
+        => state.LocalPlayerId;
 
     public PlayerEntity? LocalPlayerEntity
     {
         get
         {
-            var playerEntity = _state.LocalPlayerEntity;
+            var playerEntity = state.LocalPlayerEntity;
             if (playerEntity == null)
                 return null;
             return new PlayerEntity(playerEntity.Value);
@@ -63,7 +48,7 @@ internal class WukongPlayerState
 
     public PlayerEntity? GetPlayerById(PlayerId playerId)
     {
-        if (!_state.PlayerEntries.TryGetValue(playerId, out var playerEntry))
+        if (!state.PlayerEntries.TryGetValue(playerId, out var playerEntry))
             return null;
 
         var playerEntity = playerEntry.PlayerEntity;
@@ -74,10 +59,10 @@ internal class WukongPlayerState
     {
         get
         {
-            if (_state.LocalPlayerId == null)
+            if (state.LocalPlayerId == null)
                 return null;
 
-            var matching = _ix[_state.LocalPlayerId.Value];
+            var matching = _ix[state.LocalPlayerId.Value];
 
             switch (matching.Count)
             {
@@ -86,7 +71,7 @@ internal class WukongPlayerState
                 case 1:
                     return new MainCharacterEntity(matching[0]);
                 default:
-                    _logger.LogError("Multiple entities found with MainCharacterComponent for local player {PlayerId}. This should not happen.", _state.LocalPlayerId);
+                    logger.LogError("Multiple entities found with MainCharacterComponent for local player {PlayerId}. This should not happen.", state.LocalPlayerId);
                     return null;
             }
         }
@@ -103,14 +88,14 @@ internal class WukongPlayerState
             case 1:
                 return new MainCharacterEntity(matching[0]);
             default:
-                _logger.LogError("Multiple entities found with MainCharacterComponent {PlayerId}. This should not happen.", playerId);
+                logger.LogError("Multiple entities found with MainCharacterComponent {PlayerId}. This should not happen.", playerId);
                 return null;
         }
     }
 
     public MainCharacterEntity? GetMainCharacterById(NetworkId netId)
     {
-        if (!_netEntity.TryGetEntityByNetworkId(netId, out var entity))
+        if (!netEntity.TryGetEntityByNetworkId(netId, out var entity))
             return null;
 
         if (!MainCharacterEntity.TryGetMainCharacter(entity.Value, out var mainEntity))
@@ -121,18 +106,18 @@ internal class WukongPlayerState
 
     public MainCharacterEntity CreateLocalMainCharacter()
     {
-        if (_state.LocalPlayerId == null)
+        if (state.LocalPlayerId == null)
             throw new InvalidOperationException("Local player ID is not set. Cannot create local main character.");
 
         var mainEntity = LocalMainCharacter;
         if (mainEntity != null)
             return mainEntity.Value;
 
-        var entity = _clientNetEntity.CreateAreaEntity(_wukongArchetype.MainCharacterArchetype, b =>
+        var entity = clientNetEntity.CreateAreaEntity(wukongArchetype.MainCharacterArchetype, b =>
         {
             b.Add(new MainCharacterComponent
             {
-                PlayerId = _state.LocalPlayerId.Value,
+                PlayerId = state.LocalPlayerId.Value,
             });
         });
         return new MainCharacterEntity(entity);

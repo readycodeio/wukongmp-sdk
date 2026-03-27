@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
@@ -6,7 +7,7 @@ using WukongMp.Api.Windows;
 
 namespace WukongMp.Api;
 
-internal class LaunchParameters
+internal sealed class LaunchParameters
 {
     private static LaunchParameters? _instance;
     public static LaunchParameters Instance => _instance ??= new LaunchParameters();
@@ -47,9 +48,16 @@ internal class LaunchParameters
     public string? PlayShimName { get; }
     public string? PlayShimFile { get; }
 
+    private readonly Dictionary<string, string> _allParameters;
+    
+    public string GetParameterOrDefault(string key, string defaultValue)
+    {
+        return _allParameters.GetValueOrDefault(key, defaultValue);
+    }
+
     private LaunchParameters()
     {
-        var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
+        var data = _allParameters = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
         // CO-OP: API base URL
         ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");

@@ -3,6 +3,7 @@ using CSharpModBase;
 using DryIoc;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api;
+using ReadyM.Api.DI;
 using WukongMp.Api;
 using WukongMp.Sdk.Api;
 

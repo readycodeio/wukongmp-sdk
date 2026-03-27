@@ -3,6 +3,8 @@ using b1;
 using b1.BGW;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
@@ -29,7 +31,7 @@ internal class WukongClientGameEvents(
     WukongWidgetManager widgetManager,
     GameplayEventRouter eventRouter,
     ILogger logger
-) : IScopedLifetime
+) : IHostedService
 {
     // ReSharper disable once InconsistentNaming
     private static readonly MethodInfo PlayDBC_ByType = AccessTools.Method(typeof(BGU_AbnormalStateHandlerBase), "PlayDBC_ByType");

@@ -1,6 +1,6 @@
-﻿using System;
-using Friflo.Engine.ECS.Systems;
+﻿using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Api.Multiplayer.Mapping.Events;
@@ -36,7 +36,7 @@ internal sealed class WukongSystemRegistration(
     FreeCameraManager freeCameraManager,
     FreeCameraController freeCameraController,
     ILogger logger
-) : IScopedLifetime, IDisposable
+) : IHostedService
 {
     private readonly SystemGroup _syncGroup = new("Synchronization")
     {

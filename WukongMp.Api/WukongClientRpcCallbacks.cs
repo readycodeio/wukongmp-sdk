@@ -3,6 +3,8 @@ using System.Diagnostics;
 using b1;
 using BtlShare;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Values;
@@ -11,15 +13,12 @@ using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Api.Multiplayer.Serialization;
-using ReadyM.Api.State;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Client.State;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Helpers;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.Mapping.Policies.Event;
 using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Resources;
@@ -31,7 +30,7 @@ using INetworkedEntityManager = ReadyM.Api.Multiplayer.ECS.Managers.INetworkedEn
 
 namespace WukongMp.Api;
 
-internal partial class WukongClientRpcCallbacks : IDisposable
+internal partial class WukongClientRpcCallbacks : IHostedService
 {
     private readonly RelaySerializer Serializer;
     private readonly IRelayClient RelayClient;
@@ -66,7 +65,10 @@ internal partial class WukongClientRpcCallbacks : IDisposable
         _widgetManager = widgetManager;
         _timerController = timerController;
         _logger = logger;
+    }
 
+    public void OnScopeStart()
+    {
         InitRpc();
 
         _mappedEvent.RegisterEcsEventHandler<ExitPhantomRushEvent, WukongClientRpcCallbacks>(static (ev, self) => { self.SendExitPhantomRush(ev.Entity.GetNetId()); }, this);

@@ -3,8 +3,11 @@ using System.Threading.Tasks;
 using Friflo.Engine.ECS;
 using LiteNetLib;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
@@ -13,44 +16,39 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api;
 
 [Obsolete]
-internal class WukongConnectionManager : IDisposable
+internal class WukongConnectionManager(
+    IRelayClient relayClient,
+    ClientState state,
+    ILogger logger
+) : IHostedService
 {
-    private readonly ILogger _logger;
-    private readonly RelayClientService _relayClientService;
-    private readonly IRelayClient _relayClient;
-    private readonly ClientState _state;
+    private readonly ILogger _logger = logger;
+    private readonly RelayClientService _relayClientService = new(relayClient, logger);
 
-    public WukongConnectionManager(IRelayClient relayClient,
-        ClientState state,
-        ILogger logger)
+    public void OnScopeStart()
     {
-        _relayClient = relayClient;
-        _state = state;
-        _logger = logger;
-        _relayClientService = new RelayClientService(relayClient, logger);
-
         state.OnConnected += OnConnectedHandler;
         state.OnDisconnected += OnDisconnectedHandler;
+    }
+
+    public void Dispose()
+    {
+        state.OnConnected -= OnConnectedHandler;
+        state.OnDisconnected -= OnDisconnectedHandler;
     }
 
     public bool IsRunning
         => _relayClientService.IsRunning;
 
     public bool RequestedConnect
-        => _relayClient.RequestedConnect;
+        => relayClient.RequestedConnect;
 
     private AreaId? RequestedAreaId
-        => _relayClient.RequestedAreaId;
+        => relayClient.RequestedAreaId;
 
     private static void OnConnectedHandler(PlayerId player, Entity entity)
     {
         entity.GetComponent<PlayerComponent>().Nickname = LaunchParameters.Instance.Nickname;
-    }
-
-    public void Dispose()
-    {
-        _state.OnConnected -= OnConnectedHandler;
-        _state.OnDisconnected -= OnDisconnectedHandler;
     }
 
     public void Start()
@@ -65,7 +63,7 @@ internal class WukongConnectionManager : IDisposable
 
     public void Connect()
     {
-        _relayClient.RequestConnect();
+        relayClient.RequestConnect();
     }
 
     public void Disconnect()
@@ -73,24 +71,24 @@ internal class WukongConnectionManager : IDisposable
         if (RequestedAreaId != null)
             LeaveArea();
         if (RequestedConnect)
-            _relayClient.RequestDisconnect();
+            relayClient.RequestDisconnect();
     }
 
     public void JoinArea(AreaId areaId)
     {
-        _relayClient.RequestJoinArea(areaId);
+        relayClient.RequestJoinArea(areaId);
     }
 
     public void LeaveArea()
     {
-        _relayClient.RequestLeaveArea();
+        relayClient.RequestLeaveArea();
     }
 
     public void Reconnect()
     {
         Logging.LogInformation("Attempting to reconnect...");
 
-        _relayClient.Scheduler.Schedule(async void (_, self) =>
+        relayClient.Scheduler.Schedule(async void (_, self) =>
         {
             try
             {

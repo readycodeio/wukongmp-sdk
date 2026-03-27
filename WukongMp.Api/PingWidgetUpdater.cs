@@ -1,10 +1,9 @@
-using System;
+using ReadyM.Api.DI;
 using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Relay.Client;
 
 namespace WukongMp.Api;
 
-internal class PingWidgetUpdater(NetworkPingMonitor pingMonitor, WukongServerRpcCallbacks rpc) : IScopedLifetime, IDisposable
+internal class PingWidgetUpdater(NetworkPingMonitor pingMonitor, WukongServerRpcCallbacks rpc) : IHostedService
 {
     public void OnScopeStart()
     {

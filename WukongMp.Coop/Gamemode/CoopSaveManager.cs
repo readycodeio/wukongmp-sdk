@@ -91,11 +91,11 @@ public sealed class CoopSaveManager(ILogger logger)
         else
         {
             // we need to write the data as file to read it
-            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopWorldArchiveId);
+            var worldSaveName = GSE_SaveGameUtil.GetArchiveSlotName(b1.SaveFileType.Archive, Constants.CoopWorldArchiveId);
             var worldSavePath = GSWindowsPlatformSaveGame.GetFileFullName(worldSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(worldSavePath, worldData);
 
-            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, Constants.CoopPlayerArchiveId);
+            var playerSaveName = GSE_SaveGameUtil.GetArchiveSlotName(b1.SaveFileType.Archive, Constants.CoopPlayerArchiveId);
             var playerSavePath = GSWindowsPlatformSaveGame.GetFileFullName(playerSaveName, __instance.ArchiveWorker.UserId);
             File.WriteAllBytes(playerSavePath, playerData);
 

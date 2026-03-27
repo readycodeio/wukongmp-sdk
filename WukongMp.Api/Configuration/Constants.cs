@@ -64,7 +64,6 @@ internal static class Constants
 
     public const string DebugCubeActorPath = "/Game/Mods/DebugMod/BP_DebugCube.BP_DebugCube_C";
     public const string DebugSphereActorPath = "/Game/Mods/DebugMod/BP_DebugShpere.BP_DebugShpere_C";
-    public const string CoopWorldArchiveName = "world.sav";
 
     public static readonly EnumSet<EBGUAttrFloat> SyncedAttributes = new([
         #region Calculated Attributes

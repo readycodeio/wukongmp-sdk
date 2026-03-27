@@ -1,6 +1,5 @@
-﻿using System;
+﻿using ReadyM.Api.DI;
 using WukongMp.Api;
-using WukongMp.Api.Configuration;
 using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Api;
@@ -11,8 +10,9 @@ namespace WukongMp.Sdk.Api;
 /// </summary>
 public static class WukongApi
 {
-    static WukongApi()
+    internal static void RegisterApis()
     {
+        Services.RegisterSingleton<IWukongSaveApi, WukongSelfHostedSaveApi>();
         Services.RegisterSingleton<IWukongFileApi, WukongFileApi>();
         Services.RegisterSingleton<IWukongConsoleApi, WukongConsoleApi>();
         Services.RegisterSingleton<IWukongEventApi, WukongEventApi>();
@@ -20,12 +20,11 @@ public static class WukongApi
         Services.RegisterSingleton<IWukongLocalApi, WukongLocalApi>();
         Services.RegisterSingleton<IWukongInputApi, WukongInputApi>();
         Services.RegisterSingleton<IWukongWidgetApi, WukongWidgetApi>();
+        Services.RegisterSingleton<IWukongConfigurationApi, WukongConfigurationApi>();
     }
 
     public static IDependencyContainer Services => DI.Instance;
 
-    [Obsolete("TODO: Make a more centralized configuration system.")]
-    public static GameplayConfiguration Configuration => Services.Resolve<GameplayConfiguration>();
     public static IWukongInputApi Input => Services.Resolve<IWukongInputApi>();
     public static IWukongConsoleApi Console => Services.Resolve<IWukongConsoleApi>();
     public static IWukongFileApi Files => Services.Resolve<IWukongFileApi>();
@@ -34,4 +33,5 @@ public static class WukongApi
     public static IWukongSynchronizationApi Sync => Services.Resolve<IWukongSynchronizationApi>();
     public static IWukongWidgetApi Widgets => Services.Resolve<IWukongWidgetApi>();
     public static IWukongLocalApi Local => Services.Resolve<IWukongLocalApi>();
+    public static IWukongConfigurationApi Configuration => Services.Resolve<IWukongConfigurationApi>();
 }

@@ -2,25 +2,19 @@
 
 namespace WukongMp.Api.Helpers
 {
-    internal class TimerController
+    internal class TimerController(WukongWidgetManager widgetManager)
     {
-        private readonly WukongWidgetManager _widgetManager;
         private CountdownTimer? _timer;
         private int _initialMinutes;
         private int _initialSeconds;
-
-        public TimerController(WukongWidgetManager widgetManager)
-        {
-            _widgetManager = widgetManager;
-        }
 
         public void SetTimer(int minutes, int seconds)
         {
             _initialMinutes = minutes;
             _initialSeconds = seconds;
             _timer = new CountdownTimer(minutes, seconds);
-            _widgetManager.SetTimerVisibility(true);
-            _widgetManager.SetTimerText(_initialMinutes, _initialSeconds);
+            widgetManager.SetTimerVisibility(true);
+            widgetManager.SetTimerText(_initialMinutes, _initialSeconds);
         }
 
         public void StartTimer()
@@ -33,13 +27,13 @@ namespace WukongMp.Api.Helpers
 
         private void OnTimerTick(int minutes, int seconds)
         {
-            _widgetManager.SetTimerText(minutes, seconds);
+            widgetManager.SetTimerText(minutes, seconds);
         }
 
         private void OnTimerFinished()
         {
-            _widgetManager.SetTimerText(0, 0);
-            _widgetManager.SetTimerVisibility(false);
+            widgetManager.SetTimerText(0, 0);
+            widgetManager.SetTimerVisibility(false);
         }
 
         public void StopTimer()
@@ -50,8 +44,8 @@ namespace WukongMp.Api.Helpers
         public void ResetTimer()
         {
             _timer?.Reset();
-            _widgetManager.SetTimerVisibility(true);
-            _widgetManager.SetTimerText(_initialMinutes, _initialSeconds);
+            widgetManager.SetTimerVisibility(true);
+            widgetManager.SetTimerText(_initialMinutes, _initialSeconds);
         }
     }
 }

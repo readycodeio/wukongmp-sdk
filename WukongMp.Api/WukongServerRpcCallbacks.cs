@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
@@ -24,7 +26,7 @@ internal partial class WukongServerRpcCallbacks(
     NetworkSessionStats sessionStats,
     WukongWidgetManager widgetManager,
     ILogger logger
-) : IScopedLifetime
+) : IHostedService
 {
     private IRelayClient RelayClient => relayClient;
     private IMappedEventManager MappedEvent => mappedEvent;

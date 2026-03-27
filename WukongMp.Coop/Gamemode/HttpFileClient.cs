@@ -1,35 +1,60 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using WukongMp.Api.Configuration;
+using WukongMp.Api.Https;
+using WukongMp.Coop.Configuration;
+using WukongMp.Sdk.Api;
+using FileInfo = WukongMp.Api.Https.FileInfo;
 
-namespace WukongMp.Api.Https;
+namespace WukongMp.Coop.Gamemode;
 
-internal class HttpBlobClient(ILogger logger) : IBlobClient
+public class HttpFileClient : IFileClient
 {
-    private enum FileType
+    private class DownloadServerFileResponse
     {
-        WorldSave,
-        PlayerSave
+        public string DownloadUrl { get; set; } = null!;
     }
 
-    public async Task<bool> UploadBlobAsync(BlobInfo blob, CancellationToken ct = default)
+    private readonly int serverId;
+    private readonly string apiBaseUrl;
+    private readonly string jwtToken;
+    private readonly ILogger logger;
+
+    public HttpFileClient(ILogger logger)
+    {
+        this.logger = logger;
+
+        var serverIdParam = WukongApi.Configuration.GetLaunchParameter("SERVER_ID", "");
+        if (!int.TryParse(serverIdParam, out serverId))
+        {
+            logger.LogError("Invalid or missing SERVER_ID launch parameter");
+        }
+
+        apiBaseUrl = WukongApi.Configuration.GetLaunchParameter("API_BASE_URL", "");
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+        {
+            logger.LogError("Invalid or missing API_BASE_URL launch parameter");
+        }
+
+        jwtToken = WukongApi.Configuration.GetLaunchParameter("JWT_TOKEN", "");
+        if (string.IsNullOrWhiteSpace(jwtToken))
+        {
+            logger.LogError("Invalid or missing JWT_TOKEN launch parameter");
+        }
+    }
+
+
+    public async Task<bool> UploadFileAsync(FileInfo file, CancellationToken ct = default)
     {
         var client = new BouncyCastleHttpsClient(logger);
-        var serverId = LaunchParameters.Instance.ServerId!.Value;
-        var kind = blob.Name == Constants.CoopWorldArchiveName ? FileType.WorldSave : FileType.PlayerSave;
+        var kind = file.Name == Constants.CoopWorldArchiveName ? SaveFileType.WorldSave : SaveFileType.PlayerSave;
 
         Guid? userGuid = null;
-        if (kind == FileType.PlayerSave)
+        if (kind == SaveFileType.PlayerSave)
         {
             // name is like "player_<userGuid>.sav"
-            var parts = blob.Name.Split('_', '.');
+            var parts = file.Name.Split('_', '.');
             if (parts.Length == 3 && Guid.TryParse(parts[1], out var parsedGuid))
             {
                 userGuid = parsedGuid;
@@ -37,10 +62,10 @@ internal class HttpBlobClient(ILogger logger) : IBlobClient
         }
 
         var query = $"?kind={kind}&userGuid={userGuid}&serverId={serverId}";
-        var url = new Uri($"{LaunchParameters.Instance.ApiBaseUrl}/api/server/{serverId}/files/upload-sas{query}");
+        var url = new Uri($"{apiBaseUrl}/api/server/{serverId}/files/upload-sas{query}");
         var uploadUrl = await client.GetAsync<string>(url, new Dictionary<string, string>
         {
-            { "Authorization", $"Bearer {LaunchParameters.Instance.JwtToken}" }
+            { "Authorization", $"Bearer {jwtToken}" }
         }, ct);
 
         if (uploadUrl is not null)
@@ -49,7 +74,7 @@ internal class HttpBlobClient(ILogger logger) : IBlobClient
             using var stream = new MemoryStream();
             using (var gzip = new GZipStream(stream, CompressionLevel.Optimal, true))
             {
-                await gzip.WriteAsync(blob.Content, 0, blob.Content.Length, ct);
+                await gzip.WriteAsync(file.Content, 0, file.Content.Length, ct);
             }
 
             var gzippedContent = stream.ToArray();
@@ -70,22 +95,21 @@ internal class HttpBlobClient(ILogger logger) : IBlobClient
             return status is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous;
         }
 
-        logger.LogError("Failed to get upload URL for blob '{BlobName}' for server {ServerId}", blob.Name, serverId);
+        logger.LogError("Failed to get upload URL for blob '{BlobName}' for server {ServerId}", file.Name, serverId);
         return false;
     }
 
-    public async Task<BlobInfo?> DownloadBlobAsync(string name, CancellationToken ct = default)
+    public async Task<FileInfo?> DownloadFileAsync(string name, CancellationToken ct = default)
     {
-        var serverId = LaunchParameters.Instance.ServerId!.Value;
         var nameEscaped = Uri.EscapeDataString(name);
 
         var client = new BouncyCastleHttpsClient(logger);
 
         // Download
-        var linkUrl = new Uri($"{LaunchParameters.Instance.ApiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
+        var linkUrl = new Uri($"{apiBaseUrl}/api/server/{serverId}/files/{nameEscaped}");
         var downloadResponse = await client.GetAsync<DownloadServerFileResponse>(linkUrl, new Dictionary<string, string>
         {
-            { "Authorization", $"Bearer {LaunchParameters.Instance.JwtToken}" }
+            { "Authorization", $"Bearer {jwtToken}" }
         }, ct);
 
         if (string.IsNullOrWhiteSpace(downloadResponse?.DownloadUrl))
@@ -103,6 +127,6 @@ internal class HttpBlobClient(ILogger logger) : IBlobClient
             return null;
         }
 
-        return new BlobInfo(name, response);
+        return new FileInfo(name, response);
     }
 }

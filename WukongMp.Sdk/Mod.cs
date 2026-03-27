@@ -12,6 +12,7 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using ReadyM.Api;
+using ReadyM.Api.DI;
 using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.NameCompressors;
@@ -61,6 +62,7 @@ internal class Mod : ModBase
         }
 
         DI.Instance.Init();
+        WukongApi.RegisterApis();
 
         // Start the relay client
 //         if (LaunchParameters.Instance.PlayShimOnStart)
@@ -326,10 +328,7 @@ internal class Mod : ModBase
                 di.WidgetManager.ToggleChatVisibility();
         });
 
-        WukongApi.Input.RegisterKeyBind(Key.F1, () =>
-        {
-            di.WidgetManager.ToggleCommandVisibility();
-        });
+        WukongApi.Input.RegisterKeyBind(Key.F1, () => { di.WidgetManager.ToggleCommandVisibility(); });
 
         WukongApi.Input.RegisterKeyBind(Key.UP, () =>
         {

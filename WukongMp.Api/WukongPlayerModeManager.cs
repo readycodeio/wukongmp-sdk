@@ -10,15 +10,15 @@ namespace WukongMp.Api;
 
 internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
-    private float _gravityScale = 0f;
+    private float _gravityScale;
     private FVector _lastValidLocation;
 
     public bool HandleBecameSpectator(MainCharacterEntity mainEntity, bool isSpectator)
     {
         if (isSpectator)
             return HandleBecameSpectator(mainEntity);
-        else
-            return HandleStoppedBeingSpectator(mainEntity);
+
+        return HandleStoppedBeingSpectator(mainEntity);
     }
 
     public bool HandleBecameSpectator(MainCharacterEntity mainEntity)

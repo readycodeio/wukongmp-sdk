@@ -1,9 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
 using LiteNetLib;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
@@ -13,7 +16,13 @@ using WukongMp.Api.State;
 
 namespace WukongMp.Api.UI;
 
-internal sealed class WukongWidgetManager : IDisposable
+internal sealed class WukongWidgetManager(
+    ClientState clientState,
+    WukongPlayerState playerState,
+    IRelayClient relayClient,
+    WukongEventBus eventBus,
+    FreeCameraManager freeCameraManager
+) : IHostedService
 {
     private string _lastDisconnectText = BuiltinTexts.Disconnected;
 
@@ -33,22 +42,11 @@ internal sealed class WukongWidgetManager : IDisposable
     private readonly Lazy<ModVersionWidget> _modVersionWidget = new();
     private readonly Lazy<DebugViewWidget> _debugViewWidget = new();
     private readonly Lazy<TimerWidget> _timerWidget = new();
-    private readonly ClientState clientState;
-    private readonly WukongPlayerState playerState;
-    private readonly IRelayClient relayClient;
-    private readonly WukongEventBus eventBus;
-    private readonly FreeCameraManager freeCameraManager;
 
     public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
 
-    public WukongWidgetManager(ClientState clientState, WukongPlayerState playerState, IRelayClient relayClient, WukongEventBus eventBus, FreeCameraManager freeCameraManager)
+    public void OnScopeStart()
     {
-        this.clientState = clientState;
-        this.playerState = playerState;
-        this.relayClient = relayClient;
-        this.eventBus = eventBus;
-        this.freeCameraManager = freeCameraManager;
-
         clientState.OnConnected += OnConnected;
         clientState.OnDisconnected += OnDisconnected;
         clientState.OnJoinedArea += OnJoinedArea;

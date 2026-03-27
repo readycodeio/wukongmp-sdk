@@ -1,8 +1,10 @@
-﻿using System;
-using b1;
+﻿using b1;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
 using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Relay.Client;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.GameEvents;
@@ -12,19 +14,17 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-internal class WukongServerGameEvents : IDisposable
+internal class WukongServerGameEvents(
+    IMappedEventManager mappedEvent,
+    WukongWidgetManager widgetManager,
+    ILogger logger
+) : IHostedService
 {
-    private readonly WukongWidgetManager _widgetManager;
-    private readonly ILogger _logger;
+    private readonly WukongWidgetManager _widgetManager = widgetManager;
+    private readonly ILogger _logger = logger;
 
-    public WukongServerGameEvents(
-        IMappedEventManager mappedEvent,
-        WukongWidgetManager widgetManager,
-        ILogger logger)
+    public void OnScopeStart()
     {
-        _widgetManager = widgetManager;
-        _logger = logger;
-
         mappedEvent.RegisterGameEventHandler<SkipMovieEvent, WukongServerGameEvents>(static (ev, self) =>
         {
             self._logger.LogDebug("Received skip movie event from server, sequence id: {Id}, waiting: {Waiting}/{All}", ev.SequenceId, ev.WaitingPlayers, ev.AllPlayers);

@@ -12,6 +12,7 @@ using PreludeLib.Runtime.Backend.WeaverCallback;
 using PreludeLib.Runtime.Public;
 using ReadyM.Api.Command;
 using ReadyM.Api.Command.Converters;
+using ReadyM.Api.DI;
 using ReadyM.Api.ECS.Registry;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
@@ -44,7 +45,6 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Helpers;
-using WukongMp.Api.Https;
 using WukongMp.Api.Input;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.Mapping.Policies.Event;
@@ -72,13 +72,13 @@ internal sealed class DI : IDependencyContainer
 
     public T Resolve<T>() => Container.Resolve<T>();
 
-    public void RegisterSingleton<T>() => Container.Register<T>();
-    public void RegisterSingleton<T>(T instance) => Container.RegisterInstance(instance);
+    public void RegisterSingleton<T>() => Container.Register<T>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+    public void RegisterSingleton<T>(T instance) => Container.RegisterInstance(instance, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
 
-    public void RegisterSingleton<TService>(Type type) => Container.Register(typeof(TService), type);
+    public void RegisterSingleton<TService>(Type type) => Container.Register(typeof(TService), type, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
 
     public void RegisterSingleton<TService, TImplementation>() where TImplementation : TService
-        => Container.Register<TService, TImplementation>();
+        => Container.Register<TService, TImplementation>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
 
     public InputManager InputManager => Container.Resolve<InputManager>();
     public ILoggerFactory LoggerFactory => Container.Resolve<ILoggerFactory>();
@@ -142,6 +142,7 @@ internal sealed class DI : IDependencyContainer
         Logger.LogDebug("Initializing DI...");
         Container.RegisterInstance<IDependencyContainer>(Instance);
 
+        Container.RegisterInstance(LaunchParameters.Instance);
         Container.RegisterInstance(new NetworkSessionStats(LaunchParameters.Instance.UserGuid.ToString(), LaunchParameters.Instance.Region));
         Container.RegisterInstanceMany(InputManager.Instance);
 
@@ -175,8 +176,6 @@ internal sealed class DI : IDependencyContainer
 #else
         Container.Register<IRelayClient, RelayClient>();
 #endif
-        Container.Register<IBlobClient, HttpBlobClient>();
-
         Container.Register<INetworkedEntityManager, NetworkedEntityManager>();
         Container.Register<WukongEventBus>();
         Container.Register<GameplayConfiguration>();
@@ -206,7 +205,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<CutsceneStatusSynchronizer>();
         Container.Register<WukongAreaState>();
         Container.Register<WukongPlayerModeManager>();
-        Container.Register<WukongConnectionManager>(); // TODO: Implicit lifetime and start/stop semantics
+        Container.Register<WukongConnectionManager>();
         Container.Register<WukongNetworkLogger>();
         Container.Register<DataSideChannel>();
 
@@ -244,8 +243,6 @@ internal sealed class DI : IDependencyContainer
         Container.Register<WukongMappingPolicyDirectory>();
         Container.RegisterMany<ComponentFieldMappingRegistry>(serviceTypeCondition: type => type.IsInterface, nonPublicServiceTypes: true);
         Container.RegisterInitializer<IComponentFieldMappingRegistry>((iface, _) => { RegisterDataMappings((ComponentFieldMappingRegistry)iface); });
-
-        Container.Register<IWukongSaveApi, WukongSaveApi>();
 
         Container.Register<WukongClientGameEvents>();
         Container.Register<WukongClientRpcCallbacks>();
@@ -288,7 +285,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<TestsRunner>();
 
         Logger.LogDebug("DI Initialized");
-#if SHIMMING // TODO: restore functionality
+#if SHIMMING // TODO: restore shimming functionality
         // ---
 
         var shimLogger = LoggerFactory.CreateLogger("Shim");
@@ -364,15 +361,16 @@ internal sealed class DI : IDependencyContainer
         Container = Container.WithNoMoreRegistrationAllowed();
 
         var hostedServices = Container.GetServiceRegistrations()
-            .Where(r => typeof(IScopedLifetime).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
+            .Where(r => typeof(IHostedService).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
             .Where(r => r.Factory.Reuse is null or SingletonReuse)
             .OrderBy(r => r.FactoryRegistrationOrder)
             .GroupBy(r => r.FactoryRegistrationOrder, (_, r) => r.First());
 
         foreach (var r in hostedServices)
         {
-            var service = (IScopedLifetime)Container.Resolve(r.ServiceType, r.OptionalServiceKey);
+            var service = (IHostedService)Container.Resolve(r.ServiceType, r.OptionalServiceKey);
             service.OnScopeStart();
+            Logger.LogDebug("Started hosted service: {ServiceType}", r.ServiceType.FullName);
         }
     }
 

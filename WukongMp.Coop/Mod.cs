@@ -1,5 +1,6 @@
 ﻿using CSharpModBase.Input;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
 using WukongMp.Api;
 using WukongMp.Coop.Commands;
 using WukongMp.Coop.Configuration;
@@ -19,13 +20,14 @@ public sealed class Mod : ModBase
 
     protected override void Initialize(IDependencyContainer services)
     {
-        // if (!LaunchParameters.Instance.ValidForCoOp)
-        // {
-        //     Logger.LogDebug("Co-op not launching.");
-        //     return;
-        // }
-
         Instance = this;
+
+        // Launcher will set SERVER_ID when playing on hosted ReadyM servers
+        if (WukongApi.Configuration.GetLaunchParameter("SERVER_ID", "") != "")
+        {
+            services.RegisterSingleton<IFileClient, HttpFileClient>();
+            services.RegisterSingleton<IWukongSaveApi, CloudWukongSaveApi>();
+        }
 
         services.RegisterSingleton<ColliderDisableData>();
         services.RegisterSingleton<CoopSaveManager>();

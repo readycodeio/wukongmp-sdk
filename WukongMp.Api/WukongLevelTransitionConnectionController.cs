@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using b1;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Relay.Client;
 using WukongMp.Api.WukongUtils;
@@ -10,7 +11,7 @@ namespace WukongMp.Api;
 internal class WukongLevelTransitionConnectionController(
     WukongEventBus eventBus,
     WukongConnectionManager connection
-) : IScopedLifetime, IDisposable
+) : IHostedService
 {
     public void OnScopeStart()
     {
