@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using WukongMp.Api.Tests.TestActions;
 
 namespace WukongMp.Api.Tests.TestActionSequences
 {
-    public class AllGameplayTestsSequence : TestActionSequenceBase
+    internal class AllGameplayTestsSequence : TestActionSequenceBase
     {
         private List<Type> _allAvailableTestTypes = [];
 

@@ -1,82 +1,69 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Friflo.Engine.ECS;
 using LiteNetLib;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
-using WukongMp.Api.State;
 
 namespace WukongMp.Api;
 
 [Obsolete]
-public class WukongConnectionManager : IDisposable
+internal class WukongConnectionManager(
+    IRelayClient relayClient,
+    ClientState state,
+    ILogger logger
+) : IHostedService
 {
-    public RelayClientService RelayClientService { get; }
-    public IRelayClient RelayClient { get; }
-    public WukongAreaState AreaState { get; }
-    public WukongPlayerState PlayerState { get; }
+    private readonly ILogger _logger = logger;
+    private readonly RelayClientService _relayClientService = new(relayClient, logger);
 
-    private readonly ClientState _state;
-    private readonly ILogger _logger;
-
-    public PlayerId? PlayerId => PlayerState.LocalPlayerId;
-
-    public bool IsRunning
-        => RelayClientService.IsRunning;
-
-    public bool RequestedConnect
-        => RelayClient.RequestedConnect;
-
-    public AreaId? RequestedAreaId
-        => RelayClient.RequestedAreaId;
-
-    public WukongConnectionManager(RelayClientService relayClientService,
-        ClientState state,
-        WukongPlayerState playerState,
-        WukongAreaState areaState,
-        ILogger logger)
+    public void OnScopeStart()
     {
-        RelayClientService = relayClientService;
-        RelayClient = relayClientService.RelayClient;
-        AreaState = areaState;
-        PlayerState = playerState;
-        _state = state;
-        _logger = logger;
-
-        _state.OnConnected += OnConnectedHandler;
-        _state.OnDisconnected += OnDisconnectedHandler;
-    }
-
-    private static void OnConnectedHandler(PlayerId player, Entity entity)
-    {
-        entity.GetComponent<PlayerComponent>().NickName = LaunchParameters.Instance.Nickname;
+        state.OnConnected += OnConnectedHandler;
+        state.OnDisconnected += OnDisconnectedHandler;
     }
 
     public void Dispose()
     {
-        _state.OnConnected -= OnConnectedHandler;
-        _state.OnDisconnected -= OnDisconnectedHandler;
+        state.OnConnected -= OnConnectedHandler;
+        state.OnDisconnected -= OnDisconnectedHandler;
+    }
+
+    public bool IsRunning
+        => _relayClientService.IsRunning;
+
+    public bool RequestedConnect
+        => relayClient.RequestedConnect;
+
+    private AreaId? RequestedAreaId
+        => relayClient.RequestedAreaId;
+
+    private static void OnConnectedHandler(PlayerId player, Entity entity)
+    {
+        entity.GetComponent<PlayerComponent>().Nickname = LaunchParameters.Instance.Nickname;
     }
 
     public void Start()
     {
-        RelayClientService.Start();
+        _relayClientService.Start();
     }
 
     public void Stop()
     {
-        RelayClientService.Stop();
+        _relayClientService.Stop();
     }
 
     public void Connect()
     {
-        RelayClient.RequestConnect();
+        relayClient.RequestConnect();
     }
 
     public void Disconnect()
@@ -84,24 +71,24 @@ public class WukongConnectionManager : IDisposable
         if (RequestedAreaId != null)
             LeaveArea();
         if (RequestedConnect)
-            RelayClient.RequestDisconnect();
+            relayClient.RequestDisconnect();
     }
 
     public void JoinArea(AreaId areaId)
     {
-        RelayClient.RequestJoinArea(areaId);
+        relayClient.RequestJoinArea(areaId);
     }
 
     public void LeaveArea()
     {
-        RelayClient.RequestLeaveArea();
+        relayClient.RequestLeaveArea();
     }
 
     public void Reconnect()
     {
         Logging.LogInformation("Attempting to reconnect...");
 
-        RelayClient.Scheduler.Schedule(async void (context, self) =>
+        relayClient.Scheduler.Schedule(async void (_, self) =>
         {
             try
             {

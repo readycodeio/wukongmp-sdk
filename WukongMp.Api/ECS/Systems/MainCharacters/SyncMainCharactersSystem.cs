@@ -1,45 +1,43 @@
-﻿using Friflo.Engine.ECS;
+﻿using b1;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Api.Multiplayer.Mapping.Data;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class SyncMainCharactersSystem(
+internal class SyncMainCharactersSystem(
     WukongPlayerState playerState,
     WukongPlayerModeManager modeManager,
     WukongEventBus eventBus,
-    WukongWidgetManager widgetManager,
     GameplayConfiguration configuration,
     GameplayEventRouter eventRouter,
+    IComponentFieldMappingRegistry mappedField,
     ILogger logger
 )
-    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
+    : QuerySystem<MainCharacterComponent>
 {
     protected override void OnUpdate()
     {
         if (!eventBus.IsGameplayLevel)
             return;
 
-        Query.ForEachEntity((
-            ref localMainComp,
-            ref mainComp, entity) =>
+        Query.ForEachEntity((ref mainComp, entity) =>
         {
-            if (localMainComp.Pawn == null)
+            var mainEntity = new MainCharacterEntity(entity);
+
+            if (mainEntity.Pawn == null)
                 return;
 
             var playerEntity = playerState.GetPlayerById(mainComp.PlayerId);
             if (playerEntity == null)
                 return;
 
-            var mainEntity = new MainCharacterEntity(entity);
             if (mainComp.PlayerId != playerState.LocalPlayerId)
             {
                 SyncOtherMainCharacterState(playerEntity.Value, mainEntity);
@@ -61,7 +59,7 @@ public class SyncMainCharactersSystem(
         if (isSpectator != localMainComp.IsSpectatorLocally)
         {
             localMainComp.IsSpectatorLocally = isSpectator;
-            if (modeManager.HandleBecameSpectator(playerEntity, mainEntity, isSpectator))
+            if (modeManager.HandleBecameSpectator(mainEntity, isSpectator))
             {
                 var playerId = playerEntity.Entity.GetComponent<MetadataComponent>().Owner;
                 Logging.LogInformation("Player {Id} spectator status changed: {Spectator}", playerId, isSpectator);
@@ -69,11 +67,11 @@ public class SyncMainCharactersSystem(
         }
 
         ref readonly var teamComp = ref mainEntity.GetTeam();
-        var pawnTeamId = localMainComp.Pawn!.GetTeamIDInCS();
+        var pawnTeamId = mainEntity.Pawn!.GetTeamIDInCS();
         if (pawnTeamId != teamComp.TeamId)
         {
-            logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.NickName);
-            ClientUtils.RegisterAndSetPlayerTeam(localMainComp.Pawn, teamComp.TeamId);
+            logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.Nickname);
+            ClientUtils.RegisterAndSetPlayerTeam(mainEntity.Pawn, teamComp.TeamId);
             eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
     }
@@ -88,7 +86,7 @@ public class SyncMainCharactersSystem(
             var playerTeamId = playerComp.TeamId;
             if (playerTeamId != mainEntity.GetTeam().TeamId)
             {
-                logger.LogDebug("Assigning team ID {TeamId} to player {Name} from player to character", playerTeamId, playerComp.NickName);
+                logger.LogDebug("Assigning team ID {TeamId} to player {Name} from player to character", playerTeamId, playerComp.Nickname);
                 mainEntity.SetTeam(new TeamComponent
                 {
                     TeamId = playerTeamId,
@@ -101,24 +99,12 @@ public class SyncMainCharactersSystem(
     {
         SyncMainCharacterStateBase(playerEntity, mainEntity);
 
-        ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
-
-        if (localMainComp.Pawn == null)
+        if (mainEntity.Pawn == null)
             return;
 
-        var eqCopy = mainComp.Equipment;
-        if (eqCopy.IsLocallyDirty)
+        if (mappedField.CanSyncToGame<MainCharacterComponent>(mainEntity.Entity, out var sync))
         {
-            if (localMainComp.Pawn.GetClass().PathName != Constants.WukongDashengClassPath)
-            {
-                EquipmentUtils.SetActorEquipment(localMainComp.Pawn, mainComp.Equipment);
-            }
-
-            eqCopy.ClearLocallyDirty();
-            mainComp.Equipment = eqCopy;
-            // Equipment is passed by value, so we need to reassign it
-            // This sets the dirty flag, but since we're not the owner of the entity, it won't be sent back to the server
+            sync.SyncToGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), mainEntity.Pawn);
         }
     }
 }

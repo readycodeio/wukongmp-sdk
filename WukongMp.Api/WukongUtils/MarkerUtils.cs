@@ -1,35 +1,47 @@
 ﻿using b1;
 using b1.BGW;
+using Friflo.Engine.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class MarkerUtils
+internal static class MarkerUtils
 {
-    public static void CreateMarkerForCharacter(TamerEntity tamerEntity, string color)
+    public static void CreateMarkerForPlayer(Entity entity, string text, string color)
     {
-        var markerActor = SpawnMarkerActor();
-        if (markerActor == null)
+        if (!entity.HasComponent<MarkerComponent>())
+        {
+            Logging.LogError("Entity {Entity} does not have MarkerComponent", entity.GetNetId());
             return;
+        }
 
-        ref var nameComp = ref tamerEntity.GetNickname();
-        ref var markerComp = ref tamerEntity.GetMarker();
+        ref var localMainComp = ref entity.GetComponent<MarkerComponent>();
 
-        markerActor.CallFunctionByNameWithArguments($"SetText {nameComp.Nickname} {color}", true);
-        markerComp.MarkerActor = markerActor;
-        markerComp.DestroyQueued = false;
+        var markerActor = localMainComp.MarkerActor ?? SpawnMarkerActor();
+        if (markerActor == null)
+        {
+            Logging.LogError("Failed to create marker actor for player {Entity}", entity.GetNetId());
+            return;
+        }
+
+        markerActor.CallFunctionByNameWithArguments($"SetText {text} {color}", true);
+        localMainComp.MarkerActor = markerActor;
     }
 
-    public static void DestroyMarkerForCharacter(TamerEntity tamerEntity)
+    public static void DestroyMarkerForCharacter(Entity entity)
     {
-        ref var markerComp = ref tamerEntity.GetMarker();
+        if (!entity.HasComponent<MarkerComponent>())
+            return;
+
+        ref var markerComp = ref entity.GetComponent<MarkerComponent>();
 
         if (!markerComp.DestroyQueued)
         {
-            Logging.LogDebug("Destroying marker for monster {NetId}, guid {Guid}", tamerEntity.GetMeta().NetId, tamerEntity.GetTamer().Guid);
+            Logging.LogDebug("Destroying marker for entity {NetId}", entity.GetNetId());
             markerComp.DestroyQueued = true;
 
             var markerActor = markerComp.MarkerActor;
@@ -42,22 +54,7 @@ public static class MarkerUtils
         }
     }
 
-    public static AActor? CreateMarkerForCharacter(MainCharacterEntity mainEntity, string color)
-    {
-        var markerActor = SpawnMarkerActor();
-        if (markerActor == null)
-            return null;
-
-        ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
-
-        markerActor.CallFunctionByNameWithArguments($"SetText {mainComp.CharacterNickName} {color}", true);
-        localMainComp.MarkerActor = markerActor;
-
-        return markerActor;
-    }
-
-    public static AActor? SpawnMarkerActor()
+    private static AActor? SpawnMarkerActor()
     {
         var world = GameUtils.GetWorld();
         var markerActorClass = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);

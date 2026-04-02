@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using b1;
 using b1.BGW;
 using b1.ECS;
@@ -19,11 +18,13 @@ using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
+using WukongMp.Coop.Configuration;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.Coop.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public static class PatchStartGameUiCoop
 {
     [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
@@ -48,15 +49,21 @@ public static class PatchStartGameUiCoop
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
-                    UiUtils.ShowTip(Texts.MissingPak, false);
+                    WukongApi.Widgets.ShowTip(BuiltinTexts.MissingPak, false);
                     Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
                 }
-                else if (!DI.Instance.State.IsConnected)
+                else if (!WukongApi.Sync.IsConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
 
-                    DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected); }); });
+                    WukongApi.Sync.GetDisconnectReasonAndInvoke(reason =>
+                    {
+                        Utils.TryRunOnGameThread(() =>
+                        {
+                            WukongApi.Local.ShowInfoMessage(reason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected);
+                        });
+                    });
                     Logging.LogError("Disconnected. Could not continue game.");
                 }
                 else
@@ -87,7 +94,7 @@ public static class PatchStartGameUiCoop
 /// Hide challenges shrine options in coop mode.
 /// </summary>
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchShrineRegisterFunc
 {
     [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
@@ -99,7 +106,7 @@ public class PatchShrineRegisterFunc
 
     public static bool Prefix(int FuncId)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
         var interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
@@ -109,7 +116,7 @@ public class PatchShrineRegisterFunc
 }
 
 [HarmonyPatch(typeof(BUI_BattleInfoCS), "InitBloodBarUI")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchInitBloodBarUI
 {
     public static bool Prefix(BUI_BattleInfoCS __instance, Dictionary<Entity, BUI_ProjWidget> ___EntityDic, Dictionary<AActor, DSBarInfoBind> ___BloodBarActorBindDict, Entity Entity)
@@ -127,7 +134,7 @@ public class PatchInitBloodBarUI
         if (battleInfoExtendDesc == null)
             return false;
 
-        var maybePlayer = DI.Instance.PawnState.GetEntityByPlayerPawn(actor);
+        var maybePlayer = WukongApi.Sync.GetPlayerEntityByActor(actor);
         var isPlayer = maybePlayer.HasValue;
         var bloodBarShowType = isPlayer ? EBGUBloodBarShowType.Always : EBGUBloodBarShowType.Change;
 
@@ -149,7 +156,7 @@ public class PatchInitBloodBarUI
             ___EntityDic.Add(Entity, bloodBarPoolWidget);
         }
 
-        if (!___EntityDic.ContainsKey(Entity) || !___BloodBarActorBindDict.TryGetValue(actor, out DSBarInfoBind dsBarInfoBind))
+        if (!___EntityDic.ContainsKey(Entity) || !___BloodBarActorBindDict.TryGetValue(actor, out var dsBarInfoBind))
             return false;
 
         dsBarInfoBind.ReInit();
@@ -158,7 +165,7 @@ public class PatchInitBloodBarUI
 }
 
 [HarmonyPatch(typeof(BUS_UnitBarInfoComp), "ShowEnemyBar")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchShowEnemyBar
 {
     public static bool Prefix(BUS_UnitBarInfoComp __instance, ref bool __result)
@@ -169,6 +176,7 @@ public class PatchShowEnemyBar
             __result = !BGUFunctionLibraryCS.BGUHasUnitSimpleState(owner, EBGUSimpleState.CantShowBlood);
             return false;
         }
+
         return true;
     }
 }

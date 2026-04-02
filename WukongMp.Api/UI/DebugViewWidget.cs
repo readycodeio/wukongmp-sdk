@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.UI
 {
-    public class DebugViewWidget : GameWidgetBase
+    internal class DebugViewWidget : GameWidgetBase
     {
         private const string DebugViewWidgetPath = "/Game/Mods/WukongMod/Debug/WBP_DebugView.WBP_DebugView_C";
 
@@ -51,7 +52,7 @@ namespace WukongMp.Api.UI
             byte* ptr = stackalloc byte[(int)(uint)(SetPlayerPosition_ParamsSize + 16)];
             int num = (int)((16L - (long)ptr) & 0xF);
             byte* ptr2 = ptr + num;
-            System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetPlayerPosition_ParamsSize);
+            Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetPlayerPosition_ParamsSize);
             IntPtr intPtr = new IntPtr(ptr2);
 
             FStringMarshaler.ToNative(IntPtr.Add(intPtr, SetPlayerPosition_PlayerName_Offset), 0, SetPlayerPosition_PlayerName_PropertyAddress.Address, playerName);
@@ -79,7 +80,7 @@ namespace WukongMp.Api.UI
             byte* ptr = stackalloc byte[(int)(uint)(IsWidgetVisible_ParamsSize + 16)];
             int num = (int)((16L - (long)ptr) & 0xF);
             byte* ptr2 = ptr + num;
-            System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)IsWidgetVisible_ParamsSize);
+            Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)IsWidgetVisible_ParamsSize);
             IntPtr intPtr = new IntPtr(ptr2);
 
             NativeReflection.InvokeFunctionOptimized(GameWidget.Address, IsWidgetVisible_FunctionAddress, intPtr, IsWidgetVisible_ParamsSize);

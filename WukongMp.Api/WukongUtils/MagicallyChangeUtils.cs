@@ -3,12 +3,12 @@ using b1.BGW;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class MagicallyChangeUtils
+internal static class MagicallyChangeUtils
 {
     public static void TriggerMagicallyChange(BGUCharacterCS pawn, string configAssetPath, int skillID, int recoverSkillID, int curVigorSkillID, ECastReason_MagicallyChange castReason = ECastReason_MagicallyChange.VigorSkill)
     {
         var world = GameUtils.GetWorld();
-        UBGWDataAsset config = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UBGWDataAsset>(configAssetPath, ELoadResourceType.SyncLoadAndCache);
+        var config = BGW_PreloadAssetMgr.Get(world).TryGetCachedResourceObj<UBGWDataAsset>(configAssetPath, ELoadResourceType.SyncLoadAndCache);
         if (config == null)
         {
             Logging.LogError("Failed to load MagicallyChangeConfig from path: {Path}", configAssetPath);

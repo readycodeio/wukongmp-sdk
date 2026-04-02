@@ -1,22 +1,24 @@
-﻿using b1;
-using BtlShare;
-using Friflo.Engine.ECS.Systems;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.ECS.Values;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using b1;
+using BtlShare;
+using Friflo.Engine.ECS.Systems;
+using ReadyM.Api.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Components;
+using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
 
-namespace WukongMp.Api.ECS.Systems;
+namespace WukongMp.PvP.ECS.Systems;
 
-internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks rpc)
-    : QuerySystem<LocalMainCharacterComponent, MetadataComponent, TeamComponent>
+internal class PvpAntiStallSystem(WukongAreaState areaState, WukongClientRpcCallbacks rpc)
+    : QuerySystem<MappingComponent<AActor>, MetadataComponent, TeamComponent>
 {
     private struct PlayerEngagementData
     {
@@ -40,7 +42,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong _tickCounter;
     private float _elapsedTime;
-    private bool _isReset = false;
+    private bool _isReset;
 
     private float _warningTimer;
     private float _activeTimer;
@@ -50,7 +52,7 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
     private readonly Dictionary<NetworkId, PlayerEngagementData> _playerEngagementData = [];
     private readonly Random _rng = new();
 
-    private int _decayRounds = 0;
+    private int _decayRounds;
 
     protected override void OnUpdate()
     {
@@ -70,15 +72,15 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
             return;
         }
 
-        Query.ForEachEntity((ref localMainCharacter, ref metadata, ref team, entity) =>
+        Query.ForEachEntity((ref mapping, ref metadata, ref team, _) =>
         {
             var playerId = metadata.NetId;
-            if (!_playerEngagementData.TryGetValue(playerId, out PlayerEngagementData data))
+            if (!_playerEngagementData.TryGetValue(playerId, out var data))
             {
                 data=new PlayerEngagementData();
                 _playerEngagementData[playerId] = data;
             }
-            var pawn = localMainCharacter.Pawn;
+            var pawn = mapping.GameObject as BGUCharacterCS;
             if (pawn != null)
             {
                 data.LastPosition = pawn.GetActorLocation();
@@ -137,12 +139,12 @@ internal class PvpAntiStallSystem(WukongAreaState areaState, WukongRpcCallbacks 
 
     private void UpdatePlayerMultipliers()
     {
-        var _playerFacingDictionary = CalculatePlayerFacing();
+        var playerFacingDictionary = CalculatePlayerFacing();
         foreach (var playerId in _playerEngagementData.Keys)
         {
             float current = _playerEngagementMultipliers.TryGetValue(playerId, out var val) ? val : 1.0f;
 
-            if (_playerFacingDictionary.TryGetValue(playerId, out bool isFacing) && isFacing)
+            if (playerFacingDictionary.TryGetValue(playerId, out bool isFacing) && isFacing)
             {
                 current = MathF.Max(current - AntiStallConfig.PlayerEngagementMultiplierIncrease * _elapsedTime, AntiStallConfig.PlayerEngagementMultiplierMin);
             }

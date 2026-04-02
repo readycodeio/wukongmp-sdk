@@ -1,9 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using WukongMp.Api.PathCompressors;
 
 namespace WukongMp.Api.NameCompressors;
 
-public static class Compressors
+internal static class Compressors
 {
     public static readonly NameCompressor MontageNameCompressor = new(
         "/Game/00Main/Animation",

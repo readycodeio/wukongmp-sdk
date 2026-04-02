@@ -6,12 +6,13 @@ $zipName = "WukongMp"
 
 # Shared (variant-agnostic) file name lists
 $modFilesCore = @(
+    "order.txt",
     "WukongMp.Api.dll",
+    "WukongMp.Sdk.dll",
     "ReadyM.Api.dll",
     "ReadyM.Api.Multiplayer.dll",
     "ReadyM.Relay.Client.dll",
-    "ReadyM.Relay.Common.dll",
-    "ReadyM.Relay.Common.Wukong.dll",
+    "ReadyM.Wukong.Common.dll",
     "Friflo.Engine.ECS.dll",
     "Friflo.Engine.ECS.Boost.dll",
     "Friflo.Json.Burst.dll",
@@ -25,6 +26,10 @@ $modFilesCore = @(
     "Nito.AsyncEx.Context.dll",
     "Nito.AsyncEx.Tasks.dll",
     "Nito.Disposables.dll",
+    "Superpower.dll",
+    "DryIoc.dll",
+    "System.Reflection.Emit.dll",
+    "System.Reflection.Emit.ILGeneration.dll",
     "BouncyCastle.Cryptography.dll",
     "HttpMachine.dll",
     "IHttpMachine.dll"
@@ -32,11 +37,11 @@ $modFilesCore = @(
 
 $modFilesDebugCore = @(
     "WukongMp.Api.pdb",
+    "WukongMp.Sdk.pdb",
     "ReadyM.Api.pdb",
     "ReadyM.Api.Multiplayer.pdb",
     "ReadyM.Relay.Client.pdb",
-    "ReadyM.Relay.Common.pdb",
-    "ReadyM.Relay.Common.Wukong.pdb",
+    "ReadyM.Wukong.Common.pdb",
     "Friflo.Engine.ECS.pdb",
     "Friflo.Engine.ECS.Boost.pdb"
 )
@@ -59,53 +64,40 @@ $overridesFilesDebug = @(
     "LiteNetLib.pdb"
 )
 
-$saveFilesBase = @(
-    "cacert.pem",
-    "ArchiveSaveFile.1.sav" # Prologue save file
+$binaryFiles = @(
+    "cacert.pem"
 )
 
 # Culture folders (satellite assemblies)
 $cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
 
-function Get-VariantLists
+function Get-ModFiles
 {
     param(
-        [Parameter(Mandatory = $true)][string]$Variant,
+        [Parameter(Mandatory = $true)][string]$Mod,
         [Parameter(Mandatory = $true)][string]$Configuration
     )
 
     # Compute *per-variant* paths
-    $modSourceDir = "WukongMp.$Variant/bin/$Configuration/netstandard2.0"
+    $modSourceDir = "WukongMp.$Mod/bin/$Configuration/netstandard2.0"
     $reflectionOnlySourceDir = "WukongMp.Api/Game"
     $overridesSourceDir = "WukongMp.Api/Game"
-    $saveSourceDir = "Deployment"
+    $binariesSourceDir = "Deployment"
 
-    $modDestDir = "Mods/WukongMp.$Variant"
+    $modDestDir = "Mods/WukongMp.$Mod"
     $reflectionOnlyDestDir = "Mods/ReflectionOnly"
     $overridesDestDir = "Mods/Overrides"
-    $saveDestDir = "Mods/WukongMp.$Variant"
-
-    # Save files (PvP adds PvP save)
-    $saveFiles = @($saveFilesBase)
-    if ($Variant -eq 'PvP')
-    {
-        $saveFiles += "ArchiveSaveFile.0.sav"
-    }
     
-    # add "WukongMp.$ModVariant.dll" to modFilesCore
-    $modFilesVariant = $modFilesCore + "WukongMp.$Variant.dll"
-    $modFilesDebugVariant = $modFilesDebugCore + "WukongMp.$Variant.pdb"
-
     # Compose the triplets: @( <files>, <sourceDir>, <destDir> )
     $modFiles = @(
-        @($modFilesVariant, $modSourceDir, $modDestDir),
+        @($modFilesCore, $modSourceDir, $modDestDir),
         @($cultureFolders, $modSourceDir, $modDestDir),
         @($overridesFiles, $overridesSourceDir, $overridesDestDir),
-        @($saveFiles, $saveSourceDir, $saveDestDir)
+        @($binaryFiles, $binariesSourceDir, $modDestDir)
     )
 
     $devFiles = $modFiles + @(
-        @($modFilesDebugVariant, $modSourceDir, $modDestDir),
+        @($modFilesDebugCore, $modSourceDir, $modDestDir),
         @($overridesFilesDebug, $overridesSourceDir, $overridesDestDir),
         @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
     )

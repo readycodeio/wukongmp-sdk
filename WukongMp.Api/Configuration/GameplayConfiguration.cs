@@ -4,12 +4,13 @@ using Microsoft.Extensions.Logging;
 
 namespace WukongMp.Api.Configuration;
 
-public class GameplayConfiguration(ILogger logger)
+[Obsolete("TODO: Make a more centralized configuration system.")]
+public sealed class GameplayConfiguration(ILogger logger)
 {
     public bool IsSupportMultiLockEnabled { get; set; } = false;
     public bool IsStrongDamageImmueEnabled { get; set; } = false;
     public bool EnableCustomCameraArmLength { get; set; } = false;
-    public bool EnableSpawnedTamers { get; set; } = false;
+    public bool DeleteDestroyedTamersFromEcs { get; set; } = false;
     public bool DisableCutscenes { get; set; } = false;
 
     [Obsolete("To be replaced by data sync direction after refactoring")]
@@ -20,7 +21,7 @@ public class GameplayConfiguration(ILogger logger)
 
     private Func<bool>? disableTamerAttackQuery;
 
-    public void SetDisableTamerAttackQuery(Func<bool> query)
+    internal void SetDisableTamerAttackQuery(Func<bool> query)
     {
         if (disableTamerAttackQuery is not null)
             logger.LogError("DisableTamerAttackQuery is already set. Overriding the existing query.");
@@ -28,16 +29,16 @@ public class GameplayConfiguration(ILogger logger)
         disableTamerAttackQuery = query;
     }
 
-    public void ClearDisableTamerAttackQuery()
+    internal void ClearDisableTamerAttackQuery()
     {
         disableTamerAttackQuery = null;
     }
 
-    public bool ShouldDisableTamerAttack() => disableTamerAttackQuery?.Invoke() ?? false;
+    internal bool ShouldDisableTamerAttack() => disableTamerAttackQuery?.Invoke() ?? false;
 
     private Func<int, bool>? isSkillEnabledQuery;
 
-    public void SetIsSkillEnabledQuery(Func<int, bool> query)
+    internal void SetIsSkillEnabledQuery(Func<int, bool> query)
     {
         if (isSkillEnabledQuery is not null)
             logger.LogError("IsSkillEnabledQuery is already set. Overriding the existing query.");
@@ -45,18 +46,18 @@ public class GameplayConfiguration(ILogger logger)
         isSkillEnabledQuery = query;
     }
 
-    public void ClearIsSkillEnabledQuery()
+    internal void ClearIsSkillEnabledQuery()
     {
         isSkillEnabledQuery = null;
     }
 
-    public bool IsSkillEnabled(int skillId) => isSkillEnabledQuery?.Invoke(skillId) ?? true;
+    internal bool IsSkillEnabled(int skillId) => isSkillEnabledQuery?.Invoke(skillId) ?? true;
 
     // Custom IsPlayerInBattle
-    public bool EnableCustomIsPlayerInBattle { get; set; } = false;
+    internal bool EnableCustomIsPlayerInBattle { get; set; } = false;
     private Func<bool>? isPlayerInBattleQuery;
 
-    public void SetIsPlayerInBattleQuery(Func<bool> query)
+    internal void SetIsPlayerInBattleQuery(Func<bool> query)
     {
         if (isPlayerInBattleQuery is not null)
             logger.LogError("IsPlayerInBattleQuery is already set. Overriding the existing query.");
@@ -64,17 +65,17 @@ public class GameplayConfiguration(ILogger logger)
         isPlayerInBattleQuery = query;
     }
 
-    public void ClearIsPlayerInBattleQuery()
+    internal void ClearIsPlayerInBattleQuery()
     {
         isPlayerInBattleQuery = null;
     }
 
-    public bool IsPlayerInBattle() => isPlayerInBattleQuery?.Invoke() ?? false;
+    internal bool IsPlayerInBattle() => isPlayerInBattleQuery?.Invoke() ?? false;
 
     // IsInteractAllowed
     private Func<EInteractType, bool>? isInteractionAllowedQuery;
 
-    public void SetIsInteractionAllowedQuery(Func<EInteractType, bool> query)
+    internal void SetIsInteractionAllowedQuery(Func<EInteractType, bool> query)
     {
         if (isInteractionAllowedQuery is not null)
             logger.LogError("IsInteractionAllowedQuery is already set. Overriding the existing query.");
@@ -82,17 +83,17 @@ public class GameplayConfiguration(ILogger logger)
         isInteractionAllowedQuery = query;
     }
 
-    public void ClearIsInteractionAllowedQuery()
+    internal void ClearIsInteractionAllowedQuery()
     {
         isPlayerInBattleQuery = null;
     }
 
-    public bool IsInteractionAllowed(EInteractType interactType) => isInteractionAllowedQuery?.Invoke(interactType) ?? true;
+    internal bool IsInteractionAllowed(EInteractType interactType) => isInteractionAllowedQuery?.Invoke(interactType) ?? true;
 
     // IsTamerNotSynchronized
     private Func<string, bool>? isTamerNotSynchronizedQuery;
 
-    public void SetIsTamerNotSynchronizedQuery(Func<string, bool> query)
+    internal void SetIsTamerNotSynchronizedQuery(Func<string, bool> query)
     {
         if (isTamerNotSynchronizedQuery is not null)
             logger.LogError("IsTamerNotSynchronizedQuery is already set. Overriding the existing query.");
@@ -100,17 +101,17 @@ public class GameplayConfiguration(ILogger logger)
         isTamerNotSynchronizedQuery = query;
     }
 
-    public void ClearIsTamerNotSynchronizedQuery()
+    internal void ClearIsTamerNotSynchronizedQuery()
     {
         isTamerNotSynchronizedQuery = null;
     }
 
-    public bool IsTamerNotSynchronized(string guid) => isTamerNotSynchronizedQuery?.Invoke(guid) ?? true;
+    internal bool IsTamerNotSynchronized(string guid) => isTamerNotSynchronizedQuery?.Invoke(guid) ?? true;
 
     // IsAreaOverlapDisabled
     private Func<string, bool>? isAreaOverlapDisabledQuery;
 
-    public void SetIsAreaOverlapDisabledQuery(Func<string, bool> query)
+    internal void SetIsAreaOverlapDisabledQuery(Func<string, bool> query)
     {
         if (isAreaOverlapDisabledQuery is not null)
             logger.LogError("IsAreaOverlapDisabledQuery is already set. Overriding the existing query.");
@@ -118,10 +119,10 @@ public class GameplayConfiguration(ILogger logger)
         isAreaOverlapDisabledQuery = query;
     }
 
-    public void ClearIsAreaOverlapDisabledQuery()
+    internal void ClearIsAreaOverlapDisabledQuery()
     {
         isAreaOverlapDisabledQuery = null;
     }
 
-    public bool IsAreaOverlapDisabled(string guid) => isAreaOverlapDisabledQuery?.Invoke(guid) ?? false;
+    internal bool IsAreaOverlapDisabled(string guid) => isAreaOverlapDisabledQuery?.Invoke(guid) ?? false;
 }

@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Shim;
@@ -12,7 +12,7 @@ using WukongMp.Api.Https;
 
 namespace WukongMp.Api.Shim;
 
-public class ShimAutoStarter : IDisposable
+internal class ShimAutoStarter : IDisposable
 {
     private readonly IClientEcsUpdateLoop _ecsLoop;
     private readonly IClientEcsUpdateLoop _shimEcsLoop;
@@ -25,7 +25,7 @@ public class ShimAutoStarter : IDisposable
 
     private readonly ShimRelayRecorder _recorder;
     private readonly IRelayClient _recorderRelayClient;
-    private readonly IBlobClient _recorderRelayBlobClient;
+    // private readonly IBlobClient _recorderRelayBlobClient;
     private readonly RelayClientService _recorderRelayService;
 
     public bool ShouldAutoRecord { get; set; }
@@ -42,7 +42,7 @@ public class ShimAutoStarter : IDisposable
         IClientEcsUpdateLoop shimEcsLoop,
         ShimPlaybackRelayClient playbackClient,
         ShimRelayRecorder recorder,
-        IBlobClient recorderRelayBlobClient,
+        // IBlobClient recorderRelayBlobClient,
         RelayClientService recorderRelayService,
         ILogger logger
     )
@@ -57,7 +57,7 @@ public class ShimAutoStarter : IDisposable
 
         _recorder = recorder;
         _recorderRelayClient = _recorder.AttachedRelayClient;
-        _recorderRelayBlobClient = recorderRelayBlobClient;
+        // _recorderRelayBlobClient = recorderRelayBlobClient;
         _recorderRelayService = recorderRelayService;
 
         _logger = logger;
@@ -175,12 +175,12 @@ public class ShimAutoStarter : IDisposable
 
         _recorderRelayClient.RequestJoinArea(areaId.Value);
 
-        _logger.LogDebug("Requesting saves to record the results for shim");
-        var recordSaveRelay = new WukongSaveRelay(_recorderRelayBlobClient, _logger);
-        var worldSave = await recordSaveRelay.DownloadWorldSaveAsync();
-        _logger.LogDebug("World save downloaded: {WorldSave}, size {Size} bytes", worldSave?.Name, worldSave?.Content.Length);
-        var playerSave = await recordSaveRelay.DownloadPlayerSaveAsync();
-        _logger.LogDebug("Player save downloaded: {PlayerSave}, size {Size} bytes", playerSave?.Name, playerSave?.Content.Length);
+        // _logger.LogDebug("Requesting saves to record the results for shim");
+        // var recordSaveRelay = new CloudWukongSaveApi(_recorderRelayBlobClient, _logger);
+        // var worldSave = await recordSaveRelay.DownloadWorldSaveAsync();
+        // _logger.LogDebug("World save downloaded: {WorldSave}, size {Size} bytes", worldSave?.Name, worldSave?.Content.Length);
+        // var playerSave = await recordSaveRelay.DownloadPlayerSaveAsync();
+        // _logger.LogDebug("Player save downloaded: {PlayerSave}, size {Size} bytes", playerSave?.Name, playerSave?.Content.Length);
     }
 
     private void OnRecordingStoppedHandler()

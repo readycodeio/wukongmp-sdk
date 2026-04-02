@@ -1,11 +1,13 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+using Microsoft.Extensions.Logging;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class GameSaveUtils
+internal static class GameSaveUtils
 {
-    public static string GetModsDirectory()
+    internal static string GetModsDirectory()
     {
         if (LaunchParameters.Instance.ModFolderOverride != null)
         {
@@ -27,10 +29,12 @@ public static class GameSaveUtils
         return FPaths.Combine(FPaths.ProjectDir, "Binaries", "Win64", "CSharpLoader", "Mods", modName);
     }
 
-    // TODO: We need a universal way to get mod DLL name. We pass Assembly for now, but it's a hack.
-    public static string GetSaveFileFullName(Assembly modAssembly, string slotName)
+    internal static string GetSaveFileFullName(Assembly modAssembly, string slotName)
     {
         slotName += ".sav";
-        return FPaths.Combine(GetModDirectory(modAssembly), slotName);
+        var path = FPaths.Combine(GetModDirectory(modAssembly), slotName);
+
+        DI.Instance.Logger.LogDebug("Redirecting save file to {Path}", path);
+        return path;
     }
 }

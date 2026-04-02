@@ -1,17 +1,19 @@
-﻿using b1;
+﻿using System.Reflection;
+using b1;
 using BtlB1;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using System.Reflection;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_MFOverlapCompImpl), "OnMagicFieldDead")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnMagicFieldDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnMagicFieldDead
 {
     public static void Postfix(BUS_MFOverlapCompImpl __instance, EBGUBulletDestroyReason Reason)
     {
@@ -23,14 +25,14 @@ public static class PatchOnMagicFieldDead
         if (className.Contains(Constants.SupremeInspectorFirewallName))
         {
             Logging.LogDebug("OnMagicFieldDead send for {Class}", className);
-            DI.Instance.Rpc.SendMagicFieldDead(className, Reason);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MagicFieldDeadEvent(className, Reason), default(EmptyContext));
         }
     }
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOSpawnAProjectileObj
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOSpawnAProjectileObj
 {
     [HarmonyTargetMethodHint("b1.BGS_ProjectileManager", "SpawnAProjectileObj")]
     private static MethodBase TargetMethod()
@@ -66,7 +68,7 @@ public class PatchOSpawnAProjectileObj
             if (localMainCharacter.HasValue)
             {
                 Logging.LogDebug("Teleporting local player to firewall location");
-                PlayerUtils.TeleportLocalPlayer(localMainCharacter.Value, Constants.SupremeInspectorFirewallLocation, localMainCharacter.Value.GetLocalState().Pawn?.GetActorRotation() ?? FRotator.ZeroRotator);
+                PlayerUtils.TeleportLocalPlayer(localMainCharacter.Value, Constants.SupremeInspectorFirewallLocation, localMainCharacter.Value.Pawn?.GetActorRotation() ?? FRotator.ZeroRotator);
             }
         }
     }

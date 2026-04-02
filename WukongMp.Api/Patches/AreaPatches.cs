@@ -5,8 +5,8 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_AreaOverlapComp), "EnableOverlap")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchEnableOverlap
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchEnableOverlap
 {
     public static bool Prefix(BUS_AreaOverlapComp __instance)
     {
@@ -25,8 +25,8 @@ public class PatchEnableOverlap
 }
 
 [HarmonyPatch(typeof(BUS_AreaOverlapComp), "OnActorEnter_EnterArea")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnActorEnter_EnterArea
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnActorEnter_EnterArea
 {
     public static bool Prefix(BUS_AreaOverlapComp __instance)
     {

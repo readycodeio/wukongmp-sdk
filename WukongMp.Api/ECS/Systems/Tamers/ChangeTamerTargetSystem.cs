@@ -1,12 +1,13 @@
 ﻿using b1;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class ChangeTamerTargetSystem : QuerySystem<LocalTamerComponent>
+internal sealed class ChangeTamerTargetSystem(ClientOwnershipManager clientOwnership) : QuerySystem<LocalTamerComponent>
 {
     private float _elapsedTime;
 
@@ -16,12 +17,12 @@ public sealed class ChangeTamerTargetSystem : QuerySystem<LocalTamerComponent>
         {
             _elapsedTime = 0;
 
-            Query.ForEachEntity((
-                ref localTamerComp, entity) =>
+            Query.ForEachEntity((ref _, entity) =>
             {
-                if (DI.Instance.ClientOwnership.OwnsEntity(entity) && BGUFunctionLibraryCS.BGUIsUnitInBattle(localTamerComp.Pawn))
+                var tamerEntity = new TamerEntity(entity);
+                if (clientOwnership.OwnsEntity(entity) && BGUFunctionLibraryCS.BGUIsUnitInBattle(tamerEntity.Pawn))
                 {
-                    BGUFuncLibAICS.SearchTargetSP(localTamerComp.Pawn);
+                    BGUFuncLibAICS.SearchTargetSP(tamerEntity.Pawn);
                 }
             });
         }

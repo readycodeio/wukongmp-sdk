@@ -1,53 +1,61 @@
-﻿using b1;
+﻿using System;
+using b1;
 using BtlB1;
 using BtlShare;
-using System;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Relay.Client.State;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.ECS.Values;
+using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils
 {
-    public static class PlayerUtils
+    internal static class PlayerUtils
     {
         public static void TeleportLocalPlayer(MainCharacterEntity mainEntity, FVector location, FRotator rotation, bool setLookAt = true)
         {
+            var pawn = mainEntity.Pawn;
             ref var localMainComp = ref mainEntity.GetLocalState();
-            if (localMainComp.Pawn == null)
+            if (pawn == null)
             {
                 Logging.LogError("Failed to teleport local player: Pawn is null");
                 return;
             }
-            BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
+
+            BUS_EventCollectionCS.Get(pawn)?.Evt_UnitStateTrigger.Invoke(EBUStateTrigger.TeleportBegin, -1f);
             localMainComp.TeleportFinishFrames = 5;
-            var correctedLocation = SpawningUtils.GetCorrectedSpawnLocation(localMainComp.Pawn, location);
-            localMainComp.Pawn.SetActorTransform(new FTransform(rotation, correctedLocation), false, out _, true);
+            var correctedLocation = SpawningUtils.GetCorrectedSpawnLocation(pawn, location);
+            pawn.SetActorTransform(new FTransform(rotation, correctedLocation), false, out _, setLookAt);
             if (setLookAt)
             {
-                BUS_EventCollectionCS.Get(localMainComp.Pawn)?.Evt_ResetCameraSpringArmRot.Invoke();
+                BUS_EventCollectionCS.Get(pawn)?.Evt_ResetCameraSpringArmRot.Invoke();
             }
         }
 
         public static void SetPlayerInteractionEnabled(MainCharacterEntity mainEntity, bool enabled)
         {
-            ref var localMainComp = ref mainEntity.GetLocalState();
+            var pawn = mainEntity.Pawn;
 
-            IBUC_SimpleStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_SimpleStateData, BUC_SimpleStateData>(localMainComp.Pawn);
+            IBUC_SimpleStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_SimpleStateData, BUC_SimpleStateData>(pawn);
             var hasCantInteract = readOnlyData.HasSimpleState(EBGUSimpleState.CantInteract);
 
             if (!enabled && hasCantInteract)
                 return;
 
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            var events = BUS_EventCollectionCS.Get(pawn);
             events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
         }
 
         public static void SetLocalPlayerDamageImmunity(MainCharacterEntity mainEntity, bool enabled)
         {
-            ref var localMainComp = ref mainEntity.GetLocalState();
-            var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+            var pawn = mainEntity.Pawn;
+            var events = BUS_EventCollectionCS.Get(pawn);
             if (events != null)
             {
                 events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, !enabled);
@@ -88,7 +96,12 @@ namespace WukongMp.Api.WukongUtils
         public static void TeleportLocalPlayerToCurrentRebirthPoint(MainCharacterEntity mainEntity)
         {
             var transform = GetCurrentRebirthPointTransform();
-            TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), false);
+            TeleportLocalPlayer(mainEntity, transform.GetLocation(), transform.GetRotation().Rotator(), true);
+
+            if (DI.Instance.FreeCameraManager.IsInFreeCameraMode)
+            {
+                DI.Instance.FreeCameraManager.SetFreeCameraActorTransform(transform);
+            }
         }
 
         public static void TeleportLocalPlayerToRebirthPoint(MainCharacterEntity mainEntity, int rebirthPointId)
@@ -146,8 +159,8 @@ namespace WukongMp.Api.WukongUtils
                 return FTransform.Default;
             }
 
-            UBGWFunctionLibraryCS.GetRebirthPointTransform(GameUtils.GetWorld(), rebirthPointData.CurrentBirthPoint.PointID, out var Transform);
-            return Transform;
+            UBGWFunctionLibraryCS.GetRebirthPointTransform(GameUtils.GetWorld(), rebirthPointData.CurrentBirthPoint.PointID, out var transform);
+            return transform;
         }
 
         private static FTransform GetRebirthPointTransform(int rebirthPointId)
@@ -175,40 +188,48 @@ namespace WukongMp.Api.WukongUtils
             BUS_EventCollectionCS.Get(character)?.Evt_SetIsEnableCollisionHitMove.Invoke(enabled, ECollisionHitMoveEnableReqType.Interact);
         }
 
-        public static void RespawnSoftlockedParty(MainCharacterEntity mainCharacter)
+        public static void RespawnSoftlockedParty(Store world, IMappedEventManager mappedEvent, MainCharacterEntity mainEntity)
         {
             var maxComp = 0;
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
+            world.Query<MainCharacterComponent>().ForEachEntity((ref mainComp, _) => { maxComp = Math.Max(maxComp, mainComp.RebirthPointId); });
 
-            ref var localMainComp = ref mainCharacter.GetLocalState();
+            ref var localMainComp = ref mainEntity.GetLocalState();
             localMainComp.IsRespawning = true;
-            DI.Instance.Rpc.SendPartySoftlock(maxComp);
+
+            mappedEvent.InvokeInGameAndNotifyEcs(new PartySoftlockEvent(
+                entity: mainEntity.Entity,
+                birthPointId: maxComp
+            ), default(EmptyContext));
         }
 
-        public static void DisableOtherPlayersCollision()
+        public static void DisableOtherPlayersCollision(ClientState clientState, WukongPlayerState playerState)
         {
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            foreach (var playerId in clientState.OtherAreaPlayers)
             {
-                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
                 if (mainEntity == null)
                     continue;
-                ref var localMain = ref mainEntity.Value.GetLocalState();
-                if (localMain.Pawn == null)
+
+                var pawn = mainEntity.Value.Pawn;
+                if (pawn == null)
                     continue;
-                SetCollisionEnabled(localMain.Pawn, false);
-                localMain.ShouldDisableCollision = true;
+
+                ref var localMainComp = ref mainEntity.Value.GetLocalState();
+                SetCollisionEnabled(pawn, false);
+                localMainComp.ShouldDisableCollision = true;
             }
         }
 
-        public static void AllowOtherPlayersCollision()
+        public static void AllowOtherPlayersCollision(ClientState clientState, WukongPlayerState playerState)
         {
-            foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
+            foreach (var playerId in clientState.OtherAreaPlayers)
             {
-                var mainEntity = DI.Instance.PlayerState.GetMainCharacterById(playerId);
+                var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
                 if (mainEntity == null)
                     continue;
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                if (localMain.Pawn == null)
+                var pawn = mainEntity.Value.Pawn;
+                if (pawn == null)
                     continue;
                 localMain.ShouldDisableCollision = false;
             }
@@ -216,19 +237,15 @@ namespace WukongMp.Api.WukongUtils
 
         public static void EnableSpectator(MainCharacterEntity mainEntity, SpectatorReason reason)
         {
-            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickName, reason);
+            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickname, reason);
             ref var pvp = ref mainEntity.GetPvP();
             pvp.IsSpectator = true;
             pvp.SpectatorReason = reason;
-
-            ref var localState = ref mainEntity.GetLocalState();
-            if (localState.Pawn != null)
-                localState.BeforeSpectatorLocation = localState.Pawn.GetActorLocation();
         }
 
         public static void DisableSpectator(MainCharacterEntity mainEntity)
         {
-            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickName);
+            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickname);
             mainEntity.GetPvP().IsSpectator = false;
             mainEntity.GetLocalState().IsDuringDeathAnim = false;
         }

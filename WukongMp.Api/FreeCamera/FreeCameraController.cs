@@ -1,11 +1,11 @@
-﻿using B1UI;
-using CSharpModBase;
-using CSharpModBase.Input;
-using ReadyM.Api.Multiplayer.Idents;
-using ReadyM.Relay.Client.State;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using B1UI;
+using CSharpModBase;
+using CSharpModBase.Input;
+using ReadyM.Api.Idents;
+using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 using WukongMp.Api.ECS.Entities;
@@ -15,7 +15,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.FreeCamera
 {
-    public class FreeCameraController : IDisposable
+    internal class FreeCameraController : IDisposable
     {
         private float _rotateDirLR;
         private float _rotateDirUD;
@@ -51,14 +51,14 @@ namespace WukongMp.Api.FreeCamera
         private (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)? GetEntities(PlayerId playerId)
         {
             var playerEntity = _playerState.GetPlayerById(playerId);
-            var mainEntity = _playerState.GetMainCharacterById(playerId);
+            var mainEntity = _playerState.GetMainCharacterByPlayerId(playerId);
             if (!playerEntity.HasValue || !mainEntity.HasValue)
                 return null;
             return (PlayerId: playerId, Player: playerEntity.Value, Character: mainEntity.Value);
         }
 
         private IEnumerable<PlayerId> AllNotSpectatingPlayerIds
-            => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterById(p)?.GetPvP().IsSpectator == false);
+            => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterByPlayerId(p)?.GetPvP().IsSpectator == false);
 
         private IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> AllPvPPlayers
             => AllNotSpectatingPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
@@ -144,13 +144,12 @@ namespace WukongMp.Api.FreeCamera
                     UpdateSpectatedPlayer(-1);
                     return;
                 }
-                var localCharacterComp = _spectatedEntity.GetLocalState();
-                if (localCharacterComp.Pawn == null)
+                if (_spectatedEntity.Pawn == null)
                 {
                     UpdateSpectatedPlayer(-1);
                     return;
                 }
-                var spectatedCharacter = localCharacterComp.Pawn;
+                var spectatedCharacter = _spectatedEntity.Pawn;
 
                 float orbitYawInput = -_moveDirLR + _rotateDirLR * MouseOrbitSensitivity;
                 float orbitPitchInput = -_moveDirUD + _rotateDirUD * MouseOrbitSensitivity;
@@ -187,19 +186,18 @@ namespace WukongMp.Api.FreeCamera
 
             _currentSpectatedIndex = FMath.Clamp(_currentSpectatedIndex, 0, allPlayers.Count - 1);
             var spectatedPlayer = allPlayers[_currentSpectatedIndex];
-            var localCharacterComp = spectatedPlayer.Character.GetLocalState();
-            if (!localCharacterComp.HasPawn)
+            if (!spectatedPlayer.Character.HasUnsyncedPawn)
             {
                 DisablePlayerSpectating();
                 return;
             }
 
             _spectatedEntity = spectatedPlayer.Character;
-            var spectatedCharacter = localCharacterComp.Pawn;
+            var spectatedCharacter = spectatedPlayer.Character.Pawn;
             var cameraPosition = _freeCameraManager.GetCurrentCameraPosition();
             var characterLocation = spectatedCharacter!.GetActorLocation();
             SetInitialOrbitFromCamera(cameraPosition, characterLocation, spectatedCharacter!.GetActorRotation());
-            _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetState().CharacterNickName);
+            _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetState().CharacterNickname);
         }
 
         private void DisablePlayerSpectating()

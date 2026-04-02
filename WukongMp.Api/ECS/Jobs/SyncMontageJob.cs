@@ -1,30 +1,37 @@
 ﻿using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.ECS.Components;
+using ReadyM.Api.ECS.Worlds;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.Idents;
+using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.ECS.Jobs;
 
-public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlayerId) : IEach<LocalTamerComponent, MetadataComponent>
+internal readonly struct SyncMontageJob(Store world, PlayerId ownerPlayerId) : IEachEntity<MappingComponent<AActor>, LocalTamerComponent, MetadataComponent>
 {
-    public void Execute(ref LocalTamerComponent tamerComponent, ref MetadataComponent meta)
+    public void Execute(ref MappingComponent<AActor> mappingComp, ref LocalTamerComponent tamerComponent, ref MetadataComponent meta, int entityId)
     {
         if (meta.Owner != ownerPlayerId)
             return;
 
-        if (tamerComponent.Pawn == null || tamerComponent.Pawn.Mesh == null)
+        var entity = new TamerEntity(world.GetEntityById(entityId));
+        var pawn = entity.Pawn;
+
+        if (pawn == null || pawn.Mesh == null)
             return;
 
         var montageState = tamerComponent.MontageState;
         if (montageState.LocalAnimationInstance == null)
         {
-            montageState.LocalAnimationInstance = tamerComponent.Pawn.Mesh.GetAnimInstance();
+            montageState.LocalAnimationInstance = pawn.Mesh.GetAnimInstance();
             if (montageState.LocalAnimationInstance == null)
                 return;
         }
 
-        var currentMontage = tamerComponent.Pawn.GetCurrentMontage();
+        var currentMontage = pawn.GetCurrentMontage();
 
         if (currentMontage != null)
         {
@@ -37,7 +44,7 @@ public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlay
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
                 // TODO: Replace by system
-                rpc.SendMontageCallback(meta.NetId, currentMontage, currentPosition, hasMontageRewound);
+                DI.Instance.ClientRpc.SendMontageCallback(meta.NetId, currentMontage, currentPosition, hasMontageRewound);
             }
 
             montageState.LocalMontagePosition = currentPosition;
@@ -45,7 +52,7 @@ public readonly struct SyncMontageJob(WukongRpcCallbacks rpc, PlayerId ownerPlay
         else if (montageState.LocalMontage != null)
         {
             DI.Instance.Logger.LogDebug("Sent cancel at {Position} for montage {Montage}", montageState.LocalMontagePosition, montageState.LocalMontage.PathName);
-            DI.Instance.Rpc.SendMontageCancel(meta.NetId);
+            DI.Instance.ClientRpc.SendMontageCancel(meta.NetId);
         }
 
         montageState.LocalMontage = currentMontage;

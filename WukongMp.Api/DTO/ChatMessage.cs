@@ -2,15 +2,15 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LiteNetLib.Utils;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Serialization;
 
 namespace WukongMp.Api.DTO;
 
-public struct ChatMessage : INetSerializable
+internal struct ChatMessage : INetSerializable
 {
     [RegisterJsonConverter]
-    public class Converter : JsonConverter<ChatMessage>
+    internal class Converter : JsonConverter<ChatMessage>
     {
         public override ChatMessage Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             => TextDeserialize(ref reader, options);

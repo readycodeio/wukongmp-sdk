@@ -4,8 +4,8 @@ using B1UI;
 using B1UI.GSUI;
 using Friflo.Engine.ECS;
 using LiteNetLib;
+using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Common;
-using ReadyM.Api.Multiplayer.Idents;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
@@ -20,9 +20,10 @@ namespace WukongMp.PvP.UI
 {
     internal class PvpWidgetManager
     {
+        public readonly WukongWidgetManager WidgetManager;
+        
         private readonly ClientState _clientState;
         private readonly WukongPlayerState _playerState;
-        public readonly WukongWidgetManager widgetManager;
         private readonly WukongEventBus _eventBus;
         private readonly FreeCameraManager _freeCameraManager;
         private readonly WukongAreaState _areaState;
@@ -36,7 +37,7 @@ namespace WukongMp.PvP.UI
 
         public PvpWidgetManager(WukongWidgetManager widgetManager, ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, FreeCameraManager freeCameraManager, WukongAreaState areaState, GameplayEventRouter eventRouter)
         {
-            this.widgetManager = widgetManager;
+            WidgetManager = widgetManager;
             _clientState = clientState;
             _playerState = playerState;
             _eventBus = eventBus;
@@ -84,7 +85,7 @@ namespace WukongMp.PvP.UI
         {
             ref var playerComp = ref playerEntity.GetState();
 
-            _lobbyStatusWidget.Value.UpdatePlayerTeam(playerComp.NickName, playerComp.TeamId);
+            _lobbyStatusWidget.Value.UpdatePlayerTeam(playerComp.Nickname, playerComp.TeamId);
             RefreshWidgets();
         }
 
@@ -121,7 +122,7 @@ namespace WukongMp.PvP.UI
 
         private void OnLevelLoaded()
         {
-            widgetManager.OnLevelLoaded();
+            WidgetManager.OnLevelLoaded();
 
             Logging.LogDebug("Initializing pvp widgets");
             InitializeWidgets();
@@ -132,14 +133,14 @@ namespace WukongMp.PvP.UI
             Logging.LogDebug("Deinitializing pvp widgets");
             DeinitializeWidgets();
 
-            widgetManager.OnExitLevel();
+            WidgetManager.OnExitLevel();
             _isAfterLoadingScreen = false;
         }
 
         private void OnLoadingScreenClose()
         {
             var isOnGameplayLevel = _areaState.CurrentArea != null;
-            widgetManager.ShowInGameWidgets(isOnGameplayLevel);
+            WidgetManager.ShowInGameWidgets(isOnGameplayLevel);
             if (isOnGameplayLevel)
             {
                 ShowInGameWidgets();
@@ -158,17 +159,17 @@ namespace WukongMp.PvP.UI
 
         private void OnConnected(PlayerId playerId, Entity entity)
         {
-            widgetManager.OnConnected(playerId, entity);
+            WidgetManager.OnConnected(playerId, entity);
         }
 
         private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
         {
-            widgetManager.OnDisconnected(playerId, entity, reason);
+            WidgetManager.OnDisconnected(playerId, entity, reason);
         }
 
         private void OnFreeCameraModeChanged(bool enabled)
         {
-            widgetManager.OnFreeCameraModeChanged(enabled);
+            WidgetManager.OnFreeCameraModeChanged(enabled);
         }
 
         private void OnLocalPlayerChangedSpectator(bool enabled)
@@ -218,7 +219,7 @@ namespace WukongMp.PvP.UI
 
         public void SwitchReadyState(bool isReady)
         {
-            _gameMessageWidget.Value.SetThirdText(isReady ? Texts.YouAreReady : Texts.PressToSwitchTeam);
+            _gameMessageWidget.Value.SetThirdText(isReady ? BuiltinTexts.YouAreReady : BuiltinTexts.PressToSwitchTeam);
             _gameMessageWidget.Value.SetSecondText(TextUtils.GetReadyText(_clientState.AllPlayers.Count, isReady));
         }
 
@@ -235,9 +236,9 @@ namespace WukongMp.PvP.UI
                 return;
 
             _gameMessageWidget.Value.SetVisibility(true);
-            _gameMessageWidget.Value.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.Value.SetSecondText(TextUtils.GetReadyText(DI.Instance.State.AllPlayers.Count, DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
-            _gameMessageWidget.Value.SetThirdText(Texts.PressToSwitchTeam);
+            _gameMessageWidget.Value.SetMainText(BuiltinTexts.InMultiplayer);
+            _gameMessageWidget.Value.SetSecondText(TextUtils.GetReadyText(_clientState.AllPlayers.Count, _playerState.LocalMainCharacter?.GetPvP().IsReadyForPvP == true));
+            _gameMessageWidget.Value.SetThirdText(BuiltinTexts.PressToSwitchTeam);
             _lobbyStatusWidget.Value.SetVisibility(true);
         }
 
@@ -247,33 +248,33 @@ namespace WukongMp.PvP.UI
                 return;
 
             _gameMessageWidget.Value.SetVisibility(true);
-            _gameMessageWidget.Value.SetMainText(Texts.InMultiplayer);
-            _gameMessageWidget.Value.SetSecondText(Texts.WaitForEnd);
+            _gameMessageWidget.Value.SetMainText(BuiltinTexts.InMultiplayer);
+            _gameMessageWidget.Value.SetSecondText(BuiltinTexts.WaitForEnd);
             _gameMessageWidget.Value.SetThirdText("");
             _lobbyStatusWidget.Value.SetVisibility(true);
         }
 
         private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
         {
-            widgetManager.OnOtherPlayerInsideArea(playerId, area, reason);
+            WidgetManager.OnOtherPlayerInsideArea(playerId, area, reason);
             RefreshWidgets();
         }
 
         private void OnOtherPlayerOutsideArea(PlayerId arg1, AreaId arg2, OtherPlayerOutsideAreaReason arg3)
         {
-            widgetManager.OnOtherPlayerOutsideArea(arg1, arg2, arg3);
+            WidgetManager.OnOtherPlayerOutsideArea(arg1, arg2, arg3);
             RefreshWidgets();
         }
 
         private void OnJoinedArea(AreaId area, Entity areaEntity)
         {
-            widgetManager.OnJoinedArea(area, areaEntity);
+            WidgetManager.OnJoinedArea(area, areaEntity);
             RefreshWidgets();
         }
 
         private void OnLeftArea(AreaId arg1, Entity arg2)
         {
-            widgetManager.OnLeftArea(arg1, arg2);
+            WidgetManager.OnLeftArea(arg1, arg2);
             RefreshWidgets();
         }
     }

@@ -1,19 +1,19 @@
-﻿using ArchiveB1;
+﻿using System.IO;
+using ArchiveB1;
 using b1;
 using B1UI.GSSvc;
 using Microsoft.Extensions.Logging;
-using System.IO;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
 
-namespace WukongMp.PvP.Gamemode;
+namespace WukongMp.PvP.GameMode;
 
 internal class PvpSaveManager
 {
     private readonly ILogger _logger;
 
-    private bool _redirectSaveFiles = false;
+    private bool _redirectSaveFiles;
     private bool _shouldCacheSave;
 
     public bool ShouldRedirectSaveFiles => _redirectSaveFiles;

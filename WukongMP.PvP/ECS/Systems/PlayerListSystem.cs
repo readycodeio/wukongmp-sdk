@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.UI;
@@ -35,9 +35,9 @@ internal sealed class PlayerListSystem(
 
         Query
             .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity)
-            .ForEachEntity((ref mainCharacterComponent, ref pvp, _) =>
+            .ForEachEntity((ref mainComp, ref pvp, _) =>
             {
-                var player = playerState.GetPlayerById(mainCharacterComponent.PlayerId);
+                var player = playerState.GetPlayerById(mainComp.PlayerId);
                 if (player.HasValue)
                 {
                     var team = player.Value.GetState().TeamId;
@@ -45,13 +45,13 @@ internal sealed class PlayerListSystem(
                     switch (team)
                     {
                         case PvpConstants.RedTeamId:
-                            redTeamList.Add(mainCharacterComponent.CharacterNickName);
+                            redTeamList.Add(mainComp.CharacterNickname);
                             return;
                         case PvpConstants.BlueTeamId:
-                            blueTeamList.Add(mainCharacterComponent.CharacterNickName);
+                            blueTeamList.Add(mainComp.CharacterNickname);
                             return;
                         case PvpConstants.SpectatorTeamId:
-                            spectatorsList.Add(mainCharacterComponent.CharacterNickName);
+                            spectatorsList.Add(mainComp.CharacterNickname);
                             return;
                     }
                 }

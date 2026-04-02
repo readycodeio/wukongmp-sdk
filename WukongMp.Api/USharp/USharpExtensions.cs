@@ -6,6 +6,7 @@ using UnrealEngine;
 using UnrealEngine.Runtime;
 
 // NOTE: Cannot change the namespace because we need to hide the USharp original extensions within this namespace
+// ReSharper disable once CheckNamespace
 namespace WukongMp.Api;
 
 public static class USharpExtensions

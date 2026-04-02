@@ -1,19 +1,17 @@
-﻿using b1;
+﻿using System.Reflection;
+using b1;
 using BtlShare;
 using HarmonyLib;
-using ReadyM.Api.Multiplayer.ECS.Values;
-using System.Reflection;
 using PreludeLib.Attributes;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnSwitchBulletTarget
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnSwitchBulletTarget
 {
     [HarmonyTargetMethodHint("b1.BUS_ProjectileCtrComp", "OnSwitchBulletTarget")]
     private static MethodBase TargetMethod()
@@ -21,7 +19,7 @@ public class PatchOnSwitchBulletTarget
         return AccessTools.Method("b1.BUS_ProjectileCtrComp:OnSwitchBulletTarget");
     }
 
-    public static bool Prefix(UActorCompBaseCS __instance, BGUProjectileBaseActor? ProjectileActor, AActor? InnerTarget, string SocketName = "")
+    public static bool Prefix(UActorCompBaseCS? __instance, BGUProjectileBaseActor? ProjectileActor, AActor? InnerTarget, string SocketName = "")
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
@@ -41,47 +39,31 @@ public class PatchOnSwitchBulletTarget
             return true;
         }
 
-        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
-            var newTargetId = default(NetworkId);
-            if (InnerTarget is BGUPlayerCharacterCS)
+            if (DI.Instance.MappingPolicyDir.IsCharacterMapped(InnerTarget, out var targetEntity))
             {
-                var mainCharacterEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(InnerTarget);
-
-                if (mainCharacterEntity == null)
+                var projectileClass = ProjectileActor.GetClass();
+                if (projectileClass != null)
                 {
-                    Logging.LogError("Player character entity not found for actor: {ActorName}", InnerTarget.GetName());
-                    return false;
+                    var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ProjectileTargetEvent(entity.Value, projectileClass.GetName(), targetEntity.Value, SocketName), entity.Value.Entity);
+                    if (sent)
+                        Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectileClass.GetName(), entity.Value.GetState().CharacterNickname, InnerTarget.GetName());
                 }
-                newTargetId = mainCharacterEntity.Value.GetMeta().NetId;
             }
             else
             {
-                var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(InnerTarget);
-                if (tamerEntity.HasValue)
-                {
-                    newTargetId = tamerEntity.Value.GetMeta().NetId;
-                }
-                else
-                {
-                    Logging.LogError("Could not find tamer entity for projectile target");
-                }
+                Logging.LogError("Target entity not found for actor: {ActorName}", InnerTarget.GetName());
             }
-            var projectileClass = ProjectileActor.GetClass();
-            if (projectileClass != null)
-            {
-                Logging.LogDebug("New projectile target sent for {Projectile} (Owner {NickName}) as: {Target}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, InnerTarget.GetName());
-                DI.Instance.Rpc.SendProjectileTarget(new ProjectileTargetData(projectileClass.GetName(), newTargetId, SocketName));
-            }
-            return true;
         }
+
         return true;
     }
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnSwitchBulletInfoIfNeed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnSwitchBulletInfoIfNeed
 {
     [HarmonyTargetMethodHint("b1.BUS_ProjectileCtrComp", "SwitchBulletInfoIfNeed")]
     private static MethodBase TargetMethod()
@@ -97,7 +79,7 @@ public class PatchOnSwitchBulletInfoIfNeed
         if (DI.Instance.PlayerState.LocalMainCharacter == null)
             return true;
 
-        var owner = __instance?.GetOwner();
+        var owner = __instance.GetOwner();
         if (owner.IsNullOrDestroyed())
         {
             Logging.LogError("Owner is null or destroyed");
@@ -109,23 +91,24 @@ public class PatchOnSwitchBulletInfoIfNeed
             return true;
         }
 
-        if (owner == DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             var projectileClass = ProjectileActor.GetClass();
             if (projectileClass != null)
             {
-                Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, BulletSwitchID);
-                DI.Instance.Rpc.SendSwitchOneProjectile(new ProjectileSwitchData(projectileClass.GetName(), BulletSwitchID, SwitchIdx));
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ProjectileSwitchEvent(entity.Value, projectileClass.GetName(), BulletSwitchID, SwitchIdx), entity.Value.Entity);
+                if (sent)
+                    Logging.LogDebug("Switch projectile info sent for {Projectile} (Owner {NickName}) with switch id: {SwitchID}", projectileClass.GetName(), entity.Value.GetState().CharacterNickname, BulletSwitchID);
             }
-            return true;
         }
+
         return true;
     }
 }
 
 [HarmonyPatch(typeof(BUS_ProjectileLifeComp), "OnProjectileDead")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnProjectileDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnProjectileDead
 {
     public static void Postfix(BUS_ProjectileLifeComp __instance, IBUC_MasterData ___MasterData, EBGUBulletDestroyReason Reason)
     {
@@ -137,21 +120,23 @@ public static class PatchOnProjectileDead
 
         var master = ___MasterData.GetMasterActor();
         var projectile = __instance.GetOwner() as BGUProjectileBaseActor;
-        if (projectile != null && DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
+
+        if (projectile != null && DI.Instance.MappingPolicyDir.IsMainCharacterMapped(master, out var entity))
         {
             var projectileClass = projectile.GetClass();
             if (projectileClass != null)
             {
-                Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
-                DI.Instance.Rpc.SendProjectileDead(new ProjectileDeadData(projectileClass.GetName(), Reason));
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ProjectileDeadEvent(entity.Value, projectileClass.GetName(), Reason), entity.Value.Entity);
+                if (sent)
+                    Logging.LogDebug("BUS_ProjectileLifeComp OnProjectileDead send with reason: {Reason}", Reason);
             }
         }
     }
 }
 
 [HarmonyPatch(typeof(BUS_ObjActorMovementComp), "OnSetMoveMode")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnSetMoveMode
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnSetMoveMode
 {
     public static void Postfix(BUS_ObjActorMovementComp __instance, EBulletOrMagicFieldMoveModeType MoveMode)
     {
@@ -164,32 +149,30 @@ public static class PatchOnSetMoveMode
             return;
         }
 
-        IBUC_MasterData masterData = BGU_DataUtil.GetReadOnlyData<IBUC_MasterData, BUC_MasterData>(projectile);
+        var masterData = BGU_DataUtil.GetReadOnlyData<IBUC_MasterData, BUC_MasterData>(projectile);
         if (masterData == null)
         {
             return;
         }
 
-        if (DI.Instance.PlayerState.LocalMainCharacter == null)
-            return;
-
         var master = masterData.GetMasterActor();
 
-        if (DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn == master)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(master, out var entity))
         {
             var projectileClass = projectile.GetClass();
             if (projectileClass != null)
             {
-                Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectileClass.GetName(), DI.Instance.PlayerState.LocalMainCharacter.Value.GetState().CharacterNickName, MoveMode);
-                DI.Instance.Rpc.SendProjectileMoveMode(new ProjectileMoveModeData(projectileClass.GetName(), MoveMode));
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ProjectileMoveModeEvent(entity.Value, projectileClass.GetName(), MoveMode), entity.Value.Entity);
+                if (sent)
+                    Logging.LogDebug("New move mode sent for {Projectile} (Owner {NickName}) as: {MoveMode}", projectileClass.GetName(), entity.Value.GetState().CharacterNickname, MoveMode);
             }
         }
     }
 }
 
 [HarmonyPatch(typeof(BUEffectBulletSwitchSelf), "ApplyBySkill_Implement")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchApplyBySkill_Implement
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchApplyBySkill_Implement
 {
     public static bool Prefix(int EffectID, AActor? Caster, AActor? Target)
     {
@@ -201,28 +184,31 @@ public static class PatchApplyBySkill_Implement
         {
             return true;
         }
+
         BUC_MasterData readOnlyData = BGU_DataUtil.GetReadOnlyData<BUC_MasterData>(bGUBulletBaseCS);
         if (readOnlyData == null)
         {
             return true;
         }
+
         AActor masterActor = readOnlyData.GetMasterActor();
 
         if (DI.Instance.PlayerState.LocalMainCharacter == null)
             return true;
 
-        if (masterActor is BGUPlayerCharacterCS && masterActor != DI.Instance.PlayerState.LocalMainCharacter.Value.GetLocalState().Pawn)
+        if (masterActor is BGUPlayerCharacterCS && masterActor != DI.Instance.PlayerState.LocalMainCharacter.Value.Pawn)
         {
             Logging.LogDebug("Skipping BUEffectBulletSwitchSelf ApplyBySkill_Implement called for non local player");
             return false;
         }
+
         return true;
     }
 }
 
 [HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "CheckTargetValid")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchCheckTargetValid
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchCheckTargetValid
 {
     public static bool Prefix(AActor Target, ref bool __result)
     {
@@ -234,15 +220,17 @@ public static class PatchCheckTargetValid
             __result = false;
             return false;
         }
+
         return true;
     }
 }
 
 [HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "SearchTargetTick")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchSearchTargetTick
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchSearchTargetTick
 {
     private static MethodInfo? _changeToFollowMasterMethod;
+
     public static void Prefix(BPS_MultiTargetProjectileCtrComp __instance, BPC_MultiTargetProjectileCtrData ___MultiTargetProjectileCtrData, IBUC_TargetInfoData ___TargetInfoData)
     {
         if (!DI.Instance.AreaState.InRoom)
@@ -263,6 +251,7 @@ public static class PatchSearchTargetTick
             {
                 return;
             }
+
             _changeToFollowMasterMethod.Invoke(__instance, null);
         }
     }

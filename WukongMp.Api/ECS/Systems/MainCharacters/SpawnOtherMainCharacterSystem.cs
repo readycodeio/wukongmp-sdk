@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
@@ -16,7 +14,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// or pawn of the local player.
 /// </summary>
 /// <param name="playerPawn"></param>
-public class SpawnOtherMainCharactersSystem(
+internal class SpawnOtherMainCharactersSystem(
     ClientState clientState,
     WukongPlayerState playerState,
     WukongPlayerPawnState playerPawn,
@@ -24,7 +22,7 @@ public class SpawnOtherMainCharactersSystem(
     ClientOwnershipManager ownershipManager,
     ILogger logger
 )
-    : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
+    : QuerySystem<MainCharacterComponent>
 {
     protected override void OnUpdate()
     {
@@ -43,15 +41,15 @@ public class SpawnOtherMainCharactersSystem(
             return;
 
         Query.ForEachEntity((
-            ref localMainComp,
             ref mainComp, entity) =>
         {
             if (mainComp.PlayerId == playerId)
                 return;
-            if (localMainComp.HasPawn)
-                return;
 
             var mainEntity = new MainCharacterEntity(entity);
+
+            if (mainEntity.HasPawn)
+                return;
 
             var playerEntity = playerState.GetPlayerById(mainComp.PlayerId);
             if (playerEntity == null && ownershipManager.OwnsEntity(entity))
@@ -76,6 +74,6 @@ public class SpawnOtherMainCharactersSystem(
 
         localMainComp.IsPlayerSynced = true;
 
-        Debug.Assert(localMainComp.HasPawn);
+        Debug.Assert(mainEntity.HasPawn, "mainEntity.HasPawn");
     }
 }

@@ -1,11 +1,11 @@
 ﻿using b1;
-using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using WukongMp.Api.Configuration;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -14,7 +14,7 @@ namespace WukongMp.Api.ECS.Systems.MainCharacters;
 /// <summary>
 /// Creates the MainCharacterEntity corresponding to the locally controlled pawn
 /// </summary>
-public class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, ILogger logger) : BaseSystem
+internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, WukongPlayerState playerState, WukongEventBus eventBus, IComponentFieldMappingRegistry mappedField, ILogger logger) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {
@@ -46,34 +46,32 @@ public class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wukon
         ref var player = ref playerEntity.GetState();
 
         var mainEntity = playerState.CreateLocalMainCharacter();
-        ref var mainComp = ref mainEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
 
         logger.LogDebug("Local main character pawn: {Pawn}", pawn.PathName);
 
-        localMainComp.Pawn = pawn;
+        mainEntity.SetPawn(pawn, false);
 
-        mainComp.Location = pawn.GetActorLocation().ToVector3();
-        mainComp.Rotation = pawn.GetActorRotation().ToVector3();
-
-        var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-        mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.Hp);
-        mainComp.HpMaxBase = attrContainer.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-        if (mainComp.Hp > 0)
+        if (mappedField.CanLoadFromGame<TransformComponent>(mainEntity, out var load))
         {
-            mainComp.IsDead = false;
+            load.SetFromGame(TransformComponent.Fields.Position, pawn.GetActorLocation().ToVector3());
+            load.SetFromGame(TransformComponent.Fields.Rotation, pawn.GetActorRotation().ToVector3());
         }
 
-        foreach (var attr in Constants.SyncedAttributes)
+        var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(pawn);
+
+        if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(mainEntity, out var loadHp))
         {
-            var value = attrContainer.GetFloatValue(attr);
-            mainComp.Attributes.SetAttribute((byte)attr, value);
+            loadHp.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
+            loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
         }
 
-        mainComp.CharacterNickName = player.NickName;
-
-        var eq = EquipmentUtils.GetCurrentEquipmentStateForActor(pawn);
-        mainComp.Equipment = eq;
+        if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity, out var loadMain))
+        {
+            loadMain.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
+            loadMain.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), pawn);
+            loadMain.SetFromGame(MainCharacterComponent.Fields.CharacterNickname, player.Nickname);
+        }
 
         var pawnTeamId = pawn.GetTeamIDInCS();
         mainEntity.SetTeam(new TeamComponent

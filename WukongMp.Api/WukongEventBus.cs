@@ -2,7 +2,11 @@ using System;
 
 namespace WukongMp.Api;
 
-public class WukongEventBus
+/// <summary>
+/// Exposes events related to level transitions, such as loading, playing, and exiting levels.
+/// This allows mods to hook into these events and perform actions at the appropriate times during the level lifecycle.
+/// </summary>
+internal sealed class WukongEventBus
 {
     private enum LevelTransitionPhase
     {
@@ -24,7 +28,7 @@ public class WukongEventBus
     public bool IsGameplayLevel { get; private set; }
     
     // this is triggered when beginning to load the gameplay level
-    public bool TryInvokeBeginLoadGameplayLevel()
+    internal bool TryInvokeBeginLoadGameplayLevel()
     {
         if (_phase == LevelTransitionPhase.Loading)
             return false;
@@ -33,7 +37,7 @@ public class WukongEventBus
         return true;
     }
     
-    public bool TryInvokeBeginPlayGameplayLevel()
+    internal bool TryInvokeBeginPlayGameplayLevel()
     {
         if (_phase == LevelTransitionPhase.Playing)
             return false;
@@ -43,7 +47,7 @@ public class WukongEventBus
         return true;
     }
     
-    public bool TryInvokeEndPlayGameplayLevel()
+    internal bool TryInvokeEndPlayGameplayLevel()
     {
         if (_phase == LevelTransitionPhase.Ending)
             return false;
@@ -53,19 +57,19 @@ public class WukongEventBus
         return true;
     }
     
-    public void InvokeLoadingScreenClose()
+    internal void InvokeLoadingScreenClose()
     {
         _phase = LevelTransitionPhase.None;
         OnLoadingScreenClose?.Invoke();
     }
 
-    public void InvokeOnLevelLoaded()
+    internal void InvokeOnLevelLoaded()
     {
         _phase = LevelTransitionPhase.None;
         OnLevelLoaded?.Invoke();
     }
 
-    public void InvokeOnExitLevel()
+    internal void InvokeOnExitLevel()
     {
         _phase = LevelTransitionPhase.None;
         OnExitLevel?.Invoke();

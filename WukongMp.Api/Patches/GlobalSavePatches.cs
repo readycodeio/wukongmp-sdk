@@ -9,8 +9,8 @@ using WukongMp.Api.Configuration;
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.MarkSaveSetting))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchArchiveReadWriterAppendArchive2
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchArchiveReadWriterAppendArchive2
 {
     public static bool Prefix(UISettingArchiveData UISettingArchiveData)
     {
@@ -19,8 +19,8 @@ public class PatchArchiveReadWriterAppendArchive2
 }
 
 [HarmonyPatch(typeof(GSB1UIUtil), nameof(GSB1UIUtil.CheckArchiveFull))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchCheckArchiveFull
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchCheckArchiveFull
 {
     public static bool Prefix(ref bool __result)
     {
@@ -30,8 +30,8 @@ public class PatchCheckArchiveFull
 }
 
 [HarmonyPatch(typeof(BGW_GameArchiveMgr), "TickSaveArchiveSnapshot")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTickSaveArchiveSnapshot
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTickSaveArchiveSnapshot
 {
     public static Exception? Finalizer(Exception? __exception)
     {

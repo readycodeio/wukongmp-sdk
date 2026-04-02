@@ -1,12 +1,12 @@
-﻿using b1;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using b1;
 
 namespace WukongMp.Api.WukongUtils;
 
 // TODO: More like: TeamUtils
-public static class ClientUtils
+internal static class ClientUtils
 {
     private static Action<BGUCharacterCS, int>? _setter;
 

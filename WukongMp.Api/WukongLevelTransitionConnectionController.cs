@@ -1,49 +1,43 @@
-﻿using b1;
-using ReadyM.Api.Multiplayer.Idents;
-using System;
-using System.Diagnostics;
-using WukongMp.Api.UI;
+﻿using System;
+using b1;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
+using ReadyM.Api.Idents;
+using ReadyM.Relay.Client;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongLevelTransitionConnectionController : IDisposable
+internal class WukongLevelTransitionConnectionController(
+    WukongEventBus eventBus,
+    WukongConnectionManager connection
+) : IHostedService
 {
-    private readonly WukongEventBus _eventBus;
-    private readonly WukongConnectionManager _connection;
-
-    public WukongLevelTransitionConnectionController(
-        WukongEventBus eventBus,
-        WukongConnectionManager connection
-    )
+    public void OnScopeStart()
     {
-        _eventBus = eventBus;
-        _connection = connection;
-        
-        _eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
-        _eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
+        eventBus.OnBeginPlayGameplayLevel += OnBeginPlayGameplayLevel;
+        eventBus.OnEndPlayGameplayLevel += OnEndPlayGameplayLevel;
     }
-    
+
     public void Dispose()
     {
-        _eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevel;
-        _eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
+        eventBus.OnEndPlayGameplayLevel -= OnEndPlayGameplayLevel;
+        eventBus.OnBeginPlayGameplayLevel -= OnBeginPlayGameplayLevel;
     }
-    
+
     private void OnBeginPlayGameplayLevel()
     {
-        Debug.Assert(_connection.RequestedAreaId != null);
-
         var areaId = BGUFuncLibMap.GetCurLevelId(GameUtils.GetWorld());
         if (areaId > ushort.MaxValue)
         {
             throw new InvalidCastException("AreaId is greater than ushort max value");
         }
-        _connection.JoinArea(new AreaId((ushort)areaId));
+
+        connection.JoinArea(new AreaId((ushort)areaId));
     }
-    
+
     private void OnEndPlayGameplayLevel()
     {
-        _connection.LeaveArea();
+        connection.LeaveArea();
     }
 }

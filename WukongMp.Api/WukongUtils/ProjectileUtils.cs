@@ -1,11 +1,11 @@
-﻿using b1;
+﻿using System;
+using b1;
 using b1.ECS;
 using BtlShare;
-using System;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class ProjectileUtils
+internal static class ProjectileUtils
 {
     private static Type? _projectileCtrlDataType;
 

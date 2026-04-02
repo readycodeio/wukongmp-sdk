@@ -1,13 +1,13 @@
-﻿using b1;
-using b1.BGW;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using b1;
+using b1.BGW;
 using UnrealEngine.Runtime;
 using UnrealEngine.UMG;
 
 namespace WukongMp.Api.WukongUtils
 {
-    public static class ModWidgetsUtils
+    internal static class ModWidgetsUtils
     {
         public static UUserWidget? SpawnWidget(string widgetPath)
         {

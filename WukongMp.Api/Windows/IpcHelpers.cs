@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace WukongMp.Api.Windows;
 
-public class IpcHelpers
+// TODO: Move to common API
+internal static class IpcHelpers
 {
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern uint GetEnvironmentVariable(string lpName, StringBuilder lpBuffer, uint nSize);
@@ -27,7 +28,7 @@ public class IpcHelpers
             if (error == 0 && buffer.Length == 0)
                 return null;
 
-            throw new System.ComponentModel.Win32Exception(error);
+            throw new Win32Exception(error);
         }
 
         if (size > buffer.Capacity)

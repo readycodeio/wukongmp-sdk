@@ -1,6 +1,9 @@
-using b1;
-using ReadyM.Api.Multiplayer.Idents;
-using System;
+﻿using b1;
+using Microsoft.Extensions.Logging;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
+using ReadyM.Api.Idents;
+using ReadyM.Relay.Client;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
@@ -9,33 +12,25 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.Chat;
 
-public class WukongChatter : IDisposable
+internal class WukongChatter(
+    WukongPlayerState playerState,
+    WukongClientRpcCallbacks clientRpc,
+    WukongWidgetManager widgetManager,
+    ILogger logger
+) : IHostedService
 {
-    private readonly WukongPlayerState _playerState;
-    private readonly WukongRpcCallbacks _rpc;
-    private readonly WukongWidgetManager _widgetManager;
-    private string NickName => _playerState.LocalPlayerEntity?.GetState().NickName ?? "";
+    private string NickName => playerState.LocalPlayerEntity?.GetState().Nickname ?? "";
 
-    public WukongChatter(
-        WukongPlayerState playerState,
-        WukongRpcCallbacks rpc,
-        WukongWidgetManager widgetManager
-    )
+    public void OnScopeStart()
     {
-        Logging.LogDebug("Initializing WukongChatter");
-
-        _playerState = playerState;
-        _rpc = rpc;
-        _widgetManager = widgetManager;
-
-        _rpc.OnGetChatMessage += OnGetMessage;
+        clientRpc.OnGetChatMessage += OnGetMessage;
     }
 
     public void Dispose()
     {
-        Logging.LogDebug("Disposing WukongChatter");
+        logger.LogDebug("Disposing WukongChatter");
 
-        _rpc.OnGetChatMessage -= OnGetMessage;
+        clientRpc.OnGetChatMessage -= OnGetMessage;
     }
 
     public void ProcessMessage(string message)
@@ -43,13 +38,14 @@ public class WukongChatter : IDisposable
         if (!string.IsNullOrWhiteSpace(message))
         {
             message = message.Trim();
-            if (_playerState.LocalPlayerId.HasValue)
+            if (playerState.LocalPlayerId.HasValue)
             {
-                if(message.StartsWith("/"))
+                if (message.StartsWith("/"))
                 {
                     AddLocalServerMessage("HintCommandsUse");
                 }
-                SendChatMessage(_playerState.LocalPlayerId.Value, NickName, message);
+
+                SendChatMessage(playerState.LocalPlayerId.Value, NickName, message);
             }
             else
                 Logging.LogError("Cannot send chat message because local player ID is not set");
@@ -58,14 +54,14 @@ public class WukongChatter : IDisposable
 
     private void SendChatMessage(PlayerId playerId, string nickname, string message)
     {
-        Logging.LogDebug("Sending message {Message}", message);
-        _rpc.SendChatMessage(ChatMessage.CreateClientMessage(playerId, nickname, message));
+        logger.LogDebug("Sending message {Message}", message);
+        clientRpc.SendChatMessage(ChatMessage.CreateClientMessage(playerId, nickname, message));
     }
 
     public void SendServerMessage(string message, params string[] args)
     {
-        Logging.LogDebug("Sending server message {Message}", message);
-        _rpc.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
+        logger.LogDebug("Sending server message {Message}", message);
+        clientRpc.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
     }
 
     private void OnGetMessage(ChatMessage message)
@@ -73,31 +69,35 @@ public class WukongChatter : IDisposable
         var isServer = message.PlayerId == PlayerId.Server;
         var messageColor = isServer ? Constants.ServerMessageColor : Constants.PlayerMessageColor;
 
-        var sender = _playerState.GetMainCharacterById(message.PlayerId);
-        if (sender.HasValue && _playerState.LocalMainCharacter.HasValue)
+        var sender = playerState.GetMainCharacterByPlayerId(message.PlayerId);
+        if (sender.HasValue && playerState.LocalMainCharacter.HasValue)
         {
-            var senderPawn = sender.Value.GetLocalState().Pawn;
-            var localPlayerPawn = _playerState.LocalMainCharacter.Value.GetLocalState().Pawn;
+            var senderPawn = sender.Value.Pawn;
+            var localPlayerPawn = playerState.LocalMainCharacter.Value.Pawn;
             var isEnemy = BGUFunctionLibraryCS.BGUIsEnemyTeam(localPlayerPawn, senderPawn);
             if (isEnemy)
             {
                 messageColor = Constants.EnemyPlayerMessageColor;
             }
         }
-        var senderNickname = isServer ? "Server" : message.Nickname!;
+
         var translatedMessage = message.Message;
         if (isServer)
         {
-            translatedMessage = string.Format(Texts.ResourceManager.GetString(message.Message, Texts.Culture)!, [.. message.Placeholders]);
+            translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message.Message, BuiltinTexts.Culture)!, [.. message.Placeholders]);
+            widgetManager.AddSystemChatMessage(translatedMessage, messageColor);
+        }
+        else
+        {
+            widgetManager.AddChatMessage(message.Nickname!, translatedMessage, messageColor);
         }
 
-        Logging.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message.Message, senderNickname);
-        _widgetManager.AddChatMessage(isServer, senderNickname, translatedMessage, messageColor);
+        logger.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message.Message, isServer ? "Server" : message.Nickname!);
     }
 
     public void AddLocalServerMessage(string message, params string[] placeholders)
     {
-        var translatedMessage = string.Format(Texts.ResourceManager.GetString(message, Texts.Culture)!, [.. placeholders]);
-        _widgetManager.AddChatMessage(true, "Server", translatedMessage, Constants.ServerMessageColor);
+        var translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message, BuiltinTexts.Culture)!, [.. placeholders]);
+        widgetManager.AddSystemChatMessage(translatedMessage, Constants.ServerMessageColor);
     }
 }

@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace WukongMp.Api.Helpers;
 
-public sealed class EnumSet<T> : IEnumerable<T> where T : Enum
+internal sealed class EnumSet<T> : IEnumerable<T> where T : Enum
 {
     private readonly byte[] _flags = new byte[32];
 

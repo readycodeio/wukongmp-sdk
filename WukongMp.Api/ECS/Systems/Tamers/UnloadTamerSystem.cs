@@ -1,29 +1,27 @@
 ﻿using b1;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
-public sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
+internal sealed class UnloadTamersSystem : QuerySystem<TamerComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
-        Query.ForEachEntity((
-            ref tamerComp,
-            ref localTamerComp, _) =>
+        Query.ForEachEntity((ref tamerComp, ref localTamerComp, entity) =>
         {
-            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null || localTamerComp.Tamer.CurrentRef == null || localTamerComp.Pawn == null)
-            {
-                return;
-            }
+            var tamerEntity = new TamerEntity(entity);
 
-            if (localTamerComp is { IsMonsterActive: true, IsLocallySpawned: false, HasPendingUnload: true }
-                && !tamerComp.ShouldBeSpawned
-                && localTamerComp.Tamer.CurrentRef.Phase != ETamerPhase.Loaded)
+            if (localTamerComp is { IsTamerSynced: true, IsMonsterActive: true, IsLocallySpawned: false, HasPendingUnload: true }
+                && !tamerComp.ForceKeepSpawned)
             {
-                localTamerComp.Tamer.CurrentRef.TurnBack2Loaded();
+                var tamer = tamerEntity.Tamer;
+                if (tamer != null && tamer.CurrentRef != null && tamer.CurrentRef.Phase != ETamerPhase.Loaded && tamerEntity.Pawn != null)
+                {
+                    tamer.CurrentRef.TurnBack2Loaded();
+                }
             }
         });
     }

@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Relay.Client;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
-using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.GameMode;
 using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.ECS.Systems;
@@ -37,7 +37,8 @@ internal sealed class PvpRoundEndSystem(
             {
                 var state = p.Character.GetState();
                 var pvp = p.Character.GetPvP();
-                return !pvp.IsObserver && (!state.IsDead || state.IsTransformed);
+                var hp = p.Character.GetHp();
+                return !pvp.IsObserver && (!hp.IsDead || state.IsTransformed);
             })
             .Select(x => x.Player.GetState().TeamId)
             .ToList();
@@ -79,8 +80,11 @@ internal sealed class PvpRoundEndSystem(
         if (aliveTeamCount == 1)
         {
             Logging.LogInformation("One team with alive players, ending round");
-            var winner = playerEntities.First(p => !p.Character.GetState().IsDead);
-            ecsLoop.Scheduler.ScheduleFunc(async (_, pvp, winner0) => { await pvp.EndRoundAsync(winner0.Player.GetState().TeamId); }, pvpMode, winner);
+            var winner = playerEntities.First(p => !p.Character.GetHp().IsDead);
+            ecsLoop.Scheduler.ScheduleFunc(async (_, pvp, winner0) =>
+            {
+                await pvp.EndRoundAsync(winner0.Player.GetState().TeamId);
+            }, pvpMode, winner);
         }
     }
 }

@@ -7,16 +7,16 @@ using HarmonyLib;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 
-namespace WukongMp.Common.Patches;
+namespace WukongMp.Api.Patches;
 
-public static class PatchOverlapUtils
+internal static class PatchOverlapUtils
 {
     internal static readonly object OverlapLock = new();
 }
 
 [HarmonyPatch(typeof(BGS_SimpleOverlapMgrSystem), "ThreadFunc")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchThreadFunc
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchThreadFunc
 {
     public static void Prefix()
     {
@@ -30,8 +30,8 @@ public static class PatchThreadFunc
 }
 
 [HarmonyPatch(typeof(BGS_SimpleOverlapMgrSystem), "OnRegisterEntityUpdatenfo")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchOnRegisterEntityUpdatenfo
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchOnRegisterEntityUpdatenfo
 {
     public static void Prefix()
     {
@@ -45,8 +45,8 @@ public static class PatchOnRegisterEntityUpdatenfo
 }
 
 [HarmonyPatch(typeof(BGS_SimpleOverlapMgrSystem), "OnDeregisterEntity")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchOnDeregisterEntity
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchOnDeregisterEntity
 {
     public static void Prefix()
     {
@@ -60,8 +60,8 @@ public static class PatchOnDeregisterEntity
 }
 
 [HarmonyPatch(typeof(BGC_SimpleOverlapMgrData), "GetOverlapGridIndexList")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchGetOverlapGridIndexList
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchGetOverlapGridIndexList
 {
     [ThreadStatic]
     private static List<int>? _list;
@@ -137,8 +137,8 @@ public static class PatchGetOverlapGridIndexList
 }
 
 [HarmonyPatch(typeof(BGC_SimpleOverlapMgrData), "GetSimpleOverlapActorsByMask")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchGetSimpleOverlapActorsByMask
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchGetSimpleOverlapActorsByMask
 {
     public static Exception? Finalizer()
     {

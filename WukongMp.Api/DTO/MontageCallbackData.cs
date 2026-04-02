@@ -7,7 +7,12 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct MontageCallbackData(NetworkId netId, bool compressed, string montagePath, float position, bool reset) : INetSerializable
+internal partial struct MontageCallbackData(
+    NetworkId netId, 
+    bool compressed,
+    string montagePath,
+    float position,
+    bool reset) : INetSerializable
 {
     public NetworkId NetId = netId;
     public bool Compressed = compressed;

@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using b1;
 using BtlShare;
-using CSharpModBase;
-using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
@@ -19,7 +17,7 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// whether they require spawning.
 /// </summary>
 /// <param name="state"></param>
-public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router, GameplayConfiguration configuration) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
+internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router, GameplayConfiguration configuration) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
     private readonly HashSet<string?> _notYetSpawnedGuids = [];
 
@@ -34,30 +32,32 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
         {
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
-            if (localTamerComp.IsMonsterActive || !tamerComp.ShouldBeSpawned)
+            if (localTamerComp.IsMonsterActive || !tamerComp.ForceKeepSpawned)
+            {
+                return;
+            }
+            
+            var tamerEntity = new TamerEntity(entity);
+
+            if (!localTamerComp.IsTamerSynced || tamerEntity.Tamer == null)
             {
                 return;
             }
 
-            if (!localTamerComp.IsTamerSynced || localTamerComp.Tamer == null)
+            if (tamerEntity.Tamer.CurrentRef?.Phase == ETamerPhase.Dead)
             {
                 return;
             }
 
-            if (localTamerComp.Tamer.CurrentRef?.Phase == ETamerPhase.Dead)
-            {
-                return;
-            }
-
-            var monster = localTamerComp.Tamer?.GetMonster();
-            var currentPhase = localTamerComp.Tamer!.CurrentRef?.Phase;
+            var monster = tamerEntity.Tamer?.GetMonster();
+            var currentPhase = tamerEntity.Tamer!.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 TamerUtils.SpawnMonsterLocally(new TamerEntity(entity));
             }
 
-            monster = localTamerComp.Tamer.GetMonster();
-            currentPhase = localTamerComp.Tamer.CurrentRef?.Phase;
+            monster = tamerEntity.Tamer.GetMonster();
+            currentPhase = tamerEntity.Tamer.CurrentRef?.Phase;
             if (currentPhase != ETamerPhase.Spawned || monster == null)
             {
                 if (_notYetSpawnedGuids.Add(tamerComp.Guid))
@@ -89,14 +89,14 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
                 }
             }
 
-            var events = BUS_EventCollectionCS.Get(localTamerComp.Tamer);
+            var events = BUS_EventCollectionCS.Get(tamerEntity.Tamer);
             if (events == null)
             {
                 Logging.LogError("events are null");
                 return;
             }
 
-            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(localTamerComp.Pawn);
+            IBUC_ABPMotionMatchingData mmData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_ABPMotionMatchingData>(tamerEntity.Pawn);
             if (mmData != null)
             {
                 events.Evt_ChangeMotionMatchingState.Invoke(mmData.DefaultMMState);
@@ -126,7 +126,7 @@ public sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter rou
 
             localTamerComp.IsMonsterActive = true;
 
-            if (localTamerComp.Tamer.TamerType == ETamerType.Spawned)
+            if (tamerEntity.Tamer.TamerType == ETamerType.Spawned)
             {
                 router.RaiseOnMonsterSpawned(entity);
             }

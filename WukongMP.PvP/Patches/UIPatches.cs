@@ -20,10 +20,13 @@ using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Resources;
 
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Local
+
 namespace WukongMp.PvP.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public static class PatchStartGameUiPvp
 {
     [HarmonyTargetMethodHint("B1UI.GSUI.UIStartGame", "OnUIPageConstructImpl")]
@@ -39,12 +42,12 @@ public static class PatchStartGameUiPvp
         var isConnected = DI.Instance.State.IsConnected;
         if (!hasPak)
         {
-            UiUtils.ShowTip(Texts.MissingPak, false);
+            UiUtils.ShowTip(BuiltinTexts.MissingPak, false);
             Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
         }
         else if (!isConnected)
         {
-            DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected); }); });
+            DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected); }); });
             Logging.LogError(" PvP Disconnected. Could not continue game.");
         }
 
@@ -122,7 +125,7 @@ public static class PatchStartGameUiPvp
 }
 
 [HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenMapUI")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchOnClickOpenMapUI
 {
     public static bool Prefix()
@@ -135,7 +138,7 @@ public class PatchOnClickOpenMapUI
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchShrineRegisterFunc
 {
     [HarmonyTargetMethodHint(typeof(FMenuHelper<EShrineMenuTag>), "RegisterFunc")]
@@ -158,7 +161,7 @@ public class PatchShrineRegisterFunc
 }
 
 [HarmonyPatch(typeof(GSEUtil), "GetCanTeleportGroupMapList")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchGetCanTeleportGroupMapList
 {
     public static bool Prefix(ref List<int> __result)
@@ -172,7 +175,7 @@ public class PatchGetCanTeleportGroupMapList
 }
 
 [HarmonyPatch(typeof(UISaveTips), "OnChangeSaveTipsStat")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchOnChangeSaveTipsStat
 {
     public static bool Prefix(UWidget ___RootCon)
@@ -183,7 +186,7 @@ public class PatchOnChangeSaveTipsStat
 }
 
 [HarmonyPatch(typeof(BUI_BattleInfoCS), "SetDamageNumCanEnabled")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
+[HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchSetDamageNumCanEnabled
 {
     public static void Prefix(ref bool InIsDamageNumCanEnabled)
@@ -193,7 +196,7 @@ public class PatchSetDamageNumCanEnabled
 }
 
 [HarmonyPatch(typeof(UBGWFunctionLibraryCS), "IsShowSettingUiOnly")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PatchIsShowSettingUiOnly
 {
     public static bool Prefix(ref bool __result)
@@ -214,7 +217,7 @@ public class PatchIsShowSettingUiOnly
 
 // TODO: Maybe there's a way to fix free floating camera after exiting menu without prohibiting it altogether
 [HarmonyPatch(typeof(UIBattleMainCon), "OnClickOpenEquipUI")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PatchOnClickOpenEquipUI
 {
     public static bool Prefix()

@@ -10,10 +10,13 @@ using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.WukongUtils;
 
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Local
+
 namespace WukongMp.PvP.Patches;
 
 [HarmonyPatch(typeof(BPC_PlayerRoleData), "GetNewGamePlusCount")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public static class PatchGetNewGamePlusCount
 {
     public static bool Prefix(ref int __result)
@@ -33,7 +36,7 @@ public static class PatchGetNewGamePlusCount
 /// This prevents the game from resetting the team ID of monsters assigned to player teams in PvP.
 /// </summary>
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class TamerResetPatch
 {
     [HarmonyTargetMethodHint("b1.BUS_TeamIDManageComp", "OnResetTeamID")]
@@ -53,7 +56,7 @@ public class TamerResetPatch
 }
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "OnCameraLockTarget")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PlayerCameraLockPatch
 {
     public static bool Prefix(UnitLockTargetInfo TargetInfo)
@@ -69,7 +72,7 @@ public class PlayerCameraLockPatch
 }
 
 [HarmonyPatch(typeof(BUS_PlayerCameraCompImpl), "UpdateCameraState_AnyThread")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class FixTransformCameraLockToOriginPatch
 {
     private static MethodInfo? TargetGetter;
@@ -93,6 +96,7 @@ public class FixTransformCameraLockToOriginPatch
         if (cameraState == null)
             return;
 
+        // FIXME: This seems like a hack?
         // we are forced to look at origin
         if (cameraState.TargetSoulFocusPos.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
         {
@@ -105,14 +109,14 @@ public class FixTransformCameraLockToOriginPatch
             if (entity.HasValue)
             {
                 var events = BUS_EventCollectionCS.Get(owner);
-                events?.Evt_Camera_ManualLock?.Invoke(entity.Value.GetLocalState().Pawn, Constants.ChestCameraLockNode);
+                events?.Evt_Camera_ManualLock?.Invoke(entity.Value.Pawn, Constants.ChestCameraLockNode);
             }
         }
     }
 }
 
 [HarmonyPatch(typeof(BGUFuncLibSelectTargetsCS), nameof(BGUFuncLibSelectTargetsCS.BGUSelectLockTargetInRange))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
+[HarmonyPatchCategory(PatchCategory.Connected)]
 public class PatchBGUSelectLockTargetInRange
 {
     public static bool Prefix(

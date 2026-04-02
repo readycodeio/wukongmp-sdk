@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.UI
 {
-    public class TimerWidget : GameWidgetBase
+    internal class TimerWidget : GameWidgetBase
     {
         private const string TimerWidgetPath = "/Game/Mods/WukongMod/WBP_Timer.WBP_Timer_C";
 

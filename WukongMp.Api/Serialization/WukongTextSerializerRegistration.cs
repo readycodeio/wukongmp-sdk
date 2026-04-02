@@ -1,12 +1,9 @@
-﻿using b1;
-using ReadyM.Relay.Common.Serialization;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
-using UnrealEngine.Runtime;
-using WukongMp.Api.ECS.Values;
+﻿using ReadyM.Api.Multiplayer.Serialization;
+using ReadyM.Wukong.Common.ECS.Values;
 
 namespace WukongMp.Api.Serialization;
 
-public class WukongTextSerializerRegistration : ITextRelaySerializerRegistration
+internal class WukongTextSerializerRegistration : ITextRelaySerializerRegistration
 {
     public void Register(TextRelaySerializer serializer)
     {

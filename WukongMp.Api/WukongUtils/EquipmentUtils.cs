@@ -1,17 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using b1;
 using HarmonyLib;
-using ReadyM.Relay.Common.Wukong.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Values;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class EquipmentUtils
+internal static class EquipmentUtils
 {
-    private static readonly MethodInfo OnChangeEquipReal = typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private delegate void OnChangeEquipRealDelegate(BUS_EquipComp equipComp, BtlB1.EquipPosition position, int item);
+
+    private static readonly OnChangeEquipRealDelegate OnChangeEquipReal =
+        (OnChangeEquipRealDelegate)Delegate.CreateDelegate(
+            typeof(OnChangeEquipRealDelegate),
+            null,
+            typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance)!);
+
+    // Weak cache: entries disappear when actor is collected.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<BGUCharacterCS, BUS_EquipComp> EquipCompCache = new();
 
     public static EquipmentState GetCurrentEquipmentStateForActor(APawn player)
     {
@@ -21,19 +33,80 @@ public static class EquipmentUtils
 
     public static void SetActorEquipment(BGUCharacterCS actor, EquipmentState equipment)
     {
-        var equipComp = GetEquipComp(actor);
+        if (ShouldSkip(actor))
+            return;
 
+        var equipComp = GetOrCacheEquipComp(actor);
+        if (equipComp is null)
+            return;
+
+        var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
         foreach (var (position, item) in equipment.GetItems())
         {
-            OnChangeEquipReal.Invoke(equipComp, [position.ToGame(), item]);
+            var toWear = item;
+
+            if (toWear == 0 && actual.MapDefaultEquip.TryGetValue(position.ToGame(), out var defaultItem))
+                toWear = defaultItem;
+
+            if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != toWear)
+            {
+                OnChangeEquipReal(equipComp, position.ToGame(), toWear);
+            }
         }
     }
 
-    private static BUS_EquipComp? GetEquipComp(BGUCharacterCS actor)
+    public static void SetActorEquipment(BGUCharacterCS actor, EquipPosition position, int item)
+    {
+        if (ShouldSkip(actor))
+            return;
+
+        var equipComp = GetOrCacheEquipComp(actor);
+        if (equipComp is null)
+            return;
+
+        var actual = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_EquipData>(actor);
+
+        if (item == 0 && actual.MapDefaultEquip.TryGetValue(position.ToGame(), out var defaultItem))
+            item = defaultItem;
+
+        if (!actual.MapEquip.TryGetValue(position.ToGame(), out var current) || current != item)
+        {
+            OnChangeEquipReal(equipComp, position.ToGame(), item);
+        }
+    }
+
+    private static bool ShouldSkip(BGUCharacterCS actor)
+    {
+        return actor.GetClass().PathName == Constants.WukongDashengClassPath;
+    }
+
+    private static BUS_EquipComp? GetOrCacheEquipComp(BGUCharacterCS actor)
+    {
+        if (EquipCompCache.TryGetValue(actor, out var cached))
+        {
+            Debug.Assert(cached.GetOwner() == actor, "cached.GetOwner() == actor");
+            return cached;
+        }
+
+        var resolved = ResolveEquipComp(actor);
+        if (resolved is not null)
+            EquipCompCache.Add(actor, resolved);
+
+        return resolved;
+    }
+
+    // Slow path, used only on cache miss.
+    private static BUS_EquipComp? ResolveEquipComp(BGUCharacterCS actor)
     {
         return Traverse
             .Create(actor.ActorCompContainerCS)
-            .Field<List<UActorCompBaseCS>>("CompCSs").Value
-            .FirstOrDefault(x => x is BUS_EquipComp) as BUS_EquipComp;
+            .Field<List<UActorCompBaseCS>>("CompCSs").Value?
+            .FirstOrDefault(static x => x is BUS_EquipComp) as BUS_EquipComp;
+    }
+
+    // Optional: call this if you know an actor rebuilt its components.
+    public static void InvalidateEquipCompCache(BGUCharacterCS actor)
+    {
+        EquipCompCache.Remove(actor);
     }
 }

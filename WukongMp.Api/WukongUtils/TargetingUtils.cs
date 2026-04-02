@@ -3,7 +3,7 @@ using UnrealEngine.Engine;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class TargetingUtils
+internal static class TargetingUtils
 {
     public static AActor? GetTarget(BGUCharacterCS? pawn)
     {

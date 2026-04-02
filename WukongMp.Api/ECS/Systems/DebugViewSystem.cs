@@ -1,12 +1,12 @@
 ﻿using Friflo.Engine.ECS.Systems;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Runtime;
-using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems;
 
-public class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<LocalMainCharacterComponent, MainCharacterComponent>
+internal class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<MainCharacterComponent, TransformComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;
@@ -22,11 +22,13 @@ public class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widget
         if (tickCounter++ % TickInterval != 0)
             return;
 
-        Query.ForEachEntity((ref localMainCharacter, ref mainCharacter, entity) =>
+        Query.ForEachEntity((ref mainCharacter, ref transform, entity) =>
         {
-            var nickname = mainCharacter.CharacterNickName;
-            var position = localMainCharacter.Pawn?.GetActorLocation() ?? FVector.ZeroVector;
-            var ecsPosition = mainCharacter.Location.ToFVector();
+            var mainEntity = new MainCharacterEntity(entity);
+
+            var nickname = mainCharacter.CharacterNickname;
+            var position = mainEntity.Pawn?.GetActorLocation() ?? FVector.ZeroVector;
+            var ecsPosition = transform.Position.ToFVector();
 
             widgetManager.UpdatePlayerPosition(nickname, position, ecsPosition);
         });

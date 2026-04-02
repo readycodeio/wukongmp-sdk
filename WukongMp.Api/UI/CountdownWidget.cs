@@ -1,6 +1,6 @@
 ﻿namespace WukongMp.Api.UI
 {
-    public class CountdownWidget : GameWidgetBase
+    internal class CountdownWidget : GameWidgetBase
     {
         private const string CountdownWidgetPath = "/Game/Mods/WukongMod/WBP_Countdown.WBP_Countdown_C";
 

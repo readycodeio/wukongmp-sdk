@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Resources;
@@ -71,7 +72,7 @@ namespace WukongMp.PvP.UI
             byte* ptr = stackalloc byte[(int)(uint)(SetTeams_ParamsSize + 16)];
             int num = (int)((16L - (long)ptr) & 0xF);
             byte* ptr2 = ptr + num;
-            System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetTeams_ParamsSize);
+            Unsafe.InitBlockUnaligned((void*)ptr2, (byte)0, (uint)SetTeams_ParamsSize);
             IntPtr intPtr = new IntPtr(ptr2);
 
             TArrayCopyMarshaler<string> readTeamArrayCopyMarshaler = new TArrayCopyMarshaler<string>(1, SetText_RedTeamList_PropertyAddress, CachedMarshalingDelegates<string, FStringMarshaler>.FromNative, CachedMarshalingDelegates<string, FStringMarshaler>.ToNative);
@@ -154,7 +155,7 @@ namespace WukongMp.PvP.UI
 
         protected override void PostInitialize()
         {
-            SetStaticTexts(Texts.RedTeam, Texts.BlueTeam, Texts.Spectators, Texts.Ready, Texts.Connected, Texts.More);
+            SetStaticTexts(BuiltinTexts.RedTeam, BuiltinTexts.BlueTeam, BuiltinTexts.Spectators, BuiltinTexts.Ready, BuiltinTexts.Connected, BuiltinTexts.More);
             InitNativeFunctions();
         }
 

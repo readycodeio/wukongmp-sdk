@@ -1,21 +1,22 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using b1;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorLocation), typeof(AActor), typeof(FVector), typeof(bool), typeof(bool), typeof(FHitResult), typeof(bool), typeof(bool))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBGUSetActorLocationForPhysicsBasedMovement
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBGUSetActorLocationForPhysicsBasedMovement
 {
     public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleport)
     {
@@ -30,8 +31,8 @@ public class PatchBGUSetActorLocationForPhysicsBasedMovement
 }
 
 [HarmonyPatch(typeof(BGUFuncLibActorTransformCS), nameof(BGUFuncLibActorTransformCS.BGUSetActorRotation))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchBGUSetActorRotationForPhysicsBasedMovement
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchBGUSetActorRotationForPhysicsBasedMovement
 {
     public static void Prefix(AActor NeedSetInfoActor, ref bool bTeleportPhysics, ref bool bForceUpdate)
     {
@@ -47,8 +48,8 @@ public class PatchBGUSetActorRotationForPhysicsBasedMovement
 }
 
 [HarmonyPatch(typeof(BGU_PhysicsSimulationMoveMode), "OnUpdate")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchPhysicsSimulationMoveMode
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchPhysicsSimulationMoveMode
 {
     public static void Postfix(ACharacter ___OwnerCharacter)
     {
@@ -68,8 +69,8 @@ public class PatchPhysicsSimulationMoveMode
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnRegisterTamer
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnRegisterTamer
 {
     [HarmonyTargetMethodHint("b1.BGS_TamerManagerSystem", "OnRegisterTamer")]
     private static MethodBase TargetMethod()
@@ -87,8 +88,8 @@ public class PatchOnRegisterTamer
 }
 
 [HarmonyPatch(typeof(BUTamerActor), "BeginPlayCS_Implementation")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerBeginPlayCS_Implementation
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerBeginPlayCS_Implementation
 {
     public static void Postfix(BUTamerActor __instance)
     {
@@ -103,7 +104,7 @@ public class PatchTamerBeginPlayCS_Implementation
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
                 if (tamerEntity == null)
                 {
-                    SpawningUtils.CreateMonsterInEcs(guid, __instance, Constants.DefaultMonsterTeamId, __instance.PathName);
+                    SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, guid, __instance, Constants.DefaultMonsterTeamId, __instance.PathName);
                 }
                 else
                 {
@@ -115,8 +116,8 @@ public class PatchTamerBeginPlayCS_Implementation
 }
 
 [HarmonyPatch(typeof(FTamerRef), "IncrementalBeginPlayUnit")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerLoad
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerLoad
 {
     public static void Postfix(FTamerRef __instance)
     {
@@ -133,9 +134,7 @@ public class PatchTamerLoad
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
         if (tamerEntity.HasValue)
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            var metadata = tamerEntity.Value.GetMeta();
-            TamerUtils.MarkMonsterLocallySpawned(ref localTamer, metadata);
+            TamerUtils.MarkMonsterLocallySpawned(DI.Instance.MappedEvent, tamerEntity.Value);
         }
         else if (!EcsExcludedMonsters.MonsterNames.Any(monsterGuid.Contains) && !DI.Instance.GameplayConfiguration.IsTamerNotSynchronized(monsterGuid))
         {
@@ -145,8 +144,8 @@ public class PatchTamerLoad
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.CanTurnBack2Loaded))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class PatchCanTurnBack2Loaded
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchCanTurnBack2Loaded
 {
     static bool Prefix(ref bool __result)
     {
@@ -156,8 +155,8 @@ public class PatchCanTurnBack2Loaded
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.TurnBack2Loaded))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTurnBack2Loaded
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTurnBack2Loaded
 {
     static bool Prefix(FTamerRef __instance)
     {
@@ -174,12 +173,11 @@ public class PatchTurnBack2Loaded
         if (tamerEntity.HasValue)
         {
             ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            ref var meta = ref tamerEntity.Value.GetMeta();
-            TamerUtils.MarkMonsterLocallyDespawned(ref localTamer, meta);
+            TamerUtils.MarkMonsterLocallyDespawned(DI.Instance.MappedEvent, tamerEntity.Value);
             localTamer.HasPendingUnload = true;
 
             ref var tamer = ref tamerEntity.Value.GetTamer();
-            if (!tamer.ShouldBeSpawned)
+            if (!tamer.ForceKeepSpawned)
             {
                 Logging.LogDebug("Unloading monster {Guid} locally", tamerGuid);
                 localTamer.IsMonsterActive = false;
@@ -194,25 +192,26 @@ public class PatchTurnBack2Loaded
         {
             Logging.LogError("Unloading monster is not in the ECS, guid: {Guid}", tamerGuid);
         }
+
         return true;
     }
 }
 
 [HarmonyPatch(typeof(FTamerRef), "DestroyTamer")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerUnload
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerUnload
 {
     public static void Prefix(FTamerRef __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.EnableSpawnedTamers))
+        if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.DeleteDestroyedTamersFromEcs))
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
             if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             {
-                tamerEntity.Value.GetLocalTamer().Tamer = null;
+                tamerEntity.Value.SetTamer(null, false);
                 Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.GetMeta().NetId);
                 DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
             }
@@ -221,8 +220,8 @@ public class PatchTamerUnload
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "OnAIPerceptionSetting")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnAIPerceptionSetting
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnAIPerceptionSetting
 {
     public static bool Prefix(BUS_AIComp __instance, bool bEnable)
     {
@@ -243,8 +242,8 @@ public class PatchOnAIPerceptionSetting
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "OnAIPauseBT")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnAIPauseBT
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnAIPauseBT
 {
     public static bool Prefix(BUS_AIComp __instance, bool IsPause)
     {
@@ -265,8 +264,8 @@ public class PatchOnAIPauseBT
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "OnEnableCanSetBT")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnEnableCanSetBT
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnEnableCanSetBT
 {
     public static bool Prefix(BUS_AIComp __instance, bool bEnable)
     {
@@ -287,8 +286,8 @@ public class PatchOnEnableCanSetBT
 }
 
 [HarmonyPatch(typeof(BUS_FsmComp), "OnAIPauseFsm")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnAIPauseFsm
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnAIPauseFsm
 {
     public static bool Prefix(BUS_FsmComp __instance, bool IsPause)
     {
@@ -313,8 +312,8 @@ public class PatchOnAIPauseFsm
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnEnableCanUpdateHatred
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnEnableCanUpdateHatred
 {
     [HarmonyTargetMethodHint("b1.BUS_BattleStateComp", "OnEnableCanUpdateHatred")]
     private static MethodBase TargetMethod()
@@ -344,8 +343,8 @@ public class PatchOnEnableCanUpdateHatred
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.OnReset))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTamerOnReset
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTamerOnReset
 {
     static bool Prefix(EResetActorReason ResetReason, FTamerRef __instance)
     {
@@ -358,8 +357,8 @@ public class PatchTamerOnReset
 }
 
 [HarmonyPatch(typeof(BUS_FsmComp), "OnTriggerFsmEvent")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnTriggerFsmEvent
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnTriggerFsmEvent
 {
     public static bool Prefix(FGameplayTag EventTag, BUS_FsmComp __instance)
     {
@@ -380,10 +379,10 @@ public class PatchOnTriggerFsmEvent
         if (EventTag == BGW_FlowUtils.NormalAIFsmEventTag.LifeTimeGazeAndSurround)
         {
             var anyPlayerAlive = false;
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-                ref playerComp, _) =>
+            DI.Instance.World.Query<MainCharacterComponent, HpComponent>().ForEachEntity((
+                ref _, ref hp, _) =>
             {
-                if (!playerComp.IsDead)
+                if (!hp.IsDead)
                     anyPlayerAlive = true;
             });
 
@@ -393,14 +392,12 @@ public class PatchOnTriggerFsmEvent
             }
         }
 
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-        if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+        if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner as BGUCharacterCS, out var entity))
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            if (localTamer.Pawn != null && !BGU_CommonUtil.IsInFsmState(localTamer.Pawn, EventTag))
+            Debug.Assert(owner == entity.Value.Pawn, "owner == tamerEntity.Pawn");
+            if (!BGU_CommonUtil.IsInFsmState(owner, EventTag))
             {
-                var netId = tamerEntity.Value.GetMeta().NetId;
-                DI.Instance.Rpc.SendTriggerFsmState(new FsmStateData(netId, EventTag.TagName.ToString()));
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerFsmStateEvent(entity.Value, EventTag.TagName.ToString()), entity.Value.Entity);
             }
         }
 
@@ -409,8 +406,8 @@ public class PatchOnTriggerFsmEvent
 }
 
 [HarmonyPatch(typeof(BUS_MovementSystem), "TickForMonster")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchMovementTickForMonster
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchMovementTickForMonster
 {
     public static void Postfix(float DeltaTime, bool bStopMove, bool bNeedPauseMoveModeUpdate, BUS_MovementSystem? __instance, BUC_MovementData ___MovementData)
     {
@@ -436,9 +433,7 @@ public class PatchMovementTickForMonster
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
         if (tamerEntity.HasValue)
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-
-            if (!localTamer.IsTamerValid)
+            if (!tamerEntity.Value.IsTamerValid)
                 return;
 
             ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
@@ -448,7 +443,7 @@ public class PatchMovementTickForMonster
             }
             else
             {
-                var events = BUS_EventCollectionCS.Get(localTamer.Pawn);
+                var events = BUS_EventCollectionCS.Get(tamerEntity.Value.Pawn);
                 events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
             }
         }
@@ -456,8 +451,8 @@ public class PatchMovementTickForMonster
 }
 
 [HarmonyPatch(typeof(FTamerRef), nameof(FTamerRef.AfterMonsterDead))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchAfterMonsterDead
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchAfterMonsterDead
 {
     public static void Prefix(FTamerRef? __instance)
     {
@@ -481,15 +476,15 @@ public class PatchAfterMonsterDead
             ref var meta = ref tamerEntity.Value.GetMeta();
             localTamer.IsMonsterActive = false;
             MarkerUtils.DestroyMarkerForCharacter(tamerEntity.Value);
-            TamerUtils.MarkMonsterLocallyDespawned(ref tamerEntity.Value.GetLocalTamer(), tamerEntity.Value.GetMeta());
+            TamerUtils.MarkMonsterLocallyDespawned(DI.Instance.MappedEvent, tamerEntity.Value);
             Logging.LogDebug("Unloading monster locally. NetId: {NetId}, guid {Guid} (MonsterDead)", meta.NetId, BGU_DataUtil.GetActorGuid(monster));
         }
     }
 }
 
 [HarmonyPatch(typeof(BUS_AIComp), "TriggerWakeupActivated")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchTriggerWakeupActivated
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchTriggerWakeupActivated
 {
     public static void Postfix(BUS_AIComp? __instance)
     {
@@ -504,23 +499,16 @@ public class PatchTriggerWakeupActivated
             return;
 
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
-        if (tamerEntity.HasValue)
-        {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            if (!localTamer.IsTamerValid)
-                return;
+        if (tamerEntity is not { IsTamerValid: true })
+            return;
 
-            if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-            {
-                DI.Instance.Rpc.SendMonsterWakeUp(tamerEntity.Value.GetMeta().NetId);
-            }
-        }
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MonsterWakeUpEvent(tamerEntity.Value), tamerEntity.Value.Entity);
     }
 }
 
 [HarmonyPatch(typeof(BUS_DumperTruckTriggerComp), "PatrolTick")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchPatrolTick
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchPatrolTick
 {
     private static MethodInfo? _dumperTruckTriggerDataGetter;
     private static MethodInfo? _BeGetter;
@@ -553,8 +541,7 @@ public class PatchPatrolTick
         var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(character);
         if (tamerEntity.HasValue)
         {
-            ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-            if (!localTamer.IsTamerValid)
+            if (!tamerEntity.Value.IsTamerValid)
                 return true;
 
             ref var anim = ref tamerEntity.Value.GetMonsterAnimation();

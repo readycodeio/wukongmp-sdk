@@ -8,9 +8,9 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct BuffRemoveData(NetworkId id, int buffId, EBuffEffectTriggerType triggerType, int layer, bool withTriggerRemoveEffect) : INetSerializable
+internal partial struct BuffRemoveData(NetworkId netId, int buffId, EBuffEffectTriggerType triggerType, int layer, bool withTriggerRemoveEffect) : INetSerializable
 {
-    public NetworkId Id = id;
+    public NetworkId NetId = netId;
     public int BuffId = buffId;
     public EBuffEffectTriggerType TriggerType = triggerType;
     public int Layer = layer;

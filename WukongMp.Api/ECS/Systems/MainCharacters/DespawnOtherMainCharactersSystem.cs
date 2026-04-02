@@ -4,20 +4,20 @@ using b1;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.ECS.Managers;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.ECS.Managers;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
 /// <summary>
 /// Despawns the pawns corresponding to MainCharacterEntities for other players. Doesn't affect the main players' MainCharacterEntity.
 /// </summary>
-public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
+internal sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
 {
     private struct PendingDeleteEvent
     {
@@ -73,13 +73,11 @@ public sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
         if (playerId == _playerState.LocalPlayerId)
             return;
 
-        var localComp = mainEntity.GetLocalState();
-
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
             PlayerId = playerId,
-            PlayerCharacter = localComp.Pawn,
-            PlayerMarker = localComp.MarkerActor
+            PlayerCharacter = mainEntity.Pawn,
+            PlayerMarker = mainEntity.GetMarker().MarkerActor
         });
     }
 

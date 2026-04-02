@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongNetworkLogger(
+internal class WukongNetworkLogger(
     Store world,
     ClientState state,
     WukongAreaState areaState,

@@ -1,30 +1,38 @@
-﻿using Friflo.Engine.ECS;
+﻿using System;
+using Friflo.Engine.ECS;
 using LiteNetLib;
+using ReadyM.Api.DI;
+using ReadyM.Api.Helpers;
+using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
-using ReadyM.Api.Multiplayer.Idents;
+using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.UI;
 
-public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerState playerState) : IDisposable
+internal sealed class WukongWidgetManager(
+    ClientState clientState,
+    WukongPlayerState playerState,
+    IRelayClient relayClient,
+    WukongEventBus eventBus,
+    FreeCameraManager freeCameraManager
+) : IHostedService
 {
-    private string _lastDisconnectText = Texts.Disconnected;
+    private string _lastDisconnectText = BuiltinTexts.Disconnected;
 
     private bool _isInitialized;
 
     private string _fullModVersion = "";
     private string _shortModVersion = "";
-    private List<string> _availableCommands = [];
-    private Dictionary<string, IEnumerable<string>> _availableParameters = [];
 
-    private readonly Lazy<CommandConsoleWidget> _commandConsoleWidget = new();
+    // lazily initialized from DI, since otherwise we get a circular dependency
+    private readonly Lazy<CommandConsoleWidget> _commandConsoleWidget = new(() => new CommandConsoleWidget(DI.Instance.CommandConsole));
     private readonly Lazy<ChatWidget> _chatWidget = new();
     private readonly Lazy<InfoMessageWidget> _infoMessageWidget = new();
     private readonly Lazy<ErrorMessageWidget> _errorMessageWidget = new();
@@ -35,12 +43,44 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     private readonly Lazy<DebugViewWidget> _debugViewWidget = new();
     private readonly Lazy<TimerWidget> _timerWidget = new();
 
-    public void Dispose() { }
+    public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
 
-    public void OnFreeCameraModeChanged(bool enabled)
+    public void OnScopeStart()
     {
-        _freeCameraControlsWidget.Value.SetVisibility(enabled);
+        clientState.OnConnected += OnConnected;
+        clientState.OnDisconnected += OnDisconnected;
+        clientState.OnJoinedArea += OnJoinedArea;
+        clientState.OnLeftArea += OnLeftArea;
+        clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
+        clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
+        eventBus.OnLevelLoaded += OnLevelLoaded;
+        eventBus.OnExitLevel += OnExitLevel;
+        freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
     }
+
+    public void Dispose()
+    {
+        clientState.OnConnected -= OnConnected;
+        clientState.OnDisconnected -= OnDisconnected;
+        clientState.OnJoinedArea -= OnJoinedArea;
+        clientState.OnLeftArea -= OnLeftArea;
+        clientState.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
+        clientState.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
+        eventBus.OnLevelLoaded -= OnLevelLoaded;
+        eventBus.OnExitLevel -= OnExitLevel;
+        freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
+
+        DeinitializeWidgets();
+    }
+
+    #region Public API
+
+    public void AddSystemChatMessage(string message, FLinearColor color) => _chatWidget.Value.AddMessageWithColor(false, "", message, color);
+    public void AddChatMessage(string sender, string message, FLinearColor color) => _chatWidget.Value.AddMessageWithColor(true, sender, message, color);
+
+    public void ToggleCommandVisibility() => _commandConsoleWidget.Value.ToggleVisibility();
+
+    public void AddMessageToConsole(string message) => _commandConsoleWidget.Value.AddMessage("> " + message);
 
     public void ShowInGameWidgets(bool isOnGameplayLevel)
     {
@@ -49,10 +89,24 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _pingIndicatorWidget.Value.SetVisibility(true);
             _chatWidget.Value.ShowIfNotHidden();
         }
+
         _modVersionWidget.Value.SetVisibility(true);
     }
 
-    public void SetModVersion(string version)
+    public void ShowInfoMessage(string message)
+    {
+        _infoMessageWidget.Value.SetText(message);
+        _infoMessageWidget.Value.SetVisibility(true);
+    }
+
+    public void HideInfoMessage()
+    {
+        _infoMessageWidget.Value.SetVisibility(false);
+    }
+
+    #endregion
+
+    public void SetSdkVersion(string version)
     {
         _fullModVersion = version;
         var subVersions = version.Split('+');
@@ -60,46 +114,14 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _shortModVersion = subVersions[0];
     }
 
-    public void OnLevelLoaded()
+    public void AddCharacterToDebugView(string name)
     {
-        Logging.LogDebug("Initializing widgets");
-        InitializeWidgets();
-        _chatWidget.Value.SetVisibility(false);
-        SetModVersionText();
-
-        if (!clientState.IsConnected)
-        {
-            DI.Instance.RelayClient.Scheduler.Schedule(static (ctx, self) =>
-            {
-                self._infoMessageWidget.Value.SetVisibility(true);
-                self._lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
-                self._infoMessageWidget.Value.SetText(self._lastDisconnectText);
-            }, this);
-        }
-    }
-
-    public void UpdateConsoleCommands(List<string> commands, Dictionary<string, IEnumerable<string>> availableParameters)
-    {
-        _availableCommands = commands;
-        _availableParameters = availableParameters;
-    }
-
-    public bool IsDebugViewVisible => _debugViewWidget.Value.IsVisible();
-
-    private void SetModVersionText()
-    {
-        _modVersionWidget.Value.SetVersionText(_shortModVersion);
-        _debugViewWidget.Value.SetVersionText(_fullModVersion);
+        _debugViewWidget.Value.AddPlayer(name);
     }
 
     public void UpdatePlayerPosition(string playerName, FVector gameLocation, FVector ecsLocation)
     {
         _debugViewWidget.Value.SetPlayerPosition(playerName, gameLocation, ecsLocation);
-    }
-
-    public void AddCharacterToDebugView(string name)
-    {
-        _debugViewWidget.Value.AddPlayer(name);
     }
 
     public void UpdatePingIndicator(long pingMs)
@@ -111,73 +133,92 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
     public void SetPacketLossWarning()
     {
         _pingIndicatorWidget.Value.SetPingValue(999);
-        _pingIndicatorWidget.Value.SetInfoText(Texts.SeverePacketLossDetected);
+        _pingIndicatorWidget.Value.SetInfoText(BuiltinTexts.SeverePacketLossDetected);
     }
 
-    public void HideInfoMessage()
+    private void OnFreeCameraModeChanged(bool enabled)
     {
-        _infoMessageWidget.Value.SetVisibility(false);
+        _freeCameraControlsWidget.Value.SetVisibility(enabled);
     }
 
-    public void ShowInfoMessage(string message)
+    private void OnLevelLoaded()
     {
-        _infoMessageWidget.Value.SetText(message);
-        _infoMessageWidget.Value.SetVisibility(true);
+        Logging.LogDebug("Initializing widgets");
+        InitializeWidgets();
+        _chatWidget.Value.SetVisibility(false);
+        SetModVersionText();
+
+        if (!clientState.IsConnected)
+        {
+            relayClient.Scheduler.Schedule(static (ctx, self) =>
+            {
+                self._infoMessageWidget.Value.SetVisibility(true);
+                self._lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected;
+                self._infoMessageWidget.Value.SetText(self._lastDisconnectText);
+            }, this);
+        }
     }
 
-    public void OnExitLevel()
+    private void SetModVersionText()
+    {
+        _modVersionWidget.Value.SetVersionText(_shortModVersion);
+        _debugViewWidget.Value.SetVersionText(_fullModVersion);
+    }
+
+    private void OnExitLevel()
     {
         Logging.LogDebug("Deinitializing widgets");
         DeinitializeWidgets();
     }
 
-    public void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
+    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
     {
         _infoMessageWidget.Value.SetVisibility(true);
-        _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? Texts.ConnectionRejectedByServer : Texts.Disconnected;
+        _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected;
         _infoMessageWidget.Value.SetText(_lastDisconnectText);
     }
 
-    public void OnConnected(PlayerId playerId, Entity entity)
+    private void OnConnected(PlayerId playerId, Entity entity)
     {
         _infoMessageWidget.Value.SetVisibility(false);
     }
 
-    public void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
+    private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
     {
         var player = playerState.GetPlayerById(playerId);
         if (player.HasValue)
         {
-            _debugViewWidget.Value.AddPlayer(player.Value.GetState().NickName);
+            _debugViewWidget.Value.AddPlayer(player.Value.GetState().Nickname);
         }
     }
 
-    public void OnOtherPlayerOutsideArea(PlayerId playerId, AreaId area, OtherPlayerOutsideAreaReason reason)
+    private void OnOtherPlayerOutsideArea(PlayerId playerId, AreaId area, OtherPlayerOutsideAreaReason reason)
     {
         var player = playerState.GetPlayerById(playerId);
         if (player.HasValue)
         {
-            _debugViewWidget.Value.RemovePlayer(player.Value.GetState().NickName);
+            _debugViewWidget.Value.RemovePlayer(player.Value.GetState().Nickname);
         }
     }
 
-    public void OnJoinedArea(AreaId area, Entity areaEntity)
+    private void OnJoinedArea(AreaId area, Entity areaEntity)
     {
         var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity.HasValue)
         {
-            _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().NickName);
+            _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().Nickname);
         }
+
         AreaEntity joinedAreaEntity = new(areaEntity);
         _chatWidget.Value.SetWritingEnabled(joinedAreaEntity.GetRoom().ChatEnabled);
     }
 
-    public void OnLeftArea(AreaId arg1, Entity arg2)
+    private void OnLeftArea(AreaId arg1, Entity arg2)
     {
         var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity.HasValue)
         {
-            _debugViewWidget.Value.RemovePlayer(playerEntity.Value.GetState().NickName);
+            _debugViewWidget.Value.RemovePlayer(playerEntity.Value.GetState().Nickname);
         }
     }
 
@@ -197,10 +238,6 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
             _modVersionWidget.Value.Initialize();
             _debugViewWidget.Value.Initialize();
             _timerWidget.Value.Initialize();
-
-            _commandConsoleWidget.Value.SetAvailableCommands(_availableCommands);
-            foreach (var kvp in _availableParameters)
-                _commandConsoleWidget.Value.AddCommandParameters(kvp.Key, kvp.Value.ToList());
         }
     }
 
@@ -233,15 +270,11 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public void ToggleChatVisibility() => _chatWidget.Value.ToggleVisibility();
 
-    public void AddChatMessage(bool isSystemMessage, string sender, string message, FLinearColor color) => _chatWidget.Value.AddMessageWithColor(!isSystemMessage, sender, message, color);
-
-    public bool ChatHasFocus() => _chatWidget.Value.HasFocus();
+    public bool ChatHasFocus => _chatWidget.Value.HasFocus();
 
     public void SetChatInputFocus() => _chatWidget.Value.SetInputFocus();
 
     public string CommitChatMessage() => _chatWidget.Value.CommitMessage();
-
-    public void ToggleCommandVisibility() => _commandConsoleWidget.Value.ToggleVisibility();
 
     public bool CommandHasFocus() => _commandConsoleWidget.Value.HasFocus();
 
@@ -261,7 +294,6 @@ public sealed class WukongWidgetManager(ClientState clientState, WukongPlayerSta
 
     public string CommitCommand() => _commandConsoleWidget.Value.CommitCommand();
 
-    public void AddMessageToConsole(string message) => _commandConsoleWidget.Value.AddMessage("> " + message);
 
     public void SetSpectatingMessage(string message)
     {

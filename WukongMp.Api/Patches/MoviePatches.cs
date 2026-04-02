@@ -1,26 +1,27 @@
 ﻿using System;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using ReadyM.Relay.Common.Wukong.RPC;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
-using WukongMp.Api.ECS.Components;
+using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRequestPlayMovie
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRequestPlayMovie
 {
     [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "RequestPlayMovie")]
     private static MethodBase TargetMethod()
@@ -128,14 +129,14 @@ public static class PatchRequestPlayMovie
             Logging.LogDebug("Movie with sequenceId {Id} started, hiding all players", SequenceId);
             foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
             {
-                var mainEntity = playerState.GetMainCharacterById(playerId);
+                var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
                 if (mainEntity == null)
                     continue;
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                localMain.Pawn?.SetActorHiddenInGame(true);
-                localMain.MarkerActor?.SetActorHiddenInGame(true);
+                mainEntity.Value.Pawn?.SetActorHiddenInGame(true);
+                mainEntity.Value.GetMarker().MarkerActor?.SetActorHiddenInGame(true);
                 localMain.ShouldDisableCollision = true;
-                PlayerUtils.SetCollisionEnabled(localMain.Pawn, false);
+                PlayerUtils.SetCollisionEnabled(mainEntity.Value.Pawn, false);
             }
 
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
@@ -143,7 +144,7 @@ public static class PatchRequestPlayMovie
                 var areaEntity = DI.Instance.AreaState.CurrentArea;
                 if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(SequenceId))
                 {
-                    DI.Instance.ServerRpc.SendMovieFinished(SequenceId, areaEntity.Value.Scope.AreaId);
+                    DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId), default(EmptyContext));
                 }
 
                 var playerState = DI.Instance.PlayerState;
@@ -156,12 +157,12 @@ public static class PatchRequestPlayMovie
                 Logging.LogDebug("Movie with sequenceId {Id} finished, showing all players", SequenceId);
                 foreach (var playerId in DI.Instance.State.OtherAreaPlayers)
                 {
-                    var mainEntity = playerState.GetMainCharacterById(playerId);
+                    var mainEntity = playerState.GetMainCharacterByPlayerId(playerId);
                     if (!mainEntity.HasValue)
                         continue;
                     ref var localMain = ref mainEntity.Value.GetLocalState();
-                    localMain.Pawn?.SetActorHiddenInGame(false);
-                    localMain.MarkerActor?.SetActorHiddenInGame(false);
+                    mainEntity.Value.Pawn?.SetActorHiddenInGame(false);
+                    mainEntity.Value.GetMarker().MarkerActor?.SetActorHiddenInGame(false);
                     localMain.ShouldDisableCollision = false;
                     DI.Instance.WidgetManager.HideInfoMessage();
                 }
@@ -171,8 +172,8 @@ public static class PatchRequestPlayMovie
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTickForMovieSystem
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchTickForMovieSystem
 {
     [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "TickForMovieSystem")]
     private static MethodBase TargetMethod()
@@ -222,7 +223,7 @@ public static class PatchTickForMovieSystem
             var areaEntity = DI.Instance.AreaState.CurrentArea;
             var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(peakRequest.SequenceID);
 
-            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(DI.Instance.State, DI.Instance.PlayerState, peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
             {
                 DI.Instance.WidgetManager.HideInfoMessage();
                 if (mainEntity != null)
@@ -237,6 +238,7 @@ public static class PatchTickForMovieSystem
                     var movieRequest = GlobalMovieData.PlayMovieRequestQueue.Dequeue();
                     if (areaEntity != null && !areaEntity.Value.GetMovie().StartedSequences.Contains(movieRequest.SequenceID))
                     {
+                        // TODO: Event?
                         DI.Instance.ServerRpc.SendMovieStarted(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
                     }
 
@@ -258,20 +260,22 @@ public static class PatchTickForMovieSystem
                 }
 
                 ref var main = ref mainEntity.Value.GetState();
+                var trans = mainEntity.Value.GetTransform();
                 ref var localMain = ref mainEntity.Value.GetLocalState();
-                DI.Instance.WidgetManager.ShowInfoMessage(Texts.WaitForOtherPlayers);
+                DI.Instance.WidgetManager.ShowInfoMessage(BuiltinTexts.WaitForOtherPlayers);
                 main.WaitingSequenceId = peakRequest.SequenceID;
                 localMain.IsWaitingForSequence = true;
-                localMain.JoiningSequenceLocation = main.Location.ToFVector();
+                localMain.JoiningSequenceLocation = trans.Position.ToFVector();
                 Logging.LogDebug("Sending waiting for sequence with sequenceId {Id}", peakRequest.SequenceID);
-                DI.Instance.Rpc.SendWaitingForSequence(new SequenceWaitingData(peakRequest.SequenceID, main.Location.ToFVector()));
+
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new WaitingForSequenceEvent(peakRequest.SequenceID, trans.Position.ToFVector()), default(EmptyContext));
 
                 // some cutscenes cannot be triggered for multiple players
                 // e.g. 3rd act boss attacks one player causing him to enter a cutscene,
                 // but other players are stuck since they are not attacked
                 if (Constants.InstantTriggerSequences.Contains(peakRequest.SequenceID))
                 {
-                    DI.Instance.Rpc.SendPlayMovieRequest(peakRequest);
+                    DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayMovieRequestEvent(peakRequest.SequenceID, peakRequest.bDisablePlayerControl, peakRequest.bDisableMovementInput, peakRequest.bDisableLookAtInput, peakRequest.bHidePlayer, peakRequest.bHideHud, peakRequest.OverlapBoxGuid, peakRequest.MatchType), default(EmptyContext));
                 }
             }
         }
@@ -302,8 +306,8 @@ public static class PatchTickForMovieSystem
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnSkipCurrentCameraMovie
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnSkipCurrentCameraMovie
 {
     [HarmonyTargetMethodHint("b1.BGS_MovieSystem", "OnSkipCurrentCameraMovie")]
     private static MethodBase TargetMethod()
@@ -328,10 +332,7 @@ public static class PatchOnSkipCurrentCameraMovie
         if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
-            DI.Instance.ServerRpc.SendSkipMovie(new SkipMovieData
-            {
-                SequenceId = sequenceId
-            });
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new SkipMovieEvent(sequenceId), default(EmptyContext));
             return false;
         }
 

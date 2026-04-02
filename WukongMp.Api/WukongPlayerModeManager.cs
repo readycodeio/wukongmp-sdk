@@ -4,28 +4,26 @@ using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.FreeCamera;
-using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api;
 
-public class WukongPlayerModeManager(ClientState state, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
+internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter eventRouter, FreeCameraManager freeCameraManager)
 {
-    private float _gravityScale = 0f;
+    private float _gravityScale;
     private FVector _lastValidLocation;
 
-    public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool isSpectator)
+    public bool HandleBecameSpectator(MainCharacterEntity mainEntity, bool isSpectator)
     {
         if (isSpectator)
-            return HandleBecameSpectator(playerEntity, mainEntity);
+            return HandleBecameSpectator(mainEntity);
 
-        return HandleStoppedBeingSpectator(playerEntity, mainEntity);
+        return HandleStoppedBeingSpectator(mainEntity);
     }
 
-    public bool HandleBecameSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
+    public bool HandleBecameSpectator(MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
         var isMyself = mainComp.PlayerId == state.LocalPlayerId;
 
         if (isMyself)
@@ -33,8 +31,8 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
             UiUtils.SetHudVisibility(false);
         }
 
-        SetPlayerVisibility(playerEntity, mainEntity, false);
-        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        SetPlayerVisibility(mainEntity, false);
+        var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
         events?.Evt_BuffAllRemove.Invoke(EBuffEffectTriggerType.Remove);
 
         if (isMyself)
@@ -42,13 +40,20 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
             freeCameraManager.EnterFreeCameraMode();
             eventRouter.RaiseOnLocalPlayerChangedSpectator(true);
         }
-        SetSpectatorCollisionEnabled(playerEntity, mainEntity, false);
-        eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
-        
+
+        SetSpectatorCollisionEnabled(mainEntity, false);
+
+        var playerId = mainComp.PlayerId;
+        if (state.PlayerEntries.TryGetValue(playerId, out var playerEntry))
+        {
+            var playerEntity = new PlayerEntity(playerEntry.PlayerEntity);
+            eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
+        }
+
         return true;
     }
 
-    public bool HandleStoppedBeingSpectator(PlayerEntity playerEntity, MainCharacterEntity mainEntity)
+    public bool HandleStoppedBeingSpectator(MainCharacterEntity mainEntity)
     {
         ref var mainComp = ref mainEntity.GetState();
 
@@ -57,60 +62,64 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
         if (isMyself)
             UiUtils.SetHudVisibility(true);
 
-        SetPlayerVisibility(playerEntity, mainEntity, true);
-        SetSpectatorCollisionEnabled(playerEntity, mainEntity, true);
+        SetPlayerVisibility(mainEntity, true);
+        SetSpectatorCollisionEnabled(mainEntity, true);
 
         if (isMyself)
         {
             freeCameraManager.LeaveFreeCameraMode();
             eventRouter.RaiseOnLocalPlayerChangedSpectator(false);
         }
-        eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
+
+        var playerId = mainComp.PlayerId;
+        if (state.PlayerEntries.TryGetValue(playerId, out var playerEntry))
+        {
+            var playerEntity = new PlayerEntity(playerEntry.PlayerEntity);
+            eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
+        }
 
         return true;
     }
 
-    public bool SetPlayerVisibility(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool visible)
+    public bool SetPlayerVisibility(MainCharacterEntity mainEntity, bool visible)
     {
-        ref var localMainComp = ref mainEntity.GetLocalState();
-        ref var playerComp = ref playerEntity.GetState();
+        ref var mainComp = ref mainEntity.GetState();
 
-        var isVisible = localMainComp.Pawn?.Hidden == false;
+        var isVisible = mainEntity.Pawn?.Hidden == false;
         if (isVisible == visible)
             return false;
 
-        Logging.LogDebug("Setting player {PlayerName} visibility to: {Visibility}", playerComp.NickName, visible);
+        Logging.LogDebug("Setting character {CharacterNickName} visibility to: {Visibility}", mainComp.CharacterNickname, visible);
 
-        if (localMainComp.Pawn == null)
+        if (mainEntity.Pawn == null)
         {
             Logging.LogError("Player pawn is null");
             return false;
         }
 
-        localMainComp.Pawn.SetActorHiddenInGame(!visible);
-        localMainComp.MarkerActor?.SetActorHiddenInGame(!visible);
+        mainEntity.Pawn.SetActorHiddenInGame(!visible);
+        mainEntity.GetMarker().MarkerActor?.SetActorHiddenInGame(!visible);
 
-        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantShowBlood, visible);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreBattleInfoInUnitBar, visible);
 
         return true;
     }
 
-    private bool SetSpectatorCollisionEnabled(PlayerEntity playerEntity, MainCharacterEntity mainEntity, bool enable)
+    private bool SetSpectatorCollisionEnabled(MainCharacterEntity mainEntity, bool enable)
     {
-        ref var localMainComp = ref mainEntity.GetLocalState();
-        ref var playerComp = ref playerEntity.GetState();
+        ref var mainComp = ref mainEntity.GetState();
 
-        Logging.LogDebug("Setting player {PlayerName} collision to: {Enabled}", playerComp.NickName, enable);
+        Logging.LogDebug("Setting player {PlayerName} collision to: {Enabled}", mainComp.CharacterNickname, enable);
 
-        if (localMainComp.Pawn == null)
+        if (mainEntity.Pawn == null)
         {
             Logging.LogError("Player pawn is null");
             return false;
         }
 
-        var events = BUS_EventCollectionCS.Get(localMainComp.Pawn);
+        var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
         events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeLock, enable);
@@ -122,19 +131,22 @@ public class WukongPlayerModeManager(ClientState state, GameplayEventRouter even
 
         if (enable)
         {
-            localMainComp.Pawn.CharacterMovement.GravityScale = _gravityScale;
+            _lastValidLocation = mainEntity.Pawn.GetActorLocation(); // TODO: Only in co-op
+
+            mainEntity.Pawn.CharacterMovement.GravityScale = _gravityScale;
             PlayerUtils.TeleportLocalPlayer(mainEntity, _lastValidLocation, new FRotator(), false);
         }
         else
         {
-            _gravityScale = localMainComp.Pawn.CharacterMovement.GravityScale;
-            localMainComp.Pawn.CharacterMovement.GravityScale = 0;
-            _lastValidLocation = localMainComp.Pawn.GetActorLocation();
-            var offset = new FVector(0, 0, localMainComp.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * -3);
-            localMainComp.Pawn.SetActorLocation(_lastValidLocation + offset, false, out _, true);
+            _gravityScale = mainEntity.Pawn.CharacterMovement.GravityScale;
+            mainEntity.Pawn.CharacterMovement.GravityScale = 0;
+            _lastValidLocation = mainEntity.Pawn.GetActorLocation();
+            var offset = new FVector(0, 0, mainEntity.Pawn.CapsuleComponent.GetScaledCapsuleHalfHeight() * -3);
+            mainEntity.Pawn.SetActorLocation(_lastValidLocation + offset, false, out _, true);
         }
-        localMainComp.Pawn.CharacterMovement.StopMovementImmediately();
-        PlayerUtils.SetCollisionEnabled(localMainComp.Pawn, enable);
+
+        mainEntity.Pawn.CharacterMovement.StopMovementImmediately();
+        PlayerUtils.SetCollisionEnabled(mainEntity.Pawn, enable);
         return true;
     }
 }

@@ -27,7 +27,7 @@ internal class BouncyCastleTlsAuthentication : TlsAuthentication
             return;
 
         // Load root CAs from a PEM file called "cacert.pem" where the DLL is
-        var path = Path.Combine(GameSaveUtils.GetModsDirectory(), "WukongMp.Coop", "cacert.pem"); // TODO: Un-hardcode mod name
+        var path = Path.Combine(GameSaveUtils.GetModsDirectory(), "WukongMp.Sdk", "cacert.pem"); // TODO: Un-hardcode mod name
         using var stream = File.OpenRead(path);
 
         using var reader = new StreamReader(stream);

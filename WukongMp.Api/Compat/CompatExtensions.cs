@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace WukongMp.Api.Compat;
 
-public static class CompatExtensions
+internal static class CompatExtensions
 {
     public static bool TryDequeue<T>(this Queue<T> queue, out T item)
     {

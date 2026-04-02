@@ -1,31 +1,6 @@
-using System.Reflection;
 using PreludeLib.Runtime.Public;
 using WukongMp.Api;
-using WukongMp.Api.Configuration;
 
 namespace WukongMp.Tests;
 
-public class TestPatcher(RuntimePrelude prelude) : WukongPatcher(prelude)
-{
-    protected override void OnPatch()
-    {
-        base.OnPatch();
-
-        Prelude.ScanAndPatchCategory(Assembly.GetExecutingAssembly(), new(Constants.GlobalPatches));
-        Logging.LogInformation("Patched Prelude category: {Category}", Constants.GlobalPatches);
-
-        Prelude.ScanAndPatchCategory(Assembly.GetExecutingAssembly(), new(Constants.ConnectedPatches));
-        Logging.LogInformation("Patched Prelude category: {Category}", Constants.ConnectedPatches);
-    }
-
-    protected override void OnUnpatch()
-    {
-        Prelude.UnpatchCategory(Assembly.GetExecutingAssembly(), new(Constants.ConnectedPatches));
-        Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.ConnectedPatches);
-
-        Prelude.UnpatchCategory(Assembly.GetExecutingAssembly(), new(Constants.GlobalPatches));
-        Logging.LogInformation("Unpatched Prelude category: {Category}", Constants.GlobalPatches);
-
-        base.OnUnpatch();
-    }
-}
+internal class TestPatcher(RuntimePrelude prelude) : WukongPatcher(typeof(Mod).Assembly, "WukongMp.Tests", prelude);

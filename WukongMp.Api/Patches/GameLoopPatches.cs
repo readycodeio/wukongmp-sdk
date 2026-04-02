@@ -1,19 +1,21 @@
 ﻿using b1;
 using Friflo.Engine.ECS;
 using HarmonyLib;
+using ReadyM.Api.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.ECS.Jobs;
 using WukongMp.Api.Monitors;
 
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGWGameInstanceCS), "ReceiveTick_Implementation")]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class ReceiveTickPatch
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class ReceiveTickPatch
 {
     public static void Prefix(ref int TickGroup)
     {
@@ -40,40 +42,44 @@ public static class ReceiveTickPatch
         }
     }
 
+    private static SyncMontageJob? _syncMontageJob;
+
     private static void RunMontageSync()
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var mainEntity = DI.Instance.PlayerState.LocalMainCharacter;
-        if (mainEntity == null)
-            return;
+        DI.Instance.World.Query<LocalMainCharacterComponent>().ForEachEntity((ref _, entity) =>
+        {
+            var mainEntity = new MainCharacterEntity(entity);
 
-        SyncPlayerMontage(mainEntity.Value);
+            if (DI.Instance.MappingPolicyDir.ForEvent<MontageCallbackEvent>().CanGameEventNotifyEcs(mainEntity))
+            {
+                SyncPlayerMontage(mainEntity);
+            }
+        });
 
-        var playerId = DI.Instance.State.LocalPlayerId;
-        if (playerId == null)
-            return;
+        _syncMontageJob ??= new SyncMontageJob(DI.Instance.World, DI.Instance.PlayerState.LocalPlayerId!.Value);
 
-        DI.Instance.World.Query<LocalTamerComponent, MetadataComponent>().Each(new SyncMontageJob(DI.Instance.Rpc, playerId.Value));
+        DI.Instance.World.Query<MappingComponent<AActor>, LocalTamerComponent, MetadataComponent>().EachEntity(_syncMontageJob.Value);
     }
 
     private static void SyncPlayerMontage(MainCharacterEntity mainEntity)
     {
         ref var localMainComp = ref mainEntity.GetLocalState();
 
-        if (localMainComp.Pawn == null || localMainComp.Pawn.Mesh == null)
+        if (mainEntity.Pawn == null || mainEntity.Pawn.Mesh == null)
             return;
 
         var montageState = localMainComp.MontageState;
         if (montageState.LocalAnimationInstance == null)
         {
-            montageState.LocalAnimationInstance = localMainComp.Pawn.Mesh.GetAnimInstance();
+            montageState.LocalAnimationInstance = mainEntity.Pawn.Mesh.GetAnimInstance();
             if (montageState.LocalAnimationInstance == null)
                 return;
         }
 
-        var currentMontage = localMainComp.Pawn.GetCurrentMontage();
+        var currentMontage = mainEntity.Pawn.GetCurrentMontage();
 
         if (currentMontage != null)
         {
@@ -85,16 +91,16 @@ public static class ReceiveTickPatch
 
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
-                var netId = mainEntity.GetMeta().NetId;
-                DI.Instance.Rpc.SendMontageCallback(netId, currentMontage, currentPosition, hasMontageRewound);
+                // TODO: Check was performed beforehand
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound), mainEntity.Entity);
             }
 
             montageState.LocalMontagePosition = currentPosition;
         }
         else if (montageState.LocalMontage != null)
         {
-            var netId = mainEntity.GetMeta().NetId;
-            DI.Instance.Rpc.SendMontageCancel(netId);
+            // TODO: Check was performed beforehand
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCancelEvent(mainEntity), mainEntity.Entity);
         }
 
         montageState.LocalMontage = currentMontage;

@@ -1,16 +1,18 @@
 ﻿using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
+using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.Mapping.Policies.Event;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BGU_UnrealWorldUtil), nameof(BGU_UnrealWorldUtil.RequestSpawnServant))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRequestSpawnServant
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRequestSpawnServant
 {
     public static bool Prefix(ref string? __result, UWorld World, TSubclassOf<BUTamerActor> TamerClass, in FTransform InTransform, FServantReq InServantReq, bool SafeClampToLand = false)
     {
@@ -21,13 +23,19 @@ public static class PatchRequestSpawnServant
             return true;
 
         __result = null;
-        if (SpawningUtils.CanSummon(InServantReq.Summoner, InTransform.GetLocation()))
+
+        _ = DI.Instance.MappingPolicyDir.IsCharacterMapped(InServantReq.Summoner, out var entity);
+        var ctx = new SpawnSummonContext(entity, InTransform.GetLocation());
+
+        if (DI.Instance.MappingPolicyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanEcsInvokeGameEvent(ctx))
         {
+            // inlined original code
             var tamerActor = SpawningUtils.BeginDeferredSummonSpawn(World, TamerClass, InTransform, InServantReq.SummonID, SafeClampToLand);
             if (tamerActor == null)
             {
-                return false;
+                return false; // we overwrite the original method
             }
+
             tamerActor.MarkAsServant();
             InServantReq.ServantTamerGuid = tamerActor.GetFinalGuid();
             BPS_EventCollectionCS.GetLocal(World).Evt_SendServantReq.Invoke(InServantReq);
@@ -38,26 +46,39 @@ public static class PatchRequestSpawnServant
             var summonTeam = Constants.DefaultMonsterTeamId;
             if (InServantReq.MasterActor is BGUCharacterCS master)
                 summonTeam = master.GetTeamIDInCS();
-            SpawningUtils.CreateMonsterInEcs(__result, tamerActor, summonTeam, tamerActor.PathName);
+            SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, __result, tamerActor, summonTeam, tamerActor.PathName);
             Logging.LogDebug("Sending SpawnSummon for summoner {Summoner} with guid {Guid} for tamer path {Path}", InServantReq.Summoner?.GetName() ?? "Null", InServantReq.ServantTamerGuid, InServantReq.TamerTemplate.GetName());
-            DI.Instance.Rpc.SendSpawnSummon(InServantReq.FromGame());
+
+            var ev = InServantReq.FromGame(DI.Instance.PawnState);
+            if (ev != null)
+            {
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(ev.Value, ctx);
+            }
         }
-        return false;
+
+        return false; // we overwrite the original method
     }
 }
 
 [HarmonyPatch(typeof(BGS_SummonManagerSystem), "RequestSummon")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchRequestSummon
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchRequestSummon
 {
     public static bool Prefix(FSummonReq InSummonReq)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        if (InSummonReq.SummonType == ESummonType.NeutralAnimSpawn || InSummonReq.SummonType == ESummonType.PhantomRush)
+        if (InSummonReq.SummonType is ESummonType.NeutralAnimSpawn or ESummonType.PhantomRush)
             return true;
 
-        return SpawningUtils.CanSummon(InSummonReq.Summoner, InSummonReq.HitLocation);
+        if (InSummonReq.Summoner == null)
+            return true;
+
+        // accept null if a BGU_QuestActor (act 6.)
+        _ = DI.Instance.MappingPolicyDir.IsCharacterMapped(InSummonReq.Summoner, out var entity);
+
+        var ctx = new SpawnSummonContext(entity, InSummonReq.HitLocation);
+        return DI.Instance.MappingPolicyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanGameEventRunLocally(ctx);
     }
 }

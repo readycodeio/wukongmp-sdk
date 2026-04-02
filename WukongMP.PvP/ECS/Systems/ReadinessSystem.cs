@@ -1,11 +1,12 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
-using WukongMp.PvP.Gamemode;
+using WukongMp.PvP.GameMode;
 using WukongMp.PvP.Resources;
 using WukongMp.PvP.UI;
 
@@ -27,7 +28,7 @@ internal sealed class ReadinessSystem(
         if (!areaState.CurrentArea.HasValue)
             return;
 
-        if (areaState.PvpState.HasValue && areaState.PvpState.Value.InTournament)
+        if (areaState.PvpState is { InTournament: true })
             return;
 
         var players = 0;
@@ -71,7 +72,7 @@ internal sealed class ReadinessSystem(
         {
             var allReady = readyCount == players && players > 0;
 
-            world.Query<LocalTamerComponent, TeamComponent>().ForEachEntity((ref localTamerComp, ref team, _) =>
+            world.Query<LocalTamerComponent, TeamComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, ref TeamComponent team, Entity _) =>
             {
                 if (localTamerComp.IsTamerSynced)
                 {

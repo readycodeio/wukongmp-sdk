@@ -1,8 +1,8 @@
-﻿using b1;
+﻿using System.Collections.Generic;
+using b1;
 using b1.BGW;
 using b1.ECS;
 using BtlB1;
-using System.Collections.Generic;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 
@@ -17,19 +17,19 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
         playerEvents.Evt_CastImmobilize.Invoke(0);
     }
 
-    internal static void TriggerImmobilize(BGUCharacterCS? pawn, BGUCharacterCS? caster, bool hasBuff)
+    internal static void TriggerImmobilize(BGUCharacterCS? target, BGUCharacterCS? caster, bool hasBuff)
     {
-        Logging.LogDebug("Received trigger immobilize for character {Pawn}", pawn?.GetName());
+        Logging.LogDebug("Received trigger immobilize for character {Pawn}", target?.GetName());
 
-        if (pawn == null)
+        if (target == null)
         {
-            Logging.LogError("Failed to cast immobilizedCharacter to BGUCharacterCS");
+            Logging.LogError("Could not find immobilized pawn");
             return;
         }
 
         if (caster == null)
         {
-            Logging.LogError("Failed to cast castingCharacter to BGUCharacterCS");
+            Logging.LogError("Could not find caster pawn");
             return;
         }
 
@@ -43,30 +43,14 @@ internal static class ImmobilizeUtils // TODO: API should accept Entity, not BGU
             return;
         }
 
-        var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(pawn, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
-        BUS_EventCollectionCS.Get(pawn)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
+        var immobilizeConfigInstance = CreateImmobilizeConfig(target, caster, cachedImmobilizeConfigDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
+        BUS_EventCollectionCS.Get(target)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
     }
 
     internal static void RelieveImmobilize(BGUCharacterCS pawn)
     {
         Logging.LogDebug("Received relieve immobilize for player {Nickname}", pawn.GetName());
         var playerEvents = BUS_EventCollectionCS.Get(pawn);
-
-        var entity = DI.Instance.PawnState.GetEntityByTamerMonster(pawn);
-        if (entity.HasValue)
-        {
-            ref var localTamer = ref entity.Value.GetLocalTamer();
-            localTamer.RunImmobilizePatches = true;
-        }
-        else
-        {
-            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(pawn);
-            if (mainEntity != null)
-            {
-                mainEntity.Value.GetLocalState().RunImmobilizePatches = true;
-            }
-        }
-
         playerEvents?.Evt_RelieveImmobilized.Invoke();
     }
 

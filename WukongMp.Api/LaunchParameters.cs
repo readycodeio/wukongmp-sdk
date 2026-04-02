@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
@@ -6,7 +7,7 @@ using WukongMp.Api.Windows;
 
 namespace WukongMp.Api;
 
-public class LaunchParameters
+internal sealed class LaunchParameters
 {
     private static LaunchParameters? _instance;
     public static LaunchParameters Instance => _instance ??= new LaunchParameters();
@@ -15,25 +16,22 @@ public class LaunchParameters
                          && ServerPort is not null
                          && UserGuid != Guid.Empty;
 
-    public bool ValidForCoOp => Valid && GameMode == "co-op"
-                                      && JwtToken is not null
+    public bool ValidForCoOp => Valid && JwtToken is not null
                                       && ApiBaseUrl is not null
                                       && ServerId is not null;
 
-    public bool ValidForPvP => GameMode == "pvp"
-                               && LevelId is not null;
+    public bool ValidForPvP => LevelId is not null;
 
     public string? ModFolderOverride { get; }
     public string? ServerIp { get; }
     public int? ServerPort { get; }
     public int? ServerId { get; }
     public Guid UserGuid { get; } = Guid.Empty;
-    public string? GameMode { get; }
     public string? ApiBaseUrl { get; }
     public string? JwtToken { get; }
-    public string Nickname { get; } = "Player";
+    public string Nickname { get; }
     public int Region { get; } = -1;
-    public int? LevelId { get; set; } // TODO: this needs to be removed after testing
+    public int? LevelId { get; set; }
 
     public string? ShimDbName { get; }
     public string? ShimDbDir { get; }
@@ -50,17 +48,16 @@ public class LaunchParameters
     public string? PlayShimName { get; }
     public string? PlayShimFile { get; }
 
+    private readonly Dictionary<string, string> _allParameters;
+    
+    public string GetParameterOrDefault(string key, string defaultValue)
+    {
+        return _allParameters.GetValueOrDefault(key, defaultValue);
+    }
+
     private LaunchParameters()
     {
-        var data = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
-
-        // BOTH: Game mode
-        GameMode = data.GetValueOrDefault("GAME_MODE").ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(GameMode))
-        {
-            Logging.LogError("Game mode not provided, launch the game from the ReadyM Launcher.");
-            return;
-        }
+        var data = _allParameters = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
         // CO-OP: API base URL
         ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
@@ -99,7 +96,7 @@ public class LaunchParameters
 
         // BOTH: user nickname
         Nickname = data.GetValueOrDefault("NICKNAME");
-        
+
         // BOTH: server region
         var region = data.GetValueOrDefault("REGION", "");
         if (int.TryParse(region, out var regionId))

@@ -5,9 +5,9 @@ using CSharpModBase;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.Shim;
-using WukongMp.Tests;
+using WukongMp.Api.Tests.TestActionSequences;
 
-namespace WukongMp.Testing
+namespace WukongMp.Tests
 {
     // ReSharper disable once UnusedType.Global
     public class Mod : ICSharpModExV2
@@ -100,7 +100,7 @@ namespace WukongMp.Testing
             // NOTE: EcsLoop requires initialization from the same thread that will execute Tick()
             Utils.TryRunOnGameThread(() =>
             {
-                Debug.Assert(Patcher.IsPatched);
+                Debug.Assert(Patcher.IsPatched, "Patcher.IsPatched");
 
                 if (!DI.Instance.Connection.IsRunning)
                 {
@@ -120,7 +120,7 @@ namespace WukongMp.Testing
 
                 if (!DI.Instance.TestsRunner.IsRunning)
                 {
-                    DI.Instance.TestsRunner.Init(new Api.Tests.TestActionSequences.ReconnectTestsSequence(DI.Instance.Logger));
+                    DI.Instance.TestsRunner.Init(new ReconnectTestsSequence(DI.Instance.Logger));
                     DI.Instance.TestsRunner.Start();
                 }
             });

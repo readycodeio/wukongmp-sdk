@@ -1,39 +1,41 @@
-﻿using b1;
-using b1.BGW;
-using BtlShare;
-using Friflo.Engine.ECS;
-using ReadyM.Relay.Common.Wukong.ECS.Components;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Threading.Tasks;
+using b1;
+using b1.BGW;
+using BtlShare;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.FreeCamera;
+using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils;
 
-public static class SpawningUtils
+internal static class SpawningUtils
 {
-    public static BGUCharacterCS? SpawnCloneForPlayer(WukongPlayerState playerState, in MainCharacterEntity mainEntity)
+    public static BGUCharacterCS? SpawnCloneForPlayer(FreeCameraManager freeCameraManager, WukongPlayerState playerState, in MainCharacterEntity mainEntity)
     {
-        ref var mainComp = ref mainEntity.GetState();
-        ref var localMainComp = ref mainEntity.GetLocalState();
+        var mainComp = mainEntity.GetState();
+        var hpComp = mainEntity.GetHp();
+        var transComp = mainEntity.GetTransform();
         var pvpComp = mainEntity.GetPvP();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
         var playerId = mainComp.PlayerId;
 
-        if (localMainComp.HasPawn)
+        if (mainEntity.HasUnsyncedPawn)
         {
             Logging.LogDebug("Player already exists: {Id}", playerId); // reconnection
             return null;
         }
 
-        var localPlayerPawn = playerState.LocalMainCharacter?.GetLocalState().Pawn;
+        var localPlayerPawn = playerState.LocalMainCharacter?.Pawn;
 
         if (localPlayerPawn == null)
         {
@@ -61,8 +63,8 @@ public static class SpawningUtils
             return null;
         }
 
-        var loc = mainComp.Location.ToFVector();
-        var rot = mainComp.Rotation.ToFRotator();
+        var loc = transComp.Position.ToFVector();
+        var rot = transComp.Rotation.ToFRotator();
 
         var @class = UClass.GetClass("BGP_AIPlayerControllerB1"); // "BGPPlayerController" works for sure
 
@@ -73,7 +75,7 @@ public static class SpawningUtils
         }
 
         var oldController = GameUtils.GetPlayerController();
-        var controllerCameraRotation = oldController.GetControlRotation();
+        var controllerCameraRotation = oldController!.GetControlRotation();
         var newPawn = SpawnWukong(oldController, playerPawnClass, new FTransform(rot, loc), oldPawn);
 
         if (newPawn == null)
@@ -82,7 +84,7 @@ public static class SpawningUtils
             return null;
         }
 
-        GameUtils.PossesPawnWithViewTarget(oldController, oldPawn, newPawn, controllerCameraRotation);
+        GameUtils.PossesPawnWithViewTarget(freeCameraManager, oldController, oldPawn, newPawn, controllerCameraRotation);
 
         Logging.LogDebug("Assigned player {PlayerId} clone {CloneHash}", playerId, newPawn.GetEntityHash());
 
@@ -103,13 +105,13 @@ public static class SpawningUtils
         var teamId = teamComp.TeamId;
 
         // get initial Hp and HpMax
-        var initialHp = mainComp.Hp;
+        var initialHp = hpComp.Hp;
         Logging.LogDebug("Setting initial HP to {Hp}", initialHp);
 
-        var initialHpMaxBase = mainComp.HpMaxBase;
+        var initialHpMaxBase = hpComp.HpMaxBase;
         Logging.LogDebug("Setting initial HPMax to {HpMax}", initialHpMaxBase);
 
-        localMainComp.Pawn = newPawn;
+        mainEntity.SetPawn(newPawn, false);
 
         var attrContainer = (BUC_AttrContainer?)BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(newPawn);
         if (attrContainer != null)
@@ -135,7 +137,7 @@ public static class SpawningUtils
         ClientUtils.RegisterAndSetPlayerTeam(newPawn, teamId);
 
         // NOTE: Nickname already set in ECS. Therefore, the following can be removed
-        Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickName);
+        Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickname);
 
         // NOTE: Player properties already set in ECS. Therefore the following can be removed
         Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", pvpComp.IsReadyForPvP);
@@ -194,7 +196,7 @@ public static class SpawningUtils
         return spawnLoc;
     }
 
-    public static void SpawnUnitsAsOwner(string unitName, int count, int teamId, FVector spawnLocation)
+    public static void SpawnUnitsAsOwner(WukongPlayerState playerState, WukongPawnState pawnState, WukongMappingPolicyDirectory policyDir, TamerKind tamerKind, int count, int teamId, FVector spawnLocation)
     {
         // Spawn in a grid around center point, separated by 200 units.
         var cols = (int)Math.Ceiling(Math.Sqrt(count));
@@ -212,7 +214,7 @@ public static class SpawningUtils
                 var y = startY + row * Constants.MonsterSpawnSpread;
                 var loc = spawnLocation + new FVector(x, y, 0);
 
-                SpawnUnitAsOwner(unitName, loc, teamId);
+                SpawnUnitAsOwner(playerState, pawnState, policyDir, tamerKind, loc, teamId);
                 placed++;
                 if (placed == count)
                     return;
@@ -220,37 +222,44 @@ public static class SpawningUtils
         }
     }
 
-    public static void SpawnUnitAsOwner(string unitName, FVector locaction, int teamId)
+    public static void SpawnUnitAsOwner(WukongPlayerState playerState, WukongPawnState pawnState, WukongMappingPolicyDirectory policyDir, TamerKind tamerKind, FVector location, int teamId)
     {
         var guid = Guid.NewGuid().ToString();
-        var tamerActor = SpawnUnitLocallyByName(guid, unitName, locaction);
-        if (tamerActor != null)
+        var tamerActor = SpawnUnitLocallyByName(guid, tamerKind, location);
+        if (tamerActor != null && playerState.LocalPlayerId != null)
         {
-            var unitPath = UnitPathsConfig.GetUnitPath(unitName);
-            var characterEntity = CreateMonsterInEcs(guid, tamerActor, teamId, unitPath);
+            var unitPath = UnitPathUtils.GetUnitPathName(tamerKind);
+            var tamerEntity = CreateMonsterInEcs(pawnState, guid, tamerActor, teamId, unitPath);
 
-            ref var transComp = ref characterEntity.GetTransform();
-            transComp.Position = locaction.ToVector3();
+            ref var transComp = ref tamerEntity.GetTransform();
+            transComp.Position = location.ToVector3();
             transComp.Rotation = Vector3.Zero;
 
-            ref var nameComp = ref characterEntity.GetNickname();
+            ref var nameComp = ref tamerEntity.GetNickname();
             nameComp.Nickname = "Bot";
 
-            Logging.LogDebug("Sending spawn unit {Name} at {Location}", unitName, locaction.ToString());
-            DI.Instance.Rpc.SendSpawnUnit(new DTO.UnitSpawnData(unitName, guid, locaction));
+            Logging.LogDebug("Sending spawn unit {Name} at {Location}", tamerKind, location.ToString());
+
+            // NOTE(api): PolicyDir check always true because newly created entity is owned locally.
+            policyDir.MappedEvent.NotifyEcsIfApplicable(new BroadcastUnitSpawnEvent(
+                entity: tamerEntity.Entity,
+                unitName: tamerKind.Name,
+                guid: guid,
+                location: location
+            ), tamerEntity.Entity);
         }
     }
 
-    public static BUTamerActor? SpawnUnitLocallyByName(string guid, string unitName, FVector location)
+    public static BUTamerActor? SpawnUnitLocallyByName(string guid, TamerKind tamerKind, FVector location)
     {
-        if (!UnitPathsConfig.IsValidUnitName(unitName))
+        if (!UnitPathUtils.IsValidUnitName(tamerKind))
         {
-            Logging.LogError("Invalid unit name in SpawnUnitLocallyByName: {UnitName}", unitName);
+            Logging.LogError("Invalid unit name in SpawnUnitLocallyByName: {UnitName}", tamerKind.Name);
             return null;
         }
 
-        Logging.LogDebug("Spawn unit called for {UnitName}", unitName);
-        var unitPath = UnitPathsConfig.GetUnitPath(unitName);
+        Logging.LogDebug("Spawn unit called for {UnitName}", tamerKind.Name);
+        var unitPath = UnitPathUtils.GetUnitPathName(tamerKind);
 
         if (string.IsNullOrEmpty(unitPath))
             return null;
@@ -288,12 +297,12 @@ public static class SpawningUtils
         return tamerActor;
     }
 
-    public static TamerEntity CreateMonsterInEcs(string guid, BUTamerActor tamer, int teamId, string unitName)
+    public static TamerEntity CreateMonsterInEcs(WukongPawnState pawnState, string guid, BUTamerActor tamer, int teamId, string unitName)
     {
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
 
-        var entity = DI.Instance.PawnState.CreateNetworkedMonster(
-            new LocalTamerComponent(tamer),
+        var entity = pawnState.CreateNetworkedTamer(
+            new LocalTamerComponent(),
             new TamerComponent
             {
                 Guid = guid,
@@ -302,13 +311,16 @@ public static class SpawningUtils
             new TeamComponent
             {
                 TeamId = teamId
-            });
+            },
+            tamer);
 
         return new TamerEntity(entity);
     }
 
     public static BUTamerActor? BeginDeferredSummonSpawn(UWorld? world, TSubclassOf<BUTamerActor> tamerClass, FTransform transform, int summonId, bool safeClampToLand = false)
     {
+        #region InlineOriginalCode
+
         if (world == null || tamerClass.Value == null)
         {
             return null;
@@ -344,6 +356,8 @@ public static class SpawningUtils
             }
         }
 
+        #endregion
+
         return tamerActor;
     }
 
@@ -365,58 +379,6 @@ public static class SpawningUtils
         UBGUFunctionLibrary.BGUFinishSpawningActor(tamerActor, servantReq.BornTransform);
     }
 
-    public static bool CanSummon(AActor summoner, FVector summonLocation)
-    {
-        var localCharacter = DI.Instance.PlayerState.LocalMainCharacter;
-        if (localCharacter == null)
-        {
-            return false;
-        }
-
-        var summonerEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(summoner);
-        if (summonerEntity.HasValue && summoner == localCharacter.Value.GetLocalState().Pawn)
-        {
-            return true; // Local player summons.
-        }
-        else if (summonerEntity.HasValue)
-        {
-            return false; // Other player summons.
-        }
-        else // Summoner is not a player e.g. spawn point
-        {
-            if (DI.Instance.PlayerState.LocalPlayerId == null)
-                return false;
-
-            if (DI.Instance.AreaState.IsMasterClient)
-                return true;
-
-            var localPlayerId = DI.Instance.PlayerState.LocalPlayerId.Value;
-            var localPosition = localCharacter.Value.GetState().Location;
-            var squaredDistanceToSummon = FVector.DistSquared(localPosition.ToFVector(), summonLocation);
-            var squaredSpawnOwnershipRadius = Constants.SpawnOwnershipRadius * Constants.SpawnOwnershipRadius;
-            if (squaredDistanceToSummon > squaredSpawnOwnershipRadius)
-            {
-                return false; // Distant summon -> master as owner
-            }
-
-            // Check if master or another player with lower id is nearby
-            bool canSummon = true;
-            DI.Instance.World.Query<MainCharacterComponent>().ForEachEntity((
-                ref playerComp, entity) =>
-            {
-                if (entity == localCharacter.Value.Entity)
-                    return;
-
-                var squaredDistance = Vector3.DistanceSquared(localPosition, playerComp.Location);
-                if (squaredDistance < squaredSpawnOwnershipRadius && (DI.Instance.AreaState.MasterClientId == playerComp.PlayerId || playerComp.PlayerId.RawValue < localPlayerId.RawValue))
-                {
-                    canSummon = false;
-                }
-            });
-            return canSummon;
-        }
-    }
-
     public static FVector GetCorrectedSpawnLocation(ACharacter character, FVector targetLocation)
     {
         FVector location = targetLocation;
@@ -430,6 +392,7 @@ public static class SpawningUtils
             location = OutHitLocation;
             location.Z += 2.4f;
         }
+
         return location;
     }
 }

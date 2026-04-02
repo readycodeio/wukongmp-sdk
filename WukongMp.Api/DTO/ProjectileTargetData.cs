@@ -7,9 +7,14 @@ namespace WukongMp.Api.DTO;
 
 [DeriveINetSerializable]
 [DeriveJsonSerializable]
-public partial struct ProjectileTargetData(string projectileName, NetworkId target, string socketName) : INetSerializable
+internal partial struct ProjectileTargetData(
+    NetworkId characterNetId, 
+    string projectileName,
+    NetworkId targetNetId, 
+    string socketName) : INetSerializable
 {
+    public NetworkId CharacterNetId = characterNetId;
     public string ProjectileName = projectileName;
-    public NetworkId Target = target;
+    public NetworkId TargetNetId = targetNetId;
     public string SocketName = socketName;
 }

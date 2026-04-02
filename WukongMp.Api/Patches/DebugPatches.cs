@@ -1,6 +1,5 @@
 ﻿using b1;
 using HarmonyLib;
-using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 
 namespace WukongMp.Api.Patches;
@@ -8,8 +7,8 @@ namespace WukongMp.Api.Patches;
 #if DEBUG
 
 [HarmonyPatch(typeof(BGWConsoleCommands), nameof(BGWConsoleCommands.HasGMFlag))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class EnableConsoleCommandsPatch
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class EnableConsoleCommandsPatch
 {
     public static bool Prefix(int Flag, ref bool __result)
     {
@@ -24,8 +23,8 @@ public class EnableConsoleCommandsPatch
 }
 
 [HarmonyPatch(typeof(BGWConsoleCommands), nameof(BGWConsoleCommands.IsPlayerGMInputEnabled), MethodType.Getter)]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public class EnableConsoleCommandsPatch2
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class EnableConsoleCommandsPatch2
 {
     public static bool Prefix(ref bool __result)
     {

@@ -3,7 +3,7 @@ using WukongMp.Api.Tests.TestActions;
 
 namespace WukongMp.Api.Tests.TestActionSequences
 {
-    public class ReconnectTestsSequence : TestActionSequenceBase
+    internal class ReconnectTestsSequence : TestActionSequenceBase
     {
         public ReconnectTestsSequence(ILogger logger) : base(logger)
         {

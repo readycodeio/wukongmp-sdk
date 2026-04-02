@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using b1;
 using b1.BGW;
@@ -7,18 +8,20 @@ using BtlB1;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerMagicSkill")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTriggerMagicSkill
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchTriggerMagicSkill
 {
     public static bool Prefix(int SkillID)
     {
@@ -30,8 +33,8 @@ public static class PatchTriggerMagicSkill
 }
 
 [HarmonyPatch(typeof(BUS_PlayerInputActionComp), "TriggerItemSkill")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchTriggerItemSkill
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchTriggerItemSkill
 {
     public static bool Prefix(BUS_PlayerInputActionComp __instance)
     {
@@ -45,8 +48,8 @@ public static class PatchTriggerItemSkill
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchDoPoleDrink
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchDoPoleDrink
 {
     [HarmonyTargetMethodHint("b1.BUS_PoleDrinkComp", "DoPoleDrink")]
     private static MethodBase TargetMethod()
@@ -73,27 +76,25 @@ public static class PatchDoPoleDrink
 }
 
 [HarmonyPatch(typeof(BUS_CastImmobilizeComp), "OnCastImmobilize")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnCastImmobilize
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnCastImmobilize
 {
     public static bool Prefix(int ConfigID, BUS_CastImmobilizeComp __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var playerState = DI.Instance.PlayerState;
-
         // get properties
-        MethodInfo getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
-        BUC_CastImmobilizeData CastImmobilizeData = (BUC_CastImmobilizeData)getter.Invoke(__instance, null);
+        var getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "CastImmobilizeData");
+        var castImmobilizeData = (BUC_CastImmobilizeData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "TargetInfoData");
-        IBUC_TargetInfoData TargetInfoData = (IBUC_TargetInfoData)getter.Invoke(__instance, null);
+        var targetInfoData = (IBUC_TargetInfoData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "PassiveSkillData");
-        IBUC_PassiveSkillData PassiveSkillData = (IBUC_PassiveSkillData)getter.Invoke(__instance, null);
+        var passiveSkillData = (IBUC_PassiveSkillData)getter.Invoke(__instance, null);
         getter = AccessTools.PropertyGetter(typeof(BUS_CastImmobilizeComp), "BuffData");
-        IBUC_BuffData BuffData = (IBUC_BuffData)getter.Invoke(__instance, null);
+        var buffData = (IBUC_BuffData)getter.Invoke(__instance, null);
 
-        AActor castingCharacter = __instance.GetOwner();
+        var castingCharacter = __instance.GetOwner();
 
         if (castingCharacter.IsNullOrDestroyed())
         {
@@ -101,69 +102,59 @@ public static class PatchOnCastImmobilize
             return false;
         }
 
-        var castingMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(castingCharacter);
-
-        if (!DI.Instance.AreaState.IsMasterClient)
-        {
-            if (!castingMainEntity.HasValue)
-                return false;
-
-            ref var castingMain = ref castingMainEntity.Value.GetState();
-
-            // Broadcast that you have cast a spell
-            if (castingMain.PlayerId == playerState.LocalMainCharacter?.GetState().PlayerId)
-            {
-                // target doesn't matter, not evaluated
-                DI.Instance.Rpc.SendCastImmobilize(castingMainEntity.Value.GetMeta().NetId);
-            }
-
+        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped(castingCharacter, out var castingMainEntity))
             return false;
-        }
+
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastImmobilizeEvent(castingMainEntity.Value), castingMainEntity.Value.Entity);
+        if (!DI.Instance.MappingPolicyDir.ForEvent<CastImmobilizeEvent>().CanGameEventRunLocally(castingMainEntity.Value.Entity))
+            return false;
+
+        Debug.Assert(DI.Instance.AreaState.IsMasterClient, "DI.Instance.AreaState.IsMasterClient");
+        // inlined OnCastImmobilize code with some modifications follows
 
         if (ConfigID == 0)
         {
-            ConfigID = CastImmobilizeData.ResId;
+            ConfigID = castImmobilizeData.ResId;
         }
 
-        if (!PassiveSkillData.TryGetCachedDesc<FUStImmobilizeSkillConfigDesc>(ConfigID, out var cachedDesc) || BGW_LogUtil.LogIfNull(castingCharacter as ABGUCharacter, "CurCharacter is null"))
+        if (!passiveSkillData.TryGetCachedDesc<FUStImmobilizeSkillConfigDesc>(ConfigID, out var cachedDesc) || BGW_LogUtil.LogIfNull(castingCharacter as ABGUCharacter, "CurCharacter is null"))
         {
             return false;
         }
 
-        var aBGUCharacter = TargetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
-        if (aBGUCharacter == null)
+        var aBguCharacter = targetInfoData.GetSkillBaseTarget().LockTargetActor as ABGUCharacter;
+        if (aBguCharacter == null)
         {
-            aBGUCharacter = TargetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
+            aBguCharacter = targetInfoData.GetTargetInfo().LockTargetActor as ABGUCharacter;
         }
 
-        if (aBGUCharacter == null || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBGUCharacter, cachedDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBGUCharacter, cachedDesc.AffiliationTypeFilter))
+        if (aBguCharacter == null || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByTeamFilter(castingCharacter, aBguCharacter, cachedDesc.TargetFilter) || !BGUFuncLibSelectTargetsCS.BGUIsSelectTargetByAffiliationFilter(castingCharacter, aBguCharacter, cachedDesc.AffiliationTypeFilter))
         {
             Logging.LogDebug("CurrentTarget As BGUCharacter is null in PatchOnCastImmobilize");
             return false;
         }
 
-        int num = ((cachedDesc.TargetCount <= 0) ? 1 : cachedDesc.TargetCount);
-        List<AActor> outActors = new();
+        var num = cachedDesc.TargetCount <= 0 ? 1 : cachedDesc.TargetCount;
+        List<AActor> outActors = [];
         if (num > 1)
         {
-            List<int> list = [cachedDesc.RangeRadius];
-            AActor owner2 = __instance.GetOwner();
-            FVector baseLoc = aBGUCharacter.BGUGetActorLocation();
-            int targetFilter = cachedDesc.TargetFilter;
-            int targetTypeFilter = cachedDesc.TargetTypeFilter;
-            int affiliationTypeFilter = cachedDesc.AffiliationTypeFilter;
-            IList<int> Prams = list;
-            BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out outActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in Prams);
+            IList<int> list = [cachedDesc.RangeRadius];
+            var owner2 = __instance.GetOwner();
+            var baseLoc = aBguCharacter.BGUGetActorLocation();
+            var targetFilter = cachedDesc.TargetFilter;
+            var targetTypeFilter = cachedDesc.TargetTypeFilter;
+            var affiliationTypeFilter = cachedDesc.AffiliationTypeFilter;
+            BGUFuncLibSelectTargetsCS.BGUSelectTargetsInShape(castingCharacter, out outActors, owner2, baseLoc, ERangeType.Circle, -1, targetFilter, targetTypeFilter, affiliationTypeFilter, in list);
         }
 
-        if (outActors.Contains(aBGUCharacter))
+        if (outActors.Contains(aBguCharacter))
         {
-            outActors.Remove(aBGUCharacter);
+            outActors.Remove(aBguCharacter);
         }
 
-        outActors.Insert(0, aBGUCharacter);
+        outActors.Insert(0, aBguCharacter);
 
-        int num2 = 0;
+        var num2 = 0;
         foreach (var item in outActors)
         {
             if (num2 >= num)
@@ -178,8 +169,8 @@ public static class PatchOnCastImmobilize
 
             if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(item, EBGUSimpleState.ImmueImmobilizing))
             {
-                int actorResID = BGU_DataUtil.GetActorResID(item);
-                var fXAssetByResID = ImmobilizeUtils.GetFxAssetByResId(castingCharacter, cachedDesc.FailedFXs, actorResID, CastImmobilizeData.ResId, CastImmobilizeData);
+                var actorResID = BGU_DataUtil.GetActorResID(item);
+                var fXAssetByResID = ImmobilizeUtils.GetFxAssetByResId(castingCharacter, cachedDesc.FailedFXs, actorResID, castImmobilizeData.ResId, castImmobilizeData);
                 if (fXAssetByResID != null)
                 {
                     BUS_EventCollectionCS.Get(item)?.Evt_RequestSpawnFXByDispConfigDA.Invoke(fXAssetByResID, out var _);
@@ -189,28 +180,22 @@ public static class PatchOnCastImmobilize
             }
 
             num2++;
-            int actorResID2 = BGU_DataUtil.GetActorResID(item);
+            var actorResID2 = BGU_DataUtil.GetActorResID(item);
             if (BGW_LogUtil.LogIfNull(BGW_GameDB.GetUnitCommDesc(actorResID2), "BGW_GameDB.GetUnitCommDesc is null, ResID:%d", actorResID2))
             {
                 continue;
             }
 
-            var hasBuff = BuffData.HasBuff(cachedDesc.GreatSageTalentActiveBuff);
-            ImmobilizeConfigInstance immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(item, castingCharacter, cachedDesc, CastImmobilizeData.ResId, hasBuff, CastImmobilizeData);
+            var hasBuff = buffData.HasBuff(cachedDesc.GreatSageTalentActiveBuff);
+            var immobilizeConfigInstance = ImmobilizeUtils.CreateImmobilizeConfig(item, castingCharacter, cachedDesc, castImmobilizeData.ResId, hasBuff, castImmobilizeData);
             BUS_EventCollectionCS.Get(item)?.Evt_TriggerImmobilize.Invoke(immobilizeConfigInstance);
 
-            // broadcast
-            var immobilizedMainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(item);
-            var immobilizedTamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(item);
-
-            if ((immobilizedMainEntity != null || immobilizedTamerEntity.HasValue) && castingMainEntity != null)
+            // broadcast trigger immobilize on targets
+            if (DI.Instance.MappingPolicyDir.IsCharacterMapped(item, out var entity))
             {
-                Logging.LogDebug("Broadcasting trigger immobilize");
-                var netId = immobilizedMainEntity == null
-                    ? immobilizedTamerEntity!.Value.GetMeta().NetId
-                    : immobilizedMainEntity.Value.GetMeta().NetId;
-
-                DI.Instance.Rpc.SendTriggerImmobilize(new TriggerImmobilizeData(netId, castingMainEntity.Value.GetMeta().NetId, hasBuff));
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerImmobilizeEvent(entity.Value, castingMainEntity.Value, hasBuff), default(EmptyContext));
+                if (sent)
+                    Logging.LogDebug("Broadcasting trigger immobilize for target {Target}", item.GetName());
             }
         }
 
@@ -219,8 +204,8 @@ public static class PatchOnCastImmobilize
 }
 
 [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTickWithGroup")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchImmobilizeOnTickWithGroup
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchImmobilizeOnTickWithGroup
 {
     public static bool Prefix()
     {
@@ -237,8 +222,8 @@ public static class PatchImmobilizeOnTickWithGroup
 }
 
 [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "RelieveImmobilized")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchRelieveImmobilized
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchRelieveImmobilized
 {
     public static bool Prefix(BUS_BeImmobilizedComp __instance)
     {
@@ -253,57 +238,25 @@ public static class PatchRelieveImmobilized
             return false;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-
-        if (mainEntity == null && !tamerEntity.HasValue)
-        {
+        if (!DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
             return true;
-        }
 
-        var netId = mainEntity != null ? mainEntity.Value.GetMeta().NetId : tamerEntity!.Value.GetMeta().NetId;
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value), default(EmptyContext));
 
-        if (DI.Instance.AreaState.IsMasterClient)
-        {
-            DI.Instance.Rpc.SendRelieveImmobilize(netId);
-            return true;
-        }
-
-        if (mainEntity != null)
-        {
-            ref var localMain = ref mainEntity.Value.GetLocalState();
-
-            if (!localMain.RunImmobilizePatches)
-            {
-                return false;
-            }
-
-            localMain.RunImmobilizePatches = false;
-            return true;
-        }
-
-        ref var localTamer = ref tamerEntity!.Value.GetLocalTamer();
-
-        if (!localTamer.RunImmobilizePatches)
-        {
-            return false;
-        }
-
-        localTamer.RunImmobilizePatches = false;
-        return true;
+        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanGameEventRunLocally(default);
     }
 }
 
 [HarmonyPatch(typeof(BUS_BeImmobilizedComp), "OnTriggerImmobilizedBreak")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnTriggerImmobilizedBreak
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnTriggerImmobilizedBreak
 {
     public static bool Prefix(BUS_BeImmobilizedComp __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        var owner = __instance.GetOwner();
+        var owner = __instance.GetOwner() as BGUCharacterCS;
 
         if (owner.IsNullOrDestroyed())
         {
@@ -311,39 +264,19 @@ public static class PatchOnTriggerImmobilizedBreak
             return false;
         }
 
-        if (DI.Instance.AreaState.IsMasterClient)
+        // TODO: This used to be forcibly replaced by RelieveImmobilize, find out why
+        if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-
-            if (mainEntity != null)
-            {
-                DI.Instance.Rpc.SendRelieveImmobilize(mainEntity.Value.GetMeta().NetId);
-                BUS_EventCollectionCS.Get(mainEntity.Value.GetLocalState().Pawn)?.Evt_RelieveImmobilized.Invoke();
-                return false;
-            }
-
-            var entity = DI.Instance.PawnState.GetEntityByTamerMonster(owner);
-
-            if (entity.HasValue)
-            {
-                ref var meta = ref entity.Value.GetMeta();
-                ref var localTamer = ref entity.Value.GetLocalTamer();
-
-                DI.Instance.Rpc.SendRelieveImmobilize(meta.NetId);
-                BUS_EventCollectionCS.Get(localTamer.Pawn)?.Evt_RelieveImmobilized.Invoke();
-            }
-
-            Logging.LogDebug("Character state is null - continuing standard execution");
-            return true;
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value), default(EmptyContext));
         }
-
-        return false;
+        
+        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanGameEventRunLocally(default);
     }
 }
 
 [HarmonyPatch(typeof(BUS_PhantomRushComp), "OnTriggerPhantomRush")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnTriggerPhantomRush
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnTriggerPhantomRush
 {
     public static bool Prefix(
         BUS_PhantomRushComp __instance,
@@ -370,7 +303,7 @@ public static class PatchOnTriggerPhantomRush
             return false;
         }
 
-        AActor owner = __instance.GetOwner();
+        var owner = __instance.GetOwner();
 
         if (owner.IsNullOrDestroyed())
         {
@@ -378,19 +311,19 @@ public static class PatchOnTriggerPhantomRush
             return false;
         }
 
-        if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        if (owner == playerState.LocalMainCharacter?.Pawn)
             return true;
 
         // Modified original implementation
-        MethodInfo GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
+        var GetActualUseConfigIDMethod = AccessTools.Method(typeof(BUS_PhantomRushComp), "GetActualUseConfigID");
         if (GetActualUseConfigIDMethod == null)
         {
             Logging.LogError("GetActualUseConfigID method info is null");
             return false;
         }
 
-        BUS_GSEventCollection BUSEventCollection = BUS_EventCollectionCS.Get(owner);
-        BGS_GSEventCollection BGSEventCollection = BGS_GSEventCollection.Get(owner);
+        var BUSEventCollection = BUS_EventCollectionCS.Get(owner);
+        var BGSEventCollection = BGS_GSEventCollection.Get(owner);
         var aCharacter = owner as ACharacter;
         if (aCharacter == null || ___SimpleStateData.HasSimpleState(EBGUSimpleState.PhantomRush))
         {
@@ -398,7 +331,7 @@ public static class PatchOnTriggerPhantomRush
             return false;
         }
 
-        FUStPhantomRushSkillConfigDesc phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
+        var phantomRushSkillConfigDesc = BGW_GameDB.GetPhantomRushSkillConfigDesc((int)GetActualUseConfigIDMethod.Invoke(__instance, null), owner);
         if (phantomRushSkillConfigDesc == null)
         {
             Logging.LogError("phantomRushSkillConfigDesc is null");
@@ -406,14 +339,14 @@ public static class PatchOnTriggerPhantomRush
         }
 
         __instance.PreloadAssetMgr.TryGetCachedResourceObj<BGWDataAsset_PhantomRushRelatedeSkillConfig>(phantomRushSkillConfigDesc.PhantomRushRelatedSkillConfigPath, ELoadResourceType.AsyncLoadAndCache, EAssetPriority.Medium);
-        FPoseSnapshot Snapshot = default(FPoseSnapshot);
+        var Snapshot = default(FPoseSnapshot);
         aCharacter.Mesh.SnapshotPose(ref Snapshot);
         ___PhantomRushData.PoseSnapshot = Snapshot;
-        UAnimInstance animInstance = aCharacter.Mesh.GetAnimInstance();
-        FContinueBehaviorInfo cBI = default(FContinueBehaviorInfo);
+        var animInstance = aCharacter.Mesh.GetAnimInstance();
+        var cBI = default(FContinueBehaviorInfo);
         if (animInstance != null)
         {
-            UAnimMontage currentActiveMontage = animInstance.GetCurrentActiveMontage();
+            var currentActiveMontage = animInstance.GetCurrentActiveMontage();
             if (currentActiveMontage != null)
             {
                 if (___SimpleStateData.HasSimpleState(EBGUSimpleState.InAnimationSyncing))
@@ -455,10 +388,10 @@ public static class PatchOnTriggerPhantomRush
             EAbnormalStateType.Abnormal_Poison,
             EAbnormalStateType.Abnormal_Thunder
         ]);
-        int phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
+        var phantomRushSummonID = phantomRushSkillConfigDesc.PhantomRushSummonID;
         BUSEventCollection.Evt_SummonSkillCastByPhantomRush.Invoke(phantomRushSummonID, cBI);
         BUSEventCollection.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PhantomRush);
-        foreach (int phantomRushBeginAddBuffID in phantomRushSkillConfigDesc.PhantomRushBeginAddBuffIDList)
+        foreach (var phantomRushBeginAddBuffID in phantomRushSkillConfigDesc.PhantomRushBeginAddBuffIDList)
         {
             BUSEventCollection.Evt_BuffAdd.Invoke(phantomRushBeginAddBuffID, owner, owner, -1f, EBuffSourceType.PhantomRush);
         }
@@ -490,24 +423,23 @@ public static class PatchOnTriggerPhantomRush
             return;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
+        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(owner);
         if (mainEntity != null && mainEntity != playerState.LocalMainCharacter && playerState.LocalPlayerEntity != null)
         {
-            DI.Instance.ModeManager.SetPlayerVisibility(playerState.LocalPlayerEntity.Value, mainEntity.Value, false);
+            DI.Instance.ModeManager.SetPlayerVisibility(mainEntity.Value, false);
         }
     }
 }
 
 [HarmonyPatch(typeof(BUS_SkillInstsCompSvr), "OnUnitCastSkillTry", typeof(FCastSkillInfo))]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnUnitCastSkillTry
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnUnitCastSkillTry
 {
     public static void Postfix(FCastSkillInfo CSI, BUC_SkillInstsData ___SkillInstsData, BUS_SkillInstsCompSvr __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var playerState = DI.Instance.PlayerState;
         var owner = __instance.GetOwner();
 
         if (___SkillInstsData.GetLastSkillCastResult() != 0)
@@ -518,32 +450,30 @@ public static class PatchOnUnitCastSkillTry
 
         if (CSI.SourceType == ECastSkillSourceType.PhantomRush)
         {
-            if (owner == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+            if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
             {
-                Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
-                DI.Instance.Rpc.SendPhantomRush(CSI.SkillDirection);
-                return;
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PhantomRushEvent(entity.Value, CSI.SkillDirection), entity.Value.Entity);
+                if (sent)
+                    Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
             }
         }
-
-        var pawnState = DI.Instance.PawnState;
-        if (CSI.SourceType == ECastSkillSourceType.CBG && CSI.SkillID == 471236)
+        else if (CSI is { SourceType: ECastSkillSourceType.CBG, SkillID: 471236 })
         {
-            var tamerEntity = pawnState.GetEntityByTamerMonster(owner);
-            if (tamerEntity.HasValue && DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
+            if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner as BGUCharacterCS, out var entity))
             {
-                DI.Instance.Rpc.SendCastSkill(tamerEntity.Value.GetMeta().NetId, CSI.SkillID, CSI.SourceType);
-                Logging.LogDebug("Sent CBG skill cast for skill {SkillId}", CSI.SkillID);
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastSkillEvent(entity.Value, CSI.SkillID, CSI.SourceType), entity.Value.Entity);
+                if (sent)
+                    Logging.LogDebug("Sent CBG skill cast for skill {SkillId}", CSI.SkillID);
             }
         }
     }
 }
 
 [HarmonyPatch(typeof(BUS_PhantomRushComp), "ExitPhantomRush")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchExitPhantomRush
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchExitPhantomRush
 {
-    public static void Prefix(BUS_PhantomRushComp __instance, IBUC_SimpleStateData ___SimpleStateData)
+    public static void Prefix(BUS_PhantomRushComp __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
@@ -557,34 +487,27 @@ public static class PatchExitPhantomRush
             return;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(owner);
-
-        if (mainEntity == null)
+        if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
             return;
 
-        ref var main = ref mainEntity.Value.GetState();
-        ref var localMain = ref mainEntity.Value.GetLocalState();
+        var main = mainEntity.Value.GetState();
 
-        if ((DI.Instance.AreaState.IsMasterClient || owner == localMain.Pawn) && !localMain.ReceivedPhantomRushExit)
-        {
-            Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", main.CharacterNickName);
-            DI.Instance.Rpc.SendExitPhantomRush(main.PlayerId);
-            localMain.ReceivedPhantomRushExit = false;
-        }
+        var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ExitPhantomRushEvent(mainEntity.Value), mainEntity.Value.Entity);
+        if (sent)
+            Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", main.CharacterNickname);
 
-        var playerId = main.PlayerId;
-        var playerEntity = DI.Instance.PlayerState.GetPlayerById(playerId);
-
+        // show other players again
+        var playerEntity = DI.Instance.PlayerState.GetPlayerById(main.PlayerId);
         if (mainEntity != playerState.LocalMainCharacter && playerEntity.HasValue)
         {
-            DI.Instance.ModeManager.SetPlayerVisibility(playerEntity.Value, mainEntity.Value, true);
+            DI.Instance.ModeManager.SetPlayerVisibility(mainEntity.Value, true);
         }
     }
 }
 
 [HarmonyPatch(typeof(BUFFPlayerWinePartnerAttr), "Apply")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchBuffPlayerWinePartnerAttr
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchBuffPlayerWinePartnerAttr
 {
     public static bool Prefix(AActor Target, out float OutAbs, out float OutMul)
     {
@@ -594,10 +517,10 @@ public static class PatchBuffPlayerWinePartnerAttr
         if (!DI.Instance.AreaState.InRoom)
             return true;
 
-        ABGUCharacter? abguCharacter = Target as ABGUCharacter;
+        var abguCharacter = Target as ABGUCharacter;
         if (abguCharacter != null)
         {
-            IBPC_PlayerRoleData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBPC_PlayerRoleData, BPC_PlayerRoleData>(abguCharacter.GetController());
+            var readOnlyData = BGU_DataUtil.GetReadOnlyData<IBPC_PlayerRoleData, BPC_PlayerRoleData>(abguCharacter.GetController());
             if (readOnlyData is { RoleData: null })
                 return false;
         }
@@ -607,8 +530,8 @@ public static class PatchBuffPlayerWinePartnerAttr
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class TransformationPatch
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class TransformationPatch
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "TransferData")]
     private static MethodBase TargetMethod()
@@ -635,7 +558,7 @@ public static class TransformationPatch
             return;
         }
 
-        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerPawn(oldOwner);
+        var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(oldOwner);
 
         if (mainEntity == null)
         {
@@ -643,21 +566,17 @@ public static class TransformationPatch
             return;
         }
 
-        ref var main = ref mainEntity.Value.GetState();
-        ref var localMain = ref mainEntity.Value.GetLocalState();
-
-        localMain.Pawn = newOwner;
+        var main = mainEntity.Value.GetState();
+        mainEntity.Value.SetPawn(newOwner, true);
         // update equipment
         EquipmentUtils.SetActorEquipment(newOwner, main.Equipment);
         Logging.LogDebug("Transformed {OldOwner} to {NewOwner}", oldOwner?.GetName(), newOwner?.GetName());
     }
 }
 
-// TODO: This fixes follower transform (UI for skills no longer crashes) but also causes me and them to be unable to transform back
-// Also, skill UI for myself when I transform does not appear
 [HarmonyPatch(typeof(BPC_BattleMainInfoData), "GetCommonDisabledState")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchLogs4
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchLogs4
 {
     public static bool Prefix(BPC_BattleMainInfoData __instance, ref bool __result, out bool IsDisabled)
     {
@@ -679,8 +598,8 @@ public class PatchLogs4
     }
 }
 
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnTransBeginSpawnNewOne
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnTransBeginSpawnNewOne
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "OnTransBeginSpawnNewOne")]
     private static MethodBase TargetMethod()
@@ -701,23 +620,24 @@ public class PatchOnTransBeginSpawnNewOne
         var playerState = DI.Instance.PlayerState;
 
         var pawn = __instance.GetOwner();
-        if (pawn == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(pawn, out var mainEntity))
         {
-            Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            DI.Instance.Rpc.SendPlayerTransBegin(new PlayerTransBeginData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
-        }
-
-        var entity = DI.Instance.PawnState.GetEntityByPlayerPawn(pawn);
-        if (entity != null)
-        {
-            ref var mainComp = ref entity.Value.GetState();
-            mainComp.IsTransformed = true;
+            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransBeginEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType), mainEntity.Value.Entity);
+            if (sent)
+            {
+                Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter?.GetState().CharacterNickname, ToReplaceUnitResID);
+            }
+            
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var loadState))
+            {
+                loadState.SetFromGame(MainCharacterComponent.Fields.IsTransformed, true);
+            }
         }
     }
 }
 
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnTransBackSpawnNewOne
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnTransBackSpawnNewOne
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "OnTransBackSpawnNewOne")]
     private static MethodBase TargetMethod()
@@ -739,18 +659,19 @@ public class PatchOnTransBackSpawnNewOne
             return;
         }
 
-        var playerState = DI.Instance.PlayerState;
         var pawn = __instance.GetOwner();
-        if (pawn == playerState.LocalMainCharacter?.GetLocalState().Pawn)
+
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(pawn, out var mainEntity))
         {
-            Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter.Value.GetState().CharacterNickName, ToReplaceUnitResID);
-            DI.Instance.Rpc.SendPlayerTransEnd(new PlayerTransEndData(ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
+            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransEndEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType), mainEntity.Value.Entity);
+            if (sent)
+                Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", mainEntity.Value.GetState().CharacterNickname, ToReplaceUnitResID);
         }
 
-        __state = DI.Instance.PawnState.GetEntityByPlayerPawn(pawn);
+        __state = mainEntity;
     }
 
-    public static void Postfix(UActorCompBaseCS __instance, object? __state)
+    public static void Postfix(object? __state)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
@@ -758,17 +679,23 @@ public class PatchOnTransBackSpawnNewOne
         var state = (MainCharacterEntity?)__state;
         if (state.HasValue)
         {
-            ref var mainComp = ref state.Value.GetState();
-            mainComp.IsTransformed = false;
-            var attrContainer = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(state.Value.GetLocalState().Pawn);
-            mainComp.Hp = attrContainer.GetFloatValue(EBGUAttrFloat.HpMax);
-            mainComp.IsDead = false;
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(state.Value, out var loadState))
+            {
+                loadState.SetFromGame(MainCharacterComponent.Fields.IsTransformed, false);
+            }
+
+            // TODO: Used to load HpMax, not Hp, possibly healing the player to full. Check if this is intended and if not - change it back.
+            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(state.Value, out var load))
+            {
+                var attrContainer = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(state.Value.Pawn);
+                load.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
+            }
         }
     }
 }
 
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchSpawnAndPossess
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchSpawnAndPossess
 {
     [HarmonyTargetMethodHint("b1.BUS_PlayerTransComp", "SpawnAndPossessTransUnit")]
     private static MethodBase TargetMethod()
@@ -848,8 +775,8 @@ public class PatchSpawnAndPossess
         var actor = (ACharacter)newPawn;
 
         var mainPlayerPawn = GameUtils.GetControlledPawn();
-        var mainPlayerController = GameUtils.GetPlayerController();
-        bool isNonLocalTransform = false;
+        var mainPlayerController = GameUtils.GetPlayerController()!;
+        var isNonLocalTransform = false;
         var cameraRotation = FRotator.ZeroRotator;
         if (controller != mainPlayerController && mainPlayerPawn != null)
         {
@@ -865,7 +792,7 @@ public class PatchSpawnAndPossess
         if (isNonLocalTransform && mainPlayerPawn != null)
         {
             // Set player controller back to main player
-            GameUtils.PossesPawnWithViewTarget(mainPlayerController, mainPlayerPawn, newPawn, cameraRotation);
+            GameUtils.PossesPawnWithViewTarget(DI.Instance.FreeCameraManager, mainPlayerController, mainPlayerPawn, newPawn, cameraRotation);
             controller.Possess(newPawn);
         }
 
@@ -883,8 +810,8 @@ public class PatchSpawnAndPossess
 }
 
 [HarmonyPatch(typeof(BUS_TransGuideComp), "UpdateTransGuideData")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchUpdateTransGuideData
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchUpdateTransGuideData
 {
     public static bool Prefix(BUS_TransGuideComp __instance)
     {
@@ -901,8 +828,8 @@ public class PatchUpdateTransGuideData
 }
 
 [HarmonyPatch(typeof(BUS_TransPlayerDataBindComp), "OnPostTransBindData")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public class PatchOnPostTransBindData
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchOnPostTransBindData
 {
     public static bool Prefix(BUS_TransPlayerDataBindComp __instance)
     {
@@ -920,26 +847,26 @@ public class PatchOnPostTransBindData
 
 // TODO: Possibly synced by a buff, maybe we can disable this
 [HarmonyPatch(typeof(BUS_IronBodyComp), "OnIronBodyStart")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnIronBodyStart
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnIronBodyStart
 {
     public static void Postfix(BUS_IronBodyComp __instance)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        var playerState = DI.Instance.PlayerState;
-        if (playerState.LocalMainCharacter?.GetLocalState().Pawn == __instance.GetOwner())
+        var owner = __instance.GetOwner();
+
+        if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            // Send iron body trigger to others
-            DI.Instance.Rpc.SendIronBodyStart();
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new IronBodyStartEvent(entity.Value), entity.Value);
         }
     }
 }
 
 [HarmonyPatch(typeof(BPS_BattleMainInfoComp), "OnPossessed")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchBattleMainInfoCompOnPossessed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchBattleMainInfoCompOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
@@ -955,8 +882,8 @@ public static class PatchBattleMainInfoCompOnPossessed
 }
 
 [HarmonyPatch(typeof(BPS_InputSystem), "OnPossessed")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchInputSystemOnPossessed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchInputSystemOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
@@ -972,8 +899,8 @@ public static class PatchInputSystemOnPossessed
 }
 
 [HarmonyPatch(typeof(BPS_MultiTargetProjectileCtrComp), "OnPossessed")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchMultiTargetOnPossessed
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchMultiTargetOnPossessed
 {
     public static bool Prefix(AActor? OldActor, AActor? CurActor)
     {
@@ -989,29 +916,30 @@ public static class PatchMultiTargetOnPossessed
 }
 
 [HarmonyPatch(typeof(BUS_MagicallyChangeComp), "DoCastMagicallyChangeSkill_PendingCast")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchDoCastMagicallyChangeSkill_PendingCast
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchDoCastMagicallyChangeSkill_PendingCast
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, UBGWDataAsset? _Config, int _SkillID, int _RecoverSkillID, BUC_MagicallyChangeData ___MagicallyChangeData)
     {
         if (!DI.Instance.AreaState.InRoom)
             return;
 
-        if (_Config != null)
+        if (_Config == null)
+            return;
+
+        Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}, CurVigorSkillID {CurVigorSkillID}", _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID);
+
+        var owner = __instance.GetOwner();
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
-            Logging.LogDebug("BUS_MagicallyChangeComp DoCastMagicallyChangeSkill_PendingCast called with Config Path: {Path}, SkillID: {SkillID}, RecoverSkillID: {RecoverSkillID}, CurVigorSkillID {CurVigorSkillID}", _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID);
-            var playerState = DI.Instance.PlayerState;
-            if (DI.Instance.State.LocalPlayerId != null && playerState.LocalMainCharacter?.GetLocalState().Pawn == __instance.GetOwner())
-            {
-                DI.Instance.Rpc.SendTriggerMagicallyChange(DI.Instance.State.LocalPlayerId.Value, _Config, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason);
-            }
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerMagicallyChangeEvent(entity.Value, _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason), entity.Value.Entity);
         }
     }
 }
 
 [HarmonyPatch(typeof(BUS_MagicallyChangeComp), "PendingReset")]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchPendingReset
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchPendingReset
 {
     public static void Postfix(BUS_MagicallyChangeComp __instance, EResetReason_MagicallyChange Reason)
     {
@@ -1019,17 +947,18 @@ public static class PatchPendingReset
             return;
 
         Logging.LogDebug("BUS_MagicallyChangeComp PendingReset called with reason: {Reason}", Reason);
-        var players = DI.Instance.PlayerState;
-        if (players.LocalMainCharacter?.GetLocalState().Pawn == __instance.GetOwner())
+
+        var owner = __instance.GetOwner();
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
-            DI.Instance.Rpc.SendResetMagicallyChange(Reason);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ResetMagicallyChangeEvent(entity.Value, Reason), entity.Value.Entity);
         }
     }
 }
 
 [HarmonyPatch]
-[HarmonyPatchCategory(Constants.ConnectedPatches)]
-public static class PatchOnSweepCheckHit
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchOnSweepCheckHit
 {
     [HarmonyTargetMethodHint("b1.BUS_SweepCheckHitComp", "OnSweepCheckHit")]
     private static MethodBase TargetMethod()
@@ -1055,8 +984,8 @@ public static class PatchOnSweepCheckHit
 }
 
 [HarmonyPatch(typeof(FInputMappingContextProcessor), nameof(FInputMappingContextProcessor.SetCloudInputEnable))]
-[HarmonyPatchCategory(Constants.GlobalPatches)]
-public static class PatchSetCloudInputEnable
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal static class PatchSetCloudInputEnable
 {
     public static bool Prefix(bool bEnable)
     {
@@ -1064,7 +993,7 @@ public static class PatchSetCloudInputEnable
             return true;
 
         var players = DI.Instance.PlayerState;
-        var cloudMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_CloudMoveData>(players.LocalMainCharacter?.GetLocalState().Pawn);
+        var cloudMoveData = BGU_DataUtil.GetUnPersistentReadOnlyData<BUC_CloudMoveData>(players.LocalMainCharacter?.Pawn);
         if (cloudMoveData == null)
         {
             return true;

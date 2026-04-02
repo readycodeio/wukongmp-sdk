@@ -2,7 +2,7 @@
 
 namespace WukongMp.Api.UI
 {
-    public class PingIndicatorWidget : GameWidgetBase
+    internal class PingIndicatorWidget : GameWidgetBase
     {
         private const string PingWidgetPath = "/Game/Mods/WukongMod/WBP_PingIndicator.WBP_PingIndicator_C";
 
@@ -46,7 +46,7 @@ namespace WukongMp.Api.UI
 
         protected override void PostInitialize() 
         {
-            SetStaticTexts(Texts.Ping, Texts.PingUnits);
+            SetStaticTexts(BuiltinTexts.Ping, BuiltinTexts.PingUnits);
         }
     }
 }

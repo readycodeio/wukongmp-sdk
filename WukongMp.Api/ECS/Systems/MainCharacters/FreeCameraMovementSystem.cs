@@ -3,7 +3,7 @@ using WukongMp.Api.FreeCamera;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
-public class FreeCameraMovementSystem(WukongEventBus eventBus, FreeCameraManager freeCameraManager, FreeCameraController freeCameraController) : BaseSystem
+internal class FreeCameraMovementSystem(WukongEventBus eventBus, FreeCameraManager freeCameraManager, FreeCameraController freeCameraController) : BaseSystem
 {
     protected override void OnUpdateGroup()
     {

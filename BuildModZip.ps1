@@ -10,9 +10,9 @@ if (-not $Configuration)
     Exit 1
 }
 
-$ModVariants = @('Coop', 'PvP')
+$Mods = @('Sdk')
 
-# Source the helper (expects Get-VariantLists and CopyFiles)
+# Source the helper (expects Get-ModFiles and CopyFiles)
 . ./BuildInfo.ps1
 
 # 1. Build solution
@@ -53,16 +53,22 @@ New-Item -ItemType Directory -Path $destRoot -Force | Out-Null
 
 # 4. Build combined file list across variants
 $allFiles = @()
-foreach ($v in $ModVariants)
+foreach ($p in $Mods)
 {
-    $lists = Get-VariantLists -Variant $v -Configuration $Configuration
+    $lists = Get-ModFiles -Mod $p -Configuration $Configuration
     $allFiles += $lists.Mod
 }
 
-# (Optional) de-dup identical triplets if you want to avoid recopying shared dirs:
-# $allFiles = $allFiles | Sort-Object { "$($_[1])|$($_[2])|$($_[0] -join ',')" } -Unique
+# Append non-SDK mod files
+$allFiles += @(
+    @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("WukongMp.Swarm.dll"), "WukongMp.Swarm/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Swarm"),
+    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
+#    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
+#    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp")
+)
 
-# Pre-create destination directories
+# Create destination directories
 foreach ($item in $allFiles)
 {
     $destDir = Join-Path $destRoot $item[2]
@@ -81,7 +87,7 @@ foreach ($item in $allFiles)
     CopyFiles $files $sourceDir $destDir
 }
 
-# 6. Zip files (single ZIP containing all variants)
+# 6. Zip files (single 7Z containing all variants)
 $zipPath = Join-Path $outputRoot "$zipBase.7z"
 if (Test-Path $zipPath)
 {
