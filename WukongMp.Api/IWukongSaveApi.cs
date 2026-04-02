@@ -6,6 +6,7 @@ namespace WukongMp.Api;
 
 /// <summary>
 /// API for managing world and player saves in Wukong Multiplayer.
+/// Supports co-op style operations where each player has their own save file, and there's a shared world save file for all players.
 /// </summary>
 public interface IWukongSaveApi
 {
