@@ -171,11 +171,8 @@ internal sealed class DI : IDependencyContainer
         Container.Register<IRelaySerializerRegistration, WukongSerializerRegistration>();
         Container.Register<RelaySerializer>();
 
-#if DEBUG
         Container.RegisterMany<HotSwappableRelayClient>(nonPublicServiceTypes: true);
-#else
-        Container.Register<IRelayClient, RelayClient>();
-#endif
+
         Container.Register<INetworkedEntityManager, NetworkedEntityManager>();
         Container.Register<WukongEventBus>();
         Container.Register<GameplayConfiguration>();
