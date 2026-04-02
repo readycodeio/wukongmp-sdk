@@ -145,12 +145,12 @@ Global
 		{9C061140-71BB-463F-8850-8864CC2B42D8}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.NoDisconnect|Any CPU.ActiveCfg = Debug|Any CPU
-		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.NoDisconnect|Any CPU.Build.0 = Debug|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Testing|Any CPU.Build.0 = Debug|Any CPU
+		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
+		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

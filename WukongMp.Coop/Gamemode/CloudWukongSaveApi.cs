@@ -19,10 +19,10 @@ public sealed class CloudWukongSaveApi : IWukongSaveApi
         this.fileClient = fileClient;
         this.logger = logger;
 
-        var userGuid = configuration.GetLaunchParameter("USER_GUID", "");
+        var userGuid = configuration.GetLaunchParameter("PLAYER_ID", "");
         if (string.IsNullOrEmpty(userGuid) || !Guid.TryParse(userGuid, out var guid))
         {
-            logger.LogError("USER_GUID launch parameter is not set. Player saves will not be uniquely identified.");
+            logger.LogError("PLAYER_ID launch parameter is not set. Player saves will not be uniquely identified.");
         }
 
         PlayerSaveName = $"player_{guid:N}.sav";
