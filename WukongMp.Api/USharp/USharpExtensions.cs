@@ -9,6 +9,9 @@ using UnrealEngine.Runtime;
 // ReSharper disable once CheckNamespace
 namespace WukongMp.Api;
 
+/// <summary>
+/// Extension methods for Unreal Engine types and other helper methods.
+/// </summary>
 public static class USharpExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

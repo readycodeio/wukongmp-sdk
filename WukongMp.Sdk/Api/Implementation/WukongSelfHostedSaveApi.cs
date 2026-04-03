@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using WukongMp.Api;
 using WukongMp.Api.Https;
-using WukongMp.Coop.Gamemode;
 
 namespace WukongMp.Sdk.Api.Implementation;
 

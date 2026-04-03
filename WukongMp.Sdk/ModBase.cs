@@ -9,14 +9,32 @@ using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk;
 
+/// <summary>
+/// Base class for WukongMP SDK mods.
+/// Each mod should have exactly one class extending from this, which will be instantiated by the mod loader.
+/// </summary>
 public abstract class ModBase : ICSharpModExV2
 {
     protected ILogger Logger { get; private set; } = null!;
     private PatcherBase _patcher = null!;
 
+    /// <summary>
+    /// Mod name.
+    /// This should be unique across all mods, as it's used for logging and patching.
+    /// </summary>
     public abstract string Name { get; }
+
+    /// <summary>
+    /// Mod version.
+    /// This is for informational purposes and does not have to be unique.
+    /// In future versions of the SDK, this might be used for compatibility checks or update notifications.
+    /// </summary>
     public abstract string Version { get; }
 
+    /// <summary>
+    /// Indicates whether the mod is running in a debug build.
+    /// Can be used to enable debug-only features or logging.
+    /// </summary>
     public bool IsDebug
 #if DEBUG
         => true;
@@ -24,6 +42,9 @@ public abstract class ModBase : ICSharpModExV2
             => false;
 #endif
 
+    /// <summary>
+    /// Called by the mod loader on game start.
+    /// </summary>
     public void Init()
     {
         ScanForAndRegisterSystems();
@@ -44,6 +65,9 @@ public abstract class ModBase : ICSharpModExV2
 
     protected abstract void Initialize(IDependencyContainer services);
 
+    /// <summary>
+    /// Called by the mod loader after all <c>Init</c> calls.
+    /// </summary>
     public virtual void LateInit()
     {
         _patcher = new WukongPatcher(GetType().Assembly, Name, DI.Instance.Prelude);
@@ -53,6 +77,9 @@ public abstract class ModBase : ICSharpModExV2
         }
     }
 
+    /// <summary>
+    /// Called by the mod loader on game closing.
+    /// </summary>
     public virtual void DeInit()
     {
         if (_patcher.IsPatched)
@@ -61,17 +88,28 @@ public abstract class ModBase : ICSharpModExV2
         }
     }
 
+    /// <summary>
+    /// Called by the mod loader.
+    /// </summary>
     public void SetLoggerFactory(ILoggerFactory loggerFactory)
     {
         DI.Instance.InitLogging(loggerFactory);
         Logger = DI.Instance.Logger;
     }
 
+    /// <summary>
+    /// Called by the mod loader.
+    /// Used in hot reload.
+    /// </summary>
     public virtual object? GetReloadContext()
     {
         return null;
     }
 
+    /// <summary>
+    /// Called by the mod loader.
+    /// Used in hot reload.
+    /// </summary>
     public virtual void Reload(object? context)
     {
         Logger.LogWarning("Mod {Name} does not support hot reload", Name);
