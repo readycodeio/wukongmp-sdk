@@ -4,16 +4,18 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>14</LangVersion>
         <Nullable>enable</Nullable>
+        <Configurations>Debug;Release;NoDisconnect;Testing</Configurations>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\WukongMp.Sdk\WukongMp.Sdk.csproj" />
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\WukongMp.Sdk\WukongMp.Sdk.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="UnrealEngine.Runtime">
-        <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
-      </Reference>
+        <Reference Include="UnrealEngine.Runtime">
+            <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 </Project>

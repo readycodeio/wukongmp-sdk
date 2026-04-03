@@ -27,6 +27,7 @@ using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
 using ReadyM.Api.Multiplayer.Mapping.Policies.Event.Common;
+using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Api.State;
 using ReadyM.Relay.Client;
@@ -141,6 +142,8 @@ internal sealed class DI : IDependencyContainer
     {
         Logger.LogDebug("Initializing DI...");
         Container.RegisterInstance<IDependencyContainer>(Instance);
+        
+        Container.Register<RpcOffsetProvider>();
 
         Container.RegisterInstance(LaunchParameters.Instance);
         Container.RegisterInstance(new NetworkSessionStats(LaunchParameters.Instance.UserGuid.ToString(), LaunchParameters.Instance.Region));
@@ -169,7 +172,7 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<IRelaySerializerRegistration, DefaultRelaySerializerRegistration>();
         Container.Register<IRelaySerializerRegistration, WukongSerializerRegistration>();
-        Container.Register<RelaySerializer>();
+        Container.Register<IRelaySerializer, RelaySerializer>();
 
         Container.RegisterMany<HotSwappableRelayClient>(nonPublicServiceTypes: true);
 

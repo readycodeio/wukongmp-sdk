@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using ReadyM.Api;
 using ReadyM.Api.DI;
+using ReadyM.Api.Multiplayer.RPC;
 using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.NameCompressors;
@@ -116,6 +117,7 @@ internal class Mod : ModBase
         }
 
         AddModSystemsToEcs();
+        SetUpRpcOffsets();
         DebugUtils.LogUe4SsPresence();
         DetectSdkVersion();
         RegisterKeybinds(DI.Instance);
@@ -178,6 +180,26 @@ internal class Mod : ModBase
             systemGroup.SetMonitorPerf(true);
 #endif
             DI.Instance.World.SystemRoot.Add(systemGroup);
+        }
+    }
+    
+    private void SetUpRpcOffsets()
+    {
+        var rpcClasses = DI.Instance.Container.GetServiceRegistrations()
+            .Where(r => typeof(RpcClassBase).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
+            .Where(r => r.Factory.Reuse is null or SingletonReuse)
+            .OrderBy(t => t.FactoryRegistrationOrder) // ensure deterministic order
+            .ToList();
+        
+        Logger.LogDebug("Found {RpcCount} RPC classes in mod {Name}", rpcClasses.Count, Name);
+        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
+        
+        foreach (var rpcClassRegistration in rpcClasses)
+        {
+            var rpcObject = (RpcClassBase)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
+            var offsetBefore = offsetProvider.CurrentOffset;
+            rpcObject.SetUpOffset(offsetProvider);
+            Logger.LogDebug("Registered RPC class {RpcClass} with codes {BeforeOffset}..{AfterOffset}", rpcClassRegistration.ServiceType.FullName, offsetBefore, offsetProvider.CurrentOffset - 1);
         }
     }
 

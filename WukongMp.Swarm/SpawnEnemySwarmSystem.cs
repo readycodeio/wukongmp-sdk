@@ -8,12 +8,13 @@ using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Swarm;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public sealed class SpawnEnemySwarmSystem : ModSystemBase
 {
     private bool _enabled;
     private float _timeSinceLastSpawn;
     private int _swarmSize = 3;
-    private int _enemies;
+    public int SpawnedEnemies;
     private const int SwarmIncrement = 1;
     private const int SwarmMax = 7;
     private const float SpawnRadius = 1000.0f;
@@ -23,9 +24,6 @@ public sealed class SpawnEnemySwarmSystem : ModSystemBase
     public void Enable()
     {
         _enabled = true;
-
-        WukongApi.Local.ShowInfoMessage("Get ready!", 3);
-        WukongApi.Local.AddChatMessage("Swarm mode enabled! Enemies will spawn around you every 10 seconds, with increasing numbers. Survive as long as you can!", FLinearColor.NavajoWhite);
     }
 
     public void Disable()
@@ -34,10 +32,9 @@ public sealed class SpawnEnemySwarmSystem : ModSystemBase
             return;
 
         _enabled = false;
-        WukongApi.Local.AddChatMessage($"Swarm mode ended, survived {_enemies} enemies", FLinearColor.OrangeRed);
 
         // reset state for next time
-        _enemies = 0;
+        SpawnedEnemies = 0;
         _swarmSize = 3;
         _timeSinceLastSpawn = SpawnInterval - InitialDelay;
     }
@@ -64,7 +61,7 @@ public sealed class SpawnEnemySwarmSystem : ModSystemBase
             _swarmSize = Math.Min(_swarmSize + SwarmIncrement, SwarmMax);
 
             // count total enemies spawned for end-of-mode summary
-            _enemies += _swarmSize;
+            SpawnedEnemies += _swarmSize;
         }
     }
 

@@ -5,6 +5,12 @@ using WukongMp.Api.FreeCamera;
 
 namespace WukongMp.Api.WukongUtils;
 
+/// <summary>
+/// Provides utility methods for directly interacting with the game world, bypassing the SDK.
+/// </summary>
+/// <remarks>
+/// These methods are not guaranteed to be stable across game updates, and might be removed in the future.
+/// </remarks>
 public static class GameUtils
 {
     private static UWorld? _world;

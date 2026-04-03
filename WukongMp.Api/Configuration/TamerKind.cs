@@ -2,6 +2,9 @@
 
 namespace WukongMp.Api.Configuration;
 
+/// <summary>
+/// Represents the type of a Tamer (monster).
+/// </summary>
 public readonly struct TamerKind : IEquatable<TamerKind>
 {
     public readonly string? Name;

@@ -4,20 +4,40 @@ using Microsoft.Extensions.Logging;
 
 namespace WukongMp.Api.Configuration;
 
-[Obsolete("TODO: Make a more centralized configuration system.")]
+/// <summary>
+/// Configuration class for gameplay-related settings and queries.
+/// </summary>
+[Obsolete("Will be replaced with a configuration file in the future.")]
 public sealed class GameplayConfiguration(ILogger logger)
 {
-    public bool IsSupportMultiLockEnabled { get; set; } = false;
-    public bool IsStrongDamageImmueEnabled { get; set; } = false;
-    public bool EnableCustomCameraArmLength { get; set; } = false;
-    public bool DeleteDestroyedTamersFromEcs { get; set; } = false;
-    public bool DisableCutscenes { get; set; } = false;
+    /// <summary>
+    /// Can secondary lock targets (other than the character's body) be locked when using the camera lock-on feature?
+    /// This is <c>true</c> in co-op and <c>false</c> in PvP.
+    /// </summary>
+    public bool IsSupportMultiLockEnabled { get; set; }
+
+    /// <summary>
+    /// Is immunity to strong damage enabled?
+    /// This would prevent characters from being one-shot by powerful attacks, providing a more balanced gameplay experience.
+    /// This is <c>true</c> in PvP and <c>false</c> in co-op.
+    /// </summary>
+    public bool IsStrongDamageImmueEnabled { get; set; }
+
+    /// <summary>
+    /// When enabled, allows for a custom camera arm length to be set, which can affect how close or far the camera is from the character.
+    /// This is <c>true</c> in PvP and <c>false</c> in co-op.
+    /// </summary>
+    public bool EnableCustomCameraArmLength { get; set; }
+
+    internal bool DeleteDestroyedTamersFromEcs { get; set; }
+
+    internal bool DisableCutscenes { get; set; }
 
     [Obsolete("To be replaced by data sync direction after refactoring")]
-    public bool SyncTamerTeamFromGameToEcs { get; set; } = false;
+    internal bool SyncTamerTeamFromGameToEcs { get; set; }
 
     [Obsolete("To be replaced by data sync direction after refactoring")]
-    public bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; } = false;
+    internal bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; }
 
     private Func<bool>? disableTamerAttackQuery;
 
