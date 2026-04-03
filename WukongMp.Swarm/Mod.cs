@@ -19,14 +19,14 @@ public class Mod : ModBase
         Logger.LogWarning("Swarm mode Initialized!");
         services.RegisterSingleton<Rpc>();
 
-        var rpcInstance = services.Resolve<Rpc>();
+        var rpc = services.Resolve<Rpc>();
 
         var spawnSystem = services.Resolve<SpawnEnemySwarmSystem>();
 
         WukongApi.Console.AddCommand("swarm_mode", ConsoleCommand.Create(() =>
         {
             spawnSystem.Enable();
-            rpcInstance.SendSwarmStarted();
+            rpc.SendSwarmStarted();
         }));
 
         // if all players are dead, reset the swarm mode
@@ -36,11 +36,11 @@ public class Mod : ModBase
 
             if (alivePlayers > 0)
             {
-                WukongApi.Local.AddChatMessage($"Remaining players: {alivePlayers}", FLinearColor.Yellow);
+                rpc.SendRemainingPlayers(alivePlayers);
             }
             else
             {
-                rpcInstance.SendSwarmEnded(spawnSystem.SpawnedEnemies);
+                rpc.SendSwarmEnded(spawnSystem.SpawnedEnemies);
                 spawnSystem.Disable();
             }
         };

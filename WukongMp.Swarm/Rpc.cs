@@ -30,4 +30,10 @@ public partial class Rpc(IRpcClient client, IRelaySerializer serializer) : RpcCl
     {
         WukongApi.Local.AddChatMessage($"Swarm mode ended, survived {enemiesSpawned} enemies", FLinearColor.OrangeRed);
     }
+    
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    private void OnRemainingPlayers(int remaining)
+    {
+        WukongApi.Local.AddChatMessage($"Remaining players: {remaining}", FLinearColor.Yellow);
+    }
 }
