@@ -6,7 +6,7 @@ $zipName = "WukongMp"
 
 # Shared (variant-agnostic) file name lists
 $modFilesCore = @(
-    "order.txt",
+    "manifest.json",
     "WukongMp.Api.dll",
     "WukongMp.Sdk.dll",
     "ReadyM.Api.dll",

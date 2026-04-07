@@ -5,6 +5,7 @@
         <LangVersion>14</LangVersion>
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release;NoDisconnect;Testing</Configurations>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,6 +17,12 @@
         <Reference Include="UnrealEngine.Runtime">
             <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
         </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="manifest.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
