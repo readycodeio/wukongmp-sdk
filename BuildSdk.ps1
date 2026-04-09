@@ -75,34 +75,7 @@ foreach ($item in $allFiles)
     CopyFiles $files $sourceDir $destDir
 }
 
-# (ZIP target name, [list of mod folders to compress])
-$archiveNames = @(
-    @("WukongMp.Coop", @("Mods/WukongMp.Coop")),
-    @("WukongMp.Sdk", @("Mods/WukongMp.Sdk", "Mods/Overrides"))
-)
-
-foreach ($item in $archiveNames)
-{
-    $archiveName = $item[0]
-    $foldersToInclude = $item[1]
-
-    $archivePath = Join-Path $outputRoot "$archiveName.zip"
-    if (Test-Path $archivePath)
-    {
-        Remove-Item $archivePath -Force
-    }
-
-    $includePaths = @()
-    foreach ($folder in $foldersToInclude)
-    {
-        $includePaths += (Join-Path $destRoot $folder)
-    }
-
-    Compress-Archive -Path $includePaths -DestinationPath $archivePath -Force
-    Write-Output "Created $( Split-Path $archivePath -Leaf )"
-}
-
-# 7. Open explorer to the output directory
+# 6. Open explorer to the output directory
 if ($PSVersionTable.PSEdition -eq 'Core')
 {
     Start-Process "explorer.exe" -ArgumentList $outputRoot

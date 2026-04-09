@@ -19,17 +19,9 @@ public abstract class ModBase : ICSharpModExV2
     private PatcherBase _patcher = null!;
 
     /// <summary>
-    /// Mod name.
-    /// This should be unique across all mods, as it's used for logging and patching.
+    /// Mod name, used for logging and patching.
     /// </summary>
     public abstract string Name { get; }
-
-    /// <summary>
-    /// Mod version.
-    /// This is for informational purposes and does not have to be unique.
-    /// In future versions of the SDK, this might be used for compatibility checks or update notifications.
-    /// </summary>
-    public abstract string Version { get; }
 
     /// <summary>
     /// Indicates whether the mod is running in a debug build.

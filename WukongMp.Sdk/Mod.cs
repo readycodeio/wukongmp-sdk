@@ -28,7 +28,6 @@ namespace WukongMp.Sdk;
 internal class Mod : ModBase
 {
     public override string Name => "WukongMp.Sdk";
-    public override string Version => "1.0.0";
 
     private PatcherBase _apiPatcher = null!;
 
