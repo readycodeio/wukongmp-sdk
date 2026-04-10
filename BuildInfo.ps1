@@ -6,7 +6,7 @@ $zipName = "WukongMp"
 
 # Shared (variant-agnostic) file name lists
 $modFilesCore = @(
-    "order.txt",
+    "manifest.json",
     "WukongMp.Api.dll",
     "WukongMp.Sdk.dll",
     "ReadyM.Api.dll",
@@ -48,15 +48,6 @@ $modFilesDebugCore = @(
 
 $reflectionOnlyFiles = @("*")
 
-$overridesFiles = @(
-    "System.Collections.Immutable.dll",
-    "System.Runtime.CompilerServices.Unsafe.dll",
-    "System.Text.Encodings.Web.dll",
-    "System.Text.Json.dll",
-    "System.Numerics.Vectors.dll",
-    "LiteNetLib.dll"
-)
-
 $overridesFilesDebug = @(
     "System.Text.Encodings.Web.pdb",
     "System.Text.Json.pdb",
@@ -81,7 +72,6 @@ function Get-ModFiles
     # Compute *per-variant* paths
     $modSourceDir = "WukongMp.$Mod/bin/$Configuration/netstandard2.0"
     $reflectionOnlySourceDir = "WukongMp.Api/Game"
-    $overridesSourceDir = "WukongMp.Api/Game"
     $binariesSourceDir = "Deployment"
 
     $modDestDir = "Mods/WukongMp.$Mod"
@@ -92,13 +82,11 @@ function Get-ModFiles
     $modFiles = @(
         @($modFilesCore, $modSourceDir, $modDestDir),
         @($cultureFolders, $modSourceDir, $modDestDir),
-        @($overridesFiles, $overridesSourceDir, $overridesDestDir),
         @($binaryFiles, $binariesSourceDir, $modDestDir)
     )
 
     $devFiles = $modFiles + @(
         @($modFilesDebugCore, $modSourceDir, $modDestDir),
-        @($overridesFilesDebug, $overridesSourceDir, $overridesDestDir),
         @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
     )
 

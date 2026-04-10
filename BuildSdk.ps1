@@ -1,16 +1,7 @@
 #!powershell.exe -ExecutionPolicy Bypass -File
-param (
-    [string] $Configuration
-)
-
-# Normalize params
-if (-not $Configuration)
-{
-    Write-Host "Usage: .\BuildModZip.ps1 <Debug|Release>"
-    Exit 1
-}
 
 $Mods = @('Sdk')
+$Configuration = "Release"
 
 # Source the helper (expects Get-ModFiles and CopyFiles)
 . ./BuildInfo.ps1
@@ -47,8 +38,7 @@ if (-not (Test-Path $outputRoot))
     New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 }
 
-$zipBase = "$zipName-$version"
-$destRoot = Join-Path $outputRoot $zipBase
+$destRoot = Join-Path $outputRoot "SDK"
 New-Item -ItemType Directory -Path $destRoot -Force | Out-Null
 
 # 4. Build combined file list across variants
@@ -61,11 +51,9 @@ foreach ($p in $Mods)
 
 # Append non-SDK mod files
 $allFiles += @(
-    @(@("manifest.json"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("manifest.json"), "WukongMp.Coop/bin/Release/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/Release/netstandard2.0", "Mods/WukongMp.Coop"),
     @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
-#    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
-#    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp")
 )
 
 # Create destination directories
@@ -87,17 +75,7 @@ foreach ($item in $allFiles)
     CopyFiles $files $sourceDir $destDir
 }
 
-# 6. Zip files (single 7Z containing all variants)
-$zipPath = Join-Path $outputRoot "$zipBase.7z"
-if (Test-Path $zipPath)
-{
-    Remove-Item $zipPath -Force
-}
-
-7z a -t7z -mx=9 -ms=on -mmt=on $zipPath (Join-Path $destRoot '*')
-Write-Output "Created $( Split-Path $zipPath -Leaf )"
-
-# 7. Open explorer to the output directory
+# 6. Open explorer to the output directory
 if ($PSVersionTable.PSEdition -eq 'Core')
 {
     Start-Process "explorer.exe" -ArgumentList $outputRoot

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
@@ -22,6 +23,10 @@ internal sealed class WukongFileApi(ILogger logger) : IWukongFileApi
         if (LaunchParameters.Instance.ModFolderOverride == null)
             throw new NotImplementedException("GetModDirectory is not implemented for non-override mod folder. Please specify ModFolderOverride in launch parameters.");
 
-        return FPaths.Combine(LaunchParameters.Instance.ModFolderOverride, mod.Name);
+        var modAssembly = mod.GetType().Assembly;
+        var assemblyLocation = modAssembly.Location;
+        var folderName = Path.GetFileName(Path.GetDirectoryName(assemblyLocation));
+        
+        return FPaths.Combine(LaunchParameters.Instance.ModFolderOverride, folderName);
     }
 }

@@ -15,7 +15,6 @@ namespace WukongMp.Coop;
 public sealed class Mod : ModBase
 {
     public override string Name => "WukongMp.Coop";
-    public override string Version => "1.0.0";
     public static Mod Instance { get; private set; } = null!;
 
     protected override void Initialize(IDependencyContainer services)
@@ -34,7 +33,7 @@ public sealed class Mod : ModBase
         services.RegisterSingleton<CoopWidgetManager>();
         services.RegisterSingleton<CoopEventCallbacks>();
 
-        Logger.LogInformation("Initializing {PluginName} v{PluginVersion}", Name, Version);
+        Logger.LogInformation("Initializing {ModName}", Name);
 
         CoopCommandRegistrations.RegisterCommands(WukongApi.Console);
 

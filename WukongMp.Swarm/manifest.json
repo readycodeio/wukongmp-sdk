@@ -1,0 +1,13 @@
+{
+  "uniqueId": "WukongMp.Swarm",
+  "version": "1.0.0",
+  "name": "WukongMp Swarm Example Mod",
+  "author": "ReadyM Team",
+  "description": "An example mod demonstrating the capabilities of WukongMp SDK.",
+  "dependencies": [
+    {
+      "uniqueId": "WukongMp.Sdk",
+      "minimumVersion": "1.0.0"
+    }
+  ]
+}

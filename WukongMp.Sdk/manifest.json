@@ -1,0 +1,8 @@
+{
+  "uniqueId": "WukongMp.Sdk",
+  "version": "1.0.0",
+  "name": "WukongMp SDK",
+  "author": "ReadyM Team",
+  "link": "https://docs.ready.mp",
+  "description": "WukongMp SDK for developing plugins and mods for WukongMp."
+}

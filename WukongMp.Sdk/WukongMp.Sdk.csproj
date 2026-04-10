@@ -49,10 +49,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="order.txt" />
-      <Content Include="order.txt">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+      <None Update="manifest.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
