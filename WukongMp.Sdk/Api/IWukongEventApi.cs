@@ -100,4 +100,9 @@ public interface IWukongEventApi
     /// The first parameter is the monster that died, and the second parameter is the entity that killed it (if applicable).
     /// </summary>
     event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
+    
+    /// <summary>
+    /// Fired when a monster is removed from the game world, either by dying or by being despawned for other reasons (e.g. the player leaving the area).
+    /// </summary>
+    event Action<ReadyTamer>? OnMonsterDestroyed;
 }

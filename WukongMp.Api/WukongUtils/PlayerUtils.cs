@@ -7,6 +7,7 @@ using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
@@ -72,11 +73,11 @@ namespace WukongMp.Api.WukongUtils
                 return;
             }
 
-            ResetCooldown(player);
+            ResetCooldowns(player);
             ResetMana(player);
         }
 
-        public static void ResetCooldown(APawn playerPawn)
+        public static void ResetCooldowns(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_ResetSkillCD.Invoke();

@@ -1,82 +1,51 @@
 ﻿using Friflo.Engine.ECS;
-using Friflo.Engine.ECS.Systems;
-using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Components;
-using WukongMp.Api.ECS.Components;
-using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.GameMode;
 using WukongMp.PvP.Resources;
 using WukongMp.PvP.UI;
+using WukongMp.Sdk;
+using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.PvP.ECS.Systems;
 
-internal sealed class ReadinessSystem(
-    Store world,
-    WukongAreaState areaState,
+public class ReadinessSystem(
     PvpWidgetManager widgetManager,
-    WukongPlayerState playerState,
     PvpMode pvpMode
-) : QuerySystem<PvPComponent, TeamComponent, InScopeComponent>
+) : ModSystemBase
 {
     private int _lastPlayers = -1;
     private int _lastReadyCount = -1;
 
-    protected override void OnUpdate()
+    protected override void OnUpdate(UpdateTick tick)
     {
-        if (!areaState.CurrentArea.HasValue)
-            return;
-
-        if (areaState.PvpState is { InTournament: true })
+        if (!WukongApi.Sync.CurrentAreaId.HasValue || WukongApi.PvP.InPvpTournament)
             return;
 
         var players = 0;
         var readyCount = 0;
         var blueTeamAnyReady = false;
         var redTeamAnyReady = false;
+        var localPlayer = WukongApi.Sync.LocalMainCharacter;
 
-        Query.ForEachEntity((ref pvp, ref team, ref scope, _) =>
-        {
-            if (scope.ScopeEntity != areaState.CurrentArea.Value.Entity)
-                return;
-
-            if (pvp.IsObserver)
-                return;
-
-            players++;
-            if (pvp.IsReadyForPvP)
-            {
-                readyCount++;
-                switch (team.TeamId)
-                {
-                    case PvpConstants.BlueTeamId:
-                        blueTeamAnyReady = true;
-                        break;
-                    case PvpConstants.RedTeamId:
-                        redTeamAnyReady = true;
-                        break;
-                }
-            }
-        });
-
-        if (_lastReadyCount == readyCount && _lastPlayers == players)
+        if (!localPlayer.HasValue)
             return;
 
-        _lastReadyCount = readyCount;
-        _lastPlayers = players;
-
-        widgetManager.UpdateReadyCount(readyCount, players);
-
-        if (areaState.PvpState is { InPvP: false })
+        foreach (var character in WukongApi.Sync.AreaMainCharacters)
         {
-            var allReady = readyCount == players && players > 0;
-
-            world.Query<LocalTamerComponent, TeamComponent>().ForEachEntity((ref LocalTamerComponent localTamerComp, ref TeamComponent team, Entity _) =>
+            if (WukongApi.Sync.TryGetPlayerInfoById(character.PlayerId, out _, out var teamId))
             {
-                if (localTamerComp.IsTamerSynced)
+                var info = WukongApi.PvP.PvpData(character);
+
+                if (info.IsObserver)
+                    return;
+
+                players++;
+                if (info.IsReadyForPvP)
                 {
-                    switch (team.TeamId)
+                    readyCount++;
+                    switch (teamId)
                     {
                         case PvpConstants.BlueTeamId:
                             blueTeamAnyReady = true;
@@ -86,9 +55,35 @@ internal sealed class ReadinessSystem(
                             break;
                     }
                 }
-            });
+            }
+        }
 
-            var isSpectator = playerState.LocalMainCharacter!.Value.GetPvP().IsSpectator;
+        if (_lastReadyCount == readyCount && _lastPlayers == players)
+            return;
+
+        _lastReadyCount = readyCount;
+        _lastPlayers = players;
+
+        widgetManager.UpdateReadyCount(readyCount, players);
+
+        if (!WukongApi.PvP.InPvP)
+        {
+            var allReady = readyCount == players && players > 0;
+
+            foreach (var tamer in WukongApi.Sync.AreaTamers)
+            {
+                switch (tamer.TeamId)
+                {
+                    case PvpConstants.BlueTeamId:
+                        blueTeamAnyReady = true;
+                        break;
+                    case PvpConstants.RedTeamId:
+                        redTeamAnyReady = true;
+                        break;
+                }
+            }
+
+            var isSpectator = WukongApi.PvP.PvpData(localPlayer.Value).IsSpectator;
             if (allReady)
             {
                 if (blueTeamAnyReady && redTeamAnyReady)

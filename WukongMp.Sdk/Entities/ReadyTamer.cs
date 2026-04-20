@@ -62,6 +62,15 @@ public readonly struct ReadyTamer
         entity = Entity;
     }
 
+    public BUTamerActor? Tamer
+    {
+        get
+        {
+            var tamerEntity = new TamerEntity(Entity);
+            return tamerEntity.Tamer;
+        }
+    }
+
     public bool IsMonsterActive
     {
         get

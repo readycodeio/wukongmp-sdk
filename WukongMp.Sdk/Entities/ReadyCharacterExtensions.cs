@@ -2,6 +2,7 @@ using System;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -72,6 +73,18 @@ public static class ReadyCharacterExtensions
                 obj.Deconstruct(out _, out var entity);
                 return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.IsDead : throw new InvalidOperationException();
             }
+        }
+
+        public void SetMarkerMessage(string message, string color)
+        {
+            obj.Deconstruct(out _, out var entity);
+            MarkerUtils.CreateMarkerForPlayer(entity, message, color);
+        }
+
+        public void HideMarker()
+        {
+            obj.Deconstruct(out _, out var entity);
+            MarkerUtils.DestroyMarkerForCharacter(entity);
         }
     }
 }

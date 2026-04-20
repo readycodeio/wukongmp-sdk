@@ -3,9 +3,18 @@
 public static class PvpConstants
 {
     public const float PvpStartingRadius = 500;
-    public const float PvpMonsterRadius = 1000;
     public const int CharacterArchiveId = 10;
     public const int WorldArchiveId = 0;
+    public const int NewCharacterArchiveId = 1;
+    public const float FloatComparisonTolerance = 0.1f;
+
+    public const string ChestCameraLockNode = "CAMERA_LOCK";
+    public const string FeetCameraLockNode = "CAMERA_LOCK_Root";
+    public const string PlayerMarkerPath = "/Game/Mods/WukongMod/BP_PlayerMarker.BP_PlayerMarker_C";
+
+    public const float MonsterSpawnDistance = 2000f;
+    public const float MonsterSpawnTraceHeight = 2000f;
+    public const float MonsterHalfHeight = 200f;
 
     public const int DrawTeamId = 9999;
 

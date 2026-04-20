@@ -7,7 +7,7 @@ namespace WukongMp.Api.Configuration;
 /// <summary>
 /// Defines constants for Tamer (monster) types.
 /// </summary>
-public static class TamerConstants
+public static class TamerKinds
 {
     private static TamerKind CreateTamerKind(string name, bool disabled = false)
     {
@@ -85,17 +85,17 @@ public static class TamerConstants
     public static readonly TamerKind DaSheng2 = CreateTamerKind("da_sheng_2");
 
     // not working yet
-    internal static readonly TamerKind BawLangLang = CreateTamerKind("baw_lang_lang", true);
-    internal static readonly TamerKind BlazeBone = CreateTamerKind("blaze_bone", true);
-    internal static readonly TamerKind BossB = CreateTamerKind("boss_b", true);
-    internal static readonly TamerKind BossC = CreateTamerKind("boss_c", true);
-    internal static readonly TamerKind JackalSoldier = CreateTamerKind("jackal_soldier", true);
-    internal static readonly TamerKind JiaoLoong = CreateTamerKind("jiao_loong", true);
-    internal static readonly TamerKind LotusVision = CreateTamerKind("lotus_vision", true);
-    internal static readonly TamerKind MacaqueChief = CreateTamerKind("macaque_chief", true);
-    internal static readonly TamerKind Martialist = CreateTamerKind("martialist", true);
-    internal static readonly TamerKind Spider = CreateTamerKind("spider", true);
-    internal static readonly TamerKind Spider2 = CreateTamerKind("spider2", true);
+    // internal static readonly TamerKind BawLangLang = CreateTamerKind("baw_lang_lang", true);
+    // internal static readonly TamerKind BlazeBone = CreateTamerKind("blaze_bone", true);
+    // internal static readonly TamerKind BossB = CreateTamerKind("boss_b", true);
+    // internal static readonly TamerKind BossC = CreateTamerKind("boss_c", true);
+    // internal static readonly TamerKind JackalSoldier = CreateTamerKind("jackal_soldier", true);
+    // internal static readonly TamerKind JiaoLoong = CreateTamerKind("jiao_loong", true);
+    // internal static readonly TamerKind LotusVision = CreateTamerKind("lotus_vision", true);
+    // internal static readonly TamerKind MacaqueChief = CreateTamerKind("macaque_chief", true);
+    // internal static readonly TamerKind Martialist = CreateTamerKind("martialist", true);
+    // internal static readonly TamerKind Spider = CreateTamerKind("spider", true);
+    // internal static readonly TamerKind Spider2 = CreateTamerKind("spider2", true);
     
     public static bool IsValidTamerName(string tamerName)
     {
@@ -112,5 +112,10 @@ public static class TamerConstants
             throw new ArgumentException($"Invalid tamer name: {tamerName}");
         var unifiedName = TamerUtils.UnifyUnitName(tamerName);
         return new TamerKind(unifiedName);
+    }
+    
+    public static IEnumerable<TamerKind> GetAllValidTamerKinds()
+    {
+        return _validTamerKinds;
     }
 }

@@ -18,7 +18,7 @@ using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.PvP.UI
 {
-    internal class PvpWidgetManager
+    public class PvpWidgetManager
     {
         public readonly WukongWidgetManager WidgetManager;
         

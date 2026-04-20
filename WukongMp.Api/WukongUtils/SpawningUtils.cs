@@ -176,25 +176,7 @@ internal static class SpawningUtils
         UGSE_ActorFuncLib.UpdateActorOverlaps(newCharacter);
         return newCharacter;
     }
-
-
-    public static FVector CalculateSpawnLocation(FVector playerLocation, FVector playerForwardVector)
-    {
-        var spawnLoc = playerLocation + playerForwardVector * Constants.MonsterSpawnDistance;
-
-        var startLoc = spawnLoc + FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
-        var endLoc = spawnLoc - FVector.UpVector * Constants.MonsterSpawnTraceHeight / 2;
-
-        // Trace vertically for spawn height.
-        var hitResultSimple = new FHitResultSimple();
-        var hit = BGUFuncLibSelectTargetsCS.LineTraceForHitWorldItem(GameUtils.GetWorld(), startLoc, endLoc, ref hitResultSimple);
-        if (hit)
-        {
-            spawnLoc = hitResultSimple.HitLocation + FVector.UpVector * Constants.MonsterHalfHeight;
-        }
-
-        return spawnLoc;
-    }
+    
 
     public static void SpawnUnitsAsOwner(WukongPlayerState playerState, WukongPawnState pawnState, WukongMappingPolicyDirectory policyDir, TamerKind tamerKind, int count, int teamId, FVector spawnLocation)
     {

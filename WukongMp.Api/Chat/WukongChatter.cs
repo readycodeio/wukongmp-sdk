@@ -52,16 +52,22 @@ internal class WukongChatter(
         }
     }
 
-    private void SendChatMessage(PlayerId playerId, string nickname, string message)
+    public void SendChatMessage(PlayerId playerId, string nickname, string message)
     {
         logger.LogDebug("Sending message {Message}", message);
         clientRpc.SendChatMessage(ChatMessage.CreateClientMessage(playerId, nickname, message));
     }
 
-    public void SendServerMessage(string message, params string[] args)
+    public void SendServerMessage(string message)
     {
         logger.LogDebug("Sending server message {Message}", message);
-        clientRpc.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
+        clientRpc.SendChatMessage(ChatMessage.CreateServerMessage(message));
+    }
+
+    public void SendLocalizedServerMessage(string message, params string[] args)
+    {
+        logger.LogDebug("Sending server message {Message}", message);
+        clientRpc.SendChatMessage(ChatMessage.CreateLocalizedServerMessage(message, args));
     }
 
     private void OnGetMessage(ChatMessage message)
@@ -82,9 +88,13 @@ internal class WukongChatter(
         }
 
         var translatedMessage = message.Message;
-        if (isServer)
+        if (message.Localized)
         {
             translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message.Message, BuiltinTexts.Culture)!, [.. message.Placeholders]);
+        }
+
+        if (isServer)
+        {
             widgetManager.AddSystemChatMessage(translatedMessage, messageColor);
         }
         else

@@ -1,5 +1,6 @@
 ﻿using b1;
 using b1.BGW;
+using CSharpModBase;
 using Friflo.Engine.ECS;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -47,7 +48,7 @@ internal static class MarkerUtils
             var markerActor = markerComp.MarkerActor;
             if (!markerActor.IsNullOrDestroyed())
             {
-                BGU_UnrealWorldUtil.DestroyActor(markerActor);
+                Utils.TryRunOnGameThread(() => { BGU_UnrealWorldUtil.DestroyActor(markerActor); });
             }
 
             markerComp.MarkerActor = null;

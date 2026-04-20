@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Timers;
 
-namespace WukongMp.Api.Helpers;
+namespace WukongMp.PvP.UI;
 
-internal class CountdownTimer
+public class CountdownTimer
 {
     private int _remainingSeconds;
     private int _totalSeconds;

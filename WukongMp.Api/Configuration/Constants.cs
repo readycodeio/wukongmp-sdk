@@ -9,9 +9,6 @@ internal static class Constants
 {
     public const int ToleratedLatencyMs = 50;
     public const float FloatComparisonTolerance = 0.1f;
-    public const float MonsterSpawnDistance = 2000f;
-    public const float MonsterSpawnTraceHeight = 2000f;
-    public const float MonsterHalfHeight = 200f;
     public const float MonsterSpawnSpread = 200f;
     public const float CameraArmLength = 720;
     public const float TransformedCameraArmLength = 1100;

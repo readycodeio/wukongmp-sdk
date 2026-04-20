@@ -121,7 +121,7 @@ internal class WukongClientGameEvents(
 
         mappedEvent.RegisterGameEventHandler<RequestSpawnUnitsEvent, WukongClientGameEvents>(static (ev, self) => { SpawningUtils.SpawnUnitsAsOwner(self._playerState, self._pawnState, self._policyDir, new TamerKind(ev.UnitName), ev.Count, ev.TeamId, ev.Location); }, this);
 
-        mappedEvent.RegisterGameEventHandler<BroadcastUnitSpawnEvent>(static ev => { SpawningUtils.SpawnUnitLocallyByName(ev.Guid, new TamerKind(ev.UnitName), ev.Location); });
+        mappedEvent.RegisterGameEventHandler<BroadcastUnitSpawnEvent>(static ev => { SpawningUtils.SpawnUnitLocallyByName(ev.Guid, new TamerKind(ev.UnitName!), ev.Location); });
 
         mappedEvent.RegisterGameEventHandler<PlayerTransBeginEvent, WukongClientGameEvents>(static (ev, self) =>
         {
@@ -210,7 +210,7 @@ internal class WukongClientGameEvents(
             events?.Evt_TriggerPhantomRush.Invoke(ev.Direction);
 
             // reset mana and cooldowns of the sender's pawn, since it's a remote player who needs to keep track of them
-            PlayerUtils.ResetCooldown(mainEntity.Pawn);
+            PlayerUtils.ResetCooldowns(mainEntity.Pawn);
             PlayerUtils.ResetMana(mainEntity.Pawn);
 
             // NOTE(api): This is handling a special case where the target is the event entity 

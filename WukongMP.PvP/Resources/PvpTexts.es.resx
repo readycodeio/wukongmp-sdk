@@ -129,4 +129,10 @@
   <data name="BothTeamsNeedReadyPlayers" xml:space="preserve">
     <value>Ambos equipos deben tener al menos un jugador o monstruo para comenzar el PvP.</value>
   </data>
+  <data name="PlayerSpawned" xml:space="preserve">
+    <value>{0} generó {1} {2}</value>
+  </data>
+  <data name="PlayerKilledPlayer" xml:space="preserve">
+    <value>{0} mató a {1}</value>
+  </data>
 </root>

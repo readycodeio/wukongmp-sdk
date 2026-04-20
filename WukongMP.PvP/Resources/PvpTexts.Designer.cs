@@ -78,6 +78,24 @@ namespace WukongMp.PvP.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} killed {1}.
+        /// </summary>
+        internal static string PlayerKilledPlayer {
+            get {
+                return ResourceManager.GetString("PlayerKilledPlayer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} spawned {1} {2}.
+        /// </summary>
+        internal static string PlayerSpawned {
+            get {
+                return ResourceManager.GetString("PlayerSpawned", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quick Join.
         /// </summary>
         internal static string QuickJoin {

@@ -194,7 +194,6 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<FreeCameraManager>();
         Container.Register<WukongWidgetManager>();
-        Container.Register<TimerController>();
         Container.Register<FreeCameraController>();
         Container.Register<IMappedEntityManager<AActor>, MappedEntityManager<AActor>>();
         Container.Register<WukongPawnState>();

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DryIoc.ImTools;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Relay.Client;
@@ -10,22 +11,17 @@ using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.GameMode;
 using WukongMp.PvP.WukongUtils;
+using WukongMp.Sdk;
+using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.PvP.ECS.Systems;
 
-internal sealed class PvpRoundEndSystem(
-    Store world,
-    WukongAreaState areaState,
-    PvpMode pvpMode,
-    IClientEcsUpdateLoop ecsLoop
-) : BaseSystem
+public class PvpRoundEndSystem(PvpMode pvpMode ) : ModSystemBase
 {
-    protected override void OnUpdateGroup()
+    protected override void OnUpdate(UpdateTick tick)
     {
-        if (!areaState.CurrentArea.HasValue || !areaState.OwnsPvpState)
-            return;
-
-        if (areaState.PvpState is not { InPvP: true })
+        if (!WukongApi.Sync.CurrentAreaId.HasValue || !WukongApi.PvP.OwnsPvpState || !WukongApi.PvP.InPvP)
             return;
 
         if (pvpMode.IsRoundEnding || pvpMode.PendingDaShengSecondPhaseSpawns > 0)
@@ -44,13 +40,14 @@ internal sealed class PvpRoundEndSystem(
             .ToList();
 
         var aliveMonsters = new List<int>();
-        world.Query<HpComponent, TeamComponent>().ForEachEntity((ref hpComp, ref teamComp, _) =>
+        
+        foreach (var tamer in WukongApi.Sync.AreaTamers)
         {
-            if (hpComp.IsDead || !PvpConstants.CompetingTeamIds.Contains(teamComp.TeamId))
+            if (tamer.IsDead || !PvpConstants.CompetingTeamIds.Contains(tamer.TeamId))
                 return;
 
-            aliveMonsters.Add(teamComp.TeamId);
-        });
+            aliveMonsters.Add(tamer.TeamId);
+        }
 
         var alivePlayersTeams = aliveTeamIds.Concat(aliveMonsters).ToList();
 
@@ -81,10 +78,7 @@ internal sealed class PvpRoundEndSystem(
         {
             Logging.LogInformation("One team with alive players, ending round");
             var winner = playerEntities.First(p => !p.Character.GetHp().IsDead);
-            ecsLoop.Scheduler.ScheduleFunc(async (_, pvp, winner0) =>
-            {
-                await pvp.EndRoundAsync(winner0.Player.GetState().TeamId);
-            }, pvpMode, winner);
+            Task.Run(async () => await pvpMode.EndRoundAsync(winner.Player.GetState().TeamId));
         }
     }
 }

@@ -12,7 +12,6 @@ namespace WukongMp.Swarm;
 public class Mod : ModBase
 {
     public override string Name => "SwarmMode";
-    public override string Version => "1.0.0";
 
     protected override void Initialize(IDependencyContainer services)
     {

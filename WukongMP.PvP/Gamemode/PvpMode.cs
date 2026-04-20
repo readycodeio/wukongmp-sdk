@@ -7,29 +7,16 @@ using b1;
 using CSharpModBase;
 using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.ECS.Values;
-using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
-using ReadyM.Api.Multiplayer.Serialization;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
-using WukongMp.Api.Chat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.ECS.Values;
-using WukongMp.Api.Helpers;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.Resources;
-using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.GameEvents;
@@ -39,11 +26,8 @@ using WukongMp.PvP.WukongUtils;
 
 namespace WukongMp.PvP.GameMode;
 
-internal class PvpMode : IDisposable
+public class PvpMode : IDisposable
 {
-    protected readonly RelaySerializer Serializer;
-    protected readonly IRelayClient RelayClient;
-
     public bool IsRoundEnding { get; private set; }
     private readonly Store _world;
     private readonly MappedEventManager _mappedEvent;
@@ -52,7 +36,6 @@ internal class PvpMode : IDisposable
     private readonly WukongPlayerState _playerState;
     private readonly WukongPlayerPawnState _playerPawnState;
     private readonly WukongEventBus _eventBus;
-    private readonly WukongClientRpcCallbacks _clientRpc;
     private readonly WukongChatter _chatter;
     private readonly GameplayEventRouter _eventRouter;
     private readonly WukongMappingPolicyDirectory _policyDir;
@@ -88,22 +71,22 @@ internal class PvpMode : IDisposable
     }
 
     public IEnumerable<PlayerId> SpectatingPlayerIds
-        => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterByPlayerId(p)?.GetPvP().IsSpectator == true);
+        => Enumerable.Where<PlayerId>(_state.AreaPlayers, p => _playerState.GetMainCharacterByPlayerId(p)?.GetPvP().IsSpectator == true);
 
     public IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> SpectatingPlayers
         => SpectatingPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
 
     public IEnumerable<PlayerId> AllPvPPlayerIds
-        => _state.AreaPlayers.Where(GetPvPPlayerIds);
+        => Enumerable.Where<PlayerId>(_state.AreaPlayers, GetPvPPlayerIds);
 
     public IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> AllPvPPlayers
         => AllPvPPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
 
     public IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> AllPlayers
-        => _state.AreaPlayers.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
+        => Enumerable.Select<PlayerId, (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)?>(_state.AreaPlayers, GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
 
     public IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> OtherPlayers
-        => _state.OtherAreaPlayers.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
+        => Enumerable.Select<PlayerId, (PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)?>(_state.OtherAreaPlayers, GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
 
     public PvpMode(
         Store world,
@@ -156,7 +139,6 @@ internal class PvpMode : IDisposable
 
         _playerPawnState.OnPlayerPawnSpawned += OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized += OnMainCharacterEntityInitialized;
-        _clientRpc.OnPvpEventReceived += OnPvpEvent;
     }
 
     public void Dispose()
@@ -174,7 +156,6 @@ internal class PvpMode : IDisposable
 
         _playerPawnState.OnPlayerPawnSpawned -= OnPlayerPawnSpawned;
         _playerState.OnMainCharacterEntityInitialized -= OnMainCharacterEntityInitialized;
-        _clientRpc.OnPvpEventReceived -= OnPvpEvent;
     }
 
     private void OnPlayerChangedTeam(PlayerEntity player, MainCharacterEntity character)
@@ -374,7 +355,7 @@ internal class PvpMode : IDisposable
         await ResetHpAndRespawnAllPlayers();
 
         // resolve tournament
-        var winnersSoFar = _areaState.PvpState!.Value.RoundWinners.ToList();
+        var winnersSoFar = Enumerable.ToList<int>(_areaState.PvpState!.Value.RoundWinners);
         var winnersByTeam = winnersSoFar.Where(w => w != PvpConstants.DrawTeamId).GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count());
 
         // check if only one team is present
@@ -757,7 +738,7 @@ internal class PvpMode : IDisposable
                 var tamerClass = victimTamerEntity.Value.Tamer?.GetClass();
                 var netId = victimTamerEntity.Value.GetMeta().NetId;
                 var character = victimTamerEntity.Value.Pawn;
-                if (character != null && tamerClass != null && tamerClass.PathName == UnitPathUtils.GetUnitPathName(TamerConstants.DaSheng))
+                if (character != null && tamerClass != null && tamerClass.PathName == UnitPathUtils.GetUnitPathName(TamerKinds.DaSheng))
                 {
                     var teamId = character.GetTeamIDInCS();
                     var location = character.GetActorLocation();
@@ -770,7 +751,7 @@ internal class PvpMode : IDisposable
                             await Task.Delay(5000);
                             Utils.TryRunOnGameThread(() =>
                             {
-                                SpawningUtils.SpawnUnitAsOwner(_playerState, _pawnState, _policyDir, TamerConstants.DaSheng2, location, teamId);
+                                SpawningUtils.SpawnUnitAsOwner(_playerState, _pawnState, _policyDir, TamerKinds.DaSheng2, location, teamId);
                                 PendingDaShengSecondPhaseSpawns--;
                             });
                         });
@@ -810,7 +791,7 @@ internal class PvpMode : IDisposable
         _clientRpc.SendPvpEvent([(int)ev.Kind, ev.Data]);
     }
 
-    internal void OnPvpEvent(PlayerId playerId, int[] data)
+    public void OnPvpEvent(PlayerId playerId, int[] data)
     {
         var ev = new PvpEvent((PvpEventKind)data[0], data[1]);
         var winnerTeamId = ev.Data;

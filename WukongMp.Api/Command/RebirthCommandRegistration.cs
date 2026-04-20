@@ -29,7 +29,7 @@ internal class RebirthCommandRegistration(
             entity: mainEntity.Entity,
             teleport: false
         ), default(EmptyContext));
-        chatter.SendServerMessage("PlayerRequestedRebirth", playerState.Nickname);
+        chatter.SendLocalizedServerMessage("PlayerRequestedRebirth", playerState.Nickname);
     }
 
     private void RequestPointRebirth()
@@ -42,6 +42,6 @@ internal class RebirthCommandRegistration(
             teleport: true
         ), default(EmptyContext));
 
-        chatter.SendServerMessage("PlayerRequestedRebirth", playerState.Nickname);
+        chatter.SendLocalizedServerMessage("PlayerRequestedRebirth", playerState.Nickname);
     }
 }

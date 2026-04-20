@@ -4,7 +4,6 @@ using WukongMp.Api.Command;
 
 namespace WukongMp.Sdk.Api.Implementation;
 
-/// API for the in-game console (F1).
 internal sealed class WukongConsoleApi(
     WukongCommandConsole console,
     ConsoleCommandRegistry commandRegistry
@@ -20,7 +19,7 @@ internal sealed class WukongConsoleApi(
         return commandRegistry.HasCommand(commandName);
     }
 
-    public void WriteConsoleMessage(string message)
+    public void LogMessage(string message)
     {
         console.AddMessage(message);
     }

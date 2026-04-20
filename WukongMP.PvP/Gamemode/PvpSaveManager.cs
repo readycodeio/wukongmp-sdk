@@ -9,7 +9,7 @@ using WukongMp.PvP.Configuration;
 
 namespace WukongMp.PvP.GameMode;
 
-internal class PvpSaveManager
+public class PvpSaveManager
 {
     private readonly ILogger _logger;
 
@@ -39,7 +39,7 @@ internal class PvpSaveManager
 
         BGW_EventCollection.Get(worldContext).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
         {
-            ArchiveId = Constants.NewCharacterArchiveId // Move to PvP constants
+            ArchiveId = PvpConstants.NewCharacterArchiveId
         });
     }
 

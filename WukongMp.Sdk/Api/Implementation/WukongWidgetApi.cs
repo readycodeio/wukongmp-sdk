@@ -24,9 +24,15 @@ internal sealed class WukongWidgetApi(WukongWidgetManager widgetManager) : IWuko
     public void HideInfoMessage()
         => widgetManager.HideInfoMessage();
 
-    public void ShowTip(string tip, bool autoHide) 
+    public void ShowTip(string tip, bool autoHide)
         => UiUtils.ShowTip(tip, autoHide);
 
     public void HideTip()
         => UiUtils.HideTip();
+
+    public void SetTimerVisibility(bool visible)
+        => widgetManager.SetTimerVisibility(visible);
+
+    public void SetTimerText(int initialMinutes, int initialSeconds)
+        => widgetManager.SetTimerText(initialMinutes, initialSeconds);
 }

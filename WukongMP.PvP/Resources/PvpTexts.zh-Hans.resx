@@ -129,4 +129,10 @@
   <data name="BothTeamsNeedReadyPlayers" xml:space="preserve">
     <value>双方队伍必须至少有一名玩家或怪物才能开始 PvP。</value>
   </data>
+  <data name="PlayerSpawned" xml:space="preserve">
+    <value>{0}生成了{1}{2}</value>
+  </data>
+  <data name="PlayerKilledPlayer" xml:space="preserve">
+    <value>{0}击杀了{1}</value>
+  </data>
 </root>

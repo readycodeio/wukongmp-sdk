@@ -21,7 +21,7 @@ internal class ConnectionCommandRegistration(
     {
         if (areaState.InRoom)
         {
-            chatter.SendServerMessage("PlayerLeft", playerState.Nickname);
+            chatter.SendLocalizedServerMessage("PlayerLeft", playerState.Nickname);
             connection.Disconnect();
         }
     }
