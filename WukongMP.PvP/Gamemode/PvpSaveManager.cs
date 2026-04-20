@@ -4,6 +4,7 @@ using b1;
 using B1UI.GSSvc;
 using Microsoft.Extensions.Logging;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
 
@@ -11,17 +12,10 @@ namespace WukongMp.PvP.GameMode;
 
 public class PvpSaveManager
 {
-    private readonly ILogger _logger;
-
     private bool _redirectSaveFiles;
     private bool _shouldCacheSave;
 
     public bool ShouldRedirectSaveFiles => _redirectSaveFiles;
-
-    public PvpSaveManager(ILogger logger)
-    {
-        _logger = logger;
-    }
 
     public void OnSavedGameLoad()
     {
@@ -73,7 +67,7 @@ public class PvpSaveManager
         var readArchiveResult = __instance.ReadArchiveData(PvpConstants.WorldArchiveId, out var gameArchiveData, out _);
         if (readArchiveResult != 0)
         {
-            _logger.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
+            Logging.LogError("ReadArchiveData Failed, Result: {Result}", readArchiveResult);
             return;
         }
 

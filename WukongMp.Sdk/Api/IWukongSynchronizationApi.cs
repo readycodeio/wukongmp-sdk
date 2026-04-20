@@ -26,8 +26,8 @@ public interface IWukongSynchronizationApi
     EntityList<ReadyTamer> AreaTamers { get; }
     EntityList<ReadyMainCharacter> AllMainCharacters { get; }
     EntityList<ReadyMainCharacter> AreaMainCharacters { get; }
-    ReadyMainCharacter? GetPlayerEntityByActor(AActor actor);
-    ReadyMainCharacter? GetPlayerEntityByLastTransformation(BGUCharacterCS targetCharacter);
+    ReadyMainCharacter? GetPlayerEntityByActor(AActor? actor);
+    ReadyMainCharacter? GetPlayerEntityByLastTransformation(BGUCharacterCS? targetCharacter);
     bool TryGetPlayerInfoById(PlayerId player, [NotNullWhen(true)] out string? nickname, [NotNullWhen(true)] out int? team);
     ReadyMainCharacter? GetMainCharacterByPlayerId(PlayerId playerId);
     void SyncMonstersInArea();

@@ -13,7 +13,9 @@ using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using ReadyM.Api;
 using ReadyM.Api.DI;
+using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.RPC;
+using ReadyM.Relay.Client;
 using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.NameCompressors;
@@ -192,12 +194,13 @@ internal class Mod : ModBase
         
         Logger.LogDebug("Found {RpcCount} RPC classes in mod {Name}", rpcClasses.Count, Name);
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
+        var ecsLoop = DI.Instance.Container.Resolve<IClientEcsUpdateLoop>();
         
         foreach (var rpcClassRegistration in rpcClasses)
         {
             var rpcObject = (RpcClassBase)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
             var offsetBefore = offsetProvider.CurrentOffset;
-            rpcObject.SetUpOffset(offsetProvider);
+            rpcObject.Initialize(offsetProvider, ecsLoop.Scheduler);
             Logger.LogDebug("Registered RPC class {RpcClass} with codes {BeforeOffset}..{AfterOffset}", rpcClassRegistration.ServiceType.FullName, offsetBefore, offsetProvider.CurrentOffset - 1);
         }
     }

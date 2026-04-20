@@ -125,7 +125,7 @@ internal sealed class WukongSynchronizationApi(
         }
     }
 
-    public ReadyMainCharacter? GetPlayerEntityByActor(AActor actor)
+    public ReadyMainCharacter? GetPlayerEntityByActor(AActor? actor)
     {
         if (mappingDir.IsMainCharacterMapped(actor, out var entity))
         {
@@ -135,7 +135,7 @@ internal sealed class WukongSynchronizationApi(
         return null;
     }
 
-    public ReadyMainCharacter? GetPlayerEntityByLastTransformation(BGUCharacterCS targetCharacter)
+    public ReadyMainCharacter? GetPlayerEntityByLastTransformation(BGUCharacterCS? targetCharacter)
     {
         var entity = pawnState.GetEntityByLastPlayerPawn(targetCharacter);
         if (entity.HasValue)

@@ -15,6 +15,13 @@ public static class PvpConstants
     public const float MonsterSpawnDistance = 2000f;
     public const float MonsterSpawnTraceHeight = 2000f;
     public const float MonsterHalfHeight = 200f;
+    
+    public const int GourdSkillId = 10530;
+    public const int ImmobilizeSkillId = 10518;
+    public const int IncenseTrailTalismanSkillId = 10909;
+    public const int RuyiScrollSkillId = 10912;
+    public const int ConsumableBuffSkillId = 10913;
+    public const int IronBodySkillId = 10505;
 
     public const int DrawTeamId = 9999;
 

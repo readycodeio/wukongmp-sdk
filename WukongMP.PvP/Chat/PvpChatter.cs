@@ -1,5 +1,5 @@
 ﻿using ReadyM.Api.DI;
-using WukongMp.Api;
+using WukongMp.PvP.Resources;
 using WukongMp.Sdk.Api;
 using WukongMp.Sdk.Entities;
 
@@ -28,12 +28,10 @@ public class PvpChatter : IHostedService
         if (victim.Pawn == attacker.Value.Pawn) 
             return;
         
-        if (!_clientOwnership.OwnsEntity(victimMainEntity.Value.Entity))
+        if (WukongApi.Sync.GetPlayerEntityByActor(attacker.Value.Pawn) is not { } attackerEntity)
             return;
 
-        ref var attackerMain = ref attackerMainEntity.Value.GetState();
-        ref var killedMain = ref victimMainEntity.Value.GetState();
-
-        WukongApi.Chat.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickname, killedMain.CharacterNickname);
+        var msg = string.Format(PvpTexts.PlayerKilledPlayer, attackerEntity.Nickname, victim.Nickname);
+        WukongApi.Chat.SendServerMessage(msg);
     }
 }

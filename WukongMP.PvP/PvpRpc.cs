@@ -26,7 +26,7 @@ public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, PvpM
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnShowAntiStallWarning(int warningTime)
     {
-        ScheduleOnMainThread(() =>
+        RunOnMainThread(() =>
         {
             if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
                 return;
@@ -44,7 +44,7 @@ public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, PvpM
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnShowAntiStallAction()
     {
-        ScheduleOnMainThread(() =>
+        RunOnMainThread(() =>
         {
             if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
                 return;
@@ -60,7 +60,7 @@ public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, PvpM
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnHideAntiStall()
     {
-        ScheduleOnMainThread(() =>
+        RunOnMainThread(() =>
         {
             if (WukongApi.Sync.LocalMainCharacter is null)
                 return;
@@ -74,7 +74,7 @@ public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, PvpM
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnStallDamage(PlayerId damagedPlayer, float value)
     {
-        ScheduleOnMainThread(() =>
+        RunOnMainThread(() =>
         {
             if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
                 return;
