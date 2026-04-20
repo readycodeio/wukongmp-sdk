@@ -7,6 +7,7 @@ public static class PvpConstants
     public const int WorldArchiveId = 0;
     public const int NewCharacterArchiveId = 1;
     public const float FloatComparisonTolerance = 0.1f;
+    public const int MaxPlayers = 10;
 
     public const string ChestCameraLockNode = "CAMERA_LOCK";
     public const string FeetCameraLockNode = "CAMERA_LOCK_Root";
@@ -15,7 +16,7 @@ public static class PvpConstants
     public const float MonsterSpawnDistance = 2000f;
     public const float MonsterSpawnTraceHeight = 2000f;
     public const float MonsterHalfHeight = 200f;
-    
+
     public const int GourdSkillId = 10530;
     public const int ImmobilizeSkillId = 10518;
     public const int IncenseTrailTalismanSkillId = 10909;

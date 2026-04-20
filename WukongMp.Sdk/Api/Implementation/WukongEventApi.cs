@@ -58,6 +58,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         _eventRouter.OnPlayerChangedTeam += InvokeOnPlayerChangedTeam;
         _eventRouter.OnLocalPlayerBeforeRebirth += InvokeOnLocalPlayerBeforeRebirth;
         _eventRouter.OnUnitDead += InvokeOnUnitDead;
+        _eventRouter.OnLocalPlayerChangedSpectator += InvokeOnLocalPlayerChangedSpectator;
         _archetypeEventRouter[_archetypeRegistration.TamerArchetype].OnEntityDelete += InvokeOnMonsterDestroyed;
     }
 
@@ -79,6 +80,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         _eventRouter.OnPlayerChangedTeam -= InvokeOnPlayerChangedTeam;
         _eventRouter.OnLocalPlayerBeforeRebirth -= InvokeOnLocalPlayerBeforeRebirth;
         _eventRouter.OnUnitDead -= InvokeOnUnitDead;
+        _eventRouter.OnLocalPlayerChangedSpectator -= InvokeOnLocalPlayerChangedSpectator;
         _archetypeEventRouter[_archetypeRegistration.TamerArchetype].OnEntityDelete -= InvokeOnMonsterDestroyed;
     }
 
@@ -107,6 +109,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
     public event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
     public event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
     public event Action<ReadyTamer>? OnMonsterDestroyed;
+    public event Action<bool>? OnLocalPlayerChangedSpectator;
 
     private void InvokeJoinedArea(AreaId areaId, Entity _)
         => OnJoinedArea?.Invoke(areaId);
@@ -169,4 +172,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
 
     private void InvokeOnMonsterDestroyed(EntityDelete evt)
         => OnMonsterDestroyed?.Invoke(new ReadyTamer(WukongApi.Sync, evt.Entity));
+    
+    private void InvokeOnLocalPlayerChangedSpectator(bool isSpectator)
+        => OnLocalPlayerChangedSpectator?.Invoke(isSpectator);
 }

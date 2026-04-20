@@ -21,6 +21,7 @@ public interface IWukongSynchronizationApi
     PlayerId? LocalPlayerId { get; }
     AreaId? CurrentAreaId { get; }
     ReadyMainCharacter? LocalMainCharacter { get; }
+    IReadOnlyList<PlayerId> AllPlayers { get; }
     IReadOnlyList<PlayerId> AreaPlayers { get; }
     EntityList<ReadyTamer> AllTamers { get; }
     EntityList<ReadyTamer> AreaTamers { get; }

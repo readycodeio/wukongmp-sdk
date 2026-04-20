@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Numerics;
 using b1;
 using Friflo.Engine.ECS;
 using LiteNetLib;
-using Microsoft.Extensions.Logging;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.State;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Mapping;
@@ -66,6 +62,9 @@ internal sealed class WukongSynchronizationApi(
     public ReadyMainCharacter? LocalMainCharacter
         => playerState.LocalMainCharacter != null ? new ReadyMainCharacter(this, playerState.LocalMainCharacter.Value) : null;
 
+    public IReadOnlyList<PlayerId> AllPlayers
+        => state.AllPlayers;
+    
     public IReadOnlyList<PlayerId> AreaPlayers
         => state.AreaPlayers;
 
