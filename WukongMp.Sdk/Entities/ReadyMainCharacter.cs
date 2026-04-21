@@ -7,6 +7,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
+using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk.Entities;
@@ -111,5 +112,10 @@ public readonly struct ReadyMainCharacter
             entity: Entity,
             birthShrineId: shrineId
         ), default(EmptyContext));
+    }
+
+    public void EnableInteraction(bool enabled)
+    {
+        PlayerUtils.SetPlayerInteractionEnabled(Entity, enabled);
     }
 }

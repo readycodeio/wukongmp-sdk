@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LiteNetLib;
 using ReadyM.Api.Idents;
 using WukongMp.Sdk.Entities;
@@ -109,5 +110,15 @@ public interface IWukongEventApi
     /// <summary>
     /// Fired when the local player changes spectator mode, either by entering or exiting spectator mode.
     /// </summary>
-    event Action<bool> OnLocalPlayerChangedSpectator;
+    event Action<bool>? OnLocalPlayerChangedSpectator;
+
+    /// <summary>
+    /// Fired when a monster is spawned in the game world, either by being spawned by the player or by being spawned by the game itself.
+    /// </summary>
+    event Action<ReadyTamer>? OnMonsterSpawned;
+
+    /// <summary>
+    /// Fired when the game's language is changed, either by the player changing it in the settings or by the game automatically setting it based on the player's system language.
+    /// </summary>
+    event Action<CultureInfo>? OnLanguageChanged;
 }

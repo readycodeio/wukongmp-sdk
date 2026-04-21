@@ -12,6 +12,7 @@ using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.PvP.WukongUtils;
 
@@ -64,21 +65,21 @@ public static class PvpUtils
         return AdjustSpawnLocation(pawn, baseLocation);
     }
 
-    public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
+    public static FVector AdjustSpawnLocation(BGUCharacterCS? pawn, FVector InTargetLocation)
     {
         // For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
-        if (WukongApi.Configuration.GetLaunchParameter("LEVEL_ID", "0") == "0")
+        if (WukongApi.PvP.LevelId == 0)
         {
             return InTargetLocation;
         }
 
         var result = InTargetLocation;
-        if (CharacterCS == null)
+        if (pawn == null)
         {
             return result;
         }
 
-        var uCapsuleComponent = CharacterCS.GetRootComponent() as UCapsuleComponent;
+        var uCapsuleComponent = pawn.GetRootComponent() as UCapsuleComponent;
         if (uCapsuleComponent == null)
         {
             return result;
@@ -89,7 +90,7 @@ public static class PvpUtils
         var num = 2.4f;
         var start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
         var end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
-        if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GameUtils.GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
+        if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GameUtils.GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, pawn, out var OutHitLocation))
         {
             result = OutHitLocation + num + FVector.UpVector * scaledCapsuleHalfHeight;
         }

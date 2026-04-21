@@ -64,6 +64,24 @@ public static class ReadyCharacterExtensions
                     throw new InvalidOperationException($"Entity does not have TeamComponent: {entity.GetNetId()}");
                 return teamComp.TeamId;
             }
+            set
+            {
+                obj.Deconstruct(out _, out var entity);
+
+                if (DI.Instance.MappedField.CanSetFromApi<TeamComponent>(entity, out var sync))
+                {
+                    sync.SetFromApi(TeamComponent.Fields.TeamId, value);
+
+                    if (DI.Instance.PlayerState.LocalPlayerEntity is { } player)
+                    {
+                        player.GetState().TeamId = value;
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
         }
 
         public bool IsDead

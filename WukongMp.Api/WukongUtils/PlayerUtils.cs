@@ -53,17 +53,6 @@ namespace WukongMp.Api.WukongUtils
             events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
         }
 
-        public static void SetLocalPlayerDamageImmunity(MainCharacterEntity mainEntity, bool enabled)
-        {
-            var pawn = mainEntity.Pawn;
-            var events = BUS_EventCollectionCS.Get(pawn);
-            if (events != null)
-            {
-                events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, !enabled);
-                Logging.LogDebug("Set local player damage immunity to {Enabled}", enabled);
-            }
-        }
-
         public static void ResetLocalPlayerCooldown()
         {
             var player = GameUtils.GetControlledPawn();

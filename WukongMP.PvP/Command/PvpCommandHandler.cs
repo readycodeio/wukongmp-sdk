@@ -1,7 +1,6 @@
-﻿using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
+using System.Numerics;
 using b1;
-using BtlShare;
 using ReadyM.Api.Command;
 using ReadyM.Api.DI;
 using ReadyM.Wukong.Common.ECS.Values;
@@ -101,136 +100,111 @@ public class PvpCommandHandler(
 
     private void SetSpiritCooldown(float spiritCooldownTime)
     {
-        if (playerState.LocalMainCharacter is not { } mainEntity)
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (areaState.CurrentArea.HasValue && !areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (!WukongApi.Cheats.CheatsAllowed)
         {
-            consoleApi.AddLocalizedMessage("CheatsAreDisabled");
+            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
             return;
         }
 
         if (spiritCooldownTime < 0)
         {
-            consoleApi.AddLocalizedMessage("InvalidCooldown");
+            consoleApi.LogMessage(BuiltinTexts.InvalidCooldown);
             return;
         }
 
-        ref var localStateComp = ref mainEntity.GetLocalState();
-        if (mainEntity.Pawn != null)
-        {
-            var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
-            localStateComp.ShouldSetSpiritCooldown = true;
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.VigorEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(mainEntity.Pawn, EBGUAttrFloat.VigorEnergyMax));
-            localStateComp.ShouldSetSpiritCooldown = false;
-        }
-
-        localStateComp.SpiritCooldownEnabled = true;
-        localStateComp.SpiritCooldownTime = spiritCooldownTime;
-        chatter.SendServerMessage("CustomSpiritCooldown", playerState.Nickname, spiritCooldownTime.ToString(CultureInfo.InvariantCulture));
+        WukongApi.Cheats.SetSpritCooldownTime(mainEntity, spiritCooldownTime);
     }
 
     private void ToggleInfiniteVessel()
     {
-        if (playerState.LocalMainCharacter is not { } mainEntity)
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (areaState.CurrentArea is { Room.CheatsAllowed: false })
+        if (!WukongApi.Cheats.CheatsAllowed)
         {
-            consoleApi.AddLocalizedMessage("CheatsAreDisabled");
+            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
             return;
         }
 
-        if (mainEntity.Pawn != null)
-        {
-            var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.FabaoEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(mainEntity.Pawn, EBGUAttrFloat.FabaoEnergyMax));
-        }
-
-        mainEntity.GetLocalState().HasInfiniteVessel = !mainEntity.GetLocalState().HasInfiniteVessel;
-        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteVessel ? "InfVesselEnabled" : "InfVesselDisabled", playerState.Nickname);
+        WukongApi.Cheats.ToggleInfiniteVessel(mainEntity);
     }
 
     private void ToggleInfiniteTransform()
     {
-        if (playerState.LocalMainCharacter is not { } mainEntity)
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (areaState.CurrentArea is { Room.CheatsAllowed: false })
+        if (!WukongApi.Cheats.CheatsAllowed)
         {
-            consoleApi.AddLocalizedMessage("CheatsAreDisabled");
+            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
             return;
         }
 
-        if (mainEntity.HasPawn)
-        {
-            var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
-            events?.Evt_SetAttrFloat.Invoke(EBGUAttrFloat.CurEnergy, BGUFunctionLibraryCS.BGUGetFloatAttr(mainEntity.Pawn, EBGUAttrFloat.TransEnergyMax));
-        }
-
-        mainEntity.GetLocalState().HasInfiniteTransform = !mainEntity.GetLocalState().HasInfiniteTransform;
-        var playerComp = mainEntity.GetState();
-        chatter.SendServerMessage(mainEntity.GetLocalState().HasInfiniteTransform ? "InfTransformEnabled" : "InfTransformDisabled", playerComp.CharacterNickname);
+        WukongApi.Cheats.ToggleInfiniteTransform(mainEntity);
     }
 
     private void ToggleSkillsCooldown()
     {
-        if (playerState.LocalMainCharacter is not { } mainEntity)
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (areaState.CurrentArea.HasValue && !areaState.CurrentArea.Value.Room.CheatsAllowed)
+        if (!WukongApi.Cheats.CheatsAllowed)
         {
-            consoleApi.AddLocalizedMessage("CheatsAreDisabled");
+            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
             return;
         }
 
-        ref var localStateComp = ref mainEntity.GetLocalState();
-        var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
-        events?.Evt_ResetSkillCD.Invoke();
-        localStateComp.InstantSkillCooldown = !localStateComp.InstantSkillCooldown;
-        chatter.SendServerMessage(mainEntity.GetLocalState().InstantSkillCooldown ? "InstantCooldownEnabled" : "InstantCooldownDisabled", playerState.Nickname);
+        WukongApi.Cheats.ToggleNoSkillsCooldown(mainEntity);
     }
 
     private void TeleportToArena()
     {
-        if (playerState.LocalMainCharacter is not { } mainEntity)
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (areaState.InRoom && !mainEntity.GetPvP().IsSpectator && areaState.PvpState is { InTournament: false })
+        if (WukongApi.Sync.InRoom && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
         {
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-            PlayerUtils.TeleportLocalPlayer(mainEntity, levelData.PvpStartingLocation, FRotator.ZeroRotator);
+            mainEntity.Teleport(levelData.PvpStartingLocation.ToVector3(), Vector3.Zero);
         }
     }
 
     private void TeleportToShrine()
     {
-        if (playerState.LocalMainCharacter is not { } mainEntity)
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (areaState.InRoom && !mainEntity.GetPvP().IsSpectator && areaState.PvpState is { InTournament: false })
+        if (WukongApi.Sync.InRoom && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
         {
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
-            PlayerUtils.TeleportLocalPlayerToRebirthPoint(mainEntity, levelData.BirthPointID);
+            UBGWFunctionLibraryCS.GetRebirthPointTransform(GameUtils.GetWorld(), levelData.BirthPointID, out var shrineTransform);
+
+            mainEntity.Teleport(shrineTransform.Translation.ToVector3(), shrineTransform.Rotation.Rotator().ToVector3());
         }
     }
 
     private void TeleportToPvpLevel(int pvpLevelId)
     {
-        if (playerState.LocalMainCharacter is not { } mainEntity || !areaState.InRoom || mainEntity.GetPvP().IsSpectator || areaState.PvpState is { InTournament: true })
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (pvpLevelId < 0)
+        if (WukongApi.Sync.InRoom && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
         {
-            consoleApi.AddMessage(BuiltinTexts.InvalidCommand);
-            return;
+            if (pvpLevelId < 0)
+            {
+                consoleApi.LogMessage(BuiltinTexts.InvalidCommand);
+                return;
+            }
+
+            WukongApi.PvP.LevelId = pvpLevelId;
+            var levelData = LevelSpawnConfig.GetLevelSpawnData(pvpLevelId);
+            BPS_EventCollectionCS.GetLocal(GameUtils.GetWorld()).Evt_BPS_TeleportTo.Invoke(ETeleportTypeV2.RebirthPointTeleportOnly, new TeleportParam_RebirthPoint
+            {
+                RebirthPointId = levelData.BirthPointID,
+            }, EPlayerTeleportReason.RebirthPoint);
         }
-
-        LaunchParameters.Instance.LevelId = pvpLevelId;
-        var levelData = LevelSpawnConfig.GetLevelSpawnData(pvpLevelId);
-        BPS_EventCollectionCS.GetLocal(GameUtils.GetWorld()).Evt_BPS_TeleportTo.Invoke(ETeleportTypeV2.RebirthPointTeleportOnly, new TeleportParam_RebirthPoint
-        {
-            RebirthPointId = levelData.BirthPointID,
-        }, EPlayerTeleportReason.RebirthPoint);
     }
 }

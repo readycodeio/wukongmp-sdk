@@ -17,7 +17,7 @@ using WukongMp.Sdk.Entities;
 
 namespace WukongMp.PvP.ECS.Systems;
 
-public class PvpRoundEndSystem(PvpMode pvpMode ) : ModSystemBase
+public class PvpRoundEndSystem(PvpMode pvpMode) : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {
@@ -31,16 +31,14 @@ public class PvpRoundEndSystem(PvpMode pvpMode ) : ModSystemBase
         var playerEntities = pvpMode.AllPvPPlayers.ToList();
         var aliveTeamIds = playerEntities.Where(p =>
             {
-                var state = p.Character.GetState();
-                var pvp = p.Character.GetPvP();
-                var hp = p.Character.GetHp();
-                return !pvp.IsObserver && (!hp.IsDead || state.IsTransformed);
+                var pvp = WukongApi.PvP.PvpData(p);
+                return !pvp.IsObserver && (!p.IsDead || p.IsTransformed);
             })
-            .Select(x => x.Player.GetState().TeamId)
+            .Select(x => x.TeamId)
             .ToList();
 
         var aliveMonsters = new List<int>();
-        
+
         foreach (var tamer in WukongApi.Sync.AreaTamers)
         {
             if (tamer.IsDead || !PvpConstants.CompetingTeamIds.Contains(tamer.TeamId))
@@ -77,8 +75,8 @@ public class PvpRoundEndSystem(PvpMode pvpMode ) : ModSystemBase
         if (aliveTeamCount == 1)
         {
             Logging.LogInformation("One team with alive players, ending round");
-            var winner = playerEntities.First(p => !p.Character.GetHp().IsDead);
-            Task.Run(async () => await pvpMode.EndRoundAsync(winner.Player.GetState().TeamId));
+            var winner = playerEntities.First(p => !p.IsDead);
+            Task.Run(async () => await pvpMode.EndRoundAsync(winner.TeamId));
         }
     }
 }

@@ -8,21 +8,14 @@ using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
 using WukongMp.Api;
 using WukongMp.Api.Resources;
-using WukongMp.PvP.GameMode;
 using WukongMp.PvP.UI;
 using WukongMp.Sdk.Api;
 using WukongMp.Sdk.Entities;
 
 namespace WukongMp.PvP;
 
-public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, PvpMode pvpMode, TimerController timerController) : RpcClassBase(client, serializer)
+public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, TimerController timerController) : RpcClassBase(client, serializer)
 {
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnPvpEvent(PlayerId __sender, int[] data)
-    {
-        pvpMode.OnPvpEvent(__sender, data);
-    }
-
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnShowAntiStallWarning(int warningTime)
     {

@@ -22,14 +22,15 @@ public class Mod : ModBase
         Instance = this;
         Logger.LogInformation("Initializing {PluginName}", Name);
         
+        services.RegisterSingleton<PvpRpc>();
         services.RegisterSingleton<TimerController>();
         services.RegisterSingleton<PvpChatter>();
         services.RegisterSingleton<PvpGameplayConfiguration>();
         services.RegisterSingleton<PvpSaveManager>();
         services.RegisterSingleton<PvpWidgetManager>();
         services.RegisterSingleton<PvpMode>();
-        services.RegisterSingleton<PvpSynchronizer>();
         services.RegisterSingleton<PvpCommandHandler>();
+        services.RegisterSingleton<PvpSynchronizer>();
     }
 
     public override void LateInit()

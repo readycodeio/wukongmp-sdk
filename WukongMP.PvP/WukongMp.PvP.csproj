@@ -23,6 +23,7 @@
     <ItemGroup>
         <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
         <ProjectReference Include="..\WukongMp.Sdk\WukongMp.Sdk.csproj" />
+        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -83,6 +84,12 @@
         <Generator>ResXFileCodeGenerator</Generator>
         <LastGenOutput>PvpTexts.Designer.cs</LastGenOutput>
       </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="manifest.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

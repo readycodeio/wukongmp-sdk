@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace WukongMp.Api.Configuration;
 
-internal static class UnitPathUtils
+public static class UnitPathUtils
 {
     private static readonly Dictionary<TamerKind, string> CharacterPathNames = new()
     {
@@ -96,6 +96,9 @@ internal static class UnitPathUtils
         // { CharacterKind.BossC, "/Game/00Main/Design/Units/GYCY/TAMER_gycy_yanjianxi_01a.TAMER_gycy_yanjianxi_01a_C" }
     };
 
+    /// <summary>
+    /// Get the path to the unit blueprint for a given tamer kind. This is used for spawning units in the world.
+    /// </summary>
     public static string GetUnitPathName(TamerKind tamerKind)
     {
         if (tamerKind == default)
@@ -104,6 +107,6 @@ internal static class UnitPathUtils
         return CharacterPathNames[tamerKind];
     }
 
-    public static bool IsValidUnitName(TamerKind tamerKind)
+    internal static bool IsValidUnitName(TamerKind tamerKind)
         => CharacterPathNames.ContainsKey(tamerKind);
 }

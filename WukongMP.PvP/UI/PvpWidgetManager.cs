@@ -189,7 +189,7 @@ public class PvpWidgetManager : IHostedService
 
     public void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList) => _lobbyStatusWidget.Value.SetTeams(redTeamList, blueTeamList, spectatorsList);
 
-    private void SetupLobbyUi()
+    public void SetupLobbyUi()
     {
         if (!_isAfterLoadingScreen)
             return;
