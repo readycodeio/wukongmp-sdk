@@ -192,7 +192,7 @@ internal class Mod : ModBase
             .OrderBy(t => t.FactoryRegistrationOrder) // ensure deterministic order
             .ToList();
         
-        Logger.LogDebug("Found {RpcCount} RPC classes in mod {Name}", rpcClasses.Count, Name);
+        Logger.LogDebug("Found {RpcCount} RPC classes", rpcClasses.Count);
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
         var ecsLoop = DI.Instance.Container.Resolve<IClientEcsUpdateLoop>();
         

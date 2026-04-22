@@ -35,6 +35,7 @@ public class Mod : ModBase
 
     public override void LateInit()
     {
+        Logger.LogInformation("LateInit {PluginName}", Name);
         base.LateInit();
         
         WukongApi.Input.RegisterKeyBind(Key.J, () =>
