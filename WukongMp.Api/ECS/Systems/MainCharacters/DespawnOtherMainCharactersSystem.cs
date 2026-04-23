@@ -6,11 +6,10 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.ECS.Managers;
-using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems.MainCharacters;
 
@@ -23,7 +22,6 @@ internal sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
     {
         public PlayerId PlayerId;
         public BGUCharacterCS? PlayerCharacter;
-        public AActor? PlayerMarker;
     }
 
     private readonly ArchetypeEventRouter _archetypeEvent;
@@ -68,6 +66,8 @@ internal sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
 
         var mainEntity = new MainCharacterEntity(evt.Entity);
         var mainComp = mainEntity.GetState();
+        
+        MarkerUtils.DestroyMarkerForCharacter(mainEntity); // for everyone
 
         var playerId = mainComp.PlayerId;
         if (playerId == _playerState.LocalPlayerId)
@@ -75,9 +75,8 @@ internal sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
 
         _pendingDeleteEvents.Add(new PendingDeleteEvent
         {
-            PlayerId = playerId,
+            PlayerId = mainComp.PlayerId,
             PlayerCharacter = mainEntity.Pawn,
-            PlayerMarker = mainEntity.GetMarker().MarkerActor
         });
     }
 
@@ -91,7 +90,7 @@ internal sealed class DespawnOtherMainCharactersSystem : BaseSystem, IDisposable
             _logger.LogDebug("ATTEMPTING TO DESPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", pending.PlayerId);
 
             // NOTE: Currently it safely handles removing characters that are already despawned
-            _playerPawnState.RemovePlayerPawn(pending.PlayerId, pending.PlayerCharacter, pending.PlayerMarker);
+            _playerPawnState.RemovePlayerPawn(pending.PlayerId, pending.PlayerCharacter);
         }
 
         _pendingDeleteEvents.Clear();

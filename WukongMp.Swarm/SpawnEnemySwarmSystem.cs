@@ -54,7 +54,7 @@ public sealed class SpawnEnemySwarmSystem : ModSystemBase
             for (var i = 0; i < _swarmSize; i++)
             {
                 var position = GetNthPointOnCircle(WukongApi.Sync.LocalMainCharacter.Value.Location, i, _swarmSize);
-                WukongApi.Sync.SpawnEnemy(TamerConstants.WolfSentinel, position);
+                WukongApi.Sync.SpawnEnemy(TamerKinds.WolfSentinel, position);
             }
 
             // increase difficulty, up to a certain point

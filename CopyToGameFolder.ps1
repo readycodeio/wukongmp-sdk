@@ -28,11 +28,13 @@ foreach ($p in $Mods)
 
 # Append non-SDK mod files
 $allDevFiles += @(
-    @(@("manifest.json"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
-#    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
-#    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp")
+#    @(@("manifest.json"), "WukongMp.Coop", "Mods/WukongMp.Coop"),
+#    @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+#    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
+    @(@("manifest.json"), "WukongMp.Pvp", "Mods/WukongMp.Pvp"),
+    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
+    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp"),
+    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Pvp")
 )
 
 # (Optional) de-dup identical triplets if desired

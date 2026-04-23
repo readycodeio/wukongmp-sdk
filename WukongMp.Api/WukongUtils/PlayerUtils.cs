@@ -7,6 +7,7 @@ using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
@@ -49,18 +50,7 @@ namespace WukongMp.Api.WukongUtils
                 return;
 
             var events = BUS_EventCollectionCS.Get(pawn);
-            events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
-        }
-
-        public static void SetLocalPlayerDamageImmunity(MainCharacterEntity mainEntity, bool enabled)
-        {
-            var pawn = mainEntity.Pawn;
-            var events = BUS_EventCollectionCS.Get(pawn);
-            if (events != null)
-            {
-                events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, !enabled);
-                Logging.LogDebug("Set local player damage immunity to {Enabled}", enabled);
-            }
+            events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, IsRemove: enabled);
         }
 
         public static void ResetLocalPlayerCooldown()
@@ -72,11 +62,11 @@ namespace WukongMp.Api.WukongUtils
                 return;
             }
 
-            ResetCooldown(player);
+            ResetCooldowns(player);
             ResetMana(player);
         }
 
-        public static void ResetCooldown(APawn playerPawn)
+        public static void ResetCooldowns(APawn playerPawn)
         {
             var events = BUS_EventCollectionCS.Get(playerPawn);
             events?.Evt_ResetSkillCD.Invoke();

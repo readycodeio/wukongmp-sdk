@@ -12,4 +12,6 @@ public interface IWukongWidgetApi
     void HideInfoMessage();
     void ShowTip(string tip, bool autoHide);
     void HideTip();
+    void SetTimerVisibility(bool visible);
+    void SetTimerText(int initialMinutes, int initialSeconds);
 }

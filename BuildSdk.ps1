@@ -1,7 +1,9 @@
 #!powershell.exe -ExecutionPolicy Bypass -File
+param (
+    [string] $Configuration
+)
 
 $Mods = @('Sdk')
-$Configuration = "Release"
 
 # Source the helper (expects Get-ModFiles and CopyFiles)
 . ./BuildInfo.ps1
@@ -16,7 +18,7 @@ if (-not (Test-Path $solutionPath))
 }
 
 Write-Output "Building solution $solutionPath in configuration $Configuration..."
-$buildOutput = dotnet build $solutionPath -c $Configuration -v minimal /t:Rebuild | Tee-Object -FilePath 'build.log'
+$buildOutput = dotnet build $solutionPath -c $Configuration | Tee-Object -FilePath 'build.log'
 
 # 2. Extract version number from build output
 $pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){3})'
@@ -51,9 +53,14 @@ foreach ($p in $Mods)
 
 # Append non-SDK mod files
 $allFiles += @(
-    @(@("manifest.json"), "WukongMp.Coop/bin/Release/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("manifest.json"), "WukongMp.Coop", "Mods/WukongMp.Coop"),
     @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/Release/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
+    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop"),
+    @(@("manifest.json"), "WukongMp.Pvp", "Mods/WukongMp.Pvp"),
+    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
+    @(@("WukongMp.Pvp.pdb"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
+    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp"),
+    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Pvp")
 )
 
 # Create destination directories

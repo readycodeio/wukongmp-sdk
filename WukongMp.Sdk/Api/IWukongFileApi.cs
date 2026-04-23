@@ -2,5 +2,5 @@ namespace WukongMp.Sdk.Api;
 
 public interface IWukongFileApi
 {
-    string GetSaveFileFullName(ModBase mod, string slotName);
+    string GetSaveFileFullName<T>(string slotName) where T : ModBase;
 }

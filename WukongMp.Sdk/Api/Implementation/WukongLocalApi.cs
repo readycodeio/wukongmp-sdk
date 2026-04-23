@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using ReadyM.Relay.Client;
-using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.UI;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Sdk.Api.Implementation;
 
@@ -35,11 +35,12 @@ internal sealed class WukongLocalApi(
     }
 
     public void HideInfoMessage() => widgetManager.HideInfoMessage();
-    public void AddChatMessage(string message, FLinearColor color)
-    {
-        widgetManager.AddSystemChatMessage(message, color);
-    }
 
     /// Waits for the given task to complete in a synchronous manner.
     public void Wait(Task task) => ecsUpdateLoop.Wait(task);
+
+    public void ShowTip(string message, bool autoHide)
+    {
+        UiUtils.ShowTip(message, autoHide);
+    }
 }

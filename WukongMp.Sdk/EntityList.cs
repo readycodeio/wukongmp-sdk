@@ -11,12 +11,12 @@ public readonly struct EntityList<T> : IEnumerable<T>
     private struct Enumerator : IEnumerator<T>
     {
         private readonly WukongSynchronizationApi _api;
-        private readonly EntityList _entityList;
+        private readonly IList<Entity> _entityList;
 
         private int _index;
         private T _current;
 
-        internal Enumerator(WukongSynchronizationApi api, EntityList entityList)
+        internal Enumerator(WukongSynchronizationApi api, IList<Entity> entityList)
         {
             _api = api;
             _entityList = entityList;
@@ -48,9 +48,9 @@ public readonly struct EntityList<T> : IEnumerable<T>
     }
 
     private readonly WukongSynchronizationApi _api;
-    private readonly EntityList _entityList;
+    private readonly IList<Entity> _entityList;
 
-    internal EntityList(WukongSynchronizationApi api, EntityList entityList)
+    internal EntityList(WukongSynchronizationApi api, IList<Entity> entityList)
     {
         _api = api;
         _entityList = entityList;

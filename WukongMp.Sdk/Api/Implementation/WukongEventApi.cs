@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Globalization;
 using b1;
 using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Common;
+using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api;
+using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Sdk.Entities;
@@ -19,14 +22,26 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
     private readonly WukongPlayerState _playerState;
     private readonly WukongEventBus _eventBus;
     private readonly GameplayEventRouter _eventRouter;
+    private readonly ArchetypeEventRouter _archetypeEventRouter;
+    private readonly ClientWukongArchetypeRegistration _archetypeRegistration;
 
-    public WukongEventApi(ClientState clientState, WukongPlayerPawnState pawnState, WukongPlayerState playerState, WukongEventBus eventBus, GameplayEventRouter eventRouter)
+    public WukongEventApi(
+        ClientState clientState,
+        WukongPlayerPawnState pawnState,
+        WukongPlayerState playerState,
+        WukongEventBus eventBus,
+        GameplayEventRouter eventRouter,
+        ArchetypeEventRouter archetypeEventRouter,
+        ClientWukongArchetypeRegistration archetypeRegistration
+    )
     {
         _clientState = clientState;
         _pawnState = pawnState;
         _playerState = playerState;
         _eventBus = eventBus;
         _eventRouter = eventRouter;
+        _archetypeEventRouter = archetypeEventRouter;
+        _archetypeRegistration = archetypeRegistration;
 
         _clientState.OnJoinedArea += InvokeJoinedArea;
         _clientState.OnLeftArea += InvokeLeftArea;
@@ -44,6 +59,10 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         _eventRouter.OnPlayerChangedTeam += InvokeOnPlayerChangedTeam;
         _eventRouter.OnLocalPlayerBeforeRebirth += InvokeOnLocalPlayerBeforeRebirth;
         _eventRouter.OnUnitDead += InvokeOnUnitDead;
+        _eventRouter.OnLocalPlayerChangedSpectator += InvokeOnLocalPlayerChangedSpectator;
+        _eventRouter.OnMonsterSpawned += InvokeOnMonsterSpawned;
+        _eventRouter.OnLanguageChanged += InvokeOnLanguageChanged;
+        _archetypeEventRouter[_archetypeRegistration.TamerArchetype].OnEntityDelete += InvokeOnMonsterDestroyed;
     }
 
     public void Dispose()
@@ -64,6 +83,10 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
         _eventRouter.OnPlayerChangedTeam -= InvokeOnPlayerChangedTeam;
         _eventRouter.OnLocalPlayerBeforeRebirth -= InvokeOnLocalPlayerBeforeRebirth;
         _eventRouter.OnUnitDead -= InvokeOnUnitDead;
+        _eventRouter.OnLocalPlayerChangedSpectator -= InvokeOnLocalPlayerChangedSpectator;
+        _eventRouter.OnMonsterSpawned -= InvokeOnMonsterSpawned;
+        _eventRouter.OnLanguageChanged -= InvokeOnLanguageChanged;
+        _archetypeEventRouter[_archetypeRegistration.TamerArchetype].OnEntityDelete -= InvokeOnMonsterDestroyed;
     }
 
     public event Action? OnBeginPlayGameplayLevel;
@@ -71,25 +94,22 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
     public event Action? OnLoadingScreenClose;
     public event Action? OnLevelLoaded;
     public event Action? OnExitLevel;
-
     public event Action<AreaId>? OnJoinedArea;
-
     public event Action<AreaId>? OnLeftArea;
-
     public event Action<ReadyMainCharacter>? OnPlayerPawnSpawned;
-
     public event Action<ReadyMainCharacter>? OnMainCharacterEntityInitialized;
-
     public event Action<ReadyMainCharacter>? OnPlayerChangedTeam;
     public event Action? OnLocalPlayerBeforeRebirth;
     public event Action<PlayerId, AreaId>? OnOtherPlayerInsideArea;
     public event Action<PlayerId, AreaId>? OnOtherPlayerOutsideArea;
-
-
     public event Action<PlayerId>? OnConnected;
     public event Action<PlayerId, DisconnectReason>? OnDisconnected;
     public event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
     public event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
+    public event Action<ReadyTamer>? OnMonsterDestroyed;
+    public event Action<ReadyTamer>? OnMonsterSpawned;
+    public event Action<bool>? OnLocalPlayerChangedSpectator;
+    public event Action<CultureInfo>? OnLanguageChanged;
 
     private void InvokeJoinedArea(AreaId areaId, Entity _)
         => OnJoinedArea?.Invoke(areaId);
@@ -149,4 +169,16 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
             OnMonsterDead?.Invoke(new ReadyTamer(WukongApi.Sync, victim), attacker.HasValue ? new ReadyCharacter(WukongApi.Sync, attacker.Value) : null);
         }
     }
+
+    private void InvokeOnMonsterDestroyed(EntityDelete evt)
+        => OnMonsterDestroyed?.Invoke(new ReadyTamer(WukongApi.Sync, evt.Entity));
+
+    private void InvokeOnMonsterSpawned(Entity entity)
+        => OnMonsterSpawned?.Invoke(new ReadyTamer(WukongApi.Sync, entity));
+
+    private void InvokeOnLocalPlayerChangedSpectator(bool isSpectator)
+        => OnLocalPlayerChangedSpectator?.Invoke(isSpectator);
+    
+    private void InvokeOnLanguageChanged(CultureInfo cultureInfo)
+        => OnLanguageChanged?.Invoke(cultureInfo);
 }

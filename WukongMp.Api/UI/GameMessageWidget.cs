@@ -1,33 +1,30 @@
-﻿namespace WukongMp.Api.UI
+﻿namespace WukongMp.Api.UI;
+
+public class GameMessageWidget() : GameWidgetBase(GameMessageWidgetPath)
 {
-    internal class GameMessageWidget : GameWidgetBase
+    private const string GameMessageWidgetPath = "/Game/Mods/WukongMod/WBP_GameMessage.WBP_GameMessage_C";
+
+    public void SetMainText(string message)
     {
-        private const string GameMessageWidgetPath = "/Game/Mods/WukongMod/WBP_GameMessage.WBP_GameMessage_C";
-
-        public GameMessageWidget() : base(GameMessageWidgetPath) { }
-
-        public void SetMainText(string message)
-        {
-            GameWidget?.CallFunctionByNameWithArguments($"SetMainText {message}", true);
-        }
-
-        public void SetSecondText(string message)
-        {
-            GameWidget?.CallFunctionByNameWithArguments($"SetSecondText {message}", true);
-        }
-
-        public void SetThirdText(string message)
-        {
-            GameWidget?.CallFunctionByNameWithArguments($"SetThirdText {message}", true);
-        }
-
-        public void ClearMessages()
-        {
-            SetMainText("");
-            SetSecondText("");
-            SetThirdText("");
-        }
-
-        protected override void PostInitialize() { }
+        GameWidget?.CallFunctionByNameWithArguments($"SetMainText {message}", true);
     }
+
+    public void SetSecondText(string message)
+    {
+        GameWidget?.CallFunctionByNameWithArguments($"SetSecondText {message}", true);
+    }
+
+    public void SetThirdText(string message)
+    {
+        GameWidget?.CallFunctionByNameWithArguments($"SetThirdText {message}", true);
+    }
+
+    public void ClearMessages()
+    {
+        SetMainText("");
+        SetSecondText("");
+        SetThirdText("");
+    }
+
+    protected override void PostInitialize() { }
 }

@@ -12,8 +12,8 @@ internal readonly struct AreaEntity(Entity entity) : IComponent
     public bool IsNull
         => Entity.IsNull;
     
-    public RoomComponent Room
-        => Entity.GetComponent<RoomComponent>();
+    public ref RoomComponent Room
+        => ref Entity.GetComponent<RoomComponent>();
 
     public ref AreaScopeComponent Scope
         => ref Entity.GetComponent<AreaScopeComponent>();

@@ -2,6 +2,7 @@ using System;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -63,6 +64,24 @@ public static class ReadyCharacterExtensions
                     throw new InvalidOperationException($"Entity does not have TeamComponent: {entity.GetNetId()}");
                 return teamComp.TeamId;
             }
+            set
+            {
+                obj.Deconstruct(out _, out var entity);
+
+                if (DI.Instance.MappedField.CanSetFromApi<TeamComponent>(entity, out var sync))
+                {
+                    sync.SetFromApi(TeamComponent.Fields.TeamId, value);
+
+                    if (DI.Instance.PlayerState.LocalPlayerEntity is { } player)
+                    {
+                        player.GetState().TeamId = value;
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
         }
 
         public bool IsDead
@@ -72,6 +91,18 @@ public static class ReadyCharacterExtensions
                 obj.Deconstruct(out _, out var entity);
                 return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.IsDead : throw new InvalidOperationException();
             }
+        }
+
+        public void SetMarkerMessage(string message, string color)
+        {
+            obj.Deconstruct(out _, out var entity);
+            MarkerUtils.CreateMarkerForPlayer(entity, message, color);
+        }
+
+        public void HideMarker()
+        {
+            obj.Deconstruct(out _, out var entity);
+            MarkerUtils.DestroyMarkerForCharacter(entity);
         }
     }
 }

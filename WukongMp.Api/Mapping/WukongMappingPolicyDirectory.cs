@@ -112,7 +112,7 @@ internal class WukongMappingPolicyDirectory(
 
         mainEntity = new(entity.Value);
 
-        if (mainEntity.Value.Pawn != character)
+        if (mainEntity.Value.IsNull || mainEntity.Value.Pawn != character)
         {
             mainEntity = null;
             return false;

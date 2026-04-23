@@ -9,6 +9,8 @@ using UnrealEngine.Runtime;
 using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.WukongUtils;
+using WukongMp.PvP.GameMode;
+using WukongMp.Sdk.Api;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
@@ -22,14 +24,13 @@ public class PatchWindowsSaveGame
 {
     public static bool Prefix(ref string __result, string SlotName)
     {
-        if (!PvpDI.Instance.SaveManager.ShouldRedirectSaveFiles)
+        if (!WukongApi.Services.Resolve<PvpSaveManager>().ShouldRedirectSaveFiles)
             return true;
 
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true;
 
-        var modAssembly = typeof(PatchWindowsSaveGame).Assembly;
-        __result = GameSaveUtils.GetSaveFileFullName(modAssembly, SlotName);
+        __result = WukongApi.Files.GetSaveFileFullName<Mod>(SlotName);
         return false;
     }
 }
@@ -47,7 +48,7 @@ public class PatchUIArchives
 
     public static void Prefix()
     {
-        PvpDI.Instance.SaveManager.OnSavedGameLoad();
+        WukongApi.Services.Resolve<PvpSaveManager>().OnSavedGameLoad();
     }
 }
 
@@ -58,7 +59,7 @@ public class PatchStartNewGame
 {
     public static bool Prefix(UObject WorldContext)
     {
-        PvpDI.Instance.SaveManager.OnNewGameLoad(WorldContext);
+        WukongApi.Services.Resolve<PvpSaveManager>().OnNewGameLoad(WorldContext);
         return false;
     }
 }
@@ -81,8 +82,8 @@ public class PatchGameArchive
             Logging.LogError("Original OutArchiveData is null");
             return;
         }
-        
-        PvpDI.Instance.SaveManager.OnLoadArchive(__instance, ref __result, ArchiveId, ref OutArchiveData);
+
+        WukongApi.Services.Resolve<PvpSaveManager>().OnLoadArchive(__instance, ref __result, ArchiveId, ref OutArchiveData);
     }
 }
 
@@ -115,7 +116,7 @@ public class PatchArchiveReadWriter
 [HarmonyPatchCategory(PatchCategory.Global)]
 public class PatchArchiveReadWriteWorkerAppendArchiveSaveRequest
 {
-    public static bool Prefix(int ArchiveId, GSArchiveFileContainer ArchiveWriteContainer, List<ArchiveSaveRequestOne> saveArchiveRequests)
+    public static bool Prefix()
     {
         return false;
     }

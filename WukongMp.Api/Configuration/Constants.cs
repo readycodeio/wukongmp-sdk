@@ -9,9 +9,6 @@ internal static class Constants
 {
     public const int ToleratedLatencyMs = 50;
     public const float FloatComparisonTolerance = 0.1f;
-    public const float MonsterSpawnDistance = 2000f;
-    public const float MonsterSpawnTraceHeight = 2000f;
-    public const float MonsterHalfHeight = 200f;
     public const float MonsterSpawnSpread = 200f;
     public const float CameraArmLength = 720;
     public const float TransformedCameraArmLength = 1100;
@@ -48,11 +45,6 @@ internal static class Constants
         90005018, // Feng-Tail General
     ];
 
-    public const int GourdSkillId = 10530;
-    public const int ImmobilizeSkillId = 10518;
-    public const int IncenseTrailTalismanSkillId = 10909;
-    public const int RuyiScrollSkillId = 10912;
-    public const int ConsumableBuffSkillId = 10913;
     public const int IronBodySkillId = 10505;
     public const string ChestCameraLockNode = "CAMERA_LOCK";
     public const string FeetCameraLockNode = "CAMERA_LOCK_Root";

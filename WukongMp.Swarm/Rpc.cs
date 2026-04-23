@@ -21,19 +21,19 @@ public partial class Rpc(IRpcClient client, IRelaySerializer serializer) : RpcCl
         }
 
         WukongApi.Local.ShowInfoMessage("Get ready!", 3);
-        WukongApi.Local.AddChatMessage($"Swarm mode enabled by {playerName}!", FLinearColor.NavajoWhite);
-        WukongApi.Local.AddChatMessage("Enemies will spawn around you every 10 seconds, with increasing numbers. Survive as long as you can!", FLinearColor.NavajoWhite);
+        WukongApi.Chat.ShowLocalMessage($"Swarm mode enabled by {playerName}!", FLinearColor.NavajoWhite);
+        WukongApi.Chat.ShowLocalMessage("Enemies will spawn around you every 10 seconds, with increasing numbers. Survive as long as you can!", FLinearColor.NavajoWhite);
     }
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnSwarmEnded(int enemiesSpawned)
     {
-        WukongApi.Local.AddChatMessage($"Swarm mode ended, survived {enemiesSpawned} enemies", FLinearColor.OrangeRed);
+        WukongApi.Chat.ShowLocalMessage($"Swarm mode ended, survived {enemiesSpawned} enemies", FLinearColor.OrangeRed);
     }
     
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnRemainingPlayers(int remaining)
     {
-        WukongApi.Local.AddChatMessage($"Remaining players: {remaining}", FLinearColor.Yellow);
+        WukongApi.Chat.ShowLocalMessage($"Remaining players: {remaining}", FLinearColor.Yellow);
     }
 }

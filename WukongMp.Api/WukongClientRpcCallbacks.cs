@@ -37,8 +37,6 @@ internal partial class WukongClientRpcCallbacks(
     IRelaySerializer serializer,
     IRelayClient relayClient,
     INetworkedEntityManager netEntity,
-    WukongWidgetManager widgetManager,
-    TimerController timerController,
     ILogger logger
 )
     : RpcClassBase(relayClient, serializer)
@@ -47,8 +45,6 @@ internal partial class WukongClientRpcCallbacks(
     private readonly WukongPlayerState _playerState = playerState;
     private readonly WukongAreaState _areaState = areaState;
     private readonly INetworkedEntityManager _netEntity = netEntity;
-    private readonly WukongWidgetManager _widgetManager = widgetManager;
-    private readonly TimerController _timerController = timerController;
     private readonly ILogger _logger = logger;
 
     public override void OnScopeStart()
@@ -460,11 +456,6 @@ internal partial class WukongClientRpcCallbacks(
                 ev.SkillType
             );
         }, this);
-
-        _mappedEvent.RegisterEcsEventHandler<ShowAntiStallWarningEvent, WukongClientRpcCallbacks>(static (ev, self) => { self.SendShowAntiStallWarning(ev.WarningTime); }, this);
-        _mappedEvent.RegisterEcsEventHandler<ShowAntiStallActionEvent, WukongClientRpcCallbacks>(static (_, self) => { self.SendShowAntiStallAction(); }, this);
-        _mappedEvent.RegisterEcsEventHandler<HideAntiStallEvent, WukongClientRpcCallbacks>(static (_, self) => { self.SendHideAntiStall(); }, this);
-        _mappedEvent.RegisterEcsEventHandler<StallDamageEvent, WukongClientRpcCallbacks>(static (ev, self) => { self.SendStallDamage(ev.Target, ev.Damage); }, this);
     }
 
     public void SendMontageCallback(NetworkId netId, UAnimMontage montage, float position, bool reset)
@@ -1394,112 +1385,4 @@ internal partial class WukongClientRpcCallbacks(
             ), casterEntity.Value);
         }, this, casterNetId, skillId, skillType);
     }
-
-    [Obsolete("To be removed once per-file RPC is implemented")]
-    public event Action<ChatMessage>? OnGetChatMessage;
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnChatMessage(ChatMessage message)
-    {
-        ecsLoop.Scheduler.Schedule(static (_, self, message0) => { self.OnGetChatMessage?.Invoke(message0); }, this, message);
-    }
-
-    #region PvpRPC
-
-    [Obsolete("To be removed once per-project RPC is implemented")]
-    public event Action<PlayerId, int[]>? OnPvpEventReceived;
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnPvpEvent(PlayerId __sender, int[] data)
-    {
-        OnPvpEventReceived?.Invoke(__sender, data);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnShowAntiStallWarning(int warningTime)
-    {
-        ecsLoop.Scheduler.Schedule(static (_, self, warningTime0) =>
-        {
-            if (self._playerState.LocalMainCharacter is not { } mainEntity)
-                return;
-
-            if (mainEntity.GetHp().IsDead)
-                return;
-
-            self._widgetManager.ShowInfoMessage(BuiltinTexts.AntiStallWarning);
-            self._timerController.SetTimer(0, warningTime0);
-            self._timerController.StartTimer();
-            Logging.LogDebug("OnShowAntiStallWarning received");
-        }, this, warningTime);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnShowAntiStallAction()
-    {
-        ecsLoop.Scheduler.Schedule(static (_, self) =>
-        {
-            if (self._playerState.LocalMainCharacter is not { } mainEntity)
-                return;
-
-            if (mainEntity.GetHp().IsDead)
-                return;
-
-            self._widgetManager.ShowInfoMessage(BuiltinTexts.StallingMessage);
-            Logging.LogDebug("OnShowAntiStallAction received");
-        }, this);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnHideAntiStall()
-    {
-        ecsLoop.Scheduler.Schedule(static (_, self) =>
-        {
-            if (self._playerState.LocalMainCharacter is not { } mainEntity)
-                return;
-
-            self._widgetManager.HideInfoMessage();
-            self._timerController.StopTimer();
-            self._widgetManager.SetTimerVisibility(false);
-            Logging.LogDebug("OnHideAntiStallWarning received");
-        }, this);
-    }
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnStallDamage(NetworkId netId, float value)
-    {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0, value0) =>
-        {
-            if (self._playerState.LocalMainCharacter is not { } mainEntity)
-                return;
-
-            if (mainEntity.GetHp().IsDead)
-                return;
-
-            if (self._netEntity.TryGetEntityByNetworkId(netId0, out var entity) && entity == mainEntity.Entity)
-            {
-                // TODO: Move to player utils
-                Logging.LogDebug("Applying stall damage: {Damage}%", value0);
-                var pawn = mainEntity.Pawn;
-                if (pawn == null)
-                    return;
-
-                var container = BGU_DataUtil.GetReadOnlyData<IBUC_AttrContainer, BUC_AttrContainer>(pawn);
-                var maxStamina = container?.GetFloatValue(EBGUAttrFloat.StaminaMax) ?? 1f;
-
-                FSkillDamageConfig SkillDamageConfig = new()
-                {
-                    DamageCalcType = EDamageCalcType.HPMaxRatioAbs,
-                    HPMaxINV10000Damage_Abs = value0 * 100,
-                    DamageImmueLevel = 2,
-                    DmgReason = EDamageReason.FallDmg
-                };
-
-                var events = BUS_EventCollectionCS.Get(pawn);
-                events?.Evt_IncreaseAttrFloat.Invoke(EBGUAttrFloat.Stamina, -(maxStamina * value0 / 100 * 3));
-                events?.Evt_TriggerNormalDamageEffect.Invoke(null, in SkillDamageConfig, default, new FBattleAttrSnapShot(null));
-            }
-        }, this, netId, value);
-    }
-
-    #endregion
 }

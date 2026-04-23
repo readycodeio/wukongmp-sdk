@@ -9,6 +9,8 @@ using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.WukongUtils;
+using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
@@ -21,12 +23,12 @@ public static class PatchGetNewGamePlusCount
 {
     public static bool Prefix(ref int __result)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
-        if (DI.Instance.AreaState.CurrentArea == null)
+        if (WukongApi.Sync.CurrentAreaId == null)
             return true;
 
-        __result = DI.Instance.AreaState.CurrentArea.Value.GetRoom().EnemiesNgPlusLevel + 1;
+        __result = WukongApi.PvP.EnemiesNgPlusLevel + 1;
         return false;
     }
 }
@@ -47,7 +49,7 @@ public class TamerResetPatch
 
     public static bool Prefix(BGUCharacterCS ___OwnerAsCharacterCS)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
         var teamId = ___OwnerAsCharacterCS.GetTeamIDInCS();
@@ -61,7 +63,7 @@ public class PlayerCameraLockPatch
 {
     public static bool Prefix(UnitLockTargetInfo TargetInfo)
     {
-        if (TargetInfo is { LockTargetActor: BGUPlayerCharacterCS, LockTargetSkeletonSocketName: Constants.FeetCameraLockNode })
+        if (TargetInfo is { LockTargetActor: BGUPlayerCharacterCS, LockTargetSkeletonSocketName: PvpConstants.FeetCameraLockNode })
             return false;
 
         if (BGUFunctionLibraryCS.BGUHasUnitSimpleState(TargetInfo.LockTargetActor, EBGUSimpleState.PhantomRush))
@@ -80,7 +82,7 @@ public class FixTransformCameraLockToOriginPatch
 
     public static void Prefix(BUS_PlayerCameraCompImpl __instance)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return;
 
         TargetGetter ??= AccessTools.PropertyGetter(typeof(BUS_PlayerCameraCompImpl), "Target");
@@ -98,18 +100,18 @@ public class FixTransformCameraLockToOriginPatch
 
         // FIXME: This seems like a hack?
         // we are forced to look at origin
-        if (cameraState.TargetSoulFocusPos.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+        if (cameraState.TargetSoulFocusPos.Equals(FVector.ZeroVector, PvpConstants.FloatComparisonTolerance))
         {
             var owner = __instance.GetOwner() as BGUCharacterCS;
 
             if (owner == null)
                 return;
 
-            var entity = DI.Instance.PawnState.GetEntityByLastPlayerPawn(targetCharacter);
+            var entity = WukongApi.Sync.GetPlayerEntityByLastTransformation(targetCharacter);
             if (entity.HasValue)
             {
                 var events = BUS_EventCollectionCS.Get(owner);
-                events?.Evt_Camera_ManualLock?.Invoke(entity.Value.Pawn, Constants.ChestCameraLockNode);
+                events?.Evt_Camera_ManualLock?.Invoke(entity.Value.Pawn, PvpConstants.ChestCameraLockNode);
             }
         }
     }

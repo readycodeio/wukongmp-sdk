@@ -11,6 +11,8 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
+using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.PvP.WukongUtils;
 
@@ -19,16 +21,11 @@ public static class PvpUtils
     private const string RedTeamColor = "(R=1,G=0.3,B=0.3)";
     private const string BlueTeamColor = "(R=0.3,G=0.3,B=1)";
 
-    public static void ShowPvPCountDown(WukongAreaState areaState)
+    public static void ShowPvPCountDown()
     {
-        var areaEntity = areaState.CurrentArea;
-        if (areaEntity == null || !areaState.PvpState.HasValue)
-            return;
-
-        ref var room = ref areaEntity.Value.GetRoom();
-        var current = areaState.PvpState.Value.CurrentRound;
-        var total = room.TournamentRounds;
-        UiUtils.ShowTip(string.Format(BuiltinTexts.RoundCount, current, total), true);
+        var current = WukongApi.PvP.CurrentRound;
+        var total = WukongApi.PvP.TournamentRounds;
+        WukongApi.Widgets.ShowTip(string.Format(BuiltinTexts.RoundCount, current, total), true);
     }
 
     public static string GetTeamColorString(int teamId)
@@ -56,11 +53,6 @@ public static class PvpUtils
         return teamId == PvpConstants.RedTeamId ? PvpConstants.BlueTeamId : PvpConstants.RedTeamId;
     }
 
-    public static void CreatePvpStateEntity(WukongAreaState areaState, ClientNetworkedEntityManager clientNetEntity, ClientWukongArchetypeRegistration wukongArchetype)
-    {
-        areaState.PvpStateEntity = clientNetEntity.CreateAreaEntity(wukongArchetype.PvPStateSingletonArchetype);
-    }
-
     public static FVector GetSpawnPosition(BGUCharacterCS? pawn, int playerId, int maxPlayersCount)
     {
         var angle = playerId / (float)maxPlayersCount * 2f * FMath.PI;
@@ -73,21 +65,21 @@ public static class PvpUtils
         return AdjustSpawnLocation(pawn, baseLocation);
     }
 
-    public static FVector AdjustSpawnLocation(ABGUCharacter? CharacterCS, FVector InTargetLocation)
+    public static FVector AdjustSpawnLocation(BGUCharacterCS? pawn, FVector InTargetLocation)
     {
-        // TODO: For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
-        if (LaunchParameters.Instance.LevelId == 0)
+        // For Heart of Birthstone map adjustment resulted in falling - invisible collision. So it is disabled for now.
+        if (WukongApi.PvP.LevelId == 0)
         {
             return InTargetLocation;
         }
 
         var result = InTargetLocation;
-        if (CharacterCS == null)
+        if (pawn == null)
         {
             return result;
         }
 
-        var uCapsuleComponent = CharacterCS.GetRootComponent() as UCapsuleComponent;
+        var uCapsuleComponent = pawn.GetRootComponent() as UCapsuleComponent;
         if (uCapsuleComponent == null)
         {
             return result;
@@ -98,7 +90,7 @@ public static class PvpUtils
         var num = 2.4f;
         var start = InTargetLocation + FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
         var end = InTargetLocation - FVector.UpVector * scaledCapsuleHalfHeight * 2.0;
-        if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GameUtils.GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, CharacterCS, out var OutHitLocation))
+        if (UGSE_TraceFuncLib.CharacterCapsuleTraceSingleByProfile(GameUtils.GetWorld(), start, end, scaledCapsuleHalfHeight2, scaledCapsuleHalfHeight, B1GlobalFNames.Pawn, bTraceComplex: false, pawn, out var OutHitLocation))
         {
             result = OutHitLocation + num + FVector.UpVector * scaledCapsuleHalfHeight;
         }
@@ -165,7 +157,7 @@ public static class PvpUtils
                     foreach (var name in readOnlyData2.CachedLockSkeletonSocket)
                     {
                         // do not lock on Wukong's feet
-                        if (name == Constants.FeetCameraLockNode && bguCharacterCs is BGUPlayerCharacterCS)
+                        if (name == PvpConstants.FeetCameraLockNode && bguCharacterCs is BGUPlayerCharacterCS)
                             continue;
 
                         if (!readOnlyData2.DisabledLockSkeletonSocket.Contains(name))

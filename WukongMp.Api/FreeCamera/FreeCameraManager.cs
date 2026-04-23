@@ -169,6 +169,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
                 Logging.LogError("[FreeCameraManager] EnterFreeCameraMode PlayerController IsNull");
                 return;
             }
+
             _cacheCameraViewTarget = aBGPPlayerController.GetViewTarget();
             aBGPPlayerController.SetViewTargetWithBlend(_freeCameraActor);
         }
@@ -206,6 +207,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
         {
             finalPosition = BGUFunctionLibraryCS.BGUGetVectorFromNetQuantizeVector(hitResult.Location);
         }
+
         _freeCameraActor.SetActorLocation(finalPosition, false, out _, true);
         UpdatePawnPositionToCamera();
         return true;
@@ -235,6 +237,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
                 _freeCameraActor.AddActorWorldOffset(outputOffset, bSweep: true, out var _, bTeleport: false);
             }
         }
+
         UpdatePawnPositionToCamera();
         return true;
     }
@@ -285,7 +288,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
             _freeCameraActor.SetActorRotation(lookAtRotation, false);
         }
     }
-    
+
     internal FVector GetCurrentCameraPosition()
     {
         if (IsInFreeCameraMode && !_freeCameraActor.IsNullOrDestroyed())
@@ -299,6 +302,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
         {
             return _freeCameraActor.GetActorForwardVector();
         }
+
         return FVector.ForwardVector;
     }
 
@@ -308,6 +312,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
         {
             return _freeCameraActor.GetActorRightVector();
         }
+
         return FVector.RightVector;
     }
 
@@ -317,6 +322,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
         {
             return _freeCameraActor.GetActorRotation().Pitch;
         }
+
         return 0f;
     }
 
@@ -349,6 +355,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
         {
             return _springArmComponent.GetSocketTransform(new FName(Constants.SpringArmEndSocket));
         }
+
         return FTransform.Identity;
     }
 
@@ -357,6 +364,12 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
     /// </summary>
     private void UpdatePawnPositionToCamera()
     {
+        // TODO: Decouple this when PvP component is declared in PvP mod
+        if (playerState.LocalMainCharacter is { } main && main.GetPvP().IsSpectator)
+        {
+            return;
+        }
+
         if (IsInFreeCameraMode && !_cachePlayerPawn.IsNullOrDestroyed())
         {
             _cachePlayerPawn.SetActorLocation(GetCurrentCameraPosition(), false, out _, true);

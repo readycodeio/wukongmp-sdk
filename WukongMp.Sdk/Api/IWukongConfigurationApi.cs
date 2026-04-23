@@ -1,12 +1,30 @@
-﻿namespace WukongMp.Sdk.Api;
+﻿using System;
+using BtlShare;
+
+namespace WukongMp.Sdk.Api;
 
 public interface IWukongConfigurationApi
 {
-    public bool IsSupportMultiLockEnabled { get; set; }
-    public bool IsStrongDamageImmueEnabled { get; set; }
-    public bool EnableCustomCameraArmLength { get; set; }
-    public bool DeleteDestroyedTamersFromEcs { get; set; }
-    public bool SyncTamerTeamFromGameToEcs { get; set; }
+    bool IsSupportMultiLockEnabled { get; set; }
+    bool IsStrongDamageImmueEnabled { get; set; }
+    bool EnableCustomCameraArmLength { get; set; }
+    bool DeleteDestroyedTamersFromEcs { get; set; }
+    bool SyncTamerTeamFromGameToEcs { get; set; }
+    bool DisableCutscenes { get; set; }
+    bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; }
 
     string GetLaunchParameter(string key, string defaultValue);
+    void SetDisableTamerAttackQuery(Func<bool> shouldDisableTamerAttack);
+    void SetIsSkillEnabledQuery(Func<int, bool> isSkillEnabled);
+    void SetIsPlayerInBattleQuery(Func<bool> isPlayerInBattle);
+    void SetIsInteractionAllowedQuery(Func<EInteractType, bool> isInteractAllowed);
+    void SetIsTamerNotSynchronizedQuery(Func<string, bool> isTamerNotSynchronized);
+    void SetIsAreaOverlapDisabledQuery(Func<string, bool> isAreaOverlapDisabled);
+
+    void ClearDisableTamerAttackQuery();
+    void ClearIsSkillEnabledQuery();
+    void ClearIsPlayerInBattleQuery();
+    void ClearIsInteractionAllowedQuery();
+    void ClearIsTamerNotSynchronizedQuery();
+    void ClearIsAreaOverlapDisabledQuery();
 }

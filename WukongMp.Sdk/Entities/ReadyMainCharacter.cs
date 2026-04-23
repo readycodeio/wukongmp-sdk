@@ -5,12 +5,10 @@ using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
-using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -87,11 +85,7 @@ public readonly struct ReadyMainCharacter
         }
     }
 
-    public void SetMarkerMessage(string message, string color)
-        => MarkerUtils.CreateMarkerForPlayer(Entity, message, color);
-
-    public void HideMarker()
-        => MarkerUtils.DestroyMarkerForCharacter(Entity);
+    public bool IsSpectator => Entity.GetPvP().IsSpectator;
 
     // ---
 
@@ -118,5 +112,10 @@ public readonly struct ReadyMainCharacter
             entity: Entity,
             birthShrineId: shrineId
         ), default(EmptyContext));
+    }
+
+    public void EnableInteraction(bool enabled)
+    {
+        PlayerUtils.SetPlayerInteractionEnabled(Entity, enabled);
     }
 }

@@ -15,12 +15,9 @@ namespace WukongMp.Coop;
 public sealed class Mod : ModBase
 {
     public override string Name => "WukongMp.Coop";
-    public static Mod Instance { get; private set; } = null!;
 
     protected override void Initialize(IDependencyContainer services)
     {
-        Instance = this;
-
         // Launcher will set SERVER_ID when playing on hosted ReadyM servers
         if (WukongApi.Configuration.GetLaunchParameter("SERVER_ID", "") != "")
         {

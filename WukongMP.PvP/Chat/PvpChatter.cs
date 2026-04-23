@@ -1,62 +1,37 @@
-﻿using System;
-using Friflo.Engine.ECS;
-using ReadyM.Relay.Client.State;
-using WukongMp.Api;
-using WukongMp.Api.Chat;
-using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.State;
+﻿using ReadyM.Api.DI;
+using WukongMp.PvP.Resources;
+using WukongMp.Sdk.Api;
+using WukongMp.Sdk.Entities;
 
 namespace WukongMp.PvP.Chat;
 
-internal class PvpChatter : IDisposable
+public class PvpChatter : IHostedService
 {
-    private readonly WukongChatter _wukongChatter;
-    private readonly GameplayEventRouter _eventRouter;
-    private readonly WukongAreaState _areaState;
-    private readonly ClientOwnershipManager _clientOwnership;
-
-    public PvpChatter(
-        WukongChatter wukongChatter,
-        GameplayEventRouter eventRouter,
-        WukongAreaState areaState,
-        ClientOwnershipManager clientOwnership
-    )
+    public void OnScopeStart()
     {
-        Logging.LogDebug("Initializing PvpChatter");
-
-        _wukongChatter = wukongChatter;
-        _eventRouter = eventRouter;
-        _areaState = areaState;
-        _clientOwnership = clientOwnership;
-
-        _eventRouter.OnUnitDead += OnUnitDead;
+        WukongApi.Events.OnPlayerDead += OnPlayerDead;
     }
 
     public void Dispose()
     {
-        Logging.LogDebug("Disposing PvpChatter");
-
-        _eventRouter.OnUnitDead -= OnUnitDead;
+        WukongApi.Events.OnPlayerDead -= OnPlayerDead;
     }
 
-    private void OnUnitDead(Entity victim, Entity attacker)
+    private void OnPlayerDead(ReadyMainCharacter victim, ReadyCharacter? attacker)
     {
-        if (_areaState is { PvpState.InPvP: true })
-        {
-            if (victim != attacker)
-            {
-                if (MainCharacterEntity.TryGetMainCharacter(victim, out var victimMainEntity) &&
-                    MainCharacterEntity.TryGetMainCharacter(attacker, out var attackerMainEntity))
-                {
-                    if (!_clientOwnership.OwnsEntity(victimMainEntity.Value.Entity))
-                        return;
+        if (!WukongApi.PvP.InPvP || !attacker.HasValue) 
+            return;
 
-                    ref var attackerMain = ref attackerMainEntity.Value.GetState();
-                    ref var killedMain = ref victimMainEntity.Value.GetState();
+        if (victim.PlayerId != WukongApi.Sync.LocalPlayerId)
+            return;
+        
+        if (victim.Pawn == attacker.Value.Pawn) 
+            return;
+        
+        if (WukongApi.Sync.GetPlayerEntityByActor(attacker.Value.Pawn) is not { } attackerEntity)
+            return;
 
-                    _wukongChatter.SendServerMessage("PlayerKilledPlayer", attackerMain.CharacterNickname, killedMain.CharacterNickname);
-                }
-            }
-        }
+        var msg = string.Format(PvpTexts.PlayerKilledPlayer, attackerEntity.Nickname, victim.Nickname);
+        WukongApi.Chat.SendServerMessage(msg);
     }
 }

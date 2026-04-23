@@ -22,7 +22,7 @@ internal class GiveUpCommandRegistration(
 
     private void RequestGiveUp()
     {
-        chatter.SendServerMessage("PlayerGaveUp", _playerState.Nickname);
+        chatter.SendLocalizedServerMessage("PlayerGaveUp", _playerState.Nickname);
 
         // no need to send an RPC event since in co-op all players are authoritative over their HP
         ecsLoop.Scheduler.Schedule(static (_, self) =>

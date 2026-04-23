@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LiteNetLib;
 using ReadyM.Api.Idents;
 using WukongMp.Sdk.Entities;
@@ -100,4 +101,24 @@ public interface IWukongEventApi
     /// The first parameter is the monster that died, and the second parameter is the entity that killed it (if applicable).
     /// </summary>
     event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
+    
+    /// <summary>
+    /// Fired when a monster is removed from the game world, either by dying or by being despawned for other reasons (e.g. the player leaving the area).
+    /// </summary>
+    event Action<ReadyTamer>? OnMonsterDestroyed;
+
+    /// <summary>
+    /// Fired when the local player changes spectator mode, either by entering or exiting spectator mode.
+    /// </summary>
+    event Action<bool>? OnLocalPlayerChangedSpectator;
+
+    /// <summary>
+    /// Fired when a monster is spawned in the game world, either by being spawned by the player or by being spawned by the game itself.
+    /// </summary>
+    event Action<ReadyTamer>? OnMonsterSpawned;
+
+    /// <summary>
+    /// Fired when the game's language is changed, either by the player changing it in the settings or by the game automatically setting it based on the player's system language.
+    /// </summary>
+    event Action<CultureInfo>? OnLanguageChanged;
 }

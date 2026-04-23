@@ -3,6 +3,11 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
 using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Generators;
+using ReadyM.Api.Multiplayer.Protocol.Enums;
+using ReadyM.Api.Multiplayer.RPC;
+using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Relay.Client;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
@@ -12,25 +17,21 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.Chat;
 
-internal class WukongChatter(
+internal partial class WukongChatter(
     WukongPlayerState playerState,
-    WukongClientRpcCallbacks clientRpc,
     WukongWidgetManager widgetManager,
-    ILogger logger
-) : IHostedService
+    IClientEcsUpdateLoop ecsLoop,
+    ILogger logger,
+    IRpcClient rpcClient,
+    IRelaySerializer serializer
+) : RpcClassBase(rpcClient, serializer)
 {
     private string NickName => playerState.LocalPlayerEntity?.GetState().Nickname ?? "";
 
-    public void OnScopeStart()
+    [RpcEvent(RelayMode.AreaOfInterestAll)]
+    private void OnChatMessage(ChatMessage message)
     {
-        clientRpc.OnGetChatMessage += OnGetMessage;
-    }
-
-    public void Dispose()
-    {
-        logger.LogDebug("Disposing WukongChatter");
-
-        clientRpc.OnGetChatMessage -= OnGetMessage;
+        ecsLoop.Scheduler.Schedule(static (_, self, message0) => { self.OnGetMessage(message0); }, this, message);
     }
 
     public void ProcessMessage(string message)
@@ -52,16 +53,22 @@ internal class WukongChatter(
         }
     }
 
-    private void SendChatMessage(PlayerId playerId, string nickname, string message)
+    public void SendChatMessage(PlayerId playerId, string nickname, string message)
     {
         logger.LogDebug("Sending message {Message}", message);
-        clientRpc.SendChatMessage(ChatMessage.CreateClientMessage(playerId, nickname, message));
+        SendChatMessage(ChatMessage.CreateClientMessage(playerId, nickname, message));
     }
 
-    public void SendServerMessage(string message, params string[] args)
+    public void SendServerMessage(string message)
     {
         logger.LogDebug("Sending server message {Message}", message);
-        clientRpc.SendChatMessage(ChatMessage.CreateServerMessage(message, args));
+        SendChatMessage(ChatMessage.CreateServerMessage(message));
+    }
+
+    public void SendLocalizedServerMessage(string message, params string[] args)
+    {
+        logger.LogDebug("Sending server message {Message}", message);
+        SendChatMessage(ChatMessage.CreateLocalizedServerMessage(message, args));
     }
 
     private void OnGetMessage(ChatMessage message)
@@ -82,9 +89,13 @@ internal class WukongChatter(
         }
 
         var translatedMessage = message.Message;
-        if (isServer)
+        if (message.Localized)
         {
             translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message.Message, BuiltinTexts.Culture)!, [.. message.Placeholders]);
+        }
+
+        if (isServer)
+        {
             widgetManager.AddSystemChatMessage(translatedMessage, messageColor);
         }
         else

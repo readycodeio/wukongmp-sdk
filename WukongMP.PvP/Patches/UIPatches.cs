@@ -19,6 +19,7 @@ using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.Resources;
+using WukongMp.Sdk.Api;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
@@ -37,17 +38,17 @@ public static class PatchStartGameUiPvp
 
     public static void Postfix(GSUIView __instance, ref List<VIButtonBaseV2> ___StartGameBtnList, ref UTextBlock ___TxtMainName, ref UTextBlock ___TxtSubName, DSStartGame ___DataStore, ref UCanvasPanel ___RegionNameCon)
     {
-        var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(Constants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
+        var playerMarkerActorClass = BGW_PreloadAssetMgr.Get(GameUtils.GetWorld()).TryGetCachedResourceObj<UClass>(PvpConstants.PlayerMarkerPath, ELoadResourceType.SyncLoadAndCache);
         var hasPak = playerMarkerActorClass != null;
-        var isConnected = DI.Instance.State.IsConnected;
+        var isConnected = WukongApi.Sync.IsConnected;
         if (!hasPak)
         {
-            UiUtils.ShowTip(BuiltinTexts.MissingPak, false);
+            WukongApi.Local.ShowTip(BuiltinTexts.MissingPak, false);
             Logging.LogError("WukongMP.pak is not loaded. Could not continue game.");
         }
         else if (!isConnected)
         {
-            DI.Instance.RelayClient.Scheduler.Schedule(ctx => { Utils.TryRunOnGameThread(() => { DI.Instance.WidgetManager.ShowInfoMessage(ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected); }); });
+            WukongApi.Sync.GetDisconnectReasonAndInvoke(reason => { Utils.TryRunOnGameThread(() => { WukongApi.Local.ShowInfoMessage(reason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected); }); });
             Logging.LogError(" PvP Disconnected. Could not continue game.");
         }
 
@@ -66,7 +67,7 @@ public static class PatchStartGameUiPvp
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
                 }
-                else if (File.Exists(GameSaveUtils.GetSaveFileFullName(typeof(PatchStartGameUiPvp).Assembly, GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId))))
+                else if (File.Exists(WukongApi.Files.GetSaveFileFullName<Mod>(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId))))
                 {
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.QuickJoin));
                 }
@@ -130,7 +131,7 @@ public class PatchOnClickOpenMapUI
 {
     public static bool Prefix()
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
         return false;
@@ -150,7 +151,7 @@ public class PatchShrineRegisterFunc
 
     public static bool Prefix(int FuncId)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
         InteractionFuncDesc interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
@@ -166,7 +167,7 @@ public class PatchGetCanTeleportGroupMapList
 {
     public static bool Prefix(ref List<int> __result)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
         __result = [];
@@ -201,11 +202,10 @@ public class PatchIsShowSettingUiOnly
 {
     public static bool Prefix(ref bool __result)
     {
-        if (!DI.Instance.AreaState.InRoom)
+        if (!WukongApi.Sync.InRoom)
             return true;
 
-        var areaState = DI.Instance.AreaState;
-        if (areaState.PvpState is { InTournament: true })
+        if (WukongApi.PvP.InPvpTournament)
         {
             __result = true;
             return false;
@@ -222,6 +222,6 @@ public class PatchOnClickOpenEquipUI
 {
     public static bool Prefix()
     {
-        return DI.Instance.PlayerState.LocalMainCharacter?.GetPvP().IsSpectator is not true;
+        return WukongApi.Sync.LocalMainCharacter?.IsSpectator is not true;
     }
 }

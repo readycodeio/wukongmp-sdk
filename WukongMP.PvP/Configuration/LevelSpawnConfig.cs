@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnrealEngine.Runtime;
 using WukongMp.Api;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.PvP.Configuration
 {
@@ -42,7 +43,11 @@ namespace WukongMp.PvP.Configuration
 
         public static LevelSpawnData GetCurrentLevelSpawnData()
         {
-            return GetLevelSpawnData(LaunchParameters.Instance.LevelId!.Value);
+            if (WukongApi.Sync.LocalMainCharacter is not { } main)
+                return GetLevelSpawnData(0);
+            
+            var levelId = WukongApi.PvP.LevelId;            
+            return GetLevelSpawnData(levelId);
         }
     }
 }

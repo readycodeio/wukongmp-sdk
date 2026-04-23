@@ -165,7 +165,9 @@ internal sealed class DI : IDependencyContainer
         Container.Register<INetworkedComponentRegistration, WukongNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistry, NetworkedComponentRegistry>();
 
-        Container.Register<EntityStore>();
+        // TODO | WTF? - using Register<>, which does the same thing, but lazily,
+        // TODO | causes the game to crash with a NullReferenceException in completely unrelated game code
+        Container.RegisterInstance(new EntityStore());
         Container.Register<Store>();
 
         Container.Register<ArchetypeEventRouter>();
@@ -194,7 +196,6 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<FreeCameraManager>();
         Container.Register<WukongWidgetManager>();
-        Container.Register<TimerController>();
         Container.Register<FreeCameraController>();
         Container.Register<IMappedEntityManager<AActor>, MappedEntityManager<AActor>>();
         Container.Register<WukongPawnState>();

@@ -22,9 +22,5 @@ internal static class AssetUtils
         }
     }
 
-    public static void PlayBossDefeatedSound()
-    {
-        var playUiSound = AccessTools.Method("B1UI.Script.GSUI.Util.GSUIAudioUtil:PlayUISound");
-        playUiSound.Invoke(null, ["EVT_ui_kill_jisha_manjingtou"]);
-    }
+
 }

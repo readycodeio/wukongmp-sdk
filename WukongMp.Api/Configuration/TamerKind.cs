@@ -5,14 +5,10 @@ namespace WukongMp.Api.Configuration;
 /// <summary>
 /// Represents the type of a Tamer (monster).
 /// </summary>
-public readonly struct TamerKind : IEquatable<TamerKind>
+/// <param name="name">Must be a valid monster name.</param>
+public readonly struct TamerKind(string name) : IEquatable<TamerKind>
 {
-    public readonly string? Name;
-
-    internal TamerKind(string? name)
-    {
-        Name = name;
-    }
+    public readonly string Name = name;
 
     public bool Equals(TamerKind other)
         => Name == other.Name;
@@ -28,7 +24,7 @@ public readonly struct TamerKind : IEquatable<TamerKind>
 
     public static bool operator ==(TamerKind left, TamerKind right)
         => left.Equals(right);
-    
+
     public static bool operator !=(TamerKind left, TamerKind right)
         => !left.Equals(right);
 }

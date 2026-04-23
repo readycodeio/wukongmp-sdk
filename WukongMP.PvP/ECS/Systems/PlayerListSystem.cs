@@ -1,27 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Friflo.Engine.ECS;
-using Friflo.Engine.ECS.Systems;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Wukong.Common.ECS.Components;
-using WukongMp.Api.State;
 using WukongMp.PvP.Configuration;
 using WukongMp.PvP.UI;
+using WukongMp.Sdk;
+using WukongMp.Sdk.Api;
 
 namespace WukongMp.PvP.ECS.Systems;
 
-internal sealed class PlayerListSystem(
-    WukongPlayerState playerState,
-    WukongAreaState areaState,
-    PvpWidgetManager widgetManager
-) : QuerySystem<MainCharacterComponent, PvPComponent>
+public class PlayerListSystem(PvpWidgetManager widgetManager) : ModSystemBase
 {
     private readonly Stopwatch _timer = Stopwatch.StartNew();
 
-    protected override void OnUpdate()
+    protected override void OnUpdate(UpdateTick tick)
     {
-        if (!areaState.CurrentArea.HasValue)
+        if (!WukongApi.Sync.CurrentAreaId.HasValue)
             return;
 
         if (_timer.Elapsed < TimeSpan.FromSeconds(1))
@@ -33,29 +26,24 @@ internal sealed class PlayerListSystem(
         List<string> blueTeamList = [];
         List<string> spectatorsList = [];
 
-        Query
-            .HasValue<InScopeComponent, Entity>(areaState.CurrentArea.Value.Entity)
-            .ForEachEntity((ref mainComp, ref pvp, _) =>
+        foreach (var areaPlayer in WukongApi.Sync.AreaPlayers)
+        {
+            if (WukongApi.Sync.TryGetPlayerInfoById(areaPlayer, out var nickname, out var team))
             {
-                var player = playerState.GetPlayerById(mainComp.PlayerId);
-                if (player.HasValue)
+                switch (team)
                 {
-                    var team = player.Value.GetState().TeamId;
-
-                    switch (team)
-                    {
-                        case PvpConstants.RedTeamId:
-                            redTeamList.Add(mainComp.CharacterNickname);
-                            return;
-                        case PvpConstants.BlueTeamId:
-                            blueTeamList.Add(mainComp.CharacterNickname);
-                            return;
-                        case PvpConstants.SpectatorTeamId:
-                            spectatorsList.Add(mainComp.CharacterNickname);
-                            return;
-                    }
+                    case PvpConstants.RedTeamId:
+                        redTeamList.Add(nickname);
+                        break;
+                    case PvpConstants.BlueTeamId:
+                        blueTeamList.Add(nickname);
+                        break;
+                    case PvpConstants.SpectatorTeamId:
+                        spectatorsList.Add(nickname);
+                        break;
                 }
-            });
+            }
+        }
 
         widgetManager.SetTeams(redTeamList, blueTeamList, spectatorsList);
         widgetManager.RefreshWidgets();

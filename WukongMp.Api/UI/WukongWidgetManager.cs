@@ -210,7 +210,9 @@ internal sealed class WukongWidgetManager(
         }
 
         AreaEntity joinedAreaEntity = new(areaEntity);
-        _chatWidget.Value.SetWritingEnabled(joinedAreaEntity.GetRoom().ChatEnabled);
+        var chatEnabled = joinedAreaEntity.GetRoom().ChatEnabled;
+        _chatWidget.Value.SetWritingEnabled(chatEnabled);
+        Logging.LogInformation("Chat enabled: {ChatEnabled}", chatEnabled);
     }
 
     private void OnLeftArea(AreaId arg1, Entity arg2)

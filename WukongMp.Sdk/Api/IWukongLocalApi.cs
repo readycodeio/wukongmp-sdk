@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using UnrealEngine.Runtime;
 
 namespace WukongMp.Sdk.Api;
 
@@ -29,11 +28,11 @@ public interface IWukongLocalApi
     void HideInfoMessage();
 
     /// <summary>
-    /// Adds a message to the in-game chat, visible only to the local player.
+    /// Shows a tip message on the player's screen using the game's UI.
     /// </summary>
-    /// <param name="message">The message to add to the chat.</param>
-    /// <param name="color">The color of the message in the chat.</param>
-    void AddChatMessage(string message, FLinearColor color);
+    /// <param name="message">The message to show.</param>
+    /// <param name="autoHide">Whether the message should automatically hide after 5 seconds</param>
+    void ShowTip(string message, bool autoHide);
 
     /// <summary>
     /// Waits for the given task to complete in a synchronous manner.
