@@ -1,4 +1,4 @@
-﻿namespace WukongMp.Api.ECS.Values
+﻿namespace ReadyM.Wukong.Common.ECS.Values
 {
     public enum SpectatorReason
     {

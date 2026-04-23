@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using ReadyM.Api.Multiplayer.Generators;
-using WukongMp.Api.ECS.Values;
+using ReadyM.Wukong.Common.ECS.Values;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
