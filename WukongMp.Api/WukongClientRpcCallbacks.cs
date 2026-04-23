@@ -1385,15 +1385,4 @@ internal partial class WukongClientRpcCallbacks(
             ), casterEntity.Value);
         }, this, casterNetId, skillId, skillType);
     }
-
-    [Obsolete("To be removed once per-file RPC is implemented")]
-    public event Action<ChatMessage>? OnGetChatMessage;
-
-    [RpcEvent(RelayMode.AreaOfInterestAll)]
-    private void OnChatMessage(ChatMessage message)
-    {
-        ecsLoop.Scheduler.Schedule(static (_, self, message0) => { self.OnGetChatMessage?.Invoke(message0); }, this, message);
-    }
-
-   
 }
