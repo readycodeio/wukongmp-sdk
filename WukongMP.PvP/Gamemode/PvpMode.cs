@@ -74,7 +74,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
     public override void Dispose()
     {
         base.Dispose();
-        
+
         WukongApi.Events.OnOtherPlayerInsideArea -= OnOtherPlayerInsideAreaHandler;
         WukongApi.Events.OnJoinedArea -= OnJoinedAreaHandler;
 
@@ -144,6 +144,12 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
         }
 
         SetLocalPlayerDamageImmunity(mainCharacter, true);
+        SetInitialTeam();
+
+        if (mainCharacter.Pawn != null)
+        {
+            OnPlayerPawnSpawned(mainCharacter); // recreate the marker when reconnecting
+        }
     }
 
     private static void SetLocalPlayerDamageImmunity(ReadyMainCharacter mainEntity, bool enabled)
@@ -152,7 +158,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
         var events = BUS_EventCollectionCS.Get(pawn);
         if (events != null)
         {
-            events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, !enabled);
+            events.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, IsRemove: !enabled);
             Logging.LogDebug("Set local player damage immunity to {Enabled}", enabled);
         }
     }
@@ -376,11 +382,6 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
         }
     }
 
-    private void ResetRoundState()
-    {
-        Utils.TryRunOnGameThread(DestroyTamersOnArena);
-    }
-
     private void SetReadyState(bool isReady)
     {
         if (WukongApi.Sync.LocalMainCharacter is not { } main)
@@ -499,8 +500,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
             return;
 
         main.EnableInteraction(false);
-
-        // PlayerUtils.SetLocalPlayerDamageImmunity(_playerState.LocalMainCharacter!.Value, false);
+        SetLocalPlayerDamageImmunity(main, false);
 
         if (WukongApi.PvP.OwnsPvpState)
         {
@@ -521,7 +521,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
             return;
 
         main.EnableInteraction(true);
-        // PlayerUtils.SetLocalPlayerDamageImmunity(_playerState.LocalMainCharacter!.Value, true);
+        SetLocalPlayerDamageImmunity(main, true);
 
         if (WukongApi.PvP.OwnsPvpState)
         {
@@ -548,7 +548,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
             teamsCount[assignedTeamId]++;
         }
 
-        return teamsCount[PvpConstants.RedTeamId] > teamsCount[PvpConstants.BlueTeamId] ? PvpConstants.RedTeamId : PvpConstants.BlueTeamId;
+        return teamsCount[PvpConstants.RedTeamId] > teamsCount[PvpConstants.BlueTeamId] ? PvpConstants.BlueTeamId : PvpConstants.RedTeamId;
     }
 
     private void SetUpRoom()
@@ -600,8 +600,8 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
 
     private void RefreshReadyCounts()
     {
-        var readyForPvp = OtherPlayers.Count(x => WukongApi.PvP.PvpData(x) is { IsReadyForPvP: true, IsSpectator: false });
-        var available = OtherPlayers.Count(x => !WukongApi.PvP.PvpData(x).IsObserver);
+        var readyForPvp = AllPlayers.Count(x => WukongApi.PvP.PvpData(x) is { IsReadyForPvP: true, IsObserver: false });
+        var available = AllPlayers.Count(x => !WukongApi.PvP.PvpData(x).IsObserver);
         pvpWidgetManager.UpdateReadyCount(readyForPvp, available);
     }
 
@@ -632,7 +632,10 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
 
         SetUpRoom();
         RefreshReadyCounts();
+    }
 
+    private void SetInitialTeam()
+    {
         if (WukongApi.Sync.LocalMainCharacter is not { } main)
             return;
 
@@ -792,7 +795,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
             }
             case PvpEventKind.ResetStats:
             {
-                ResetRoundState();
+                Utils.TryRunOnGameThread(DestroyTamersOnArena);
 
                 if (WukongApi.Sync.LocalMainCharacter is not { } main)
                     return;

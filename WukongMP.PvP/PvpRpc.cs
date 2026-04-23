@@ -24,7 +24,7 @@ public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, Time
             if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
                 return;
 
-            if (mainEntity.IsDead)
+            if (mainEntity.IsDead || mainEntity.IsSpectator)
                 return;
 
             WukongApi.Local.ShowInfoMessage(BuiltinTexts.AntiStallWarning);
@@ -42,7 +42,7 @@ public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, Time
             if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
                 return;
 
-            if (mainEntity.IsDead)
+            if (mainEntity.IsDead || mainEntity.IsSpectator)
                 return;
 
             WukongApi.Local.ShowInfoMessage(BuiltinTexts.StallingMessage);
@@ -72,7 +72,7 @@ public partial class PvpRpc(IRpcClient client, IRelaySerializer serializer, Time
             if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
                 return;
 
-            if (mainEntity.IsDead)
+            if (mainEntity.IsDead || mainEntity.IsSpectator)
                 return;
 
             if (damagedPlayer == mainEntity.PlayerId)

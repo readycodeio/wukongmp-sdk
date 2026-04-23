@@ -50,7 +50,7 @@ namespace WukongMp.Api.WukongUtils
                 return;
 
             var events = BUS_EventCollectionCS.Get(pawn);
-            events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, enabled);
+            events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantInteract, IsRemove: enabled);
         }
 
         public static void ResetLocalPlayerCooldown()

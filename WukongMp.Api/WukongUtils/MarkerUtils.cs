@@ -20,9 +20,9 @@ internal static class MarkerUtils
             return;
         }
 
-        ref var localMainComp = ref entity.GetComponent<MarkerComponent>();
+        ref var markerComp = ref entity.GetComponent<MarkerComponent>();
 
-        var markerActor = localMainComp.MarkerActor ?? SpawnMarkerActor();
+        var markerActor = markerComp.MarkerActor ?? SpawnMarkerActor();
         if (markerActor == null)
         {
             Logging.LogError("Failed to create marker actor for player {Entity}", entity.GetNetId());
@@ -30,7 +30,7 @@ internal static class MarkerUtils
         }
 
         markerActor.CallFunctionByNameWithArguments($"SetText {text} {color}", true);
-        localMainComp.MarkerActor = markerActor;
+        markerComp.MarkerActor = markerActor;
     }
 
     public static void DestroyMarkerForCharacter(Entity entity)
@@ -43,11 +43,11 @@ internal static class MarkerUtils
         if (!markerComp.DestroyQueued)
         {
             Logging.LogDebug("Destroying marker for entity {NetId}", entity.GetNetId());
-            markerComp.DestroyQueued = true;
 
             var markerActor = markerComp.MarkerActor;
             if (!markerActor.IsNullOrDestroyed())
             {
+                markerComp.DestroyQueued = true;
                 Utils.TryRunOnGameThread(() => { BGU_UnrealWorldUtil.DestroyActor(markerActor); });
             }
 

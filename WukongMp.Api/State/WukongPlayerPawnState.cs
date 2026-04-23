@@ -41,15 +41,9 @@ internal class WukongPlayerPawnState(FreeCameraManager freeCameraManager, Store 
         logger.LogDebug("Spawn successful: {PlayerId}", playerId);
     }
 
-    public void RemovePlayerPawn(PlayerId playerId, BGUCharacterCS? playerPawn, AActor? playerMarker)
+    public void RemovePlayerPawn(PlayerId playerId, BGUCharacterCS? playerPawn)
     {
         logger.LogDebug("DESPAWN OTHER MAIN CHARACTER ENTITY: {PlayerId}", playerId);
-
-        if (!playerMarker.IsNullOrDestroyed())
-        {
-            logger.LogDebug("Other main character marker: {Actor}", playerMarker?.GetName());
-            BGU_UnrealWorldUtil.DestroyActor(playerMarker);
-        }
 
         if (!playerPawn.IsNullOrDestroyed())
         {

@@ -16,6 +16,7 @@ namespace WukongMp.PvP.Configuration
             configuration.DisableCutscenes = true;
             configuration.SyncTamerTeamFromGameToEcs = false;
             configuration.OverrideLocalPlayerTeamFromGlobalEntity = true;
+            configuration.DeleteDestroyedTamersFromEcs = true;
 
             configuration.SetDisableTamerAttackQuery(ShouldDisableTamerAttack);
             configuration.SetIsSkillEnabledQuery(IsSkillEnabled);

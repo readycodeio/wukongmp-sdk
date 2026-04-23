@@ -22,8 +22,6 @@ public static class TamerKinds
 
     private static readonly HashSet<TamerKind> _validTamerKinds = new();
     
-    public static readonly TamerKind Monkey = CreateTamerKind("monkey");
-    
     // regular enemies
     public static readonly TamerKind AxeStalwart = CreateTamerKind("axe_stalwart");
     public static readonly TamerKind Bandit = CreateTamerKind("bandit");
@@ -85,6 +83,7 @@ public static class TamerKinds
     public static readonly TamerKind DaSheng2 = CreateTamerKind("da_sheng_2");
 
     // not working yet
+    // public static readonly TamerKind Monkey = CreateTamerKind("monkey"); // only the tail is visible
     // internal static readonly TamerKind BawLangLang = CreateTamerKind("baw_lang_lang", true);
     // internal static readonly TamerKind BlazeBone = CreateTamerKind("blaze_bone", true);
     // internal static readonly TamerKind BossB = CreateTamerKind("boss_b", true);

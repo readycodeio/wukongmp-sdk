@@ -15,9 +15,6 @@ public class ReadinessSystem(
     PvpMode pvpMode
 ) : ModSystemBase
 {
-    private int _lastPlayers = -1;
-    private int _lastReadyCount = -1;
-
     protected override void OnUpdate(UpdateTick tick)
     {
         if (!WukongApi.Sync.CurrentAreaId.HasValue || WukongApi.PvP.InPvpTournament)
@@ -39,7 +36,7 @@ public class ReadinessSystem(
                 var info = WukongApi.PvP.PvpData(character);
 
                 if (info.IsObserver)
-                    return;
+                    continue;
 
                 players++;
                 if (info.IsReadyForPvP)
@@ -57,14 +54,10 @@ public class ReadinessSystem(
                 }
             }
         }
-
-        if (_lastReadyCount == readyCount && _lastPlayers == players)
+        
+        var updated = widgetManager.UpdateReadyCount(readyCount, players);
+        if (!updated)
             return;
-
-        _lastReadyCount = readyCount;
-        _lastPlayers = players;
-
-        widgetManager.UpdateReadyCount(readyCount, players);
 
         if (!WukongApi.PvP.InPvP)
         {

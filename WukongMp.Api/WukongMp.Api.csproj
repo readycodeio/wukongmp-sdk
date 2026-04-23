@@ -207,7 +207,6 @@
 
     <ItemGroup>
       <Folder Include="ECS\Managers\" />
-      <Folder Include="Logging\" />
     </ItemGroup>
 
 </Project>

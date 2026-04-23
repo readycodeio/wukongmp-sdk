@@ -87,8 +87,11 @@ public class PvpAntiStallSystem(PvpRpc rpc) : ModSystemBase
                 _playerEngagement[playerId] = data;
             }
 
-            var pawn = WukongApi.Sync.GetMainCharacterByPlayerId(playerId)?.Pawn;
-            if (pawn != null)
+            var main = WukongApi.Sync.GetMainCharacterByPlayerId(playerId);
+            if (!main.HasValue || main.Value.IsSpectator)
+                continue;
+
+            if (main.Value.Pawn is { } pawn)
             {
                 data.LastPosition = pawn.GetActorLocation();
                 data.ForwardDirection = pawn.GetActorForwardVector();

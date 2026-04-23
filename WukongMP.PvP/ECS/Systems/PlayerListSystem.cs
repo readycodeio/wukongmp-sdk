@@ -34,13 +34,13 @@ public class PlayerListSystem(PvpWidgetManager widgetManager) : ModSystemBase
                 {
                     case PvpConstants.RedTeamId:
                         redTeamList.Add(nickname);
-                        return;
+                        break;
                     case PvpConstants.BlueTeamId:
                         blueTeamList.Add(nickname);
-                        return;
+                        break;
                     case PvpConstants.SpectatorTeamId:
                         spectatorsList.Add(nickname);
-                        return;
+                        break;
                 }
             }
         }

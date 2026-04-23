@@ -9,7 +9,7 @@ public static class UnitPathUtils
     private static readonly Dictionary<TamerKind, string> CharacterPathNames = new()
     {
         // Monkey
-        { TamerKinds.Monkey, "/Game/00Main/Design/Units/Player/TAMER_monkeysummon_fs.TAMER_monkeysummon_fs_C" },
+        // { TamerKinds.Monkey, "/Game/00Main/Design/Units/Player/TAMER_monkeysummon_fs.TAMER_monkeysummon_fs_C" },
 
         // Regular enemies
         { TamerKinds.AxeStalwart, "/Game/00Main/Design/Units/HYS/TAMER_hys_niu_02.TAMER_hys_niu_02_C" },

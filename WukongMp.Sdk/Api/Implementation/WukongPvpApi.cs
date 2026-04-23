@@ -10,7 +10,8 @@ using WukongMp.Sdk.Entities;
 namespace WukongMp.Sdk.Api.Implementation;
 
 [Obsolete("This API is temporary and will be removed in the future when custom data sync is implemented.")]
-internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManager clientNetEntity, ClientWukongArchetypeRegistration wukongArchetype, LaunchParameters launchParameters) : IWukongPvpApi
+internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManager clientNetEntity, ClientWukongArchetypeRegistration wukongArchetype, LaunchParameters launchParameters) 
+    : IWukongPvpApi
 {
     public int LevelId { get; set; } = launchParameters.LevelId ?? 0;
 
@@ -47,13 +48,14 @@ internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManag
     }
 
     public bool OwnsPvpState => areaState.OwnsPvpState;
-    public bool ImmobilizeAllowed => areaState.CurrentArea?.Room.ImmobilizeAllowed ?? false;
-    public bool GourdAllowed => areaState.CurrentArea?.Room.GourdAllowed ?? false;
-    public bool ConsumablesAllowed => areaState.CurrentArea?.Room.ConsumablesAllowed ?? false;
+    // TODO: These should be settable when not set from Agones
+    public bool ImmobilizeAllowed => areaState.CurrentArea?.Room.ImmobilizeAllowed ?? true;
+    public bool GourdAllowed => areaState.CurrentArea?.Room.GourdAllowed ?? true;
+    public bool ConsumablesAllowed => areaState.CurrentArea?.Room.ConsumablesAllowed ?? true;
     public int EnemiesNgPlusLevel => areaState.CurrentArea?.Room.EnemiesNgPlusLevel ?? 0;
-    public int CurrentRound => areaState.PvpState?.CurrentRound ?? 0;
-    public int TournamentRounds => areaState.CurrentArea?.Room.TournamentRounds ?? 0;
-    public bool AntiStallEnabled => areaState.CurrentArea?.Room.AntiStallEnabled ?? false;
+    public int CurrentRound => areaState.PvpState?.CurrentRound ?? 1;
+    public int TournamentRounds => areaState.CurrentArea?.Room.TournamentRounds ?? 3;
+    public bool AntiStallEnabled => areaState.CurrentArea?.Room.AntiStallEnabled ?? true;
 
     public void InitializeAreaPvpState()
     {

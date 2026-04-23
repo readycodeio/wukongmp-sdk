@@ -101,8 +101,8 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
         mainEntity.GetMarker().MarkerActor?.SetActorHiddenInGame(!visible);
 
         var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantShowBlood, visible);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreBattleInfoInUnitBar, visible);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantShowBlood, IsRemove: visible);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreBattleInfoInUnitBar, IsRemove: visible);
 
         return true;
     }
@@ -120,14 +120,14 @@ internal class WukongPlayerModeManager(ClientState state, GameplayEventRouter ev
         }
 
         var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, enable);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, enable);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeLock, enable);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeAutoLockTarget, enable);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreAllInput, enable);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PELock, enable);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.StaminaLock, enable);
-        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PlayerCantLock, enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.ImmueDamage, IsRemove: enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeBaseTarget, IsRemove: enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeLock, IsRemove: enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.CantBeAutoLockTarget, IsRemove: enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.IgnoreAllInput, IsRemove: enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PELock, IsRemove: enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.StaminaLock, IsRemove: enable);
+        events?.Evt_UnitSetSimpleState.Invoke(EBGUSimpleState.PlayerCantLock, IsRemove: enable);
 
         if (enable)
         {

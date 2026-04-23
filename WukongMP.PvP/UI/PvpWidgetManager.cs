@@ -137,16 +137,9 @@ public class PvpWidgetManager : IHostedService
         {
             SetupSpectatorUi();
         }
-        else
+        else if (!WukongApi.PvP.InPvP)
         {
-            if (!WukongApi.PvP.InPvP)
-            {
-                SetupLobbyUi();
-            }
-            else
-            {
-                _lobbyStatusWidget.Value.SetVisibility(false);
-            }
+            SetupLobbyUi();
         }
     }
 
@@ -182,9 +175,9 @@ public class PvpWidgetManager : IHostedService
         _gameMessageWidget.Value.SetSecondText(TextUtils.GetReadyText(WukongApi.Sync.AllPlayers.Count, isReady));
     }
 
-    public void UpdateReadyCount(int readyCount, int maxCount)
+    public bool UpdateReadyCount(int readyCount, int maxCount)
     {
-        _lobbyStatusWidget.Value.SetReadyCount(readyCount, maxCount);
+        return _lobbyStatusWidget.Value.SetReadyCount(readyCount, maxCount);
     }
 
     public void SetTeams(List<string> redTeamList, List<string> blueTeamList, List<string> spectatorsList) => _lobbyStatusWidget.Value.SetTeams(redTeamList, blueTeamList, spectatorsList);

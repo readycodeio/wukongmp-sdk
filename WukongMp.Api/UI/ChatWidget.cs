@@ -7,7 +7,7 @@ using WukongMp.Api.Resources;
 
 namespace WukongMp.Api.UI
 {
-    internal class ChatWidget : GameWidgetBase
+    internal class ChatWidget() : GameWidgetBase(ChatWidgetPath)
     {
         private struct MessageEntry
         {
@@ -19,8 +19,6 @@ namespace WukongMp.Api.UI
         }
 
         private const string ChatWidgetPath = "/Game/Mods/WukongMod/WBP_MultiplayerChat.WBP_MultiplayerChat_C";
-
-        public ChatWidget() : base(ChatWidgetPath) { }
 
         private int _messageId;
 
