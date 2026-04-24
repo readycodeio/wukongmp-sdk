@@ -90,7 +90,7 @@ internal class Mod : ModBase
             DI.Instance,
             LaunchParameters.Instance.ServerIp!,
             LaunchParameters.Instance.ServerPort!.Value,
-            LaunchParameters.Instance.UserGuid,
+            LaunchParameters.Instance.Ticket,
 #if NO_DISCONNECT
                 true
 #else

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ReadyM.Api.Multiplayer.Client;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.Windows;
@@ -14,7 +15,7 @@ internal sealed class LaunchParameters
 
     public bool Valid => ServerIp is not null
                          && ServerPort is not null
-                         && UserGuid != Guid.Empty;
+                         && Ticket != default;
 
     public bool ValidForCoOp => Valid && JwtToken is not null
                                       && ApiBaseUrl is not null
@@ -26,9 +27,10 @@ internal sealed class LaunchParameters
     public string? ServerIp { get; }
     public int? ServerPort { get; }
     public int? ServerId { get; }
-    public Guid UserGuid { get; } = Guid.Empty;
+    public Guid UserGuid { get; }
     public string? ApiBaseUrl { get; }
-    public string? JwtToken { get; }
+    public string? JwtToken { get; } // TODO: Internalize the co-op save client and use this
+    public ConnectionTicket Ticket { get; }
     public string Nickname { get; }
     public int Region { get; } = -1;
     public int? LevelId { get; set; }
@@ -49,7 +51,7 @@ internal sealed class LaunchParameters
     public string? PlayShimFile { get; }
 
     private readonly Dictionary<string, string> _allParameters;
-    
+
     public string GetParameterOrDefault(string key, string defaultValue)
     {
         return _allParameters.GetValueOrDefault(key, defaultValue);
@@ -62,7 +64,7 @@ internal sealed class LaunchParameters
         // CO-OP: API base URL
         ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
 
-        // CO-OP: JWT token
+        // JWT token and 
         JwtToken = data.GetValueOrDefault("JWT_TOKEN");
 
         // BOTH: user GUID
@@ -76,6 +78,19 @@ internal sealed class LaunchParameters
         else
         {
             Logging.LogError("Invalid ID format: {Guid}", guidString);
+        }
+        
+        // BOTH: single use connection ticket
+        var ticketString = data.GetValueOrDefault("TICKET");
+
+        if (ConnectionTicket.TryParse(ticketString, out var ticket))
+        {
+            Ticket = ticket.Value;
+            Logging.LogDebug("Ticket: {Guid}", Ticket);
+        }
+        else
+        {
+            Logging.LogError("Invalid Ticket format: {Guid}", ticketString);
         }
 
         // CO-OP: server ID

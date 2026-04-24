@@ -54,7 +54,7 @@ namespace WukongMp.Tests
                     DI.Instance,
                     LaunchParameters.Instance.ServerIp!,
                     LaunchParameters.Instance.ServerPort!.Value,
-                    LaunchParameters.Instance.UserGuid,
+                    LaunchParameters.Instance.Ticket,
 #if NO_DISCONNECT
                     true,
 #else
@@ -67,7 +67,7 @@ namespace WukongMp.Tests
                     DI.Instance,
                     "127.0.0.1",
                     9050,
-                    LaunchParameters.Instance.UserGuid,
+                    LaunchParameters.Instance.Ticket,
 #if NO_DISCONNECT
                     true
 #else
