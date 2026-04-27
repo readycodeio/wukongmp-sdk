@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
 using ReadyM.Api.Idents;
@@ -13,11 +12,11 @@ namespace WukongMp.Api.Shim;
 
 internal static class ShimUtils
 {
-    private static RelayClient CreateRelayNetworked(IDependencyContainer container, string host, int port, Guid userGuid, bool noDisconnect, string? shimDbPath = null)
+    private static RelayClient CreateRelayNetworked(IDependencyContainer container, string host, int port, ConnectionTicket ticket, bool noDisconnect, string? shimDbPath = null)
     {
-        var options = new RelayConnectionOptions()
+        var options = new RelayConnectionOptions
         {
-            UserGuid = userGuid,
+            Ticket = ticket,
         };
 
         if (shimDbPath != null)
@@ -50,11 +49,11 @@ internal static class ShimUtils
         // container.ShimAuto.ShouldAutoPlay = true;
     }
 
-    internal static void InitRelayRecordShim(IDependencyContainer container, string host, int port, Guid userGuid, bool noDisconnect, string shimPath)
+    internal static void InitRelayRecordShim(IDependencyContainer container, string host, int port, ConnectionTicket ticket, bool noDisconnect, string shimPath)
     {
         var shimDbPath = Path.GetDirectoryName(shimPath);
 
-        var relayClient = CreateRelayNetworked(container, host, port, userGuid, noDisconnect, shimDbPath);
+        var relayClient = CreateRelayNetworked(container, host, port, ticket, noDisconnect, shimDbPath);
 
         AttachRecording(container, host, port, noDisconnect);
 
@@ -64,10 +63,10 @@ internal static class ShimUtils
 
     private static void AttachRecording(IDependencyContainer container, string host, int port, bool noDisconnect)
     {
-        var recordGuid = new Guid("deadbeef-3333-3333-3333-deadbeef0001");
+        var recordTicket = ConnectionTicket.Parse("deadbeef-3333-3333-3333-deadbeef0001");
         var recordOptions = new RelayConnectionOptions
         {
-            UserGuid = recordGuid,
+            Ticket = recordTicket,
             PlayerIdMode = PlayerIdMode.ExactId,
             PlayerId = new PlayerId(255),
         };
@@ -83,9 +82,9 @@ internal static class ShimUtils
         container.Resolve<HotSwappableRelayClient>().Attach(recordRelayClient);
     }
 
-    internal static void InitRelay(DI container, string host, int port, Guid userGuid, bool noDisconnect)
+    internal static void InitRelay(DI container, string host, int port, ConnectionTicket ticket, bool noDisconnect)
     {
-        var relayClient = CreateRelayNetworked(container, host, port, userGuid, noDisconnect);
+        var relayClient = CreateRelayNetworked(container, host, port, ticket, noDisconnect);
 
         container.RelayClient.Attach(relayClient);
     }
