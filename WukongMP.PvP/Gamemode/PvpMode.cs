@@ -392,7 +392,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
 
     public void SwitchReadyStateMulti()
     {
-        if (WukongApi.Sync.InRoom && !WukongApi.PvP.InPvpTournament && WukongApi.Sync.AllPlayers.Count > 0)
+        if (WukongApi.Sync.InArea && !WukongApi.PvP.InPvpTournament && WukongApi.Sync.AllPlayers.Count > 0)
         {
             if (WukongApi.Sync.LocalMainCharacter is { } main && !WukongApi.PvP.PvpData(main).IsSpectator)
             {
@@ -422,7 +422,7 @@ public partial class PvpMode(PvpWidgetManager pvpWidgetManager, IRpcClient rpcCl
 
         var pvpData = WukongApi.PvP.PvpData(main);
 
-        if (force || WukongApi.Sync.InRoom && !pvpData.IsReadyForPvP && !WukongApi.PvP.InPvpTournament && !pvpData.IsSpectator)
+        if (force || WukongApi.Sync.InArea && !pvpData.IsReadyForPvP && !WukongApi.PvP.InPvpTournament && !pvpData.IsSpectator)
         {
             var teamId = PvpUtils.GetOppositeTeam(main.TeamId);
             main.TeamId = teamId;

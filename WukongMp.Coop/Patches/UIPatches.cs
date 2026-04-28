@@ -106,7 +106,7 @@ public class PatchShrineRegisterFunc
 
     public static bool Prefix(int FuncId)
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return true;
 
         var interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);

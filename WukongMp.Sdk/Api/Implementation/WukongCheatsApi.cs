@@ -61,8 +61,23 @@ internal sealed class WukongCheatsApi(WukongPlayerState playerState, WukongAreaS
             PlayerUtils.ResetCooldowns(player);
     }
 
-    public void SetSpritCooldownTime(ReadyMainCharacter mainEntity, float spiritCooldownTime)
+    public void SetSpritCooldownTime(float spiritCooldownTime)
     {
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (!WukongApi.Cheats.CheatsAllowed)
+        {
+            WukongApi.Console.LogMessage(BuiltinTexts.CheatsAreDisabled);
+            return;
+        }
+        
+        if (spiritCooldownTime < 0)
+        {
+            WukongApi.Console.LogMessage(BuiltinTexts.InvalidCooldown);
+            return;
+        }
+
         ref var localStateComp = ref mainEntity.Entity.GetLocalState();
         if (mainEntity.Pawn != null)
         {
@@ -77,8 +92,17 @@ internal sealed class WukongCheatsApi(WukongPlayerState playerState, WukongAreaS
         chatter.SendLocalizedServerMessage(nameof(BuiltinTexts.CustomSpiritCooldown), playerState.Nickname, spiritCooldownTime.ToString(CultureInfo.InvariantCulture));
     }
 
-    public void ToggleInfiniteVessel(ReadyMainCharacter mainEntity)
+    public void ToggleInfiniteVessel()
     {
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (!WukongApi.Cheats.CheatsAllowed)
+        {
+            WukongApi.Console.LogMessage(BuiltinTexts.CheatsAreDisabled);
+            return;
+        }
+
         if (mainEntity.Pawn != null)
         {
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
@@ -91,8 +115,17 @@ internal sealed class WukongCheatsApi(WukongPlayerState playerState, WukongAreaS
         chatter.SendLocalizedServerMessage(state.HasInfiniteVessel ? nameof(BuiltinTexts.InfVesselEnabled) : nameof(BuiltinTexts.InfVesselDisabled), playerState.Nickname);
     }
 
-    public void ToggleInfiniteTransform(ReadyMainCharacter mainEntity)
+    public void ToggleInfiniteTransform()
     {
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (!WukongApi.Cheats.CheatsAllowed)
+        {
+            WukongApi.Console.LogMessage(BuiltinTexts.CheatsAreDisabled);
+            return;
+        }
+
         if (mainEntity.Pawn != null)
         {
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
@@ -105,8 +138,17 @@ internal sealed class WukongCheatsApi(WukongPlayerState playerState, WukongAreaS
         chatter.SendLocalizedServerMessage(state.HasInfiniteTransform ? nameof(BuiltinTexts.InfTransformEnabled) : nameof(BuiltinTexts.InfTransformDisabled), mainEntity.Nickname);
     }
 
-    public void ToggleNoSkillsCooldown(ReadyMainCharacter mainEntity)
+    public void ToggleNoSkillsCooldown()
     {
+        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
+            return;
+
+        if (!WukongApi.Cheats.CheatsAllowed)
+        {
+            WukongApi.Console.LogMessage(BuiltinTexts.CheatsAreDisabled);
+            return;
+        }
+
         var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
         events?.Evt_ResetSkillCD.Invoke();
 

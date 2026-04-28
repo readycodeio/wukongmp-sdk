@@ -30,7 +30,7 @@ public class PatchWindowsSaveGame
         if (!SlotName.StartsWith("ArchiveSaveFile"))
             return true;
 
-        __result = WukongApi.Files.GetSaveFileFullName<Mod>(SlotName);
+        __result = FPaths.Combine(WukongApi.Files.GetModDirectory<Mod>(), $"{SlotName}.sav");
         return false;
     }
 }

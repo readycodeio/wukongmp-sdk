@@ -13,8 +13,8 @@ public class TimerController
         _initialMinutes = minutes;
         _initialSeconds = seconds;
         _timer = new CountdownTimer(minutes, seconds);
-        WukongApi.Widgets.SetTimerVisibility(true);
-        WukongApi.Widgets.SetTimerText(_initialMinutes, _initialSeconds);
+        WukongApi.Widgets.SetCountdownVisibility(true);
+        WukongApi.Widgets.SetCountdownText(_initialMinutes, _initialSeconds);
     }
 
     public void StartTimer()
@@ -27,25 +27,25 @@ public class TimerController
 
     private void OnTimerTick(int minutes, int seconds)
     {
-        WukongApi.Widgets.SetTimerText(minutes, seconds);
+        WukongApi.Widgets.SetCountdownText(minutes, seconds);
     }
 
     private void OnTimerFinished()
     {
-        WukongApi.Widgets.SetTimerText(0, 0);
-        WukongApi.Widgets.SetTimerVisibility(false);
+        WukongApi.Widgets.SetCountdownText(0, 0);
+        WukongApi.Widgets.SetCountdownVisibility(false);
     }
 
     public void StopTimer()
     {
         _timer?.Stop();
-        WukongApi.Widgets.SetTimerVisibility(false);
+        WukongApi.Widgets.SetCountdownVisibility(false);
     }
 
     public void ResetTimer()
     {
         _timer?.Reset();
-        WukongApi.Widgets.SetTimerVisibility(true);
-        WukongApi.Widgets.SetTimerText(_initialMinutes, _initialSeconds);
+        WukongApi.Widgets.SetCountdownVisibility(true);
+        WukongApi.Widgets.SetCountdownText(_initialMinutes, _initialSeconds);
     }
 }

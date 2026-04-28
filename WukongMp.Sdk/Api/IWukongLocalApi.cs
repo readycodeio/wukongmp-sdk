@@ -2,6 +2,9 @@ using System.Threading.Tasks;
 
 namespace WukongMp.Sdk.Api;
 
+/// <summary>
+/// Provides various utility methods not related to networking.
+/// </summary>
 public interface IWukongLocalApi
 {
     /// <summary>

@@ -6,7 +6,7 @@ using WukongMp.Sdk.Entities;
 namespace WukongMp.Sdk.Api;
 
 /// <summary>
-/// API for PvP mode. Will be removed in the future when custom data sync is implemented.
+/// API for PvP mode. Will be removed in the future when custom data sync and server-side scripting are implemented.
 /// </summary>
 [Obsolete("This API is temporary and will be removed in the future when custom data sync is implemented.")]
 public interface IWukongPvpApi

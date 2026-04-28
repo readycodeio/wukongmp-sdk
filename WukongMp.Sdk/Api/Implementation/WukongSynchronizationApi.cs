@@ -44,7 +44,7 @@ internal sealed class WukongSynchronizationApi(
         relayClient.Scheduler.Schedule((ctx, call) => { call(ctx.LastDisconnectReason); }, callback);
     }
 
-    public bool InRoom
+    public bool InArea
         => areaState.InRoom;
 
     public bool IsConnected

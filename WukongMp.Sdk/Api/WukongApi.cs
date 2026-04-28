@@ -28,16 +28,39 @@ public static class WukongApi
 
     public static IDependencyContainer Services => DI.Instance;
 
+    /// <inheritdoc cref="IWukongInputApi"/>
     public static IWukongInputApi Input => Services.Resolve<IWukongInputApi>();
+
+    /// <inheritdoc cref="IWukongConsoleApi"/>
     public static IWukongConsoleApi Console => Services.Resolve<IWukongConsoleApi>();
+
+    /// <inheritdoc cref="IWukongChatApi"/>
     public static IWukongChatApi Chat => Services.Resolve<IWukongChatApi>();
+
+    /// <inheritdoc cref="IWukongPvpApi"/>
     public static IWukongPvpApi PvP => Services.Resolve<IWukongPvpApi>();
+
+    /// <inheritdoc cref="IWukongCheatsApi"/>
     public static IWukongCheatsApi Cheats => Services.Resolve<IWukongCheatsApi>();
+
+    /// <inheritdoc cref="IWukongFileApi"/>
     public static IWukongFileApi Files => Services.Resolve<IWukongFileApi>();
+
+    /// <inheritdoc cref="IWukongSaveApi"/>
     public static IWukongSaveApi Saves => Services.Resolve<IWukongSaveApi>();
+
+    /// <inheritdoc cref="IWukongEventApi"/>
     public static IWukongEventApi Events => Services.Resolve<IWukongEventApi>();
+
+    /// <inheritdoc cref="IWukongSynchronizationApi"/>
     public static IWukongSynchronizationApi Sync => Services.Resolve<IWukongSynchronizationApi>();
+
+    /// <inheritdoc cref="IWukongWidgetApi"/>
     public static IWukongWidgetApi Widgets => Services.Resolve<IWukongWidgetApi>();
+
+    /// <inheritdoc cref="IWukongLocalApi"/>
     public static IWukongLocalApi Local => Services.Resolve<IWukongLocalApi>();
+
+    /// <inheritdoc cref="IWukongConfigurationApi"/>
     public static IWukongConfigurationApi Configuration => Services.Resolve<IWukongConfigurationApi>();
 }

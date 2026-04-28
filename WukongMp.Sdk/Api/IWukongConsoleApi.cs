@@ -6,7 +6,7 @@ namespace WukongMp.Sdk.Api;
 /// <summary>
 /// API for the in-game console (F1).
 /// </summary>
-public interface IWukongConsoleApi : IConsoleCommandRegistry
+public interface IWukongConsoleApi
 {
     /// <summary>
     /// Registers a command to the in-game console.

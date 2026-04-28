@@ -1,14 +1,10 @@
-﻿using UnrealEngine.Runtime;
-using WukongMp.Api.UI;
+﻿using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Sdk.Api.Implementation;
 
 internal sealed class WukongWidgetApi(WukongWidgetManager widgetManager) : IWukongWidgetApi
 {
-    public void AddChatMessage(string message, FLinearColor color)
-        => widgetManager.AddSystemChatMessage(message, color);
-
     public void ToggleCommandVisibility()
         => widgetManager.ToggleChatVisibility();
 
@@ -30,9 +26,9 @@ internal sealed class WukongWidgetApi(WukongWidgetManager widgetManager) : IWuko
     public void HideTip()
         => UiUtils.HideTip();
 
-    public void SetTimerVisibility(bool visible)
+    public void SetCountdownVisibility(bool visible)
         => widgetManager.SetTimerVisibility(visible);
 
-    public void SetTimerText(int initialMinutes, int initialSeconds)
+    public void SetCountdownText(int initialMinutes, int initialSeconds)
         => widgetManager.SetTimerText(initialMinutes, initialSeconds);
 }

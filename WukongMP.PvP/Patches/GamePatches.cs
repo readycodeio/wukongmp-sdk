@@ -23,7 +23,7 @@ public static class PatchGetNewGamePlusCount
 {
     public static bool Prefix(ref int __result)
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return true;
         if (WukongApi.Sync.CurrentAreaId == null)
             return true;
@@ -49,7 +49,7 @@ public class TamerResetPatch
 
     public static bool Prefix(BGUCharacterCS ___OwnerAsCharacterCS)
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return true;
 
         var teamId = ___OwnerAsCharacterCS.GetTeamIDInCS();
@@ -82,7 +82,7 @@ public class FixTransformCameraLockToOriginPatch
 
     public static void Prefix(BUS_PlayerCameraCompImpl __instance)
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return;
 
         TargetGetter ??= AccessTools.PropertyGetter(typeof(BUS_PlayerCameraCompImpl), "Target");

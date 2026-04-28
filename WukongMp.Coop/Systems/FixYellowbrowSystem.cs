@@ -9,7 +9,7 @@ public class FixYellowbrowSystem : ModSystemBase
 {
     protected override void OnUpdate(UpdateTick tick)
     {
-        if (!WukongApi.Sync.InRoom || !WukongApi.Sync.LocalMainCharacter.HasValue)
+        if (!WukongApi.Sync.InArea || !WukongApi.Sync.LocalMainCharacter.HasValue)
             return;
 
         foreach (var tamer in WukongApi.Sync.AllTamers)

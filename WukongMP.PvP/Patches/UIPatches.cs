@@ -62,12 +62,16 @@ public static class PatchStartGameUiPvp
             if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
             {
                 Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
+
+                var slot = GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId);
+                var savePath = FPaths.Combine(WukongApi.Files.GetModDirectory<Mod>(), $"{slot}.sav");
+
                 if (!hasPak || !isConnected)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
                 }
-                else if (File.Exists(WukongApi.Files.GetSaveFileFullName<Mod>(GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId))))
+                else if (File.Exists(savePath))
                 {
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.QuickJoin));
                 }
@@ -131,7 +135,7 @@ public class PatchOnClickOpenMapUI
 {
     public static bool Prefix()
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return true;
 
         return false;
@@ -151,7 +155,7 @@ public class PatchShrineRegisterFunc
 
     public static bool Prefix(int FuncId)
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return true;
 
         InteractionFuncDesc interactionFuncDesc = GameDBRuntime.GetInteractionFuncDesc(FuncId);
@@ -167,7 +171,7 @@ public class PatchGetCanTeleportGroupMapList
 {
     public static bool Prefix(ref List<int> __result)
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return true;
 
         __result = [];
@@ -202,7 +206,7 @@ public class PatchIsShowSettingUiOnly
 {
     public static bool Prefix(ref bool __result)
     {
-        if (!WukongApi.Sync.InRoom)
+        if (!WukongApi.Sync.InArea)
             return true;
 
         if (WukongApi.PvP.InPvpTournament)

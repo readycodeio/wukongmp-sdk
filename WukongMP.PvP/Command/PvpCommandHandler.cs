@@ -31,11 +31,11 @@ public class PvpCommandHandler(
         consoleApi.AddCommand("spawn", ConsoleCommand.Create(RequestSpawn, false), allmonsterNames);
 
         consoleApi.AddCommand("spectator", ConsoleCommand.Create(SetSpectatorStatus, false));
-        consoleApi.AddCommand("instant_cooldown", ConsoleCommand.Create(ToggleSkillsCooldown, false));
+        consoleApi.AddCommand("instant_cooldown", ConsoleCommand.Create(cheatsApi.ToggleNoSkillsCooldown, false));
         consoleApi.AddCommand("infinite_mana", ConsoleCommand.Create(cheatsApi.ToggleInfiniteMana, false));
-        consoleApi.AddCommand("spirit_cooldown", ConsoleCommand.Create(SetSpiritCooldown, false));
-        consoleApi.AddCommand("infinite_vessel", ConsoleCommand.Create(ToggleInfiniteVessel, false));
-        consoleApi.AddCommand("infinite_transform", ConsoleCommand.Create(ToggleInfiniteTransform, false));
+        consoleApi.AddCommand("spirit_cooldown", ConsoleCommand.Create(cheatsApi.SetSpritCooldownTime, false));
+        consoleApi.AddCommand("infinite_vessel", ConsoleCommand.Create(cheatsApi.ToggleInfiniteVessel, false));
+        consoleApi.AddCommand("infinite_transform", ConsoleCommand.Create(cheatsApi.ToggleInfiniteTransform, false));
         consoleApi.AddCommand("arena", ConsoleCommand.Create(TeleportToArena, false));
         consoleApi.AddCommand("shrine", ConsoleCommand.Create(TeleportToShrine, false));
         consoleApi.AddCommand("pvp_level", ConsoleCommand.Create(TeleportToPvpLevel, true));
@@ -98,74 +98,12 @@ public class PvpCommandHandler(
         }
     }
 
-    private void SetSpiritCooldown(float spiritCooldownTime)
-    {
-        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
-            return;
-
-        if (!WukongApi.Cheats.CheatsAllowed)
-        {
-            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
-            return;
-        }
-
-        if (spiritCooldownTime < 0)
-        {
-            consoleApi.LogMessage(BuiltinTexts.InvalidCooldown);
-            return;
-        }
-
-        WukongApi.Cheats.SetSpritCooldownTime(mainEntity, spiritCooldownTime);
-    }
-
-    private void ToggleInfiniteVessel()
-    {
-        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
-            return;
-
-        if (!WukongApi.Cheats.CheatsAllowed)
-        {
-            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
-            return;
-        }
-
-        WukongApi.Cheats.ToggleInfiniteVessel(mainEntity);
-    }
-
-    private void ToggleInfiniteTransform()
-    {
-        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
-            return;
-
-        if (!WukongApi.Cheats.CheatsAllowed)
-        {
-            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
-            return;
-        }
-
-        WukongApi.Cheats.ToggleInfiniteTransform(mainEntity);
-    }
-
-    private void ToggleSkillsCooldown()
-    {
-        if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
-            return;
-
-        if (!WukongApi.Cheats.CheatsAllowed)
-        {
-            consoleApi.LogMessage(BuiltinTexts.CheatsAreDisabled);
-            return;
-        }
-
-        WukongApi.Cheats.ToggleNoSkillsCooldown(mainEntity);
-    }
-
     private void TeleportToArena()
     {
         if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (WukongApi.Sync.InRoom && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
+        if (WukongApi.Sync.InArea && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
         {
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             mainEntity.Teleport(levelData.PvpStartingLocation.ToVector3(), Vector3.Zero);
@@ -177,7 +115,7 @@ public class PvpCommandHandler(
         if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (WukongApi.Sync.InRoom && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
+        if (WukongApi.Sync.InArea && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
         {
             var levelData = LevelSpawnConfig.GetCurrentLevelSpawnData();
             UBGWFunctionLibraryCS.GetRebirthPointTransform(GameUtils.GetWorld(), levelData.BirthPointID, out var shrineTransform);
@@ -191,7 +129,7 @@ public class PvpCommandHandler(
         if (WukongApi.Sync.LocalMainCharacter is not { } mainEntity)
             return;
 
-        if (WukongApi.Sync.InRoom && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
+        if (WukongApi.Sync.InArea && !WukongApi.PvP.PvpData(mainEntity).IsSpectator && !WukongApi.PvP.InPvpTournament)
         {
             if (pvpLevelId < 0)
             {
