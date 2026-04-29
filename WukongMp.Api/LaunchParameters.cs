@@ -34,6 +34,7 @@ public class LaunchParameters
     public string Nickname { get; } = "Player";
     public int Region { get; } = -1;
     public int? LevelId { get; set; }
+    public bool UseSharedPvpSaveFile { get; }
 
     public string? ShimDbName { get; }
     public string? ShimDbDir { get; }
