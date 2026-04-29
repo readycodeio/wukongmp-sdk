@@ -81,15 +81,17 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
         get
         {
             ref readonly var mappingComp = ref GetMappingComponent();
-            // ref var localTamerComp = ref GetLocalTamer();
+            var localTamerComp = GetLocalTamer();
 
-            // NOTE(api): This test will always work the same
-            // if (!localTamerComp.IsTamerSynced)
-            //     return null;
+            if (!localTamerComp.IsTamerSynced)
+                return null;
 
             var tamer = mappingComp.GameObject as BUTamerActor;
+
             if (tamer.IsNullOrDestroyed())
+            {
                 return null;
+            }
 
             return tamer;
         }
@@ -118,7 +120,6 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
             var tamer = Tamer;
             if (tamer.IsNullOrDestroyed())
             {
-                // Logging.LogDebug("Tamer is null or destroyed in getPawn");
                 return null;
             }
 
