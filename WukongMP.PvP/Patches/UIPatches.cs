@@ -58,17 +58,20 @@ public static class PatchStartGameUiPvp
             if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME).ToString())
             {
                 Logging.LogDebug("Continue UI name desc: {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.CONTINUE_GAME));
-                if (!hasPak || !isConnected)
+                if (!hasPak || !isConnected || LaunchParameters.Instance.UseSharedPvpSaveFile)
                 {
+                    // hidden when using shared save file
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
                 }
                 else if (File.Exists(GameSaveUtils.GetSaveFileFullName(typeof(PatchStartGameUiPvp).Assembly, GSE_SaveGameUtil.GetArchiveSlotName(SaveFileType.Archive, PvpConstants.CharacterArchiveId))))
                 {
+                    // Quick Join when there's a cached character save file
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.QuickJoin));
                 }
                 else
                 {
+                    // Hide "Quick launch", players must choose their save file
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
                 }
@@ -86,21 +89,28 @@ public static class PatchStartGameUiPvp
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
                 }
+                else if (LaunchParameters.Instance.UseSharedPvpSaveFile)
+                {
+                    // when using shared save file - Quick Join
+                    ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.QuickJoin));
+                }
                 else
                 {
+                    // otherwise - New Character
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.NewCharacter));
                 }
             }
             else if (buttonName == GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME).ToString())
             {
                 Logging.LogDebug("Load game UI name desc : {Description}", GSB1UIUtil.GetUIWordDescFText(EUIWordID.LOAD_GAME));
-                if (!hasPak || !isConnected)
+                if (!hasPak || !isConnected || LaunchParameters.Instance.UseSharedPvpSaveFile)
                 {
                     ___StartGameBtnList[j].GetBUIButton().SetVisibility(ESlateVisibility.Collapsed);
                     ___StartGameBtnList.RemoveAt(j);
                 }
                 else
                 {
+                    // only shown when not using shared save file
                     ___StartGameBtnList[j].SetTxtName(FText.FromString(PvpTexts.SelectCharacter));
                 }
             }

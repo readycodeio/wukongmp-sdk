@@ -33,7 +33,7 @@ public class LaunchParameters
     public string? JwtToken { get; }
     public string Nickname { get; } = "Player";
     public int Region { get; } = -1;
-    public int? LevelId { get; set; } // TODO: this needs to be removed after testing
+    public int? LevelId { get; set; }
 
     public string? ShimDbName { get; }
     public string? ShimDbDir { get; }
@@ -99,7 +99,7 @@ public class LaunchParameters
 
         // BOTH: user nickname
         Nickname = data.GetValueOrDefault("NICKNAME");
-        
+
         // BOTH: server region
         var region = data.GetValueOrDefault("REGION", "");
         if (int.TryParse(region, out var regionId))
@@ -112,6 +112,13 @@ public class LaunchParameters
         if (!string.IsNullOrWhiteSpace(level) && int.TryParse(level, out var levelId))
         {
             LevelId = levelId;
+        }
+
+        // PvP: Use shared save
+        var useSharedSave = data.GetValueOrDefault("USE_SHARED_SAVE");
+        if (!string.IsNullOrWhiteSpace(useSharedSave) && bool.TryParse(useSharedSave, out var useShared))
+        {
+            UseSharedPvpSaveFile = useShared;
         }
 
         // OPTIONAL: custom mod folder

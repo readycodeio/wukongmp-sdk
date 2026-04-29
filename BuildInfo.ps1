@@ -89,7 +89,8 @@ function Get-VariantLists
     $saveFiles = @($saveFilesBase)
     if ($Variant -eq 'PvP')
     {
-        $saveFiles += "ArchiveSaveFile.0.sav"
+        $saveFiles += "ArchiveSaveFile.0.sav" # fresh character
+        $saveFiles += "ArchiveSaveFile.2.sav" # endgame character
     }
     
     # add "WukongMp.$ModVariant.dll" to modFilesCore

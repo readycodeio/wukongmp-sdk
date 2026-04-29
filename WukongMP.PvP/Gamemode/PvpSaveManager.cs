@@ -4,6 +4,7 @@ using B1UI.GSSvc;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using UnrealEngine.Runtime;
+using WukongMp.Api;
 using WukongMp.Api.Configuration;
 using WukongMp.PvP.Configuration;
 
@@ -39,7 +40,7 @@ internal class PvpSaveManager
 
         BGW_EventCollection.Get(worldContext).Evt_BGW_TriggerGlobalFSMEvent(EGI_Global.LoadArchive, new FSMInputData_GI_Global_SubG_GI_Loading_TravelLevel
         {
-            ArchiveId = Constants.NewCharacterArchiveId // Move to PvP constants
+            ArchiveId = LaunchParameters.Instance.UseSharedPvpSaveFile ? Constants.SharedPvpArchiveId : Constants.NewCharacterArchiveId
         });
     }
 

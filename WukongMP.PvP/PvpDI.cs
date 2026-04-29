@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using WukongMp.Api;
-using WukongMp.Api.FreeCamera;
 using WukongMp.PvP.Chat;
 using WukongMp.PvP.Command;
 using WukongMp.PvP.Configuration;
